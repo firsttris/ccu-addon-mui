@@ -5,25 +5,26 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import { useApi } from '../hooks/useApi';
+import { useGetRooms } from '../hooks/useApi';
 import InboxIcon from '@mui/icons-material/Inbox';
 import { useNavigate } from 'react-router-dom';
 
 export const Rooms = () => {
   const navigate = useNavigate();
 
-  const response = useApi('Room.getAll');
-  console.log('response', response);
-  const rooms = response.data?.data.result;
+  const {data, isFetched } = useGetRooms();
 
-  if (response.isFetched) {
+  const rooms = data?.data.result;
+  console.log('rooms',rooms)
+
+  if (isFetched && rooms) {
     return (
       <List>
-        {rooms.map((room: { name: string; id: string; channelIds: string[] }) => (
+        {rooms.map((room) => (
           <ListItem
             disablePadding
             key={room.id}
-            onClick={() => navigate(`/room/${room.id}/${room.channelIds.join(',')}`)}
+            onClick={() => navigate(`/room/${room.id}`)}
           >
             <ListItemButton>
               <ListItemIcon>

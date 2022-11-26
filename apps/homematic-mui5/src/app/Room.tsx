@@ -1,16 +1,37 @@
-import { useParams } from "react-router-dom";
-import { useApi } from "../hooks/useApi";
+import {
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from '@mui/material';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useChannelForRoom } from '../hooks/useApi';
+import InboxIcon from '@mui/icons-material/Inbox';
 
 export const Room = () => {
-    const { roomId, channelIds } = useParams()
-    console.log('roomId', roomId)
-    const channelIdsList = channelIds?.split(',');
-    console.log('channelIds', channelIdsList)
+  const navigate = useNavigate();
 
-    const response = useApi('Channel.getName', { id: channelIdsList ? channelIdsList[1] : 0 });
-    console.log('Channel.getName', response)
-    // const response = useApi('Room.get', { id: roomId });
+  const { roomId } = useParams();
 
-    // console.log('Room', response.data)
+  const result = useChannelForRoom(roomId);
+
+  if (result.isFetched && result.channelsForRoom) {
+    return (
+      <List>
+        {result.channelsForRoom.map((channel) => (
+          <ListItem disablePadding key={channel.id}>
+            <ListItemButton>
+              <ListItemIcon>
+                <InboxIcon />
+              </ListItemIcon>
+              <ListItemText primary={channel.name} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    );
+  } else {
     return null;
-}
+  }
+};
