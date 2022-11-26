@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<roomList>
+    <room name='Dach' ise_id='2117'>
+        <channel ise_id='4107' />
+        <channel ise_id='4149' />
+        <channel ise_id='4023' />
+        <channel ise_id='4065' />
+        <channel ise_id='3886' />
+        <channel ise_id='3928' />
+        <channel ise_id='3802' />
+        <channel ise_id='3844' />
+        <channel ise_id='3605' />
+        <channel ise_id='3631' />
+        <channel ise_id='3657' />
+        <channel ise_id='3553' />
+        <channel ise_id='3683' />
+        <channel ise_id='3709' />
+        <channel ise_id='3735' />
+        <channel ise_id='3579' />
+        <channel ise_id='1913' />
+    </room>
+    <room name='EG' ise_id='4657'>
+        <channel ise_id='2803' />
+        <channel ise_id='2751' />
+        <channel ise_id='2699' />
+        <channel ise_id='2725' />
+        <channel ise_id='2647' />
+        <channel ise_id='2621' />
+        <channel ise_id='2777' />
+        <channel ise_id='2673' />
+        <channel ise_id='2446' />
+        <channel ise_id='2404' />
+        <channel ise_id='2530' />
+        <channel ise_id='2488' />
+        <channel ise_id='5130' />
+        <channel ise_id='4401' />
+        <channel ise_id='5289' />
+    </room>
+    <room name='Keller' ise_id='2116'>
+        <channel ise_id='2207' />
+        <channel ise_id='2233' />
+        <channel ise_id='2285' />
+        <channel ise_id='2259' />
+        <channel ise_id='2181' />
+        <channel ise_id='2155' />
+        <channel ise_id='5183' />
+        <channel ise_id='1671' />
+        <channel ise_id='5236' />
+    </room>
+    <room name='OG' ise_id='4658'>
+        <channel ise_id='4628' />
+        <channel ise_id='4999' />
+        <channel ise_id='3022' />
+        <channel ise_id='3048' />
+        <channel ise_id='2918' />
+        <channel ise_id='2970' />
+        <channel ise_id='2996' />
+        <channel ise_id='2892' />
+        <channel ise_id='2944' />
+        <channel ise_id='2866' />
+        <channel ise_id='3115' />
+        <channel ise_id='3241' />
+        <channel ise_id='3378' />
+        <channel ise_id='3157' />
+        <channel ise_id='3462' />
+        <channel ise_id='3336' />
+        <channel ise_id='3420' />
+        <channel ise_id='5077' />
+        <channel ise_id='4971' />
+        <channel ise_id='5024' />
+    </room>
+</roomList>
