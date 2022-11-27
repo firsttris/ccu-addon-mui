@@ -15,7 +15,6 @@ export const Rooms = () => {
   const {data, isFetched } = useGetRooms();
 
   const rooms = data?.data.result;
-  console.log('rooms',rooms)
 
   if (isFetched && rooms) {
     return (

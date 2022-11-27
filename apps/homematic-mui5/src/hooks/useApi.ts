@@ -1,10 +1,16 @@
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import { useQuery, useMutation } from '@tanstack/react-query';
+
+export enum ChannelType {
+  SWITCH_VIRTUAL_RECEIVER = "SWITCH_VIRTUAL_RECEIVER",
+  BLIND_VIRTUAL_RECEIVER = "BLIND_VIRTUAL_RECEIVER",
+  HEATING_CLIMATECONTROL_TRANSCEIVER = "HEATING_CLIMATECONTROL_TRANSCEIVER"
+}
 
 interface Channel {
   address: string;
   category: string;
-  channelType: string;
+  channelType: ChannelType;
   deviceId: string;
   id: string;
   index: number;
@@ -34,9 +40,15 @@ interface Device {
   type: string;
 }
 
+interface Error {
+  name: string;
+  code: number;
+  message: string
+}
+
 interface Response<T> {
-  error: any;
-  result: T[];
+  error: Error;
+  result: T;
   version: string;
 }
 
@@ -49,54 +61,72 @@ interface Room {
 
 // Api
 
-const callApi = async (method: string, params?: any) => {
-  return await axios.post('/api/homematic.cgi', {
+const callApi = async <T>(method: string, params?: any) => {
+  return await axios.post<Response<T>>('/api/homematic.cgi', {
     method,
     params: { ...params, _session_id_: sessionStorage.getItem('session_id') },
   });
 };
 
 const login = async (username: string, password: string) => {
-  const response = await callApi('Session.login', { username, password });
+  const response = await callApi<string>('Session.login', { username, password });
   sessionStorage.setItem('session_id', response.data.result);
 };
 
-export const queryDeviceListAllDetail = (): Promise<AxiosResponse<Response<Device>>> => callApi('Device.listAllDetail');
+interface SetValue {
+  address: string, valueKey: string, type: string, value: any
+}
 
-export const queryRoomGetAll = (): Promise<AxiosResponse<Response<Room>>> => callApi('Room.getAll')
-
+const setValue = async (value: SetValue) => {
+  await callApi<any>('Interface.setValue', { interface: "HmIP-RF", ...value })
+}
 
 // useQuery
 
 export const useChannelForRoom = (roomId?: string) => {
   const getRoomsQueryInfo = useGetRooms()
-  const listAllDetailQueryInfo = useListAllDetail()
+  const listAllDetailQueryInfo = useGetAllDeviceDetails()
   const channelIds = getRoomsQueryInfo.data?.data.result.find(room => room.id === roomId)?.channelIds
   const allChannels = listAllDetailQueryInfo.data?.data.result?.flatMap(item => item.channels)
   const channelsForRoom = allChannels?.filter(value => channelIds?.includes(value.id))
   return {
     channelsForRoom,
-    isFetched: getRoomsQueryInfo.isFetched && listAllDetailQueryInfo.isFetched
+    isFetched: getRoomsQueryInfo.isFetched && listAllDetailQueryInfo.isFetched,
+    isLoading: getRoomsQueryInfo.isLoading || listAllDetailQueryInfo.isLoading
   }
 }
 
 
-export const useApi = (method: string, params?: any) => {
-  return useQuery([method, params], () => callApi(method, params));
+export const useApi = <T>(method: string, params?: any) => {
+  return useQuery([method, params], () => callApi<T>(method, params));
 };
 
+export const useGetAllDeviceDetails = () => useApi<Device[]>('Device.listAllDetail')
 
-export const useListAllDetail = () => {
-  return useQuery(['Device.listAllDetail'], queryDeviceListAllDetail);
-};
+export const useGetRooms = () => useApi<Room[]>('Room.getAll')
 
-export const useGetRooms = () => {
-  return useQuery(['Room.getAll'], ({queryKey: [method]}): Promise<AxiosResponse<Response<Room>>> => callApi(method));
+export const useGetValue = (address: string, valueKey: string) => useApi<string>('Interface.getValue', { interface: "HmIP-RF", address, valueKey})
+
+
+
+
+
+export const useSetValueMutation = () => {
+  return useMutation({
+    mutationFn: (value: SetValue) =>{
+      return setValue(value)
+    }
+  })
+}
+
+interface Credentials {
+  username: string
+  password: string
 }
 
 export const useLogin = () => {
   return useMutation({
-    mutationFn: (credentials: { username: string; password: string }) => {
+    mutationFn: (credentials: Credentials) => {
       const { username, password } = credentials;
       return login(username, password);
     },
