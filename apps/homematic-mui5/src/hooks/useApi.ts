@@ -71,6 +71,7 @@ const callApi = async <T>(method: string, params?: any) => {
 const login = async (username: string, password: string) => {
   const response = await callApi<string>('Session.login', { username, password });
   sessionStorage.setItem('session_id', response.data.result);
+  return response
 };
 
 interface SetValue {
@@ -83,16 +84,14 @@ const setValue = async (value: SetValue) => {
 
 // useQuery
 
-export const useChannelForRoom = (roomId?: string) => {
-  const getRoomsQueryInfo = useGetRooms()
+export const useChannelForRoom = (channelIds?: string[]) => {
   const listAllDetailQueryInfo = useGetAllDeviceDetails()
-  const channelIds = getRoomsQueryInfo.data?.data.result.find(room => room.id === roomId)?.channelIds
   const allChannels = listAllDetailQueryInfo.data?.data.result?.flatMap(item => item.channels)
   const channelsForRoom = allChannels?.filter(value => channelIds?.includes(value.id))
   return {
     channelsForRoom,
-    isFetched: getRoomsQueryInfo.isFetched && listAllDetailQueryInfo.isFetched,
-    isLoading: getRoomsQueryInfo.isLoading || listAllDetailQueryInfo.isLoading
+    isFetched: listAllDetailQueryInfo.isFetched,
+    isLoading: listAllDetailQueryInfo.isLoading
   }
 }
 
@@ -107,7 +106,7 @@ export const useGetRooms = () => useApi<Room[]>('Room.getAll')
 
 export const useGetValue = (address: string, valueKey: string) => useApi<string>('Interface.getValue', { interface: "HmIP-RF", address, valueKey})
 
-export const useGetParamSet = (address: string) => useApi<string>('Interface.getParamset', { interface: "HmIP-RF", address, paramsetKey: "VALUES"})
+export const useGetParamSet = <T>(address: string) => useApi<T>('Interface.getParamset', { interface: "HmIP-RF", address, paramsetKey: "VALUES"})
 
 
 export const useSetValueMutation = () => {
@@ -125,8 +124,7 @@ interface Credentials {
 
 export const useLogin = () => {
   return useMutation({
-    mutationFn: (credentials: Credentials) => {
-      const { username, password } = credentials;
+    mutationFn: ({ username, password }: Credentials) => {
       return login(username, password);
     },
   });

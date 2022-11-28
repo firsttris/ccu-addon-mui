@@ -2,19 +2,20 @@ import {
   Box,
   CircularProgress,
   Container,
+  Divider,
   IconButton,
   List,
   ListItem,
-  ListItemButton,
   ListItemIcon,
   ListItemText,
   Switch,
   Typography,
 } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 import {
   ChannelType,
   useChannelForRoom,
+  useGetParamSet,
   useGetValue,
   useSetValueMutation,
 } from '../hooks/useApi';
@@ -56,17 +57,46 @@ export const LightControl = ({ address, valueKey }: ControlProps) => {
   );
 };
 
-export const ThermostatControl = ({ address }: { address: string }) => {
-  const actualTemperatureQueryInfo = useGetValue(address, 'ACTUAL_TEMPERATURE');
-  const humidityQueryInfo = useGetValue(address, 'HUMIDITY');
+interface ThermostatResponse {
+  ACTIVE_PROFILE: string;
+  ACTUAL_TEMPERATURE: string;
+  ACTUAL_TEMPERATURE_STATUS: string;
+  BOOST_MODE: string;
+  BOOST_TIME: string;
+  FROST_PROTECTION: string;
+  HEATING_COOLING: string;
+  HUMIDITY: string;
+  HUMIDITY_STATUS: string;
+  PARTY_MODE: string;
+  QUICK_VETO_TIME: string;
+  SET_POINT_MODE: string;
+  SET_POINT_TEMPERATURE: string;
+  SWITCH_POINT_OCCURED: string;
+  WINDOW_STATE: string;
+}
 
+export const ThermostatControl = ({ address }: { address: string }) => {
+  //const actualTemperatureQueryInfo = useGetValue(address, 'ACTUAL_TEMPERATURE');
+  //const humidityQueryInfo = useGetValue(address, 'HUMIDITY');
+
+  const response = useGetParamSet<ThermostatResponse>(address);
+  const result = response.data?.data.result;
   return (
-    <Box>
-      <Typography variant="caption" sx={{ mr: 3 }}>
-        {Number(humidityQueryInfo.data?.data.result)}%
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Typography variant="caption" sx={{ mr: 1 }}>
+        {result?.SET_POINT_MODE === '1' ? 'Manuell' : 'Auto'}
+      </Typography>
+      <Typography variant="caption" sx={{ mr: 1 }}>
+        {result?.HUMIDITY ? Number(result?.HUMIDITY) : null}%
       </Typography>
       <Typography variant="caption">
-        {Number(actualTemperatureQueryInfo.data?.data.result)}°
+        {result?.ACTUAL_TEMPERATURE
+          ? Number(result?.ACTUAL_TEMPERATURE).toLocaleString('de-DE', {
+              maximumFractionDigits: 2,
+              minimumFractionDigits: 2,
+            })
+          : null}
+        °
       </Typography>
     </Box>
   );
@@ -76,7 +106,7 @@ export const BlindsControl = ({ address, valueKey }: ControlProps) => {
   const getChannelValueQueryInfo = useGetValue(address, valueKey);
   const setValueMutation = useSetValueMutation();
   return (
-    <Box>
+    <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
       <Typography variant="caption">
         {Number(getChannelValueQueryInfo.data?.data.result) * 100 + '%'}
       </Typography>
@@ -121,17 +151,20 @@ export const BlindsControl = ({ address, valueKey }: ControlProps) => {
 };
 
 export const Room = () => {
-  const { roomId } = useParams();
 
-  const result = useChannelForRoom(roomId);
+  const [searchParams] = useSearchParams()
+
+  const channelIds = searchParams.get('channelIds')?.split(',')
+
+  const result = useChannelForRoom(channelIds);
 
   if (result.isFetched && result.channelsForRoom) {
     return (
       <Container maxWidth="md">
         <List>
-          {result.channelsForRoom.map((channel) => (
-            <ListItem disablePadding key={channel.id}>
-              <ListItemButton>
+          {result.channelsForRoom.map((channel, index) => (
+            <Box key={index}>
+              <ListItem disablePadding key={channel.id} sx={{ height: '48px' }}>
                 <ListItemIcon>
                   {channel.channelType ===
                   ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
@@ -146,19 +179,32 @@ export const Room = () => {
                     <ThermostatOutlinedIcon />
                   ) : null}
                 </ListItemIcon>
-                <ListItemText primary={channel.name} />
-              </ListItemButton>
-              {channel.channelType === ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
-                <LightControl address={channel.address} valueKey={'STATE'} />
-              ) : null}
-              {channel.channelType ===
-              ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
-                <ThermostatControl address={channel.address} />
-              ) : null}
-              {channel.channelType === ChannelType.BLIND_VIRTUAL_RECEIVER ? (
-                <BlindsControl address={channel.address} valueKey={'LEVEL'} />
-              ) : null}
-            </ListItem>
+                <ListItemText
+                  primary={channel.name}
+                  sx={{
+                    "& .MuiListItemText-primary": {
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                    }
+                  }}
+                />
+
+                {channel.channelType === ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
+                  <LightControl address={channel.address} valueKey={'STATE'} />
+                ) : null}
+                {channel.channelType ===
+                ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
+                  <ThermostatControl address={channel.address} />
+                ) : null}
+                {channel.channelType === ChannelType.BLIND_VIRTUAL_RECEIVER ? (
+                  <BlindsControl address={channel.address} valueKey={'LEVEL'} />
+                ) : null}
+              </ListItem>
+              {result.channelsForRoom?.length === index + 1 ? null : (
+                <Divider />
+              )}
+            </Box>
           ))}
         </List>
       </Container>
