@@ -1,6 +1,8 @@
 import {
   Box,
   CircularProgress,
+  Container,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -9,7 +11,7 @@ import {
   Switch,
   Typography,
 } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   ChannelType,
   useChannelForRoom,
@@ -19,6 +21,9 @@ import {
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import BlindsOutlinedIcon from '@mui/icons-material/BlindsOutlined';
 import ThermostatOutlinedIcon from '@mui/icons-material/ThermostatOutlined';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import StopIcon from '@mui/icons-material/Stop';
 
 interface ControlProps {
   address: string;
@@ -51,18 +56,68 @@ export const LightControl = ({ address, valueKey }: ControlProps) => {
   );
 };
 
-export const ThermostatControl = ({ address, valueKey }: ControlProps) => {
-  const getChannelValueQueryInfo = useGetValue(address, valueKey);
+export const ThermostatControl = ({ address }: { address: string }) => {
+  const actualTemperatureQueryInfo = useGetValue(address, 'ACTUAL_TEMPERATURE');
+  const humidityQueryInfo = useGetValue(address, 'HUMIDITY');
+
   return (
-    <Typography>
-      {Number(getChannelValueQueryInfo.data?.data.result)}
-    </Typography>
+    <Box>
+      <Typography variant="caption" sx={{ mr: 3 }}>
+        {Number(humidityQueryInfo.data?.data.result)}%
+      </Typography>
+      <Typography variant="caption">
+        {Number(actualTemperatureQueryInfo.data?.data.result)}°
+      </Typography>
+    </Box>
   );
 };
 
 export const BlindsControl = ({ address, valueKey }: ControlProps) => {
   const getChannelValueQueryInfo = useGetValue(address, valueKey);
-  return <Typography>{getChannelValueQueryInfo.data?.data.result}</Typography>;
+  const setValueMutation = useSetValueMutation();
+  return (
+    <Box>
+      <Typography variant="caption">
+        {Number(getChannelValueQueryInfo.data?.data.result) * 100 + '%'}
+      </Typography>
+      <IconButton
+        onClick={() =>
+          setValueMutation.mutateAsync({
+            address,
+            valueKey: 'STOP',
+            type: 'boolean',
+            value: true,
+          })
+        }
+      >
+        <StopIcon />
+      </IconButton>
+      <IconButton
+        onClick={() =>
+          setValueMutation.mutateAsync({
+            address,
+            valueKey,
+            type: 'double',
+            value: 0,
+          })
+        }
+      >
+        <ArrowDownwardIcon />
+      </IconButton>
+      <IconButton
+        onClick={() =>
+          setValueMutation.mutateAsync({
+            address,
+            valueKey,
+            type: 'double',
+            value: 1,
+          })
+        }
+      >
+        <ArrowUpwardIcon />
+      </IconButton>
+    </Box>
+  );
 };
 
 export const Room = () => {
@@ -70,44 +125,43 @@ export const Room = () => {
 
   const result = useChannelForRoom(roomId);
 
-  console.log(result.channelsForRoom);
-
   if (result.isFetched && result.channelsForRoom) {
     return (
-      <List>
-        {result.channelsForRoom.map((channel) => (
-          <ListItem disablePadding key={channel.id}>
-            <ListItemButton>
-              <ListItemIcon>
-                {channel.channelType === ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
-                  <LightbulbOutlinedIcon />
-                ) : null}
-                {channel.channelType === ChannelType.BLIND_VIRTUAL_RECEIVER ? (
-                  <BlindsOutlinedIcon />
-                ) : null}
-                {channel.channelType ===
-                ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
-                  <ThermostatOutlinedIcon />
-                ) : null}
-              </ListItemIcon>
-              <ListItemText primary={channel.name} />
-            </ListItemButton>
-            {channel.channelType === ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
-              <LightControl address={channel.address} valueKey={'STATE'} />
-            ) : null}
-            {channel.channelType ===
-            ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
-              <ThermostatControl
-                address={channel.address}
-                valueKey={'ACTUAL_TEMPERATURE'}
-              />
-            ) : null}
-            {channel.channelType === ChannelType.BLIND_VIRTUAL_RECEIVER ? (
-              <BlindsControl address={channel.address} valueKey={'LEVEL'} />
-            ) : null}
-          </ListItem>
-        ))}
-      </List>
+      <Container maxWidth="md">
+        <List>
+          {result.channelsForRoom.map((channel) => (
+            <ListItem disablePadding key={channel.id}>
+              <ListItemButton>
+                <ListItemIcon>
+                  {channel.channelType ===
+                  ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
+                    <LightbulbOutlinedIcon />
+                  ) : null}
+                  {channel.channelType ===
+                  ChannelType.BLIND_VIRTUAL_RECEIVER ? (
+                    <BlindsOutlinedIcon />
+                  ) : null}
+                  {channel.channelType ===
+                  ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
+                    <ThermostatOutlinedIcon />
+                  ) : null}
+                </ListItemIcon>
+                <ListItemText primary={channel.name} />
+              </ListItemButton>
+              {channel.channelType === ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
+                <LightControl address={channel.address} valueKey={'STATE'} />
+              ) : null}
+              {channel.channelType ===
+              ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
+                <ThermostatControl address={channel.address} />
+              ) : null}
+              {channel.channelType === ChannelType.BLIND_VIRTUAL_RECEIVER ? (
+                <BlindsControl address={channel.address} valueKey={'LEVEL'} />
+              ) : null}
+            </ListItem>
+          ))}
+        </List>
+      </Container>
     );
   } else if (result.isLoading) {
     return (

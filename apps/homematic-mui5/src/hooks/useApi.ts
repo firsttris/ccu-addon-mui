@@ -107,8 +107,7 @@ export const useGetRooms = () => useApi<Room[]>('Room.getAll')
 
 export const useGetValue = (address: string, valueKey: string) => useApi<string>('Interface.getValue', { interface: "HmIP-RF", address, valueKey})
 
-
-
+export const useGetParamSet = (address: string) => useApi<string>('Interface.getParamset', { interface: "HmIP-RF", address, paramsetKey: "VALUES"})
 
 
 export const useSetValueMutation = () => {
