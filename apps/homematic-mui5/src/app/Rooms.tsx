@@ -4,11 +4,10 @@ import {
   List,
   ListItem,
   ListItemButton,
-  ListItemIcon,
   ListItemText,
 } from '@mui/material';
 import { useGetRooms } from '../hooks/useApi';
-import InboxIcon from '@mui/icons-material/Inbox';
+import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined';
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/system';
 
@@ -25,19 +24,25 @@ export const Rooms = () => {
         <List>
           {rooms.map((room, index) => (
             <Box key={index}>
-            <ListItem
-              disablePadding
-              key={room.id}
-              onClick={() => navigate(`/room/${room.id}?channelIds=${room.channelIds.join(',')}`)}
-            >
-              <ListItemButton>
-                <ListItemIcon>
-                  <InboxIcon />
-                </ListItemIcon>
-                <ListItemText primary={room.name} />
-              </ListItemButton>
-            </ListItem>
-            { rooms.length === index + 1 ? null : <Divider/>}
+              <ListItem
+                disablePadding
+                key={room.id}
+                onClick={() =>
+                  navigate(
+                    `/room/${room.id}?channelIds=${room.channelIds.join(',')}`
+                  )
+                }
+              >
+                <ListItemButton>
+                  <MeetingRoomOutlinedIcon />
+
+                  <ListItemText
+                    primary={room.name}
+                    sx={{ marginLeft: '20px' }}
+                  />
+                </ListItemButton>
+              </ListItem>
+              {rooms.length === index + 1 ? null : <Divider />}
             </Box>
           ))}
         </List>

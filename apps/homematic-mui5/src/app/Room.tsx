@@ -8,6 +8,7 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Slider,
   Switch,
   Typography,
 } from '@mui/material';
@@ -22,9 +23,11 @@ import {
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import BlindsOutlinedIcon from '@mui/icons-material/BlindsOutlined';
 import ThermostatOutlinedIcon from '@mui/icons-material/ThermostatOutlined';
+import ThermostatAutoIcon from '@mui/icons-material/ThermostatAuto';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import StopIcon from '@mui/icons-material/Stop';
+import WaterDamageOutlinedIcon from '@mui/icons-material/WaterDamageOutlined';
 
 interface ControlProps {
   address: string;
@@ -79,25 +82,78 @@ export const ThermostatControl = ({ address }: { address: string }) => {
   //const actualTemperatureQueryInfo = useGetValue(address, 'ACTUAL_TEMPERATURE');
   //const humidityQueryInfo = useGetValue(address, 'HUMIDITY');
 
+  const marks = [
+    {
+      value: 10,
+      label: '10°C',
+    },
+
+    {
+      value: 20,
+      label: '20°C',
+    },
+
+    {
+      value: 30,
+      label: '30°C',
+    },
+  ];
+
   const response = useGetParamSet<ThermostatResponse>(address);
   const result = response.data?.data.result;
+  console.log('result', result);
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      <Typography variant="caption" sx={{ mr: 1 }}>
-        {result?.SET_POINT_MODE === '1' ? 'Manuell' : 'Auto'}
-      </Typography>
-      <Typography variant="caption" sx={{ mr: 1 }}>
-        {result?.HUMIDITY ? Number(result?.HUMIDITY) : null}%
-      </Typography>
-      <Typography variant="caption">
-        {result?.ACTUAL_TEMPERATURE
-          ? Number(result?.ACTUAL_TEMPERATURE).toLocaleString('de-DE', {
-              maximumFractionDigits: 2,
-              minimumFractionDigits: 2,
-            })
-          : null}
-        °
-      </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', marginTop: '10px' }}>
+      <Box>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <WaterDamageOutlinedIcon sx={{ marginRight: '3px' }} />
+          <Typography variant="caption" sx={{ mr: 1 }}>
+            {result?.HUMIDITY ? Number(result?.HUMIDITY) : null}%
+          </Typography>
+          <IconButton sx={{ padding: 0, color: 'black'}}>
+            {result?.SET_POINT_MODE === '1' ? (
+              <ThermostatOutlinedIcon />
+            ) : (
+              <ThermostatAutoIcon />
+            )}
+          </IconButton>
+          <Typography variant="caption" sx={{}}>
+            {result?.ACTUAL_TEMPERATURE
+              ? Number(result?.ACTUAL_TEMPERATURE).toLocaleString('de-DE', {
+                  maximumFractionDigits: 2,
+                  minimumFractionDigits: 2,
+                })
+              : null}
+            °C
+          </Typography>
+        </Box>
+      </Box>
+
+      <Box sx={{ width: 150 }}>
+        <Slider
+          aria-label="Temperature"
+          defaultValue={30}
+          getAriaValueText={(value: number) => `${value}°C`}
+          getAriaLabel={(value: number) => `${value}°C`}
+          valueLabelDisplay="auto"
+          value={Number(result?.SET_POINT_TEMPERATURE)}
+          step={1}
+          marks={marks}
+          min={5}
+          max={30}
+          sx={{
+            '& .MuiSlider-markLabel': {
+              fontSize: '11px',
+            },
+          }}
+        />
+      </Box>
     </Box>
   );
 };
@@ -151,10 +207,9 @@ export const BlindsControl = ({ address, valueKey }: ControlProps) => {
 };
 
 export const Room = () => {
+  const [searchParams] = useSearchParams();
 
-  const [searchParams] = useSearchParams()
-
-  const channelIds = searchParams.get('channelIds')?.split(',')
+  const channelIds = searchParams.get('channelIds')?.split(',');
 
   const result = useChannelForRoom(channelIds);
 
@@ -164,29 +219,36 @@ export const Room = () => {
         <List>
           {result.channelsForRoom.map((channel, index) => (
             <Box key={index}>
-              <ListItem disablePadding key={channel.id} sx={{ height: '48px' }}>
-                <ListItemIcon>
-                  {channel.channelType ===
-                  ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
-                    <LightbulbOutlinedIcon />
-                  ) : null}
-                  {channel.channelType ===
-                  ChannelType.BLIND_VIRTUAL_RECEIVER ? (
-                    <BlindsOutlinedIcon />
-                  ) : null}
-                  {channel.channelType ===
-                  ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
-                    <ThermostatOutlinedIcon />
-                  ) : null}
-                </ListItemIcon>
+              <ListItem
+                disablePadding
+                key={channel.id}
+                sx={{
+                  minHeight: '48px',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  justifyContent: 'center',
+                }}
+              >
+                {channel.channelType === ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
+                  <LightbulbOutlinedIcon />
+                ) : null}
+                {channel.channelType === ChannelType.BLIND_VIRTUAL_RECEIVER ? (
+                  <BlindsOutlinedIcon />
+                ) : null}
+                {channel.channelType ===
+                ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
+                  <ThermostatOutlinedIcon />
+                ) : null}
+
                 <ListItemText
                   primary={channel.name}
                   sx={{
-                    "& .MuiListItemText-primary": {
+                    marginLeft: '10px',
+                    '& .MuiListItemText-primary': {
                       overflow: 'hidden',
                       whiteSpace: 'nowrap',
                       textOverflow: 'ellipsis',
-                    }
+                    },
                   }}
                 />
 
