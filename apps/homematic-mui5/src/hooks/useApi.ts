@@ -75,11 +75,11 @@ const login = async (username: string, password: string) => {
 };
 
 interface SetValue {
-  address: string, valueKey: string, type: string, value: any
+  interface: string, address: string, valueKey: string, type: string, value: any
 }
 
-const setValue = async (value: SetValue) => {
-  await callApi<any>('Interface.setValue', { interface: "HmIP-RF", ...value })
+const setValue = async (params: SetValue) => {
+  await callApi<any>('Interface.setValue', params)
 }
 
 // useQuery
@@ -90,8 +90,7 @@ export const useChannelForRoom = (channelIds?: string[]) => {
   const channelsForRoom = allChannels?.filter(value => channelIds?.includes(value.id))
   return {
     channelsForRoom,
-    isFetched: listAllDetailQueryInfo.isFetched,
-    isLoading: listAllDetailQueryInfo.isLoading
+    ...listAllDetailQueryInfo
   }
 }
 
@@ -104,9 +103,9 @@ export const useGetAllDeviceDetails = () => useApi<Device[]>('Device.listAllDeta
 
 export const useGetRooms = () => useApi<Room[]>('Room.getAll')
 
-export const useGetValue = (address: string, valueKey: string) => useApi<string>('Interface.getValue', { interface: "HmIP-RF", address, valueKey})
+export const useGetValue = (interfaceName: string, address: string, valueKey: string) => useApi<string>('Interface.getValue', { interface: interfaceName, address, valueKey})
 
-export const useGetParamSet = <T>(address: string) => useApi<T>('Interface.getParamset', { interface: "HmIP-RF", address, paramsetKey: "VALUES"})
+export const useGetParamSet = <T>(interfaceName: string, address: string) => useApi<T>('Interface.getParamset', { interface: interfaceName, address, paramsetKey: "VALUES"})
 
 
 export const useSetValueMutation = () => {

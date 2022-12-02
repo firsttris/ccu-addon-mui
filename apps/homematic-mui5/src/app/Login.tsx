@@ -16,7 +16,6 @@ export const Login = () => {
     if(response.data.result) {
       navigate('/rooms');
     }
-    console.log('Response', response)
   };
 
   return (

@@ -6,13 +6,12 @@ import {
   IconButton,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
   Slider,
   Switch,
   Typography,
 } from '@mui/material';
-import { useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   ChannelType,
   useChannelForRoom,
@@ -22,41 +21,64 @@ import {
 } from '../hooks/useApi';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import BlindsOutlinedIcon from '@mui/icons-material/BlindsOutlined';
+import BlindsClosedIcon from '@mui/icons-material/BlindsClosed';
 import ThermostatOutlinedIcon from '@mui/icons-material/ThermostatOutlined';
 import ThermostatAutoIcon from '@mui/icons-material/ThermostatAuto';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import StopIcon from '@mui/icons-material/Stop';
 import WaterDamageOutlinedIcon from '@mui/icons-material/WaterDamageOutlined';
+import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import { useEffect, useState } from 'react';
 
 interface ControlProps {
+  interfaceName: string;
   address: string;
-  valueKey: string;
+  name: string;
 }
-export const LightControl = ({ address, valueKey }: ControlProps) => {
-  const getChannelValueQueryInfo = useGetValue(address, valueKey);
+export const LightControl = ({ name, address, interfaceName }: ControlProps) => {
+  const getChannelValueQueryInfo = useGetValue(interfaceName, address, 'STATE');
 
   const setValueMutation = useSetValueMutation();
 
   const checked = getChannelValueQueryInfo.data?.data.result === '1';
 
   return (
-    <Switch
-      edge="end"
-      onChange={async () => {
-        await setValueMutation.mutateAsync({
-          address,
-          valueKey,
-          type: 'boolean',
-          value: !checked,
-        });
-        await getChannelValueQueryInfo.refetch();
-      }}
-      checked={checked}
-      inputProps={{
-        'aria-labelledby': 'switch-list-label-wifi',
-      }}
-    />
+    <>
+      {checked ? (
+        <LightbulbIcon sx={{ color: 'orange' }} />
+      ) : (
+        <LightbulbOutlinedIcon />
+      )}
+      <ListItemText
+        primary={name}
+        sx={{
+          marginLeft: '10px',
+          '& .MuiListItemText-primary': {
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+          },
+        }}
+      />
+      <Switch
+        edge="end"
+        onChange={async () => {
+          await setValueMutation.mutateAsync({
+            interface: interfaceName,
+            address,
+            valueKey: 'STATE',
+            type: 'boolean',
+            value: !checked,
+          });
+          await getChannelValueQueryInfo.refetch();
+        }}
+        checked={checked}
+        inputProps={{
+          'aria-labelledby': 'switch-list-label-wifi',
+        }}
+      />
+    </>
   );
 };
 
@@ -78,10 +100,7 @@ interface ThermostatResponse {
   WINDOW_STATE: string;
 }
 
-export const ThermostatControl = ({ address }: { address: string }) => {
-  //const actualTemperatureQueryInfo = useGetValue(address, 'ACTUAL_TEMPERATURE');
-  //const humidityQueryInfo = useGetValue(address, 'HUMIDITY');
-
+export const ThermostatControl = ({ name, address, interfaceName }: ControlProps) => {
   const marks = [
     {
       value: 10,
@@ -99,110 +118,180 @@ export const ThermostatControl = ({ address }: { address: string }) => {
     },
   ];
 
-  const response = useGetParamSet<ThermostatResponse>(address);
+  const setValueMutation = useSetValueMutation();
+  const response = useGetParamSet<ThermostatResponse>(interfaceName, address);
   const result = response.data?.data.result;
-  console.log('result', result);
+  const setPoinTemperatureResult = Number(result?.SET_POINT_TEMPERATURE ?? 0);
+  const [pointTemp, setPointTemp] = useState<number>(setPoinTemperatureResult);
+  const setPointModeResult = Number(result?.SET_POINT_MODE ?? 0)
+  const [pointMode, setPointMode] = useState<number>(setPointModeResult);
+
+  useEffect(() => {
+    setPointMode(setPointModeResult);
+  }, [setPointModeResult]);
+
+  useEffect(() => {
+    setPointTemp(setPoinTemperatureResult);
+  }, [setPoinTemperatureResult]);
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', marginTop: '10px' }}>
-      <Box>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <WaterDamageOutlinedIcon sx={{ marginRight: '3px' }} />
-          <Typography variant="caption" sx={{ mr: 1 }}>
-            {result?.HUMIDITY ? Number(result?.HUMIDITY) : null}%
-          </Typography>
-          <IconButton sx={{ padding: 0, color: 'black'}}>
-            {result?.SET_POINT_MODE === '1' ? (
-              <ThermostatOutlinedIcon />
-            ) : (
-              <ThermostatAutoIcon />
-            )}
-          </IconButton>
-          <Typography variant="caption" sx={{}}>
-            {result?.ACTUAL_TEMPERATURE
-              ? Number(result?.ACTUAL_TEMPERATURE).toLocaleString('de-DE', {
-                  maximumFractionDigits: 2,
-                  minimumFractionDigits: 2,
-                })
-              : null}
-            °C
-          </Typography>
+    <>
+      <ThermostatOutlinedIcon sx={{ color: Number(result?.ACTUAL_TEMPERATURE) < 15 ? 'blue' : Number(result?.ACTUAL_TEMPERATURE) > 15 && Number(result?.ACTUAL_TEMPERATURE) < 20 ? 'orange' : 'red'}}/>
+      <ListItemText
+        primary={name}
+        sx={{
+          marginLeft: '10px',
+          '& .MuiListItemText-primary': {
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+          },
+        }}
+      />
+      <Box sx={{ display: 'flex', flexDirection: 'column', marginTop: '10px' }}>
+        <Box>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <WaterDamageOutlinedIcon sx={{ marginRight: '3px' }} />
+            <Typography variant="caption" sx={{ mr: 1 }}>
+              {result?.HUMIDITY ? Number(result?.HUMIDITY) : null}%
+            </Typography>
+            <IconButton
+              sx={{ padding: 0, color: 'black' }}
+              onClick={() => {
+                setPointMode(Number(pointMode ? '0' : '1'))
+                setValueMutation.mutateAsync({
+                  interface: interfaceName,
+                  address,
+                  valueKey: 'CONTROL_MODE',
+                  type: 'double',
+                  value: pointMode ? 0 : 1,
+                });
+              }}
+            >
+              {pointMode ? (
+                <ThermostatOutlinedIcon />
+              ) : (
+                <ThermostatAutoIcon />
+              )}
+            </IconButton>
+            <Typography variant="caption" sx={{}}>
+              {result?.ACTUAL_TEMPERATURE
+                ? Number(result?.ACTUAL_TEMPERATURE).toLocaleString('de-DE', {
+                    maximumFractionDigits: 2,
+                    minimumFractionDigits: 2,
+                  })
+                : null}
+              °C
+            </Typography>
+          </Box>
+        </Box>
+
+        <Box sx={{ width: 150 }}>
+          <Slider
+            aria-label="Temperature"
+            defaultValue={30}
+            getAriaValueText={(value: number) => `${value}°C`}
+            getAriaLabel={(value: number) => `${value}°C`}
+            valueLabelDisplay="auto"
+            value={pointTemp}
+            onChange={(_, value) => {
+              setPointTemp(value as number);
+              setValueMutation.mutateAsync({
+                interface: interfaceName,
+                address,
+                valueKey: 'SET_POINT_TEMPERATURE',
+                type: 'double',
+                value: value.toString(),
+              });
+            }}
+            step={1}
+            marks={marks}
+            min={5}
+            max={30}
+            sx={{
+              '& .MuiSlider-markLabel': {
+                fontSize: '11px',
+              },
+            }}
+          />
         </Box>
       </Box>
-
-      <Box sx={{ width: 150 }}>
-        <Slider
-          aria-label="Temperature"
-          defaultValue={30}
-          getAriaValueText={(value: number) => `${value}°C`}
-          getAriaLabel={(value: number) => `${value}°C`}
-          valueLabelDisplay="auto"
-          value={Number(result?.SET_POINT_TEMPERATURE)}
-          step={1}
-          marks={marks}
-          min={5}
-          max={30}
-          sx={{
-            '& .MuiSlider-markLabel': {
-              fontSize: '11px',
-            },
-          }}
-        />
-      </Box>
-    </Box>
+    </>
   );
 };
 
-export const BlindsControl = ({ address, valueKey }: ControlProps) => {
-  const getChannelValueQueryInfo = useGetValue(address, valueKey);
+export const BlindsControl = ({ name, address, interfaceName }: ControlProps) => {
+  const adressAndIndex = address.split(':');
+  const statusIndex = Number(adressAndIndex[1]) - 1;
+  const getChannelValueQueryInfo = useGetValue(interfaceName,
+    `${adressAndIndex[0]}:${statusIndex}`,
+    'LEVEL'
+  );
   const setValueMutation = useSetValueMutation();
+  const blindValue = Number(getChannelValueQueryInfo.data?.data.result);
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
-      <Typography variant="caption">
-        {Number(getChannelValueQueryInfo.data?.data.result) * 100 + '%'}
-      </Typography>
-      <IconButton
-        onClick={() =>
-          setValueMutation.mutateAsync({
-            address,
-            valueKey: 'STOP',
-            type: 'boolean',
-            value: true,
-          })
-        }
-      >
-        <StopIcon />
-      </IconButton>
-      <IconButton
-        onClick={() =>
-          setValueMutation.mutateAsync({
-            address,
-            valueKey,
-            type: 'double',
-            value: 0,
-          })
-        }
-      >
-        <ArrowDownwardIcon />
-      </IconButton>
-      <IconButton
-        onClick={() =>
-          setValueMutation.mutateAsync({
-            address,
-            valueKey,
-            type: 'double',
-            value: 1,
-          })
-        }
-      >
-        <ArrowUpwardIcon />
-      </IconButton>
-    </Box>
+    <>
+      {blindValue === 1 ? <BlindsOutlinedIcon /> : <BlindsClosedIcon />}
+      <ListItemText
+        primary={name}
+        sx={{
+          marginLeft: '10px',
+          '& .MuiListItemText-primary': {
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+          },
+        }}
+      />
+      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
+        <Typography variant="caption">{blindValue * 100 + '%'}</Typography>
+        <IconButton
+          onClick={() =>
+            setValueMutation.mutateAsync({
+              interface: interfaceName,
+              address,
+              valueKey: 'STOP',
+              type: 'boolean',
+              value: true,
+            })
+          }
+        >
+          <StopIcon />
+        </IconButton>
+        <IconButton
+          onClick={() =>
+            setValueMutation.mutateAsync({
+              interface: interfaceName,
+              address,
+              valueKey: 'LEVEL',
+              type: 'double',
+              value: 0,
+            })
+          }
+        >
+          <ArrowDownwardIcon />
+        </IconButton>
+        <IconButton
+          onClick={() =>
+            setValueMutation.mutateAsync({
+              interface: interfaceName,
+              address,
+              valueKey: 'LEVEL',
+              type: 'double',
+              value: 1,
+            })
+          }
+        >
+          <ArrowUpwardIcon />
+        </IconButton>
+      </Box>
+    </>
   );
 };
 
@@ -213,11 +302,17 @@ export const Room = () => {
 
   const result = useChannelForRoom(channelIds);
 
-  if (result.isFetched && result.channelsForRoom) {
+  const channelsForRoom = result.channelsForRoom ?? []
+  const allDevices = result.data?.data.result ?? []
+
+  if (result.isFetched) {
     return (
       <Container maxWidth="md">
         <List>
-          {result.channelsForRoom.map((channel, index) => (
+          {channelsForRoom.map((channel, index) => {
+            const splitted = channel.address.split(':')
+            const interfaceName = allDevices.find(device => device.address === splitted[0])?.interface ?? ''
+            return (
             <Box key={index}>
               <ListItem
                 disablePadding
@@ -230,44 +325,29 @@ export const Room = () => {
                 }}
               >
                 {channel.channelType === ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
-                  <LightbulbOutlinedIcon />
-                ) : null}
-                {channel.channelType === ChannelType.BLIND_VIRTUAL_RECEIVER ? (
-                  <BlindsOutlinedIcon />
+                  <LightControl address={channel.address} name={channel.name} interfaceName={interfaceName} />
                 ) : null}
                 {channel.channelType ===
                 ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
-                  <ThermostatOutlinedIcon />
-                ) : null}
-
-                <ListItemText
-                  primary={channel.name}
-                  sx={{
-                    marginLeft: '10px',
-                    '& .MuiListItemText-primary': {
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis',
-                    },
-                  }}
-                />
-
-                {channel.channelType === ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
-                  <LightControl address={channel.address} valueKey={'STATE'} />
-                ) : null}
-                {channel.channelType ===
-                ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
-                  <ThermostatControl address={channel.address} />
+                  <ThermostatControl
+                    interfaceName={interfaceName}
+                    address={channel.address}
+                    name={channel.name}
+                  />
                 ) : null}
                 {channel.channelType === ChannelType.BLIND_VIRTUAL_RECEIVER ? (
-                  <BlindsControl address={channel.address} valueKey={'LEVEL'} />
+                  <BlindsControl
+                    interfaceName={interfaceName}
+                    address={channel.address}
+                    name={channel.name}
+                  />
                 ) : null}
               </ListItem>
               {result.channelsForRoom?.length === index + 1 ? null : (
                 <Divider />
               )}
             </Box>
-          ))}
+          )})}
         </List>
       </Container>
     );
