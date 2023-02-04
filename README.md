@@ -3,9 +3,9 @@ KISS Keep it simple (and) stupid Responsive WebUI for HomeMatic with MUI5 and Re
 
 # Currently supported actors
 
-- Light
-- Thermostat
-- Blinds
+- [Light](/apps/homematic-mui5/src/app/LightControl.tsx)
+- [Thermostat](/apps/homematic-mui5/src/app/ThermostatControl.tsx)
+- [Blinds](/apps/homematic-mui5/src/app/BlindsControl.tsx)
 
 # Screenshots
 
