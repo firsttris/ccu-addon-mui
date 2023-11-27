@@ -1,0 +1,21 @@
+#!/bin/sh
+
+ADDON_DIR="/usr/local/addons/homematic-mui5"
+
+case "$1" in
+    info)
+        echo "Homematic MUI5 Addon"
+        echo "Verzeichnis: $ADDON_DIR"
+        ;;
+    uninstall)
+        echo "Deinstalliere Homematic MUI5 Addon..."
+        rm -rf $ADDON_DIR
+        echo "Deinstallation abgeschlossen."
+        ;;
+    *)
+        echo "Usage: $0 {info|uninstall}"
+        exit 1
+        ;;
+esac
+
+exit 0
