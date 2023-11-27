@@ -1,7 +1,5 @@
 #!/bin/sh
 
-exec > /var/log/mui.log 2>&1
-
 ADDON_DIR=/usr/local/addons/mui
 RC_DIR=/usr/local/etc/config/rc.d
 CONFIG_DIR=/usr/local/etc/config/addons
