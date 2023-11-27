@@ -15,7 +15,6 @@
         "baseHref": "/",
         "main": "apps/homematic-mui5/src/main.tsx",
         "polyfills": "apps/homematic-mui5/src/polyfills.ts",
-        
         "tsConfig": "apps/homematic-mui5/tsconfig.app.json",
         "assets": [
           "apps/homematic-mui5/src/favicon.ico",
