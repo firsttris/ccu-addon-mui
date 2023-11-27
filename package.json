@@ -4,9 +4,10 @@
   "license": "MIT",
   "scripts": {
     "start": "nx serve --host=0.0.0.0",
-    "build": "nx build",
-    "postbuild": "npm run copy:build && npm run tar:gz",
+    "build": "nx build --baseHref /addons/homematic-mui5/",
+    "postbuild": "npm run remove:build && npm run copy:build && npm run tar:gz",
     "test": "nx test",
+    "remove:build": "rm -R addon_installer/homematic-mui5",
     "copy:build": "cp -r dist/apps/* addon_installer/",
     "tar:gz": "tar -czvf homematic-mui5.tar.gz -C addon_installer ."
   },
