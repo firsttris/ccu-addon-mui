@@ -5,6 +5,9 @@ ADDON_DIR="/usr/local/addons/homematic-mui5"
 # RC DIR
 RC_DIR=/usr/local/etc/config/rc.d
 
+# Leiten Sie die Ausgabe in eine Datei um
+exec > /var/log/installHomematicMui5.log 2>&1
+
 mount | grep /usr/local 2>&1 >/dev/null
 if [ $? -eq 1 ]; then
   mount /usr/local
@@ -27,8 +30,5 @@ cp -f rc_script $RC_DIR/homematic-mui5
 chmod +x $RC_DIR/homematic-mui5
 
 sync
-
-# Leiten Sie die Ausgabe in eine Datei um
-exec > /usr/local/etc/config/addons/install-h-mui5.log 2>&1
 
 exit 0
