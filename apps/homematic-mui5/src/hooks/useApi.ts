@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import regaScript from './getAll.tcl';
+import regaScript from './../rega/getAll.tcl';
 
 export const interfaceName = "HmIP-RF"
 
