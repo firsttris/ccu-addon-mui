@@ -1,5 +1,5 @@
 import { Box, IconButton, ListItemText, Typography } from '@mui/material';
-import { useGetValue, useSetValueMutation } from '../hooks/useApi';
+import { useSetValueMutation } from '../hooks/useApi';
 import BlindsOutlinedIcon from '@mui/icons-material/BlindsOutlined';
 import BlindsClosedIcon from '@mui/icons-material/BlindsClosed';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -10,22 +10,16 @@ interface ControlProps {
   interfaceName: string;
   address: string;
   name: string;
+  blindValue: number;
 }
 
 export const BlindsControl = ({
   name,
   address,
   interfaceName,
+  blindValue
 }: ControlProps) => {
-  const adressAndIndex = address.split(':');
-  const statusIndex = Number(adressAndIndex[1]) - 1;
-  const getChannelValueQueryInfo = useGetValue(
-    interfaceName,
-    `${adressAndIndex[0]}:${statusIndex}`,
-    'LEVEL'
-  );
   const setValueMutation = useSetValueMutation();
-  const blindValue = Number(getChannelValueQueryInfo.data?.data.result);
   return (
     <>
       {blindValue === 1 ? <BlindsOutlinedIcon /> : <BlindsClosedIcon />}

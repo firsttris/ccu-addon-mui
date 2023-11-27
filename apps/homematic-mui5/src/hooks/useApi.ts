@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import regaScript from './getAll.tcl';
 
 export enum ChannelType {
   SWITCH_VIRTUAL_RECEIVER = "SWITCH_VIRTUAL_RECEIVER",
@@ -7,38 +8,75 @@ export enum ChannelType {
   HEATING_CLIMATECONTROL_TRANSCEIVER = "HEATING_CLIMATECONTROL_TRANSCEIVER"
 }
 
-interface Channel {
-  address: string;
-  category: string;
-  channelType: ChannelType;
-  deviceId: string;
-  id: string;
-  index: number;
-  isAesAvailable: boolean;
-  isEventable: boolean;
-  isLogable: boolean;
-  isLogged: boolean;
-  isReadable: boolean;
-  isReady: boolean;
-  isUsable: boolean;
-  isVirtual: boolean;
-  isVisible: boolean;
-  isWritable: boolean;
-  mode: string;
+type SwitchVirtualReceiverDatapoint = {
+  COMBINED_PARAMETER: string;
+  ON_TIME: string;
+  PROCESS: string;
+  SECTION: string;
+  SECTION_STATUS: string;
+  STATE: string;
+};
+
+type BlindVirtualReceiverDatapoint = {
+  ACTIVITY_STATE: string;
+  COMBINED_PARAMETER: string;
+  LEVEL: string;
+  LEVEL_2: string;
+  LEVEL_2_STATUS: string;
+  LEVEL_STATUS: string;
+  PROCESS: string;
+  SECTION: string;
+  SECTION_STATUS: string;
+  STOP: string;
+};
+
+type HeatingClimateControlTransceiverDatapoint = {
+  ACTIVE_PROFILE: string;
+  ACTUAL_TEMPERATURE: string;
+  ACTUAL_TEMPERATURE_STATUS: string;
+  BOOST_MODE: string;
+  BOOST_TIME: string;
+  CONTROL_DIFFERENTIAL_TEMPERATURE: string;
+  CONTROL_MODE: string;
+  DURATION_UNIT: string;
+  DURATION_VALUE: string;
+  FROST_PROTECTION: string;
+  HEATING_COOLING: string;
+  HUMIDITY: string;
+  HUMIDITY_STATUS: string;
+  PARTY_MODE: string;
+  PARTY_SET_POINT_TEMPERATURE: string;
+  PARTY_TIME_END: string;
+  PARTY_TIME_START: string;
+  QUICK_VETO_TIME: string;
+  SET_POINT_MODE: string;
+  SET_POINT_TEMPERATURE: string;
+  SWITCH_POINT_OCCURED: string;
+  WINDOW_STATE: string;
+};
+
+interface BaseChannel {
+  id: number;
   name: string;
-  partnerId: string;
+  address: string;
 }
 
-interface Device {
-  address: string;
-  channels: Channel[]
-  id: string;
-  interface: string;
-  isReady: boolean;
-  name: string;
-  operateGroupOnly: string;
-  type: string;
+interface SwitchVirtualReceiverChannel extends BaseChannel {
+  type: ChannelType.SWITCH_VIRTUAL_RECEIVER;
+  datapoints: SwitchVirtualReceiverDatapoint;
 }
+
+interface BlindVirtualReceiverChannel extends BaseChannel {
+  type: ChannelType.BLIND_VIRTUAL_RECEIVER;
+  datapoints: BlindVirtualReceiverDatapoint;
+}
+
+interface HeatingClimateControlTransceiverChannel extends BaseChannel {
+  type: ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER;
+  datapoints: HeatingClimateControlTransceiverDatapoint;
+}
+
+type Channel = SwitchVirtualReceiverChannel | BlindVirtualReceiverChannel | HeatingClimateControlTransceiverChannel;
 
 interface Error {
   name: string;
@@ -54,17 +92,17 @@ interface Response<T> {
 
 interface Room {
   name: string;
-  id: string;
-  description: string;
-  channelIds: string[]
+  id: number;
+  channels: Channel[];
 }
 
 // Api
 
 const callApi = async <T>(method: string, params?: any) => {
-  return await axios.post<Response<T>>('/api/homematic.cgi', {
+  return axios.post<Response<T>>('/api/homematic.cgi', {
     method,
     params: { ...params, _session_id_: sessionStorage.getItem('session_id') },
+    jsonrpc: '2.0',
   });
 };
 
@@ -82,31 +120,25 @@ const setValue = async (params: SetValue) => {
   await callApi<any>('Interface.setValue', params)
 }
 
-// useQuery
-
-export const useChannelForRoom = (channelIds?: string[]) => {
-  const listAllDetailQueryInfo = useGetAllDeviceDetails()
-  const allChannels = listAllDetailQueryInfo.data?.data.result?.flatMap(item => item.channels)
-  const channelsForRoom = allChannels?.filter(value => channelIds?.includes(value.id))
-  return {
-    channelsForRoom,
-    ...listAllDetailQueryInfo
-  }
+export const useGetChannelsForRoom = (roomId?: number) => {
+  const useGetRegaRoomsQueryInfo = useGetRegaRooms();
+  console.log('all', useGetRegaRoomsQueryInfo.data)
+  const room = useGetRegaRoomsQueryInfo.data?.find((room) => room.id === roomId);
+  console.log('room', room)
+  return { ...useGetRegaRoomsQueryInfo ,data: room };
 }
 
+export const useGetRegaRooms = () => useRunScript(regaScript)
 
-export const useApi = <T>(method: string, params?: any) => {
-  return useQuery([method, params], () => callApi<T>(method, params));
+export const useRunScript = (script: string) => {
+  const api = useApi<string>('ReGa.runScript', { script: script.replace(/\n/g, '') });
+  const parsedData = api.data?.data?.result ? JSON.parse(api.data?.data?.result) : [];
+  return { isFetched: api.isFetched, isLoading: api.isLoading, data: parsedData as Room[] };
 };
 
-export const useGetAllDeviceDetails = () => useApi<Device[]>('Device.listAllDetail')
-
-export const useGetRooms = () => useApi<Room[]>('Room.getAll')
-
-export const useGetValue = (interfaceName: string, address: string, valueKey: string) => useApi<string>('Interface.getValue', { interface: interfaceName, address, valueKey})
-
-export const useGetParamSet = <T>(interfaceName: string, address: string) => useApi<T>('Interface.getParamset', { interface: interfaceName, address, paramsetKey: "VALUES"})
-
+export const useApi = <T>(method: string, params?: any) => {
+  return useQuery([method], () => callApi<T>(method, params), { retry: false, refetchOnWindowFocus: false, staleTime: 30000 });
+};
 
 export const useSetValueMutation = () => {
   return useMutation({

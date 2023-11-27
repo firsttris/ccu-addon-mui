@@ -6,19 +6,13 @@ import {
   Typography,
 } from '@mui/material';
 
-import { useGetParamSet, useSetValueMutation } from '../hooks/useApi';
+import { useSetValueMutation } from '../hooks/useApi';
 import ThermostatOutlinedIcon from '@mui/icons-material/ThermostatOutlined';
 import ThermostatAutoIcon from '@mui/icons-material/ThermostatAuto';
 import WaterDamageOutlinedIcon from '@mui/icons-material/WaterDamageOutlined';
 import { useEffect, useState } from 'react';
 
-interface ControlProps {
-  interfaceName: string;
-  address: string;
-  name: string;
-}
-
-interface ThermostatResponse {
+interface ThermostatValues {
   ACTIVE_PROFILE: string;
   ACTUAL_TEMPERATURE: string;
   ACTUAL_TEMPERATURE_STATUS: string;
@@ -36,10 +30,18 @@ interface ThermostatResponse {
   WINDOW_STATE: string;
 }
 
+interface ControlProps {
+  interfaceName: string;
+  address: string;
+  name: string;
+  value: ThermostatValues;
+}
+
 export const ThermostatControl = ({
   name,
   address,
   interfaceName,
+  value,
 }: ControlProps) => {
   const marks = [
     {
@@ -58,31 +60,30 @@ export const ThermostatControl = ({
     },
   ];
 
+
   const setValueMutation = useSetValueMutation();
-  const response = useGetParamSet<ThermostatResponse>(interfaceName, address);
-  const result = response.data?.data.result;
-  const setPoinTemperatureResult = Number(result?.SET_POINT_TEMPERATURE ?? 0);
-  const [pointTemp, setPointTemp] = useState<number>(setPoinTemperatureResult);
-  const setPointModeResult = Number(result?.SET_POINT_MODE ?? 0);
-  const [pointMode, setPointMode] = useState<number>(setPointModeResult);
+  const setPoinTemperaturevalue = Number(value?.SET_POINT_TEMPERATURE ?? 0);
+  const [pointTemp, setPointTemp] = useState<number>(setPoinTemperaturevalue);
+  const setPointModevalue = Number(value?.SET_POINT_MODE ?? 0);
+  const [pointMode, setPointMode] = useState<number>(setPointModevalue);
 
   useEffect(() => {
-    setPointMode(setPointModeResult);
-  }, [setPointModeResult]);
+    setPointMode(setPointModevalue);
+  }, [setPointModevalue]);
 
   useEffect(() => {
-    setPointTemp(setPoinTemperatureResult);
-  }, [setPoinTemperatureResult]);
+    setPointTemp(setPoinTemperaturevalue);
+  }, [setPoinTemperaturevalue]);
 
   return (
     <>
       <ThermostatOutlinedIcon
         sx={{
           color:
-            Number(result?.ACTUAL_TEMPERATURE) < 15
+            Number(value?.ACTUAL_TEMPERATURE) < 15
               ? 'blue'
-              : Number(result?.ACTUAL_TEMPERATURE) > 15 &&
-                Number(result?.ACTUAL_TEMPERATURE) < 20
+              : Number(value?.ACTUAL_TEMPERATURE) > 15 &&
+                Number(value?.ACTUAL_TEMPERATURE) < 20
               ? 'orange'
               : 'red',
         }}
@@ -109,7 +110,7 @@ export const ThermostatControl = ({
           >
             <WaterDamageOutlinedIcon sx={{ marginRight: '3px' }} />
             <Typography variant="caption" sx={{ mr: 1 }}>
-              {result?.HUMIDITY ? Number(result?.HUMIDITY) : null}%
+              {value?.HUMIDITY ? Number(value?.HUMIDITY) : null}%
             </Typography>
             <IconButton
               sx={{ padding: 0, color: 'black' }}
@@ -127,8 +128,8 @@ export const ThermostatControl = ({
               {pointMode ? <ThermostatOutlinedIcon /> : <ThermostatAutoIcon />}
             </IconButton>
             <Typography variant="caption" sx={{}}>
-              {result?.ACTUAL_TEMPERATURE
-                ? Number(result?.ACTUAL_TEMPERATURE).toLocaleString('de-DE', {
+              {value?.ACTUAL_TEMPERATURE
+                ? Number(value?.ACTUAL_TEMPERATURE).toLocaleString('de-DE', {
                     maximumFractionDigits: 2,
                     minimumFractionDigits: 2,
                   })
@@ -170,4 +171,5 @@ export const ThermostatControl = ({
       </Box>
     </>
   );
+  
 };

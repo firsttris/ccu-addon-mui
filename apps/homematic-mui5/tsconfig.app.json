@@ -19,5 +19,5 @@
     "**/*.spec.jsx",
     "**/*.test.jsx"
   ],
-  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx", "src/app/rooms.rega"]
+  "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx", "src/app/rooms.rega", "declarations.d.ts"]
 }

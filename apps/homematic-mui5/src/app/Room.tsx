@@ -6,31 +6,24 @@ import {
   List,
   ListItem,
 } from '@mui/material';
-import { useSearchParams } from 'react-router-dom';
-import { ChannelType, useChannelForRoom } from '../hooks/useApi';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { ChannelType, useGetChannelsForRoom } from '../hooks/useApi';
 import { BlindsControl } from './BlindsControl';
 import { LightControl } from './LightControl';
 import { ThermostatControl } from './ThermostatControl';
 
 export const Room = () => {
-  const [searchParams] = useSearchParams();
+  const { roomId } = useParams<{ roomId: string }>();
+  console.log('roomId', roomId)
+  const result = useGetChannelsForRoom(Number(roomId));
+  const channelsForRoom = result.data?.channels ?? [];
 
-  const channelIds = searchParams.get('channelIds')?.split(',');
-
-  const result = useChannelForRoom(channelIds);
-
-  const channelsForRoom = result.channelsForRoom ?? [];
-  const allDevices = result.data?.data.result ?? [];
-
-  if (result.isFetched) {
+  console.log('channelsForRoom', channelsForRoom)
     return (
       <Container maxWidth="md">
         <List>
           {channelsForRoom.map((channel, index) => {
-            const splitted = channel.address.split(':');
-            const interfaceName =
-              allDevices.find((device) => device.address === splitted[0])
-                ?.interface ?? '';
+            const interfaceName = 'mocked'
             return (
               <Box key={index}>
                 <ListItem
@@ -43,32 +36,35 @@ export const Room = () => {
                     justifyContent: 'center',
                   }}
                 >
-                  {channel.channelType ===
+                  {channel.type ===
                   ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
                     <LightControl
                       address={channel.address}
                       name={channel.name}
                       interfaceName={interfaceName}
+                      checked={channel.datapoints.STATE === 'true'}
                     />
                   ) : null}
-                  {channel.channelType ===
+                  {channel.type ===
                   ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER ? (
                     <ThermostatControl
                       interfaceName={interfaceName}
                       address={channel.address}
                       name={channel.name}
+                      value={channel.datapoints}
                     />
                   ) : null}
-                  {channel.channelType ===
+                  {channel.type ===
                   ChannelType.BLIND_VIRTUAL_RECEIVER ? (
                     <BlindsControl
                       interfaceName={interfaceName}
                       address={channel.address}
                       name={channel.name}
+                      blindValue={Number(channel.datapoints.LEVEL)}
                     />
                   ) : null}
                 </ListItem>
-                {result.channelsForRoom?.length === index + 1 ? null : (
+                {channelsForRoom?.length === index + 1 ? null : (
                   <Divider />
                 )}
               </Box>
@@ -77,15 +73,4 @@ export const Room = () => {
         </List>
       </Container>
     );
-  } else if (result.isLoading) {
-    return (
-      <Box
-        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  } else {
-    return null;
-  }
 };

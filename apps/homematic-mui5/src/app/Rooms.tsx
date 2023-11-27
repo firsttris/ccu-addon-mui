@@ -6,7 +6,7 @@ import {
   ListItemButton,
   ListItemText,
 } from '@mui/material';
-import { useGetRooms } from '../hooks/useApi';
+import { useGetRegaRooms } from '../hooks/useApi';
 import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined';
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/system';
@@ -14,9 +14,10 @@ import { Box } from '@mui/system';
 export const Rooms = () => {
   const navigate = useNavigate();
 
-  const { data, isFetched } = useGetRooms();
+  const useGetRegaRoomsQueryInfo = useGetRegaRooms();
 
-  const rooms = data?.data.result;
+  const rooms = useGetRegaRoomsQueryInfo.data;
+  const isFetched = useGetRegaRoomsQueryInfo.isFetched;
 
   if (isFetched && rooms) {
     return (
@@ -29,7 +30,7 @@ export const Rooms = () => {
                 key={room.id}
                 onClick={() =>
                   navigate(
-                    `/room/${room.id}?channelIds=${room.channelIds.join(',')}`
+                    `/room/${room.id}`
                   )
                 }
               >
