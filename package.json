@@ -7,8 +7,8 @@
     "build": "nx build --baseHref /addons/homematic-mui5/",
     "postbuild": "npm run remove:build && npm run copy:build && npm run tar:gz",
     "test": "nx test",
-    "remove:build": "rm -R addon_installer/homematic-mui5",
-    "copy:build": "cp -r dist/apps/* addon_installer/",
+    "remove:build": "rm -Rf addon_installer/dist",
+    "copy:build": "mkdir -p addon_installer/dist && cp -r dist/apps/homematic-mui5/* addon_installer/dist",
     "tar:gz": "tar -czvf homematic-mui5.tar.gz -C addon_installer ."
   },
   "private": true,

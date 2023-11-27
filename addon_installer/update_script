@@ -12,10 +12,10 @@ fi
 mkdir -p $ADDON_DIR && chmod 755 $ADDONS_DIR
 
 # dist ordner nach addon kopieren
-cp -r homematic-mui5/* $ADDON_DIR
+cp -af dist/* $ADDON_DIR
 
 # Kopieren Sie die Addon-Konfigurationsdatei in das richtige Verzeichnis
-cp homematic-mui5.config /usr/local/etc/config/addons/
+cp -f homematic-mui5.config /usr/local/etc/config/addons/
 
 sync
 exit 0
