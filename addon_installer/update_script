@@ -1,8 +1,8 @@
 #!/bin/sh
 
 ADDON_DIR=/usr/local/addons/mui
-RC_DIR=/usr/local/etc/config/rc.d
-CONFIG_DIR=/usr/local/etc/config/addons
+RC_DIR=/usr/local/etc/config/rc.d/mui
+CONFIG_DIR=/usr/local/etc/config/addons/mui.config
 
 mount | grep /usr/local 2>&1 >/dev/null
 if [ $? -eq 1 ]; then
@@ -13,10 +13,10 @@ mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
 
 cp -af dist/* $ADDON_DIR
 
-cp -f mui.config $CONFIG_DIR/mui.config
+cp -f mui.config $CONFIG_DIR
 
-cp -f rc.d/mui $RC_DIR/mui
-chmod +x $RC_DIR/mui
+cp -f rc.d/mui $RC_DIR
+chmod +x $RC_DIR
 
 sync
 
