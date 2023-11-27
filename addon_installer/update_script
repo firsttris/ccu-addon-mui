@@ -1,33 +1,24 @@
 #!/bin/sh
 
-# Definieren Sie den Pfad zu Ihrem Addon-Verzeichnis
-ADDON_DIR="/usr/local/addons/homematic-mui5"
-# RC DIR
-RC_DIR=/usr/local/etc/config/rc.d
+exec > /var/log/mui.log 2>&1
 
-# Leiten Sie die Ausgabe in eine Datei um
-exec > /var/log/installHomematicMui5.log 2>&1
+ADDON_DIR=/usr/local/addons/mui
+RC_DIR=/usr/local/etc/config/rc.d
+CONFIG_DIR=/usr/local/etc/config/addons
 
 mount | grep /usr/local 2>&1 >/dev/null
 if [ $? -eq 1 ]; then
   mount /usr/local
 fi
 
-# Erstellen Sie das Addon-Verzeichnis, falls es noch nicht existiert
-mkdir -p $ADDON_DIR
+mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
 
-# dist ordner nach addon kopieren
 cp -af dist/* $ADDON_DIR
 
-# Setzen Sie die Berechtigungen
-chmod -R 755 $ADDON_DIR
+cp -f mui.config $CONFIG_DIR/mui.config
 
-# Kopieren Sie die Addon-Konfigurationsdatei in das richtige Verzeichnis
-cp -f homematic-mui5.config /usr/local/etc/config/addons/
-
-# Installieren Sie das RC-Skript
-cp -f rc_script $RC_DIR/homematic-mui5
-chmod +x $RC_DIR/homematic-mui5
+cp -f rc.d/mui $RC_DIR/mui
+chmod +x $RC_DIR/mui
 
 sync
 

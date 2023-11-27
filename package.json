@@ -1,15 +1,15 @@
 {
-  "name": "homematic-mui5",
-  "version": "0.0.0",
+  "name": "mui",
+  "version": "0.0.1",
   "license": "MIT",
   "scripts": {
     "start": "nx serve --host=0.0.0.0",
-    "build": "nx build --baseHref /addons/homematic-mui5/",
+    "build": "nx build --baseHref /addons/mui/",
     "postbuild": "npm run remove:build && npm run copy:build && npm run tar:gz",
     "test": "nx test",
     "remove:build": "rm -Rf addon_installer/dist",
     "copy:build": "mkdir -p addon_installer/dist && cp -r dist/apps/homematic-mui5/* addon_installer/dist",
-    "tar:gz": "tar -czvf homematic-mui5.tar.gz -C addon_installer ."
+    "tar:gz": "tar -czvf mui-1.0.tar.gz -C addon_installer ."
   },
   "private": true,
   "dependencies": {
