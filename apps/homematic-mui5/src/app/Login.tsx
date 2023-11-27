@@ -13,7 +13,7 @@ export const Login = () => {
     const username = d.currentTarget['username'].value;
     const password = d.currentTarget['password'].value;
     const response = await loginMutation.mutateAsync({ username, password });
-    if(response.data.result) {
+    if(response) {
       navigate('/rooms');
     }
   };

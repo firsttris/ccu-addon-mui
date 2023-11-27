@@ -15,7 +15,6 @@ export const Rooms = () => {
   const navigate = useNavigate();
 
   const useGetRegaRoomsQueryInfo = useGetRegaRooms();
-
   const rooms = useGetRegaRoomsQueryInfo.data;
   const isFetched = useGetRegaRoomsQueryInfo.isFetched;
 

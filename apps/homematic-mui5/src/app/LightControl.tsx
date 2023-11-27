@@ -1,22 +1,21 @@
 import { ListItemText, Switch } from '@mui/material';
-import { useSetValueMutation } from '../hooks/useApi';
+import { SwitchVirtualReceiverChannel, SwitchVirtualReceiverDatapoint, interfaceName, useGetValue, useSetValueMutation } from '../hooks/useApi';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 
 interface ControlProps {
-  interfaceName: string;
-  address: string;
-  name: string;
-  checked: boolean;
+  channel: SwitchVirtualReceiverChannel;
+  refetch: () => void;
 }
 export const LightControl = ({
-  name,
-  address,
-  interfaceName,
-  checked
+  channel,
+  refetch,
 }: ControlProps) => {
 
   const setValueMutation = useSetValueMutation();
+  const checked = channel.datapoints.STATE === 'true';
+  const name = channel.name;
+  const address = channel.address;
 
   return (
     <>
@@ -46,7 +45,7 @@ export const LightControl = ({
             type: 'boolean',
             value: !checked,
           });
-          // refetch api await getChannelValueQueryInfo.refetch();
+          refetch();
         }}
         checked={checked}
         inputProps={{

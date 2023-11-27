@@ -29,7 +29,7 @@ foreach (sRoomId, dom.GetObject(ID_ROOMS).EnumUsedIDs()) {
         } else {
             bFirstSecond = false;
         }
-        Write('{"id": ' # sChannelId # ', "address": "' # oChannel.Address() # '", "name": "' # oChannel.Name() # '", "type": "' # oChannel.HssType() # '", "datapoints":{');
+        Write('{"id": ' # sChannelId # ', "address": "' # oChannel.Address() # '", "name": "' # oChannel.Name() # '", "type": "' # oChannel.HssType() # '", "interface": "' # oChannel.Interface() # '", "datapoints":{');
         bFirstThird = true;
 
         foreach(sDPId, oChannel.DPs().EnumUsedIDs()) {

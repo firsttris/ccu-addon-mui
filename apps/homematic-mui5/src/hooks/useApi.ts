@@ -2,13 +2,15 @@ import axios from 'axios';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import regaScript from './getAll.tcl';
 
+export const interfaceName = "HmIP-RF"
+
 export enum ChannelType {
   SWITCH_VIRTUAL_RECEIVER = "SWITCH_VIRTUAL_RECEIVER",
   BLIND_VIRTUAL_RECEIVER = "BLIND_VIRTUAL_RECEIVER",
   HEATING_CLIMATECONTROL_TRANSCEIVER = "HEATING_CLIMATECONTROL_TRANSCEIVER"
 }
 
-type SwitchVirtualReceiverDatapoint = {
+export type SwitchVirtualReceiverDatapoint = {
   COMBINED_PARAMETER: string;
   ON_TIME: string;
   PROCESS: string;
@@ -17,7 +19,7 @@ type SwitchVirtualReceiverDatapoint = {
   STATE: string;
 };
 
-type BlindVirtualReceiverDatapoint = {
+export type BlindVirtualReceiverDatapoint = {
   ACTIVITY_STATE: string;
   COMBINED_PARAMETER: string;
   LEVEL: string;
@@ -30,7 +32,7 @@ type BlindVirtualReceiverDatapoint = {
   STOP: string;
 };
 
-type HeatingClimateControlTransceiverDatapoint = {
+export type HeatingClimateControlTransceiverDatapoint = {
   ACTIVE_PROFILE: string;
   ACTUAL_TEMPERATURE: string;
   ACTUAL_TEMPERATURE_STATUS: string;
@@ -61,17 +63,17 @@ interface BaseChannel {
   address: string;
 }
 
-interface SwitchVirtualReceiverChannel extends BaseChannel {
+export interface SwitchVirtualReceiverChannel extends BaseChannel {
   type: ChannelType.SWITCH_VIRTUAL_RECEIVER;
   datapoints: SwitchVirtualReceiverDatapoint;
 }
 
-interface BlindVirtualReceiverChannel extends BaseChannel {
+export interface BlindVirtualReceiverChannel extends BaseChannel {
   type: ChannelType.BLIND_VIRTUAL_RECEIVER;
   datapoints: BlindVirtualReceiverDatapoint;
 }
 
-interface HeatingClimateControlTransceiverChannel extends BaseChannel {
+export interface HeatingClimateControlTransceiverChannel extends BaseChannel {
   type: ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER;
   datapoints: HeatingClimateControlTransceiverDatapoint;
 }
@@ -99,45 +101,50 @@ interface Room {
 // Api
 
 const callApi = async <T>(method: string, params?: any) => {
-  return axios.post<Response<T>>('/api/homematic.cgi', {
+  const response = await axios.post<Response<T>>('/api/homematic.cgi', {
     method,
     params: { ...params, _session_id_: sessionStorage.getItem('session_id') },
     jsonrpc: '2.0',
   });
-};
+  return response.data.result;
+}
 
 const login = async (username: string, password: string) => {
   const response = await callApi<string>('Session.login', { username, password });
-  sessionStorage.setItem('session_id', response.data.result);
-  return response
+  sessionStorage.setItem('session_id', response);
+  return response;
 };
 
 interface SetValue {
   interface: string, address: string, valueKey: string, type: string, value: any
 }
 
-const setValue = async (params: SetValue) => {
-  await callApi<any>('Interface.setValue', params)
-}
+const setValue = async (params: SetValue) => callApi<any>('Interface.setValue', params)
+
+export const listInterfaces = () => useApi<string[]>('Interface.listInterfaces');
 
 export const useGetChannelsForRoom = (roomId?: number) => {
   const useGetRegaRoomsQueryInfo = useGetRegaRooms();
-  console.log('all', useGetRegaRoomsQueryInfo.data)
   const room = useGetRegaRoomsQueryInfo.data?.find((room) => room.id === roomId);
-  console.log('room', room)
-  return { ...useGetRegaRoomsQueryInfo ,data: room };
+  return { ...useGetRegaRoomsQueryInfo, data: room };
 }
+
+export const useGetValue = (address: string, valueKey: string) => useApi<string>('Interface.getValue', { interface: "HmIP-RF", address, valueKey}, { enabled: false })
 
 export const useGetRegaRooms = () => useRunScript(regaScript)
 
 export const useRunScript = (script: string) => {
-  const api = useApi<string>('ReGa.runScript', { script: script.replace(/\n/g, '') });
-  const parsedData = api.data?.data?.result ? JSON.parse(api.data?.data?.result) : [];
-  return { isFetched: api.isFetched, isLoading: api.isLoading, data: parsedData as Room[] };
+  const result = useApi<string>('ReGa.runScript', { script: script.replace(/\n/g, '') });
+  const parsedData = result.data ? JSON.parse(result.data) : [];
+  return { isFetched: result.isFetched, isLoading: result.isLoading, refetch: result.refetch, data: parsedData as Room[] };
 };
 
-export const useApi = <T>(method: string, params?: any) => {
-  return useQuery([method], () => callApi<T>(method, params), { retry: false, refetchOnWindowFocus: false, staleTime: 30000 });
+interface Options {
+  enabled?: boolean;
+}
+
+export const useApi = <T>(method: string, params?: any, options?: Options) => {
+  return useQuery([method], () => callApi<T>(method, params), { retry: false, refetchOnWindowFocus: false, staleTime: 30000, ...options });
 };
 
 export const useSetValueMutation = () => {

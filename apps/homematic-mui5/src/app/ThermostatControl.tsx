@@ -6,42 +6,18 @@ import {
   Typography,
 } from '@mui/material';
 
-import { useSetValueMutation } from '../hooks/useApi';
+import { HeatingClimateControlTransceiverChannel, interfaceName, useSetValueMutation } from '../hooks/useApi';
 import ThermostatOutlinedIcon from '@mui/icons-material/ThermostatOutlined';
 import ThermostatAutoIcon from '@mui/icons-material/ThermostatAuto';
 import WaterDamageOutlinedIcon from '@mui/icons-material/WaterDamageOutlined';
 import { useEffect, useState } from 'react';
 
-interface ThermostatValues {
-  ACTIVE_PROFILE: string;
-  ACTUAL_TEMPERATURE: string;
-  ACTUAL_TEMPERATURE_STATUS: string;
-  BOOST_MODE: string;
-  BOOST_TIME: string;
-  FROST_PROTECTION: string;
-  HEATING_COOLING: string;
-  HUMIDITY: string;
-  HUMIDITY_STATUS: string;
-  PARTY_MODE: string;
-  QUICK_VETO_TIME: string;
-  SET_POINT_MODE: string;
-  SET_POINT_TEMPERATURE: string;
-  SWITCH_POINT_OCCURED: string;
-  WINDOW_STATE: string;
-}
-
 interface ControlProps {
-  interfaceName: string;
-  address: string;
-  name: string;
-  value: ThermostatValues;
+  channel: HeatingClimateControlTransceiverChannel;
 }
 
 export const ThermostatControl = ({
-  name,
-  address,
-  interfaceName,
-  value,
+  channel
 }: ControlProps) => {
   const marks = [
     {
@@ -60,7 +36,9 @@ export const ThermostatControl = ({
     },
   ];
 
-
+  const value = channel.datapoints;
+  const name = channel.name;
+  const address = channel.address;
   const setValueMutation = useSetValueMutation();
   const setPoinTemperaturevalue = Number(value?.SET_POINT_TEMPERATURE ?? 0);
   const [pointTemp, setPointTemp] = useState<number>(setPoinTemperaturevalue);
