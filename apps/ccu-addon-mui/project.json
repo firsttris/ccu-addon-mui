@@ -12,7 +12,7 @@
         "compiler": "babel",
         "outputPath": "dist/apps/ccu-addon-mui",
         "index": "apps/ccu-addon-mui/src/index.html",
-        "baseHref": "/",
+        "baseHref": "/addons/mui/",
         "main": "apps/ccu-addon-mui/src/main.tsx",
         "polyfills": "apps/ccu-addon-mui/src/polyfills.ts",
         "tsConfig": "apps/ccu-addon-mui/tsconfig.app.json",
@@ -32,12 +32,6 @@
           "vendorChunk": true
         },
         "production": {
-          "fileReplacements": [
-            {
-              "replace": "apps/ccu-addon-mui/src/environments/environment.ts",
-              "with": "apps/ccu-addon-mui/src/environments/environment.prod.ts"
-            }
-          ],
           "optimization": true,
           "outputHashing": "all",
           "sourceMap": false,
