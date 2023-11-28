@@ -52,8 +52,10 @@ To develop and build this project, follow these steps:
 1. Clone the repository: `git clone https://github.com/ccu-addon-mui.git`
 2. Navigate into the project directory: `cd ccu-addon-mui`
 3. Install the dependencies: `npm install`
-4. Start the development server: `npm start`
-5. To build the project, use: `npm run build`
+4. Set your CCU3 IP in: `apps/ccu-addon-mui/proxy.config.json`
+5. Currently InterfaceName (HmIP-RF) is fix in: `apps/ccu-addon-mui/src/hooks/useApi.ts` (line 7)
+6. Start the development server: `npm start`
+7. To build the project, use: `npm run build`
 
 # Issues
 
