@@ -20,6 +20,10 @@ This project is built with a robust set of technologies to ensure high performan
 - [Material-UI](https://mui.com/): A popular React UI framework for faster and easier web development.
 - [React-Query](https://react-query.tanstack.com/): A data fetching library for React, used to fetch, cache and update data in your React and React Native applications.
 
+# Prerequisites
+
+For this add-on to work, it is necessary to have rooms configured in your CCU3. These rooms should have channels assigned to them, and these channels should have appropriate names. Without this setup, the add-on is not working as expected.
+
 # Efficiency
 
 The WebApp uses the same JSON-RPC interface as the CCU3.
