@@ -80,6 +80,12 @@ export interface HeatingClimateControlTransceiverChannel extends BaseChannel {
 
 type Channel = SwitchVirtualReceiverChannel | BlindVirtualReceiverChannel | HeatingClimateControlTransceiverChannel;
 
+interface Room {
+  name: string;
+  id: number;
+  channels: Channel[];
+}
+
 interface Error {
   name: string;
   code: number;
@@ -92,26 +98,32 @@ interface Response<T> {
   version: string;
 }
 
-interface Room {
-  name: string;
-  id: number;
-  channels: Channel[];
-}
 
-// Api
+
+export const useSessionId = () => localStorage.getItem('session_id');
+export const removeSessionId = () => localStorage.removeItem('session_id');
 
 const callApi = async <T>(method: string, params?: any) => {
-  const response = await axios.post<Response<T>>('/api/homematic.cgi', {
-    method,
-    params: { ...params, _session_id_: sessionStorage.getItem('session_id') },
-    jsonrpc: '2.0',
-  });
-  return response.data.result;
+  try {
+    const response = await axios.post<Response<T>>('/api/homematic.cgi', {
+      method,
+      params: { ...params, _session_id_: useSessionId() },
+      jsonrpc: '2.0',
+    });
+
+    if (response.data.error) {
+      throw new Error((response.data.error as Error).message);
+    }
+
+    return response.data.result;
+  } catch (error) {
+    throw error;
+  }
 }
 
 const login = async (username: string, password: string) => {
   const response = await callApi<string>('Session.login', { username, password });
-  sessionStorage.setItem('session_id', response);
+  localStorage.setItem('session_id', response);
   return response;
 };
 
@@ -126,7 +138,7 @@ export const listInterfaces = () => useApi<string[]>('Interface.listInterfaces')
 export const useGetChannelsForRoom = (roomId?: number) => {
   const useGetRegaRoomsQueryInfo = useGetRegaRooms();
   const room = useGetRegaRoomsQueryInfo.data?.find((room) => room.id === roomId);
-  return { ...useGetRegaRoomsQueryInfo, data: room };
+  return { ...useGetRegaRoomsQueryInfo, data: room?.channels ?? [] };
 }
 
 export const useGetValue = (address: string, valueKey: string) => useApi<string>('Interface.getValue', { interface: "HmIP-RF", address, valueKey}, { enabled: false })
@@ -136,7 +148,7 @@ export const useGetRegaRooms = () => useRunScript(regaScript)
 export const useRunScript = (script: string) => {
   const result = useApi<string>('ReGa.runScript', { script: script.replace(/\n/g, '') });
   const parsedData = result.data ? JSON.parse(result.data) : [];
-  return { isFetched: result.isFetched, isLoading: result.isLoading, refetch: result.refetch, data: parsedData as Room[] };
+  return { ...result, data: parsedData as Room[] };
 };
 
 interface Options {

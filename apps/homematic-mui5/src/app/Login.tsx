@@ -1,12 +1,21 @@
 import { Box, Button, TextField } from '@mui/material';
 import { Container } from '@mui/system';
-import { FormEvent } from 'react';
+import { FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLogin } from '../hooks/useApi';
+import { useLogin, useSessionId } from '../hooks/useApi';
 
 export const Login = () => {
   const loginMutation = useLogin();
+
   const navigate = useNavigate()
+
+  const sessionId = useSessionId();
+
+  useEffect(() => {
+    if(sessionId) {
+      navigate('/rooms');
+    }
+  }, [sessionId])
 
   const Login = async (d: FormEvent<HTMLFormElement>) => {
     d.preventDefault();

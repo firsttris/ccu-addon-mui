@@ -13,9 +13,8 @@ export const LightControl = ({
 }: ControlProps) => {
 
   const setValueMutation = useSetValueMutation();
-  const checked = channel.datapoints.STATE === 'true';
-  const name = channel.name;
-  const address = channel.address;
+  const { datapoints: { STATE }, name, address } = channel;
+  const checked = STATE === 'true';
 
   return (
     <>

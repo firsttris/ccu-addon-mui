@@ -6,7 +6,7 @@ import {
   ListItemButton,
   ListItemText,
 } from '@mui/material';
-import { useGetRegaRooms } from '../hooks/useApi';
+import { removeSessionId, useGetRegaRooms } from '../hooks/useApi';
 import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined';
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/system';
@@ -14,9 +14,13 @@ import { Box } from '@mui/system';
 export const Rooms = () => {
   const navigate = useNavigate();
 
-  const useGetRegaRoomsQueryInfo = useGetRegaRooms();
-  const rooms = useGetRegaRoomsQueryInfo.data;
-  const isFetched = useGetRegaRoomsQueryInfo.isFetched;
+  const { data: rooms, isFetched, error, isError} = useGetRegaRooms();
+
+
+  if(isError && (error as Error)?.message.includes('access denied')) {
+    removeSessionId();
+    navigate('/');
+  } 
 
   if (isFetched && rooms) {
     return (
