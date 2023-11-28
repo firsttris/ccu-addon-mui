@@ -1,17 +1,15 @@
-# Current State
+# Current Project State
 
 Please note that this project is currently in an alpha stage and should be considered as a proof of concept. 
 It aims to solve challenges in bridging the gap between the old and the new. 
 
-We appreciate your understanding and patience.
-
 # Motivation
 
-Many Homematic user interfaces are outdated and sluggish. 
+Web based homematic user interfaces are outdated and sluggish.
 
-Technically, numerous web-based solutions are mired in antiquated commonJS code, entangled in the callback chaos of jQuery and Bootstrap.
+Numerous web-based solutions are mired in antiquated commonJS code, entangled in the callback chaos.
 
-Our aim is to leverage cutting-edge frontend technologies to craft a simple, yet lightning-fast, responsive web UI. This can be installed as an add-on to your CCU3, offering a seamless and dynamic user experience.
+Our aim is to craft a simple, yet fast, responsive web UI as an add-on to your CCU3.
 
 # Technology Stack
 
@@ -24,15 +22,24 @@ This project is built with a robust set of technologies to ensure high performan
 
 # Efficiency
 
-The App uses json-rpc in a combination with Rega Script to retrieve the data from the CCU in a more effiecient manner.
+The WebApp uses the same JSON-RPC interface as the CCU3.
 
-For this we've refined the Rega scripts available on Github,with the assistance of GitHub Copilot, tailoring them to fetch data in the exact structure required by our application.
+To optimize performance we've tailored Rega Scripts with Github Copilot to fetch data in the exact structure required by our Webapp.
 
-In addition, we've utilized [React-Query](https://react-query.tanstack.com/) from TanStack, adhering to their best practices to ensure our data requests are as efficient as possible.
+In addition, we are utilizing [React-Query](https://react-query.tanstack.com/), adhering to their best practices to ensure our data requests are as efficient as possible.
+
+# Authentication
+
+The WebApp employs the same authentication mechanism as the CCU3. 
+After logging in, the WebApp obtains a random sessionID from the CCU3, which is used for subsequent requests. 
+To prevent users from inadvertently logging each other out, it is necessary to use distinct user accounts.
 
 # Install
 
-To install this add-on, download the tar.gz file from the releases page. You can then install it as a plugin on your CCU3. After installation, the add-on will be available at `http://ccu3ip/addons/mui`.
+To install this add-on: 
+- download the latest tar.gz file from the releases page. 
+- Install it as a plugin on your CCU3. 
+- Add-on will be available at `http://ccu3ip/addons/mui`.
 
 # Development and Build
 
@@ -41,14 +48,14 @@ To develop and build this project, follow these steps:
 1. Clone the repository: `git clone https://github.com/ccu-addon-mui.git`
 2. Navigate into the project directory: `cd ccu-addon-mui`
 3. Install the dependencies: `npm install`
-4. Start the development server: `npm start` 
+4. Start the development server: `npm start`
 5. To build the project, use: `npm run build`
 
 # Issues
 
 Want to start contributing to this project? 
 
-Please visit our [issues page](https://github.com/your-repo-name/issues) for the latest features and issues.
+Please visit our [issues page](https://github.com/your-repo-name/issues) for the latest issues and feature requests.
 
 # Currently supported devices
 
@@ -56,7 +63,7 @@ Please visit our [issues page](https://github.com/your-repo-name/issues) for the
 - [Thermostat](/apps/ccu-addon-mui/src/app/ThermostatControl.tsx)
 - [Blinds](/apps/ccu-addon-mui/src/app/BlindsControl.tsx)
 
-# Screenshots
+# Current UI Screenshots
 
 ## Login View
 ![Screenshot](/docs/Login.png)
