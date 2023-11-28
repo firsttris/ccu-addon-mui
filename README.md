@@ -1,3 +1,10 @@
+# Current State
+
+Please note that this project is currently in an alpha stage and should be considered as a proof of concept. 
+It aims to solve challenges in bridging the gap between the old and the new. 
+
+We appreciate your understanding and patience.
+
 # Motivation
 
 Many Homematic user interfaces are outdated and sluggish. 
@@ -34,7 +41,7 @@ To develop and build this project, follow these steps:
 1. Clone the repository: `git clone https://github.com/homematic-mui5.git`
 2. Navigate into the project directory: `cd homematic-mui5`
 3. Install the dependencies: `npm install`
-4. Start the development server: `npm start`
+4. Start the development server: `npm start` 
 5. To build the project, use: `npm run build`
 
 # Issues
