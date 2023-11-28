@@ -3,6 +3,7 @@
 ADDON_DIR=/usr/local/addons/mui
 RC_DIR=/usr/local/etc/config/rc.d/mui
 CONFIG_DIR=/usr/local/etc/config/addons/mui.config
+WWW_DIR=/usr/local/etc/config/addons/www/mui
 
 mount | grep /usr/local 2>&1 >/dev/null
 if [ $? -eq 1 ]; then
@@ -10,8 +11,11 @@ if [ $? -eq 1 ]; then
 fi
 
 mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
+mkdir -p $WWW_DIR && chmod 755 $WWW_DIR
 
 cp -af dist/* $ADDON_DIR
+
+ln -s $ADDON_DIR $WWW_DIR
 
 cp -f mui.config $CONFIG_DIR
 

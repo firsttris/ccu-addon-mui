@@ -9,7 +9,7 @@
     "test": "nx test",
     "remove:build": "rm -Rf addon_installer/dist",
     "copy:build": "mkdir -p addon_installer/dist && cp -r dist/apps/homematic-mui5/* addon_installer/dist",
-    "tar:gz": "tar -czvf mui-1.0.tar.gz -C addon_installer ."
+    "tar:gz": "chmod -R 777 addon_installer/ && tar -czvf mui-1.0.tar.gz -C addon_installer ."
   },
   "private": true,
   "dependencies": {
