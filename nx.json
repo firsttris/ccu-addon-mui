@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "npmScope": "homematic-mui5",
+  "npmScope": "ccu-addon-mui",
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx/tasks-runners/default",
@@ -51,5 +51,5 @@
       }
     }
   },
-  "defaultProject": "homematic-mui5"
+  "defaultProject": "ccu-addon-mui"
 }

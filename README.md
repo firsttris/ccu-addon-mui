@@ -38,8 +38,8 @@ To install this add-on, download the tar.gz file from the releases page. You can
 
 To develop and build this project, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/homematic-mui5.git`
-2. Navigate into the project directory: `cd homematic-mui5`
+1. Clone the repository: `git clone https://github.com/ccu-addon-mui.git`
+2. Navigate into the project directory: `cd ccu-addon-mui`
 3. Install the dependencies: `npm install`
 4. Start the development server: `npm start` 
 5. To build the project, use: `npm run build`
@@ -52,9 +52,9 @@ Please visit our [issues page](https://github.com/your-repo-name/issues) for the
 
 # Currently supported devices
 
-- [Light](/apps/homematic-mui5/src/app/LightControl.tsx)
-- [Thermostat](/apps/homematic-mui5/src/app/ThermostatControl.tsx)
-- [Blinds](/apps/homematic-mui5/src/app/BlindsControl.tsx)
+- [Light](/apps/ccu-addon-mui/src/app/LightControl.tsx)
+- [Thermostat](/apps/ccu-addon-mui/src/app/ThermostatControl.tsx)
+- [Blinds](/apps/ccu-addon-mui/src/app/BlindsControl.tsx)
 
 # Screenshots
 

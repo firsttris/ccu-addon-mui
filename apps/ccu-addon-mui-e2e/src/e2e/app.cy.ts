@@ -1,6 +1,6 @@
 import { getGreeting } from '../support/app.po';
 
-describe('homematic-mui5', () => {
+describe('ccu-addon-mui', () => {
   beforeEach(() => cy.visit('/'));
 
   it('should display welcome message', () => {
@@ -8,6 +8,6 @@ describe('homematic-mui5', () => {
     cy.login('my-email@something.com', 'myPassword');
 
     // Function helper example, see `../support/app.po.ts` file
-    getGreeting().contains('Welcome homematic-mui5');
+    getGreeting().contains('Welcome ccu-addon-mui');
   });
 });
