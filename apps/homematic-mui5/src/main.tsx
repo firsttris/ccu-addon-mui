@@ -21,7 +21,7 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <StrictMode>
-    <BrowserRouter basename={basename}>
+    <BrowserRouter basename={'/addons/mui/'}>
       <QueryClientProvider client={queryClient}>
         <Router />
       </QueryClientProvider>
