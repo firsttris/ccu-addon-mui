@@ -6,6 +6,8 @@ import { Router } from './router';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+const basename = process.env?.['REACT_APP_BASENAME'] ?? '/';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -19,7 +21,7 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <QueryClientProvider client={queryClient}>
         <Router />
       </QueryClientProvider>

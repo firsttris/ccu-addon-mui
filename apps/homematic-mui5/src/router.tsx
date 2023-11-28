@@ -6,7 +6,6 @@ import { Rooms } from './app/Rooms'
 export const Router = () => {
 
     return (
-    
      <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/room/:roomId" element={<Room />} />
