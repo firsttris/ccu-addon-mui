@@ -24,7 +24,7 @@ This project is built with a robust set of technologies to ensure high performan
 
 The WebApp uses the same JSON-RPC interface as the CCU3.
 
-To optimize performance we've tailored Rega Scripts with Github Copilot to fetch data in the exact structure required by our Webapp.
+To optimize performance we've tailored [Rega Scripts with Github Copilot](/apps/ccu-addon-mui/src/rega) to fetch data in the exact structure required by our Webapp.
 
 In addition, we are utilizing [React-Query](https://react-query.tanstack.com/), adhering to their best practices to ensure our data requests are as efficient as possible.
 

@@ -1,42 +1,53 @@
-1. **Datapoints-Methoden in Rega**
+# Homematic Rega - Unofficial API Reverse Engineered by GitHub Copilot
 
-   - `ID()`: Die ID des Objekts.
-   - `Name()`: Der Name des Objekts.
-   - `TypeName()`: Der Typ des Objekts.
-   - `Value()`: Der Wert des Datenpunkts.
-   - `Timestamp()`: Der Zeitstempel des letzten Wertupdates.
-   - `Operations()`: Die verfügbaren Operationen für den Datenpunkt.
-   - `Unit()`: Die Einheit des Datenpunktwerts.
-   - `ValueType()`: Der Typ des Datenpunktwerts.
-   - `ValueList()`: Die Liste der möglichen Werte für den Datenpunkt.
+Rega is a proprietary, object-oriented scripting language developed specifically for the HomeMatic CCU. This document provides an unofficial API documentation, detailing the methods and attributes associated with datapoints, channels, rooms, and devices in Rega.
 
-2. **Channel-Attribute in Rega**
+## Glossary
 
-   - `ID()`: Die ID des Objekts.
-   - `Name()`: Der Name des Objekts.
-   - `TypeName()`: Der Typ des Objekts.
-   - `Address()`: Die Adresse des Objekts.
-   - `Interface()`: Das Interface des Objekts.
-   - `HssType()`: Der Hss-Typ des Objekts.
-   - `DPs()`: Die Datenpunkte des Objekts.
+- **Datapoint**: A datapoint represents a specific piece of data or functionality of a device, such as a temperature reading or a switch state.
+- **Channel**: A channel groups related datapoints together. For example, a device might have separate channels for different functionalities.
+- **Room**: A room is a logical grouping of devices, typically representing a physical room in a building.
+- **Device**: A device represents a physical device in the HomeMatic system, such as a sensor or an actuator.
 
-3. **Room-Methoden in Rega**
+## Datapoint Methods in Rega
 
-   - `ID()`: Gibt die ID des Objekts zurück.
-   - `Name()`: Gibt den Namen des Objekts zurück.
-   - `TypeName()`: Gibt den Typ des Objekts zurück.
-   - `EnumUsedIDs()`: Gibt eine Liste der IDs der untergeordneten Objekte zurück.
-   - `Add(ID)`: Fügt ein untergeordnetes Objekt hinzu.
-   - `Remove(ID)`: Entfernt ein untergeordnetes Objekt.
-   - `State()`: Gibt den Zustand des Objekts zurück.
-   - `IsTypeOf(TypeName)`: Überprüft, ob das Objekt vom angegebenen Typ ist.
+- `ID()`: Returns the ID of the object.
+- `Name()`: Returns the name of the object.
+- `TypeName()`: Returns the type of the object.
+- `Value()`: Returns the value of the datapoint.
+- `Timestamp()`: Returns the timestamp of the last value update.
+- `Operations()`: Returns the available operations for the datapoint.
+- `Unit()`: Returns the unit of the datapoint value.
+- `ValueType()`: Returns the type of the datapoint value.
+- `ValueList()`: Returns the list of possible values for the datapoint.
 
-4. **Device-Methoden in Rega**
+## Channel Attributes in Rega
 
-   - `ID()`: Gibt die ID des Objekts zurück.
-   - `Name()`: Gibt den Namen des Objekts zurück.
-   - `TypeName()`: Gibt den Typ des Objekts zurück.
-   - `Address()`: Gibt die Adresse des Objekts zurück.
-   - `Interface()`: Gibt das Interface des Objekts zurück.
-   - `HssType()`: Gibt den Hss-Typ des Objekts zurück.
-   - `DPs()`: Gibt die Datenpunkte des Objekts zurück.
+- `ID()`: Returns the ID of the object.
+- `Name()`: Returns the name of the object.
+- `TypeName()`: Returns the type of the object.
+- `Address()`: Returns the address of the object.
+- `Interface()`: Returns the interface of the object.
+- `HssType()`: Returns the Hss type of the object.
+- `DPs()`: Returns the datapoints of the object.
+
+## Room Methods in Rega
+
+- `ID()`: Returns the ID of the object.
+- `Name()`: Returns the name of the object.
+- `TypeName()`: Returns the type of the object.
+- `EnumUsedIDs()`: Returns a list of IDs of the subordinate objects.
+- `Add(ID)`: Adds a subordinate object.
+- `Remove(ID)`: Removes a subordinate object.
+- `State()`: Returns the state of the object.
+- `IsTypeOf(TypeName)`: Checks if the object is of the specified type.
+
+## Device Methods in Rega
+
+- `ID()`: Returns the ID of the object.
+- `Name()`: Returns the name of the object.
+- `TypeName()`: Returns the type of the object.
+- `Address()`: Returns the address of the object.
+- `Interface()`: Returns the interface of the object.
+- `HssType()`: Returns the Hss type of the object.
+- `DPs()`: Returns the datapoints of the object.
