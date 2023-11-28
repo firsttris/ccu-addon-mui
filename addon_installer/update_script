@@ -2,7 +2,6 @@
 
 ADDON_DIR=/usr/local/addons/mui
 RC_DIR=/usr/local/etc/config/rc.d/mui
-CONFIG_DIR=/usr/local/etc/config/addons/mui.config
 WWW_DIR=/usr/local/etc/config/addons/www
 
 mount | grep /usr/local 2>&1 >/dev/null
@@ -16,10 +15,7 @@ cp -af dist/* $ADDON_DIR
 
 ln -sfT $ADDON_DIR $WWW_DIR
 
-cp -f mui.config $CONFIG_DIR
-
-cp -f rc.d/mui $RC_DIR
-chmod +x $RC_DIR
+cp -af rc.d/mui $RC_DIR
 
 sync
 
