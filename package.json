@@ -11,7 +11,7 @@
     "version:patch": "npm version patch",
     "version:current": "node -p -e \"require('./package.json').version\"",
     "copy:build": "mkdir -p addon_installer/dist && cp -r dist/apps/homematic-mui5/* addon_installer/dist",
-    "tar:gz": "chmod -R 777 addon_installer/ && tar -czvf releases/mui-$(npm run version:current --silent).tar.gz -C addon_installer ."
+    "tar:gz": "chmod -R 777 addon_installer/ && tar -czvf mui-$(npm run version:current --silent).tar.gz -C addon_installer ."
   },
   "private": true,
   "dependencies": {
