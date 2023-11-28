@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import regaScript from './../rega/getAll.tcl';
+import regaGetRoomsScript from './../rega/getRooms.tcl';
+import regaGetChannelsScript from './../rega/getChannelsForRoomId.tcl';
+import { useCheckSession } from './useCheckSession';
 
 export const interfaceName = "HmIP-RF"
 
@@ -135,20 +137,16 @@ const setValue = async (params: SetValue) => callApi<any>('Interface.setValue', 
 
 export const listInterfaces = () => useApi<string[]>('Interface.listInterfaces');
 
-export const useGetChannelsForRoom = (roomId?: number) => {
-  const useGetRegaRoomsQueryInfo = useGetRegaRooms();
-  const room = useGetRegaRoomsQueryInfo.data?.find((room) => room.id === roomId);
-  return { ...useGetRegaRoomsQueryInfo, data: room?.channels ?? [] };
-}
+export const useGetChannelsForRoom = (roomId?: number) => useRunScript<Channel[]>(regaGetChannelsScript.replace(/ROOMID_PLACEHOLDER/g, roomId ? roomId.toString() : 'NO_ROOM_ID'));
 
 export const useGetValue = (address: string, valueKey: string) => useApi<string>('Interface.getValue', { interface: "HmIP-RF", address, valueKey}, { enabled: false })
 
-export const useGetRegaRooms = () => useRunScript(regaScript)
+export const useGetRegaRooms = () => useRunScript<Room[]>(regaGetRoomsScript)
 
-export const useRunScript = (script: string) => {
+export const useRunScript = <T>(script: string) => {
   const result = useApi<string>('ReGa.runScript', { script: script.replace(/\n/g, '') });
   const parsedData = result.data ? JSON.parse(result.data) : [];
-  return { ...result, data: parsedData as Room[] };
+  return { ...result, data: parsedData as T };
 };
 
 interface Options {
@@ -156,7 +154,9 @@ interface Options {
 }
 
 export const useApi = <T>(method: string, params?: any, options?: Options) => {
-  return useQuery([method], () => callApi<T>(method, params), { retry: false, refetchOnWindowFocus: false, staleTime: 30000, ...options });
+  const result = useQuery([method, params], () => callApi<T>(method, params), { retry: false, refetchOnWindowFocus: false, staleTime: 30000, ...options });
+  useCheckSession(result.isError, result.error as Error);
+  return result;
 };
 
 export const useSetValueMutation = () => {

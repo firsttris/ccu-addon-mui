@@ -1,26 +1,27 @@
 import {
   Box,
+  CircularProgress,
   Container,
   Divider,
+  LinearProgress,
   List,
   ListItem,
 } from '@mui/material';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ChannelType, removeSessionId, useGetChannelsForRoom } from '../hooks/useApi';
+import { useParams } from 'react-router-dom';
+import { ChannelType, useGetChannelsForRoom } from '../hooks/useApi';
 import { BlindsControl } from './BlindsControl';
 import { LightControl } from './LightControl';
 import { ThermostatControl } from './ThermostatControl';
 
 export const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
-  const navigate = useNavigate();
 
-  const { data: channelsForRoom, refetch, isError, error } = useGetChannelsForRoom(Number(roomId));
 
-  if(isError && (error as Error)?.message.includes('access denied')) {
-    removeSessionId();
-    navigate('/');
-  } 
+  const { data: channelsForRoom, refetch, isLoading } = useGetChannelsForRoom(Number(roomId));
+
+  if(isLoading) {
+    return <LinearProgress />
+  }
 
     return (
       <Container maxWidth="md">

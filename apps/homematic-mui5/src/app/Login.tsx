@@ -3,19 +3,12 @@ import { Container } from '@mui/system';
 import { FormEvent, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLogin, useSessionId } from '../hooks/useApi';
+import { useRedirectToRooms } from '../hooks/useCheckSession';
 
 export const Login = () => {
   const loginMutation = useLogin();
 
-  const navigate = useNavigate()
-
-  const sessionId = useSessionId();
-
-  useEffect(() => {
-    if(sessionId) {
-      navigate('/rooms');
-    }
-  }, [sessionId])
+  const { navigateRooms } = useRedirectToRooms();
 
   const Login = async (d: FormEvent<HTMLFormElement>) => {
     d.preventDefault();
@@ -23,7 +16,7 @@ export const Login = () => {
     const password = d.currentTarget['password'].value;
     const response = await loginMutation.mutateAsync({ username, password });
     if(response) {
-      navigate('/rooms');
+      navigateRooms();
     }
   };
 
