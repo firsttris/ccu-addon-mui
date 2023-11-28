@@ -5,8 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Router } from './router';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-const basename = process.env?.['REACT_APP_BASENAME'] ?? '/';
+import { environment } from './environments/environment';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,7 +20,7 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <StrictMode>
-    <BrowserRouter basename={'/addons/mui/'}>
+    <BrowserRouter basename={environment.basename}>
       <QueryClientProvider client={queryClient}>
         <Router />
       </QueryClientProvider>
