@@ -22,7 +22,7 @@ This project is built with a robust set of technologies to ensure high performan
 
 # Prerequisites
 
-For this add-on to function properly, it is necessary to have rooms configured in your CCU3. These rooms should have channels assigned to them, and these channels should have appropriate names. This is because the add-on queries the rooms, their channels, and in turn, the datapoints of those channels. Without this setup, the add-on will not work as expected.
+For this add-on to function properly, it is necessary to have rooms configured in your CCU3. Rooms should have channels assigned with appropriate names. This is because the add-on queries the rooms, their channels, and in turn, the datapoints of those channels. Without this setup, the add-on will not work.
 
 # Efficiency
 
@@ -34,8 +34,8 @@ In addition, we are utilizing [React-Query](https://react-query.tanstack.com/), 
 
 # Authentication
 
-The WebApp employs the same authentication mechanism as the CCU3. 
-After logging in, the WebApp obtains a random sessionID from the CCU3, which is used for subsequent requests. 
+The WebApp provides the same authentication mechanism as the CCU3. 
+After logging in, the WebApp obtains a random session id from the CCU3, it will be saved to localStorage and used for subsequent requests. 
 To prevent users from inadvertently logging each other out, it is necessary to use distinct user accounts.
 
 # Install
@@ -66,7 +66,9 @@ Please visit our [issues page](https://github.com/your-repo-name/issues) for the
 
 # Homematic API Summary
 
-[API Docs](/docs/api/README.md)
+I have collected an API Summary, where you have an quick overview of all methods for the homematic API
+
+[API Summary](/docs/api/README.md)
 
 # Currently supported devices
 

@@ -2,6 +2,6 @@
 
 [JSON-RPC](/docs/api/JSON-RPC/README.md)
 
-[REGA](/docs/api/Rega/README.md)
+[HM-REGA](/docs/api/Rega/README.md)
 
-[XML-RPC](/docs/api/XML-RPC)
+[XML-RPC](/docs/api/XML-RPC/README.md)
