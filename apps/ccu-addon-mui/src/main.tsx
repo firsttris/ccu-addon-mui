@@ -17,7 +17,7 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <StrictMode>
-    <BrowserRouter basename={process.env['REACT_APP_BASENAME']}>
+    <BrowserRouter basename={process.env['REACT_ROUTER_BASENAME']}>
       <QueryClientProvider client={queryClient}>
         <Router />
       </QueryClientProvider>
