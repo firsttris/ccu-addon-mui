@@ -6,7 +6,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { HeatingClimateControlTransceiverChannel, interfaceName, useSetValueMutation } from '../hooks/useApi';
+import { HeatingClimateControlTransceiverChannel, useSetValueMutation } from '../hooks/useApi';
 import ThermostatOutlinedIcon from '@mui/icons-material/ThermostatOutlined';
 import ThermostatAutoIcon from '@mui/icons-material/ThermostatAuto';
 import WaterDamageOutlinedIcon from '@mui/icons-material/WaterDamageOutlined';
@@ -36,13 +36,13 @@ export const ThermostatControl = ({
     },
   ];
 
-  const value = channel.datapoints;
-  const name = channel.name;
-  const address = channel.address;
+  const { datapoints, name, address, interfaceName } = channel;
+  const setPointModevalue = Number(datapoints?.SET_POINT_MODE ?? 0);
+  const setPoinTemperaturevalue = Number(datapoints?.SET_POINT_TEMPERATURE ?? 0);
+
   const setValueMutation = useSetValueMutation();
-  const setPoinTemperaturevalue = Number(value?.SET_POINT_TEMPERATURE ?? 0);
+  
   const [pointTemp, setPointTemp] = useState<number>(setPoinTemperaturevalue);
-  const setPointModevalue = Number(value?.SET_POINT_MODE ?? 0);
   const [pointMode, setPointMode] = useState<number>(setPointModevalue);
 
   useEffect(() => {
@@ -58,10 +58,10 @@ export const ThermostatControl = ({
       <ThermostatOutlinedIcon
         sx={{
           color:
-            Number(value?.ACTUAL_TEMPERATURE) < 15
+            Number(datapoints?.ACTUAL_TEMPERATURE) < 15
               ? 'blue'
-              : Number(value?.ACTUAL_TEMPERATURE) > 15 &&
-                Number(value?.ACTUAL_TEMPERATURE) < 20
+              : Number(datapoints?.ACTUAL_TEMPERATURE) > 15 &&
+                Number(datapoints?.ACTUAL_TEMPERATURE) < 20
               ? 'orange'
               : 'red',
         }}
@@ -88,7 +88,7 @@ export const ThermostatControl = ({
           >
             <WaterDamageOutlinedIcon sx={{ marginRight: '3px' }} />
             <Typography variant="caption" sx={{ mr: 1 }}>
-              {value?.HUMIDITY ? Number(value?.HUMIDITY) : null}%
+              {datapoints?.HUMIDITY ? Number(datapoints?.HUMIDITY) : null}%
             </Typography>
             <IconButton
               sx={{ padding: 0, color: 'black' }}
@@ -106,8 +106,8 @@ export const ThermostatControl = ({
               {pointMode ? <ThermostatOutlinedIcon /> : <ThermostatAutoIcon />}
             </IconButton>
             <Typography variant="caption" sx={{}}>
-              {value?.ACTUAL_TEMPERATURE
-                ? Number(value?.ACTUAL_TEMPERATURE).toLocaleString('de-DE', {
+              {datapoints?.ACTUAL_TEMPERATURE
+                ? Number(datapoints?.ACTUAL_TEMPERATURE).toLocaleString('de-DE', {
                     maximumFractionDigits: 2,
                     minimumFractionDigits: 2,
                   })

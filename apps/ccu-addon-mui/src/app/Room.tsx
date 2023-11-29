@@ -16,7 +16,6 @@ import { ThermostatControl } from './ThermostatControl';
 export const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
 
-
   const { data: channelsForRoom, refetch, isLoading } = useGetChannelsForRoom(Number(roomId));
 
   if(isLoading) {

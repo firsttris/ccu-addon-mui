@@ -1,5 +1,5 @@
 import { ListItemText, Switch } from '@mui/material';
-import { SwitchVirtualReceiverChannel, SwitchVirtualReceiverDatapoint, interfaceName, useGetValue, useSetValueMutation } from '../hooks/useApi';
+import { SwitchVirtualReceiverChannel, useSetValueMutation } from '../hooks/useApi';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 
@@ -13,8 +13,8 @@ export const LightControl = ({
 }: ControlProps) => {
 
   const setValueMutation = useSetValueMutation();
-  const { datapoints: { STATE }, name, address } = channel;
-  const checked = STATE === 'true';
+  const { datapoints, name, address, interfaceName } = channel;
+  const checked = datapoints.STATE === 'true';
 
   return (
     <>
@@ -47,9 +47,6 @@ export const LightControl = ({
           refetch();
         }}
         checked={checked}
-        inputProps={{
-          'aria-labelledby': 'switch-list-label-wifi',
-        }}
       />
     </>
   );

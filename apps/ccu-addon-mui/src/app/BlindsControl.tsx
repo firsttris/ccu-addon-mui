@@ -1,5 +1,5 @@
 import { Box, IconButton, ListItemText, Typography } from '@mui/material';
-import { BlindVirtualReceiverChannel, interfaceName, useSetValueMutation } from '../hooks/useApi';
+import { BlindVirtualReceiverChannel, useSetValueMutation } from '../hooks/useApi';
 import BlindsOutlinedIcon from '@mui/icons-material/BlindsOutlined';
 import BlindsClosedIcon from '@mui/icons-material/BlindsClosed';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -14,9 +14,8 @@ export const BlindsControl = ({
   channel
 }: ControlProps) => {
   const setValueMutation = useSetValueMutation();
-  const blindValue = Number(channel.datapoints.LEVEL);
-  const name = channel.name;
-  const address = channel.address;
+  const { datapoints, name, address, interfaceName } = channel;
+  const blindValue = Number(datapoints.LEVEL);
   return (
     <>
       {blindValue === 1 ? <BlindsOutlinedIcon /> : <BlindsClosedIcon />}

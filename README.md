@@ -22,13 +22,13 @@ This project is built with a robust set of technologies to ensure high performan
 
 # Prerequisites
 
-For this add-on to work, it is necessary to have rooms configured in your CCU3. These rooms should have channels assigned to them, and these channels should have appropriate names. Without this setup, the add-on is not working as expected.
+For this add-on to function properly, it is necessary to have rooms configured in your CCU3. These rooms should have channels assigned to them, and these channels should have appropriate names. This is because the add-on queries the rooms, their channels, and in turn, the datapoints of those channels. Without this setup, the add-on will not work as expected.
 
 # Efficiency
 
 The WebApp uses the same JSON-RPC interface as the CCU3.
 
-To optimize performance we've tailored [Rega Scripts with Github Copilot](/apps/ccu-addon-mui/src/rega) to fetch data in the exact structure required by our Webapp.
+To optimize performance we've tailored [RegaScripts](/apps/ccu-addon-mui/src/rega) to fetch data in the exact structure required by our Webapp.
 
 In addition, we are utilizing [React-Query](https://react-query.tanstack.com/), adhering to their best practices to ensure our data requests are as efficient as possible.
 
@@ -52,16 +52,19 @@ To develop and build this project, follow these steps:
 1. Clone the repository: `git clone https://github.com/ccu-addon-mui.git`
 2. Navigate into the project directory: `cd ccu-addon-mui`
 3. Install the dependencies: `npm install`
-4. Set your CCU3 IP in: `apps/ccu-addon-mui/proxy.config.json`
-5. Currently InterfaceName (HmIP-RF) is fix in: `apps/ccu-addon-mui/src/hooks/useApi.ts` (line 7)
-6. Start the development server: `npm start`
-7. To build the project, use: `npm run build`
+4. Set your CCU3 IP in: [proxy.config.json](apps/ccu-addon-mui/proxy.config.json)
+5. Start the development server: `npm start`
+6. To build the project, use: `npm run build`
 
 # Issues
 
 Want to start contributing to this project? 
 
 Please visit our [issues page](https://github.com/your-repo-name/issues) for the latest issues and feature requests.
+
+# Homematic API Summary
+
+[API Docs](/docs/api/README.md)
 
 # Currently supported devices
 

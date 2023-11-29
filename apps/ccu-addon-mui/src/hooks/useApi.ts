@@ -63,6 +63,7 @@ interface BaseChannel {
   id: number;
   name: string;
   address: string;
+  interfaceName: string;
 }
 
 export interface SwitchVirtualReceiverChannel extends BaseChannel {
