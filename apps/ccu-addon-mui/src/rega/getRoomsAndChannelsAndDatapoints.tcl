@@ -29,7 +29,9 @@ foreach (roomId, dom.GetObject(ID_ROOMS).EnumUsedIDs()) {
         } else {
             isFirstChannel = false;
         }
-        Write('{"id": ' # channelId # ', "address": "' # channelObject.Address() # '", "name": "' # channelObject.Name() # '", "type": "' # channelObject.HssType() # '", "interface": "' # channelObject.Interface() # '", "datapoints":{');
+        var interface = dom.GetObject(channelObject.Interface());
+        var interfaceName = interface.Name();
+        Write('{"id": ' # channelId # ', "address": "' # channelObject.Address() # '", "name": "' # channelObject.Name() # '", "type": "' # channelObject.HssType() # '", "interfaceName": "' # interfaceName # '", "datapoints":{');
         isFirstDatapoint = true;
 
         foreach(datapointId, channelObject.DPs().EnumUsedIDs()) {
