@@ -9,7 +9,7 @@ Web based homematic user interfaces are outdated and sluggish.
 
 Numerous web-based solutions are mired in antiquated commonJS code, entangled in the callback chaos.
 
-Our aim is to craft a simple, yet fast, responsive web UI as an add-on to your CCU3.
+Our aim is to craft a simple, yet fast, responsive Web UI as an add-on to your CCU3.
 
 # Technology Stack
 
@@ -26,16 +26,16 @@ For this add-on to function properly, it is necessary to have rooms configured i
 
 # Efficiency
 
-The WebApp uses the same JSON-RPC interface as the CCU3.
+The App uses the same JSON-RPC interface as the CCU3.
 
-To optimize performance we've tailored [RegaScripts](/apps/ccu-addon-mui/src/rega) to fetch data in the exact structure required by our Webapp.
+To optimize performance we've tailored [RegaScripts](/apps/ccu-addon-mui/src/rega) to fetch data in the exact structure required by our App.
 
 In addition, we are utilizing [React-Query](https://react-query.tanstack.com/), adhering to their best practices to ensure our data requests are as efficient as possible.
 
 # Authentication
 
-The WebApp provides the same authentication mechanism as the CCU3. 
-After logging in, the WebApp obtains a random session id from the CCU3, it will be saved to localStorage and used for subsequent requests. 
+The App provides the same authentication mechanism as the CCU3. 
+After logging in, the App obtains a random session id from the CCU3, it will be saved to localStorage and used for subsequent requests. 
 To prevent users from inadvertently logging each other out, it is necessary to use distinct user accounts.
 
 # Install
@@ -70,20 +70,36 @@ I have collected an API Summary, where you have an quick overview of all methods
 
 [API Summary](/docs/api/README.md)
 
-# Currently supported devices
+# Device Support
+
+This project currently supports the following devices:
 
 - [Light](/apps/ccu-addon-mui/src/app/LightControl.tsx)
 - [Thermostat](/apps/ccu-addon-mui/src/app/ThermostatControl.tsx)
 - [Blinds](/apps/ccu-addon-mui/src/app/BlindsControl.tsx)
 
-# Current UI Screenshots
+We welcome pull requests to add support for new devices. Your contributions are appreciated!
+
+# User Interface Overview
+
+The current user interface represents a responsive version of the rooms view of the CCU3.
 
 ## Login View
+
+This is the root view. If you don't have a session ID, you'll always be redirected to this view.
+
 ![Screenshot](/docs/Login.png)
 
 ## Rooms View
+
+Once you obtain a session ID, you'll be automatically redirected to the rooms view. Here you see all rooms configured in the ccu3, and you can select the room in which you want to see or modify channels.
+
 ![Screenshot](/docs/Rooms.png)
 
-## List of Devices
-![Screenshot](/docs/ListOfDevices1.png)
+## Channels View
+
+This is the channels view.    
+Here you can see and change the state of the channels associated with the selected room.
+
+![Screenshot](/docs/ListOfDevices1.png)    
 ![Screenshot](/docs/ListOfDevices2.png)

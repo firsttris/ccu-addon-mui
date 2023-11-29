@@ -5,3 +5,5 @@ JSON API The HomeMatic JSON API standardizes access to the various parts of the 
 [German API Summary](./README.de.md)
 
 [English API Summary](./README.en.md) (still empty - needs translation)
+
+[Link to the Official API Specification on Github](https://github.com/eq-3/occu/blob/master/WebUI/www/api/methods.conf)
