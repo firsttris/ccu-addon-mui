@@ -45,7 +45,7 @@ To install this add-on:
 - Install it as a plugin on your CCU3 on the settings page under additional software.
 - After reboot, the Add-on will be available at `http://ccu3ip/addons/mui`.
 
-*unfortunatley currently you dont see that the addon is installed under settings, see [open issues](https://github.com/your-repo-name/issues)*
+*unfortunatley currently you dont see that the addon is installed under settings, see [open issues](https://github.com/firsttris/ccu-addon-mui/issues)*
 
 # Development and Build
 
@@ -62,7 +62,7 @@ To develop and build this project, follow these steps:
 
 Want to start contributing to this project? 
 
-Please visit our [issues page](https://github.com/your-repo-name/issues) for the latest issues and feature requests.
+Please visit our [issues page](https://github.com/firsttris/ccu-addon-mui/issues) for the latest issues and feature requests.
 
 # Homematic API Summary
 
