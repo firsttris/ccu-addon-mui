@@ -4,8 +4,6 @@ import regaGetRoomsScript from './../rega/getRooms.tcl';
 import regaGetChannelsScript from './../rega/getChannelsForRoomId.tcl';
 import { useCheckSession } from './useCheckSession';
 
-export const interfaceName = "HmIP-RF"
-
 export enum ChannelType {
   SWITCH_VIRTUAL_RECEIVER = "SWITCH_VIRTUAL_RECEIVER",
   BLIND_VIRTUAL_RECEIVER = "BLIND_VIRTUAL_RECEIVER",

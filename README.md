@@ -42,8 +42,10 @@ To prevent users from inadvertently logging each other out, it is necessary to u
 
 To install this add-on: 
 - download the latest tar.gz file from the releases page. 
-- Install it as a plugin on your CCU3. 
-- Add-on will be available at `http://ccu3ip/addons/mui`.
+- Install it as a plugin on your CCU3 on the settings page under additional software.
+- After reboot, the Add-on will be available at `http://ccu3ip/addons/mui`.
+
+*unfortunatley currently you dont see that the addon is installed under settings, see [open issues](https://github.com/your-repo-name/issues)*
 
 # Development and Build
 
