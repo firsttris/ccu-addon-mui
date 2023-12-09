@@ -25,6 +25,17 @@ export default defineConfig({
     nxViteTsPaths(),
     VitePWA({
       registerType: 'autoUpdate',
+      manifest: {
+        name: 'ccu-addon-mui',
+        short_name: 'ccu-addon-mui',
+        icons: [
+          {
+            src: 'android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          }
+        ],
+      },
     }),
     {
       name: 'load-tcl',
