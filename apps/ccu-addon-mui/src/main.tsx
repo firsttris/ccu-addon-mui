@@ -15,9 +15,11 @@ const queryClient = new QueryClient({
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+//const baseUrl = process.env?.['BASE_URL'] || '';
+//process.env['REACT_APP_BASENAME']
 root.render(
   <StrictMode>
-    <BrowserRouter basename={process.env['REACT_ROUTER_BASENAME']}>
+    <BrowserRouter basename={'/addons/mui/'}>
       <QueryClientProvider client={queryClient}>
         <Router />
       </QueryClientProvider>

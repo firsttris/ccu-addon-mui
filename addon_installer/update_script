@@ -16,7 +16,7 @@ ln -sf $ADDON_DIR $WWW_DIR
 
 cp -af rc.d/mui $RC_DIR
 
-cp -af lighttpd.conf /usr/local/etc/lighttpd/mui.conf
+cp -af lighttpd.conf /usr/local/etc/config/lighttpd/mui.conf
 
 sync
 
