@@ -4,6 +4,7 @@
 dist
 tmp
 /out-tsc
+mui-*.tar.gz
 
 # dependencies
 node_modules
