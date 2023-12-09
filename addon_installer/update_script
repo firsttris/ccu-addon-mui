@@ -10,12 +10,14 @@ if [ $? -eq 1 ]; then
 fi
 
 mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
-
 cp -af dist/* $ADDON_DIR
 
 ln -sf $ADDON_DIR $WWW_DIR
 
+mkdir -p $RC_DIR && chmod -R 755 $RC_DIR
 cp -af rc.d/mui $RC_DIR
+
+cp -af lighttpd.conf /usr/local/etc/lighttpd/mui.conf
 
 sync
 
