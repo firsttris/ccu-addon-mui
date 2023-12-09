@@ -105,7 +105,6 @@ export const useSessionId = () => localStorage.getItem('session_id');
 export const removeSessionId = () => localStorage.removeItem('session_id');
 
 const callApi = async <T>(method: string, params?: any) => {
-  try {
     const response = await axios.post<Response<T>>('/api/homematic.cgi', {
       method,
       params: { ...params, _session_id_: useSessionId() },
@@ -117,9 +116,6 @@ const callApi = async <T>(method: string, params?: any) => {
     }
 
     return response.data.result;
-  } catch (error) {
-    throw error;
-  }
 }
 
 const login = async (username: string, password: string) => {

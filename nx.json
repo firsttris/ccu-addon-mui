@@ -2,30 +2,22 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "targetDefaults": {
     "build": {
+      "cache": true,
       "dependsOn": ["^build"],
-      "inputs": ["production", "^production"],
-      "cache": true
-    },
-    "e2e": {
-      "inputs": ["default", "^production"],
-      "cache": true
+      "inputs": ["production", "^production"]
     },
     "lint": {
-      "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
-      "cache": true
-    },
-    "@nx/jest:jest": {
-      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
       "cache": true,
-      "options": {
-        "passWithNoTests": true
-      },
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true
-        }
-      }
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.js"
+      ]
+    },
+    "@nx/vite:test": {
+      "cache": true,
+      "inputs": ["default", "^production"]
     }
   },
   "namedInputs": {
@@ -34,17 +26,17 @@
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
-      "!{projectRoot}/jest.config.[jt]s",
       "!{projectRoot}/.eslintrc.json",
-      "!{projectRoot}/src/test-setup.[jt]s"
+      "!{projectRoot}/eslint.config.js"
     ],
-    "sharedGlobals": ["{workspaceRoot}/babel.config.json"]
+    "sharedGlobals": []
   },
   "generators": {
     "@nx/react": {
       "application": {
         "style": "@emotion/styled",
         "linter": "eslint",
+        "bundler": "vite",
         "babel": true
       },
       "component": {
@@ -56,5 +48,5 @@
       }
     }
   },
-  "defaultProject": "ccu-addon-mui"
+  "defaultProject": "latest-nx"
 }

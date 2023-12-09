@@ -1,0 +1,73 @@
+{
+  "name": "ccu-addon-mui",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "./src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/ccu-addon-mui",
+        "baseHref": "/addons/mui/"
+      },
+      "configurations": {
+        "development": {
+          "mode": "development"
+        },
+        "production": {
+          "mode": "production"
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "ccu-addon-mui:build",
+        "proxyConfig": "proxy.config.json"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "ccu-addon-mui:build:development",
+          "hmr": true
+        },
+        "production": {
+          "buildTarget": "ccu-addon-mui:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "preview": {
+      "executor": "@nx/vite:preview-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "ccu-addon-mui:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "ccu-addon-mui:build:development"
+        },
+        "production": {
+          "buildTarget": "ccu-addon-mui:build:production"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "coverage/ccu-addon-mui"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["./src"]
+      }
+    }
+  },
+  "tags": []
+}

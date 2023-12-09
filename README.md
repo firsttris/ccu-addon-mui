@@ -28,7 +28,7 @@ For this add-on to function properly, it is necessary to have rooms configured i
 
 The App uses the same JSON-RPC interface as the CCU3.
 
-To optimize performance we've tailored [RegaScripts](/apps/ccu-addon-mui/src/rega) to fetch data in the exact structure required by our App.
+To optimize performance we've tailored [RegaScripts](/src/rega) to fetch data in the exact structure required by our App.
 
 In addition, we are utilizing [React-Query](https://react-query.tanstack.com/), adhering to their best practices to ensure our data requests are as efficient as possible.
 
@@ -54,7 +54,7 @@ To develop and build this project, follow these steps:
 1. Clone the repository: `git clone https://github.com/ccu-addon-mui.git`
 2. Navigate into the project directory: `cd ccu-addon-mui`
 3. Install the dependencies: `npm install`
-4. Set your CCU3 IP in: [proxy.config.json](apps/ccu-addon-mui/proxy.config.json)
+4. Set your CCU3 IP in: [proxy.config.json](proxy.config.json)
 5. Start the development server: `npm start`
 6. To build the project, use: `npm run build`
 
@@ -74,9 +74,9 @@ I have collected an API Summary, where you have an quick overview of all methods
 
 This project currently supports the following devices:
 
-- [Light](/apps/ccu-addon-mui/src/app/LightControl.tsx)
-- [Thermostat](/apps/ccu-addon-mui/src/app/ThermostatControl.tsx)
-- [Blinds](/apps/ccu-addon-mui/src/app/BlindsControl.tsx)
+- [Light](/src/app/LightControl.tsx)
+- [Thermostat](/src/app/ThermostatControl.tsx)
+- [Blinds](/src/app/BlindsControl.tsx)
 
 We welcome pull requests to add support for new devices. Your contributions are appreciated!
 
