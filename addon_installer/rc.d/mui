@@ -3,19 +3,29 @@
 ADDON_DIR="/usr/local/addons/mui"
 
 case "$1" in
+    
+    ""|start|restart|stop)
+        exit 0
+    ;;
+    
     info)
-        echo "MUI Addon"
-        echo "Verzeichnis: $ADDON_DIR"
-        ;;
+        echo "Info: <b>MUI CCU Addon</b><br>"
+        echo "Info: <a href='https://github.com/firsttris/ccu-addon-mui'>https://github.com/firsttris/ccu-addon-mui</a>"
+        echo "Name: MUI CCU Addon"
+        echo "Version: 0.0.1"
+        echo "Operations: uninstall"
+        echo "Config-Url: /addons/mui/"
+        echo "Update: not implemented yet"
+    ;;
     uninstall)
         echo "Deinstalliere MUI Addon..."
         rm -rf $ADDON_DIR
         echo "Deinstallation abgeschlossen."
-        ;;
+    ;;
     *)
         echo "Usage: $0 {info|uninstall}" >&2
         exit 1
-        ;;
+    ;;
 esac
 
 exit 0

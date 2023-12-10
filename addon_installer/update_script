@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ADDON_DIR=/usr/local/addons/mui
-RC_DIR=/usr/local/etc/config/rc.d/mui
+RC_DIR=/usr/local/etc/config/rc.d
 WWW_DIR=/usr/local/etc/config/addons/www
 
 mount | grep /usr/local 2>&1 >/dev/null
@@ -14,7 +14,8 @@ cp -af dist/* $ADDON_DIR
 
 ln -sf $ADDON_DIR $WWW_DIR
 
-cp -af rc.d/mui $RC_DIR
+cp -af rc.d/mui $RC_DIR/
+chmod +x $RC_DIR/mui
 
 cp -af lighttpd.conf /usr/local/etc/config/lighttpd/mui.conf
 
