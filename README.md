@@ -45,7 +45,21 @@ To install this add-on:
 - Install it as a plugin on your CCU3 on the settings page under additional software.
 - After reboot, the Add-on will be available at `http://ccu3ip/addons/mui`.
 
-*unfortunatley currently you dont see that the addon is installed under settings, see [open issues](https://github.com/firsttris/ccu-addon-mui/issues)*
+# Adding the PWA to Your Home Screen
+
+Progressive Web Apps can be installed on your device like native apps. Here's how you can add our PWA to your home screen:
+
+### On Android:
+1. Open the PWA in your browser (Chrome, Firefox, etc.).
+2. Tap on the browser's menu (usually three dots in the top right corner).
+3. Tap on "Add to Home screen".
+
+### On iOS:
+1. Open the PWA in Safari.
+2. Tap the Share button (the box with an arrow pointing upwards).
+3. Scroll down and tap "Add to Home Screen".
+
+After these steps, the PWA will appear as an icon on your home screen, and you can use it just like a native app.
 
 # Development and Build
 
