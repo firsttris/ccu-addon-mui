@@ -4,12 +4,9 @@ Please note that this project is currently in an alpha stage and should be consi
 It aims to solve challenges in bridging the gap between the old and the new. 
 
 # Motivation
+Most web-based homematic solutions are outdated and mired in antiquated commonJS code, entangled in the callback chaos.
 
-Web based homematic user interfaces are outdated and sluggish.
-
-Numerous web-based solutions are mired in antiquated commonJS code, entangled in the callback chaos.
-
-Our aim is to craft a simple, yet fast, responsive Web UI as an add-on to your CCU3.
+Our aim is to craft a cutting edge, simple, yet fast, responsive Web UI as an add-on to your CCU3.
 
 # Technology Stack
 
