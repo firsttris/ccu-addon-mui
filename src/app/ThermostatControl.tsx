@@ -84,23 +84,39 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
         mr: { xs: 0, sm: '20px' },
       }}
     >
-      <Box sx={{ display: 'flex', width: '100%' }}>
-        <ThermostatOutlinedIcon
-          sx={{
-            color: getColor(Number(datapoints?.ACTUAL_TEMPERATURE)),
-          }}
-        />
-        <ListItemText
-          primary={name}
-          sx={{
-            marginLeft: '10px',
-            '& .MuiListItemText-primary': {
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis',
-            },
-          }}
-        />
+      <Box
+        sx={{
+          display: 'flex',
+          width: '100%',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box sx={{ display: 'flex' }}>
+          <ThermostatOutlinedIcon
+            sx={{
+              color: getColor(Number(datapoints?.ACTUAL_TEMPERATURE)),
+            }}
+          />
+          <ListItemText
+            primary={name}
+            sx={{
+              marginLeft: '10px',
+              '& .MuiListItemText-primary': {
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+              },
+            }}
+          />
+        </Box>
+        <Typography variant="body2" color="text.secondary">
+          {setPoinTemperaturevalue.toLocaleString('de-DE', {
+                maximumFractionDigits: 2,
+                minimumFractionDigits: 2,
+              })}
+          °C
+        </Typography>
       </Box>
 
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
