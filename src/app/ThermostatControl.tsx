@@ -112,7 +112,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
         </Box>
       </Box>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', width: '95%', alignItems: 'center', mt: '5px' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', width: '90%', alignItems: 'center', mt: '5px' }}>
         <Box sx={{ width: '100%'}}>
           <Box
             sx={{
@@ -207,8 +207,8 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
             sx={{
               margin: 0,
               '& .MuiSlider-thumb': {
-                height: 30, // adjust this value to change the thickness of the thumb
-                width: 30, // adjust this value to change the thickness of the thumb
+                height: 30,
+                width: 30,
               },
               '& .MuiSlider-markLabel': {
                 fontSize: '11px',

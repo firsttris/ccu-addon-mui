@@ -13,13 +13,30 @@ import { BlindsControl } from './BlindsControl';
 import { LightControl } from './LightControl';
 import { ThermostatControl } from './ThermostatControl';
 import { FloorControl } from './FloorControl';
+import { useMemo } from 'react';
 
 export const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
 
   const { data: channelsForRoom, refetch, isLoading } = useGetChannelsForRoom(Number(roomId));
 
-  console.log('channelsForRoom', channelsForRoom)
+  const sorted = useMemo(() => [...channelsForRoom].sort((a, b) => {
+    const order = [
+      ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER,
+      ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER,
+      ChannelType.SWITCH_VIRTUAL_RECEIVER,
+      ChannelType.BLIND_VIRTUAL_RECEIVER,
+    ];
+  
+    const indexA = order.indexOf(a.type);
+    const indexB = order.indexOf(b.type);
+  
+    if (indexA === -1 || indexB === -1) {
+      return 0;
+    }
+  
+    return indexA - indexB;
+  }), [channelsForRoom]);
 
   const getControlComponent = (channel: Channel, refetch: () => void) => {
     switch (channel.type) {
@@ -43,7 +60,7 @@ export const Room = () => {
     return (
       <Container maxWidth="md">
         <List>
-          {channelsForRoom.map((channel, index) => {
+          {sorted.map((channel, index) => {
             
             return (
               <Box key={index}>

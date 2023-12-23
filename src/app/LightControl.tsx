@@ -31,9 +31,9 @@ export const LightControl = ({ channel, refetch }: ControlProps) => {
           primary={name}
           sx={{
             marginLeft: '10px',
+            minWidth: '200px',
             '& .MuiListItemText-primary': {
               overflow: 'hidden',
-              whiteSpace: 'nowrap',
               textOverflow: 'ellipsis',
             },
           }}
