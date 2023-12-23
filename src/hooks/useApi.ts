@@ -96,7 +96,7 @@ export interface FloorClimateControlTransceiverChannel extends BaseChannel {
   datapoints: FloorClimateControlTransceiverDatapoint
 }
 
-type Channel = SwitchVirtualReceiverChannel | BlindVirtualReceiverChannel | HeatingClimateControlTransceiverChannel | FloorClimateControlTransceiverChannel;
+export type Channel = SwitchVirtualReceiverChannel | BlindVirtualReceiverChannel | HeatingClimateControlTransceiverChannel | FloorClimateControlTransceiverChannel;
 
 interface Room {
   name: string;
