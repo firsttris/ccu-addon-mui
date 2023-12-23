@@ -1,6 +1,5 @@
 import {
   Box,
-  CircularProgress,
   Container,
   Divider,
   LinearProgress,
@@ -12,11 +11,14 @@ import { ChannelType, useGetChannelsForRoom } from '../hooks/useApi';
 import { BlindsControl } from './BlindsControl';
 import { LightControl } from './LightControl';
 import { ThermostatControl } from './ThermostatControl';
+import { FloorControl } from './FloorControl';
 
 export const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
 
   const { data: channelsForRoom, refetch, isLoading } = useGetChannelsForRoom(Number(roomId));
+
+  console.log('channelsForRoom', channelsForRoom)
 
   if(isLoading) {
     return <LinearProgress />
@@ -39,6 +41,11 @@ export const Room = () => {
                     justifyContent: 'center',
                   }}
                 >
+                  {channel.type === ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER ? (
+                    <FloorControl
+                      channel={channel}
+                       />
+                  ) : null}
                   {channel.type ===
                   ChannelType.SWITCH_VIRTUAL_RECEIVER ? (
                     <LightControl

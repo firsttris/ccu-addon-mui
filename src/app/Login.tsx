@@ -1,8 +1,7 @@
 import { Box, Button, TextField } from '@mui/material';
 import { Container } from '@mui/system';
-import { FormEvent, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useLogin, useSessionId } from '../hooks/useApi';
+import { FormEvent } from 'react';
+import { useLogin } from '../hooks/useApi';
 import { useRedirectToRooms } from '../hooks/useCheckSession';
 
 export const Login = () => {

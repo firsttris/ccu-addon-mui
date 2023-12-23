@@ -7,7 +7,8 @@ import { useCheckSession } from './useCheckSession';
 export enum ChannelType {
   SWITCH_VIRTUAL_RECEIVER = "SWITCH_VIRTUAL_RECEIVER",
   BLIND_VIRTUAL_RECEIVER = "BLIND_VIRTUAL_RECEIVER",
-  HEATING_CLIMATECONTROL_TRANSCEIVER = "HEATING_CLIMATECONTROL_TRANSCEIVER"
+  HEATING_CLIMATECONTROL_TRANSCEIVER = "HEATING_CLIMATECONTROL_TRANSCEIVER",
+  CLIMATECONTROL_FLOOR_TRANSCEIVER = "CLIMATECONTROL_FLOOR_TRANSCEIVER"
 }
 
 export type SwitchVirtualReceiverDatapoint = {
@@ -57,6 +58,17 @@ export type HeatingClimateControlTransceiverDatapoint = {
   WINDOW_STATE: string;
 };
 
+export type FloorClimateControlTransceiverDatapoint = {
+  DEW_POINT_ALARM: string;
+  EMERGENCY_OPERATION: string;
+  EXTERNAL_CLOCK: string;
+  FROST_PROTECTION: string;
+  HUMIDITY_LIMITER: string;
+  LEVEL: string;
+  LEVEL_STATUS: string;
+  VALVE_STATE: string;
+};
+
 interface BaseChannel {
   id: number;
   name: string;
@@ -79,7 +91,12 @@ export interface HeatingClimateControlTransceiverChannel extends BaseChannel {
   datapoints: HeatingClimateControlTransceiverDatapoint;
 }
 
-type Channel = SwitchVirtualReceiverChannel | BlindVirtualReceiverChannel | HeatingClimateControlTransceiverChannel;
+export interface FloorClimateControlTransceiverChannel extends BaseChannel {
+  type: ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER;
+  datapoints: FloorClimateControlTransceiverDatapoint
+}
+
+type Channel = SwitchVirtualReceiverChannel | BlindVirtualReceiverChannel | HeatingClimateControlTransceiverChannel | FloorClimateControlTransceiverChannel;
 
 interface Room {
   name: string;
@@ -101,13 +118,13 @@ interface Response<T> {
 
 
 
-export const useSessionId = () => localStorage.getItem('session_id');
+export const getSessionId = () => localStorage.getItem('session_id');
 export const removeSessionId = () => localStorage.removeItem('session_id');
 
 const callApi = async <T>(method: string, params?: any) => {
     const response = await axios.post<Response<T>>('/api/homematic.cgi', {
       method,
-      params: { ...params, _session_id_: useSessionId() },
+      params: { ...params, _session_id_: getSessionId() },
       jsonrpc: '2.0',
     });
 
