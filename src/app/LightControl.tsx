@@ -1,53 +1,61 @@
-import { ListItemText, Switch } from '@mui/material';
-import { SwitchVirtualReceiverChannel, useSetValueMutation } from '../hooks/useApi';
+import { Box, ListItemText, Switch, styled } from '@mui/material';
+import {
+  SwitchVirtualReceiverChannel,
+  useSetValueMutation,
+} from '../hooks/useApi';
 import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
+
+const BiggerSwitch = styled(Switch)({
+  transform: 'scale(1.5)', // Adjust scale to desired size
+});
 
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;
   refetch: () => void;
 }
-export const LightControl = ({
-  channel,
-  refetch,
-}: ControlProps) => {
-
+export const LightControl = ({ channel, refetch }: ControlProps) => {
   const setValueMutation = useSetValueMutation();
   const { datapoints, name, address, interfaceName } = channel;
   const checked = datapoints.STATE === 'true';
 
   return (
-    <>
-      {checked ? (
-        <LightbulbIcon sx={{ color: 'orange' }} />
-      ) : (
-        <LightbulbOutlinedIcon />
-      )}
-      <ListItemText
-        primary={name}
-        sx={{
-          marginLeft: '10px',
-          '& .MuiListItemText-primary': {
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-          },
-        }}
-      />
-      <Switch
-        edge="end"
-        onChange={async () => {
-          await setValueMutation.mutateAsync({
-            interface: interfaceName,
-            address,
-            valueKey: 'STATE',
-            type: 'boolean',
-            value: !checked,
-          });
-          refetch();
-        }}
-        checked={checked}
-      />
-    </>
+    <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        {checked ? (
+          <LightbulbIcon sx={{ color: 'orange' }} />
+        ) : (
+          <LightbulbOutlinedIcon />
+        )}
+        <ListItemText
+          primary={name}
+          sx={{
+            marginLeft: '10px',
+            '& .MuiListItemText-primary': {
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+            },
+          }}
+        />
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+        <BiggerSwitch
+          edge="end"
+          size="medium"
+          onChange={async () => {
+            await setValueMutation.mutateAsync({
+              interface: interfaceName,
+              address,
+              valueKey: 'STATE',
+              type: 'boolean',
+              value: !checked,
+            });
+            refetch();
+          }}
+          checked={checked}
+        />
+      </Box>
+    </Box>
   );
 };

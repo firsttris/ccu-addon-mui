@@ -45,8 +45,8 @@ export type HeatingClimateControlTransceiverDatapoint = {
   DURATION_VALUE: string;
   FROST_PROTECTION: string;
   HEATING_COOLING: string;
-  HUMIDITY: string;
-  HUMIDITY_STATUS: string;
+  HUMIDITY?: string;
+  HUMIDITY_STATUS?: string;
   PARTY_MODE: string;
   PARTY_SET_POINT_TEMPERATURE: string;
   PARTY_TIME_END: string;

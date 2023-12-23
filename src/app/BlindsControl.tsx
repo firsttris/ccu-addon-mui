@@ -25,7 +25,7 @@ const CircularProgressWithLabel = (
 ) => {
   return (
     <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-      <CircularProgress variant="determinate" {...props} />
+      <CircularProgress variant="determinate" {...props} size="45px" />
       <Box
         sx={{
           top: 0,
@@ -40,8 +40,6 @@ const CircularProgressWithLabel = (
       >
         <Typography
           variant="caption"
-          component="div"
-          color="text.secondary"
         >{`${Math.round(props.value)}%`}</Typography>
       </Box>
     </Box>
@@ -53,7 +51,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const { datapoints, name, address, interfaceName } = channel;
   const blindValue = Number(datapoints.LEVEL) * 100;
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', mb: '-10px' }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         {blindValue === 0 ? <BlindsClosedIcon /> : <BlindsOutlinedIcon />}
         <ListItemText
@@ -67,10 +65,10 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             },
           }}
         />
-        <CircularProgressWithLabel value={blindValue} />
+        
       </Box>
-      <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-        <Box sx={{ display: 'flex', gap: '5px' }}>
+      <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mt: '-5px'}}>
+        <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
           <IconButton
             onClick={() =>
               setValueMutation.mutateAsync({
@@ -82,7 +80,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
               })
             }
           >
-            <StopIcon />
+            <StopIcon sx={{ fontSize: '45px'}}/>
           </IconButton>
           <IconButton
             onClick={() =>
@@ -95,7 +93,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
               })
             }
           >
-            <ArrowDownwardIcon />
+            <ArrowDownwardIcon sx={{ fontSize: '45px'}} />
           </IconButton>
           <IconButton
             onClick={() =>
@@ -108,8 +106,11 @@ export const BlindsControl = ({ channel }: ControlProps) => {
               })
             }
           >
-            <ArrowUpwardIcon />
+            <ArrowUpwardIcon sx={{ fontSize: '45px'}} />
           </IconButton>
+          <Box>
+          <CircularProgressWithLabel value={blindValue} />
+          </Box>
         </Box>
       </Box>
     </Box>

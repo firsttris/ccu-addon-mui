@@ -57,7 +57,10 @@ export const Room = () => {
                     justifyContent: 'center',
                   }}
                 >
+                  <Box sx={{ my: '5px', width: '100%'}}>
                   {getControlComponent(channel, refetch)}
+                  </Box>
+                  
                 </ListItem>
                 {channelsForRoom?.length === index + 1 ? null : (
                   <Divider />

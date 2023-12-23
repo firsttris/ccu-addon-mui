@@ -26,19 +26,18 @@ export const FloorControl = (props: FloorControlProps) => {
   };
 
   return (
-    <Box sx={{ width: '100%', mt: '8px', mb: '5px', ml: '6px' }}>
+    <Box sx={{ width: '100%', ml: '6px' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         <Icon icon="mdi:radiator-coil" color={getColor(value)} />
         <Typography>{props.channel.name}</Typography>
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mt: '5px' }}>
         <Box sx={{ width: '100%', mr: 1 }}>
           <LinearProgress variant="determinate" value={value} />
         </Box>
         <Box sx={{ minWidth: 35 }}>
           <Typography
-            variant="body2"
-            color="text.secondary"
+            variant="caption"
           >{`${value}%`}</Typography>
         </Box>
       </Box>
