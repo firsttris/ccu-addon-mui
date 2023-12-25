@@ -20,6 +20,8 @@ export const Room = () => {
 
   const { data: channelsForRoom, refetch, isLoading } = useGetChannelsForRoom(Number(roomId));
 
+  console.log('channelsForRoom', channelsForRoom)
+
   const sorted = useMemo(() => [...channelsForRoom].sort((a, b) => {
     const order = [
       ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER,

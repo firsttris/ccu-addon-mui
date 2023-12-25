@@ -82,7 +82,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
         width: '100%',
         justifyContent: 'space-between',
         mr: { xs: 0, sm: '20px' },
-        mb: '5px'
+        mb: '5px',
       }}
     >
       <Box
@@ -112,8 +112,16 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
         </Box>
       </Box>
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', width: '90%', alignItems: 'center', mt: '5px' }}>
-        <Box sx={{ width: '100%'}}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          width: '90%',
+          alignItems: 'center',
+          mt: '5px',
+        }}
+      >
+        <Box sx={{ width: '100%' }}>
           <Box
             sx={{
               display: 'flex',
@@ -121,19 +129,19 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
               justifyContent: 'space-between',
             }}
           >
-            {datapoints?.HUMIDITY ? 
-            <Box
-              sx={{
-                display: 'flex',
-                gap: '3px',
-                alignItems: 'center',
-              }}
-            >
-              <WaterDamageOutlinedIcon />
-              <Typography variant="caption">
-                {Number(datapoints?.HUMIDITY)}%
-              </Typography>
-            </Box> : null}
+            {datapoints?.HUMIDITY ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                <WaterDamageOutlinedIcon />
+                <Typography variant="caption" mt="5px">
+                  {Number(datapoints?.HUMIDITY)}%
+                </Typography>
+              </Box>
+            ) : null}
 
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <IconButton
@@ -155,7 +163,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
                   <ThermostatAutoIcon />
                 )}
               </IconButton>
-              <Typography variant="caption">
+              <Typography variant="caption" mt="5px">
                 {datapoints?.ACTUAL_TEMPERATURE
                   ? Number(datapoints?.ACTUAL_TEMPERATURE).toLocaleString(
                       'de-DE',
@@ -169,14 +177,21 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', gap: '3px', alignItems: 'center' }}>
-              <Icon icon="mdi:target" />
-              <Typography variant="caption">
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Icon icon="mdi:target" fontSize="20px" />
+              <Typography variant="caption" mt="5px">
                 {pointTemp.toLocaleString('de-DE', {
                   maximumFractionDigits: 2,
                   minimumFractionDigits: 2,
                 })}
                 °C
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Icon icon="material-symbols-light:mode-heat" fontSize="25px" />
+              <Typography variant="caption" mt="5px">
+                Boost
               </Typography>
             </Box>
           </Box>
