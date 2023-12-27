@@ -1,10 +1,13 @@
 import {
   Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Collapse,
   Container,
-  Divider,
+  IconButton,
+  IconButtonProps,
   LinearProgress,
-  List,
-  ListItem,
   Typography,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
@@ -13,32 +16,60 @@ import { BlindsControl } from './BlindsControl';
 import { LightControl } from './LightControl';
 import { ThermostatControl } from './ThermostatControl';
 import { FloorControl } from './FloorControl';
-import { useMemo } from 'react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useMemo, useState } from 'react';
+import styled from '@emotion/styled';
+
+interface ExpandMoreProps extends IconButtonProps {
+  expand: boolean;
+}
+
+const ExpandMore = styled((props: ExpandMoreProps) => {
+  const { expand, ...other } = props;
+  return <IconButton {...other} />;
+})(({ expand }) => ({
+  transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
+  marginLeft: 'auto',
+  transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+}));
 
 export const Room = () => {
+  const [expanded, setExpanded] = useState<Record<ChannelType, boolean>>(
+    Object.fromEntries(
+      Object.values(ChannelType).map((type) => [type, true])
+    ) as Record<ChannelType, boolean>
+  );
+
+  const handleExpandClick = (channelType: ChannelType) => {
+    setExpanded((prevExpanded) => ({
+      ...prevExpanded,
+      [channelType]: !prevExpanded[channelType],
+    }));
+  };
+
   const { roomId } = useParams<{ roomId: string }>();
 
-  const { data: channelsForRoom, refetch, isLoading } = useGetChannelsForRoom(Number(roomId));
+  const {
+    data: channelsForRoom,
+    refetch,
+    isLoading,
+  } = useGetChannelsForRoom(Number(roomId));
 
-  console.log('channelsForRoom', channelsForRoom)
+  console.log('channelsForRoom', channelsForRoom);
 
-  const sorted = useMemo(() => [...channelsForRoom].sort((a, b) => {
-    const order = [
-      ChannelType.SWITCH_VIRTUAL_RECEIVER,
-      ChannelType.BLIND_VIRTUAL_RECEIVER,
-      ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER,
-      ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER,
-    ];
-  
-    const indexA = order.indexOf(a.type);
-    const indexB = order.indexOf(b.type);
-  
-    if (indexA === -1 || indexB === -1) {
-      return 0;
-    }
-  
-    return indexA - indexB;
-  }), [channelsForRoom]);
+  const channelsPerType = useMemo(() => {
+    return channelsForRoom?.reduce((acc, channel) => {
+      const channels = acc.get(channel.type);
+
+      if (channels) {
+        channels.push(channel);
+      } else {
+        acc.set(channel.type, [channel]);
+      }
+
+      return acc;
+    }, new Map<ChannelType, Channel[]>());
+  }, [channelsForRoom]);
 
   const getControlComponent = (channel: Channel, refetch: () => void) => {
     switch (channel.type) {
@@ -51,43 +82,56 @@ export const Room = () => {
       case ChannelType.BLIND_VIRTUAL_RECEIVER:
         return <BlindsControl channel={channel} />;
       default:
-        return <Box><Typography>{(channel as Channel).type} no implemented</Typography></Box>;
+        return (
+          <Box>
+            <Typography>{(channel as Channel).type} no implemented</Typography>
+          </Box>
+        );
     }
+  };
+
+  if (isLoading) {
+    return <LinearProgress />;
   }
 
-  if(isLoading) {
-    return <LinearProgress />
-  }
-
-    return (
-      <Container maxWidth="md">
-        <List>
-          {sorted.map((channel, index) => {
-            
-            return (
-              <Box key={index}>
-                <ListItem
-                  disablePadding
-                  key={channel.id}
-                  sx={{
-                    minHeight: '48px',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Box sx={{ my: '5px', width: '100%'}}>
-                  {getControlComponent(channel, refetch)}
-                  </Box>
-                  
-                </ListItem>
-                {channelsForRoom?.length === index + 1 ? null : (
-                  <Divider />
-                )}
-              </Box>
-            );
-          })}
-        </List>
-      </Container>
-    );
+  return (
+    <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', gap: '10px'}}>
+      {Array.from(channelsPerType).map(([channelType, channels]) => {
+        return channels.length ? (
+          <Card key={channelType}>
+            <CardHeader
+              title={
+                <Box sx={{ display: 'flex'}}>
+                  <Typography>
+                    {channelType}
+                  </Typography>
+                  <ExpandMore
+                    expand={expanded[channelType]}
+                    onClick={() => handleExpandClick(channelType)}
+                    aria-expanded={expanded[channelType]}
+                    aria-label="show more"
+                  >
+                    <ExpandMoreIcon />
+                  </ExpandMore>
+                </Box>
+              }
+            />
+            <Collapse in={expanded[channelType]} timeout="auto" unmountOnExit>
+              <CardContent
+                sx={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}
+              >
+                {channels.map((channel, index) => {
+                  return (
+                    <Card key={index} sx={{ maxWidth: 345 }}>
+                      {getControlComponent(channel, refetch)}
+                    </Card>
+                  );
+                })}
+              </CardContent>
+            </Collapse>
+          </Card>
+        ) : null;
+      })}
+    </Container>
+  );
 };

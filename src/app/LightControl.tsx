@@ -1,4 +1,4 @@
-import { Box, ListItemText, Switch, styled } from '@mui/material';
+import { Box, CardContent, CardHeader, ListItemText, Switch, styled } from '@mui/material';
 import {
   SwitchVirtualReceiverChannel,
   useSetValueMutation,
@@ -20,26 +20,36 @@ export const LightControl = ({ channel, refetch }: ControlProps) => {
   const checked = datapoints.STATE === 'true';
 
   return (
-    <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        {checked ? (
-          <LightbulbIcon sx={{ color: 'orange', fontSize: '40px', ml: "5px" }} />
-        ) : (
-          <LightbulbOutlinedIcon sx={{ fontSize: '40px', ml: "5px" }}/>
-        )}
-        <ListItemText
-          primary={name}
-          sx={{
-            marginLeft: '10px',
-            minWidth: '200px',
-            '& .MuiListItemText-primary': {
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            },
-          }}
-        />
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', width: "70px" }}>
+    <Box
+      sx={{ display: 'flex', flexDirection: 'column' }}
+    >
+      <CardHeader
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {checked ? (
+              <LightbulbIcon
+                sx={{ color: 'orange', fontSize: '40px', ml: '5px' }}
+              />
+            ) : (
+              <LightbulbOutlinedIcon sx={{ fontSize: '40px', ml: '5px' }} />
+            )}
+            <ListItemText
+              primary={name}
+              sx={{
+                marginLeft: '10px',
+                minWidth: '200px',
+                '& .MuiListItemText-primary': {
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                },
+              }}
+            />
+          </Box>
+        }
+      />
+
+      <CardContent
+      >
         <BiggerSwitch
           edge="end"
           size="medium"
@@ -55,7 +65,7 @@ export const LightControl = ({ channel, refetch }: ControlProps) => {
           }}
           checked={checked}
         />
-      </Box>
+      </CardContent>
     </Box>
   );
 };

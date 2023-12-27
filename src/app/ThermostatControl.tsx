@@ -16,6 +16,7 @@ import ThermostatAutoIcon from '@mui/icons-material/ThermostatAuto';
 import WaterDamageOutlinedIcon from '@mui/icons-material/WaterDamageOutlined';
 import { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
+import { CircularProgressWithLabel } from './components/CircularProgressWithLabel';
 
 interface ControlProps {
   channel: HeatingClimateControlTransceiverChannel;
@@ -139,11 +140,18 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
                   alignItems: 'center',
                 }}
               >
-                <WaterDamageOutlinedIcon sx={{ fontSize: '30px'}}/>
+                <WaterDamageOutlinedIcon sx={{ fontSize: '30px' }} />
                 <Typography variant="caption" mt="4px" ml="3px">
                   {Number(datapoints?.HUMIDITY)}%
                 </Typography>
               </Box>
+            ) : null}
+
+            {datapoints?.LEVEL ? (
+              <CircularProgressWithLabel
+                value={Number(datapoints?.LEVEL)}
+                size="30px"
+              />
             ) : null}
 
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -161,37 +169,12 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
                 }}
               >
                 {pointMode ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'start',
-                      }}
-                    >
-                      <Button sx={{ padding: 0, fontSize: '10px' }}>
-                        Manuell
-                      </Button>
-                      <Button sx={{ padding: 0, fontSize: '10px' }}>
-                        Boost
-                      </Button>
-                    </Box>
-                    <ThermostatOutlinedIcon sx={{ fontSize: '30px'}} />
-                  </Box>
+                  <ThermostatOutlinedIcon sx={{ fontSize: '30px' }} />
                 ) : (
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'start',
-                    }}
-                  >
-                    <Button sx={{ padding: 0, fontSize: '10px' }}>Auto</Button>
-                    <Button sx={{ padding: 0, fontSize: '10px' }}>Boost</Button>
-                    <ThermostatAutoIcon sx={{ fontSize: '30px'}} />
-                  </Box>
+                  <ThermostatAutoIcon sx={{ fontSize: '30px' }} />
                 )}
               </IconButton>
+
               <Typography variant="caption" mt="4px">
                 {datapoints?.ACTUAL_TEMPERATURE
                   ? Number(datapoints?.ACTUAL_TEMPERATURE).toLocaleString(
@@ -207,7 +190,22 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Icon icon="mdi:target" fontSize='30px' />
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'start',
+                }}
+              >
+                <Button sx={{ padding: 0, fontSize: '10px' }}>
+                  {pointMode ? 'Manuell' : 'Auto'}
+                </Button>
+                <Button sx={{ padding: 0, fontSize: '10px' }}>Boost</Button>
+              </Box>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Icon icon="mdi:target" fontSize="30px" />
               <Typography variant="caption" mt="4px" ml="3px">
                 {pointTemp.toLocaleString('de-DE', {
                   maximumFractionDigits: 2,

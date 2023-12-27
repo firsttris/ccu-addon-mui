@@ -56,6 +56,8 @@ export type HeatingClimateControlTransceiverDatapoint = {
   SET_POINT_TEMPERATURE: string;
   SWITCH_POINT_OCCURED: string;
   WINDOW_STATE: string;
+  LEVEL?: string;
+  LEVEL_STATUS?: string;
 };
 
 export type FloorClimateControlTransceiverDatapoint = {
