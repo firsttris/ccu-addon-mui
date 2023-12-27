@@ -1,71 +1,85 @@
-import { Box, CardContent, CardHeader, ListItemText, Switch, styled } from '@mui/material';
-import {
-  SwitchVirtualReceiverChannel,
-  useSetValueMutation,
-} from '../hooks/useApi';
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-
-const BiggerSwitch = styled(Switch)({
-  transform: 'scale(1.5)', // Adjust scale to desired size
-});
+import { styled } from '@mui/system';
+import { Box, CardHeader, Typography } from '@mui/material';
+import { SwitchVirtualReceiverChannel, useSetValueMutation } from '../hooks/useApi';
+import LightbulbOutlinedIconBase from '@mui/icons-material/LightbulbOutlined';
+import LightbulbIconBase from '@mui/icons-material/Lightbulb';
 
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;
   refetch: () => void;
 }
+
+const LightbulbIcon = styled(LightbulbIconBase)({
+  cursor: 'pointer',
+  color: 'orange',
+  fontSize: '40px',
+  backgroundColor: 'lightgrey',
+  borderRadius: '50%',
+  padding: '10px',
+  '&:hover': {
+    backgroundColor: 'darkgrey',
+  },
+});
+
+const LightbulbOutlinedIcon = styled(LightbulbOutlinedIconBase)({
+  cursor: 'pointer',
+  fontSize: '40px',
+  backgroundColor: 'lightgrey',
+  borderRadius: '50%',
+  padding: '10px',
+  '&:hover': {
+    backgroundColor: 'darkgrey',
+  },
+});
+
+const StyledBox = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+});
+
+const TitleBox = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+});
+
+const StyledTypography = styled(Typography)({
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  marginLeft: '10px',
+});
+
 export const LightControl = ({ channel, refetch }: ControlProps) => {
   const setValueMutation = useSetValueMutation();
   const { datapoints, name, address, interfaceName } = channel;
   const checked = datapoints.STATE === 'true';
 
+  const onHandleChange = async () => {
+    await setValueMutation.mutateAsync({
+      interface: interfaceName,
+      address,
+      valueKey: 'STATE',
+      type: 'boolean',
+      value: !checked,
+    });
+    refetch();
+  }
+
   return (
-    <Box
-      sx={{ display: 'flex', flexDirection: 'column' }}
-    >
+    <StyledBox>
       <CardHeader
         title={
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <TitleBox>
             {checked ? (
-              <LightbulbIcon
-                sx={{ color: 'orange', fontSize: '40px', ml: '5px' }}
-              />
+              <LightbulbIcon onClick={onHandleChange} />
             ) : (
-              <LightbulbOutlinedIcon sx={{ fontSize: '40px', ml: '5px' }} />
+              <LightbulbOutlinedIcon onClick={onHandleChange} />
             )}
-            <ListItemText
-              primary={name}
-              sx={{
-                marginLeft: '10px',
-                minWidth: '200px',
-                '& .MuiListItemText-primary': {
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                },
-              }}
-            />
-          </Box>
+            <StyledTypography>
+              {name}
+            </StyledTypography>
+          </TitleBox>
         }
       />
-
-      <CardContent
-      >
-        <BiggerSwitch
-          edge="end"
-          size="medium"
-          onChange={async () => {
-            await setValueMutation.mutateAsync({
-              interface: interfaceName,
-              address,
-              valueKey: 'STATE',
-              type: 'boolean',
-              value: !checked,
-            });
-            refetch();
-          }}
-          checked={checked}
-        />
-      </CardContent>
-    </Box>
+    </StyledBox>
   );
 };

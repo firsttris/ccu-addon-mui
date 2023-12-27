@@ -1,14 +1,13 @@
 import {
   Box,
   Card,
-  CardContent,
-  CardHeader,
   Collapse,
   Container,
   IconButton,
   IconButtonProps,
   LinearProgress,
   Typography,
+  styled,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { Channel, ChannelType, useGetChannelsForRoom } from '../hooks/useApi';
@@ -18,7 +17,6 @@ import { ThermostatControl } from './ThermostatControl';
 import { FloorControl } from './FloorControl';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useMemo, useState } from 'react';
-import styled from '@emotion/styled';
 
 interface ExpandMoreProps extends IconButtonProps {
   expand: boolean;
@@ -31,6 +29,30 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
   transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
   marginLeft: 'auto',
   transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
+  backgroundColor: 'lightgrey',
+  borderRadius: '50%',
+  padding: '10px',
+  '&:hover': {
+    backgroundColor: 'darkgrey',
+  },
+}));
+
+const StyledContainer = styled(Container)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+});
+
+const TitleBox = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+});
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  maxWidth: 320,
+  [theme.breakpoints.down('md')]: {
+    width: '100%',
+  }
 }));
 
 export const Room = () => {
@@ -95,43 +117,35 @@ export const Room = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', gap: '10px'}}>
+    <StyledContainer maxWidth="xl">
       {Array.from(channelsPerType).map(([channelType, channels]) => {
         return channels.length ? (
-          <Card key={channelType}>
-            <CardHeader
-              title={
-                <Box sx={{ display: 'flex'}}>
-                  <Typography>
-                    {channelType}
-                  </Typography>
-                  <ExpandMore
-                    expand={expanded[channelType]}
-                    onClick={() => handleExpandClick(channelType)}
-                    aria-expanded={expanded[channelType]}
-                    aria-label="show more"
-                  >
-                    <ExpandMoreIcon />
-                  </ExpandMore>
-                </Box>
-              }
-            />
-            <Collapse in={expanded[channelType]} timeout="auto" unmountOnExit>
-              <CardContent
-                sx={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}
+          <Box>
+            <TitleBox>
+              <Typography sx={{ maxWidth: '300px', overflow: 'hidden', whiteSpace: 'wrap', textOverflow: 'ellipsis'}}>{channelType}</Typography>
+              <ExpandMore
+                expand={expanded[channelType]}
+                onClick={() => handleExpandClick(channelType)}
+                aria-expanded={expanded[channelType]}
+                aria-label="show more"
               >
+                <ExpandMoreIcon />
+              </ExpandMore>
+            </TitleBox>
+            <Collapse in={expanded[channelType]} timeout="auto" unmountOnExit>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '5px', justifyContent: 'center' }}>
                 {channels.map((channel, index) => {
                   return (
-                    <Card key={index} sx={{ maxWidth: 345 }}>
+                    <StyledCard key={index}>
                       {getControlComponent(channel, refetch)}
-                    </Card>
+                    </StyledCard>
                   );
                 })}
-              </CardContent>
+              </Box>
             </Collapse>
-          </Card>
+          </Box>
         ) : null;
       })}
-    </Container>
+    </StyledContainer>
   );
 };
