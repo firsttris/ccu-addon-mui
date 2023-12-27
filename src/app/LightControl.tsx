@@ -23,9 +23,9 @@ export const LightControl = ({ channel, refetch }: ControlProps) => {
     <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between' }}>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         {checked ? (
-          <LightbulbIcon sx={{ color: 'orange' }} />
+          <LightbulbIcon sx={{ color: 'orange', fontSize: '40px', ml: "5px" }} />
         ) : (
-          <LightbulbOutlinedIcon />
+          <LightbulbOutlinedIcon sx={{ fontSize: '40px', ml: "5px" }}/>
         )}
         <ListItemText
           primary={name}
@@ -39,7 +39,7 @@ export const LightControl = ({ channel, refetch }: ControlProps) => {
           }}
         />
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'column', width: "70px" }}>
         <BiggerSwitch
           edge="end"
           size="medium"

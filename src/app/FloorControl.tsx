@@ -28,7 +28,7 @@ export const FloorControl = (props: FloorControlProps) => {
   return (
     <Box sx={{ width: '100%', ml: '6px' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <Icon icon="mdi:radiator-coil" color={getColor(value)} />
+        <Icon icon="mdi:radiator-coil" color={getColor(value)} fontSize={"40px"} />
         <Typography>{props.channel.name}</Typography>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'center', mt: '5px' }}>

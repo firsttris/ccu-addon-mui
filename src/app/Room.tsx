@@ -24,10 +24,10 @@ export const Room = () => {
 
   const sorted = useMemo(() => [...channelsForRoom].sort((a, b) => {
     const order = [
-      ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER,
-      ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER,
       ChannelType.SWITCH_VIRTUAL_RECEIVER,
       ChannelType.BLIND_VIRTUAL_RECEIVER,
+      ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER,
+      ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER,
     ];
   
     const indexA = order.indexOf(a.type);
