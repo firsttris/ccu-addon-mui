@@ -3,7 +3,6 @@ import {
   Button,
   CardContent,
   CardHeader,
-  IconButton,
   Slider,
   Typography,
 } from '@mui/material';
@@ -12,16 +11,11 @@ import {
   HeatingClimateControlTransceiverChannel,
   useSetValueMutation,
 } from '../hooks/useApi';
-import ThermostatOutlinedIcon from '@mui/icons-material/ThermostatOutlined';
-import ThermostatAutoIcon from '@mui/icons-material/ThermostatAuto';
 import WaterDamageOutlinedIcon from '@mui/icons-material/WaterDamageOutlined';
 import { useEffect, useState } from 'react';
-import { Icon } from '@iconify/react';
 import { CircularProgressWithLabel } from './components/CircularProgressWithLabel';
 import { TypographyWithEllipsis } from './components/TypographyWithEllipsis';
-import { IconButtonWithHover } from './components/IconButtonWithHover';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+import { StyledHeaderIcon, StyledIconButton } from './components/StyledIcons';
 
 interface ControlProps {
   channel: HeatingClimateControlTransceiverChannel;
@@ -101,11 +95,9 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
       <CardHeader
         title={
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <ThermostatOutlinedIcon
-              sx={{
-                color: getColor(Number(datapoints?.ACTUAL_TEMPERATURE)),
-                fontSize: '30px',
-              }}
+            <StyledHeaderIcon
+              icon="mdi:thermostat-cog"
+              
             />
             <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
           </Box>
@@ -135,7 +127,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
                     alignItems: 'center',
                   }}
                 >
-                  <WaterDamageOutlinedIcon sx={{ fontSize: '30px' }} />
+                  <StyledHeaderIcon icon="material-symbols-light:humidity-indoor-outline" />
                   <Typography variant="caption" mt="4px" ml="3px">
                     {Number(datapoints?.HUMIDITY)}%
                   </Typography>
@@ -144,7 +136,10 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
 
               {datapoints?.LEVEL ? (
                 <Box>
-                  <Icon icon="mdi:pipe-valve" fontSize="30px" style={{ marginRight: '5px'}} />
+                  <StyledHeaderIcon
+                    icon="mdi:pipe-valve"
+                    style={{ marginRight: '5px' }}
+                  />
                   <CircularProgressWithLabel
                     value={Number(datapoints?.LEVEL)}
                   />
@@ -160,8 +155,9 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <IconButton
-                  sx={{ padding: 0, color: 'black' }}
+                <StyledHeaderIcon
+                  icon={pointMode ? 'mdi:thermostat' : 'mdi:thermostat-auto'}
+                  color={getColor(Number(datapoints?.ACTUAL_TEMPERATURE))}
                   onClick={() => {
                     setPointMode(Number(pointMode ? '0' : '1'));
                     setValueMutation.mutateAsync({
@@ -172,15 +168,8 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
                       value: pointMode ? 0 : 1,
                     });
                   }}
-                >
-                  {pointMode ? (
-                    <ThermostatOutlinedIcon sx={{ fontSize: '30px' }} />
-                  ) : (
-                    <ThermostatAutoIcon sx={{ fontSize: '30px' }} />
-                  )}
-                </IconButton>
-
-                <Typography variant="caption" mt="4px">
+                />
+                <Typography variant="caption" mt="4px" ml="3px">
                   {datapoints?.ACTUAL_TEMPERATURE
                     ? Number(datapoints?.ACTUAL_TEMPERATURE).toLocaleString(
                         'de-DE',
@@ -195,8 +184,8 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Icon icon="mdi:target" fontSize="30px" />
-                <Typography variant="caption" mt="4px" ml="3px">
+                <StyledHeaderIcon icon="mdi:target" />
+                <Typography variant="caption" mt="4px" ml="2px">
                   {pointTemp.toLocaleString('de-DE', {
                     maximumFractionDigits: 2,
                     minimumFractionDigits: 2,
@@ -215,12 +204,10 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
               width: '90%',
             }}
           >
-            <IconButtonWithHover
+            <StyledIconButton
+              icon="mdi:temperature-minus"
               onClick={() => changeSetPointTemperature(pointTemp - 1)}
-            >
-              <Icon icon="ph:minus" fontSize="45px" />
-            </IconButtonWithHover>
-
+            />
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <Box
                 sx={{
@@ -242,12 +229,10 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
                 </Button>
               </Box>
             </Box>
-
-            <IconButtonWithHover
+            <StyledIconButton
+              icon="mdi:temperature-add"
               onClick={() => changeSetPointTemperature(pointTemp + 1)}
-            >
-              <Icon icon="ph:plus" fontSize="45px" />
-            </IconButtonWithHover>
+            />
           </Box>
 
           <Box sx={{ width: '90%', mt: '10px' }}>

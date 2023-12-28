@@ -1,10 +1,9 @@
 import { styled } from '@mui/system';
-import { Box, CardHeader } from '@mui/material';
+import { Box, CardHeader, IconButton } from '@mui/material';
 import {
   SwitchVirtualReceiverChannel,
   useSetValueMutation,
 } from '../hooks/useApi';
-import { IconButtonWithHover } from './components/IconButtonWithHover';
 import { TypographyWithEllipsis } from './components/TypographyWithEllipsis';
 import { Icon } from '@iconify/react';
 
@@ -22,6 +21,13 @@ const TitleBox = styled(Box)({
   display: 'flex',
   alignItems: 'center',
 });
+
+const StyledIcon = styled(Icon)`
+  font-size: 40px;
+  background-color: lightGrey;
+  border-radius: 10px;
+  padding: 1px;
+`;
 
 export const SwitchControl = ({ channel, refetch }: ControlProps) => {
   const setValueMutation = useSetValueMutation();
@@ -42,20 +48,14 @@ export const SwitchControl = ({ channel, refetch }: ControlProps) => {
   return (
     <StyledBox>
       <CardHeader
-        width="100%"
+        sx={{ cursor: 'pointer' }}
+        onClick={onHandleChange}
         title={
           <TitleBox>
-            <IconButtonWithHover onClick={onHandleChange}>
-              {checked ? (
-                <Icon
-                  icon="mdi:light-switch"
-                  fontSize="40px"
-                  color="orange"
-                />
-              ) : (
-                <Icon icon="mdi:light-switch-off" fontSize="40px" />
-              )}
-            </IconButtonWithHover>
+            <StyledIcon
+              icon={checked ? 'mdi:light-switch' : 'mdi:light-switch-off'}
+              color={checked ? 'orange' : 'unset'}
+            />
             <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
           </TitleBox>
         }
