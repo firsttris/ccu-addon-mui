@@ -119,14 +119,12 @@ export const Room = () => {
     return <LinearProgress />;
   }
 
-  console.log('current STATE', hasTransitionExited);
-
   return (
     <StyledContainer maxWidth="xl">
       <List disablePadding={true}>
-        {Array.from(channelsPerType).map(([channelType, channels]) => {
+        {Array.from(channelsPerType).map(([channelType, channels], index) => {
           return channels.length ? (
-            <Box>
+            <Box key={index}> 
               <ListItem disablePadding={true}>
                 <ListItemButton
                   onClick={() => handleExpandClick(channelType)}
