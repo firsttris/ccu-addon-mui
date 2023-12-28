@@ -1,5 +1,5 @@
 import { styled } from '@mui/system';
-import { Box, CardHeader, Typography } from '@mui/material';
+import { Box, CardHeader } from '@mui/material';
 import {
   SwitchVirtualReceiverChannel,
   useSetValueMutation,

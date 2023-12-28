@@ -2,8 +2,6 @@ import {
   Box,
   CardContent,
   CardHeader,
-  IconButton,
-  ListItemText,
 } from '@mui/material';
 import {
   BlindVirtualReceiverChannel,
