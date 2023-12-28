@@ -168,11 +168,6 @@ export const Room = () => {
                   }))
                 }
               >
-                <Divider
-                  sx={{
-                    mb: '10px',
-                  }}
-                />
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                   {channels.map((channel, index) => {
                     return (
