@@ -4,26 +4,14 @@ import {
   SwitchVirtualReceiverChannel,
   useSetValueMutation,
 } from '../hooks/useApi';
-import LightbulbOutlinedIconBase from '@mui/icons-material/LightbulbOutlined';
-import LightbulbIconBase from '@mui/icons-material/Lightbulb';
 import { IconButtonWithHover } from './components/IconButtonWithHover';
 import { TypographyWithEllipsis } from './components/TypographyWithEllipsis';
+import { Icon } from '@iconify/react';
 
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;
   refetch: () => void;
 }
-
-const LightbulbIcon = styled(LightbulbIconBase)({
-  cursor: 'pointer',
-  color: 'orange',
-  fontSize: '40px',
-});
-
-const LightbulbOutlinedIcon = styled(LightbulbOutlinedIconBase)({
-  cursor: 'pointer',
-  fontSize: '40px',
-});
 
 const StyledBox = styled(Box)({
   display: 'flex',
@@ -35,9 +23,7 @@ const TitleBox = styled(Box)({
   alignItems: 'center',
 });
 
-
-
-export const LightControl = ({ channel, refetch }: ControlProps) => {
+export const SwitchControl = ({ channel, refetch }: ControlProps) => {
   const setValueMutation = useSetValueMutation();
   const { datapoints, name, address, interfaceName } = channel;
   const checked = datapoints.STATE === 'true';
@@ -60,7 +46,15 @@ export const LightControl = ({ channel, refetch }: ControlProps) => {
         title={
           <TitleBox>
             <IconButtonWithHover onClick={onHandleChange}>
-              {checked ? <LightbulbIcon /> : <LightbulbOutlinedIcon />}
+              {checked ? (
+                <Icon
+                  icon="mdi:light-switch"
+                  fontSize="40px"
+                  color="orange"
+                />
+              ) : (
+                <Icon icon="mdi:light-switch-off" fontSize="40px" />
+              )}
             </IconButtonWithHover>
             <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
           </TitleBox>

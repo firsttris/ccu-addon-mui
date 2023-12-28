@@ -16,7 +16,7 @@ import {
 import { useParams } from 'react-router-dom';
 import { Channel, ChannelType, useGetChannelsForRoom } from '../hooks/useApi';
 import { BlindsControl } from './BlindsControl';
-import { LightControl } from './LightControl';
+import { SwitchControl } from './SwitchControl';
 import { ThermostatControl } from './ThermostatControl';
 import { FloorControl } from './FloorControl';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -101,7 +101,7 @@ export const Room = () => {
       case ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER:
         return <FloorControl channel={channel} />;
       case ChannelType.SWITCH_VIRTUAL_RECEIVER:
-        return <LightControl refetch={refetch} channel={channel} />;
+        return <SwitchControl refetch={refetch} channel={channel} />;
       case ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER:
         return <ThermostatControl channel={channel} />;
       case ChannelType.BLIND_VIRTUAL_RECEIVER:
@@ -126,7 +126,7 @@ export const Room = () => {
           return channels.length ? (
             <Box key={index}> 
               <ListItem disablePadding={true}>
-                <ListItemButton
+                <ListItemButton sx={{ '&:hover': { backgroundColor: 'transparent' } }}
                   onClick={() => handleExpandClick(channelType)}
                   disableRipple={true}
                 >

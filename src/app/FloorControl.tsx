@@ -39,7 +39,7 @@ export const FloorControl = (props: FloorControlProps) => {
             <Icon
               icon="mdi:radiator-coil"
               color={getColor(value)}
-              fontSize={'40px'}
+              fontSize={'30px'}
             />
             <Typography>{props.channel.name}</Typography>
           </Box>
@@ -48,6 +48,7 @@ export const FloorControl = (props: FloorControlProps) => {
 
       <CardContent sx={{ pt: '0px'}}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Icon icon="mdi:pipe-valve" fontSize="30px" style={{ marginRight: '5px'}} />
           <Box sx={{ width: '100%', mr: 1 }}>
             <LinearProgress variant="determinate" value={value} />
           </Box>

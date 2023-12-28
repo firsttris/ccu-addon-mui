@@ -30,9 +30,9 @@ export const BlindsControl = ({ channel }: ControlProps) => {
         title={
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {blindValue === 0 ? (
-              <BlindsClosedIcon sx={{ fontSize: '40px' }} />
+              <BlindsClosedIcon sx={{ fontSize: '30px' }} />
             ) : (
-              <BlindsOutlinedIcon sx={{ fontSize: '40px' }} />
+              <BlindsOutlinedIcon sx={{ fontSize: '30px' }} />
             )}
             <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
           </Box>
