@@ -19,6 +19,9 @@ export const ChannelHeader = ({
   return (
     <CardHeader
       onClick={onClick}
+      sx={{
+        '& .MuiCardHeader-content': { width: '100%' },
+      }}
       title={
         <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
           <StyledHeaderIcon icon={icon} color={color} />

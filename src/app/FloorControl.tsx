@@ -35,7 +35,6 @@ export const FloorControl = (props: FloorControlProps) => {
   return (
     <Box>
       <ChannelHeader icon="mdi:radiator-coil" name={props.channel.name}/>
-
       <CardContent sx={{ pt: '0px'}}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <StyledHeaderIcon icon="mdi:pipe-valve" style={{ marginRight: '5px'}} color={getColor(value)}/>

@@ -19,12 +19,11 @@ import { Icon } from '@iconify/react';
 
 
 interface ExpandMoreProps {
-  expand: boolean;
+  expanded: boolean;
 }
 
-
-const ExpandMore = styled(Icon)(({ expand }: ExpandMoreProps) => ({
-  transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
+const ExpandMore = styled(Icon)<ExpandMoreProps>(({ expanded }) => ({
+  transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
   marginLeft: 'auto',
   transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
   padding: '5px',
@@ -76,7 +75,7 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
 
   const [hasTransitionExited, setHasTransitionExited] = useState<
   boolean
-  >(false);
+  >(true);
   const [expanded, setExpanded] = useState<boolean>(false);
 
   const handleExpandClick = () => setExpanded(!expanded);
@@ -85,7 +84,7 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
     <Box key={index}>
       <ListItem disablePadding={true}>
         <ListItemButton
-          sx={{ '&:hover': { backgroundColor: 'transparent' }, paddingLeft: 0 }}
+          sx={{ '&:hover': { backgroundColor: 'transparent' }, px: 0 }}
           onClick={() => handleExpandClick()}
           disableRipple={true}
         >
@@ -101,7 +100,7 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
           >
             {t(channelType)}
           </Typography>
-          <ExpandMore icon="uiw:down" expand={expanded}/>
+          <ExpandMore icon="uiw:down" expanded={expanded}/>
         </ListItemButton>
       </ListItem>
       {hasTransitionExited ? <Divider /> : null}

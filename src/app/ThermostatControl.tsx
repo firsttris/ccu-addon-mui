@@ -1,11 +1,4 @@
-import {
-  Box,
-  Button,
-  CardContent,
-  CardHeader,
-  Slider,
-  Typography,
-} from '@mui/material';
+import { Box, Button, CardContent, Slider, Typography } from '@mui/material';
 
 import {
   HeatingClimateControlTransceiverChannel,
@@ -13,7 +6,6 @@ import {
 } from '../hooks/useApi';
 import { useEffect, useState } from 'react';
 import { CircularProgressWithLabel } from './components/CircularProgressWithLabel';
-import { TypographyWithEllipsis } from './components/TypographyWithEllipsis';
 import { StyledHeaderIcon, StyledIconButton } from './components/StyledIcons';
 import { ChannelHeader } from './components/ChannelHeader';
 
@@ -85,6 +77,81 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
     }
   };
 
+  const getHumidity = () => {
+    return datapoints?.HUMIDITY ? (
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <StyledHeaderIcon icon="material-symbols-light:humidity-indoor-outline" />
+        <Typography variant="caption" ml="3px">
+          {Number(datapoints?.HUMIDITY)}%
+        </Typography>
+      </Box>
+    ) : null;
+  };
+
+  const getValveLevel = () => {
+    return (datapoints?.LEVEL ? (
+      <Box>
+        <StyledHeaderIcon
+          icon="mdi:pipe-valve"
+          style={{ marginRight: '5px' }}
+        />
+        <CircularProgressWithLabel
+          value={Number(datapoints?.LEVEL)}
+        />
+      </Box>
+    ) : null)
+  }
+
+  const getActualTemperature = () => {
+    return (<Box sx={{ display: 'flex', alignItems: 'center' }}>
+    <StyledHeaderIcon
+      icon={pointMode ? 'mdi:thermostat' : 'mdi:thermostat-auto'}
+      color={getColor(Number(datapoints?.ACTUAL_TEMPERATURE))}
+      onClick={() => {
+        setPointMode(Number(pointMode ? '0' : '1'));
+        setValueMutation.mutateAsync({
+          interface: interfaceName,
+          address,
+          valueKey: 'CONTROL_MODE',
+          type: 'double',
+          value: pointMode ? 0 : 1,
+        });
+      }}
+    />
+    <Typography variant="caption" ml="3px">
+      {datapoints?.ACTUAL_TEMPERATURE
+        ? Number(datapoints?.ACTUAL_TEMPERATURE).toLocaleString(
+            'de-DE',
+            {
+              maximumFractionDigits: 2,
+              minimumFractionDigits: 2,
+            }
+          )
+        : null}
+      °C
+    </Typography>
+  </Box>)
+  }
+
+
+  const getTargetTemperature = () => {
+    return (<Box sx={{ display: 'flex', alignItems: 'center' }}>
+    <StyledHeaderIcon icon="mdi:target" />
+    <Typography variant="caption" ml="2px">
+      {pointTemp.toLocaleString('de-DE', {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2,
+      })}
+      °C
+    </Typography>
+  </Box>)
+  }
+
   return (
     <Box
       sx={{
@@ -109,31 +176,9 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
             }}
           >
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              {datapoints?.HUMIDITY ? (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  <StyledHeaderIcon icon="material-symbols-light:humidity-indoor-outline" />
-                  <Typography variant="caption" mt="4px" ml="3px">
-                    {Number(datapoints?.HUMIDITY)}%
-                  </Typography>
-                </Box>
-              ) : null}
+              {getHumidity()}
 
-              {datapoints?.LEVEL ? (
-                <Box>
-                  <StyledHeaderIcon
-                    icon="mdi:pipe-valve"
-                    style={{ marginRight: '5px' }}
-                  />
-                  <CircularProgressWithLabel
-                    value={Number(datapoints?.LEVEL)}
-                  />
-                </Box>
-              ) : null}
+              {getValveLevel()}
             </Box>
 
             <Box
@@ -143,45 +188,9 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
                 mt: '5px',
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <StyledHeaderIcon
-                  icon={pointMode ? 'mdi:thermostat' : 'mdi:thermostat-auto'}
-                  color={getColor(Number(datapoints?.ACTUAL_TEMPERATURE))}
-                  onClick={() => {
-                    setPointMode(Number(pointMode ? '0' : '1'));
-                    setValueMutation.mutateAsync({
-                      interface: interfaceName,
-                      address,
-                      valueKey: 'CONTROL_MODE',
-                      type: 'double',
-                      value: pointMode ? 0 : 1,
-                    });
-                  }}
-                />
-                <Typography variant="caption" mt="4px" ml="3px">
-                  {datapoints?.ACTUAL_TEMPERATURE
-                    ? Number(datapoints?.ACTUAL_TEMPERATURE).toLocaleString(
-                        'de-DE',
-                        {
-                          maximumFractionDigits: 2,
-                          minimumFractionDigits: 2,
-                        }
-                      )
-                    : null}
-                  °C
-                </Typography>
-              </Box>
+              {getActualTemperature()}
 
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <StyledHeaderIcon icon="mdi:target" />
-                <Typography variant="caption" mt="4px" ml="2px">
-                  {pointTemp.toLocaleString('de-DE', {
-                    maximumFractionDigits: 2,
-                    minimumFractionDigits: 2,
-                  })}
-                  °C
-                </Typography>
-              </Box>
+              {getTargetTemperature()}
             </Box>
           </Box>
 
