@@ -11,11 +11,11 @@ import {
   HeatingClimateControlTransceiverChannel,
   useSetValueMutation,
 } from '../hooks/useApi';
-import WaterDamageOutlinedIcon from '@mui/icons-material/WaterDamageOutlined';
 import { useEffect, useState } from 'react';
 import { CircularProgressWithLabel } from './components/CircularProgressWithLabel';
 import { TypographyWithEllipsis } from './components/TypographyWithEllipsis';
 import { StyledHeaderIcon, StyledIconButton } from './components/StyledIcons';
+import { ChannelHeader } from './components/ChannelHeader';
 
 interface ControlProps {
   channel: HeatingClimateControlTransceiverChannel;
@@ -92,18 +92,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
         flexDirection: 'column',
       }}
     >
-      <CardHeader
-        title={
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <StyledHeaderIcon
-              icon="mdi:thermostat-cog"
-              
-            />
-            <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
-          </Box>
-        }
-      />
-
+      <ChannelHeader name={name} icon="mdi:thermostat-cog" />
       <CardContent sx={{ paddingTop: 0, px: '10px' }}>
         <Box
           sx={{
@@ -205,7 +194,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
             }}
           >
             <StyledIconButton
-              icon="mdi:temperature-minus"
+              icon="ph:minus"
               onClick={() => changeSetPointTemperature(pointTemp - 1)}
             />
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -230,7 +219,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
               </Box>
             </Box>
             <StyledIconButton
-              icon="mdi:temperature-add"
+              icon="ph:plus"
               onClick={() => changeSetPointTemperature(pointTemp + 1)}
             />
           </Box>

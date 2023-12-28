@@ -1,11 +1,8 @@
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Box,
   Card,
   Collapse,
   Divider,
-  IconButton,
-  IconButtonProps,
   ListItem,
   ListItemButton,
   Typography,
@@ -18,24 +15,22 @@ import { SwitchControl } from './SwitchControl';
 import { ThermostatControl } from './ThermostatControl';
 import { BlindsControl } from './BlindsControl';
 import { useTranslations } from './../i18n/utils';
+import { Icon } from '@iconify/react';
 
-interface ExpandMoreProps extends IconButtonProps {
+
+interface ExpandMoreProps {
   expand: boolean;
 }
 
-const ExpandMore = styled((props: ExpandMoreProps) => {
-  const { expand, ...other } = props;
-  return <IconButton {...other} />;
-})(({ expand }) => ({
+
+const ExpandMore = styled(Icon)(({ expand }: ExpandMoreProps) => ({
   transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
   marginLeft: 'auto',
   transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
-  padding: '1px',
+  padding: '5px',
   backgroundColor: 'lightgrey',
   borderRadius: '50%',
-  '&:hover': {
-    backgroundColor: 'darkgrey',
-  },
+  fontSize: '25px',
 }));
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -90,7 +85,7 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
     <Box key={index}>
       <ListItem disablePadding={true}>
         <ListItemButton
-          sx={{ '&:hover': { backgroundColor: 'transparent' } }}
+          sx={{ '&:hover': { backgroundColor: 'transparent' }, paddingLeft: 0 }}
           onClick={() => handleExpandClick()}
           disableRipple={true}
         >
@@ -106,13 +101,7 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
           >
             {t(channelType)}
           </Typography>
-          <ExpandMore
-            expand={expanded}
-            aria-expanded={expanded}
-            aria-label="show more"
-          >
-            <ExpandMoreIcon />
-          </ExpandMore>
+          <ExpandMore icon="uiw:down" expand={expanded}/>
         </ListItemButton>
       </ListItem>
       {hasTransitionExited ? <Divider /> : null}

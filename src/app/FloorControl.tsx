@@ -6,7 +6,8 @@ import {
   Typography,
 } from '@mui/material';
 import { FloorClimateControlTransceiverChannel } from 'src/hooks/useApi';
-import { Icon } from '@iconify/react';
+import { StyledHeaderIcon } from './components/StyledIcons';
+import { ChannelHeader } from './components/ChannelHeader';
 
 interface FloorControlProps {
   channel: FloorClimateControlTransceiverChannel;
@@ -33,22 +34,11 @@ export const FloorControl = (props: FloorControlProps) => {
 
   return (
     <Box>
-      <CardHeader
-        title={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            <Icon
-              icon="mdi:radiator-coil"
-              color={getColor(value)}
-              fontSize={'30px'}
-            />
-            <Typography>{props.channel.name}</Typography>
-          </Box>
-        }
-      />
+      <ChannelHeader icon="mdi:radiator-coil" name={props.channel.name}/>
 
       <CardContent sx={{ pt: '0px'}}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Icon icon="mdi:pipe-valve" fontSize="30px" style={{ marginRight: '5px'}} />
+        <StyledHeaderIcon icon="mdi:pipe-valve" style={{ marginRight: '5px'}} color={getColor(value)}/>
           <Box sx={{ width: '100%', mr: 1 }}>
             <LinearProgress variant="determinate" value={value} />
           </Box>

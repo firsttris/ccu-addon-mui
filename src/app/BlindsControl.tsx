@@ -1,13 +1,11 @@
-import { Box, CardContent, CardHeader } from '@mui/material';
+import { Box, CardContent } from '@mui/material';
 import {
   BlindVirtualReceiverChannel,
   useSetValueMutation,
 } from '../hooks/useApi';
-import BlindsOutlinedIcon from '@mui/icons-material/BlindsOutlined';
-import BlindsClosedIcon from '@mui/icons-material/BlindsClosed';
 import { CircularProgressWithLabel } from './components/CircularProgressWithLabel';
-import { TypographyWithEllipsis } from './components/TypographyWithEllipsis';
-import { StyledHeaderIcon, StyledIconButton } from './components/StyledIcons';
+import { StyledIconButton } from './components/StyledIcons';
+import { ChannelHeader } from './components/ChannelHeader';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;
@@ -19,15 +17,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const blindValue = Number(datapoints.LEVEL) * 100;
   return (
     <Box>
-      <CardHeader
-        title={
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <StyledHeaderIcon icon={blindValue === 0 ? "material-symbols-light:blinds-closed" : "material-symbols-light:blinds"} />
-            <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
-          </Box>
-        }
-      />
-
+      <ChannelHeader icon={blindValue === 0 ? "material-symbols-light:blinds-closed" : "material-symbols-light:blinds"} name={name}/>
       <CardContent sx={{ paddingTop: '0px' }}>
         <Box
           sx={{
