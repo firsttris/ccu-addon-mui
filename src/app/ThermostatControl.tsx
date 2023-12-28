@@ -150,7 +150,6 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
             {datapoints?.LEVEL ? (
               <CircularProgressWithLabel
                 value={Number(datapoints?.LEVEL)}
-                size="30px"
               />
             ) : null}
 

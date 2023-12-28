@@ -1,4 +1,10 @@
-import { Box, IconButton, ListItemText } from '@mui/material';
+import {
+  Box,
+  CardContent,
+  CardHeader,
+  IconButton,
+  ListItemText,
+} from '@mui/material';
 import {
   BlindVirtualReceiverChannel,
   useSetValueMutation,
@@ -9,6 +15,8 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import StopIcon from '@mui/icons-material/Stop';
 import { CircularProgressWithLabel } from './components/CircularProgressWithLabel';
+import { IconButtonWithHover } from './components/IconButtonWithHover';
+import { TypographyWithEllipsis } from './components/TypographyWithEllipsis';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;
@@ -19,93 +27,75 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const { datapoints, name, address, interfaceName } = channel;
   const blindValue = Number(datapoints.LEVEL) * 100;
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        mb: '-10px',
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        {blindValue === 0 ? (
-          <BlindsClosedIcon sx={{ fontSize: '40px', ml: '5px' }} />
-        ) : (
-          <BlindsOutlinedIcon sx={{ fontSize: '40px', ml: '5px' }} />
-        )}
-        <ListItemText
-          primary={name}
+    <Box>
+      <CardHeader
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {blindValue === 0 ? (
+              <BlindsClosedIcon sx={{ fontSize: '40px' }} />
+            ) : (
+              <BlindsOutlinedIcon sx={{ fontSize: '40px' }} />
+            )}
+            <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
+          </Box>
+        }
+      />
+
+      <CardContent sx={{ paddingTop: '0px'}}>
+        <Box
           sx={{
-            marginLeft: '10px',
-            '& .MuiListItemText-primary': {
-              overflow: 'hidden',
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis',
-            },
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
           }}
-        />
-      </Box>
-      <Box
-        sx={{
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          mt: '-5px',
-        }}
-      >
-        <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-          <IconButton
-            sx={{
-              backgroundColor: 'grey',
-              borderRadius: '10px',
-              '&:hover': {
-                backgroundColor: 'darkgrey',
-              },
-            }}
-            onClick={() =>
-              setValueMutation.mutateAsync({
-                interface: interfaceName,
-                address,
-                valueKey: 'LEVEL',
-                type: 'double',
-                value: 0,
-              })
-            }
-          >
-            <ArrowDownwardIcon sx={{ fontSize: '45px' }} />
-          </IconButton>
-          <IconButton
-            onClick={() =>
-              setValueMutation.mutateAsync({
-                interface: interfaceName,
-                address,
-                valueKey: 'STOP',
-                type: 'boolean',
-                value: true,
-              })
-            }
-          >
-            <StopIcon sx={{ fontSize: '45px' }} />
-          </IconButton>
-          <IconButton
-            onClick={() =>
-              setValueMutation.mutateAsync({
-                interface: interfaceName,
-                address,
-                valueKey: 'LEVEL',
-                type: 'double',
-                value: 1,
-              })
-            }
-          >
-            <ArrowUpwardIcon sx={{ fontSize: '45px' }} />
-          </IconButton>
-          <Box>
-            <CircularProgressWithLabel value={blindValue} />
+        >
+          <Box sx={{ display: 'flex', gap: '5px', alignItems: 'center', justifyContent: 'center' }}>
+            <IconButtonWithHover
+              onClick={() =>
+                setValueMutation.mutateAsync({
+                  interface: interfaceName,
+                  address,
+                  valueKey: 'LEVEL',
+                  type: 'double',
+                  value: 0,
+                })
+              }
+            >
+              <ArrowDownwardIcon sx={{ fontSize: '45px' }} />
+            </IconButtonWithHover>
+            <IconButtonWithHover
+              onClick={() =>
+                setValueMutation.mutateAsync({
+                  interface: interfaceName,
+                  address,
+                  valueKey: 'STOP',
+                  type: 'boolean',
+                  value: true,
+                })
+              }
+            >
+              <StopIcon sx={{ fontSize: '45px' }} />
+            </IconButtonWithHover>
+            <IconButtonWithHover
+              onClick={() =>
+                setValueMutation.mutateAsync({
+                  interface: interfaceName,
+                  address,
+                  valueKey: 'LEVEL',
+                  type: 'double',
+                  value: 1,
+                })
+              }
+            >
+              <ArrowUpwardIcon sx={{ fontSize: '45px' }} />
+            </IconButtonWithHover>
+            <Box>
+              <CircularProgressWithLabel value={blindValue} />
+            </Box>
           </Box>
         </Box>
-      </Box>
+      </CardContent>
     </Box>
   );
 };

@@ -133,7 +133,7 @@ export const Room = () => {
               </ExpandMore>
             </TitleBox>
             <Collapse in={expanded[channelType]} timeout="auto" unmountOnExit>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '5px', justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                 {channels.map((channel, index) => {
                   return (
                     <StyledCard key={index}>

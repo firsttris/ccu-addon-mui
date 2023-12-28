@@ -1,8 +1,13 @@
 import { styled } from '@mui/system';
 import { Box, CardHeader, Typography } from '@mui/material';
-import { SwitchVirtualReceiverChannel, useSetValueMutation } from '../hooks/useApi';
+import {
+  SwitchVirtualReceiverChannel,
+  useSetValueMutation,
+} from '../hooks/useApi';
 import LightbulbOutlinedIconBase from '@mui/icons-material/LightbulbOutlined';
 import LightbulbIconBase from '@mui/icons-material/Lightbulb';
+import { IconButtonWithHover } from './components/IconButtonWithHover';
+import { TypographyWithEllipsis } from './components/TypographyWithEllipsis';
 
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;
@@ -13,23 +18,11 @@ const LightbulbIcon = styled(LightbulbIconBase)({
   cursor: 'pointer',
   color: 'orange',
   fontSize: '40px',
-  backgroundColor: 'lightgrey',
-  borderRadius: '50%',
-  padding: '10px',
-  '&:hover': {
-    backgroundColor: 'darkgrey',
-  },
 });
 
 const LightbulbOutlinedIcon = styled(LightbulbOutlinedIconBase)({
   cursor: 'pointer',
   fontSize: '40px',
-  backgroundColor: 'lightgrey',
-  borderRadius: '50%',
-  padding: '10px',
-  '&:hover': {
-    backgroundColor: 'darkgrey',
-  },
 });
 
 const StyledBox = styled(Box)({
@@ -42,11 +35,7 @@ const TitleBox = styled(Box)({
   alignItems: 'center',
 });
 
-const StyledTypography = styled(Typography)({
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  marginLeft: '10px',
-});
+
 
 export const LightControl = ({ channel, refetch }: ControlProps) => {
   const setValueMutation = useSetValueMutation();
@@ -62,21 +51,18 @@ export const LightControl = ({ channel, refetch }: ControlProps) => {
       value: !checked,
     });
     refetch();
-  }
+  };
 
   return (
     <StyledBox>
       <CardHeader
+        width="100%"
         title={
           <TitleBox>
-            {checked ? (
-              <LightbulbIcon onClick={onHandleChange} />
-            ) : (
-              <LightbulbOutlinedIcon onClick={onHandleChange} />
-            )}
-            <StyledTypography>
-              {name}
-            </StyledTypography>
+            <IconButtonWithHover onClick={onHandleChange}>
+              {checked ? <LightbulbIcon /> : <LightbulbOutlinedIcon />}
+            </IconButtonWithHover>
+            <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
           </TitleBox>
         }
       />
