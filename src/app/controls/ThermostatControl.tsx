@@ -1,13 +1,12 @@
 import { Box, Slider, Typography, styled } from '@mui/material';
-
 import {
-  HeatingClimateControlTransceiverChannel,
   useSetValueMutation,
-} from '../hooks/useApi';
+} from '../../hooks/useApi';
 import { useEffect, useState } from 'react';
-import { CircularProgressWithLabel } from './components/CircularProgressWithLabel';
-import { StyledHeaderIcon, StyledIconButton } from './components/StyledIcons';
-import { ChannelHeader } from './components/ChannelHeader';
+import { CircularProgressWithLabel } from '../components/CircularProgressWithLabel';
+import { StyledHeaderIcon, StyledIconButton } from '../components/StyledIcons';
+import { ChannelHeader } from '../components/ChannelHeader';
+import { HeatingClimateControlTransceiverChannel } from 'src/types/types';
 
 interface ControlProps {
   channel: HeatingClimateControlTransceiverChannel;

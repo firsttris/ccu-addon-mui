@@ -4,9 +4,9 @@ import {
   LinearProgress,
   Typography,
 } from '@mui/material';
-import { FloorClimateControlTransceiverChannel } from 'src/hooks/useApi';
-import { StyledHeaderIcon } from './components/StyledIcons';
-import { ChannelHeader } from './components/ChannelHeader';
+import { StyledHeaderIcon } from '../components/StyledIcons';
+import { ChannelHeader } from '../components/ChannelHeader';
+import { FloorClimateControlTransceiverChannel } from 'src/types/types';
 
 interface FloorControlProps {
   channel: FloorClimateControlTransceiverChannel;

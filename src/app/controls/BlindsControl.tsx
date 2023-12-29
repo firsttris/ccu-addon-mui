@@ -1,11 +1,11 @@
 import { Box, CardContent } from '@mui/material';
 import {
-  BlindVirtualReceiverChannel,
   useSetValueMutation,
-} from '../hooks/useApi';
-import { CircularProgressWithLabel } from './components/CircularProgressWithLabel';
-import { StyledIconButton } from './components/StyledIcons';
-import { ChannelHeader } from './components/ChannelHeader';
+} from '../../hooks/useApi';
+import { CircularProgressWithLabel } from '../components/CircularProgressWithLabel';
+import { StyledIconButton } from '../components/StyledIcons';
+import { ChannelHeader } from '../components/ChannelHeader';
+import { BlindVirtualReceiverChannel } from 'src/types/types';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;

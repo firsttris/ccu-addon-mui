@@ -1,10 +1,10 @@
 import { styled } from '@mui/system';
 import { Box } from '@mui/material';
 import {
-  SwitchVirtualReceiverChannel,
   useSetValueMutation,
-} from '../hooks/useApi';
-import { ChannelHeader } from './components/ChannelHeader';
+} from '../../hooks/useApi';
+import { ChannelHeader } from '../components/ChannelHeader';
+import { SwitchVirtualReceiverChannel } from 'src/types/types';
 
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;

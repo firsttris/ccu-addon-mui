@@ -9,13 +9,14 @@ import {
   styled,
 } from '@mui/material';
 import { useState } from 'react';
-import { Channel, ChannelType } from './../hooks/useApi';
-import { FloorControl } from './FloorControl';
-import { SwitchControl } from './SwitchControl';
-import { ThermostatControl } from './ThermostatControl';
-import { BlindsControl } from './BlindsControl';
+import { FloorControl } from './controls/FloorControl';
+import { SwitchControl } from './controls/SwitchControl';
+import { ThermostatControl } from './controls/ThermostatControl';
+import { BlindsControl } from './controls/BlindsControl';
 import { useTranslations } from './../i18n/utils';
 import { Icon } from '@iconify/react';
+import { Channel, ChannelType } from './../types/types';
+import { RainDetectionControl } from './controls/RainDetectionControl';
 
 
 interface ExpandMoreProps {
@@ -46,6 +47,8 @@ const getControlComponent = (channel: Channel, refetch: () => void) => {
       return <ThermostatControl channel={channel} />;
     case ChannelType.BLIND_VIRTUAL_RECEIVER:
       return <BlindsControl channel={channel} />;
+    case ChannelType.RAIN_DETECTION_TRANSMITTER:
+      return <RainDetectionControl channel={channel} />;  
     default:
       return (
         <Box>
