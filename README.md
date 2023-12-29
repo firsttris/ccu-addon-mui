@@ -85,9 +85,24 @@ I have collected an API Summary, where you have an quick overview of all methods
 
 This project currently supports the following devices:
 
-- [Light](/src/app/LightControl.tsx)
-- [Thermostat](/src/app/ThermostatControl.tsx)
-- [Blinds](/src/app/BlindsControl.tsx)
+[Switch](src/app/controls/SwitchControl.tsx)   
+![Screenshot](docs/controls/switch.png)
+
+[Thermostat](src/app/controls/ThermostatControl.tsx)   
+![Screenshot](docs/controls/thermostat.png)
+
+[Blinds](/src/app/BlindsControl.tsx)   
+![Screenshot](docs/controls/blinds.png)
+
+[Door Operator](src/app/controls/DoorControl.tsx)    
+![Screenshot](docs/controls/door-operator.png)
+
+[Floor Heating](src/app/controls/FloorControl.tsx)    
+![Screenshot](docs/controls/floor-heating.png)
+
+[Rain Detection Control](src/app/controls/RainDetectionControl.tsx)    
+![Screenshot](docs/controls/rain.png)
+
 
 We welcome pull requests to add support for new devices. Your contributions are appreciated!
 

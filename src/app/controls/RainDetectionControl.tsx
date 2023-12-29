@@ -1,5 +1,5 @@
 import { Box, CardHeader, Typography, styled } from '@mui/material';
-import { RainDesctionTransmitterChannel } from './../../types/types';
+import { RainDetectionTransmitterChannel } from './../../types/types';
 import { StyledHeaderIcon } from '../components/StyledIcons';
 
 const StyledBox = styled(Box)({
@@ -15,7 +15,7 @@ const StyledBox = styled(Box)({
   
 
 interface RainDetectionControlProps {
-  channel: RainDesctionTransmitterChannel;
+  channel: RainDetectionTransmitterChannel;
 }
 
 export const RainDetectionControl: React.FC<RainDetectionControlProps> = ({

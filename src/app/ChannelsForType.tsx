@@ -17,6 +17,7 @@ import { useTranslations } from './../i18n/utils';
 import { Icon } from '@iconify/react';
 import { Channel, ChannelType } from './../types/types';
 import { RainDetectionControl } from './controls/RainDetectionControl';
+import { DoorControl } from './controls/DoorControl';
 
 
 interface ExpandMoreProps {
@@ -49,6 +50,8 @@ const getControlComponent = (channel: Channel, refetch: () => void) => {
       return <BlindsControl channel={channel} />;
     case ChannelType.RAIN_DETECTION_TRANSMITTER:
       return <RainDetectionControl channel={channel} />;  
+    case ChannelType.KEYMATIC:
+      return <DoorControl refetch={refetch} channel={channel} />;
     default:
       return (
         <Box>
