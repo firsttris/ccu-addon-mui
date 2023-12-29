@@ -4,9 +4,12 @@ Please note that this project is currently in an alpha stage and should be consi
 It aims to solve challenges in bridging the gap between the old and the new. 
 
 # Motivation
-Most web-based homematic solutions are outdated and mired in antiquated commonJS code, entangled in the callback chaos.
 
 Our aim is to craft a cutting edge, simple, yet fast, responsive Web UI as an add-on to your CCU3.
+
+1. Most web-based homematic solutions are outdated and mired in antiquated commonJS code, entangled in the callback chaos.
+2. I dont want to setup another server like [Mediola](https://www.mediola.com/ccu3) or [Home-Assistant](https://www.home-assistant.io/) to have a state of the Art UI.
+3. Keep the CCU3 alive and bridge the gap from the old to the new.
 
 # Technology Stack
 
