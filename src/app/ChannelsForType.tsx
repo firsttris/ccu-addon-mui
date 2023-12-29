@@ -26,14 +26,11 @@ const ExpandMore = styled(Icon)<ExpandMoreProps>(({ _expanded }) => ({
   transform: _expanded ? 'rotate(180deg)' : 'rotate(0deg)',
   marginLeft: 'auto',
   transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
-  padding: '5px',
-  backgroundColor: 'lightgrey',
-  borderRadius: '50%',
   fontSize: '25px',
 }));
 
 const StyledCard = styled(Card)(({ theme }) => ({
-  maxWidth: 320,
+  maxWidth: 288,
   [theme.breakpoints.down('md')]: {
     width: '100%',
   },

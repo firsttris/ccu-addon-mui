@@ -1,4 +1,4 @@
-import { Box, Button, CardContent, Slider, Typography } from '@mui/material';
+import { Box, Slider, Typography, styled } from '@mui/material';
 
 import {
   HeatingClimateControlTransceiverChannel,
@@ -13,24 +13,20 @@ interface ControlProps {
   channel: HeatingClimateControlTransceiverChannel;
 }
 
+const StyledButton = styled('button')(({ theme }) => ({
+  backgroundColor: 'lightgrey',
+  fontWeight: 'bold',
+  borderRadius: '10px',
+  border: 'none',
+  cursor: 'pointer',
+  padding: '10px',
+  width: '70px',
+  '&:hover, &:active, &:focus': {
+    backgroundColor: 'lightgrey',
+  },
+}));
+
 export const ThermostatControl = ({ channel }: ControlProps) => {
-  const marks = [
-    {
-      value: 10,
-      label: '10°C',
-    },
-
-    {
-      value: 20,
-      label: '20°C',
-    },
-
-    {
-      value: 30,
-      label: '30°C',
-    },
-  ];
-
   const { datapoints, name, address, interfaceName } = channel;
   const setPointModevalue = Number(datapoints?.SET_POINT_MODE ?? 0);
   const setPoinTemperaturevalue = Number(
@@ -94,63 +90,95 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
   };
 
   const getValveLevel = () => {
-    return (datapoints?.LEVEL ? (
-      <Box>
+    return datapoints?.LEVEL ? (
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <StyledHeaderIcon
           icon="mdi:pipe-valve"
           style={{ marginRight: '5px' }}
         />
-        <CircularProgressWithLabel
-          value={Number(datapoints?.LEVEL)}
-        />
+        <CircularProgressWithLabel value={Number(datapoints?.LEVEL)} />
       </Box>
-    ) : null)
-  }
+    ) : null;
+  };
 
   const getActualTemperature = () => {
-    return (<Box sx={{ display: 'flex', alignItems: 'center' }}>
-    <StyledHeaderIcon
-      icon={pointMode ? 'mdi:thermostat' : 'mdi:thermostat-auto'}
-      color={getColor(Number(datapoints?.ACTUAL_TEMPERATURE))}
-      onClick={() => {
-        setPointMode(Number(pointMode ? '0' : '1'));
-        setValueMutation.mutateAsync({
-          interface: interfaceName,
-          address,
-          valueKey: 'CONTROL_MODE',
-          type: 'double',
-          value: pointMode ? 0 : 1,
-        });
-      }}
-    />
-    <Typography variant="caption" ml="3px">
-      {datapoints?.ACTUAL_TEMPERATURE
-        ? Number(datapoints?.ACTUAL_TEMPERATURE).toLocaleString(
-            'de-DE',
-            {
-              maximumFractionDigits: 2,
-              minimumFractionDigits: 2,
-            }
-          )
-        : null}
-      °C
-    </Typography>
-  </Box>)
-  }
-
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <StyledHeaderIcon
+          icon={pointMode ? 'mdi:thermostat' : 'mdi:thermostat-auto'}
+          color={getColor(Number(datapoints?.ACTUAL_TEMPERATURE))}
+          onClick={() => {
+            setPointMode(Number(pointMode ? '0' : '1'));
+            setValueMutation.mutateAsync({
+              interface: interfaceName,
+              address,
+              valueKey: 'CONTROL_MODE',
+              type: 'double',
+              value: pointMode ? 0 : 1,
+            });
+          }}
+        />
+        <Typography variant="caption" ml="3px">
+          {datapoints?.ACTUAL_TEMPERATURE
+            ? Number(datapoints?.ACTUAL_TEMPERATURE).toLocaleString('de-DE', {
+                maximumFractionDigits: 2,
+                minimumFractionDigits: 2,
+              })
+            : null}
+          °C
+        </Typography>
+      </Box>
+    );
+  };
 
   const getTargetTemperature = () => {
-    return (<Box sx={{ display: 'flex', alignItems: 'center' }}>
-    <StyledHeaderIcon icon="mdi:target" />
-    <Typography variant="caption" ml="2px">
-      {pointTemp.toLocaleString('de-DE', {
-        maximumFractionDigits: 2,
-        minimumFractionDigits: 2,
-      })}
-      °C
-    </Typography>
-  </Box>)
-  }
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <StyledHeaderIcon icon="mdi:target" />
+        <Typography variant="caption" ml="2px">
+          {pointTemp.toLocaleString('de-DE', {
+            maximumFractionDigits: 2,
+            minimumFractionDigits: 2,
+          })}
+          °C
+        </Typography>
+      </Box>
+    );
+  };
+
+  const getWindowState = () => {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <StyledHeaderIcon
+          icon={
+            datapoints?.WINDOW_STATE === '0'
+              ? 'material-symbols:window-closed'
+              : 'material-symbols:window-open'
+          }
+        />
+        <Typography variant="caption" ml="2px">
+          {datapoints?.WINDOW_STATE === '0' ? 'Closed' : 'Open'}
+        </Typography>
+      </Box>
+    );
+  };
+
+  const marks = [
+    {
+      value: 10,
+      label: '10°C',
+    },
+
+    {
+      value: 20,
+      label: '20°C',
+    },
+
+    {
+      value: 30,
+      label: '30°C',
+    },
+  ];
 
   return (
     <Box
@@ -160,7 +188,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
       }}
     >
       <ChannelHeader name={name} icon="mdi:thermostat-cog" />
-      <CardContent sx={{ paddingTop: 0, px: '10px' }}>
+      <Box sx={{ mb: '5px' }}>
         <Box
           sx={{
             display: 'flex',
@@ -172,68 +200,16 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
             sx={{
               display: 'flex',
               flexDirection: 'column',
-              width: '90%',
             }}
           >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              {getHumidity()}
-
-              {getValveLevel()}
-            </Box>
-
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                mt: '5px',
-              }}
-            >
+            <Box sx={{ display: 'flex', gap: '5px' }}>
               {getActualTemperature()}
-
               {getTargetTemperature()}
+              {getHumidity()}
             </Box>
           </Box>
 
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              mt: '10px',
-              width: '90%',
-            }}
-          >
-            <StyledIconButton
-              icon="ph:minus"
-              onClick={() => changeSetPointTemperature(pointTemp - 1)}
-            />
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                <Button
-                  sx={{ padding: 0, fontSize: '10px' }}
-                  variant="contained"
-                >
-                  {pointMode ? 'Manuell' : 'Auto'}
-                </Button>
-                <Button
-                  sx={{ padding: 0, fontSize: '10px', mt: '3px' }}
-                  variant="contained"
-                >
-                  Boost
-                </Button>
-              </Box>
-            </Box>
-            <StyledIconButton
-              icon="ph:plus"
-              onClick={() => changeSetPointTemperature(pointTemp + 1)}
-            />
-          </Box>
-
-          <Box sx={{ width: '90%', mt: '10px' }}>
+          <Box sx={{ width: '85%', my: '10px' }}>
             <Slider
               aria-label="Temperature"
               defaultValue={30}
@@ -260,8 +236,49 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
               }}
             />
           </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              gap: '15px',
+              mt: '10px',
+            }}
+          >
+            <StyledIconButton
+              icon="ph:minus"
+              onClick={() => changeSetPointTemperature(pointTemp - 1)}
+            />
+
+            <StyledIconButton
+              icon="ph:plus"
+              onClick={() => changeSetPointTemperature(pointTemp + 1)}
+            />
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              gap: '15px',
+              mt: '10px',
+            }}
+          >
+            <StyledButton>{pointMode ? 'Manuell' : 'Auto'}</StyledButton>
+            <StyledButton>Boost</StyledButton>
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              gap: '15px',
+              mt: '10px',
+            }}
+          >
+            {getWindowState()}
+
+            {getValveLevel()}
+          </Box>
         </Box>
-      </CardContent>
+      </Box>
     </Box>
   );
 };
