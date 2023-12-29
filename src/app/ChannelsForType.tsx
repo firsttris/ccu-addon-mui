@@ -19,11 +19,11 @@ import { Icon } from '@iconify/react';
 
 
 interface ExpandMoreProps {
-  _expanded: boolean;
+  expanded: string;
 }
 
-const ExpandMore = styled(Icon)<ExpandMoreProps>(({ _expanded }) => ({
-  transform: _expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+const ExpandMore = styled(Icon)<ExpandMoreProps>(({ expanded }) => ({
+  transform: expanded === 'true' ? 'rotate(180deg)' : 'rotate(0deg)',
   marginLeft: 'auto',
   transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
   fontSize: '25px',
@@ -97,7 +97,7 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
           >
             {t(channelType)}
           </Typography>
-          <ExpandMore icon="uiw:down" _expanded={expanded}/>
+          <ExpandMore icon="uiw:down" expanded={expanded.toString()}/>
         </ListItemButton>
       </ListItem>
       {hasTransitionExited ? <Divider /> : null}
