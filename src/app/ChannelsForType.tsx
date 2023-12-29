@@ -32,11 +32,18 @@ const ExpandMore = styled(Icon)<ExpandMoreProps>(({ expanded }) => ({
 }));
 
 const StyledCard = styled(Card)(({ theme }) => ({
-  maxWidth: 288,
-  [theme.breakpoints.down('md')]: {
-    width: '100%',
+  width: 288
+}));
+
+const StyledBox = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '5px',
+  [theme.breakpoints.down('sm')]: {
+    justifyContent: 'center',
   },
 }));
+
 
 const getControlComponent = (channel: Channel, refetch: () => void) => {
   switch (channel.type) {
@@ -117,7 +124,7 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
           setHasTransitionExited(true)
         }
       >
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+        <StyledBox>
           {channels.map((channel, index) => {
             return (
               <StyledCard key={index}>
@@ -125,7 +132,7 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
               </StyledCard>
             );
           })}
-        </Box>
+        </StyledBox>
         <Divider sx={{ mt: '10px' }} />
       </Collapse>
     </Box>

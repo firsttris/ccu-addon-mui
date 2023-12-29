@@ -2,6 +2,26 @@ import { Box, CardHeader, Typography } from '@mui/material';
 import { StyledIconButton } from '../components/StyledIcons';
 import { KeymaticChannel } from './../../types/types';
 import { useSetValueMutation } from './../../hooks/useApi';
+import { styled } from '@mui/system';
+
+const StyledOuterBox = styled(Box)({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  });
+  
+  const StyledInnerBox = styled(Box)({
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'center',
+  });
+  
+  interface StyledTypographyProps {
+    isUncertain: boolean;
+  }
+  const StyledTypography = styled(Typography)<StyledTypographyProps>(({ isUncertain }) => ({
+    display: isUncertain ? 'block' : 'none',
+  }));
 
 interface DoorControlProps {
   channel: KeymaticChannel;
@@ -53,8 +73,8 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel, refetch }) =>
   return (
     <CardHeader
       title={
-        <Box>
-          <Box sx={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <StyledOuterBox>
+          <StyledInnerBox>
             <StyledIconButton
               icon="material-symbols:lock-outline"
               active={(!isUnlocked).toString()}
@@ -69,14 +89,14 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel, refetch }) =>
               icon="material-symbols:door-open-outline"
               onClick={openDoor}
             />
-          </Box>
-          <Typography
-            sx={{ display: isUncertain ? 'block' : 'none' }}
+          </StyledInnerBox>
+          <StyledTypography
+            isUncertain={isUncertain}
             variant="caption"
           >
             Door state is uncertain
-          </Typography>
-        </Box>
+          </StyledTypography>
+        </StyledOuterBox>
       }
     />
   );

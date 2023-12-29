@@ -4,7 +4,10 @@ import { StyledHeaderIcon } from '../components/StyledIcons';
 
 const StyledBox = styled(Box)({
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    gap: '20px'
   });
   
   const StyledIconBox = styled(Box)({

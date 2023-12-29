@@ -22,7 +22,6 @@ export const Room = () => {
     return <LinearProgress />;
   }
 
-  console.log('channelsPerType', channelsPerType)
   return (
     <StyledContainer maxWidth="xl">
       <List disablePadding={true}>
