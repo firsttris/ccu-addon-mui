@@ -3,6 +3,7 @@ import { StyledIconButton } from '../components/StyledIcons';
 import { KeymaticChannel } from './../../types/types';
 import { useSetValueMutation } from './../../hooks/useApi';
 import { styled } from '@mui/system';
+import { styledWithForward } from './../../styled';
 
 const StyledOuterBox = styled(Box)({
     display: 'flex',
@@ -19,7 +20,7 @@ const StyledOuterBox = styled(Box)({
   interface StyledTypographyProps {
     isUncertain: boolean;
   }
-  const StyledTypography = styled(Typography)<StyledTypographyProps>(({ isUncertain }) => ({
+  const StyledTypography = styledWithForward(Typography)<StyledTypographyProps>(({ isUncertain }) => ({
     display: isUncertain ? 'block' : 'none',
   }));
 
