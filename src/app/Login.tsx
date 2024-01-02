@@ -17,17 +17,24 @@ export const Login = () => {
     const username = d.currentTarget['username'].value;
     const password = d.currentTarget['password'].value;
     const response = await loginMutation.mutateAsync({ username, password });
-    if(response) {
+    if (response) {
       navigateRooms();
     }
   };
 
   return (
     <Container maxWidth="xs">
-          <Typography variant="h4" sx={{ mt: 6, mb: 3 }}>
-      {t('signInTitle')}
-    </Typography>
-    {loginMutation.isError && <Alert severity="error">{t('errorOccuredWhileLogin')}</Alert>}
+      <Typography variant="h4" sx={{ mt: 6, mb: 3 }}>
+        {t('signInTitle')}
+      </Typography>
+      {loginMutation.isError && (
+        <Alert severity="error">
+          <Box>
+            <Typography fontWeight={'bold'}>{t('errorOccuredWhileLogin')}</Typography>
+            <Typography>{(loginMutation.error as Error).message}</Typography>
+          </Box>
+        </Alert>
+      )}
       <form onSubmit={Login}>
         <Box sx={{ mt: 4 }}>
           <TextField
