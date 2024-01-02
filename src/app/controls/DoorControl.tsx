@@ -3,7 +3,6 @@ import { StyledIconButton } from '../components/StyledIcons';
 import { KeymaticChannel } from './../../types/types';
 import { useSetValueMutation } from './../../hooks/useApi';
 import { styled } from '@mui/system';
-import { styledWithForward } from './../../styled';
 
 const StyledOuterBox = styled(Box)({
     display: 'flex',
@@ -18,10 +17,10 @@ const StyledOuterBox = styled(Box)({
   });
   
   interface StyledTypographyProps {
-    isUncertain: boolean;
+    uncertain: string;
   }
-  const StyledTypography = styledWithForward(Typography)<StyledTypographyProps>(({ isUncertain }) => ({
-    display: isUncertain ? 'block' : 'none',
+  const StyledTypography = styled(Typography)<StyledTypographyProps>(({ uncertain }) => ({
+    display: uncertain === 'true' ? 'block' : 'none',
   }));
 
 interface DoorControlProps {
@@ -92,7 +91,7 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel, refetch }) =>
             />
           </StyledInnerBox>
           <StyledTypography
-            isUncertain={isUncertain}
+            uncertain={isUncertain.toString()}
             variant="caption"
           >
             Door state is uncertain

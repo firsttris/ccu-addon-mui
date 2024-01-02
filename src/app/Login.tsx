@@ -1,11 +1,14 @@
-import { Box, Button, TextField } from '@mui/material';
+import { Alert, Box, Button, TextField, Typography } from '@mui/material';
 import { Container } from '@mui/system';
 import { FormEvent } from 'react';
 import { useLogin } from '../hooks/useApi';
 import { useRedirectToRooms } from '../hooks/useCheckSession';
+import { useTranslations } from './../i18n/utils';
 
 export const Login = () => {
   const loginMutation = useLogin();
+
+  const t = useTranslations();
 
   const { navigateRooms } = useRedirectToRooms();
 
@@ -21,6 +24,10 @@ export const Login = () => {
 
   return (
     <Container maxWidth="xs">
+          <Typography variant="h4" sx={{ mt: 6, mb: 3 }}>
+      {t('signInTitle')}
+    </Typography>
+    {loginMutation.isError && <Alert severity="error">{t('errorOccuredWhileLogin')}</Alert>}
       <form onSubmit={Login}>
         <Box sx={{ mt: 4 }}>
           <TextField

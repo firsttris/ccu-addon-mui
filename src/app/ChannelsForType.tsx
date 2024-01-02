@@ -18,15 +18,14 @@ import { Icon } from '@iconify/react';
 import { Channel, ChannelType } from './../types/types';
 import { RainDetectionControl } from './controls/RainDetectionControl';
 import { DoorControl } from './controls/DoorControl';
-import { styledWithForward } from './../styled';
 
 
 interface ExpandMoreProps {
-  isExpanded: boolean;
+  expanded: string;
 }
 
-const ExpandMore = styledWithForward(Icon)<ExpandMoreProps>(({ isExpanded }) => ({
-  transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+const ExpandMore = styled(Icon)<ExpandMoreProps>(({ expanded }) => ({
+  transform: expanded === 'true' ? 'rotate(180deg)' : 'rotate(0deg)',
   marginLeft: 'auto',
   transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
   fontSize: '25px',
@@ -114,7 +113,7 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
           >
             {t(channelType)}
           </Typography>
-          <ExpandMore icon="uiw:down" isExpanded={expanded}/>
+          <ExpandMore icon="uiw:down" expanded={expanded.toString()}/>
         </ListItemButton>
       </ListItem>
       {hasTransitionExited ? <Divider /> : null}
