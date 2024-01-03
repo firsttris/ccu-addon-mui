@@ -1,6 +1,6 @@
 {
   "name": "@ccu-addon-mui/source",
-  "version": "0.0.45",
+  "version": "0.0.46",
   "license": "MIT",
   "scripts": {
     "start": "nx serve --host=0.0.0.0",
