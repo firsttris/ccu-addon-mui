@@ -4,6 +4,21 @@ import { Router } from './router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, createTheme } from '@mui/material';
 
+const requestWakeLock = async () => {
+  try {
+    const wakeLock = await navigator.wakeLock.request("screen");
+
+    wakeLock.addEventListener("release", () => {
+      console.log("Wake Lock wurde freigegeben.");
+    });
+  } catch (err) {
+    console.error("Wake Lock konnte nicht angefordert werden:", err);
+  }
+};
+
+
+requestWakeLock();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
