@@ -1,4 +1,3 @@
-// useCheckSession.ts
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSessionId, removeSessionId } from './useApi';
@@ -11,6 +10,7 @@ export const useCheckSession = (isError: boolean, error: Error) => {
       removeSessionId();
       navigate('/');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isError, error, sessionId]);
 }
 
@@ -24,6 +24,7 @@ export const useRedirectToRooms = () => {
       if(sessionId) {
         navigateRooms();
       }
+      //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sessionId])
     return { navigateRooms }
 }

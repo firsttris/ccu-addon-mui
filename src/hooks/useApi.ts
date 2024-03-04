@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from 'axios';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import regaGetRoomsScript from './../rega/getRooms.tcl';
@@ -30,7 +29,7 @@ const SessionIdName = 'ccu_addom-mui_session_id';
 export const getSessionId = () => localStorage.getItem(SessionIdName);
 export const removeSessionId = () => localStorage.removeItem(SessionIdName);
 
-const callApi = async <T>(method: string, params?: any) => {
+const callApi = async <T>(method: string, params?: object) => {
   const response = await axios.post<Response<T>>('/api/homematic.cgi', {
     method,
     params: { ...params, _session_id_: getSessionId() },
@@ -58,11 +57,11 @@ interface SetValue {
   address: string;
   valueKey: string;
   type: string;
-  value: any;
+  value: unknown;
 }
 
 const setValue = async (params: SetValue) =>
-  callApi<any>('Interface.setValue', params);
+  callApi<void>('Interface.setValue', params);
 
 export const useListInterfaces = () =>
   useApi<string[]>('Interface.listInterfaces');
@@ -115,8 +114,10 @@ interface Options {
   enabled?: boolean;
 }
 
-export const useApi = <T>(method: string, params?: any, options?: Options) => {
-  const result = useQuery([method, params], () => callApi<T>(method, params), {
+export const useApi = <T>(method: string, params?: object, options?: Options) => {
+  const result = useQuery({
+    queryKey: [method, params],
+    queryFn: () => callApi<T>(method, params),
     retry: false,
     staleTime: 30000,
     refetchInterval: 120000,
