@@ -61,6 +61,21 @@ Progressive Web Apps can be installed on your device like native apps. Here's ho
 
 After these steps, the PWA will appear as an icon on your home screen, and you can use it just like a native app.
 
+### Use WakeLock to pervent Screen from Standby
+
+I want to display this App on Tablet in our Kitchen, to pervent Standby from the PWA, i used WakeLock API.
+
+But WakeLock API is still experimental on Chrome.
+
+To use WakeLock API in Chrome two things need to be configured on your mobile device (tablet):
+
+1. go to Chrome://flags
+2. Search & Enable `Experimal Web Platform features`.
+3. Set your CCU3 IP as Secure origin:
+4. Search & Enable `#unsafely-treat-insecure-origin-as-secure`
+5. Add origin of your ccu3 .e.g. http://192.168.178.26 (thats mine)
+6. Save and Relaunch Chrome.
+
 # Development and Build
 
 To develop and build this project, follow these steps:
