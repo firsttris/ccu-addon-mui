@@ -63,13 +63,13 @@ After these steps, the PWA will appear as an icon on your home screen, and you c
 
 ### Use WakeLock to pervent Screen from Standby
 
-I want to display this App on Tablet in our Kitchen, to pervent Standby from the PWA, i used WakeLock API.
+I want to display this App on Tablet in our Kitchen, to pervent Standby from the PWA, i use WakeLock API.
 
-But WakeLock API is still experimental on Chrome.
+WakeLock API is still experimental on Chrome.
 
 To use WakeLock API in Chrome two things need to be configured on your mobile device (tablet):
 
-1. go to Chrome://flags
+1. go to `chrome://flags`
 2. Search & Enable `Experimal Web Platform features`.
 3. Set your CCU3 IP as Secure origin:
 4. Search & Enable `#unsafely-treat-insecure-origin-as-secure`
