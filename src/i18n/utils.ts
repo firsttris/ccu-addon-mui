@@ -18,6 +18,12 @@ export const ui = {
     KEYMATIC: 'Keymatic',
     errorOccuredWhileLogin: 'Error occured while login',
     signInTitle: 'Sign in',
+    RAINING: 'Raining',
+    NOT_RAINING: 'Not Raining',
+    HEATING: 'Heating',
+    NOT_HEATING: 'Not Heating',
+    DOOR_STATE_UNKNOWN: 'Door state is uncertain',
+    SIGN_IN: 'Sign in',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
@@ -28,6 +34,12 @@ export const ui = {
     KEYMATIC: 'Keymatic',
     errorOccuredWhileLogin: 'Fehler beim Login',
     signInTitle: 'Anmelden',
+    RAINING: 'Regen',
+    NOT_RAINING: 'Kein Regen',
+    HEATING: 'Heizen',
+    NOT_HEATING: 'Nicht Heizen',
+    DOOR_STATE_UNKNOWN: 'Türzustand ist ungewiss',
+    SIGN_IN: 'Anmelden',
   },
 } as const;
 

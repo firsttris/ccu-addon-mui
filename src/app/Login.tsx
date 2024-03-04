@@ -59,7 +59,7 @@ export const Login = () => {
         </Box>
         <Box sx={{ mt: 6 }}>
           <Button type="submit" value="submit" variant="contained" fullWidth>
-            Sign in
+            {t('SIGN_IN')}
           </Button>
         </Box>
       </form>

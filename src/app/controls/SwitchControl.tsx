@@ -1,8 +1,6 @@
 import { styled } from '@mui/system';
 import { Box } from '@mui/material';
-import {
-  useSetValueMutation,
-} from '../../hooks/useApi';
+import { useSetValueMutation } from '../../hooks/useApi';
 import { ChannelHeader } from '../components/ChannelHeader';
 import { SwitchVirtualReceiverChannel } from 'src/types/types';
 
@@ -38,7 +36,12 @@ export const SwitchControl = ({ channel, refetch }: ControlProps) => {
 
   return (
     <StyledBox>
-      <ChannelHeaderWithPointer name={name} icon={checked ? 'mdi:light-switch' : 'mdi:light-switch-off'} color={checked ? 'orange' : 'unset'} onClick={onHandleChange} />
+      <ChannelHeaderWithPointer
+        name={name}
+        icon={checked ? 'mdi:light-switch' : 'mdi:light-switch-off'}
+        color={checked ? 'orange' : 'unset'}
+        onClick={onHandleChange}
+      />
     </StyledBox>
   );
 };

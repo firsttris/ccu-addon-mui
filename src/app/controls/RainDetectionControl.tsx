@@ -1,21 +1,21 @@
 import { Box, CardHeader, Typography, styled } from '@mui/material';
 import { RainDetectionTransmitterChannel } from './../../types/types';
 import { StyledHeaderIcon } from '../components/StyledIcons';
+import { useTranslations } from './../../i18n/utils';
 
 const StyledBox = styled(Box)({
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: '100%',
-    gap: '20px'
-  });
-  
-  const StyledIconBox = styled(Box)({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '5px',
-  });
-  
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'center',
+  width: '100%',
+  gap: '20px',
+});
+
+const StyledIconBox = styled(Box)({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '5px',
+});
 
 interface RainDetectionControlProps {
   channel: RainDetectionTransmitterChannel;
@@ -30,6 +30,8 @@ export const RainDetectionControl: React.FC<RainDetectionControlProps> = ({
 
   const isRaining = RAINING === 'true';
   const isHeating = HEATER_STATE === 'true';
+  
+  const t = useTranslations();
 
   return (
     <CardHeader
@@ -41,7 +43,9 @@ export const RainDetectionControl: React.FC<RainDetectionControlProps> = ({
             ) : (
               <StyledHeaderIcon icon="mdi:clouds" />
             )}
-            <Typography variant="caption">{isRaining ? 'Raining' : 'Not Raining'}</Typography>
+            <Typography variant="caption">
+              {isRaining ? t('RAINING') : t('NOT_RAINING')}
+            </Typography>
           </StyledIconBox>
           <StyledIconBox>
             {isHeating ? (
@@ -52,7 +56,9 @@ export const RainDetectionControl: React.FC<RainDetectionControlProps> = ({
             ) : (
               <StyledHeaderIcon icon="material-symbols:mode-heat-off" />
             )}
-            <Typography variant="caption">{isHeating ? 'Heating' : 'Not Heating'}</Typography>
+            <Typography variant="caption">
+              {isHeating ? t('HEATING') : t('NOT_HEATING')}
+            </Typography>
           </StyledIconBox>
         </StyledBox>
       }

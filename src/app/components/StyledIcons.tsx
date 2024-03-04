@@ -3,11 +3,11 @@ import { styled } from "@mui/material";
 
 interface StyledIconButtonProps {
   icon: string;
-  active?: string;
+  active?: boolean;
 }
 
-export const StyledIconButton = styled(Icon)<StyledIconButtonProps>`
-  color: ${(props) => (props.active === 'true' ? '#0077B6' : '#000')};
+export const StyledIconButton = styled(Icon, { shouldForwardProp: (prop) => prop !== 'active', })<StyledIconButtonProps>`
+  color: ${(props) => (props.active ? '#0077B6' : '#000')};
   font-size: 40px;
   background-color: lightGrey;
   border-radius: 10px;

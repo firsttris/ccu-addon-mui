@@ -3,6 +3,7 @@ import { StyledIconButton } from '../components/StyledIcons';
 import { KeymaticChannel } from './../../types/types';
 import { useSetValueMutation } from './../../hooks/useApi';
 import { styled } from '@mui/system';
+import { useTranslations } from './../../i18n/utils';
 
 const StyledOuterBox = styled(Box)({
     display: 'flex',
@@ -17,10 +18,12 @@ const StyledOuterBox = styled(Box)({
   });
   
   interface StyledTypographyProps {
-    uncertain: string;
+    uncertain: boolean
   }
-  const StyledTypography = styled(Typography)<StyledTypographyProps>(({ uncertain }) => ({
-    display: uncertain === 'true' ? 'block' : 'none',
+  const StyledTypography = styled(Typography, {
+    shouldForwardProp: (prop) => prop !== 'uncertain',
+  })<StyledTypographyProps>(({ uncertain }) => ({
+    display: uncertain ? 'block' : 'none',
   }));
 
 interface DoorControlProps {
@@ -29,6 +32,7 @@ interface DoorControlProps {
 }
 
 export const DoorControl: React.FC<DoorControlProps> = ({ channel, refetch }) => {
+  const t = useTranslations();
   const setValueMutation = useSetValueMutation();
   const {
     datapoints: { STATE, STATE_UNCERTAIN },
@@ -77,12 +81,12 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel, refetch }) =>
           <StyledInnerBox>
             <StyledIconButton
               icon="material-symbols:lock-outline"
-              active={(!isUnlocked).toString()}
+              active={!isUnlocked}
               onClick={lockDoor}
             />
             <StyledIconButton
               icon="material-symbols:lock-open-outline"
-              active={isUnlocked.toString()}
+              active={isUnlocked}
               onClick={unlockDoor}
             />
             <StyledIconButton
@@ -91,10 +95,10 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel, refetch }) =>
             />
           </StyledInnerBox>
           <StyledTypography
-            uncertain={isUncertain.toString()}
+            uncertain={isUncertain}
             variant="caption"
           >
-            Door state is uncertain
+            {t('DOOR_STATE_UNKNOWN')}
           </StyledTypography>
         </StyledOuterBox>
       }

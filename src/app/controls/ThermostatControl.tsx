@@ -12,7 +12,7 @@ interface ControlProps {
   channel: HeatingClimateControlTransceiverChannel;
 }
 
-const StyledButton = styled('button')(({ theme }) => ({
+const StyledButton = styled('button')(() => ({
   backgroundColor: 'lightgrey',
   fontWeight: 'bold',
   borderRadius: '10px',
