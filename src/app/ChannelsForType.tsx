@@ -8,6 +8,7 @@ import { DoorControl } from './controls/DoorControl';
 import { useLocalStorage } from './../hooks/useLocalStorage';
 import styled from '@emotion/styled';
 import ThermostatCard from './controls/ThermostatCard';
+import {Blinds} from './controls/Blinds';
 
 interface ExpandMoreProps {
   expanded: boolean;
@@ -78,7 +79,7 @@ const getControlComponent = (channel: Channel, refetch: () => void) => {
     case ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER:
       return <ThermostatCard />;
     case ChannelType.BLIND_VIRTUAL_RECEIVER:
-      return <BlindsControl channel={channel} />;
+      return <Blinds />;
     case ChannelType.KEYMATIC:
       return <DoorControl refetch={refetch} channel={channel} />;
     default:
