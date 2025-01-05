@@ -1,46 +1,47 @@
-import { Box, CircularProgress, CircularProgressProps, Typography } from "@mui/material";
-import { styled } from "@mui/system";
+/** @jsxImportSource @emotion/react */
+import styled from '@emotion/styled';
 
-const StyledBox = styled(Box)({
-  position: 'relative',
-  display: 'inline-flex',
-});
+const StyledBox = styled.div`
+  position: relative;
+  display: inline-flex;
+`;
 
-const InnerBox = styled(Box)({
-  top: 0,
-  left: 0,
-  bottom: 0,
-  right: 0,
-  position: 'absolute',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-});
+const InnerBox = styled.div`
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
 
-const StyledCircularProgress = styled(CircularProgress)(({ theme }) => ({
-  color: theme.palette.primary.main, // Farbe für den erreichten Teil
-  position: 'absolute',
-  size: '45px',
-}));
+const StyledCircularProgress = styled.div<{ value: number }>`
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid lightgrey;
+  border-top-color: #3f51b5;
+  transform: rotate(${({ value }) => value * 3.6}deg);
+  transition: transform 0.3s linear;
+`;
 
-const BackgroundCircularProgress = styled(CircularProgress)({
-  color: 'lightgrey', // Farbe für den nicht erreichten Teil
-  size: '45px',
-});
+const Typography = styled.span`
+  font-size: 12px;
+`;
 
 export const CircularProgressWithLabel = (
-    props: CircularProgressProps & { value: number }
-  ) => {
-    const { sx, ...other} = props;
-    return (
-      <StyledBox>
-        <BackgroundCircularProgress variant="determinate" value={100} />
-        <StyledCircularProgress variant="determinate" {...other} />
-        <InnerBox>
-          <Typography
-            variant="caption"
-          >{`${Math.round(props.value)}%`}</Typography>
-        </InnerBox>
-      </StyledBox>
-    );
-  };
+  props: { value: number }
+) => {
+  const { value } = props;
+  return (
+    <StyledBox>
+      <StyledCircularProgress value={value} />
+      <InnerBox>
+        <Typography>{`${Math.round(value)}%`}</Typography>
+      </InnerBox>
+    </StyledBox>
+  );
+};
