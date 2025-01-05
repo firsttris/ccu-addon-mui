@@ -1,11 +1,9 @@
 import { FloorControl } from './controls/FloorControl';
 import { SwitchControl } from './controls/SwitchControl';
-import { ThermostatControl } from './controls/ThermostatControl';
 import { BlindsControl } from './controls/BlindsControl';
 import { useTranslations } from './../i18n/utils';
 import { Icon } from '@iconify/react';
 import { Channel, ChannelType } from './../types/types';
-import { RainDetectionControl } from './controls/RainDetectionControl';
 import { DoorControl } from './controls/DoorControl';
 import { useLocalStorage } from './../hooks/useLocalStorage';
 import styled from '@emotion/styled';
@@ -35,6 +33,7 @@ const StyledBox = styled.div({
   display: 'flex',
   flexWrap: 'wrap',
   gap: '10px',
+  justifyContent: 'space-evenly',
   '@media (max-width: 600px)': {
     justifyContent: 'center',
   },

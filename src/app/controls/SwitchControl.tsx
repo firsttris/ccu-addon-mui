@@ -10,6 +10,7 @@ interface ControlProps {
 }
 
 const StyledBox = styled(Box)({
+  background: '#f5f5f5',
   display: 'flex',
   flexDirection: 'column',
 });
