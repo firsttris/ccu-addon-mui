@@ -9,6 +9,7 @@ import { RainDetectionControl } from './controls/RainDetectionControl';
 import { DoorControl } from './controls/DoorControl';
 import { useLocalStorage } from './../hooks/useLocalStorage';
 import styled from '@emotion/styled';
+import ThermostatCard from './controls/ThermostatCard';
 
 interface ExpandMoreProps {
   expanded: boolean;
@@ -33,7 +34,7 @@ const StyledBox = styled.div({
   marginTop: '15px',
   display: 'flex',
   flexWrap: 'wrap',
-  gap: '5px',
+  gap: '10px',
   '@media (max-width: 600px)': {
     justifyContent: 'center',
   },
@@ -76,7 +77,7 @@ const getControlComponent = (channel: Channel, refetch: () => void) => {
     case ChannelType.SWITCH_VIRTUAL_RECEIVER:
       return <SwitchControl refetch={refetch} channel={channel} />;
     case ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER:
-      return <ThermostatControl channel={channel} />;
+      return <ThermostatCard />;
     case ChannelType.BLIND_VIRTUAL_RECEIVER:
       return <BlindsControl channel={channel} />;
     case ChannelType.KEYMATIC:
