@@ -41,6 +41,7 @@ root.render(
         <Global
           styles={css`
             body {
+              user-select: none;
               margin: 0;
               padding: 0;
               box-sizing: border-box;

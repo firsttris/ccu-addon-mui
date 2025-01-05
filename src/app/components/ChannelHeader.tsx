@@ -1,4 +1,4 @@
-import { Box, CardHeader } from '@mui/material';
+import styled from '@emotion/styled';
 import { StyledHeaderIcon } from './StyledIcons';
 import { TypographyWithEllipsis } from './TypographyWithEllipsis';
 
@@ -9,6 +9,19 @@ interface ChannelHeaderProps {
   onClick?: () => void;
 }
 
+const HeaderContainer = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+`;
+
+const CardHeader = styled.div<{ onClick?: () => void }>`
+  cursor: ${({ onClick }) => (onClick ? 'pointer' : 'default')};
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+`;
+
 export const ChannelHeader = ({
   name,
   icon,
@@ -17,18 +30,11 @@ export const ChannelHeader = ({
   ...props
 }: ChannelHeaderProps) => {
   return (
-    <CardHeader
-      onClick={onClick}
-      sx={{
-        '& .MuiCardHeader-content': { width: '100%' },
-      }}
-      title={
-        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-          <StyledHeaderIcon icon={icon} color={color} />
-          <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
-        </Box>
-      }
-      {...props}
-    />
+    <CardHeader onClick={onClick} {...props}>
+      <HeaderContainer>
+        <StyledHeaderIcon icon={icon} color={color} />
+        <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
+      </HeaderContainer>
+    </CardHeader>
   );
 };
