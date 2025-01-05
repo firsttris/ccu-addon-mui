@@ -22,7 +22,6 @@ const ExpandMore = styled(Icon)<ExpandMoreProps>(({ expanded }) => ({
 }));
 
 const StyledCard = styled.div({
-  width: 288,
   backgroundColor: '#fff',
   boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.2)',
   borderRadius: '4px',
@@ -63,7 +62,8 @@ const Divider = styled.hr({
   width: '100%',
   border: 'none',
   borderTop: '1px solid #e0e0e0',
-  margin: '16px 0',
+  marginTop: '16px',
+  marginBottom: '0px'
 });
 
 const Collapse = styled.div<{ in: boolean }>(({ in: inProp }) => ({

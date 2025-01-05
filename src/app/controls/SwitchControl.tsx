@@ -1,22 +1,22 @@
 import { useSetValueMutation } from '../../hooks/useApi';
-import { ChannelHeader } from '../components/ChannelHeader';
 import { SwitchVirtualReceiverChannel } from 'src/types/types';
 import styled from '@emotion/styled';
+import { TypographyWithEllipsis } from '../components/TypographyWithEllipsis';
+import { Icon } from '@iconify/react';
 
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;
   refetch: () => void;
 }
 
-const StyledBox = styled.div({
-  background: '#f5f5f5',
-  display: 'flex',
-  flexDirection: 'column',
-});
-
-const ChannelHeaderWithPointer = styled(ChannelHeader)({
-  cursor: 'pointer',
-});
+const CardHeader = styled.div<{ onClick?: () => void }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 20px;
+  width: 100px;
+`;
 
 export const SwitchControl = ({ channel, refetch }: ControlProps) => {
   const setValueMutation = useSetValueMutation();
@@ -35,13 +35,13 @@ export const SwitchControl = ({ channel, refetch }: ControlProps) => {
   };
 
   return (
-    <StyledBox>
-      <ChannelHeaderWithPointer
-        name={name}
+    <CardHeader onClick={onHandleChange}>
+      <div style={{ height: "65px"}}>{name}</div>
+      <Icon
         icon={checked ? 'mdi:light-switch' : 'mdi:light-switch-off'}
         color={checked ? 'orange' : 'unset'}
-        onClick={onHandleChange}
+        fontSize={"72px"}
       />
-    </StyledBox>
+    </CardHeader>
   );
 };

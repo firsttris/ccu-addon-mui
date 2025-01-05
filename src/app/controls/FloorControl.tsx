@@ -1,9 +1,4 @@
-import {
-  Box,
-  CardContent,
-  LinearProgress,
-  Typography,
-} from '@mui/material';
+import styled from '@emotion/styled';
 import { StyledHeaderIcon } from '../components/StyledIcons';
 import { ChannelHeader } from '../components/ChannelHeader';
 import { FloorClimateControlTransceiverChannel } from 'src/types/types';
@@ -11,6 +6,47 @@ import { FloorClimateControlTransceiverChannel } from 'src/types/types';
 interface FloorControlProps {
   channel: FloorClimateControlTransceiverChannel;
 }
+
+const Container = styled.div`
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 16px;
+`;
+
+const Content = styled.div`
+  padding-top: 0px;
+`;
+
+const FlexBox = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const ProgressBarContainer = styled.div`
+  width: 100%;
+  margin-right: 8px;
+`;
+
+const ProgressBar = styled.div<{ value: number }>`
+  height: 4px;
+  background-color: #e0e0e0;
+  border-radius: 2px;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    display: block;
+    width: ${({ value }) => value}%;
+    height: 100%;
+    background-color: #3f51b5;
+  }
+`;
+
+const Caption = styled.span`
+  font-size: 12px;
+  color: #757575;
+`;
 
 export const FloorControl = (props: FloorControlProps) => {
   const value = Math.round(Number(props.channel.datapoints.LEVEL) * 100);
@@ -32,19 +68,17 @@ export const FloorControl = (props: FloorControlProps) => {
   };
 
   return (
-    <Box>
+    <Container>
       <ChannelHeader icon="mdi:radiator-coil" name={props.channel.name}/>
-      <CardContent sx={{ pt: '0px'}}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <StyledHeaderIcon icon="mdi:pipe-valve" style={{ marginRight: '5px'}} color={getColor(value)}/>
-          <Box sx={{ width: '100%', mr: 1 }}>
-            <LinearProgress variant="determinate" value={value} />
-          </Box>
-          <Box>
-            <Typography variant="caption">{`${value}%`}</Typography>
-          </Box>
-        </Box>
-      </CardContent>
-    </Box>
+      <Content>
+        <FlexBox>
+          <StyledHeaderIcon icon="mdi:pipe-valve" style={{ marginRight: '5px'}} color={getColor(value)}/>
+          <ProgressBarContainer>
+            <ProgressBar value={value} />
+          </ProgressBarContainer>
+          <Caption>{`${value}%`}</Caption>
+        </FlexBox>
+      </Content>
+    </Container>
   );
 };
