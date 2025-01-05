@@ -1,15 +1,14 @@
-import { styled } from '@mui/system';
-import { Box } from '@mui/material';
 import { useSetValueMutation } from '../../hooks/useApi';
 import { ChannelHeader } from '../components/ChannelHeader';
 import { SwitchVirtualReceiverChannel } from 'src/types/types';
+import styled from '@emotion/styled';
 
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;
   refetch: () => void;
 }
 
-const StyledBox = styled(Box)({
+const StyledBox = styled.div({
   background: '#f5f5f5',
   display: 'flex',
   flexDirection: 'column',
