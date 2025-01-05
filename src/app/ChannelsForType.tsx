@@ -79,8 +79,6 @@ const getControlComponent = (channel: Channel, refetch: () => void) => {
       return <ThermostatControl channel={channel} />;
     case ChannelType.BLIND_VIRTUAL_RECEIVER:
       return <BlindsControl channel={channel} />;
-    case ChannelType.RAIN_DETECTION_TRANSMITTER:
-      return <RainDetectionControl channel={channel} />;
     case ChannelType.KEYMATIC:
       return <DoorControl refetch={refetch} channel={channel} />;
     default:
