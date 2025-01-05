@@ -1,29 +1,16 @@
-import { Box, Slider, Typography, styled } from '@mui/material';
+import { Box, Slider, Typography } from '@mui/material';
 import {
   useSetValueMutation,
 } from '../../hooks/useApi';
 import { useEffect, useState } from 'react';
 import { CircularProgressWithLabel } from '../components/CircularProgressWithLabel';
-import { StyledHeaderIcon, StyledIconButton } from '../components/StyledIcons';
+import { StyledHeaderIcon } from '../components/StyledIcons';
 import { ChannelHeader } from '../components/ChannelHeader';
 import { HeatingClimateControlTransceiverChannel } from 'src/types/types';
 
 interface ControlProps {
   channel: HeatingClimateControlTransceiverChannel;
-}
-
-const StyledButton = styled('button')(() => ({
-  backgroundColor: 'lightgrey',
-  fontWeight: 'bold',
-  borderRadius: '10px',
-  border: 'none',
-  cursor: 'pointer',
-  padding: '10px',
-  width: '70px',
-  '&:hover, &:active, &:focus': {
-    backgroundColor: 'lightgrey',
-  },
-}));
+} 
 
 export const ThermostatControl = ({ channel }: ControlProps) => {
   const { datapoints, name, address, interfaceName } = channel;
@@ -226,7 +213,6 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
             {getActualTemperature()}
             {getHumidity()}
             {getWindowState()}
-
             {getValveLevel()}
           </Box>
         </Box>
