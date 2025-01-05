@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const Rolladen = () => {
   const [percent, setPercent] = useState(100); // 100% geschlossen
@@ -10,7 +10,7 @@ const Rolladen = () => {
   // Berechnung der sichtbaren Höhe basierend auf Prozent
   const visibleHeight = (percent / 100) * totalHeight;
 
-  return (
+return (
     <div style={{ textAlign: "center" }}>
       <svg
         width="200"
@@ -26,6 +26,15 @@ const Rolladen = () => {
           height={totalHeight}
           fill="none"
           stroke="black"
+        />
+        {/* Vertikale Linie in der Mitte */}
+        <line
+          x1="50"
+          y1={visibleHeight}
+          x2="50"
+          y2={totalHeight}
+          stroke="black"
+          strokeWidth="1"
         />
         {/* Lamellen */}
         {lamellen.map((_, index) => {
