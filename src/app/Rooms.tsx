@@ -1,47 +1,38 @@
-import {
-  Container,
-  Divider,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-} from '@mui/material';
-import { useGetRegaRooms } from '../hooks/useApi';
-import MeetingRoomOutlinedIcon from '@mui/icons-material/MeetingRoomOutlined';
 import { useNavigate } from 'react-router-dom';
-import { Box } from '@mui/system';
+import { useGetRegaRooms } from '../hooks/useApi';
+import styled from '@emotion/styled';
+import { Typography, ListItem } from './ChannelsForType';
+import { Icon } from '@iconify/react';
+
+const Container = styled.div`
+  max-width: 1280px; /* equivalent to maxWidth="xl" in MUI */
+  margin: 0 auto;
+  padding: 16px;
+`;
+
+const List = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`;
+
+const ListItemText = styled(Typography)`
+  margin-left: 20px;
+`;
 
 export const Rooms = () => {
   const navigate = useNavigate();
-
   const { data: rooms, isFetched } = useGetRegaRooms();
 
   if (isFetched && rooms) {
     return (
-      <Container maxWidth="md">
+      <Container>
         <List>
           {rooms.map((room, index) => (
-            <Box key={index}>
-              <ListItem
-                disablePadding
-                key={room.id}
-                onClick={() =>
-                  navigate(
-                    `/room/${room.id}`
-                  )
-                }
-              >
-                <ListItemButton>
-                  <MeetingRoomOutlinedIcon />
-
-                  <ListItemText
-                    primary={room.name}
-                    sx={{ marginLeft: '20px' }}
-                  />
-                </ListItemButton>
-              </ListItem>
-              {rooms.length === index + 1 ? null : <Divider />}
-            </Box>
+            <ListItem key={room.id} onClick={() => navigate(`/room/${room.id}`)}>
+              <Icon icon="mdi:door-open" fontSize={"35px"} />
+              <ListItemText>{room.name}</ListItemText>
+            </ListItem>
           ))}
         </List>
       </Container>

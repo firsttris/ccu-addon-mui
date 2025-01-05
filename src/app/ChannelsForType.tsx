@@ -1,14 +1,3 @@
-import {
-  Box,
-  Card,
-  Collapse,
-  Divider,
-  ListItem,
-  ListItemButton,
-  Typography,
-  styled,
-} from '@mui/material';
-import { useState } from 'react';
 import { FloorControl } from './controls/FloorControl';
 import { SwitchControl } from './controls/SwitchControl';
 import { ThermostatControl } from './controls/ThermostatControl';
@@ -19,34 +8,66 @@ import { Channel, ChannelType } from './../types/types';
 import { RainDetectionControl } from './controls/RainDetectionControl';
 import { DoorControl } from './controls/DoorControl';
 import { useLocalStorage } from './../hooks/useLocalStorage';
-
+import styled from '@emotion/styled';
 
 interface ExpandMoreProps {
   expanded: boolean;
 }
 
-const ExpandMore = styled(Icon, {
-  shouldForwardProp: (prop) => prop !== 'expanded',
-})<ExpandMoreProps>(({ expanded }) => ({
+const ExpandMore = styled(Icon)<ExpandMoreProps>(({ expanded }) => ({
   transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
   marginLeft: 'auto',
   transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
   fontSize: '25px',
 }));
 
-const StyledCard = styled(Card)(({ theme }) => ({
-  width: 288
-}));
+const StyledCard = styled.div({
+  width: 288,
+  backgroundColor: '#fff',
+  boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.2)',
+  borderRadius: '4px',
+  overflow: 'hidden',
+});
 
-const StyledBox = styled(Box)(({ theme }) => ({
+const StyledBox = styled.div({
+  marginTop: '15px',
   display: 'flex',
   flexWrap: 'wrap',
   gap: '5px',
-  [theme.breakpoints.down('sm')]: {
+  '@media (max-width: 600px)': {
     justifyContent: 'center',
   },
-}));
+});
 
+export const ListItem = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  padding: '8px 16px',
+  borderBottom: '1px solid #e0e0e0',
+  cursor: 'pointer',
+});
+
+export const Typography = styled.p({
+  color: '#000',
+  maxWidth: '300px',
+  overflow: 'hidden',
+  whiteSpace: 'wrap',
+  textOverflow: 'ellipsis',
+  fontWeight: 600,
+  margin: '10px 0',
+  fontSize: '20px',
+});
+
+const Divider = styled.hr({
+  width: '100%',
+  border: 'none',
+  borderTop: '1px solid #e0e0e0',
+  margin: '16px 0',
+});
+
+const Collapse = styled.div<{ in: boolean }>(({ in: inProp }) => ({
+  display: inProp ? 'block' : 'none',
+}));
 
 const getControlComponent = (channel: Channel, refetch: () => void) => {
   switch (channel.type) {
@@ -59,14 +80,14 @@ const getControlComponent = (channel: Channel, refetch: () => void) => {
     case ChannelType.BLIND_VIRTUAL_RECEIVER:
       return <BlindsControl channel={channel} />;
     case ChannelType.RAIN_DETECTION_TRANSMITTER:
-      return <RainDetectionControl channel={channel} />;  
+      return <RainDetectionControl channel={channel} />;
     case ChannelType.KEYMATIC:
       return <DoorControl refetch={refetch} channel={channel} />;
     default:
       return (
-        <Box>
-          <Typography>{(channel as Channel).type} no implemented</Typography>
-        </Box>
+        <div>
+          <Typography>{(channel as Channel).type} not implemented</Typography>
+        </div>
       );
   }
 };
@@ -86,60 +107,30 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
 }) => {
   const t = useTranslations();
 
-  const [hasTransitionExited, setHasTransitionExited] = useState<
-  boolean
-  >(true);
   const [expanded, setExpanded] = useLocalStorage(channelType, false);
 
   const handleExpandClick = () => {
-    setExpanded(!expanded)
+    setExpanded(!expanded);
   };
 
   return (
-    <Box key={index}>
-      <ListItem disablePadding={true}>
-        <ListItemButton
-          sx={{ '&:hover': { backgroundColor: 'transparent' }, px: 0 }}
-          onClick={() => handleExpandClick()}
-          disableRipple={true}
-        >
-          <Typography
-            sx={{
-              maxWidth: '300px',
-              overflow: 'hidden',
-              whiteSpace: 'wrap',
-              textOverflow: 'ellipsis',
-              fontWeight: 600,
-              my: '10px',
-            }}
-          >
-            {t(channelType)}
-          </Typography>
-          <ExpandMore icon="uiw:down" expanded={expanded}/>
-        </ListItemButton>
+    <div key={index}>
+      <ListItem onClick={handleExpandClick}>
+          <Typography>{t(channelType)}</Typography>
+          <ExpandMore icon="uiw:down" expanded={expanded} />
       </ListItem>
-      {hasTransitionExited ? <Divider /> : null}
       <Collapse
         in={expanded}
-        timeout="auto"
-        onEnter={() =>
-          setHasTransitionExited(false)
-        }
-        onExited={() =>
-          setHasTransitionExited(true)
-        }
       >
         <StyledBox>
-          {channels.map((channel, index) => {
-            return (
-              <StyledCard key={index}>
-                {getControlComponent(channel, refetch)}
-              </StyledCard>
-            );
-          })}
+          {channels.map((channel, index) => (
+            <StyledCard key={index}>
+              {getControlComponent(channel, refetch)}
+            </StyledCard>
+          ))}
         </StyledBox>
-        <Divider sx={{ mt: '10px' }} />
+        <Divider />
       </Collapse>
-    </Box>
+    </div>
   );
 };

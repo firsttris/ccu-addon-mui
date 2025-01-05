@@ -1,5 +1,5 @@
+import styled from "@emotion/styled";
 import { Icon } from "@iconify/react";
-import { styled } from "@mui/material";
 
 interface StyledIconButtonProps {
   icon: string;

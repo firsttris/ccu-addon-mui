@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom/client';
 import { Router } from './router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, createTheme } from '@mui/material';
+import { css, Global } from '@emotion/react';
 
 const requestWakeLock = async () => {
   try {
@@ -36,9 +37,19 @@ const root = ReactDOM.createRoot(
 root.render(
   <StrictMode>
     <ThemeProvider theme={theme}>
-        <QueryClientProvider client={queryClient}>
-          <Router />
-        </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <Global
+          styles={css`
+            body {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+              font-family: 'Roboto', sans-serif;
+            }
+          `}
+        />
+        <Router />
+      </QueryClientProvider>
     </ThemeProvider>
   </StrictMode>
 );

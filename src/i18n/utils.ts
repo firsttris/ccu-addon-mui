@@ -24,6 +24,7 @@ export const ui = {
     NOT_HEATING: 'Not Heating',
     DOOR_STATE_UNKNOWN: 'Door state is uncertain',
     SIGN_IN: 'Sign in',
+    rememberMe: 'Remember me',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
@@ -40,6 +41,7 @@ export const ui = {
     NOT_HEATING: 'Nicht Heizen',
     DOOR_STATE_UNKNOWN: 'Türzustand ist ungewiss',
     SIGN_IN: 'Anmelden',
+    rememberMe: 'Erinnere dich an mich',
   },
 } as const;
 

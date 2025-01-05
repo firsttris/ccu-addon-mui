@@ -1,13 +1,52 @@
-import { Container, LinearProgress, List, styled } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { useGetChannelForType } from '../hooks/useApi';
 import { ChannelsForType } from './ChannelsForType';
+import styled from '@emotion/styled';
 
-const StyledContainer = styled(Container)({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '10px',
-});
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 1280px; /* equivalent to maxWidth="xl" in MUI */
+  margin: 0 auto; /* center the container */
+`;
+
+const List = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`;
+
+const LinearProgress = styled.div`
+  width: 100%;
+  height: 4px;
+  background-color: #e0e0e0;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #3f51b5;
+    animation: loading 1.5s infinite;
+  }
+
+  @keyframes loading {
+    0% {
+      left: -100%;
+    }
+    50% {
+      left: 0;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+`;
 
 export const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -23,8 +62,8 @@ export const Room = () => {
   }
 
   return (
-    <StyledContainer maxWidth="xl">
-      <List disablePadding={true}>
+    <Container>
+      <List>
         {channelsPerType.map(([channelType, channels], index) => {
           return channels.length ? (
             <ChannelsForType
@@ -37,6 +76,6 @@ export const Room = () => {
           ) : null;
         })}
       </List>
-    </StyledContainer>
+    </Container>
   );
 };
