@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
+import TemperatureDisplay from '../components/TemperaturDisplay';
 
 // Define types for the component's props if needed
 type ThermostatProps = {
@@ -53,6 +54,7 @@ const Dial = styled.div<{ temperature: number }>`
     height: 100%;
     border-radius: 50%;
     background: conic-gradient(
+      from 180deg,
       orange ${props => props.temperature * 3.6}deg,
       #d3d3d3 ${props => props.temperature * 3.6}deg
     );
@@ -60,17 +62,6 @@ const Dial = styled.div<{ temperature: number }>`
       radial-gradient(farthest-side, transparent calc(100% - 10px), black calc(100% - 10px));
     mask: 
       radial-gradient(farthest-side, transparent calc(100% - 10px), black calc(100% - 10px));
-  }
-
-  &::after {
-    content: '${props => props.temperature}°C';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
   }
 `;
 
@@ -109,7 +100,13 @@ const BetterThermostatUI: React.FC<ThermostatProps> = ({ initialTemperature = 25
       <Title>HeatPump</Title>
       <Mode>{mode}</Mode>
 
-      <Dial temperature={temperature} />
+      <Dial temperature={temperature}>
+    <TemperatureDisplay 
+      targetTemperature={temperature} 
+      currentTemperature={20} 
+      humidity={60} 
+    />
+  </Dial>
 
       <Controls>
         <Button onClick={decreaseTemperature}>-</Button>
