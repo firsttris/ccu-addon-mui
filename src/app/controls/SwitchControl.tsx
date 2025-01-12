@@ -1,7 +1,6 @@
 import { useSetValueMutation } from '../../hooks/useApi';
 import { SwitchVirtualReceiverChannel } from 'src/types/types';
 import styled from '@emotion/styled';
-import { TypographyWithEllipsis } from '../components/TypographyWithEllipsis';
 import { Icon } from '@iconify/react';
 
 interface ControlProps {

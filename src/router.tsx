@@ -8,6 +8,7 @@ import { Room } from './app/Room';
 import { Rooms } from './app/Rooms';
 import { ReactNode, useEffect } from 'react';
 import { getSessionId } from './hooks/useApi';
+import { WebSocketDemo } from './app/Websocket';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -51,6 +52,10 @@ export const Router = () => {
           </ProtectedRoute>
         ),
       },
+      {
+        path: 'websocket',
+        element: <WebSocketDemo />
+      }
     ],
     { basename }
   );

@@ -110,6 +110,10 @@ export const useRunScript = <T>(script: string) => {
   return { ...result, data: parsedData as T };
 };
 
+export const useInit = () => {
+  const result = useApi('Interface.init', { interface: 'HmIP-RF', url: '192.168.178.134:8001', interfaceId: '' });
+}
+
 interface Options {
   enabled?: boolean;
 }

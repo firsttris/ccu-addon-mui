@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useGetRegaRooms } from '../hooks/useApi';
+import { useGetRegaRooms, useInit, useListInterfaces } from '../hooks/useApi';
 import styled from '@emotion/styled';
 import { Typography, ListItem } from './ChannelsForType';
 import { Icon } from '@iconify/react';
