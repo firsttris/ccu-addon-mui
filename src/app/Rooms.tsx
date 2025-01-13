@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { useGetRegaRooms, useInit, useListInterfaces } from '../hooks/useApi';
 import styled from '@emotion/styled';
 import { Typography, ListItem } from './ChannelsForType';
 import { Icon } from '@iconify/react';
+import { useWebSocketContext } from 'src/hooks/useWebsocket';
+import { useEffect } from 'react';
 
 const Container = styled.div`
   max-width: 1280px; /* equivalent to maxWidth="xl" in MUI */
@@ -22,13 +23,17 @@ const ListItemText = styled(Typography)`
 
 export const Rooms = () => {
   const navigate = useNavigate();
-  const { data: rooms, isFetched } = useGetRegaRooms();
+  const {getRooms, rooms } = useWebSocketContext();
 
-  if (isFetched && rooms) {
+  useEffect(() => {
+    getRooms();
+  }, [])
+
+  if (rooms) {
     return (
       <Container>
         <List>
-          {rooms.map((room, index) => (
+          {rooms.map((room) => (
             <ListItem key={room.id} onClick={() => navigate(`/room/${room.id}`)}>
               <Icon icon="mdi:door-open" fontSize={"35px"} />
               <ListItemText>{room.name}</ListItemText>

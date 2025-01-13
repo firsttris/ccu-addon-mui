@@ -1,7 +1,9 @@
 import { useParams } from 'react-router-dom';
-import { useGetChannelForType } from '../hooks/useApi';
 import { ChannelsForType } from './ChannelsForType';
 import styled from '@emotion/styled';
+import { useWebSocketContext } from 'src/hooks/useWebsocket';
+import { useEffect, useMemo } from 'react';
+import { Channel, ChannelType } from 'src/types/types';
 
 const Container = styled.div`
   display: flex;
@@ -51,27 +53,40 @@ const LinearProgress = styled.div`
 export const Room = () => {
   const { roomId } = useParams<{ roomId: string }>();
 
-  const {
-    data: channelsPerType,
-    refetch,
-    isLoading,
-  } = useGetChannelForType(Number(roomId));
+  const { getChannelsForRoomId, channels } = useWebSocketContext();
 
-  if (isLoading) {
-    return <LinearProgress />;
-  }
+  useEffect(() => {
+    getChannelsForRoomId(Number(roomId))
+  }, [])
+
+  const channelsPerType = useMemo(() => {
+    return channels?.reduce((acc, channel) => {
+      const channels = acc.get(channel.type);
+
+      if (channels) {
+        channels.push(channel);
+      } else {
+        acc.set(channel.type, [channel]);
+      }
+
+      return acc;
+    }, new Map<ChannelType, Channel[]>());
+  }, [channels]);
+
+ // if (isLoading) {
+ //   return <LinearProgress />;
+ // }
 
   return (
     <Container>
       <List>
-        {channelsPerType.map(([channelType, channels], index) => {
+        {Array.from(channelsPerType).map(([channelType, channels], index) => {
           return channels.length ? (
             <ChannelsForType
               key={index}
               index={index}
               channelType={channelType}
               channels={channels}
-              refetch={refetch}
             />
           ) : null;
         })}

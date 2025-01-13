@@ -95,14 +95,12 @@ interface ChannelTypeProps {
   index: number;
   channelType: ChannelType;
   channels: Channel[];
-  refetch: () => void;
 }
 
 export const ChannelsForType: React.FC<ChannelTypeProps> = ({
   index,
   channelType,
   channels,
-  refetch,
 }) => {
   const t = useTranslations();
 
