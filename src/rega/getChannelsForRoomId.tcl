@@ -5,7 +5,7 @@ boolean isFirstChannel = true;
 boolean isFirstDatapoint  = true;
 
 object roomObject = dom.GetObject(roomId);
-Write('[');
+Write('{"channels":[');
 isFirstChannel = true;
 
 foreach(channelId, roomObject.EnumUsedIDs()) {
@@ -33,4 +33,4 @@ foreach(channelId, roomObject.EnumUsedIDs()) {
     Write('}}');
 }
 
-Write(']');
+Write(']}');

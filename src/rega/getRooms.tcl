@@ -2,7 +2,7 @@ object  roomObject;
 string  roomId;
 boolean isFirstRoom = true;
 
-Write("[");
+Write('{"rooms":[');
 
 foreach (roomId, dom.GetObject(ID_ROOMS).EnumUsedIDs()) {
     if (isFirstRoom == false) {
@@ -17,4 +17,4 @@ foreach (roomId, dom.GetObject(ID_ROOMS).EnumUsedIDs()) {
     Write('"}');
 }
 
-Write(']');
+Write(']}');
