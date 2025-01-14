@@ -27,7 +27,12 @@ foreach(channelId, roomObject.EnumUsedIDs()) {
         } else {
             isFirstDatapoint = false;
         }
-        Write('"' # datapointObject.HssType() # '": "' # datapointObject.Value() # '"');
+        
+        if (datapointObject.Value().Length() == 0) {
+            Write('"' # datapointObject.HssType() # '": ""');
+        } else {
+            Write('"' # datapointObject.HssType() # '": ' # datapointObject.Value());
+        }
     }
 
     Write('}}');

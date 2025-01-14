@@ -132,37 +132,8 @@ export type Channel =
   }
 
   export interface HmEvent {
-    topic: string;
-    payload: boolean;
-    ccu: string;
-    iface: string;
-    device: string;
-    deviceName: string;
-    deviceType: string;
+    interface: string;
     channel: string;
-    channelName: string;
-    channelType: ChannelType;
-    channelIndex: number;
     datapoint: string;
-    datapointName: string;
-    datapointType: string;
-    datapointMin: boolean;
-    datapointMax: boolean;
-    datapointDefault: boolean;
-    datapointControl: string;
     value: boolean;
-    valuePrevious: boolean;
-    valueStable: boolean;
-    rooms: string[];
-    room: string;
-    functions: string[];
-    ts: number;
-    tsPrevious: number;
-    lc: number;
-    change: boolean;
-    cache: boolean;
-    uncertain: boolean;
-    working: boolean;
-    stable: boolean;
-    _msgid: string;
   }

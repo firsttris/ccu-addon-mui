@@ -34,8 +34,8 @@ export const Rooms = () => {
     return (
       <Container>
         <List>
-          {rooms.map((room) => (
-            <ListItem key={room.id} onClick={() => navigate(`/room/${room.id}`)}>
+          {rooms.map((room, index) => (
+            <ListItem key={index} onClick={() => navigate(`/room/${room.id}`)}>
               <Icon icon="mdi:door-open" fontSize={"35px"} />
               <ListItemText>{room.name}</ListItemText>
             </ListItem>

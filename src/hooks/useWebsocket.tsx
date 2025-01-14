@@ -10,7 +10,7 @@ import React, { createContext, useContext } from "react";
 interface Response {
   rooms?: Room[];
   channels?: Channel[];
-  topic?: string;
+  event?: HmEvent;
 }
 
 export const useWebsocket = () => {
@@ -24,12 +24,14 @@ export const useWebsocket = () => {
       const response = (JSON.parse(lastMessage.data) as Response);
       if(response.rooms) {
         setRooms(response.rooms);
+        return
       }
       if(response.channels) {
         setChannels(response.channels);
+        return
       }
-      if (response.topic) {
-        const event = response as unknown as HmEvent;
+      if (response.event) {
+        const event = response.event;
         setChannels(prevChannels => 
           prevChannels.map(channel => 
             channel.address === event.channel
