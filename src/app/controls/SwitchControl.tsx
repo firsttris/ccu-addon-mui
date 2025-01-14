@@ -20,7 +20,7 @@ export const SwitchControl = ({ channel }: ControlProps) => {
   const { setDataPoint } = useWebSocketContext();
   const { datapoints, name, address, interfaceName } = channel;
   console.log('channel', channel);
-  const checked = datapoints.STATE === 'true';
+  const checked = datapoints.STATE === true;
 
   const onHandleChange = async () => {
     setDataPoint(interfaceName, address, 'STATE', checked ? false : true);

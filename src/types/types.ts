@@ -8,12 +8,10 @@ export enum ChannelType {
 }
 
 export type SwitchVirtualReceiverDatapoint = {
-  COMBINED_PARAMETER: string;
-  ON_TIME: string;
-  PROCESS: string;
-  SECTION: string;
-  SECTION_STATUS: string;
-  STATE: string;
+  PROCESS: number;
+  SECTION: number;
+  SECTION_STATUS: number;
+  STATE: boolean;
 };
 
 export type BlindVirtualReceiverDatapoint = {
@@ -132,7 +130,6 @@ export type Channel =
   }
 
   export interface HmEvent {
-    interface: string;
     channel: string;
     datapoint: string;
     value: boolean;
