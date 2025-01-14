@@ -1,10 +1,7 @@
 import { Box, Slider, Typography } from '@mui/material';
-import {
-  useSetValueMutation,
-} from '../../hooks/useApi';
 import { useEffect, useState } from 'react';
 import { CircularProgressWithLabel } from '../components/CircularProgressWithLabel';
-import { StyledHeaderIcon } from '../components/StyledIcons';
+import { HeaderIcon } from '../components/StyledIcons';
 import { ChannelHeader } from '../components/ChannelHeader';
 import { HeatingClimateControlTransceiverChannel } from 'src/types/types';
 
@@ -19,8 +16,6 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
     datapoints?.SET_POINT_TEMPERATURE ?? 0
   );
 
-  const setValueMutation = useSetValueMutation();
-
   const [pointTemp, setPointTemp] = useState<number>(setPoinTemperaturevalue);
   const [pointMode, setPointMode] = useState<number>(setPointModevalue);
 
@@ -34,6 +29,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
 
   const changeSetPointTemperature = (value: number) => {
     setPointTemp(value);
+    /*
     setValueMutation.mutateAsync({
       interface: interfaceName,
       address,
@@ -41,6 +37,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
       type: 'double',
       value: value.toString(),
     });
+    */
   };
 
   const getColor = (value: number): string => {
@@ -67,7 +64,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
           alignItems: 'center',
         }}
       >
-        <StyledHeaderIcon icon="material-symbols-light:humidity-indoor-outline" />
+        <HeaderIcon icon="material-symbols-light:humidity-indoor-outline" />
         <Typography variant="caption" ml="3px">
           {Number(datapoints?.HUMIDITY)}%
         </Typography>
@@ -78,7 +75,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
   const getValveLevel = () => {
     return datapoints?.LEVEL ? (
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <StyledHeaderIcon
+        <HeaderIcon
           icon="mdi:pipe-valve"
           style={{ marginRight: '5px' }}
         />
@@ -90,11 +87,12 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
   const getActualTemperature = () => {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <StyledHeaderIcon
+        <HeaderIcon
           icon={pointMode ? 'mdi:thermostat' : 'mdi:thermostat-auto'}
           color={getColor(Number(datapoints?.ACTUAL_TEMPERATURE))}
           onClick={() => {
             setPointMode(Number(pointMode ? '0' : '1'));
+            /*
             setValueMutation.mutateAsync({
               interface: interfaceName,
               address,
@@ -102,6 +100,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
               type: 'double',
               value: pointMode ? 0 : 1,
             });
+            */
           }}
         />
         <Typography variant="caption" ml="3px">
@@ -120,7 +119,7 @@ export const ThermostatControl = ({ channel }: ControlProps) => {
   const getWindowState = () => {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <StyledHeaderIcon
+        <HeaderIcon
           icon={
             datapoints?.WINDOW_STATE === '0'
               ? 'material-symbols:window-closed'

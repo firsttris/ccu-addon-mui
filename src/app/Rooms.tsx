@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { Typography, ListItem } from './ChannelsForType';
 import { Icon } from '@iconify/react';
-import { useWebSocketContext } from 'src/hooks/useWebsocket';
+import { useWebSocketContext } from './../hooks/useWebsocket';
 import { useEffect } from 'react';
 
 const Container = styled.div`
@@ -24,10 +24,11 @@ const ListItemText = styled(Typography)`
 export const Rooms = () => {
   const navigate = useNavigate();
   const {getRooms, rooms } = useWebSocketContext();
+  console.log('rooms', rooms);
 
   useEffect(() => {
     getRooms();
-  }, [])
+  }, []);
 
   if (rooms) {
     return (

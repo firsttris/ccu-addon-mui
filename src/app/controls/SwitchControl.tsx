@@ -1,11 +1,10 @@
-import { useSetValueMutation } from '../../hooks/useApi';
 import { SwitchVirtualReceiverChannel } from 'src/types/types';
 import styled from '@emotion/styled';
 import { Icon } from '@iconify/react';
+import { useWebSocketContext } from './../../hooks/useWebsocket';
 
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;
-  refetch: () => void;
 }
 
 const CardHeader = styled.div<{ onClick?: () => void }>`
@@ -17,20 +16,14 @@ const CardHeader = styled.div<{ onClick?: () => void }>`
   width: 100px;
 `;
 
-export const SwitchControl = ({ channel, refetch }: ControlProps) => {
-  const setValueMutation = useSetValueMutation();
+export const SwitchControl = ({ channel }: ControlProps) => {
+  const { setDataPoint } = useWebSocketContext();
   const { datapoints, name, address, interfaceName } = channel;
+  console.log('channel', channel);
   const checked = datapoints.STATE === 'true';
 
   const onHandleChange = async () => {
-    await setValueMutation.mutateAsync({
-      interface: interfaceName,
-      address,
-      valueKey: 'STATE',
-      type: 'boolean',
-      value: !checked,
-    });
-    refetch();
+    setDataPoint(interfaceName, address, 'STATE', checked ? false : true);
   };
 
   return (

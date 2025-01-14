@@ -2,7 +2,6 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from 'react-router-dom';
-import { Login } from './app/Login';
 import { Room } from './app/Room';
 import { Rooms } from './app/Rooms';
 
@@ -12,7 +11,7 @@ export const Router = () => {
     [
       {
         path: '/',
-        element: <Login />,
+        element: <h1>helo</h1>,
       },
       {
         path: '/rooms',

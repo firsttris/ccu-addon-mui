@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { Router } from './router';
 import { css, Global } from '@emotion/react';
+import { WebSocketProvider } from './hooks/useWebsocket';
 
 const requestWakeLock = async () => {
   try {
@@ -21,7 +22,8 @@ const root = ReactDOM.createRoot(
 );
 
 root.render(
-  <StrictMode>
+  <>
+
     <Global
       styles={css`
         body {
@@ -32,7 +34,7 @@ root.render(
           font-family: 'Roboto', sans-serif;
         }
       `}
-    />
-    <Router />
-  </StrictMode>
+    /><WebSocketProvider><Router /></WebSocketProvider>
+
+  </>
 );

@@ -14,7 +14,9 @@ interface ExpandMoreProps {
   expanded: boolean;
 }
 
-const ExpandMore = styled(Icon)<ExpandMoreProps>(({ expanded }) => ({
+const ExpandMore = styled(Icon, {
+  shouldForwardProp: (prop) => prop !== 'expanded',
+})<ExpandMoreProps>(({ expanded }) => ({
   transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
   marginLeft: 'auto',
   transition: 'transform 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
@@ -66,22 +68,24 @@ const Divider = styled.hr({
   marginBottom: '0px'
 });
 
-const Collapse = styled.div<{ in: boolean }>(({ in: inProp }) => ({
+const Collapse = styled('div', {
+  shouldForwardProp: (prop) => prop !== 'in',
+})<{ in: boolean }>(({ in: inProp }) => ({
   display: inProp ? 'block' : 'none',
 }));
 
-const getControlComponent = (channel: Channel, refetch: () => void) => {
+const getControlComponent = (channel: Channel) => {
   switch (channel.type) {
     case ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER:
       return <FloorControl channel={channel} />;
     case ChannelType.SWITCH_VIRTUAL_RECEIVER:
-      return <SwitchControl refetch={refetch} channel={channel} />;
+      return <SwitchControl channel={channel} />;
     case ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER:
       return <ThermostatCard />;
     case ChannelType.BLIND_VIRTUAL_RECEIVER:
       return <Blinds />;
     case ChannelType.KEYMATIC:
-      return <DoorControl refetch={refetch} channel={channel} />;
+      return <DoorControl channel={channel} />;
     default:
       return (
         <div>
@@ -122,7 +126,7 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
         <StyledBox>
           {channels.map((channel, index) => (
             <StyledCard key={index}>
-              {getControlComponent(channel, refetch)}
+              {getControlComponent(channel)}
             </StyledCard>
           ))}
         </StyledBox>

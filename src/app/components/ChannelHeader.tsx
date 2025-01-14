@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { StyledHeaderIcon } from './StyledIcons';
+import { HeaderIcon } from './StyledIcons';
 import { TypographyWithEllipsis } from './TypographyWithEllipsis';
 
 interface ChannelHeaderProps {
@@ -32,7 +32,7 @@ export const ChannelHeader = ({
   return (
     <CardHeader onClick={onClick} {...props}>
       <HeaderContainer>
-        <StyledHeaderIcon icon={icon} color={color} />
+        <HeaderIcon icon={icon} color={color} />
         <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
       </HeaderContainer>
     </CardHeader>

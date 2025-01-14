@@ -1,9 +1,6 @@
 import { Box, CardContent } from '@mui/material';
-import {
-  useSetValueMutation,
-} from '../../hooks/useApi';
 import { CircularProgressWithLabel } from '../components/CircularProgressWithLabel';
-import { StyledIconButton } from '../components/StyledIcons';
+import { IconButton } from '../components/StyledIcons';
 import { ChannelHeader } from '../components/ChannelHeader';
 import { BlindVirtualReceiverChannel } from 'src/types/types';
 
@@ -12,7 +9,6 @@ interface ControlProps {
 }
 
 export const BlindsControl = ({ channel }: ControlProps) => {
-  const setValueMutation = useSetValueMutation();
   const { datapoints, name, address, interfaceName } = channel;
   const blindValue = Number(datapoints.LEVEL) * 100;
   return (
@@ -35,22 +31,25 @@ export const BlindsControl = ({ channel }: ControlProps) => {
               justifyContent: 'center',
             }}
           >
-            <StyledIconButton
+            <IconButton
               icon="uiw:down"
-              onClick={() =>
-                setValueMutation.mutateAsync({
+              onClick={() => {
+
+                /*                setValueMutation.mutateAsync({
                   interface: interfaceName,
                   address,
                   valueKey: 'LEVEL',
                   type: 'double',
                   value: 0,
-                })
+                })*/
+              }
+
               }
             />
 
-            <StyledIconButton
+            <IconButton
               icon="material-symbols:stop"
-              onClick={() =>
+              onClick={() => { /*
                 setValueMutation.mutateAsync({
                   interface: interfaceName,
                   address,
@@ -58,19 +57,21 @@ export const BlindsControl = ({ channel }: ControlProps) => {
                   type: 'boolean',
                   value: true,
                 })
+                  */ }
               }
             />
 
-            <StyledIconButton
+            <IconButton
               icon="uiw:up"
-              onClick={() =>
+              onClick={() => { /*
                 setValueMutation.mutateAsync({
                   interface: interfaceName,
                   address,
                   valueKey: 'LEVEL',
                   type: 'double',
                   value: 1,
-                })
+                }) */
+              }
               }
             />
 

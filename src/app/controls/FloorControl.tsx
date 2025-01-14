@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { StyledHeaderIcon } from '../components/StyledIcons';
+import { HeaderIcon } from '../components/StyledIcons';
 import { ChannelHeader } from '../components/ChannelHeader';
 import { FloorClimateControlTransceiverChannel } from 'src/types/types';
 
@@ -72,7 +72,7 @@ export const FloorControl = (props: FloorControlProps) => {
       <ChannelHeader icon="mdi:radiator-coil" name={props.channel.name}/>
       <Content>
         <FlexBox>
-          <StyledHeaderIcon icon="mdi:pipe-valve" style={{ marginRight: '5px'}} color={getColor(value)}/>
+          <HeaderIcon icon="mdi:pipe-valve" style={{ marginRight: '5px'}} color={getColor(value)}/>
           <ProgressBarContainer>
             <ProgressBar value={value} />
           </ProgressBarContainer>

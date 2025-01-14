@@ -1,12 +1,12 @@
 import styled from "@emotion/styled";
 import { Icon } from "@iconify/react";
 
-interface StyledIconButtonProps {
+interface IconButtonProps {
   icon: string;
   active?: boolean;
 }
 
-export const StyledIconButton = styled(Icon, { shouldForwardProp: (prop) => prop !== 'active', })<StyledIconButtonProps>`
+export const IconButton = styled(Icon, { shouldForwardProp: (prop) => prop !== 'active', })<IconButtonProps>`
   color: ${(props) => (props.active ? '#0077B6' : '#000')};
   font-size: 40px;
   background-color: lightGrey;
@@ -15,6 +15,6 @@ export const StyledIconButton = styled(Icon, { shouldForwardProp: (prop) => prop
   cursor: pointer;
 `;
 
-export const StyledHeaderIcon = styled(Icon)`
+export const HeaderIcon = styled(Icon)`
   font-size: 30px;
 `;

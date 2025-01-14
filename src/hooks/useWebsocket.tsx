@@ -2,7 +2,10 @@ import { ReactNode, useEffect, useState } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 import regaGetRoomsScript from './../rega/getRooms.tcl';
 import regaGetChannelsScript from './../rega/getChannelsForRoomId.tcl';
+import getSetDataPoint from './../rega/setDatapoint.tcl';
 import { Channel, HmEvent, Room } from "src/types/types";
+
+import React, { createContext, useContext } from "react";
 
 interface Response {
   rooms?: Room[];
@@ -18,7 +21,7 @@ export const useWebsocket = () => {
 
   useEffect(() => {
     if (lastMessage !== null) {
-      const response = (lastMessage as Response);
+      const response = (JSON.parse(lastMessage.data) as Response);
       if(response.rooms) {
         setRooms(response.rooms);
       }
@@ -27,32 +30,54 @@ export const useWebsocket = () => {
       }
       if (response.topic) {
         const event = response as unknown as HmEvent;
-        const newChannels = channels.map(channel => 
-          channel.address === event.channel
-            ? {
-                ...channel,
-                datapoints: {
-                  ...channel.datapoints,
-                  [event.datapoint]: event.value,
-                },
-              }
-            : channel
+        setChannels(prevChannels => 
+          prevChannels.map(channel => 
+            channel.address === event.channel
+              ? {
+                  ...channel,
+                  datapoints: {
+                    ...channel.datapoints,
+                    [event.datapoint]: event.value,
+                  },
+                }
+              : channel
+          ) as Channel[]
         );
-        setChannels(newChannels as Channel[]);
+        console.log('setChannels', channels);
+
       }
     }
   }, [lastMessage]);
 
   const getRooms = () => {
+
     sendMessage(regaGetRoomsScript);
   }
 
   const getChannelsForRoomId = (roomId: number) => {
-    regaGetChannelsScript.replace(
+    const script = regaGetChannelsScript.replace(
       /ROOMID_PLACEHOLDER/g,
-      roomId ? roomId.toString() : 'NO_ROOM_ID'
+      roomId.toString()
     )
-    sendMessage(regaGetChannelsScript);
+    sendMessage(script);
+  };
+
+  const setDataPoint = (interfaceName: string, address: string, attributeName: string, value: string | number | boolean ) => {
+    const script = getSetDataPoint.replace(
+      /INTERFACE_PLACEHOLDER/g,
+      interfaceName
+    ).replace(
+      /ADDRESS_PLACEHOLDER/g,
+      address
+    ).replace(
+      /ATTRIBUTE_PLACEHOLDER/g,
+      attributeName
+    ).replace(
+      /VALUE_PLACEHOLDER/g,
+      value.toString()
+    )
+    console.log('script', script);
+    sendMessage(script);
   };
 
   const connectionStatus = {
@@ -64,6 +89,7 @@ export const useWebsocket = () => {
   }[readyState];
 
   return {
+    setDataPoint,
     getChannelsForRoomId,
     getRooms,
     channels,
@@ -73,8 +99,6 @@ export const useWebsocket = () => {
 };
 
 export type UseWebsocketReturnType = ReturnType<typeof useWebsocket>;
-
-import React, { createContext, useContext } from "react";
 
 const WebSocketContext = createContext<UseWebsocketReturnType | undefined>(undefined);
 

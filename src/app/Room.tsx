@@ -1,9 +1,9 @@
 import { useParams } from 'react-router-dom';
 import { ChannelsForType } from './ChannelsForType';
 import styled from '@emotion/styled';
-import { useWebSocketContext } from 'src/hooks/useWebsocket';
+import { useWebSocketContext } from './../hooks/useWebsocket';
 import { useEffect, useMemo } from 'react';
-import { Channel, ChannelType } from 'src/types/types';
+import { Channel, ChannelType } from './../types/types';
 
 const Container = styled.div`
   display: flex;
