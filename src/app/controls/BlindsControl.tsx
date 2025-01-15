@@ -15,7 +15,14 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const blindValue = Number(datapoints.LEVEL) * 100;
   return (
     <div>
-      <ChannelHeader icon={blindValue === 0 ? "material-symbols-light:blinds-closed" : "material-symbols-light:blinds"} name={name}/>
+      <ChannelHeader
+        icon={
+          blindValue === 0
+            ? 'material-symbols-light:blinds-closed'
+            : 'material-symbols-light:blinds'
+        }
+        name={name}
+      />
       <div style={{ paddingTop: '0px' }}>
         <div
           style={{
@@ -25,9 +32,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             alignItems: 'center',
           }}
         >
-          <div>
-            {blindValue}%
-          </div>
+          <div>{blindValue}%</div>
           <Shutters percent={blindValue} />
           <div
             style={{
@@ -39,13 +44,19 @@ export const BlindsControl = ({ channel }: ControlProps) => {
               marginBottom: '10px',
             }}
           >
-            <Button onClick={() => setDataPoint(interfaceName, address, 'LEVEL', 0)}>
+            <Button
+              onClick={() => setDataPoint(interfaceName, address, 'LEVEL', 0)}
+            >
               <Icon icon="uiw:down" />
             </Button>
-            <Button onClick={() => setDataPoint(interfaceName, address, 'STOP', true)}>
+            <Button
+              onClick={() => setDataPoint(interfaceName, address, 'STOP', true)}
+            >
               <Icon icon="material-symbols:stop" />
             </Button>
-            <Button onClick={() => setDataPoint(interfaceName, address, 'LEVEL', 1)}>
+            <Button
+              onClick={() => setDataPoint(interfaceName, address, 'LEVEL', 1)}
+            >
               <Icon icon="uiw:up" />
             </Button>
           </div>

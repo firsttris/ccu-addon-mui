@@ -10,45 +10,14 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 1280px; /* equivalent to maxWidth="xl" in MUI */
-  margin: 0 auto; /* center the container */
+  max-width: 1280px;
+  margin: 0 auto; 
 `;
 
 const List = styled.ul`
   list-style: none;
   padding: 0;
   margin: 0;
-`;
-
-const LinearProgress = styled.div`
-  width: 100%;
-  height: 4px;
-  background-color: #e0e0e0;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #3f51b5;
-    animation: loading 1.5s infinite;
-  }
-
-  @keyframes loading {
-    0% {
-      left: -100%;
-    }
-    50% {
-      left: 0;
-    }
-    100% {
-      left: 100%;
-    }
-  }
 `;
 
 const IconButton = styled.button`
@@ -89,8 +58,8 @@ export const Room = () => {
   const { getChannelsForRoomId, channels } = useWebSocketContext();
 
   useEffect(() => {
-      getChannelsForRoomId(Number(roomId))
-  }, [])
+    getChannelsForRoomId(Number(roomId));
+  }, []);
 
   const channelsPerType = useMemo(() => {
     return channels?.reduce((acc, channel) => {
@@ -106,10 +75,6 @@ export const Room = () => {
     }, new Map<ChannelType, Channel[]>());
   }, [channels]);
 
-  // if (isLoading) {
-  //   return <LinearProgress />;
-  // }
-
   return (
     <>
       <Header>
@@ -118,7 +83,6 @@ export const Room = () => {
         </IconButton>
       </Header>
       <Container>
-
         <List>
           {Array.from(channelsPerType).map(([channelType, channels], index) => {
             return channels.length ? (

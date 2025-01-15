@@ -6,7 +6,7 @@ import { useWebSocketContext } from './../hooks/useWebsocket';
 import { useEffect } from 'react';
 
 const Container = styled.div`
-  max-width: 1280px; /* equivalent to maxWidth="xl" in MUI */
+  max-width: 1280px;
   margin: 0 auto;
   padding: 16px;
 `;

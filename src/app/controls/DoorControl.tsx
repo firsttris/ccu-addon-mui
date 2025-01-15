@@ -1,7 +1,9 @@
-import { IconButton } from '../components/StyledIcons';
 import { KeymaticChannel } from './../../types/types';
 import { useTranslations } from './../../i18n/utils';
 import styled from '@emotion/styled';
+import { Button } from '../components/Button';
+import { Icon } from '@iconify/react';
+import { useWebSocketContext } from '../../hooks/useWebsocket';
 
 const OuterBox = styled.div({
   display: 'flex',
@@ -16,7 +18,7 @@ const InnerBox = styled.div({
 });
 
 interface StyledTypographyProps {
-  uncertain: boolean
+  uncertain: boolean;
 }
 
 const StyledTypography = styled('span', {
@@ -31,71 +33,41 @@ interface DoorControlProps {
 
 export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   const t = useTranslations();
+  const { setDataPoint } = useWebSocketContext();
   const {
     datapoints: { STATE, STATE_UNCERTAIN },
   } = channel;
 
-  const isUncertain = STATE_UNCERTAIN === 'true';
-  const isUnlocked = STATE === 'true';
+  const isUncertain = STATE_UNCERTAIN === true;
+  const isUnlocked = STATE === true;
 
   const unlockDoor = async () => {
-    /*
-    await setValueMutation.mutateAsync({
-      interface: channel.interfaceName,
-      address: channel.address,
-      valueKey: 'STATE',
-      type: 'boolean',
-      value: true,
-    });
-    */
+    setDataPoint(channel.interfaceName, channel.address, 'STATE', true);
   };
 
   const lockDoor = async () => {
-    /*
-    await setValueMutation.mutateAsync({
-      interface: channel.interfaceName,
-      address: channel.address,
-      valueKey: 'STATE',
-      type: 'boolean',
-      value: false,
-    });
-    */
+    setDataPoint(channel.interfaceName, channel.address, 'STATE', false);
   };
 
   const openDoor = async () => {
-    /*
-    await setValueMutation.mutateAsync({
-      interface: channel.interfaceName,
-      address: channel.address,
-      valueKey: 'OPEN',
-      type: 'boolean',
-      value: true,
-    });
-    */
+    setDataPoint(channel.interfaceName, channel.address, 'OPEN', true);
   };
 
   return (
     <div>
       <OuterBox>
         <InnerBox>
-          <IconButton
-            icon="material-symbols:lock-outline"
-            active={!isUnlocked}
-            onClick={lockDoor}
-          />
-          <IconButton
-            icon="material-symbols:lock-open-outline"
-            active={isUnlocked}
-            onClick={unlockDoor}
-          />
-          <IconButton
-            icon="material-symbols:door-open-outline"
-            onClick={openDoor}
-          />
+          <Button onClick={lockDoor}>
+            <Icon style={{ fontSize: '30px' }} icon="material-symbols:lock-outline" />
+          </Button>
+          <Button onClick={unlockDoor}>
+            <Icon style={{ fontSize: '30px' }} icon="material-symbols:lock-open-outline" />
+          </Button>
+          <Button onClick={openDoor}>
+            <Icon style={{ fontSize: '30px' }} icon="material-symbols:door-open-outline" />
+          </Button>
         </InnerBox>
-        <StyledTypography
-          uncertain={isUncertain}
-        >
+        <StyledTypography uncertain={isUncertain}>
           {t('DOOR_STATE_UNKNOWN')}
         </StyledTypography>
       </OuterBox>

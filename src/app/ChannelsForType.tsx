@@ -7,8 +7,7 @@ import { Channel, ChannelType } from './../types/types';
 import { DoorControl } from './controls/DoorControl';
 import { useLocalStorage } from './../hooks/useLocalStorage';
 import styled from '@emotion/styled';
-import {ThermostatControl } from './controls/ThermostatCard';
-import {Blinds} from './controls/Blinds';
+import { ThermostatControl } from './controls/ThermostatCard';
 
 interface ExpandMoreProps {
   expanded: boolean;
@@ -66,7 +65,7 @@ const Divider = styled.hr({
   border: 'none',
   borderTop: '1px solid #e0e0e0',
   marginTop: '16px',
-  marginBottom: '0px'
+  marginBottom: '0px',
 });
 
 const Collapse = styled('div', {
@@ -118,17 +117,13 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
   return (
     <div key={index}>
       <ListItem onClick={handleExpandClick}>
-          <Typography>{t(channelType)}</Typography>
-          <ExpandMore icon="uiw:down" expanded={expanded} />
+        <Typography>{t(channelType)}</Typography>
+        <ExpandMore icon="uiw:down" expanded={expanded} />
       </ListItem>
-      <Collapse
-        in={expanded}
-      >
+      <Collapse in={expanded}>
         <StyledBox>
           {channels.map((channel, index) => (
-            <StyledCard key={index}>
-              {getControlComponent(channel)}
-            </StyledCard>
+            <StyledCard key={index}>{getControlComponent(channel)}</StyledCard>
           ))}
         </StyledBox>
         <Divider />

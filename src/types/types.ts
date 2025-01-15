@@ -68,10 +68,10 @@ export type RainDesctionTransmitterDatapoint = {
 export type KeymaticDatapoint = {
   ERROR: string;
   INHIBIT: string;
-  OPEN: string;
+  OPEN: boolean;
   RELOCK_DELAY: string;
-  STATE: string;
-  STATE_UNCERTAIN: string;
+  STATE: boolean;
+  STATE_UNCERTAIN: boolean;
 };
 
 interface BaseChannel {

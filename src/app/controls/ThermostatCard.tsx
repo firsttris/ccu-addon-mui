@@ -4,22 +4,17 @@ import { HeatingClimateControlTransceiverChannel } from 'src/types/types';
 import { Icon } from '@iconify/react';
 import { useWebSocketContext } from './../../hooks/useWebsocket';
 import { Button } from '../components/Button';
+import { ChannelHeader } from '../components/ChannelHeader';
 
 type ThermostatProps = {
   channel: HeatingClimateControlTransceiverChannel
 };
 
 const Container = styled.div`
+position: relative;
   width: 250px;
   height: 100%;
   padding: 20px;
-`;
-
-const Title = styled.div`
-  font-size: 18px;
-  font-weight: bold;
-  height: 40px;
-  text-align: center;
 `;
 
 const getColor = (temperature: number) => {
@@ -33,7 +28,7 @@ const Dial = styled.div<{ temperature: number }>`
     width: 70%;
     height: 0;
     padding-bottom: 70%;
-    margin: 20px auto;
+    margin: 10px auto;
     position: relative;
     border-radius: 50%;
     background: #f0f0f0; 
@@ -79,7 +74,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
 
   return (
     <Container>
-      <Title>{channel.name}</Title>
+      <ChannelHeader icon={"mdi:thermometer"} name={channel.name}/>
       <Dial temperature={targetTemperature}>
         <TemperatureDisplay
           targetTemperature={targetTemperature}

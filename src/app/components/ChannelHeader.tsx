@@ -1,6 +1,5 @@
 import styled from '@emotion/styled';
-import { HeaderIcon } from './StyledIcons';
-import { TypographyWithEllipsis } from './TypographyWithEllipsis';
+import { Icon } from '@iconify/react';
 
 interface ChannelHeaderProps {
   name: string;
@@ -32,8 +31,8 @@ export const ChannelHeader = ({
   return (
     <CardHeader onClick={onClick} {...props}>
       <HeaderContainer>
-        <HeaderIcon icon={icon} color={color} />
-        <TypographyWithEllipsis>{name}</TypographyWithEllipsis>
+        <Icon style={{ fontSize: '30px' }} icon={icon} color={color} />
+        <div style={{ marginLeft: '5px' }}>{name}</div>
       </HeaderContainer>
     </CardHeader>
   );
