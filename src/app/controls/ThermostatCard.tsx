@@ -1,18 +1,17 @@
-import React, { useState } from 'react';
 import styled from '@emotion/styled';
-import TemperatureDisplay from '../components/TemperaturDisplay';
+import { TemperatureDisplay } from '../components/TemperaturDisplay';
+import { HeatingClimateControlTransceiverChannel } from 'src/types/types';
+import { Icon } from '@iconify/react';
+import { useWebSocketContext } from './../../hooks/useWebsocket';
 
-// Define types for the component's props if needed
 type ThermostatProps = {
-  initialTemperature?: number;
-  mode?: 'Heating' | 'Cooling';
+  channel: HeatingClimateControlTransceiverChannel
 };
 
-// Styled components for our UI elements
 const Card = styled.div`
   width: 250px;
-
-  background: #f5f5f5;
+  height: 100%;
+  
   border-radius: 15px;
   padding: 20px;
   text-align: center;
@@ -22,22 +21,17 @@ const Card = styled.div`
 const Title = styled.div`
   font-size: 18px;
   font-weight: bold;
-`;
-
-const Mode = styled.div`
-  margin-top: 5px;
-  color: orange;
-  font-size: 16px;
+  height: 40px;
 `;
 
 const getColor = (temperature: number) => {
-    if (temperature < 10) return '#00BFFF'; // DeepSkyBlue
-    if (temperature < 15) return '#8A2BE2'; // BlueViolet
-    if (temperature < 25) return '#32CD32'; // LimeGreen
-    return '#FF8C00'; // DarkOrange
-  };
-  
-  const Dial = styled.div<{ temperature: number }>`
+  if (temperature < 10) return '#00BFFF'; // DeepSkyBlue
+  if (temperature < 15) return '#8A2BE2'; // BlueViolet
+  if (temperature < 25) return '#32CD32'; // LimeGreen
+  return '#FF8C00'; // DarkOrange
+};
+
+const Dial = styled.div<{ temperature: number }>`
     width: 70%;
     height: 0;
     padding-bottom: 70%;
@@ -67,7 +61,7 @@ const getColor = (temperature: number) => {
     }
   `;
 
-const Button = styled.button`
+export const Button = styled.button`
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -77,7 +71,7 @@ const Button = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 25px;
 
   &:hover {
     background: #f0f0f0;
@@ -86,33 +80,41 @@ const Button = styled.button`
 
 const Controls = styled.div`
   display: flex;
-  justify-content: space-around;
-  margin-top: 20px;
+  justify-content: space-between;
+  margin-top: -50px;
 `;
 
-// Main component
-const BetterThermostatUI: React.FC<ThermostatProps> = ({ initialTemperature = 25.5, mode = 'Heating' }) => {
-  const [temperature, setTemperature] = useState(initialTemperature);
+const BetterThermostatUI: React.FC<ThermostatProps> = ({ channel }) => {
+  const datapoints = channel.datapoints;
+  const targetTemperature = datapoints.SET_POINT_TEMPERATURE;
+  const currentTemperature = datapoints.ACTUAL_TEMPERATURE;
+  const humidity = datapoints.HUMIDITY;
 
-  const decreaseTemperature = () => setTemperature(prev => prev - 0.5);
-  const increaseTemperature = () => setTemperature(prev => prev + 0.5);
+  const { setDataPoint } = useWebSocketContext();
+
+  const decreaseTemperature = () => setDataPoint(channel.interfaceName, channel.address, 'SET_POINT_TEMPERATURE', targetTemperature - 0.5);
+  const increaseTemperature = () => setDataPoint(channel.interfaceName, channel.address, 'SET_POINT_TEMPERATURE', targetTemperature + 0.5);
+  const boostMode = () => setDataPoint(channel.interfaceName, channel.address, 'BOOST_MODE', true);
 
   return (
     <Card>
-      <Title>HeatPump</Title>
-      <Mode>{mode}</Mode>
-
-      <Dial temperature={temperature}>
-    <TemperatureDisplay 
-      targetTemperature={temperature} 
-      currentTemperature={20} 
-      humidity={60} 
-    />
-  </Dial>
-
+      <Title>{channel.name}</Title>
+      <Dial temperature={targetTemperature}>
+        <TemperatureDisplay
+          targetTemperature={targetTemperature}
+          currentTemperature={currentTemperature}
+          humidity={humidity}
+          activateBoost={boostMode}
+          windowOpen={datapoints.WINDOW_STATE === 1}
+        />
+      </Dial>
       <Controls>
-        <Button onClick={decreaseTemperature}>-</Button>
-        <Button onClick={increaseTemperature}>+</Button>
+        <Button onClick={decreaseTemperature}>
+        <Icon icon="mdi:minus" />
+        </Button>
+        <Button onClick={increaseTemperature}>
+        <Icon icon="mdi:plus" />
+        </Button>
       </Controls>
     </Card>
   );

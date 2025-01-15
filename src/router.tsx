@@ -1,5 +1,6 @@
 import {
   createBrowserRouter,
+  Navigate,
   RouterProvider,
 } from 'react-router-dom';
 import { Room } from './app/Room';
@@ -11,7 +12,7 @@ export const Router = () => {
     [
       {
         path: '/',
-        element: <h1>helo</h1>,
+        element: <Navigate to="/rooms" />,
       },
       {
         path: '/rooms',

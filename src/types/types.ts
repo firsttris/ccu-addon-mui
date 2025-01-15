@@ -28,30 +28,25 @@ export type BlindVirtualReceiverDatapoint = {
 };
 
 export type HeatingClimateControlTransceiverDatapoint = {
-  ACTIVE_PROFILE: string;
-  ACTUAL_TEMPERATURE: string;
-  ACTUAL_TEMPERATURE_STATUS: string;
-  BOOST_MODE: string;
-  BOOST_TIME: string;
-  CONTROL_DIFFERENTIAL_TEMPERATURE: string;
-  CONTROL_MODE: string;
-  DURATION_UNIT: string;
-  DURATION_VALUE: string;
-  FROST_PROTECTION: string;
-  HEATING_COOLING: string;
-  HUMIDITY?: string;
-  HUMIDITY_STATUS?: string;
-  PARTY_MODE: string;
-  PARTY_SET_POINT_TEMPERATURE: string;
-  PARTY_TIME_END: string;
-  PARTY_TIME_START: string;
-  QUICK_VETO_TIME: string;
-  SET_POINT_MODE: string;
-  SET_POINT_TEMPERATURE: string;
-  SWITCH_POINT_OCCURED: string;
-  WINDOW_STATE: string;
-  LEVEL?: string;
-  LEVEL_STATUS?: string;
+  ACTIVE_PROFILE: number;
+  ACTUAL_TEMPERATURE: number;
+  ACTUAL_TEMPERATURE_STATUS: number;
+  BOOST_MODE: boolean;
+  BOOST_TIME: number;
+  FROST_PROTECTION: boolean;
+  HEATING_COOLING: number;
+  HUMIDITY?: number;
+  HUMIDITY_STATUS?: number;
+  PARTY_MODE: boolean;
+  PARTY_SET_POINT_TEMPERATURE: number;
+  QUICK_VETO_TIME: number;
+  SET_POINT_MODE: number;
+  SET_POINT_TEMPERATURE: number;
+  SWITCH_POINT_OCCURED: boolean;
+  WINDOW_STATE: number;
+  LEVEL?: number;
+  LEVEL_STATUS?: number;
+  VALVE_STATE?: number;
 };
 
 export type FloorClimateControlTransceiverDatapoint = {

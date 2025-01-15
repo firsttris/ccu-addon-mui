@@ -19,7 +19,6 @@ const CardHeader = styled.div<{ onClick?: () => void }>`
 export const SwitchControl = ({ channel }: ControlProps) => {
   const { setDataPoint } = useWebSocketContext();
   const { datapoints, name, address, interfaceName } = channel;
-  console.log('channel', channel);
   const checked = datapoints.STATE === true;
 
   const onHandleChange = async () => {

@@ -24,7 +24,7 @@ const ExpandMore = styled(Icon, {
 }));
 
 const StyledCard = styled.div({
-  backgroundColor: '#fff',
+  background: '#f5f5f5',
   boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.2)',
   borderRadius: '4px',
   overflow: 'hidden',
@@ -81,7 +81,7 @@ const getControlComponent = (channel: Channel) => {
     case ChannelType.SWITCH_VIRTUAL_RECEIVER:
       return <SwitchControl channel={channel} />;
     case ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER:
-      return <ThermostatCard />;
+      return <ThermostatCard channel={channel} />;
     case ChannelType.BLIND_VIRTUAL_RECEIVER:
       return <Blinds />;
     case ChannelType.KEYMATIC:
