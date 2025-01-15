@@ -84,7 +84,7 @@ const getControlComponent = (channel: Channel) => {
     case ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER:
       return <ThermostatControl channel={channel} />;
     case ChannelType.BLIND_VIRTUAL_RECEIVER:
-      return <Blinds />;
+      return <BlindsControl channel={channel} />;
     case ChannelType.KEYMATIC:
       return <DoorControl channel={channel} />;
     default:

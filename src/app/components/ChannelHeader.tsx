@@ -18,7 +18,7 @@ const HeaderContainer = styled.div`
 const CardHeader = styled.div<{ onClick?: () => void }>`
   cursor: ${({ onClick }) => (onClick ? 'pointer' : 'default')};
   width: 100%;
-  padding: 20px;
+  padding: 10px;
   box-sizing: border-box;
 `;
 

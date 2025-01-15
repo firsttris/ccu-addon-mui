@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+// import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { Router } from './router';
 import { css, Global } from '@emotion/react';
@@ -34,7 +34,10 @@ root.render(
           font-family: 'Roboto', sans-serif;
         }
       `}
-    /><WebSocketProvider><Router /></WebSocketProvider>
+    />
+    <WebSocketProvider>
+      <Router />
+    </WebSocketProvider>
 
   </>
 );

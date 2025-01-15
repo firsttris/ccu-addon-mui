@@ -23,7 +23,7 @@ const ListItemText = styled(Typography)`
 
 export const Rooms = () => {
   const navigate = useNavigate();
-  const {getRooms, rooms } = useWebSocketContext();
+  const {getRooms, rooms, setChannels } = useWebSocketContext();
 
   useEffect(() => {
       getRooms();
@@ -34,7 +34,10 @@ export const Rooms = () => {
       <Container>
         <List>
           {rooms.map((room, index) => (
-            <ListItem key={index} onClick={() => navigate(`/room/${room.id}`)}>
+            <ListItem key={index} onClick={() => {
+              setChannels([])
+              navigate(`/room/${room.id}`)
+            }}>
               <Icon icon="mdi:door-open" fontSize={"35px"} />
               <ListItemText>{room.name}</ListItemText>
             </ListItem>

@@ -92,6 +92,7 @@ export const useWebsocket = () => {
   }[readyState];
 
   return {
+    setChannels,
     setDataPoint,
     getChannelsForRoomId,
     getRooms,

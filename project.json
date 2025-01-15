@@ -3,6 +3,7 @@
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "./src",
   "projectType": "application",
+  "tags": [],
   "targets": {
     "build": {
       "executor": "@nx/vite:build",
@@ -52,7 +53,8 @@
         "production": {
           "buildTarget": "ccu-addon-mui:build:production"
         }
-      }
+      },
+      "dependsOn": ["build"]
     },
     "test": {
       "executor": "@nx/vite:test",
@@ -67,6 +69,5 @@
         "lintFilePatterns": ["{projectRoot}/src"]
       }
     }
-  },
-  "tags": []
+  }
 }
