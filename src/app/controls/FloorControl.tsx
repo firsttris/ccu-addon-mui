@@ -8,8 +8,8 @@ interface FloorControlProps {
 }
 
 const Container = styled.div`
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  width: 250px;
+  
   padding: 16px;
 `;
 

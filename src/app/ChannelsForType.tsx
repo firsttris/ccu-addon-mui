@@ -7,7 +7,7 @@ import { Channel, ChannelType } from './../types/types';
 import { DoorControl } from './controls/DoorControl';
 import { useLocalStorage } from './../hooks/useLocalStorage';
 import styled from '@emotion/styled';
-import ThermostatCard from './controls/ThermostatCard';
+import {ThermostatControl } from './controls/ThermostatCard';
 import {Blinds} from './controls/Blinds';
 
 interface ExpandMoreProps {
@@ -26,6 +26,7 @@ const ExpandMore = styled(Icon, {
 const StyledCard = styled.div({
   background: '#f5f5f5',
   boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.2)',
+  border: '1px solid #ccc',
   borderRadius: '4px',
   overflow: 'hidden',
 });
@@ -81,7 +82,7 @@ const getControlComponent = (channel: Channel) => {
     case ChannelType.SWITCH_VIRTUAL_RECEIVER:
       return <SwitchControl channel={channel} />;
     case ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER:
-      return <ThermostatCard channel={channel} />;
+      return <ThermostatControl channel={channel} />;
     case ChannelType.BLIND_VIRTUAL_RECEIVER:
       return <Blinds />;
     case ChannelType.KEYMATIC:

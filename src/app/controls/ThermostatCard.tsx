@@ -8,20 +8,17 @@ type ThermostatProps = {
   channel: HeatingClimateControlTransceiverChannel
 };
 
-const Card = styled.div`
+const Container = styled.div`
   width: 250px;
   height: 100%;
-  
-  border-radius: 15px;
   padding: 20px;
-  text-align: center;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 `;
 
 const Title = styled.div`
   font-size: 18px;
   font-weight: bold;
   height: 40px;
+  text-align: center;
 `;
 
 const getColor = (temperature: number) => {
@@ -84,7 +81,7 @@ const Controls = styled.div`
   margin-top: -50px;
 `;
 
-const BetterThermostatUI: React.FC<ThermostatProps> = ({ channel }) => {
+export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const datapoints = channel.datapoints;
   const targetTemperature = datapoints.SET_POINT_TEMPERATURE;
   const currentTemperature = datapoints.ACTUAL_TEMPERATURE;
@@ -97,7 +94,7 @@ const BetterThermostatUI: React.FC<ThermostatProps> = ({ channel }) => {
   const boostMode = () => setDataPoint(channel.interfaceName, channel.address, 'BOOST_MODE', true);
 
   return (
-    <Card>
+    <Container>
       <Title>{channel.name}</Title>
       <Dial temperature={targetTemperature}>
         <TemperatureDisplay
@@ -116,8 +113,6 @@ const BetterThermostatUI: React.FC<ThermostatProps> = ({ channel }) => {
         <Icon icon="mdi:plus" />
         </Button>
       </Controls>
-    </Card>
+    </Container>
   );
 };
-
-export default BetterThermostatUI;

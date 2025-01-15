@@ -24,10 +24,9 @@ const ListItemText = styled(Typography)`
 export const Rooms = () => {
   const navigate = useNavigate();
   const {getRooms, rooms } = useWebSocketContext();
-  console.log('rooms', rooms);
 
   useEffect(() => {
-    getRooms();
+      getRooms();
   }, []);
 
   if (rooms) {

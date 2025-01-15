@@ -25,7 +25,7 @@ const Group = styled.div({
 const Container = styled.div({
     display: 'flex',
     justifyContent: 'center',
-    gap: '5px',
+    gap: '3px',
 });
 
 export const Button = styled.button`
@@ -55,13 +55,13 @@ interface TemperatureDisplayProps {
 
 export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({ targetTemperature, currentTemperature, humidity, activateBoost, windowOpen }) => (
     <Display>
-        <div style={{ display: 'flex', alignItems: "center", justifyContent: 'center', gap: '5px' }}>
+        <div style={{ display: 'flex', alignItems: "center", justifyContent: 'center', gap: '5px', marginBottom: '-5px' }}>
             <Temperature>{targetTemperature}°C</Temperature>
             {windowOpen ? <Icon icon="material-symbols:window-open" fontSize={23} color="#00BFFF" /> : null}
         </div>
         <Container>
-            <Group><span role="img" aria-label="temp" style={{ fontSize: '25px', marginRight: '-8.5px', marginBottom: '9px'}}>🌡️</span><div>{currentTemperature}°C</div></Group>
-            {humidity ? <Group><span role="img" aria-label="humidity" style={{ fontSize: '20px', marginRight: '-2px', marginBottom: '5px'}}>💧</span><div>{humidity}%</div></Group> : null}
+            <Group><span role="img" aria-label="temp" style={{ fontSize: '25px', marginRight: '-8px', marginBottom: '10px' }}>🌡️</span><div>{currentTemperature}°C</div></Group>
+            {humidity ? <Group><span role="img" aria-label="humidity" style={{ fontSize: '20px', marginRight: '-2px', marginBottom: '5px' }}>💧</span><div>{humidity}%</div></Group> : null}
         </Container>
         <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', marginTop: '5px' }}>
             {
