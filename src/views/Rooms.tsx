@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
-import { Typography, ListItem } from './ChannelsForType';
+import { Typography, ListItem } from '../components/ChannelGroup';
 import { Icon } from '@iconify/react';
-import { useWebSocketContext } from './../hooks/useWebsocket';
+import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useEffect } from 'react';
 
 const Container = styled.div`

@@ -2,7 +2,7 @@ import styled from '@emotion/styled';
 import { TemperatureDisplay } from '../components/TemperaturDisplay';
 import { HeatingClimateControlTransceiverChannel } from 'src/types/types';
 import { Icon } from '@iconify/react';
-import { useWebSocketContext } from './../../hooks/useWebsocket';
+import { useWebSocketContext } from '../hooks/useWebsocket';
 import { Button } from '../components/Button';
 import { ChannelHeader } from '../components/ChannelHeader';
 
@@ -75,7 +75,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   return (
     <Container>
       <ChannelHeader icon={"mdi:thermometer"} name={channel.name}/>
-      <Dial temperature={targetTemperature}>
+      <Dial temperature={currentTemperature}>
         <TemperatureDisplay
           targetTemperature={targetTemperature}
           currentTemperature={currentTemperature}

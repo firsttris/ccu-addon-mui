@@ -3,8 +3,8 @@ import {
   Navigate,
   RouterProvider,
 } from 'react-router-dom';
-import { Room } from './app/Room';
-import { Rooms } from './app/Rooms';
+import { Room } from './views/Room';
+import { Rooms } from './views/Rooms';
 
 export const Router = () => {
   const basename = process.env.NODE_ENV === 'production' ? '/addons/mui/' : '/';

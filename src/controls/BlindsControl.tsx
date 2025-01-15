@@ -3,7 +3,7 @@ import { BlindVirtualReceiverChannel } from 'src/types/types';
 import { Button } from '../components/Button';
 import { Icon } from '@iconify/react';
 import { Shutters } from '../components/ShuttersSvg';
-import { useWebSocketContext } from './../../hooks/useWebsocket';
+import { useWebSocketContext } from '../hooks/useWebsocket';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;
@@ -32,8 +32,15 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             alignItems: 'center',
           }}
         >
-          <div>{blindValue}% geöffnet</div>
-          <Shutters percent={blindValue} onLamellaClick={(percent) => { console.log('percent', percent)}} />
+          <div>
+            {blindValue === 0 ? 'geschlossen' : `${blindValue} % geöffnet`}
+          </div>
+          <Shutters
+            percent={blindValue}
+            onLamellaClick={(percent) => {
+              setDataPoint(interfaceName, address, 'LEVEL', percent / 100 );
+            }}
+          />
           <div
             style={{
               display: 'flex',

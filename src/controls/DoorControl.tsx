@@ -1,14 +1,15 @@
-import { KeymaticChannel } from './../../types/types';
-import { useTranslations } from './../../i18n/utils';
+import { KeymaticChannel } from '../types/types';
+import { useTranslations } from '../i18n/utils';
 import styled from '@emotion/styled';
 import { Button } from '../components/Button';
 import { Icon } from '@iconify/react';
-import { useWebSocketContext } from '../../hooks/useWebsocket';
+import { useWebSocketContext } from '../hooks/useWebsocket';
 
 const OuterBox = styled.div({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
+  padding: '10px'
 });
 
 const InnerBox = styled.div({
@@ -25,6 +26,7 @@ const StyledTypography = styled('span', {
   shouldForwardProp: (prop) => prop !== 'uncertain',
 })<StyledTypographyProps>(({ uncertain }) => ({
   display: uncertain ? 'block' : 'none',
+  marginTop: '10px'
 }));
 
 interface DoorControlProps {
@@ -54,7 +56,6 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   };
 
   return (
-    <div>
       <OuterBox>
         <InnerBox>
           <Button onClick={lockDoor}>
@@ -71,6 +72,5 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
           {t('DOOR_STATE_UNKNOWN')}
         </StyledTypography>
       </OuterBox>
-    </div>
   );
 };

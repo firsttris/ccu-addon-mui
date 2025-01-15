@@ -1,7 +1,7 @@
 import { SwitchVirtualReceiverChannel } from 'src/types/types';
 import styled from '@emotion/styled';
 import { Icon } from '@iconify/react';
-import { useWebSocketContext } from './../../hooks/useWebsocket';
+import { useWebSocketContext } from '../hooks/useWebsocket';
 
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;

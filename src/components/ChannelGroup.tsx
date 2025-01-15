@@ -1,13 +1,9 @@
-import { FloorControl } from './controls/FloorControl';
-import { SwitchControl } from './controls/SwitchControl';
-import { BlindsControl } from './controls/BlindsControl';
-import { useTranslations } from './../i18n/utils';
+import { useTranslations } from '../i18n/utils';
 import { Icon } from '@iconify/react';
-import { Channel, ChannelType } from './../types/types';
-import { DoorControl } from './controls/DoorControl';
-import { useLocalStorage } from './../hooks/useLocalStorage';
+import { Channel, ChannelType } from '../types/types';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 import styled from '@emotion/styled';
-import { ThermostatControl } from './controls/ThermostatCard';
+import { ControlComponent } from './ControlComponent';
 
 interface ExpandMoreProps {
   expanded: boolean;
@@ -22,7 +18,7 @@ const ExpandMore = styled(Icon, {
   fontSize: '25px',
 }));
 
-const StyledCard = styled.div({
+const Card = styled.div({
   background: '#f5f5f5',
   boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.2)',
   border: '1px solid #ccc',
@@ -30,7 +26,7 @@ const StyledCard = styled.div({
   overflow: 'hidden',
 });
 
-const StyledBox = styled.div({
+const ChannelContainer = styled.div({
   marginTop: '15px',
   display: 'flex',
   flexWrap: 'wrap',
@@ -74,34 +70,13 @@ const Collapse = styled('div', {
   display: inProp ? 'block' : 'none',
 }));
 
-const getControlComponent = (channel: Channel) => {
-  switch (channel.type) {
-    case ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER:
-      return <FloorControl channel={channel} />;
-    case ChannelType.SWITCH_VIRTUAL_RECEIVER:
-      return <SwitchControl channel={channel} />;
-    case ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER:
-      return <ThermostatControl channel={channel} />;
-    case ChannelType.BLIND_VIRTUAL_RECEIVER:
-      return <BlindsControl channel={channel} />;
-    case ChannelType.KEYMATIC:
-      return <DoorControl channel={channel} />;
-    default:
-      return (
-        <div>
-          <Typography>{(channel as Channel).type} not implemented</Typography>
-        </div>
-      );
-  }
-};
-
-interface ChannelTypeProps {
+interface ChannelGroupProps {
   index: number;
   channelType: ChannelType;
   channels: Channel[];
 }
 
-export const ChannelsForType: React.FC<ChannelTypeProps> = ({
+export const ChannelGroup: React.FC<ChannelGroupProps> = ({
   index,
   channelType,
   channels,
@@ -114,18 +89,26 @@ export const ChannelsForType: React.FC<ChannelTypeProps> = ({
     setExpanded(!expanded);
   };
 
+  const localizedText = t(channelType);
+
+  if(!localizedText) {
+    return null;
+  }
+
   return (
     <div key={index}>
       <ListItem onClick={handleExpandClick}>
-        <Typography>{t(channelType)}</Typography>
+        <Typography>{localizedText}</Typography>
         <ExpandMore icon="uiw:down" expanded={expanded} />
       </ListItem>
       <Collapse in={expanded}>
-        <StyledBox>
+        <ChannelContainer>
           {channels.map((channel, index) => (
-            <StyledCard key={index}>{getControlComponent(channel)}</StyledCard>
+            <Card key={index}>
+              <ControlComponent channel={channel} />
+            </Card>
           ))}
-        </StyledBox>
+        </ChannelContainer>
         <Divider />
       </Collapse>
     </div>
