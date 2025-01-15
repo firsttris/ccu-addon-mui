@@ -32,12 +32,12 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             alignItems: 'center',
           }}
         >
-          <div>{blindValue}%</div>
-          <Shutters percent={blindValue} />
+          <div>{blindValue}% geöffnet</div>
+          <Shutters percent={blindValue} onLamellaClick={(percent) => { console.log('percent', percent)}} />
           <div
             style={{
               display: 'flex',
-              gap: '5px',
+              gap: '50px',
               alignItems: 'center',
               justifyContent: 'center',
               marginTop: '10px',

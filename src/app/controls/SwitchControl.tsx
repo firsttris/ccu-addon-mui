@@ -12,7 +12,7 @@ const CardHeader = styled.div<{ onClick?: () => void }>`
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  padding: 20px;
+  padding: 10px;
   width: 100px;
 `;
 

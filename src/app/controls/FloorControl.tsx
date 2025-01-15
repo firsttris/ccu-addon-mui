@@ -9,8 +9,7 @@ interface FloorControlProps {
 
 const Container = styled.div`
   width: 250px;
-  
-  padding: 16px;
+  padding: 10px;
 `;
 
 const Content = styled.div`
@@ -29,7 +28,7 @@ const ProgressBarContainer = styled.div`
 `;
 
 const ProgressBar = styled.div<{ value: number }>`
-  height: 4px;
+  height: 14px;
   background-color: #e0e0e0;
   border-radius: 2px;
   overflow: hidden;
@@ -39,7 +38,7 @@ const ProgressBar = styled.div<{ value: number }>`
     display: block;
     width: ${({ value }) => value}%;
     height: 100%;
-    background-color: #3f51b5;
+    background-color: ${({ value }) => getColor(value)};
   }
 `;
 
@@ -48,24 +47,24 @@ const Caption = styled.span`
   color: #757575;
 `;
 
+const getColor = (value: number): string => {
+  if (value === 0) {
+    return '#3498DB'; // Blau für niedrigen Durchfluss
+  } else if (value > 0 && value < 25) {
+    return '#2ECC71'; // Grün für mittleren Durchfluss
+  } else if (value >= 25 && value < 50) {
+    return '#F1C40F'; // Gelb für erhöhten Durchfluss
+  } else if (value >= 50 && value < 75) {
+    return '#E67E22'; // Orange für hohen Durchfluss
+  } else if (value >= 75 && value <= 100) {
+    return '#E74C3C'; // Rot für sehr hohen Durchfluss
+  } else {
+    return '#3498DB'; // Standardfarbe Blau
+  }
+};
+
 export const FloorControl = (props: FloorControlProps) => {
   const value = Math.round(Number(props.channel.datapoints.LEVEL) * 100);
-
-  const getColor = (value: number): string => {
-    if (value === 0) {
-      return 'black';
-    } else if (value >= 0 && value < 25) {
-      return 'blue';
-    } else if (value >= 25 && value < 50) {
-      return 'orange';
-    } else if (value >= 50 && value < 75) {
-      return 'red';
-    } else if (value >= 75 && value <= 100) {
-      return 'purple';
-    } else {
-      return 'black';
-    }
-  };
 
   return (
     <Container>
