@@ -132,5 +132,5 @@ export type Channel =
   export interface HmEvent {
     channel: string;
     datapoint: string;
-    value: boolean;
+    value: string | number | boolean;
   }

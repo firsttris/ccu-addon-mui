@@ -17,7 +17,23 @@ export const useWebsocket = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
 
-  const { sendMessage, lastMessage, readyState } = useWebSocket('/addons/red/ws/webapp');
+  const { sendMessage, lastMessage, readyState } = useWebSocket('/addons/red/ws/webapp', { });
+
+  const updateChannels = (event: HmEvent) => {
+    setChannels(prevChannels => 
+      prevChannels.map(channel => 
+        channel.address === event.channel
+          ? {
+              ...channel,
+              datapoints: {
+                ...channel.datapoints,
+                [event.datapoint]: event.value,
+              },
+            }
+          : channel
+      ) as Channel[]
+    );
+  };
 
   useEffect(() => {
     if (lastMessage !== null) {
@@ -31,22 +47,7 @@ export const useWebsocket = () => {
         return
       }
       if (response.event) {
-        const event = response.event;
-        setChannels(prevChannels => 
-          prevChannels.map(channel => 
-            channel.address === event.channel
-              ? {
-                  ...channel,
-                  datapoints: {
-                    ...channel.datapoints,
-                    [event.datapoint]: event.value,
-                  },
-                }
-              : channel
-          ) as Channel[]
-        );
-        console.log('setChannels', channels);
-
+        updateChannels(response.event);
       }
     }
   }, [lastMessage]);
@@ -78,8 +79,8 @@ export const useWebsocket = () => {
       /VALUE_PLACEHOLDER/g,
       value.toString()
     )
-    console.log('script', script);
     sendMessage(script);
+    updateChannels({ channel: address, datapoint: attributeName, value });
   };
 
   const connectionStatus = {
