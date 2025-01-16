@@ -78,7 +78,7 @@ export const Room = () => {
   }, [channels]);
 
   return (
-    <>
+    <div style={{ margin: '15px'}}>
       <Header>
         <IconButton onClick={() => navigate('/')} aria-label="Back to home">
           <Icon icon="mdi:menu" fontSize={34} />
@@ -98,6 +98,6 @@ export const Room = () => {
           })}
         </List>
       </Container>
-    </>
+    </div>
   );
 };

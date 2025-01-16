@@ -21,7 +21,7 @@ export const useWebsocket = () => {
 
   const deviceId = useUniqueDeviceID()
 
-  const { sendMessage, lastMessage, readyState } = useWebSocket('/addons/red/ws/webapp', {});
+  const { sendMessage, lastMessage, readyState } = useWebSocket('/addons/red/ws/webapp', { shouldReconnect: () => true });
 
   const updateChannels = (event: HmEvent) => {
     setChannels(prevChannels =>
