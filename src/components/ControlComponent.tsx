@@ -23,7 +23,7 @@ export const ControlComponent: React.FC<ControlComponentProps> = ({ channel }) =
     case ChannelType.KEYMATIC:
       return <DoorControl channel={channel} />;
     default:
-      console.error(`${channel.type} not implemented`);
+      console.error(`${(channel as any).type} not implemented`);
       return null;
   }
 };

@@ -3,7 +3,6 @@ export enum ChannelType {
   BLIND_VIRTUAL_RECEIVER = 'BLIND_VIRTUAL_RECEIVER',
   HEATING_CLIMATECONTROL_TRANSCEIVER = 'HEATING_CLIMATECONTROL_TRANSCEIVER',
   CLIMATECONTROL_FLOOR_TRANSCEIVER = 'CLIMATECONTROL_FLOOR_TRANSCEIVER',
-  //RAIN_DETECTION_TRANSMITTER = 'RAIN_DETECTION_TRANSMITTER',
   KEYMATIC = 'KEYMATIC',
 }
 
@@ -101,11 +100,6 @@ export interface FloorClimateControlTransceiverChannel extends BaseChannel {
   datapoints: FloorClimateControlTransceiverDatapoint;
 }
 
-export interface RainDetectionTransmitterChannel extends BaseChannel {
-  type: ChannelType.RAIN_DETECTION_TRANSMITTER;
-  datapoints: RainDesctionTransmitterDatapoint;
-}
-
 export interface KeymaticChannel extends BaseChannel {
   type: ChannelType.KEYMATIC;
   datapoints: KeymaticDatapoint;
@@ -116,7 +110,6 @@ export type Channel =
   | BlindVirtualReceiverChannel
   | HeatingClimateControlTransceiverChannel
   | FloorClimateControlTransceiverChannel
-  | RainDetectionTransmitterChannel
   | KeymaticChannel;
 
   export interface Room {
