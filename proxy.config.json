@@ -1,8 +1,4 @@
 {
-  "/api/homematic.cgi": {
-    "target": "http://192.168.178.26/api/homematic.cgi",
-    "secure": false
-  },
   "/addons/red/ws/webapp": {
     "target": "ws://192.168.178.26",
     "ws": true,
