@@ -1,0 +1,324 @@
+[
+    {
+        "id": 1774,
+        "address": "002C9D899A7CE3:5",
+        "name": "Heizkreis Keller - Bad",
+        "type": "CLIMATECONTROL_FLOOR_TRANSCEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "DEW_POINT_ALARM": "false",
+            "EMERGENCY_OPERATION": "false",
+            "EXTERNAL_CLOCK": "false",
+            "FROST_PROTECTION": "false",
+            "HUMIDITY_LIMITER": "false",
+            "LEVEL": "1.000000",
+            "LEVEL_STATUS": "0",
+            "VALVE_STATE": "4",
+            "ON_TIME": ""
+        }
+    },
+    {
+        "id": 1726,
+        "address": "002C9D899A7CE3:1",
+        "name": "Heizkreis Keller - Großes Büro 1",
+        "type": "CLIMATECONTROL_FLOOR_TRANSCEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "DEW_POINT_ALARM": "false",
+            "EMERGENCY_OPERATION": "false",
+            "EXTERNAL_CLOCK": "false",
+            "FROST_PROTECTION": "false",
+            "HUMIDITY_LIMITER": "false",
+            "LEVEL": "0.090000",
+            "LEVEL_STATUS": "0",
+            "VALVE_STATE": "4",
+            "ON_TIME": ""
+        }
+    },
+    {
+        "id": 1738,
+        "address": "002C9D899A7CE3:2",
+        "name": "Heizkreis Keller - Großes Büro 2",
+        "type": "CLIMATECONTROL_FLOOR_TRANSCEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "DEW_POINT_ALARM": "false",
+            "EMERGENCY_OPERATION": "false",
+            "EXTERNAL_CLOCK": "false",
+            "FROST_PROTECTION": "false",
+            "HUMIDITY_LIMITER": "false",
+            "LEVEL": "0.090000",
+            "LEVEL_STATUS": "0",
+            "VALVE_STATE": "4",
+            "ON_TIME": ""
+        }
+    },
+    {
+        "id": 1750,
+        "address": "002C9D899A7CE3:3",
+        "name": "Heizkreis Keller - Kleines Büro 1",
+        "type": "CLIMATECONTROL_FLOOR_TRANSCEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "DEW_POINT_ALARM": "false",
+            "EMERGENCY_OPERATION": "false",
+            "EXTERNAL_CLOCK": "false",
+            "FROST_PROTECTION": "false",
+            "HUMIDITY_LIMITER": "false",
+            "LEVEL": "0.000000",
+            "LEVEL_STATUS": "0",
+            "VALVE_STATE": "4",
+            "ON_TIME": ""
+        }
+    },
+    {
+        "id": 1762,
+        "address": "002C9D899A7CE3:4",
+        "name": "Heizkreis Keller - Kleines Büro 2",
+        "type": "CLIMATECONTROL_FLOOR_TRANSCEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "DEW_POINT_ALARM": "false",
+            "EMERGENCY_OPERATION": "false",
+            "EXTERNAL_CLOCK": "false",
+            "FROST_PROTECTION": "false",
+            "HUMIDITY_LIMITER": "false",
+            "LEVEL": "0.000000",
+            "LEVEL_STATUS": "0",
+            "VALVE_STATE": "4",
+            "ON_TIME": ""
+        }
+    },
+    {
+        "id": 1786,
+        "address": "002C9D899A7CE3:6",
+        "name": "Heizkreis Keller - Waschküche",
+        "type": "CLIMATECONTROL_FLOOR_TRANSCEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "DEW_POINT_ALARM": "false",
+            "EMERGENCY_OPERATION": "false",
+            "EXTERNAL_CLOCK": "false",
+            "FROST_PROTECTION": "false",
+            "HUMIDITY_LIMITER": "false",
+            "LEVEL": "0.000000",
+            "LEVEL_STATUS": "0",
+            "VALVE_STATE": "4",
+            "ON_TIME": ""
+        }
+    },
+    {
+        "id": 2207,
+        "address": "001618A99C59F6:10",
+        "name": "Licht Keller - Bad",
+        "type": "SWITCH_VIRTUAL_RECEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "COMBINED_PARAMETER": "",
+            "ON_TIME": "",
+            "PROCESS": "0",
+            "SECTION": "0",
+            "SECTION_STATUS": "0",
+            "STATE": "false"
+        }
+    },
+    {
+        "id": 2233,
+        "address": "001618A99C59F6:14",
+        "name": "Licht Keller - Flur",
+        "type": "SWITCH_VIRTUAL_RECEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "COMBINED_PARAMETER": "",
+            "ON_TIME": "",
+            "PROCESS": "0",
+            "SECTION": "0",
+            "SECTION_STATUS": "0",
+            "STATE": "false"
+        }
+    },
+    {
+        "id": 2285,
+        "address": "001618A99C59F6:22",
+        "name": "Licht Keller - Großes Zimmer",
+        "type": "SWITCH_VIRTUAL_RECEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "COMBINED_PARAMETER": "",
+            "ON_TIME": "",
+            "PROCESS": "0",
+            "SECTION": "2",
+            "SECTION_STATUS": "0",
+            "STATE": "true"
+        }
+    },
+    {
+        "id": 2259,
+        "address": "001618A99C59F6:18",
+        "name": "Licht Keller - Kleines Zimmer",
+        "type": "SWITCH_VIRTUAL_RECEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "COMBINED_PARAMETER": "",
+            "ON_TIME": "",
+            "PROCESS": "0",
+            "SECTION": "0",
+            "SECTION_STATUS": "0",
+            "STATE": "false"
+        }
+    },
+    {
+        "id": 2181,
+        "address": "001618A99C59F6:6",
+        "name": "Licht Keller - Küche",
+        "type": "SWITCH_VIRTUAL_RECEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "COMBINED_PARAMETER": "",
+            "ON_TIME": "",
+            "PROCESS": "0",
+            "SECTION": "0",
+            "SECTION_STATUS": "0",
+            "STATE": "false"
+        }
+    },
+    {
+        "id": 2155,
+        "address": "001618A99C59F6:2",
+        "name": "Licht Keller - Treppe",
+        "type": "SWITCH_VIRTUAL_RECEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "COMBINED_PARAMETER": "",
+            "ON_TIME": "",
+            "PROCESS": "0",
+            "SECTION": "2",
+            "SECTION_STATUS": "0",
+            "STATE": "true"
+        }
+    },
+    {
+        "id": 5183,
+        "address": "000A9D89A7AF78:1",
+        "name": "Wandthermostat Keller Bad",
+        "type": "HEATING_CLIMATECONTROL_TRANSCEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "ACTIVE_PROFILE": "1",
+            "ACTUAL_TEMPERATURE": "15.300000",
+            "ACTUAL_TEMPERATURE_STATUS": "0",
+            "BOOST_MODE": "false",
+            "BOOST_TIME": "0",
+            "CONTROL_DIFFERENTIAL_TEMPERATURE": "",
+            "CONTROL_MODE": "",
+            "DURATION_UNIT": "",
+            "DURATION_VALUE": "",
+            "FROST_PROTECTION": "false",
+            "HEATING_COOLING": "0",
+            "HUMIDITY": "55",
+            "HUMIDITY_STATUS": "0",
+            "PARTY_MODE": "false",
+            "PARTY_SET_POINT_TEMPERATURE": "0.000000",
+            "PARTY_TIME_END": "",
+            "PARTY_TIME_START": "",
+            "QUICK_VETO_TIME": "0",
+            "SET_POINT_MODE": "1",
+            "SET_POINT_TEMPERATURE": "16.000000",
+            "SWITCH_POINT_OCCURED": "false",
+            "WINDOW_STATE": "0"
+        }
+    },
+    {
+        "id": 1671,
+        "address": "000A98A9A72D8F:1",
+        "name": "Wandthermostat Keller Kleines Büro",
+        "type": "HEATING_CLIMATECONTROL_TRANSCEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "ACTIVE_PROFILE": "1",
+            "ACTUAL_TEMPERATURE": "16.700000",
+            "ACTUAL_TEMPERATURE_STATUS": "0",
+            "BOOST_MODE": "false",
+            "BOOST_TIME": "0",
+            "CONTROL_DIFFERENTIAL_TEMPERATURE": "",
+            "CONTROL_MODE": "",
+            "DURATION_UNIT": "",
+            "DURATION_VALUE": "",
+            "FROST_PROTECTION": "false",
+            "HEATING_COOLING": "0",
+            "HUMIDITY": "58",
+            "HUMIDITY_STATUS": "0",
+            "PARTY_MODE": "false",
+            "PARTY_SET_POINT_TEMPERATURE": "0.000000",
+            "PARTY_TIME_END": "",
+            "PARTY_TIME_START": "",
+            "QUICK_VETO_TIME": "0",
+            "SET_POINT_MODE": "1",
+            "SET_POINT_TEMPERATURE": "16.500000",
+            "SWITCH_POINT_OCCURED": "false",
+            "WINDOW_STATE": "0"
+        }
+    },
+    {
+        "id": 6338,
+        "address": "003920C999DB73:1",
+        "name": "Wandthermostat Keller Waschküche",
+        "type": "HEATING_CLIMATECONTROL_TRANSCEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "ACTIVE_PROFILE": "1",
+            "ACTUAL_TEMPERATURE": "17.300000",
+            "ACTUAL_TEMPERATURE_STATUS": "0",
+            "BOOST_MODE": "false",
+            "BOOST_TIME": "0",
+            "CONTROL_DIFFERENTIAL_TEMPERATURE": "",
+            "CONTROL_MODE": "",
+            "DURATION_UNIT": "",
+            "DURATION_VALUE": "",
+            "FROST_PROTECTION": "false",
+            "HEATING_COOLING": "0",
+            "HUMIDITY": "56",
+            "HUMIDITY_STATUS": "0",
+            "PARTY_MODE": "false",
+            "PARTY_SET_POINT_TEMPERATURE": "0.000000",
+            "PARTY_TIME_END": "",
+            "PARTY_TIME_START": "",
+            "QUICK_VETO_TIME": "0",
+            "SET_POINT_MODE": "1",
+            "SET_POINT_TEMPERATURE": "15.500000",
+            "SWITCH_POINT_OCCURED": "false",
+            "WINDOW_STATE": "0"
+        }
+    },
+    {
+        "id": 5236,
+        "address": "000A9D89A7AF7B:1",
+        "name": "Wandthermostat Keller Zentrale",
+        "type": "HEATING_CLIMATECONTROL_TRANSCEIVER",
+        "interfaceName": "HmIP-RF",
+        "datapoints": {
+            "ACTIVE_PROFILE": "1",
+            "ACTUAL_TEMPERATURE": "18.600000",
+            "ACTUAL_TEMPERATURE_STATUS": "0",
+            "BOOST_MODE": "false",
+            "BOOST_TIME": "0",
+            "CONTROL_DIFFERENTIAL_TEMPERATURE": "",
+            "CONTROL_MODE": "",
+            "DURATION_UNIT": "",
+            "DURATION_VALUE": "",
+            "FROST_PROTECTION": "false",
+            "HEATING_COOLING": "0",
+            "HUMIDITY": "51",
+            "HUMIDITY_STATUS": "0",
+            "PARTY_MODE": "false",
+            "PARTY_SET_POINT_TEMPERATURE": "0.000000",
+            "PARTY_TIME_END": "",
+            "PARTY_TIME_START": "",
+            "QUICK_VETO_TIME": "0",
+            "SET_POINT_MODE": "1",
+            "SET_POINT_TEMPERATURE": "18.500000",
+            "SWITCH_POINT_OCCURED": "false",
+            "WINDOW_STATE": "0"
+        }
+    }
+]

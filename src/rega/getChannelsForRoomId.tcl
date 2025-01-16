@@ -5,7 +5,7 @@ boolean isFirstChannel = true;
 boolean isFirstDatapoint  = true;
 
 object roomObject = dom.GetObject(roomId);
-Write('[');
+Write('{"channels":[');
 isFirstChannel = true;
 
 foreach(channelId, roomObject.EnumUsedIDs()) {
@@ -22,15 +22,18 @@ foreach(channelId, roomObject.EnumUsedIDs()) {
 
     foreach(datapointId, channelObject.DPs().EnumUsedIDs()) {
         object datapointObject = dom.GetObject(datapointId);
-        if (isFirstDatapoint == false) {
-            Write(',');
-        } else {
-            isFirstDatapoint = false;
+        var value = datapointObject.Value();
+        if (value.ToString() != "") {
+            if (isFirstDatapoint == false) {
+                Write(',');
+            } else {
+                isFirstDatapoint = false;
+            }
+            Write('"' # datapointObject.HssType() # '":' # value);
         }
-        Write('"' # datapointObject.HssType() # '": "' # datapointObject.Value() # '"');
     }
 
     Write('}}');
 }
 
-Write(']');
+Write(']}');

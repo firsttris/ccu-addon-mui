@@ -14,7 +14,7 @@ export const ui = {
     BLIND_VIRTUAL_RECEIVER: 'Blind',
     HEATING_CLIMATECONTROL_TRANSCEIVER: 'Thermostat',
     CLIMATECONTROL_FLOOR_TRANSCEIVER: 'Floor',
-    RAIN_DETECTION_TRANSMITTER: 'Rain',
+    //RAIN_DETECTION_TRANSMITTER: 'Rain',
     KEYMATIC: 'Keymatic',
     errorOccuredWhileLogin: 'Error occured while login',
     signInTitle: 'Sign in',
@@ -24,13 +24,14 @@ export const ui = {
     NOT_HEATING: 'Not Heating',
     DOOR_STATE_UNKNOWN: 'Door state is uncertain',
     SIGN_IN: 'Sign in',
+    rememberMe: 'Remember me',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
     BLIND_VIRTUAL_RECEIVER: 'Rolladen',
     HEATING_CLIMATECONTROL_TRANSCEIVER: 'Thermostat',
     CLIMATECONTROL_FLOOR_TRANSCEIVER: 'Fußboden',
-    RAIN_DETECTION_TRANSMITTER: 'Regen',
+    //RAIN_DETECTION_TRANSMITTER: 'Regen',
     KEYMATIC: 'Keymatic',
     errorOccuredWhileLogin: 'Fehler beim Login',
     signInTitle: 'Anmelden',
@@ -40,6 +41,7 @@ export const ui = {
     NOT_HEATING: 'Nicht Heizen',
     DOOR_STATE_UNKNOWN: 'Türzustand ist ungewiss',
     SIGN_IN: 'Anmelden',
+    rememberMe: 'Erinnere dich an mich',
   },
 } as const;
 

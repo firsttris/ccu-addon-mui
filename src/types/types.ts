@@ -3,17 +3,15 @@ export enum ChannelType {
   BLIND_VIRTUAL_RECEIVER = 'BLIND_VIRTUAL_RECEIVER',
   HEATING_CLIMATECONTROL_TRANSCEIVER = 'HEATING_CLIMATECONTROL_TRANSCEIVER',
   CLIMATECONTROL_FLOOR_TRANSCEIVER = 'CLIMATECONTROL_FLOOR_TRANSCEIVER',
-  RAIN_DETECTION_TRANSMITTER = 'RAIN_DETECTION_TRANSMITTER',
+  //RAIN_DETECTION_TRANSMITTER = 'RAIN_DETECTION_TRANSMITTER',
   KEYMATIC = 'KEYMATIC',
 }
 
 export type SwitchVirtualReceiverDatapoint = {
-  COMBINED_PARAMETER: string;
-  ON_TIME: string;
-  PROCESS: string;
-  SECTION: string;
-  SECTION_STATUS: string;
-  STATE: string;
+  PROCESS: number;
+  SECTION: number;
+  SECTION_STATUS: number;
+  STATE: boolean;
 };
 
 export type BlindVirtualReceiverDatapoint = {
@@ -30,30 +28,25 @@ export type BlindVirtualReceiverDatapoint = {
 };
 
 export type HeatingClimateControlTransceiverDatapoint = {
-  ACTIVE_PROFILE: string;
-  ACTUAL_TEMPERATURE: string;
-  ACTUAL_TEMPERATURE_STATUS: string;
-  BOOST_MODE: string;
-  BOOST_TIME: string;
-  CONTROL_DIFFERENTIAL_TEMPERATURE: string;
-  CONTROL_MODE: string;
-  DURATION_UNIT: string;
-  DURATION_VALUE: string;
-  FROST_PROTECTION: string;
-  HEATING_COOLING: string;
-  HUMIDITY?: string;
-  HUMIDITY_STATUS?: string;
-  PARTY_MODE: string;
-  PARTY_SET_POINT_TEMPERATURE: string;
-  PARTY_TIME_END: string;
-  PARTY_TIME_START: string;
-  QUICK_VETO_TIME: string;
-  SET_POINT_MODE: string;
-  SET_POINT_TEMPERATURE: string;
-  SWITCH_POINT_OCCURED: string;
-  WINDOW_STATE: string;
-  LEVEL?: string;
-  LEVEL_STATUS?: string;
+  ACTIVE_PROFILE: number;
+  ACTUAL_TEMPERATURE: number;
+  ACTUAL_TEMPERATURE_STATUS: number;
+  BOOST_MODE: boolean;
+  BOOST_TIME: number;
+  FROST_PROTECTION: boolean;
+  HEATING_COOLING: number;
+  HUMIDITY?: number;
+  HUMIDITY_STATUS?: number;
+  PARTY_MODE: boolean;
+  PARTY_SET_POINT_TEMPERATURE: number;
+  QUICK_VETO_TIME: number;
+  SET_POINT_MODE: number;
+  SET_POINT_TEMPERATURE: number;
+  SWITCH_POINT_OCCURED: boolean;
+  WINDOW_STATE: number;
+  LEVEL?: number;
+  LEVEL_STATUS?: number;
+  VALVE_STATE?: number;
 };
 
 export type FloorClimateControlTransceiverDatapoint = {
@@ -75,10 +68,10 @@ export type RainDesctionTransmitterDatapoint = {
 export type KeymaticDatapoint = {
   ERROR: string;
   INHIBIT: string;
-  OPEN: string;
+  OPEN: boolean;
   RELOCK_DELAY: string;
-  STATE: string;
-  STATE_UNCERTAIN: string;
+  STATE: boolean;
+  STATE_UNCERTAIN: boolean;
 };
 
 interface BaseChannel {
@@ -125,3 +118,14 @@ export type Channel =
   | FloorClimateControlTransceiverChannel
   | RainDetectionTransmitterChannel
   | KeymaticChannel;
+
+  export interface Room {
+    name: string;
+    id: number;
+  }
+
+  export interface HmEvent {
+    channel: string;
+    datapoint: string;
+    value: string | number | boolean;
+  }
