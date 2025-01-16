@@ -1,8 +1,9 @@
 object  roomObject;
 string  roomId;
+string  deviceId = "DEVICEID_PLACEHOLDER";
 boolean isFirstRoom = true;
 
-Write('{"rooms":[');
+Write('{"deviceId":"' # deviceId # '", "rooms":[');
 
 foreach (roomId, dom.GetObject(ID_ROOMS).EnumUsedIDs()) {
     if (isFirstRoom == false) {

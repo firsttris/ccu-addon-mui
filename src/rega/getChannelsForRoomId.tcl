@@ -1,11 +1,12 @@
 string  roomId = "ROOMID_PLACEHOLDER";
+string  deviceId = "DEVICEID_PLACEHOLDER";
 string  channelId;
 string  datapointId;
 boolean isFirstChannel = true;
 boolean isFirstDatapoint  = true;
 
 object roomObject = dom.GetObject(roomId);
-Write('{"channels":[');
+Write('{"deviceId":"' # deviceId # '", "channels":[');
 isFirstChannel = true;
 
 foreach(channelId, roomObject.EnumUsedIDs()) {

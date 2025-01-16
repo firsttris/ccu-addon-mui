@@ -6,30 +6,34 @@ import getSetDataPoint from './../rega/setDatapoint.tcl';
 import { Channel, HmEvent, Room } from "src/types/types";
 
 import React, { createContext, useContext } from "react";
+import { useUniqueDeviceID } from "./useUniqueDeviceID";
 
 interface Response {
   rooms?: Room[];
   channels?: Channel[];
   event?: HmEvent;
+  deviceId?: string;
 }
 
 export const useWebsocket = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
 
-  const { sendMessage, lastMessage, readyState } = useWebSocket('/addons/red/ws/webapp', { });
+  const deviceId = useUniqueDeviceID()
+
+  const { sendMessage, lastMessage, readyState } = useWebSocket('/addons/red/ws/webapp', {});
 
   const updateChannels = (event: HmEvent) => {
-    setChannels(prevChannels => 
-      prevChannels.map(channel => 
+    setChannels(prevChannels =>
+      prevChannels.map(channel =>
         channel.address === event.channel
           ? {
-              ...channel,
-              datapoints: {
-                ...channel.datapoints,
-                [event.datapoint]: event.value,
-              },
-            }
+            ...channel,
+            datapoints: {
+              ...channel.datapoints,
+              [event.datapoint]: event.value,
+            },
+          }
           : channel
       ) as Channel[]
     );
@@ -38,34 +42,40 @@ export const useWebsocket = () => {
   useEffect(() => {
     if (lastMessage !== null) {
       const response = (JSON.parse(lastMessage.data) as Response);
-      if(response.rooms) {
+      if (response.event) {
+        updateChannels(response.event);
+        return
+      }
+      if (response.deviceId !== deviceId) {
+        return;
+      }
+      if (response.rooms) {
         setRooms(response.rooms);
         return
       }
-      if(response.channels) {
+      if (response.channels) {
         setChannels(response.channels);
         return
       }
-      if (response.event) {
-        updateChannels(response.event);
-      }
+
     }
   }, [lastMessage]);
 
   const getRooms = () => {
-
-    sendMessage(regaGetRoomsScript);
+    const script = regaGetRoomsScript.replace(/DEVICEID_PLACEHOLDER/g, deviceId);
+    sendMessage(script);
   }
 
   const getChannelsForRoomId = (roomId: number) => {
+
     const script = regaGetChannelsScript.replace(
       /ROOMID_PLACEHOLDER/g,
       roomId.toString()
-    )
+    ).replace(/DEVICEID_PLACEHOLDER/g, deviceId);
     sendMessage(script);
   };
 
-  const setDataPoint = (interfaceName: string, address: string, attributeName: string, value: string | number | boolean ) => {
+  const setDataPoint = (interfaceName: string, address: string, attributeName: string, value: string | number | boolean) => {
     const script = getSetDataPoint.replace(
       /INTERFACE_PLACEHOLDER/g,
       interfaceName
@@ -106,7 +116,7 @@ export type UseWebsocketReturnType = ReturnType<typeof useWebsocket>;
 
 const WebSocketContext = createContext<UseWebsocketReturnType | undefined>(undefined);
 
-export const WebSocketProvider: React.FC<{children: ReactNode}> = ({ children }) => {
+export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const websocket = useWebsocket();
 
   return (
