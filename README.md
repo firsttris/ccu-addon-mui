@@ -139,4 +139,5 @@ Here you see all rooms configured in the ccu3, and you can select the room in wh
 This is the channels view.    
 Here you can see and change the state of the channels associated with the selected room.
 
-!todo Screenshot
+![Screenshot](/docs/channel1.png)
+![Screenshot](/docs/channel2.png)
