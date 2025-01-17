@@ -16,6 +16,16 @@ const CardHeader = styled.div<{ onClick?: () => void }>`
   width: 100px;
 `;
 
+const Name = styled.div`
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Number of lines to show before truncating */
+  -webkit-box-orient: vertical;
+  max-width: 100px; /* Adjust the max-width as needed */
+`;
+
 export const SwitchControl = ({ channel }: ControlProps) => {
   const { setDataPoint } = useWebSocketContext();
   const { datapoints, name, address, interfaceName } = channel;
@@ -27,11 +37,12 @@ export const SwitchControl = ({ channel }: ControlProps) => {
 
   return (
     <CardHeader onClick={onHandleChange}>
-      <div style={{ height: "40px" }}>{name}</div>
+      <Name>{name}</Name>
       <Icon
         icon={checked ? 'mdi:light-switch' : 'mdi:light-switch-off'}
         color={checked ? 'orange' : 'unset'}
         fontSize={"72px"}
+        style={{ marginTop: '10px' }}
       />
     </CardHeader>
   );

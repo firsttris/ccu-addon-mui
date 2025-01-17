@@ -28,7 +28,8 @@ const Dial = styled.div<{ temperature: number }>`
     width: 70%;
     height: 0;
     padding-bottom: 70%;
-    margin: 10px auto;
+    margin: 0 auto;
+    margin-bottom: 10px;
     position: relative;
     border-radius: 50%;
     background: #f0f0f0; 

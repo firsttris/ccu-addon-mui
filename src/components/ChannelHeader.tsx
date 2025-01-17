@@ -18,7 +18,17 @@ const CardHeader = styled.div<{ onClick?: () => void }>`
   cursor: ${({ onClick }) => (onClick ? 'pointer' : 'default')};
   width: 100%;
   padding: 10px;
+  padding-top: 5px;
   box-sizing: border-box;
+`;
+
+const Name = styled.div`
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Number of lines to show before truncating */
+  -webkit-box-orient: vertical;
 `;
 
 export const ChannelHeader = ({
@@ -32,7 +42,7 @@ export const ChannelHeader = ({
     <CardHeader onClick={onClick} {...props}>
       <HeaderContainer>
         <Icon style={{ fontSize: '30px' }} icon={icon} color={color} />
-        <div style={{ marginLeft: '5px' }}>{name}</div>
+        <Name style={{ marginLeft: '5px' }}>{name}</Name>
       </HeaderContainer>
     </CardHeader>
   );

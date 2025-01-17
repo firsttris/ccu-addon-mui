@@ -14,7 +14,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const { datapoints, name, address, interfaceName } = channel;
   const blindValue = Number(datapoints.LEVEL) * 100;
   return (
-    <div style={{ width: '250px', padding: '10px' }}>
+    <div style={{ width: '250px', margin: '10px' }}>
       <ChannelHeader
         icon={
           blindValue === 0
@@ -23,7 +23,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
         }
         name={name}
       />
-      <div style={{ paddingTop: '0px' }}>
+      <div>
         <div
           style={{
             width: '100%',
@@ -48,7 +48,6 @@ export const BlindsControl = ({ channel }: ControlProps) => {
               alignItems: 'center',
               justifyContent: 'center',
               marginTop: '10px',
-              marginBottom: '10px',
             }}
           >
             <Button
