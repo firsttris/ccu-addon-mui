@@ -24,18 +24,19 @@ const List = styled.ul`
 const IconButton = styled.button`
   background: none;
   border: none;
-  padding: 10px;
+  padding: 2px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: #f0f0f0;
 
   @media (max-width: 600px) {
     padding: 8px;
   }
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: #e0e0e0; 
     border-radius: 50%;
   }
 `;

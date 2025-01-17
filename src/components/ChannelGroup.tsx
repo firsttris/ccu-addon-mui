@@ -59,6 +59,9 @@ export const Typography = styled.p({
   fontWeight: 600,
   margin: '10px 0',
   fontSize: '20px',
+  '@media (max-width: 800px)': {
+    marginLeft: '70px',
+  },
 });
 
 const Divider = styled.hr({

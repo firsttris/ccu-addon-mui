@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
-import { Typography, ListItem } from '../components/ChannelGroup';
+import { ListItem } from '../components/ChannelGroup';
 import { Icon } from '@iconify/react';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useEffect } from 'react';
@@ -17,9 +17,17 @@ const List = styled.ul`
   margin: 0;
 `;
 
-const ListItemText = styled(Typography)`
-  margin-left: 20px;
-`;
+export const ListItemText = styled.p({
+  color: '#000',
+  maxWidth: '300px',
+  overflow: 'hidden',
+  whiteSpace: 'wrap',
+  textOverflow: 'ellipsis',
+  fontWeight: 600,
+  margin: '10px 0',
+  fontSize: '20px',
+  marginLeft: '20px',
+});
 
 export const Rooms = () => {
   const navigate = useNavigate();
