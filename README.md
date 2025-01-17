@@ -1,11 +1,15 @@
-# Current Project State
+# CCU3 Add-on: Modern Web UI
 
-Please note that this project is currently in an alpha stage and should be considered as a proof of concept. 
-It aims to solve challenges in bridging the gap between the old and the new. 
+This add-on aims to provide a modern, simple, fast, and responsive web user interface for your CCU3, by leveraging cutting-edge web technologies.
+
+Whether you're a developer looking to contribute or a user seeking a better interface for your CCU3, 
+this project has something for you. Dive in to explore the features, installation steps, and how you can get involved.
 
 # Motivation
 
-Our aim is to craft a cutting edge, simple, yet fast, responsive Web UI as an add-on to your CCU3.
+My motivation was to have a user-friendly app for the tablet in our kitchen, allowing us to conveniently control all devices in the house.
+
+![Screenshot](docs/tablet-screen.jpg)
 
 # Technology Stack
 
@@ -14,19 +18,19 @@ This project is built with a robust set of technologies to ensure high performan
 - [React](https://reactjs.org/): A JavaScript library for building user interfaces.
 - [TypeScript](https://www.typescriptlang.org/): A strongly typed superset of JavaScript that adds static types.
 - [Emotion](https://emotion.sh/docs/introduction): A library designed for writing CSS styles with JavaScript.
-- [Websocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API): Websocket makes it possible to open a two-way interactive communication session between the user's browser and a server.
+- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API): Websocket makes it possible to open a two-way interactive communication session between the user's browser and a server.
 
 # Prerequisites
 
-For this add-on to function properly, it is necessary to have rooms configured in your CCU3. Rooms should have channels assigned with appropriate names. This is because the add-on queries the rooms, their channels, and in turn, the datapoints of those channels. Without this setup, the add-on will not work.
+To ensure this add-on functions properly, you need to have rooms configured in your CCU3. Each room should have channels assigned with appropriate names, as the add-on queries the rooms, their channels, and the datapoints of those channels. Without this setup, the add-on will not work.
 
-For Communication with the ccu3 over Websocket this Addon requires [RedMatic](https://github.com/rdmtc/RedMatic)
+For communication with the CCU3 over WebSocket, this add-on requires [RedMatic Node-Red](https://github.com/rdmtc/RedMatic).
 
 # Installation
 
 To install this add-on:
 1. Install [RedMatic Node-Red](https://github.com/rdmtc/RedMatic/releases/latest).
-2. Import the [node-red-flow.json](node-red-flow.json) file into Node-Red.
+2. Import the [Node-Red Flow](node-red-flow.json) file into Node-Red.
 3. Download the latest `tar.gz` file from the [releases page](https://github.com/rdmtc/RedMatic/releases).
 4. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
 5. After a reboot, the add-on will be available at `http://ccu3ip/addons/mui`.
@@ -73,6 +77,15 @@ To develop and build this project, follow these steps:
 5. Start the development server: `npm start`
 6. To build the project, use: `npm run build`
 
+# WebSocket
+
+To test your WebSocket connection, you can use the [WebSocket Test Client](https://chromewebstore.google.com/detail/websocket-test-client/fgponpodhbmadfljofbimhhlengambbn) Chrome Addon:
+
+1. Open the WebSocket Test Client and go to "Options".
+2. Enter your WebSocket Endpoint URL: `ws://192.168.178.26/addons/red/ws/webapp` (replace with your actual IP).
+3. Press "Connect". (Status "OPEN" indicates a successful connection.)
+4. Test the connection by sending the content of the [getRooms.tcl](src/rega/getRooms.tcl) script as payload.
+
 # Issues
 
 Want to start contributing to this project? 
@@ -113,7 +126,7 @@ The current user interface represents a responsive version of the rooms view of 
 
 ## Rooms View
 
-Once you obtain a session ID, you'll be automatically redirected to the rooms view. Here you see all rooms configured in the ccu3, and you can select the room in which you want to see or modify channels.
+Here you see all rooms configured in the ccu3, and you can select the room in which you want to see or modify channels.
 
 ![Screenshot](/docs/Rooms.png)
 
@@ -122,4 +135,4 @@ Once you obtain a session ID, you'll be automatically redirected to the rooms vi
 This is the channels view.    
 Here you can see and change the state of the channels associated with the selected room.
 
-!todo screens from tablet
+!todo Screenshot
