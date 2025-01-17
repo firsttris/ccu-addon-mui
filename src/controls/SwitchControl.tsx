@@ -27,7 +27,7 @@ export const SwitchControl = ({ channel }: ControlProps) => {
 
   return (
     <CardHeader onClick={onHandleChange}>
-      <div style={{ height: "65px"}}>{name}</div>
+      <div style={{ height: "40px" }}>{name}</div>
       <Icon
         icon={checked ? 'mdi:light-switch' : 'mdi:light-switch-off'}
         color={checked ? 'orange' : 'unset'}

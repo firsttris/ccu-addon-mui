@@ -14,7 +14,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const { datapoints, name, address, interfaceName } = channel;
   const blindValue = Number(datapoints.LEVEL) * 100;
   return (
-    <div>
+    <div style={{ width: '250px', padding: '10px' }}>
       <ChannelHeader
         icon={
           blindValue === 0

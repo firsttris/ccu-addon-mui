@@ -23,7 +23,6 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <>
-
     <Global
       styles={css`
         body {
@@ -38,6 +37,5 @@ root.render(
     <WebSocketProvider>
       <Router />
     </WebSocketProvider>
-
   </>
 );

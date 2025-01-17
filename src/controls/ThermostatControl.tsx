@@ -14,7 +14,7 @@ const Container = styled.div`
 position: relative;
   width: 250px;
   height: 100%;
-  padding: 20px;
+  padding: 10px;
 `;
 
 const getColor = (temperature: number) => {

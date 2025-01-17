@@ -31,9 +31,14 @@ const ChannelContainer = styled.div({
   display: 'flex',
   flexWrap: 'wrap',
   gap: '10px',
-  justifyContent: 'space-around',
+  '@media (max-width: 800px)': {
+    marginLeft: '90px',
+    marginRight: '90px',
+  },
   '@media (max-width: 600px)': {
     justifyContent: 'center',
+    marginLeft: '0px',
+    marginRight: '0px',
   },
 });
 
