@@ -1,6 +1,6 @@
 # CCU3 Add-on: Modern Web UI
 
-This add-on aims to provide a modern, simple, fast, and responsive web user interface for your CCU3, by leveraging cutting-edge web technologies.
+This add-on aims to provide a modern, simple, fast, and responsive Progressive Web App (PWA) for your CCU3, by leveraging cutting-edge web technologies.
 
 Whether you're a developer looking to contribute or a user seeking a better interface for your CCU3, 
 this project has something for you. Dive in to explore the features, installation steps, and how you can get involved.
@@ -51,11 +51,15 @@ Progressive Web Apps (PWAs) can be installed on your device like native apps. Fo
 
 After these steps, the PWA will appear as an icon on your home screen, and you can use it just like a native app.
 
-### Use WakeLock to Prevent Screen from Standby
+# Use WakeLock to Prevent Screen from Standby
 
-To display this app on a tablet in our kitchen and prevent it from going into standby, we use the WakeLock API.
+To display this app on a tablet in our kitchen and prevent it from going into standby, we use the [WakeLock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API).
 
-The WakeLock API is still experimental in Chrome. To use it, you need to configure the following settings on your mobile device (tablet):
+~~The WakeLock API is still experimental in Chrome.~~
+
+NOTE: Is it still experimental or not? I'm not sure if you still need todo this:
+
+ To use it, you need to configure the following settings on your mobile device (tablet):
 
 1. Open Chrome and go to `chrome://flags`.
 2. Search for and enable `Experimental Web Platform features`.
@@ -77,7 +81,7 @@ To develop and build this project, follow these steps:
 5. Start the development server: `npm start`
 6. To build the project, use: `npm run build`
 
-# WebSocket
+# WebSocket Testing
 
 To test your WebSocket connection, you can use the [WebSocket Test Client](https://chromewebstore.google.com/detail/websocket-test-client/fgponpodhbmadfljofbimhhlengambbn) Chrome Addon:
 
