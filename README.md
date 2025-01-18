@@ -35,9 +35,11 @@ This project is built with a robust set of technologies to ensure high performan
 To install this add-on:
 1. Install [RedMatic Node-Red](https://github.com/rdmtc/RedMatic/releases/latest).
 2. Import the [Node-Red Flow](node-red-flow.json) file into Node-Red.
+![Screenshot](docs/node-red-flow.png)
 3. Download the latest addon `tar.gz` file from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases).
 4. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
-5. After a reboot, the add-on will be available at `http://ccu3ip/addons/mui`.
+![Screenshot](docs/ccu3-install.png)
+5. After a reboot, the add-on will be available at `http://192.168.178.111/addons/mui`. (replace with your IP).
 
 ## Setting Insecure CCU3 Origin as Secure
 
