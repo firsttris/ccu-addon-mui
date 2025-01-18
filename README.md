@@ -20,11 +20,15 @@ This project is built with a robust set of technologies to ensure high performan
 - [Emotion](https://emotion.sh/docs/introduction): A library designed for writing CSS styles with JavaScript.
 - [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API): Websocket makes it possible to open a two-way interactive communication session between the user's browser and a server.
 
-# Prerequisites
+# Prerequisites for CCU3
 
-To ensure this add-on functions properly, you need to have rooms configured in your CCU3. Each room should have channels assigned with appropriate names, as the add-on queries the rooms, their channels, and the datapoints of those channels. Without this setup, the add-on will not work.
+1. **Configure Rooms and Assign Channels (Devices)**
 
-For communication with the CCU3 over WebSocket, this add-on requires [RedMatic Node-Red](https://github.com/rdmtc/RedMatic).
+   To ensure this add-on functions properly, you need to have rooms configured in your CCU3. Each room should have channels assigned with appropriate names, as the add-on queries the rooms, their channels, and the datapoints of those channels. Without this setup, the add-on will not work.
+
+2. **Install Node-Red Plugin and Import Flow**
+
+   For communication with the CCU3 over WebSocket, this add-on requires [RedMatic Node-Red](https://github.com/rdmtc/RedMatic).
 
 # Installation
 
@@ -34,6 +38,16 @@ To install this add-on:
 3. Download the latest addon `tar.gz` file from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases).
 4. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
 5. After a reboot, the add-on will be available at `http://ccu3ip/addons/mui`.
+
+## Setting Insecure CCU3 Origin as Secure
+
+In the latest Chrome version, PWA and WakeLock API only work with HTTPS. You need to set up the IP of your CCU3 as a secure origin.
+
+1. Open Chrome and go to `chrome://flags`.
+2. Search for `Insecure origins treated as secure`
+3. Enter IP Adress of CCU3 e.g. `http://192.168.178.111` (replace with your IP).
+4. Enable
+5. Save and relaunch Chrome
 
 # Adding the PWA to Your Home Screen
 
@@ -53,22 +67,20 @@ After these steps, the PWA will appear as an icon on your home screen, and you c
 
 # Use WakeLock to Prevent Screen from Standby
 
-To display this app on a tablet in our kitchen and prevent it from going into standby, we use the [WakeLock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API).
+To perevent the App from going into standby, we use the [WakeLock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API).
 
-~~The WakeLock API is still experimental in Chrome.~~
+Steps to enable WakeLock experimental API in Chrome:
 
-NOTE: Is it still experimental or not? I'm not sure if you still need todo this:
-
- To use it, you need to configure the following settings on your mobile device (tablet):
+NOTE: The WakeLock API may no longer be experimental by the time you read this.
 
 1. Open Chrome and go to `chrome://flags`.
 2. Search for and enable `Experimental Web Platform features`.
-3. Set your CCU3 IP as a secure origin:
-   - Search for and enable `#unsafely-treat-insecure-origin-as-secure`.
-   - Add the origin of your CCU3, e.g., `http://192.168.178.26` (replace with your IP).
 4. Save and relaunch Chrome.
 
-After these steps, the WakeLock API should be enabled, preventing your screen from going into standby while using the PWA.
+After these steps, the WakeLock API should be enabled, preventing your screen from going into standby while using the PWA. 
+
+If WakeLock is not working, check for errors in the browser console:
+![Screenshot](docs/WakeLock_error.png)
 
 # Development and Build
 
@@ -86,7 +98,7 @@ To develop and build this project, follow these steps:
 To test your WebSocket connection, you can use the [WebSocket Test Client](https://chromewebstore.google.com/detail/websocket-test-client/fgponpodhbmadfljofbimhhlengambbn) Chrome Addon:
 
 1. Open the WebSocket Test Client and go to "Options".
-2. Enter your WebSocket Endpoint URL: `ws://192.168.178.26/addons/red/ws/webapp` (replace with your actual IP).
+2. Enter your WebSocket Endpoint URL: `ws://192.168.178.111/addons/red/ws/webapp` (replace with your actual IP).
 3. Press "Connect". (Status "OPEN" indicates a successful connection.)
 4. Test the connection by sending the content of the [getRooms.tcl](src/rega/getRooms.tcl) script as payload.
 
