@@ -114,8 +114,10 @@ This project currently supports the following devices:
 ![Screenshot](docs/controls/blinds.png)
 
   **Features:**
-  - Set the open percentage of the blinds by clicking on them.
-  - Ensure proper functionality by measuring and configuring the opening and closing times for your blinds in the CCU3 actuator.
+  - Show open percentage
+  - Open/Close
+  - Stop
+  - Set the open percentage of the blinds by clicking on them. (To this to work properly you need to measure and configuring the opening and closing times for your blinds in the CCU3.)
 
   
 [Door Operator](src/controls/DoorControl.tsx)
