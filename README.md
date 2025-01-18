@@ -90,59 +90,70 @@ This error indicates the WakeLock API is unavailable, review the steps above.
 
 This project currently supports the following devices:
 
-[Switch](src/controls/SwitchControl.tsx)
+### [Switch](src/controls/SwitchControl.tsx)
+
+**Channel Type:** `SWITCH_VIRTUAL_RECEIVER`
 
 ![Screenshot](docs/controls/switch.png)
 
-  **Features:**
-  - Show Light Status
-  - Switch Light On/Off
+**Features:**
+- Display Light Status
+- Switch Light On/Off
 
 
-[Thermostat](src/controls/ThermostatControl.tsx)
+### [Thermostat](src/controls/ThermostatControl.tsx)
+
+**Channel Type:** `HEATING_CLIMATECONTROL_TRANSCEIVER`
 
 ![Screenshot](docs/controls/thermostat.png)
 
-  **Features:**
-  - Show Current Humidity
-  - Show Target Temperature
-  - Show Current Temperature
-  - Show Window Open State
-  - Set Target Temperature
+**Features:**
+- Show Current Humidity
+- Show Target Temperature
+- Show Current Temperature
+- Show Window Open State
+- Set Target Temperature
 
 
-[Blinds](src/controls/BlindsControl.tsx)
+### [Blinds](src/controls/BlindsControl.tsx)
+
+**Channel Type:** `BLIND_VIRTUAL_RECEIVER`
 
 ![Screenshot](docs/controls/blinds.png)
 
-  **Features:**
-  - Show open percentage
-  - Open/Close
-  - Stop
-  - Set the open percentage of the blinds by clicking on them. 
-  *(For this to work properly you need to measure and configure the opening and closing times for your blinds in the CCU3.)*
+**Features:**
+- Show open percentage
+- Open/Close
+- Stop
+- Set the open percentage of the blinds by clicking on them
+
+*For this to work properly, you need to measure and configure the opening and closing times for your blinds in the CCU3.*
 
   
-[Door Operator](src/controls/DoorControl.tsx)
+### [Door Operator](src/controls/DoorControl.tsx)
+
+**Channel Type:** `KEYMATIC`
 
 ![Screenshot](docs/controls/door-operator.png)
 
-  **Features:**
-  - Show Door Status
-  - Unlock Door
-  - Lock Door
-  - Open Door
+**Features:**
+- Show Door Status
+- Unlock Door
+- Lock Door
+- Open Door
 
 
-[Floor Heating](src/controls/FloorControl.tsx)
+### [Floor Heating](src/controls/FloorControl.tsx)
+
+**Channel Type:** `CLIMATECONTROL_FLOOR_TRANSCEIVER`
 
 ![Screenshot](docs/controls/floor-heating.png)
 
-  **Features:**
-  - Displays the opening percentage of the floor heating valve
+**Features:**
+- Display the opening percentage of the floor heating valve
+- Set target temperature
+- Show current temperature
 
-
-We welcome pull requests to add features or support for new devices. Your contributions are appreciated!
 
 # User Interface Overview
 
@@ -193,3 +204,7 @@ I have collected an API Summary, where you have an quick overview of all methods
 Want to start contributing to this project? 
 
 Please visit our [issues page](https://github.com/firsttris/ccu-addon-mui/issues) for the latest issues and feature requests.
+
+# Contributions
+
+We welcome pull requests to add features or support for new devices. Your contributions are appreciated!
