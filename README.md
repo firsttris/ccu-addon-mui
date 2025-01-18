@@ -41,7 +41,7 @@ To install this add-on:
 ![Screenshot](docs/ccu3-install.png)
 5. After a reboot, the add-on will be available at `http://192.168.178.111/addons/mui`. (replace with your IP).
 
-# Setting Insecure CCU3 Origin as Secure
+## Setting Insecure CCU3 Origin as Secure
 
 In the latest Chrome version, Progressive Web App (PWA) features and WakeLock only work with HTTPS.
 You need to set up the IP of your CCU3 as a secure origin.
@@ -52,7 +52,7 @@ You need to set up the IP of your CCU3 as a secure origin.
 4. Enable
 5. Save and relaunch Chrome
 
-# Adding the PWA to Your Home Screen
+## Adding the PWA to Your Home Screen
 
 Progressive Web Apps (PWAs) can be installed on your device like native apps. Follow these steps to add our PWA to your home screen:
 
@@ -68,7 +68,7 @@ Progressive Web Apps (PWAs) can be installed on your device like native apps. Fo
 
 After these steps, the PWA will appear as an icon on your home screen, and you can use it just like a native app.
 
-# Use WakeLock to prevent Screen from Standby
+## Use WakeLock to prevent Screen from Standby
 
 To perevent the PWA from going into standby, we use the [WakeLock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API).
 
@@ -173,7 +173,7 @@ To develop and build this project, follow these steps:
 5. Start the development server: `npm start`
 6. To build the project, use: `npm run build`
 
-# WebSocket Testing
+## WebSocket Testing
 
 To test your WebSocket connection, you can use the [WebSocket Test Client](https://chromewebstore.google.com/detail/websocket-test-client/fgponpodhbmadfljofbimhhlengambbn) Chrome Addon:
 
@@ -182,7 +182,7 @@ To test your WebSocket connection, you can use the [WebSocket Test Client](https
 3. Press "Connect". (Status "OPEN" indicates a successful connection.)
 4. Test the connection by sending the content of the [getRooms.tcl](src/rega/getRooms.tcl) script as payload.
 
-# Homematic API Summary
+## Homematic API Summary
 
 I have collected an API Summary, where you have an quick overview of all methods for the different homematic API's
 
