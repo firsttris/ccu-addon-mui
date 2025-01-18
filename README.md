@@ -84,6 +84,79 @@ After these steps, the WakeLock API should be enabled, preventing your screen fr
 If WakeLock is not working, check for errors in the browser console:
 ![Screenshot](docs/WakeLock_error.png)
 
+# Device Support
+
+This project currently supports the following devices:
+
+[Switch](src/controls/SwitchControl.tsx)
+
+![Screenshot](docs/controls/switch.png)
+
+  **Features:**
+  - Show Light Status
+  - Switch Light On/Off
+
+
+[Thermostat](src/controls/ThermostatControl.tsx)
+
+![Screenshot](docs/controls/thermostat.png)
+
+  **Features:**
+  - Show Current Humidity
+  - Show Target Temperature
+  - Show Current Temperature
+  - Show Window Open State
+  - Set Target Temperature
+
+
+[Blinds](src/controls/BlindsControl.tsx)
+
+![Screenshot](docs/controls/blinds.png)
+
+  **Features:**
+  - Set the open percentage of the blinds by clicking on them.
+  - Ensure proper functionality by measuring and configuring the opening and closing times for your blinds in the CCU3 actuator.
+
+  
+[Door Operator](src/controls/DoorControl.tsx)
+
+![Screenshot](docs/controls/door-operator.png)
+
+  **Features:**
+  - Show Door Status
+  - Unlock Door
+  - Lock Door
+  - Open Door
+
+
+[Floor Heating](src/controls/FloorControl.tsx)
+
+![Screenshot](docs/controls/floor-heating.png)
+
+  **Features:**
+  - Displays the opening percentage of the floor heating valve
+
+
+We welcome pull requests to add features or support for new devices. Your contributions are appreciated!
+
+# User Interface Overview
+
+The current user interface represents a responsive version of the rooms view of the CCU3.
+
+## Rooms View
+
+Here you see all rooms configured in the ccu3, and you can select the room in which you want to see or modify channels.
+
+![Screenshot](/docs/Rooms.png)
+
+## Channels View
+
+This is the channels view.    
+Here you can see and change the state of the channels associated with the selected room.
+
+![Screenshot](/docs/channel1.png)
+![Screenshot](/docs/channel2.png)
+
 # Development and Build
 
 To develop and build this project, follow these steps:
@@ -104,54 +177,14 @@ To test your WebSocket connection, you can use the [WebSocket Test Client](https
 3. Press "Connect". (Status "OPEN" indicates a successful connection.)
 4. Test the connection by sending the content of the [getRooms.tcl](src/rega/getRooms.tcl) script as payload.
 
-# Issues
-
-Want to start contributing to this project? 
-
-Please visit our [issues page](https://github.com/firsttris/ccu-addon-mui/issues) for the latest issues and feature requests.
-
 # Homematic API Summary
 
 I have collected an API Summary, where you have an quick overview of all methods for the different homematic API's
 
 [API Summary](/docs/api/README.md)
 
-# Device Support
+# Issues
 
-This project currently supports the following devices:
+Want to start contributing to this project? 
 
-- [Switch](src/controls/SwitchControl.tsx)  
-  ![Screenshot](docs/controls/switch.png)
-
-- [Thermostat](src/controls/ThermostatControl.tsx)  
-  ![Screenshot](docs/controls/thermostat.png)
-
-- [Blinds](src/controls/BlindsControl.tsx)  
-  ![Screenshot](docs/controls/blinds.png)
-
-- [Door Operator](src/controls/DoorControl.tsx)  
-  ![Screenshot](docs/controls/door-operator.png)
-
-- [Floor Heating](src/controls/FloorControl.tsx)  
-  ![Screenshot](docs/controls/floor-heating.png)
-
-
-We welcome pull requests to add support for new devices. Your contributions are appreciated!
-
-# User Interface Overview
-
-The current user interface represents a responsive version of the rooms view of the CCU3.
-
-## Rooms View
-
-Here you see all rooms configured in the ccu3, and you can select the room in which you want to see or modify channels.
-
-![Screenshot](/docs/Rooms.png)
-
-## Channels View
-
-This is the channels view.    
-Here you can see and change the state of the channels associated with the selected room.
-
-![Screenshot](/docs/channel1.png)
-![Screenshot](/docs/channel2.png)
+Please visit our [issues page](https://github.com/firsttris/ccu-addon-mui/issues) for the latest issues and feature requests.
