@@ -41,9 +41,10 @@ To install this add-on:
 ![Screenshot](docs/ccu3-install.png)
 5. After a reboot, the add-on will be available at `http://192.168.178.111/addons/mui`. (replace with your IP).
 
-## Setting Insecure CCU3 Origin as Secure
+# Setting Insecure CCU3 Origin as Secure
 
-In the latest Chrome version, PWA and WakeLock API only work with HTTPS. You need to set up the IP of your CCU3 as a secure origin.
+In the latest Chrome version, Progressive Web App (PWA) features and WakeLock only work with HTTPS.
+You need to set up the IP of your CCU3 as a secure origin.
 
 1. Open Chrome and go to `chrome://flags`.
 2. Search for `Insecure origins treated as secure`
@@ -67,9 +68,9 @@ Progressive Web Apps (PWAs) can be installed on your device like native apps. Fo
 
 After these steps, the PWA will appear as an icon on your home screen, and you can use it just like a native app.
 
-# Use WakeLock to Prevent Screen from Standby
+# Use WakeLock to prevent Screen from Standby
 
-To perevent the App from going into standby, we use the [WakeLock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API).
+To perevent the PWA from going into standby, we use the [WakeLock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API).
 
 Steps to enable WakeLock experimental API in Chrome:
 
@@ -81,8 +82,9 @@ NOTE: The WakeLock API may no longer be experimental by the time you read this.
 
 After these steps, the WakeLock API should be enabled, preventing your screen from going into standby while using the PWA. 
 
-If WakeLock is not working, check for errors in the browser console:
+To verify if WakeLock is working, check the browser console for the following error:
 ![Screenshot](docs/WakeLock_error.png)
+This error indicates the WakeLock API is unavailable, review the steps above.
 
 # Device Support
 
@@ -117,7 +119,8 @@ This project currently supports the following devices:
   - Show open percentage
   - Open/Close
   - Stop
-  - Set the open percentage of the blinds by clicking on them. (To this to work properly you need to measure and configuring the opening and closing times for your blinds in the CCU3.)
+  - Set the open percentage of the blinds by clicking on them. 
+  *(For this to work properly you need to measure and configure the opening and closing times for your blinds in the CCU3.)*
 
   
 [Door Operator](src/controls/DoorControl.tsx)
