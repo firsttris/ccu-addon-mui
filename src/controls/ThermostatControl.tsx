@@ -1,11 +1,12 @@
 import styled from '@emotion/styled';
 import { TemperatureDisplay } from '../components/TemperaturDisplay';
 import { HeatingClimateControlTransceiverChannel } from 'src/types/types';
-import { Icon } from '@iconify/react';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { Button } from '../components/Button';
 import { ChannelHeader } from '../components/ChannelHeader';
-import { CbiTwistThermostat } from 'src/components/icons/CbiTwistThermostat';
+import { CbiTwistThermostat } from '../components/icons/CbiTwistThermostat';
+import { MdiMinus } from '../components/icons/MdiMinus';
+import { MdiPlus } from '../components/icons/MdiPlus';
 
 type ThermostatProps = {
   channel: HeatingClimateControlTransceiverChannel
@@ -76,7 +77,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
 
   return (
     <Container>
-      <ChannelHeader icon={<CbiTwistThermostat />} name={channel.name}/>
+      <ChannelHeader icon={<CbiTwistThermostat height="50px" color="lightgrey" style={{ marginRight: '2px'}}/>} name={channel.name}/>
       <Dial temperature={currentTemperature}>
         <TemperatureDisplay
           targetTemperature={targetTemperature}
@@ -88,10 +89,10 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
       </Dial>
       <Controls>
         <Button onClick={decreaseTemperature}>
-        <Icon icon="mdi:minus" />
+        <MdiMinus />
         </Button>
         <Button onClick={increaseTemperature}>
-        <Icon icon="mdi:plus" />
+        <MdiPlus />
         </Button>
       </Controls>
     </Container>

@@ -1,15 +1,15 @@
 import { useTranslations } from '../i18n/utils';
-import { Icon } from '@iconify/react';
 import { Channel, ChannelType } from '../types/types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import styled from '@emotion/styled';
 import { ControlComponent } from './ControlComponent';
+import { UiwDown } from './icons/UiwDown';
 
 interface ExpandMoreProps {
   expanded: boolean;
 }
 
-const ExpandMore = styled(Icon, {
+const ExpandMore = styled(UiwDown, {
   shouldForwardProp: (prop) => prop !== 'expanded',
 })<ExpandMoreProps>(({ expanded }) => ({
   transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -107,7 +107,7 @@ export const ChannelGroup: React.FC<ChannelGroupProps> = ({
     <div key={index}>
       <ListItem onClick={handleExpandClick}>
         <Typography>{localizedText}</Typography>
-        <ExpandMore icon="uiw:down" expanded={expanded} />
+        <ExpandMore expanded={expanded} width={30} />
       </ListItem>
       <Collapse in={expanded}>
         <ChannelContainer>

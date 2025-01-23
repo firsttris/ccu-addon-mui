@@ -46,7 +46,7 @@ export const Rooms = () => {
               setChannels([])
               navigate(`/room/${room.id}`)
             }}>
-              <TeenyiconsFloorplanSolid height={55} width={55}/>
+              <TeenyiconsFloorplanSolid width={35}/>
               <ListItemText>{room.name}</ListItemText>
             </ListItem>
           ))}

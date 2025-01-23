@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom/client';
 import { Router } from './router';
 import { css, Global } from '@emotion/react';
 import { WebSocketProvider } from './hooks/useWebsocket';
+import '@fontsource/roboto';
 
 const requestWakeLock = async () => {
   try {
@@ -30,7 +31,7 @@ root.render(
           margin: 0;
           padding: 0;
           box-sizing: border-box;
-          font-family: 'Roboto', sans-serif;
+          font-family: 'Roboto';
         }
       `}
     />

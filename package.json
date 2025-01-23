@@ -26,9 +26,6 @@
   },
   "devDependencies": {
     "@emotion/babel-plugin": "11.11.0",
-    "@iconify-json/material-symbols": "^1.2.13",
-    "@iconify/json": "^2.2.299",
-    "@iconify/react": "^5.2.0",
     "@nx/eslint": "20.3.2",
     "@nx/eslint-plugin": "20.3.2",
     "@nx/js": "20.3.2",
