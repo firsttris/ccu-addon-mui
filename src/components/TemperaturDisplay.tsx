@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { Icon } from '@iconify/react';
+import { MaterialSymbolsLightWindowOpen } from './icons/MaterialSymbolsLightWindowOpen';
 
 const Display = styled.div({
   position: 'absolute',
@@ -72,11 +72,9 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
     >
       <Temperature>{targetTemperature}°C</Temperature>
       {windowOpen ? (
-        <Icon
-          icon="material-symbols:window-open"
+        <MaterialSymbolsLightWindowOpen 
           fontSize={23}
-          color="#00BFFF"
-        />
+          color="#00BFFF" />
       ) : null}
     </div>
     <Container>

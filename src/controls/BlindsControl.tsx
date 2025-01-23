@@ -2,7 +2,7 @@ import { ChannelHeader } from '../components/ChannelHeader';
 import { BlindVirtualReceiverChannel } from 'src/types/types';
 import { Button } from '../components/Button';
 import { Icon } from '@iconify/react';
-import { Shutters } from '../components/ShuttersSvg';
+import { Shutters } from '../components/icons/Shutters';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 
 interface ControlProps {

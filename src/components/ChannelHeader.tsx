@@ -1,10 +1,9 @@
 import styled from '@emotion/styled';
-import { Icon } from '@iconify/react';
+import { ReactNode } from 'react';
 
 interface ChannelHeaderProps {
   name: string;
-  icon: string;
-  color?: string;
+  icon: ReactNode;
   onClick?: () => void;
 }
 
@@ -34,14 +33,13 @@ const Name = styled.div`
 export const ChannelHeader = ({
   name,
   icon,
-  color,
   onClick,
   ...props
 }: ChannelHeaderProps) => {
   return (
     <CardHeader onClick={onClick} {...props}>
       <HeaderContainer>
-        <Icon style={{ fontSize: '30px' }} icon={icon} color={color} />
+        {icon}
         <Name style={{ marginLeft: '5px' }}>{name}</Name>
       </HeaderContainer>
     </CardHeader>

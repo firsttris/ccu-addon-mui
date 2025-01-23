@@ -56,21 +56,21 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   };
 
   return (
-      <OuterBox>
-        <InnerBox>
-          <Button onClick={lockDoor}>
-            <Icon style={{ fontSize: '30px' }} icon="material-symbols:lock-outline" />
-          </Button>
-          <Button onClick={unlockDoor}>
-            <Icon style={{ fontSize: '30px' }} icon="material-symbols:lock-open-outline" />
-          </Button>
-          <Button onClick={openDoor}>
-            <Icon style={{ fontSize: '30px' }} icon="material-symbols:door-open-outline" />
-          </Button>
-        </InnerBox>
-        <StyledTypography uncertain={isUncertain}>
-          {t('DOOR_STATE_UNKNOWN')}
-        </StyledTypography>
-      </OuterBox>
+    <OuterBox>
+      <InnerBox>
+        <Button onClick={lockDoor}>
+          <Icon style={{ fontSize: '30px' }} icon="material-symbols:lock-outline" />
+        </Button>
+        <Button onClick={unlockDoor}>
+          <Icon style={{ fontSize: '30px' }} icon="material-symbols:lock-open-outline" />
+        </Button>
+        <Button onClick={openDoor}>
+          <Icon style={{ fontSize: '30px' }} icon="material-symbols:door-open-outline" />
+        </Button>
+      </InnerBox>
+      <StyledTypography uncertain={isUncertain}>
+        {t('DOOR_STATE_UNKNOWN')}
+      </StyledTypography>
+    </OuterBox>
   );
 };

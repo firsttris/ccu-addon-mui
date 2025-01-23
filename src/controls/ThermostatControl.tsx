@@ -5,6 +5,7 @@ import { Icon } from '@iconify/react';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { Button } from '../components/Button';
 import { ChannelHeader } from '../components/ChannelHeader';
+import { CbiTwistThermostat } from 'src/components/icons/CbiTwistThermostat';
 
 type ThermostatProps = {
   channel: HeatingClimateControlTransceiverChannel
@@ -75,7 +76,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
 
   return (
     <Container>
-      <ChannelHeader icon={"mdi:thermometer"} name={channel.name}/>
+      <ChannelHeader icon={<CbiTwistThermostat />} name={channel.name}/>
       <Dial temperature={currentTemperature}>
         <TemperatureDisplay
           targetTemperature={targetTemperature}
