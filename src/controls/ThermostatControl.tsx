@@ -1,11 +1,12 @@
 import styled from '@emotion/styled';
-import { TemperatureDisplay } from '../components/TemperaturDisplay';
+import { CurrentTemperature } from '../components/TemperaturDisplay';
 import { HeatingClimateControlTransceiverChannel } from 'src/types/types';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { Button } from '../components/Button';
 import { MdiMinus } from '../components/icons/MdiMinus';
 import { MdiPlus } from '../components/icons/MdiPlus';
 import { ChannelName } from '../components/ChannelName';
+import { MaterialSymbolsLightWindowOpen } from '../components/icons/MaterialSymbolsLightWindowOpen';
 
 type ThermostatProps = {
   channel: HeatingClimateControlTransceiverChannel
@@ -33,8 +34,6 @@ const Dial = styled.div<{ temperature: number, targetTemperature: number }>`
     margin-bottom: 10px;
     position: relative;
     border-radius: 50%;
-    //background: #f0f0f0; 
-  
     &::before {
       content: '';
       position: absolute;
@@ -46,9 +45,9 @@ const Dial = styled.div<{ temperature: number, targetTemperature: number }>`
       border-radius: 50%;
       background: conic-gradient(
         from 220deg,
-        ${props => getColor(props.temperature)} ${props => (props.temperature / 40) * 280}deg, /* 90% of 360 degrees */
-        #d3d3d3 ${props => (props.temperature / 40) * 280}deg 280deg, /* 90% of 360 degrees */
-        transparent 280deg 360deg /* 10% transparent */
+        ${props => getColor(props.temperature)} ${props => (props.temperature / 40) * 280}deg,
+        #d3d3d3 ${props => (props.temperature / 40) * 280}deg 280deg,
+        transparent 280deg 360deg
       );
       -webkit-mask: 
         radial-gradient(farthest-side, transparent calc(100% - 10px), black calc(100% - 10px));
@@ -66,25 +65,23 @@ const Dial = styled.div<{ temperature: number, targetTemperature: number }>`
       height: 100%;
       pointer-events: none;
       border-radius: 50%;
-
       background: conic-gradient(
         from 220deg,
-        /* transparent up to the targetTemperature angle */
         transparent 0deg ${props => (props.targetTemperature / 40) * 280}deg,
-        /* a tiny red slice for the marker */
         red ${props => (props.targetTemperature / 40) * 280}deg ${props => ((props.targetTemperature / 40) * 280) + 2}deg,
-        /* then transparent again */
         transparent ${props => ((props.targetTemperature / 40) * 280) + 2}deg 360deg
       );
       -webkit-mask: 
         radial-gradient(farthest-side, transparent calc(100% - 10px), black calc(100% - 10px));
       mask: 
         radial-gradient(farthest-side, transparent calc(100% - 10px), black calc(100% - 10px));
+    }
   `;
 
 const Controls = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-top: -50px;
 `;
 
@@ -98,28 +95,49 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
 
   const decreaseTemperature = () => setDataPoint(channel.interfaceName, channel.address, 'SET_POINT_TEMPERATURE', targetTemperature - 0.5);
   const increaseTemperature = () => setDataPoint(channel.interfaceName, channel.address, 'SET_POINT_TEMPERATURE', targetTemperature + 0.5);
-  const boostMode = () => setDataPoint(channel.interfaceName, channel.address, 'BOOST_MODE', true);
+  // const boostMode = () => setDataPoint(channel.interfaceName, channel.address, 'BOOST_MODE', true);
 
   return (
     <Container>
       <ChannelName name={channel.name} maxWidth='250px' />
       <Dial temperature={currentTemperature} targetTemperature={targetTemperature}>
-        <TemperatureDisplay
-          targetTemperature={targetTemperature}
+        <CurrentTemperature
           currentTemperature={currentTemperature}
-          humidity={humidity}
-          activateBoost={boostMode}
-          windowOpen={datapoints.WINDOW_STATE === 1}
         />
       </Dial>
       <Controls>
         <Button onClick={decreaseTemperature}>
           <MdiMinus />
         </Button>
+        <div style={{ display: 'flex ' }}>
+          <span style={{ fontSize: '20px' }}>{targetTemperature}</span><span style={{ fontSize: '12px', marginTop: '1px' }}>°C</span>
+        </div>
         <Button onClick={increaseTemperature}>
           <MdiPlus />
         </Button>
       </Controls>
+      <div style={{ position: 'absolute', top: 30, right: 10 }}>
+
+        <div>
+          <span
+            role="img"
+            aria-label="humidity"
+            style={{
+              fontSize: '15px',
+            }}
+          >
+            💧
+          </span>
+          <div>{humidity}%</div>
+        </div>
+        <div style={{ marginTop: 2, marginLeft: -2 }}>
+          {datapoints.WINDOW_STATE === 1 ? (
+            <MaterialSymbolsLightWindowOpen
+              fontSize={23}
+              color="#00BFFF" />
+          ) : null}
+        </div>
+      </div>
     </Container>
   );
 };
