@@ -193,7 +193,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
           </div>
         ) : null}
         <div style={{ marginTop: 4, position: 'absolute', top: 2, right: 10 }}>
-          {humidity ? (
+          {datapoints.WINDOW_STATE === 1 ? (
             <MaterialSymbolsLightWindowOpen fontSize={23} color="#00BFFF" />
           ) : null}
         </div>
