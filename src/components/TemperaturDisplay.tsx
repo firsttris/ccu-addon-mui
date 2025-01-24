@@ -29,7 +29,7 @@ export const CurrentTemperature: React.FC<CurrentTemperatureProps> = ({
 }) => (
   <Display>
     <Temperature>
-      {currentTemperature}
+      {currentTemperature.toFixed(1)}
       <Unit>°C</Unit>
     </Temperature>
   </Display>
