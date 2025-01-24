@@ -25,7 +25,7 @@ const getColor = (temperature: number) => {
   return '#FF8C00'; // DarkOrange
 };
 
-const Dial = styled.div<{ temperature: number }>`
+const Dial = styled.div<{ temperature: number, targetTemperature: number }>`
     width: 70%;
     height: 0;
     padding-bottom: 70%;
@@ -55,6 +55,31 @@ const Dial = styled.div<{ temperature: number }>`
       mask: 
         radial-gradient(farthest-side, transparent calc(100% - 10px), black calc(100% - 10px));
     }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      border-radius: 50%;
+
+      background: conic-gradient(
+        from 220deg,
+        /* transparent up to the targetTemperature angle */
+        transparent 0deg ${props => (props.targetTemperature / 40) * 280}deg,
+        /* a tiny red slice for the marker */
+        red ${props => (props.targetTemperature / 40) * 280}deg ${props => ((props.targetTemperature / 40) * 280) + 2}deg,
+        /* then transparent again */
+        transparent ${props => ((props.targetTemperature / 40) * 280) + 2}deg 360deg
+      );
+      -webkit-mask: 
+        radial-gradient(farthest-side, transparent calc(100% - 10px), black calc(100% - 10px));
+      mask: 
+        radial-gradient(farthest-side, transparent calc(100% - 10px), black calc(100% - 10px));
   `;
 
 const Controls = styled.div`
@@ -78,7 +103,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   return (
     <Container>
       <ChannelName name={channel.name} maxWidth='250px' />
-      <Dial temperature={currentTemperature}>
+      <Dial temperature={currentTemperature} targetTemperature={targetTemperature}>
         <TemperatureDisplay
           targetTemperature={targetTemperature}
           currentTemperature={currentTemperature}
