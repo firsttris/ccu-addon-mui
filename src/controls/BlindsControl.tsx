@@ -1,9 +1,11 @@
-import { ChannelHeader } from '../components/ChannelHeader';
 import { BlindVirtualReceiverChannel } from 'src/types/types';
 import { Button } from '../components/Button';
-import { Icon } from '@iconify/react';
-import { Shutters } from '../components/ShuttersSvg';
+import { Shutters } from '../components/icons/Shutters';
 import { useWebSocketContext } from '../hooks/useWebsocket';
+import { UiwDown } from '../components/icons/UiwDown';
+import { UiwUp } from '../components/icons/UiwUp';
+import { MaterialSymbolsStop } from '../components/icons/MaterialSymbolsStop';
+import { ChannelName } from '../components/ChannelName';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;
@@ -15,13 +17,9 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const blindValue = Number(datapoints.LEVEL) * 100;
   return (
     <div style={{ width: '250px', margin: '10px' }}>
-      <ChannelHeader
-        icon={
-          blindValue === 0
-            ? 'material-symbols-light:blinds-closed'
-            : 'material-symbols-light:blinds'
-        }
+      <ChannelName
         name={name}
+        maxWidth='250px'
       />
       <div>
         <div
@@ -53,17 +51,17 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             <Button
               onClick={() => setDataPoint(interfaceName, address, 'LEVEL', 0)}
             >
-              <Icon icon="uiw:down" />
+              <UiwDown />
             </Button>
             <Button
               onClick={() => setDataPoint(interfaceName, address, 'STOP', true)}
             >
-              <Icon icon="material-symbols:stop" />
+              <MaterialSymbolsStop />
             </Button>
             <Button
               onClick={() => setDataPoint(interfaceName, address, 'LEVEL', 1)}
             >
-              <Icon icon="uiw:up" />
+              <UiwUp />
             </Button>
           </div>
         </div>

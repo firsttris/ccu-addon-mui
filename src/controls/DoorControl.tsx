@@ -2,8 +2,10 @@ import { KeymaticChannel } from '../types/types';
 import { useTranslations } from '../i18n/utils';
 import styled from '@emotion/styled';
 import { Button } from '../components/Button';
-import { Icon } from '@iconify/react';
 import { useWebSocketContext } from '../hooks/useWebsocket';
+import { MaterialSymbolsDoorOpenOutline } from '../components/icons/MaterialSymbolsDoorOpenOutline';
+import { MaterialSymbolsLockOutline } from '../components/icons/MaterialSymbolsLockOutline';
+import { MaterialSymbolsLockOpenOutline } from '../components/icons/MaterialSymbolsLockOpenOutline';
 
 const OuterBox = styled.div({
   display: 'flex',
@@ -56,21 +58,21 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   };
 
   return (
-      <OuterBox>
-        <InnerBox>
-          <Button onClick={lockDoor}>
-            <Icon style={{ fontSize: '30px' }} icon="material-symbols:lock-outline" />
-          </Button>
-          <Button onClick={unlockDoor}>
-            <Icon style={{ fontSize: '30px' }} icon="material-symbols:lock-open-outline" />
-          </Button>
-          <Button onClick={openDoor}>
-            <Icon style={{ fontSize: '30px' }} icon="material-symbols:door-open-outline" />
-          </Button>
-        </InnerBox>
-        <StyledTypography uncertain={isUncertain}>
-          {t('DOOR_STATE_UNKNOWN')}
-        </StyledTypography>
-      </OuterBox>
+    <OuterBox>
+      <InnerBox>
+        <Button onClick={lockDoor}>
+          <MaterialSymbolsLockOutline />
+        </Button>
+        <Button onClick={unlockDoor}>
+          <MaterialSymbolsLockOpenOutline />
+        </Button>
+        <Button onClick={openDoor}>
+          <MaterialSymbolsDoorOpenOutline />
+        </Button>
+      </InnerBox>
+      <StyledTypography uncertain={isUncertain}>
+        {t('DOOR_STATE_UNKNOWN')}
+      </StyledTypography>
+    </OuterBox>
   );
 };

@@ -1,17 +1,18 @@
 import styled from '@emotion/styled';
 import { TemperatureDisplay } from '../components/TemperaturDisplay';
 import { HeatingClimateControlTransceiverChannel } from 'src/types/types';
-import { Icon } from '@iconify/react';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { Button } from '../components/Button';
-import { ChannelHeader } from '../components/ChannelHeader';
+import { MdiMinus } from '../components/icons/MdiMinus';
+import { MdiPlus } from '../components/icons/MdiPlus';
+import { ChannelName } from '../components/ChannelName';
 
 type ThermostatProps = {
   channel: HeatingClimateControlTransceiverChannel
 };
 
 const Container = styled.div`
-position: relative;
+  position: relative;
   width: 250px;
   height: 100%;
   padding: 10px;
@@ -32,7 +33,7 @@ const Dial = styled.div<{ temperature: number }>`
     margin-bottom: 10px;
     position: relative;
     border-radius: 50%;
-    background: #f0f0f0; 
+    //background: #f0f0f0; 
   
     &::before {
       content: '';
@@ -44,9 +45,10 @@ const Dial = styled.div<{ temperature: number }>`
       height: 100%;
       border-radius: 50%;
       background: conic-gradient(
-        from 180deg,
-        ${props => getColor(props.temperature)} ${props => (props.temperature / 30) * 360}deg,
-        #d3d3d3 ${props => (props.temperature / 30) * 360}deg
+        from 220deg,
+        ${props => getColor(props.temperature)} ${props => (props.temperature / 40) * 280}deg, /* 90% of 360 degrees */
+        #d3d3d3 ${props => (props.temperature / 40) * 280}deg 280deg, /* 90% of 360 degrees */
+        transparent 280deg 360deg /* 10% transparent */
       );
       -webkit-mask: 
         radial-gradient(farthest-side, transparent calc(100% - 10px), black calc(100% - 10px));
@@ -75,7 +77,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
 
   return (
     <Container>
-      <ChannelHeader icon={"mdi:thermometer"} name={channel.name}/>
+      <ChannelName name={channel.name} maxWidth='250px' />
       <Dial temperature={currentTemperature}>
         <TemperatureDisplay
           targetTemperature={targetTemperature}
@@ -87,10 +89,10 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
       </Dial>
       <Controls>
         <Button onClick={decreaseTemperature}>
-        <Icon icon="mdi:minus" />
+          <MdiMinus />
         </Button>
         <Button onClick={increaseTemperature}>
-        <Icon icon="mdi:plus" />
+          <MdiPlus />
         </Button>
       </Controls>
     </Container>

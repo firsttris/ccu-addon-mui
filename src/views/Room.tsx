@@ -4,7 +4,7 @@ import styled from '@emotion/styled';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useEffect, useMemo } from 'react';
 import { Channel, ChannelType } from '../types/types';
-import { Icon } from '@iconify/react';
+import { MdiMenu } from '../components/icons/MdiMenu';
 
 const Container = styled.div`
   display: flex;
@@ -82,7 +82,7 @@ export const Room = () => {
     <div style={{ margin: '15px'}}>
       <Header>
         <IconButton onClick={() => navigate('/')} aria-label="Back to home">
-          <Icon icon="mdi:menu" fontSize={34} />
+          <MdiMenu width={35} />
         </IconButton>
       </Header>
       <Container>

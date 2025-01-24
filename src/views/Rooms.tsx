@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { ListItem } from '../components/ChannelGroup';
-import { Icon } from '@iconify/react';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useEffect } from 'react';
+import { TeenyiconsFloorplanSolid } from '../components/icons/TeenyiconsFloorplanSolid';
 
 const Container = styled.div`
   max-width: 1280px;
@@ -46,7 +46,7 @@ export const Rooms = () => {
               setChannels([])
               navigate(`/room/${room.id}`)
             }}>
-              <Icon icon="mdi:door-open" fontSize={"35px"} />
+              <TeenyiconsFloorplanSolid width={35}/>
               <ListItemText>{room.name}</ListItemText>
             </ListItem>
           ))}
