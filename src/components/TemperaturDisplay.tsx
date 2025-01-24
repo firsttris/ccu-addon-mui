@@ -11,8 +11,19 @@ const Display = styled.div({
 });
 
 const Temperature = styled.div({
-  fontSize: '24px',
+  fontSize: '60px',
   fontWeight: 'bold',
+  display: 'flex'
+});
+
+const Unit = styled.sup({
+  fontSize: '18px',
+  marginTop: '8px'
+});
+
+const UnitSmall = styled.sup({
+  fontSize: '10px',
+  marginTop: '3px'
 });
 
 const Group = styled.div({
@@ -26,6 +37,7 @@ const Container = styled.div({
   display: 'flex',
   justifyContent: 'center',
   gap: '3px',
+  marginTop: '5px',
 });
 
 export const Button = styled.button`
@@ -70,7 +82,10 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
         marginBottom: '-5px',
       }}
     >
-      <Temperature>{targetTemperature}°C</Temperature>
+      <Temperature>
+        {targetTemperature}
+        <Unit>°C</Unit>
+      </Temperature>
       {windowOpen ? (
         <MaterialSymbolsLightWindowOpen 
           fontSize={23}
@@ -83,14 +98,16 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
           role="img"
           aria-label="temp"
           style={{
-            fontSize: '25px',
-            marginRight: '-8px',
-            marginBottom: '10px',
+            fontSize: '15px',
+            marginRight: '-3px',
           }}
         >
           🌡️
         </span>
-        <div>{currentTemperature}°C</div>
+        <div style={{ display: 'flex'}}>
+          {currentTemperature}
+          <UnitSmall>°C</UnitSmall>
+        </div>
       </Group>
       {humidity ? (
         <Group>
@@ -98,9 +115,7 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
             role="img"
             aria-label="humidity"
             style={{
-              fontSize: '20px',
-              marginRight: '-2px',
-              marginBottom: '5px',
+              fontSize: '15px',
             }}
           >
             💧
@@ -117,7 +132,7 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
         marginTop: '5px',
       }}
     >
-      {/*
+      {/* 
                 <Button onClick={() => activateBoost()}>
                     <Icon icon="mdi:fire" fontSize={30} />
                 </Button>

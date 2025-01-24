@@ -1,8 +1,7 @@
 import styled from '@emotion/styled';
-import { ChannelHeader } from '../components/ChannelHeader';
 import { FloorClimateControlTransceiverChannel } from 'src/types/types';
-import { MdiRadiatorCoil } from '../components/icons/MdiRadiatorCoil';
 import { MdiPipeValve } from '../components/icons/MdiPipeValve';
+import { ChannelName } from '../components/ChannelName';
 
 interface FloorControlProps {
   channel: FloorClimateControlTransceiverChannel;
@@ -69,7 +68,7 @@ export const FloorControl = (props: FloorControlProps) => {
 
   return (
     <Container>
-      <ChannelHeader icon={<MdiRadiatorCoil width={40} />} name={props.channel.name}/>
+      <ChannelName name={props.channel.name} maxWidth='250px'/>
       <Content>
         <FlexBox>
         <MdiPipeValve color={getColor(value)} style={{ marginRight: '5px'}} width={40}/>

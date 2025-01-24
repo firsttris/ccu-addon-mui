@@ -26,7 +26,7 @@ const Name = styled.div`
   -webkit-box-orient: vertical;
   max-width: 100px; /* Adjust the max-width as needed */
   height: 35px;
-  font-weight: bold;
+  font-size: 13px;
 `;
 
 export const SwitchControl = ({ channel }: ControlProps) => {
