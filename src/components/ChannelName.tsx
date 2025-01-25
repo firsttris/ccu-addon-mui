@@ -16,16 +16,3 @@ export const ChannelName = ({ name, maxWidth }: { name: string, maxWidth: string
 
     );
 }
-
-
-const NameMultiLine = styled.div`
-  white-space: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  width: 100%;
-  font-size: 13px;
-  height: 35px;
-`;

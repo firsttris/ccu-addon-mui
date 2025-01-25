@@ -21,10 +21,7 @@ const Name = styled.div`
   white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* Number of lines to show before truncating */
-  -webkit-box-orient: vertical;
-  max-width: 100px; /* Adjust the max-width as needed */
+  max-width: 100px;
   height: 35px;
   font-size: 13px;
 `;
