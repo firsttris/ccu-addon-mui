@@ -146,18 +146,6 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
             padding: '5px',
           }}
         >
-          <div
-            style={{
-              position: 'absolute',
-              top: '-6px',
-              left: '10px',
-              backgroundColor: '#f5f5f5',
-              padding: '0 5px',
-              fontSize: '10px',
-            }}
-          >
-            Soll
-          </div>
           <div style={{ display: 'flex', alignItems: 'baseline' }}>
             <span style={{ fontSize: '25px', fontWeight: 'bold' }}>
               {targetTemperature.toFixed(1)}
