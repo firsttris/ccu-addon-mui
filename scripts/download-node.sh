@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Download Node.js for ARM (CCU3) - only the binary
-NODE_VERSION="v20.19.5"
+# CCU3 runs old Debian with GLIBC 2.24, so we need Node.js <= 16
+NODE_VERSION="v16.20.2"
 NODE_DIST="node-${NODE_VERSION}-linux-armv7l"
 NODE_URL="https://nodejs.org/dist/${NODE_VERSION}/${NODE_DIST}.tar.gz"
 TARGET_DIR="addon_installer/node"
