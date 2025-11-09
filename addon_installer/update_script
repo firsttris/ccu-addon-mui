@@ -18,17 +18,28 @@ cp -af server/websocket-server.js $ADDON_DIR/server/
 cp -af server/package.json $ADDON_DIR/server/
 chmod +x $ADDON_DIR/server/websocket-server.js
 
-ln -sf $ADDON_DIR $WWW_DIR
+# Create symlink only if it doesn't exist
+if [ ! -L $WWW_DIR/mui ]; then
+  ln -sf $ADDON_DIR $WWW_DIR/mui
+fi
 
 cp -af rc.d/mui $RC_DIR/
 chmod +x $RC_DIR/mui
 
 cp -af lighttpd.conf /usr/local/etc/config/lighttpd/mui.conf
 
+# Reload lighttpd configuration
+if [ -x /etc/init.d/S50lighttpd ]; then
+  /etc/init.d/S50lighttpd reload
+fi
+
 # Install only production dependencies on CCU3
 echo "Installing server dependencies..."
 cd $ADDON_DIR/server
-npm install --production --omit=dev 2>&1
+if ! npm install --production --omit=dev 2>&1; then
+  echo "ERROR: Failed to install dependencies"
+  exit 1
+fi
 
 # Start the WebSocket server
 $RC_DIR/mui start
