@@ -294,7 +294,8 @@ wss.on('connection', (ws: WebSocket) => {
       } else {
         // Handle plain TCL script (Node-RED compatible)
         const result = await executeRegaScript(messageStr);
-        ws.send(JSON.stringify(result));
+        // Send result directly if it's already a string (likely JSON from Rega script)
+        ws.send(typeof result === 'string' ? result : JSON.stringify(result));
       }
     } catch (err) {
       console.error('Error handling message:', err);
