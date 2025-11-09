@@ -18,7 +18,7 @@ start() {
     
     echo "Starting MUI WebSocket Server..."
     cd $SERVER_DIR
-    ./websocket-server >> $LOG_FILE 2>&1 &
+    node websocket-server.js >> $LOG_FILE 2>&1 &
     echo $! > $PID_FILE
     echo "MUI WebSocket Server started (PID: $(cat $PID_FILE))"
 }

@@ -12,10 +12,11 @@ fi
 mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
 cp -af dist/* $ADDON_DIR
 
-# Copy WebSocket server binary (no dependencies needed!)
+# Copy WebSocket server (bundled JS + package.json for dependencies)
 mkdir -p $ADDON_DIR/server
-cp -af server/websocket-server $ADDON_DIR/server/
-chmod +x $ADDON_DIR/server/websocket-server
+cp -af server/websocket-server.js $ADDON_DIR/server/
+cp -af server/package.json $ADDON_DIR/server/
+chmod +x $ADDON_DIR/server/websocket-server.js
 
 ln -sf $ADDON_DIR $WWW_DIR
 
@@ -23,6 +24,11 @@ cp -af rc.d/mui $RC_DIR/
 chmod +x $RC_DIR/mui
 
 cp -af lighttpd.conf /usr/local/etc/config/lighttpd/mui.conf
+
+# Install only production dependencies on CCU3
+echo "Installing server dependencies..."
+cd $ADDON_DIR/server
+npm install --production --omit=dev 2>&1
 
 # Start the WebSocket server
 $RC_DIR/mui start

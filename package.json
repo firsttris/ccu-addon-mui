@@ -4,14 +4,13 @@
   "license": "MIT",
   "scripts": {
     "start": "nx serve --host=0.0.0.0",
-    "build": "nx build && npm run build:server",
+    "build": "nx build",
     "postbuild": "npm run remove:build && npm run copy:build && npm run tar:gz",
     "test": "nx test",
     "remove:build": "rm -Rf addon_installer/dist addon_installer/server",
     "version:patch": "npm version patch",
     "version:current": "node -p -e \"require('./package.json').version\"",
-    "build:server": "cd server && bun install && bun run build",
-    "copy:build": "mkdir -p addon_installer/dist && cp -r dist/ccu-addon-mui/* addon_installer/dist && mkdir -p addon_installer/server && cp server/dist/websocket-server addon_installer/server/",
+    "copy:build": "mkdir -p addon_installer/dist && cp -r dist/ccu-addon-mui/* addon_installer/dist && mkdir -p addon_installer/server && cp server/dist/websocket-server.js addon_installer/server/ && cp server/package.json addon_installer/server/",
     "tar:gz": "chmod -R 777 addon_installer/ && tar -czvf mui-$(npm run version:current --silent).tar.gz -C addon_installer ."
   },
   "private": true,

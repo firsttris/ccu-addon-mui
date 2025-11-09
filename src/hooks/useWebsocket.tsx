@@ -21,7 +21,12 @@ export const useWebsocket = () => {
 
   const deviceId = useUniqueDeviceID()
 
-  const { sendMessage, lastMessage, readyState } = useWebSocket('/addons/red/ws/webapp', { shouldReconnect: () => true });
+  // Connect to WebSocket server via same host (works in dev and production)
+  const wsUrl = window.location.protocol === 'https:' 
+    ? `wss://${window.location.host}/ws/mui`
+    : `ws://${window.location.host}/ws/mui`;
+  
+  const { sendMessage, lastMessage, readyState } = useWebSocket(wsUrl, { shouldReconnect: () => true });
 
   const updateChannels = (event: HmEvent) => {
     setChannels(prevChannels =>
