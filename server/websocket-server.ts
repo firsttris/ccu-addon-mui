@@ -13,7 +13,12 @@ const CCU_HOST = process.env.CCU_HOST || 'localhost';
 const CCU_USER = process.env.CCU_USER;
 const CCU_PASS = process.env.CCU_PASS;
 
+// Port 8183 is used for local connections on CCU (no auth required for localhost)
+// Port 8181 is used for remote connections (auth required)
+const REGA_PORT = CCU_HOST === 'localhost' ? 8183 : 8181;
+
 console.log(`CCU Host: ${CCU_HOST}`);
+console.log(`Rega Port: ${REGA_PORT}`);
 console.log(`CCU Auth: ${CCU_USER ? 'enabled' : 'disabled'}`);
 
 // Types
@@ -61,7 +66,7 @@ const clients = new Set<WebSocket>();
 // CCU Rega instance
 const regaConnection = new Rega({
   host: CCU_HOST,
-  port: 8181,
+  port: REGA_PORT,
   ...(CCU_USER && CCU_PASS
     ? {
         auth: true,
@@ -73,7 +78,7 @@ const regaConnection = new Rega({
 
 // Test CCU connection
 async function testCCUConnection(): Promise<void> {
-  console.log(`Testing connection to CCU Rega at ${CCU_HOST}:8181...`);
+  console.log(`Testing connection to CCU Rega at ${CCU_HOST}:${REGA_PORT}...`);
   try {
     await executeRegaScript('Write("Hello from WebSocket Server");');
     console.log('✅ CCU Rega connection successful');
@@ -82,7 +87,7 @@ async function testCCUConnection(): Promise<void> {
       '❌ CCU Rega connection failed:',
       err instanceof Error ? err.message : String(err),
     );
-    console.error(`   Make sure ${CCU_HOST}:8181 is reachable`);
+    console.error(`Make sure ${CCU_HOST}:${REGA_PORT} is reachable`);
   }
 }
 
