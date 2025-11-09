@@ -12,11 +12,15 @@ fi
 mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
 cp -af dist/* $ADDON_DIR
 
-# Copy Node.js binary
-mkdir -p $ADDON_DIR/node
-cp -af node/* $ADDON_DIR/node/
+# Copy Node.js binary (minimal - only the node binary)
+mkdir -p $ADDON_DIR/node/bin
+cp -af node/bin/node $ADDON_DIR/node/bin/
 chmod +x $ADDON_DIR/node/bin/node
-chmod +x $ADDON_DIR/node/bin/npm
+
+# Copy LICENSE if exists
+if [ -f node/LICENSE ]; then
+  cp -af node/LICENSE $ADDON_DIR/node/
+fi
 
 # Copy WebSocket server (all dependencies are bundled)
 mkdir -p $ADDON_DIR/server
