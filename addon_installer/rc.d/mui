@@ -71,13 +71,19 @@ case "$1" in
     ;;
     
     info)
+        # Read version from VERSION file if it exists, otherwise use fallback
+        VERSION="0.0.55"
+        if [ -f "$ADDON_DIR/VERSION" ]; then
+            VERSION=$(cat "$ADDON_DIR/VERSION")
+        fi
+        
         echo "Info: <b>MUI CCU Addon</b><br>"
         echo "Info: <a href='https://github.com/firsttris/ccu-addon-mui'>https://github.com/firsttris/ccu-addon-mui</a>"
         echo "Name: MUI CCU Addon"
-        echo "Version: 0.0.55"
+        echo "Version: $VERSION"
         echo "Operations: uninstall restart"
         echo "Config-Url: /addons/mui/"
-        echo "Update: not implemented yet"
+        echo "Update: /addons/mui/update-check.cgi"
     ;;
     
     uninstall)

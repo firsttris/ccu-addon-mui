@@ -26,6 +26,18 @@ fi
 cp -af rc.d/mui $RC_DIR/
 chmod +x $RC_DIR/mui
 
+# Copy version file if it exists
+if [ -f VERSION ]; then
+  cp -af VERSION $ADDON_DIR/
+fi
+
+# Copy update-check CGI script
+if [ -f www/update-check.cgi ]; then
+  mkdir -p $ADDON_DIR/www
+  cp -af www/update-check.cgi $ADDON_DIR/www/
+  chmod +x $ADDON_DIR/www/update-check.cgi
+fi
+
 cp -af lighttpd.conf /usr/local/etc/config/lighttpd/mui.conf
 
 # Reload lighttpd configuration
