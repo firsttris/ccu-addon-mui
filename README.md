@@ -1,8 +1,8 @@
 # CCU3 Add-on: Modern Web UI
 
-This add-on aims to provide a modern, simple, fast, and responsive Progressive Web App (PWA) for your CCU3, by leveraging cutting-edge web technologies.
+A modern, fast, and responsive Progressive Web App (PWA) for your CCU3 with an integrated WebSocket server.
 
-Whether you're a developer looking to contribute or a user seeking a better interface for your CCU3, 
+Whether you're a developer looking to contribute or a user seeking a better interface for your CCU3,
 this project has something for you. Dive in to explore the features, installation steps, and how you can get involved.
 
 # Motivation
@@ -15,10 +15,21 @@ My motivation was to have a user-friendly app for the tablet in our kitchen, all
 
 This project is built with a robust set of technologies to ensure high performance and maintainability:
 
+## Frontend
+
 - [React](https://reactjs.org/): A JavaScript library for building user interfaces.
 - [TypeScript](https://www.typescriptlang.org/): A strongly typed superset of JavaScript that adds static types.
 - [Emotion](https://emotion.sh/docs/introduction): A library designed for writing CSS styles with JavaScript.
-- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API): Websocket makes it possible to open a two-way interactive communication session between the user's browser and a server.
+- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API): Two-way interactive communication between browser and server.
+- [Vite](https://vitejs.dev/): Next generation frontend tooling.
+- [Nx](https://nx.dev/): Smart, fast and extensible build system.
+
+## Backend
+
+- [Bun](https://bun.sh/): Fast all-in-one JavaScript runtime and bundler.
+- [TypeScript](https://www.typescriptlang.org/): Type-safe server code.
+- [WebSocket Server](https://github.com/websockets/ws): WebSocket implementation for Node.js.
+- [Homematic Libraries](https://github.com/hobbyquaker): XML-RPC and ReGa script support.
 
 # Prerequisites for CCU3
 
@@ -26,20 +37,24 @@ This project is built with a robust set of technologies to ensure high performan
 
    To ensure this add-on functions properly, you need to have rooms configured in your CCU3. Each room should have channels assigned with appropriate names, as the add-on queries the rooms, their channels, and the datapoints of those channels. Without this setup, the add-on will not work.
 
-2. **Install Node-Red Plugin and Import Flow**
+2. **Node.js Installation (Usually Pre-installed)**
 
-   For communication with the CCU3 over WebSocket, this add-on requires [RedMatic Node-Red](https://github.com/rdmtc/RedMatic).
+   The CCU3 typically comes with Node.js pre-installed (required for the integrated WebSocket server). If not, you may need to install it manually.
 
 # Installation
 
 To install this add-on:
-1. Install [RedMatic Node-Red](https://github.com/rdmtc/RedMatic/releases/latest).
-2. Import the [Node-Red Flow](node-red-flow.json) file into Node-Red.
-![Screenshot](docs/node-red-flow.png)
-3. Download the latest addon `tar.gz` file from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases).
-4. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
-![Screenshot](docs/ccu3-install.png)
-5. After a reboot, the add-on will be available at `http://192.168.178.111/addons/mui`. (replace with your IP).
+
+1. Download the latest addon `tar.gz` file from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases).
+2. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
+   ![Screenshot](docs/ccu3-install.png)
+3. After installation, the add-on will automatically:
+   - Install the WebSocket server
+   - Start the server service
+   - Configure lighttpd proxy
+4. The add-on will be available at `http://192.168.178.111/addons/mui` (replace with your CCU IP).
+
+**Note:** Node-RED is **no longer required**! This add-on now includes its own integrated WebSocket server.
 
 ## Setting Insecure CCU3 Origin as Secure
 
@@ -57,11 +72,13 @@ You need to set up the IP of your CCU3 as a secure origin.
 Progressive Web Apps (PWAs) can be installed on your device like native apps. Follow these steps to add our PWA to your home screen:
 
 ### On Android:
+
 1. Open the PWA in your browser (e.g., Chrome, Firefox).
 2. Tap the browser's menu (usually three dots in the top right corner).
 3. Select "Add to Home screen".
 
 ### On iOS:
+
 1. Open the PWA in Safari.
 2. Tap the Share button (the box with an upward arrow).
 3. Scroll down and select "Add to Home Screen".
@@ -78,9 +95,9 @@ NOTE: The WakeLock API may no longer be experimental by the time you read this.
 
 1. Open Chrome and go to `chrome://flags`.
 2. Search for and enable `Experimental Web Platform features`.
-4. Save and relaunch Chrome.
+3. Save and relaunch Chrome.
 
-After these steps, the WakeLock API should be enabled, preventing your screen from going into standby while using the PWA. 
+After these steps, the WakeLock API should be enabled, preventing your screen from going into standby while using the PWA.
 
 To verify if WakeLock is working, check the browser console for the following error:
 ![Screenshot](docs/WakeLock_error.png)
@@ -97,9 +114,9 @@ This project currently supports the following devices:
 ![Screenshot](docs/controls/switch.png)
 
 **Features:**
+
 - Display Light Status
 - Switch Light On/Off
-
 
 ### [Thermostat](src/controls/ThermostatControl.tsx)
 
@@ -108,12 +125,12 @@ This project currently supports the following devices:
 ![Screenshot](docs/controls/thermostat.png)
 
 **Features:**
+
 - Show Current Humidity
 - Show Target Temperature
 - Show Current Temperature
 - Show Window Open State
 - Set Target Temperature
-
 
 ### [Blinds](src/controls/BlindsControl.tsx)
 
@@ -122,14 +139,14 @@ This project currently supports the following devices:
 ![Screenshot](docs/controls/blinds.png)
 
 **Features:**
+
 - Show open percentage
 - Open/Close
 - Stop
 - Set the open percentage of the blinds by clicking on them
 
-*For this to work properly, you need to measure and configure the opening and closing times for your blinds in the CCU3.*
+_For this to work properly, you need to measure and configure the opening and closing times for your blinds in the CCU3._
 
-  
 ### [Door Operator](src/controls/DoorControl.tsx)
 
 **Channel Type:** `KEYMATIC`
@@ -137,11 +154,11 @@ This project currently supports the following devices:
 ![Screenshot](docs/controls/door-operator.png)
 
 **Features:**
+
 - Show Door Status
 - Unlock Door
 - Lock Door
 - Open Door
-
 
 ### [Floor Heating](src/controls/FloorControl.tsx)
 
@@ -150,10 +167,10 @@ This project currently supports the following devices:
 ![Screenshot](docs/controls/floor-heating.png)
 
 **Features:**
+
 - Display the opening percentage of the floor heating valve
 - Set target temperature
 - Show current temperature
-
 
 # User Interface Overview
 
@@ -167,7 +184,7 @@ Here you see all rooms configured in the ccu3, and you can select the room in wh
 
 ## Channels View
 
-This is the channels view.    
+This is the channels view.  
 Here you can see and change the state of the channels associated with the selected room.
 
 ![Screenshot](/docs/channel1.png)
@@ -201,7 +218,7 @@ I have collected an API Summary, where you have an quick overview of all methods
 
 # Issues
 
-Want to start contributing to this project? 
+Want to start contributing to this project?
 
 Please visit our [issues page](https://github.com/firsttris/ccu-addon-mui/issues) for the latest issues and feature requests.
 
