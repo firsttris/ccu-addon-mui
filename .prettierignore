@@ -3,3 +3,9 @@
 /coverage
 /.nx/cache
 /.nx/workspace-data
+*.md
+/addon_installer
+/docs
+node_modules
+*.tar.gz
+dist

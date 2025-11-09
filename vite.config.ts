@@ -33,7 +33,7 @@ export default defineConfig({
             src: 'android-chrome-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-          }
+          },
         ],
       },
     }),

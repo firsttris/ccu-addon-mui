@@ -1,4 +1,4 @@
-import styled from "@emotion/styled";
+import styled from '@emotion/styled';
 
 export const Name = styled.div`
   white-space: nowrap; /* Ensure text does not wrap to the next line */
@@ -8,11 +8,23 @@ export const Name = styled.div`
   margin-bottom: 5px;
 `;
 
-export const ChannelName = ({ name, maxWidth }: { name: string, maxWidth: string }) => {
-    return (
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '5px', maxWidth }}>
-            <Name>{name}</Name>
-        </div>
-
-    );
-}
+export const ChannelName = ({
+  name,
+  maxWidth,
+}: {
+  name: string;
+  maxWidth: string;
+}) => {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        marginBottom: '5px',
+        maxWidth,
+      }}
+    >
+      <Name>{name}</Name>
+    </div>
+  );
+};

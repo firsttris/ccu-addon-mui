@@ -11,7 +11,7 @@ const Container = styled.div`
   flex-direction: column;
   gap: 10px;
   max-width: 1280px;
-  margin: 0 auto; 
+  margin: 0 auto;
   padding-top: 25px;
 `;
 
@@ -36,7 +36,7 @@ const IconButton = styled.button`
   }
 
   &:hover {
-    background-color: #e0e0e0; 
+    background-color: #e0e0e0;
     border-radius: 50%;
   }
 `;
@@ -79,7 +79,7 @@ export const Room = () => {
   }, [channels]);
 
   return (
-    <div style={{ margin: '15px'}}>
+    <div style={{ margin: '15px' }}>
       <Header>
         <IconButton onClick={() => navigate('/')} aria-label="Back to home">
           <MdiMenu width={35} />

@@ -168,20 +168,24 @@ function connectToCCU(interfaceName: string, port: number): void {
   console.log(
     `Attempting to connect to ${interfaceName} at ${CCU_HOST}:${port}...`,
   );
-  
-  const clientOptions: { host: string; port: number; basic_auth?: { user: string; pass: string } } = { 
-    host: CCU_HOST, 
-    port: port 
+
+  const clientOptions: {
+    host: string;
+    port: number;
+    basic_auth?: { user: string; pass: string };
+  } = {
+    host: CCU_HOST,
+    port: port,
   };
-  
+
   // Add basic auth if credentials are provided
   if (CCU_USER && CCU_PASS) {
     clientOptions.basic_auth = {
       user: CCU_USER,
-      pass: CCU_PASS
+      pass: CCU_PASS,
     };
   }
-  
+
   const client = xmlrpc.createClient(clientOptions);
   rpcClients[interfaceName] = client;
 
@@ -234,16 +238,13 @@ function broadcastToClients(data: CCUEvent): void {
 // Execute Rega script
 async function executeRegaScript(script: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
-    regaConnection.exec(
-      script,
-      function (err: Error | null, result: unknown) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result);
-        }
-      },
-    );
+    regaConnection.exec(script, function (err: Error | null, result: unknown) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
   });
 }
 

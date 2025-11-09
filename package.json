@@ -7,6 +7,8 @@
     "build": "nx build",
     "postbuild": "npm run remove:build && npm run copy:build && npm run tar:gz",
     "test": "nx test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "remove:build": "rm -Rf addon_installer/dist addon_installer/server",
     "version:patch": "npm version patch",
     "version:current": "node -p -e \"require('./package.json').version\"",

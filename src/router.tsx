@@ -16,18 +16,14 @@ export const Router = () => {
       },
       {
         path: '/rooms',
-        element: (
-          <Rooms />
-        ),
+        element: <Rooms />,
       },
       {
         path: '/room/:roomId',
-        element: (
-          <Room />
-        ),
-      }
+        element: <Room />,
+      },
     ],
-    { basename }
+    { basename },
   );
 
   return <RouterProvider router={router} />;

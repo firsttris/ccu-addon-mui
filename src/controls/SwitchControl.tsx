@@ -38,10 +38,8 @@ export const SwitchControl = ({ channel }: ControlProps) => {
   return (
     <CardHeader onClick={onHandleChange}>
       <Name>{name}</Name>
-      <div style={{ marginTop: '10px'}}>
-        {
-          checked ? <EmojioneLightBulb /> : <EmojioneMonotoneLightBulb />
-        }
+      <div style={{ marginTop: '10px' }}>
+        {checked ? <EmojioneLightBulb /> : <EmojioneMonotoneLightBulb />}
       </div>
     </CardHeader>
   );

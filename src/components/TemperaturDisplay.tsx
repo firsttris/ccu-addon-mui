@@ -12,12 +12,12 @@ const Display = styled.div({
 const Temperature = styled.div({
   fontSize: '60px',
   fontWeight: 'bold',
-  display: 'flex'
+  display: 'flex',
 });
 
 const Unit = styled.sup({
   fontSize: '18px',
-  marginTop: '8px'
+  marginTop: '8px',
 });
 
 interface CurrentTemperatureProps {
