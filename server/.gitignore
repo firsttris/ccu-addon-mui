@@ -10,3 +10,6 @@ dist/
 # Ignore OS files
 .DS_Store
 Thumbs.db
+
+# Ignore environment variables
+.env

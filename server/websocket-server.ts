@@ -2,14 +2,19 @@
 
 import { WebSocketServer, WebSocket } from 'ws';
 import { createServer } from 'http';
-import * as xmlrpc from 'homematic-xmlrpc';
-import * as rega from 'homematic-rega';
+import xmlrpc from 'homematic-xmlrpc';
+import Rega from 'homematic-rega';
 
 // Configuration
 const WS_PORT = 8088;
 const RPC_PORT = 2001; // BidCos-RF
 const HMIP_PORT = 2010; // HmIP-RF
-const CCU_HOST = 'localhost';
+const CCU_HOST = process.env.CCU_HOST || 'localhost';
+const CCU_USER = process.env.CCU_USER;
+const CCU_PASS = process.env.CCU_PASS;
+
+console.log(`CCU Host: ${CCU_HOST}`);
+console.log(`CCU Auth: ${CCU_USER ? 'enabled' : 'disabled'}`);
 
 // Types
 interface CCUEvent {
@@ -17,7 +22,7 @@ interface CCUEvent {
     interface: string;
     channel: string;
     datapoint: string;
-    value: any;
+    value: unknown;
     timestamp: string;
   };
 }
@@ -25,10 +30,26 @@ interface CCUEvent {
 interface RPCClient {
   methodCall(
     method: string,
-    params: any[],
-    callback: (err: Error | null, result?: any) => void,
+    params: unknown[],
+    callback: (err: Error | null, result?: unknown) => void,
   ): void;
 }
+
+interface ScriptMessage {
+  type: 'script';
+  script: string;
+  requestId?: string;
+}
+
+interface SetValueMessage {
+  type: 'setValue';
+  address: string;
+  datapoint: string;
+  value: unknown;
+  requestId?: string;
+}
+
+type WebSocketMessage = ScriptMessage | SetValueMessage;
 
 // Create HTTP server for WebSocket
 const server = createServer();
@@ -38,28 +59,52 @@ const wss = new WebSocketServer({ server });
 const clients = new Set<WebSocket>();
 
 // CCU Rega instance
-const regaConnection = new (rega as any).Rega({
+const regaConnection = new Rega({
   host: CCU_HOST,
   port: 8181,
+  ...(CCU_USER && CCU_PASS
+    ? {
+        auth: true,
+        user: CCU_USER,
+        pass: CCU_PASS,
+      }
+    : {}),
 });
 
+// Test CCU connection
+async function testCCUConnection(): Promise<void> {
+  console.log(`Testing connection to CCU Rega at ${CCU_HOST}:8181...`);
+  try {
+    await executeRegaScript('Write("Hello from WebSocket Server");');
+    console.log('✅ CCU Rega connection successful');
+  } catch (err) {
+    console.error(
+      '❌ CCU Rega connection failed:',
+      err instanceof Error ? err.message : String(err),
+    );
+    console.error(`   Make sure ${CCU_HOST}:8181 is reachable`);
+  }
+}
+
 // RPC Server to receive events from CCU
-let rpcServer: any;
+let rpcServer: ReturnType<typeof xmlrpc.createServer>;
 const rpcClients: Record<string, RPCClient> = {};
 
 // Initialize RPC connections
 function initRPC(): void {
   // Create RPC server to receive events
-  rpcServer = (xmlrpc as any).createServer({ host: '127.0.0.1', port: 9099 });
+  rpcServer = xmlrpc.createServer({ host: '127.0.0.1', port: 9099 });
 
   rpcServer.on(
     'system.multicall',
     function (
       _method: string,
-      params: any[],
+      params: unknown[],
       callback: (err: null | Error, result?: string) => void,
     ) {
-      params[0].forEach(function (event: any) {
+      (
+        params[0] as Array<{ params: [string, string, string, unknown] }>
+      ).forEach(function (event) {
         handleCCUEvent(
           event.params[0],
           event.params[1],
@@ -75,10 +120,15 @@ function initRPC(): void {
     'event',
     function (
       _err: Error,
-      params: any[],
+      params: unknown[],
       callback: (err: null | Error, result?: string) => void,
     ) {
-      handleCCUEvent(params[0], params[1], params[2], params[3]);
+      handleCCUEvent(
+        params[0] as string,
+        params[1] as string,
+        params[2] as string,
+        params[3],
+      );
       callback(null, '');
     },
   );
@@ -87,7 +137,7 @@ function initRPC(): void {
     'newDevices',
     function (
       _err: Error,
-      _params: any[],
+      _params: unknown[],
       callback: (err: null | Error, result?: string) => void,
     ) {
       console.log('New devices detected');
@@ -99,7 +149,7 @@ function initRPC(): void {
     'deleteDevices',
     function (
       _err: Error,
-      _params: any[],
+      _params: unknown[],
       callback: (err: null | Error, result?: string) => void,
     ) {
       console.log('Devices deleted');
@@ -115,7 +165,24 @@ function initRPC(): void {
 }
 
 function connectToCCU(interfaceName: string, port: number): void {
-  const client = (xmlrpc as any).createClient({ host: CCU_HOST, port: port });
+  console.log(
+    `Attempting to connect to ${interfaceName} at ${CCU_HOST}:${port}...`,
+  );
+  
+  const clientOptions: { host: string; port: number; basic_auth?: { user: string; pass: string } } = { 
+    host: CCU_HOST, 
+    port: port 
+  };
+  
+  // Add basic auth if credentials are provided
+  if (CCU_USER && CCU_PASS) {
+    clientOptions.basic_auth = {
+      user: CCU_USER,
+      pass: CCU_PASS
+    };
+  }
+  
+  const client = xmlrpc.createClient(clientOptions);
   rpcClients[interfaceName] = client;
 
   // Register callback URL
@@ -124,9 +191,10 @@ function connectToCCU(interfaceName: string, port: number): void {
     ['http://127.0.0.1:9099', interfaceName],
     function (err: Error | null) {
       if (err) {
-        console.error(`Failed to initialize ${interfaceName}:`, err.message);
+        console.error(`❌ Failed to initialize ${interfaceName}:`, err.message);
+        console.error(`   Make sure ${CCU_HOST}:${port} is reachable`);
       } else {
-        console.log(`Connected to ${interfaceName} on port ${port}`);
+        console.log(`✅ Connected to ${interfaceName} on ${CCU_HOST}:${port}`);
       }
     },
   );
@@ -137,7 +205,7 @@ function handleCCUEvent(
   interfaceName: string,
   address: string,
   datapoint: string,
-  value: any,
+  value: unknown,
 ): void {
   const event = {
     event: {
@@ -164,15 +232,18 @@ function broadcastToClients(data: CCUEvent): void {
 }
 
 // Execute Rega script
-async function executeRegaScript(script: string): Promise<any> {
+async function executeRegaScript(script: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
-    regaConnection.script(script, function (err: Error | null, result: any) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(result);
-      }
-    });
+    regaConnection.exec(
+      script,
+      function (err: Error | null, result: unknown) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      },
+    );
   });
 }
 
@@ -181,13 +252,13 @@ wss.on('connection', (ws: WebSocket) => {
   console.log('New WebSocket client connected');
   clients.add(ws);
 
-  ws.on('message', async (message: any) => {
+  ws.on('message', async (message: Buffer | ArrayBuffer | Buffer[]) => {
     try {
       const messageStr = message.toString();
 
       // Try to parse as JSON first (for future compatibility)
       let isJson = false;
-      let data: any;
+      let data: unknown;
       try {
         data = JSON.parse(messageStr);
         isJson = true;
@@ -196,26 +267,27 @@ wss.on('connection', (ws: WebSocket) => {
         isJson = false;
       }
 
-      if (isJson) {
+      if (isJson && data && typeof data === 'object') {
         // Handle JSON messages (new format)
-        if (data.type === 'script') {
-          const result = await executeRegaScript(data.script);
+        const msg = data as WebSocketMessage;
+        if (msg.type === 'script') {
+          const result = await executeRegaScript(msg.script);
           ws.send(
             JSON.stringify({
               type: 'script_response',
               result: result,
-              requestId: data.requestId,
+              requestId: msg.requestId,
             }),
           );
-        } else if (data.type === 'setValue') {
-          const { address, datapoint, value } = data;
+        } else if (msg.type === 'setValue') {
+          const { address, datapoint, value } = msg;
           const script = `dom.GetObject("${address}").DPByHssDP("${datapoint}").State(${value});`;
           const result = await executeRegaScript(script);
           ws.send(
             JSON.stringify({
               type: 'setValue_response',
               result: result,
-              requestId: data.requestId,
+              requestId: msg.requestId,
             }),
           );
         }
@@ -254,6 +326,11 @@ server.listen(WS_PORT, () => {
 
 // Initialize RPC
 initRPC();
+
+// Test CCU connection after startup
+setTimeout(() => {
+  testCCUConnection();
+}, 1000);
 
 // Cleanup on exit
 process.on('SIGTERM', () => {
