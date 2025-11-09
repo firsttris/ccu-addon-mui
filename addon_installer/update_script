@@ -12,6 +12,12 @@ fi
 mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
 cp -af dist/* $ADDON_DIR
 
+# Copy Node.js binary
+mkdir -p $ADDON_DIR/node
+cp -af node/* $ADDON_DIR/node/
+chmod +x $ADDON_DIR/node/bin/node
+chmod +x $ADDON_DIR/node/bin/npm
+
 # Copy WebSocket server (bundled JS + package.json for dependencies)
 mkdir -p $ADDON_DIR/server
 cp -af server/websocket-server.js $ADDON_DIR/server/
@@ -48,7 +54,7 @@ fi
 # Install only production dependencies on CCU3
 echo "Installing server dependencies..."
 cd $ADDON_DIR/server
-if ! npm install --production --omit=dev 2>&1; then
+if ! $ADDON_DIR/node/bin/npm install --production --omit=dev 2>&1; then
   echo "ERROR: Failed to install dependencies"
   exit 1
 fi

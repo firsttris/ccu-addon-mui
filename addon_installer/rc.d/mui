@@ -2,6 +2,7 @@
 
 ADDON_DIR="/usr/local/addons/mui"
 SERVER_DIR="$ADDON_DIR/server"
+NODE_BIN="$ADDON_DIR/node/bin/node"
 PID_FILE="/var/run/mui-websocket-server.pid"
 LOG_FILE="/var/log/mui-websocket-server.log"
 
@@ -18,7 +19,7 @@ start() {
     
     echo "Starting MUI WebSocket Server..."
     cd $SERVER_DIR
-    node websocket-server.js >> $LOG_FILE 2>&1 &
+    $NODE_BIN websocket-server.js >> $LOG_FILE 2>&1 &
     echo $! > $PID_FILE
     echo "MUI WebSocket Server started (PID: $(cat $PID_FILE))"
 }
