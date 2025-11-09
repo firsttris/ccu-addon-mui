@@ -18,10 +18,9 @@ cp -af node/* $ADDON_DIR/node/
 chmod +x $ADDON_DIR/node/bin/node
 chmod +x $ADDON_DIR/node/bin/npm
 
-# Copy WebSocket server (bundled JS + package.json for dependencies)
+# Copy WebSocket server (all dependencies are bundled)
 mkdir -p $ADDON_DIR/server
 cp -af server/websocket-server.js $ADDON_DIR/server/
-cp -af server/package.json $ADDON_DIR/server/
 chmod +x $ADDON_DIR/server/websocket-server.js
 
 # Create symlink only if it doesn't exist
@@ -51,16 +50,7 @@ if [ -x /etc/init.d/S50lighttpd ]; then
   /etc/init.d/S50lighttpd reload
 fi
 
-# Install only production dependencies on CCU3
-echo "Installing server dependencies..."
-cd $ADDON_DIR/server
-if ! $ADDON_DIR/node/bin/npm install --production --omit=dev 2>&1; then
-  echo "ERROR: Failed to install dependencies"
-  exit 1
-fi
-
-# Start the WebSocket server
-$RC_DIR/mui start
+# No need to install dependencies - everything is bundled in websocket-server.js
 
 sync
 
