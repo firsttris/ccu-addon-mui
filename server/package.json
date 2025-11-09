@@ -1,0 +1,15 @@
+{
+  "name": "ccu-addon-mui-server",
+  "version": "1.0.0",
+  "description": "WebSocket Server for CCU3 MUI Addon",
+  "main": "websocket-server.js",
+  "scripts": {
+    "start": "node websocket-server.js",
+    "build": "bun build --compile --minify --sourcemap ./websocket-server.js --outfile ./dist/websocket-server"
+  },
+  "dependencies": {
+    "ws": "^8.18.3",
+    "homematic-xmlrpc": "^1.0.2",
+    "homematic-rega": "^1.5.2"
+  }
+}

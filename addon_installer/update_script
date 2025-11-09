@@ -12,12 +12,20 @@ fi
 mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
 cp -af dist/* $ADDON_DIR
 
+# Copy WebSocket server binary (no dependencies needed!)
+mkdir -p $ADDON_DIR/server
+cp -af server/websocket-server $ADDON_DIR/server/
+chmod +x $ADDON_DIR/server/websocket-server
+
 ln -sf $ADDON_DIR $WWW_DIR
 
 cp -af rc.d/mui $RC_DIR/
 chmod +x $RC_DIR/mui
 
 cp -af lighttpd.conf /usr/local/etc/config/lighttpd/mui.conf
+
+# Start the WebSocket server
+$RC_DIR/mui start
 
 sync
 
