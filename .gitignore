@@ -46,3 +46,4 @@ vitest.config.*.timestamp*
 
 # TanStack Router
 routeTree.gen.ts
+addon_installer/server/websocket-server.js
