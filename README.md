@@ -49,12 +49,24 @@ To install this add-on:
 2. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
    ![Screenshot](docs/ccu3-install.png)
 3. After installation, the add-on will automatically:
-   - Install the WebSocket server
+   - Install the WebSocket server and dependencies
    - Start the server service
-   - Configure lighttpd proxy
+   - Configure lighttpd proxy for WebSocket connections
+   - Set up version tracking for update checks
 4. The add-on will be available at `http://192.168.178.111/addons/mui` (replace with your CCU IP).
 
-**Note:** Node-RED is **no longer required**! This add-on now includes its own integrated WebSocket server.
+**Note:** Node-RED is **no longer required**! This add-on now includes its own integrated WebSocket server that:
+- Runs natively on the CCU3
+- Uses port 8183 for local ReGa connections (no authentication needed)
+- Automatically handles CCU events via XML-RPC
+- Provides real-time updates via WebSocket
+
+## Updates
+
+The CCU3 will automatically check for new versions via GitHub Releases. When an update is available:
+1. Go to Settings → Additional Software
+2. Check for updates
+3. Download and install the new version
 
 ## Setting Insecure CCU3 Origin as Secure
 

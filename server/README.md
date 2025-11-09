@@ -33,7 +33,7 @@ Der WebSocket-Server ersetzt den bisherigen Node-RED Flow und läuft als optimie
          ▼
 ┌─────────────────┐
 │   CCU3 ReGa     │
-│   (Port 8181)   │
+│  (Port 8183)    │ Local: 8183 (no auth), Remote: 8181 (with auth)
 └─────────────────┘
 ```
 
@@ -103,8 +103,10 @@ Das Addon wird automatisch mit dem `update_script` installiert:
 
 1. Frontend-Dateien werden nach `/usr/local/addons/mui` kopiert
 2. **Server-Bundle** (`websocket-server.js` + `package.json`) wird nach `/usr/local/addons/mui/server/` kopiert
-3. **Dependencies installieren**: `npm install --production` (nur 3 Packages: ws, homematic-xmlrpc, homematic-rega)
-4. WebSocket-Server wird gestartet
+3. **VERSION Datei** wird kopiert (für Update-Check in CCU UI)
+4. **Dependencies installieren**: `npm install --production` (nur 3 Packages: ws, homematic-xmlrpc, homematic-rega)
+5. **lighttpd konfigurieren** und neu laden
+6. **WebSocket-Server starten** via rc.d Script
 
 ## Build
 
@@ -153,6 +155,29 @@ Der Server wird über das rc.d Script verwaltet:
 # Deinstallation
 /usr/local/etc/config/rc.d/mui uninstall
 ```
+
+## Konfiguration
+
+### Entwicklung (lokal)
+
+Für die Entwicklung von außerhalb der CCU nutze eine `.env` Datei:
+
+```env
+CCU_HOST=192.168.178.26
+CCU_USER=Admin
+CCU_PASS=your-password
+```
+
+Der Server nutzt dann:
+- Port **8181** für Rega (mit Authentifizierung)
+- Externe CCU-Adresse
+
+### Production (auf CCU installiert)
+
+Auf der CCU werden **keine** Umgebungsvariablen benötigt:
+- Automatisch `localhost` als Host
+- Port **8183** für Rega (keine Authentifizierung nötig für lokale Verbindungen)
+- Keine Credentials erforderlich
 
 ## Logs
 
@@ -214,5 +239,3 @@ Der Server nutzt **Bun** für den Build-Prozess:
 
 - Nur die 3 Runtime-Dependencies (`ws`, `homematic-xmlrpc`, `homematic-rega`)
 - Installiert via `npm install --production` während Addon-Installation
-
-**Auf der CCU3**: Keine! Alles ist in der Binary gebundelt.
