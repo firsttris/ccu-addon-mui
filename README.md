@@ -204,14 +204,33 @@ Here you can see and change the state of the channels associated with the select
 
 # Development and Build
 
+## Prerequisites
+
+To build this project, you need:
+
+- **[Node.js](https://nodejs.org/)** (v18 or higher) - for npm and build tools
+- **[Bun](https://bun.sh/)** (latest) - for bundling the WebSocket server
+  ```bash
+  # Install Bun
+  curl -fsSL https://bun.sh/install | bash
+  ```
+
+## Setup
+
 To develop and build this project, follow these steps:
 
-1. Clone the repository: `git clone https://github.com/ccu-addon-mui.git`
+1. Clone the repository: `git clone https://github.com/firsttris/ccu-addon-mui.git`
 2. Navigate into the project directory: `cd ccu-addon-mui`
 3. Install the dependencies: `npm install`
 4. Set your CCU3 IP in: [proxy.config.json](proxy.config.json)
 5. Start the development server: `npm start`
 6. To build the project, use: `npm run build`
+
+This will:
+- Build the frontend React app
+- Bundle the WebSocket server with all dependencies
+- Download the Node.js ARM32 binary for CCU3
+- Create a `.tar.gz` addon package ready for installation
 
 ## WebSocket Testing
 
