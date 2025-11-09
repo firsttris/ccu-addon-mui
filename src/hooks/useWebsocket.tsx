@@ -13,6 +13,7 @@ interface Response {
   channels?: Channel[];
   event?: HmEvent;
   deviceId?: string;
+  success?: boolean;
 }
 
 export const useWebsocket = () => {
@@ -50,28 +51,47 @@ export const useWebsocket = () => {
 
   useEffect(() => {
     if (lastMessage !== null) {
-      const response = JSON.parse(lastMessage.data) as Response;
-      if (response.event) {
-        updateChannels(response.event);
-        return;
-      }
+      try {
+        if (!lastMessage.data || lastMessage.data.trim() === '') {
+          return;
+        }
 
-      if (response.deviceId !== deviceId) {
-        console.warn(
-          'Device ID mismatch! Expected:',
-          deviceId,
-          'Received:',
-          response.deviceId,
-        );
-        return;
-      }
-      if (response.rooms) {
-        setRooms(response.rooms);
-        return;
-      }
-      if (response.channels) {
-        setChannels(response.channels);
-        return;
+        const response = JSON.parse(lastMessage.data) as Response;
+
+        // Handle events (no deviceId needed)
+        if (response.event) {
+          updateChannels(response.event);
+          return;
+        }
+
+        // Handle success responses (no deviceId needed)
+        if (response.success !== undefined) {
+          return;
+        }
+
+        // For rooms and channels, check deviceId
+        if (response.rooms || response.channels) {
+          if (response.deviceId !== deviceId) {
+            console.warn(
+              'Device ID mismatch! Expected:',
+              deviceId,
+              'Received:',
+              response.deviceId,
+            );
+            return;
+          }
+
+          if (response.rooms) {
+            setRooms(response.rooms);
+            return;
+          }
+          if (response.channels) {
+            setChannels(response.channels);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
       }
     }
   }, [lastMessage]);
