@@ -5,7 +5,7 @@
   "main": "websocket-server.ts",
   "scripts": {
     "start": "bun websocket-server.ts",
-    "build": "mkdir -p dist && bun build --target=node --minify --sourcemap --external ws --external homematic-xmlrpc --external homematic-rega ./websocket-server.ts --outfile websocket-server.js && mv websocket-server.js websocket-server.js.map dist/ && chmod +x dist/websocket-server.js"
+    "build": "bun build --target=node --minify --sourcemap --external ws --external homematic-xmlrpc --external homematic-rega ./websocket-server.ts --outdir dist && chmod +x dist/websocket-server.js"
   },
   "dependencies": {
     "ws": "^8.14.2",
