@@ -97,8 +97,11 @@ const rpcClients: Record<string, RPCClient> = {};
 
 // Initialize RPC connections
 function initRPC(): void {
+  console.log('🚀 Initializing RPC connections...');
+
   // Create RPC server to receive events
   rpcServer = xmlrpc.createServer({ host: '127.0.0.1', port: 9099 });
+  console.log('✅ RPC Server created on 127.0.0.1:9099');
 
   rpcServer.on(
     'system.multicall',
@@ -107,9 +110,21 @@ function initRPC(): void {
       params: unknown[],
       callback: (err: null | Error, result?: string) => void,
     ) {
+      console.log(
+        '📨 Received system.multicall with',
+        params[0] ? (params[0] as Array<unknown>).length : 0,
+        'events',
+      );
       (
         params[0] as Array<{ params: [string, string, string, unknown] }>
-      ).forEach(function (event) {
+      ).forEach(function (event, index) {
+        console.log(
+          `  Event ${index + 1}:`,
+          event.params[0],
+          event.params[1],
+          event.params[2],
+          event.params[3],
+        );
         handleCCUEvent(
           event.params[0],
           event.params[1],
@@ -128,6 +143,13 @@ function initRPC(): void {
       params: unknown[],
       callback: (err: null | Error, result?: string) => void,
     ) {
+      console.log(
+        '📨 Received single event:',
+        params[0],
+        params[1],
+        params[2],
+        params[3],
+      );
       handleCCUEvent(
         params[0] as string,
         params[1] as string,
@@ -142,10 +164,10 @@ function initRPC(): void {
     'newDevices',
     function (
       _err: Error,
-      _params: unknown[],
+      params: unknown[],
       callback: (err: null | Error, result?: string) => void,
     ) {
-      console.log('New devices detected');
+      console.log('🆕 New devices detected:', params);
       callback(null, '');
     },
   );
@@ -154,10 +176,10 @@ function initRPC(): void {
     'deleteDevices',
     function (
       _err: Error,
-      _params: unknown[],
+      params: unknown[],
       callback: (err: null | Error, result?: string) => void,
     ) {
-      console.log('Devices deleted');
+      console.log('🗑️ Devices deleted:', params);
       callback(null, '');
     },
   );
@@ -166,12 +188,12 @@ function initRPC(): void {
   connectToCCU('BidCos-RF', RPC_PORT);
   connectToCCU('HmIP-RF', HMIP_PORT);
 
-  console.log('RPC Server started on port 9099');
+  console.log('✅ RPC Server started on port 9099');
 }
 
 function connectToCCU(interfaceName: string, port: number): void {
   console.log(
-    `Attempting to connect to ${interfaceName} at ${CCU_HOST}:${port}...`,
+    `🔌 Attempting to connect to ${interfaceName} at ${CCU_HOST}:${port}...`,
   );
 
   const clientOptions: {
@@ -185,6 +207,7 @@ function connectToCCU(interfaceName: string, port: number): void {
 
   // Add basic auth if credentials are provided
   if (CCU_USER && CCU_PASS) {
+    console.log(`🔑 Using basic auth for ${interfaceName}`);
     clientOptions.basic_auth = {
       user: CCU_USER,
       pass: CCU_PASS,
@@ -194,16 +217,27 @@ function connectToCCU(interfaceName: string, port: number): void {
   const client = xmlrpc.createClient(clientOptions);
   rpcClients[interfaceName] = client;
 
-  // Register callback URL
+  console.log(
+    `📞 Calling init on ${interfaceName} with callback URL: http://127.0.0.1:9099`,
+  );
+
+  // Register callback URL with unique interface ID
+  // Using a unique ID like 'websocket-server-BidCos-RF' to avoid conflicts
+  const interfaceId = `websocket-server-${interfaceName}`;
+
   client.methodCall(
     'init',
-    ['http://127.0.0.1:9099', interfaceName],
+    ['http://127.0.0.1:9099', interfaceId],
     function (err: Error | null) {
       if (err) {
         console.error(`❌ Failed to initialize ${interfaceName}:`, err.message);
         console.error(`   Make sure ${CCU_HOST}:${port} is reachable`);
+        console.error(`   Full error:`, err);
       } else {
         console.log(`✅ Connected to ${interfaceName} on ${CCU_HOST}:${port}`);
+        console.log(
+          `✅ ${interfaceName} will now send events to http://127.0.0.1:9099 with ID: ${interfaceId}`,
+        );
       }
     },
   );
@@ -216,6 +250,13 @@ function handleCCUEvent(
   datapoint: string,
   value: unknown,
 ): void {
+  console.log('🔔 CCU Event:', {
+    interface: interfaceName,
+    address: address,
+    datapoint: datapoint,
+    value: value,
+  });
+
   const event = {
     event: {
       interface: interfaceName,
@@ -228,6 +269,7 @@ function handleCCUEvent(
 
   // Broadcast to all connected WebSocket clients
   broadcastToClients(event);
+  console.log('📤 Event broadcasted to', clients.size, 'WebSocket clients');
 }
 
 // Broadcast message to all WebSocket clients
@@ -255,7 +297,10 @@ async function executeRegaScript(script: string): Promise<unknown> {
 
 // WebSocket server
 wss.on('connection', (ws: WebSocket) => {
-  console.log('New WebSocket client connected');
+  console.log(
+    '🔗 New WebSocket client connected. Total clients:',
+    clients.size + 1,
+  );
   clients.add(ws);
 
   ws.on('message', async (message: Buffer | ArrayBuffer | Buffer[]) => {
@@ -315,12 +360,15 @@ wss.on('connection', (ws: WebSocket) => {
   });
 
   ws.on('close', () => {
-    console.log('WebSocket client disconnected');
+    console.log(
+      '🔌 WebSocket client disconnected. Remaining clients:',
+      clients.size - 1,
+    );
     clients.delete(ws);
   });
 
   ws.on('error', (err: Error) => {
-    console.error('WebSocket error:', err);
+    console.error('❌ WebSocket error:', err);
     clients.delete(ws);
   });
 });
@@ -341,18 +389,17 @@ setTimeout(() => {
 
 // Cleanup on exit
 process.on('SIGTERM', () => {
-  console.log('Shutting down...');
+  console.log('🛑 Shutting down...');
 
   // Unregister from CCU interfaces
   Object.keys(rpcClients).forEach((interfaceName) => {
-    rpcClients[interfaceName].methodCall(
-      'init',
-      ['http://127.0.0.1:9099', ''],
-      (err) => {
-        if (err)
-          console.error(`Failed to unregister ${interfaceName}:`, err.message);
-      },
-    );
+    const interfaceId = `websocket-server-${interfaceName}`;
+    console.log(`📤 Unregistering ${interfaceId}...`);
+    rpcClients[interfaceName].methodCall('init', ['', ''], (err) => {
+      if (err)
+        console.error(`❌ Failed to unregister ${interfaceName}:`, err.message);
+      else console.log(`✅ Unregistered ${interfaceId}`);
+    });
   });
 
   wss.close();
@@ -361,6 +408,6 @@ process.on('SIGTERM', () => {
 });
 
 process.on('SIGINT', () => {
-  console.log('Shutting down...');
+  console.log('🛑 Shutting down (SIGINT)...');
   process.exit(0);
 });
