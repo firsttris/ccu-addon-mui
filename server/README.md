@@ -28,6 +28,9 @@ Der WebSocket-Server ersetzt den bisherigen Node-RED Flow und läuft als optimie
 │  WebSocket      │◄──── Lighttpd Proxy (/ws/mui)
 │  Server         │      ◄──── WebSocket Clients (Browser)
 │  (Port 8088)    │
+│                 │
+│  RPC Server     │◄──── CCU sendet Events hierher
+│  (Port 9099)    │      (via CALLBACK_HOST)
 └────────┬────────┘
          │ ReGa Scripts
          ▼
@@ -36,6 +39,13 @@ Der WebSocket-Server ersetzt den bisherigen Node-RED Flow und läuft als optimie
 │  (Port 8183)    │ Local: 8183 (no auth), Remote: 8181 (with auth)
 └─────────────────┘
 ```
+
+### Event-Flow
+
+1. **CCU Gerät ändert Status** (z.B. Schalter wird betätigt)
+2. **CCU XML-RPC Interface** (BidCos-RF/HmIP-RF) sendet Event an `http://CALLBACK_HOST:9099`
+3. **WebSocket Server** empfängt Event und broadcastet an alle verbundenen Browser
+4. **Browser** empfängt Event und aktualisiert UI
 
 ## Dateien
 
@@ -107,6 +117,40 @@ Das Addon wird automatisch mit dem `update_script` installiert:
 4. **Dependencies installieren**: `npm install --production` (nur 3 Packages: ws, homematic-xmlrpc, homematic-rega)
 5. **lighttpd konfigurieren** und neu laden
 6. **WebSocket-Server starten** via rc.d Script
+
+## Umgebungsvariablen
+
+Der Server kann über Umgebungsvariablen konfiguriert werden:
+
+| Variable | Beschreibung | Default | Beispiel |
+|----------|--------------|---------|----------|
+| `CCU_HOST` | IP/Hostname der CCU | `localhost` | `192.168.178.26` |
+| `CCU_USER` | CCU Username für ReGa (optional bei localhost) | - | `Admin` |
+| `CCU_PASS` | CCU Passwort für ReGa (optional bei localhost) | - | `yourpassword` |
+| `CALLBACK_HOST` | IP wo DIESER Server läuft und CCU ihn erreichen kann | `127.0.0.1` | `192.168.178.134` |
+
+### Wichtig: CALLBACK_HOST
+
+- **Auf der CCU selbst**: `CALLBACK_HOST=127.0.0.1` (Standard)
+- **Lokale Entwicklung**: `CALLBACK_HOST=<Ihre-Dev-Machine-IP>` (z.B. `192.168.178.134`)
+
+Die CCU muss den RPC-Server (Port 9099) unter dieser Adresse erreichen können, um Events zu senden!
+
+### Beispiel .env für lokale Entwicklung:
+
+```env
+CCU_HOST=192.168.178.26
+CCU_USER=Admin
+CCU_PASS=yourpassword
+CALLBACK_HOST=192.168.178.134
+```
+
+### Beispiel für Produktion (auf CCU):
+
+```env
+# CCU_HOST=localhost (default, kann weggelassen werden)
+# CALLBACK_HOST=127.0.0.1 (default, kann weggelassen werden)
+```
 
 ## Build
 

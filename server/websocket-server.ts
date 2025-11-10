@@ -9,15 +9,22 @@ import Rega from 'homematic-rega';
 const WS_PORT = 8088;
 const RPC_PORT = 2001; // BidCos-RF
 const HMIP_PORT = 2010; // HmIP-RF
+const RPC_SERVER_PORT = 9099;
 const CCU_HOST = process.env.CCU_HOST || 'localhost';
 const CCU_USER = process.env.CCU_USER;
 const CCU_PASS = process.env.CCU_PASS;
+
+// CALLBACK_HOST is the IP/hostname where THIS server runs and CCU can reach it
+// - On CCU itself: use 'localhost' or '127.0.0.1'
+// - For local development: use your dev machine's IP (e.g., '192.168.178.134')
+const CALLBACK_HOST = process.env.CALLBACK_HOST || '127.0.0.1';
 
 // Port 8183 is used for local connections on CCU (no auth required for localhost)
 // Port 8181 is used for remote connections (auth required)
 const REGA_PORT = CCU_HOST === 'localhost' ? 8183 : 8181;
 
 console.log(`CCU Host: ${CCU_HOST}`);
+console.log(`Callback Host: ${CALLBACK_HOST}`);
 console.log(`Rega Port: ${REGA_PORT}`);
 console.log(`CCU Auth: ${CCU_USER ? 'enabled' : 'disabled'}`);
 
@@ -100,9 +107,14 @@ function initRPC(): void {
   console.log('🚀 Initializing RPC connections...');
 
   // Create RPC server to receive events
-  rpcServer = xmlrpc.createServer({ host: '127.0.0.1', port: 9099 });
-  console.log('✅ RPC Server created on 127.0.0.1:9099');
+  // Bind to 0.0.0.0 to accept connections from CCU (if running remotely)
+  const bindHost =
+    CALLBACK_HOST === '127.0.0.1' || CALLBACK_HOST === 'localhost'
+      ? '127.0.0.1'
+      : '0.0.0.0';
 
+  rpcServer = xmlrpc.createServer({ host: bindHost, port: RPC_SERVER_PORT });
+  console.log(`✅ RPC Server created on ${bindHost}:${RPC_SERVER_PORT}`);
   rpcServer.on(
     'system.multicall',
     function (
@@ -188,7 +200,10 @@ function initRPC(): void {
   connectToCCU('BidCos-RF', RPC_PORT);
   connectToCCU('HmIP-RF', HMIP_PORT);
 
-  console.log('✅ RPC Server started on port 9099');
+  console.log(`✅ RPC Server started and listening for callbacks from CCU`);
+  console.log(
+    `📍 CCU will send events to: http://${CALLBACK_HOST}:${RPC_SERVER_PORT}`,
+  );
 }
 
 function connectToCCU(interfaceName: string, port: number): void {
@@ -217,8 +232,11 @@ function connectToCCU(interfaceName: string, port: number): void {
   const client = xmlrpc.createClient(clientOptions);
   rpcClients[interfaceName] = client;
 
+  // Build callback URL that CCU can reach
+  const callbackUrl = `http://${CALLBACK_HOST}:${RPC_SERVER_PORT}`;
+
   console.log(
-    `📞 Calling init on ${interfaceName} with callback URL: http://127.0.0.1:9099`,
+    `📞 Calling init on ${interfaceName} with callback URL: ${callbackUrl}`,
   );
 
   // Register callback URL with unique interface ID
@@ -227,7 +245,7 @@ function connectToCCU(interfaceName: string, port: number): void {
 
   client.methodCall(
     'init',
-    ['http://127.0.0.1:9099', interfaceId],
+    [callbackUrl, interfaceId],
     function (err: Error | null) {
       if (err) {
         console.error(`❌ Failed to initialize ${interfaceName}:`, err.message);
@@ -236,7 +254,7 @@ function connectToCCU(interfaceName: string, port: number): void {
       } else {
         console.log(`✅ Connected to ${interfaceName} on ${CCU_HOST}:${port}`);
         console.log(
-          `✅ ${interfaceName} will now send events to http://127.0.0.1:9099 with ID: ${interfaceId}`,
+          `✅ ${interfaceName} will now send events to ${callbackUrl} with ID: ${interfaceId}`,
         );
       }
     },
