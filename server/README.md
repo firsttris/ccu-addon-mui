@@ -280,18 +280,6 @@ const { lastMessage, sendMessage } = useWebSocket(wsUrl);
 - Lighttpd proxied zu `localhost:8088`
 - Funktioniert mit HTTP und HTTPS (WSS)
 
-## Vorteile gegenüber Node-RED
-
-✅ Kleinerer Footprint (2.7 KB Bundle statt kompletter Node-RED Installation)  
-✅ Direkte Integration ins Addon  
-✅ Keine separate Node-RED Installation nötig  
-✅ Einfachere Wartung  
-✅ Schnellerer Start  
-✅ **Type-Safety durch TypeScript**  
-✅ **Optimierter Bundle-Prozess mit Bun**  
-✅ **Minimal Dependencies** (nur 3 Packages)  
-✅ **Architektur-unabhängig** - funktioniert auf ARM (CCU3) und x86-64
-
 ## Build-Technologie
 
 Der Server nutzt **Bun** für den Build-Prozess:
