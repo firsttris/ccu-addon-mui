@@ -47,15 +47,60 @@ Der WebSocket-Server ersetzt den bisherigen Node-RED Flow und läuft als optimie
 3. **WebSocket Server** empfängt Event und broadcastet an alle verbundenen Browser
 4. **Browser** empfängt Event und aktualisiert UI
 
-## Dateien
+## Dateien & Modulstruktur
 
-- `server/websocket-server.ts` - TypeScript Source (Development)
+### Hauptdateien
+- `server/websocket-server.ts` - Haupteinstieg (orchestriert alle Module)
 - `server/dist/websocket-server.js` - Gebundeltes Bundle (Production)
 - `server/package.json` - Dependencies
-- `server/types.d.ts` - Type Definitions für Homematic Libraries
 - `addon_installer/rc.d/mui` - Start/Stop Script für CCU3
 - `addon_installer/update_script` - Installations-Script
 - `addon_installer/lighttpd.conf` - WebSocket Proxy Config
+
+### Module
+
+```
+server/lib/
+├── types.ts           # TypeScript Interfaces & Types
+├── config.ts          # Umgebungsvariablen & Konfiguration
+├── logger.ts          # Logging-Funktionen
+├── rega.ts            # ReGa Script Execution
+├── xmlrpc.ts          # XML-RPC Server & Client
+├── websocket.ts       # WebSocket Server
+└── event-filter.ts    # Event Filtering (NEW)
+```
+
+**types.ts** - Alle TypeScript Typen zentral
+- `CCUEvent`, `WebSocketMessage`, `Config`, etc.
+
+**config.ts** - Konfiguration
+- Environment Variables (`CCU_HOST`, `DEBUG`, etc.)
+- Ports und Verbindungsdetails
+
+**logger.ts** - Logging
+- `log.info()`, `log.error()`, `log.debug()`
+- Conditional Debug Logging
+
+**rega.ts** - ReGa Integration
+- `createRegaConnection()` - Verbindung zur CCU
+- `executeRegaScript()` - Script Ausführung
+- `testCCUConnection()` - Connection Test
+
+**xmlrpc.ts** - XML-RPC
+- `createRPCServer()` - Server für CCU Events
+- `connectToCCU()` - Verbindung zu BidCos/HmIP
+- `initRPC()` - Initialisierung
+- `unregisterRPCClients()` - Cleanup
+
+**websocket.ts** - WebSocket Server
+- `createWebSocketServer()` - Factory Function
+- Handler für `script`, `setValue`, `subscribe`, `unsubscribe`
+- Event Broadcasting mit Filtering
+
+**event-filter.ts** - Event Filtering
+- `EventFilter` Klasse
+- `subscribeChannel()`, `unsubscribeChannel()`
+- `shouldBroadcast()` - Entscheidet ob Event gesendet wird
 
 ## WebSocket-Protokoll
 
@@ -72,6 +117,51 @@ Der WebSocket-Server ersetzt den bisherigen Node-RED Flow und läuft als optimie
   }
 }
 ```
+
+### Event-Filterung (NEW)
+
+Um die Last zu reduzieren, können Clients nur die Events abonnieren, die sie tatsächlich benötigen:
+
+**Subscribe (Client → Server)**
+```json
+{
+  "type": "subscribe",
+  "channels": ["000A18A994DB7C:1", "000B18A994DB7D:2"],
+  "requestId": "unique-id"
+}
+```
+
+**Subscribe Response (Server → Client)**
+```json
+{
+  "type": "subscribe_response",
+  "success": true,
+  "stats": {
+    "channels": 2,
+    "datapoints": 0
+  },
+  "requestId": "unique-id"
+}
+```
+
+**Unsubscribe (Client → Server)**
+```json
+{
+  "type": "unsubscribe",
+  "channels": ["000A18A994DB7C:1"],
+  "requestId": "unique-id"
+}
+```
+
+Oder alle Subscriptions löschen:
+```json
+{
+  "type": "unsubscribe",
+  "requestId": "unique-id"
+}
+```
+
+**Hinweis:** Wenn keine Subscriptions aktiv sind, werden alle Events gebroadcastet (Backward Compatible).
 
 ### Script ausführen (Client → Server)
 

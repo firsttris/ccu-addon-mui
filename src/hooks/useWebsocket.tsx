@@ -32,6 +32,22 @@ export const useWebsocket = () => {
     shouldReconnect: () => true,
   });
 
+  // Subscribe to channel updates when channels change
+  useEffect(() => {
+    if (readyState === ReadyState.OPEN && channels.length > 0) {
+      const channelAddresses = channels.map((channel) => channel.address);
+      sendMessage(
+        JSON.stringify({
+          type: 'subscribe',
+          channels: channelAddresses,
+        }),
+      );
+      console.log(
+        `📝 Subscribed to ${channelAddresses.length} channels for event filtering`,
+      );
+    }
+  }, [channels, readyState, sendMessage]);
+
   const updateChannels = (event: HmEvent) => {
     setChannels(
       (prevChannels) =>
@@ -94,7 +110,7 @@ export const useWebsocket = () => {
         console.error('Error parsing WebSocket message:', error);
       }
     }
-  }, [lastMessage]);
+  }, [lastMessage, deviceId]);
 
   const getRooms = () => {
     const script = regaGetRoomsScript.replace(
