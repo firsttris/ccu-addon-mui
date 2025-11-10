@@ -200,6 +200,39 @@ Der Server wird über das rc.d Script verwaltet:
 /usr/local/etc/config/rc.d/mui uninstall
 ```
 
+## Testing over SSH
+
+Während der Entwicklung kann der Server-Code schnell auf die CCU übertragen und getestet werden:
+
+### SSH-Verbindung zur CCU
+
+```bash
+ssh root@192.168.178.26
+```
+
+### Server-Bundle auf CCU kopieren
+
+```bash
+scp server/dist/websocket-server.js root@192.168.178.26:/tmp/
+```
+
+### Laufenden Prozess finden und stoppen
+
+```bash
+# Finde den laufenden Prozess
+ps aux | grep websocket-server
+
+# Stoppe ihn (ersetze <PID> mit der Prozess-ID)
+kill <PID>
+```
+
+### Server manuell testen
+
+```bash
+# Starte den Server direkt mit node
+/usr/local/addons/mui/node/bin/node /tmp/websocket-server.js
+```
+
 ## Konfiguration
 
 ### Entwicklung (lokal)

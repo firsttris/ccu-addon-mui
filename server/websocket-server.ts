@@ -149,54 +149,6 @@ function initRPC(): void {
     },
   );
 
-  rpcServer.on(
-    'event',
-    function (
-      _err: Error,
-      params: unknown[],
-      callback: (err: null | Error, result?: string) => void,
-    ) {
-      console.log(
-        '📨 Received single event:',
-        params[0],
-        params[1],
-        params[2],
-        params[3],
-      );
-      handleCCUEvent(
-        params[0] as string,
-        params[1] as string,
-        params[2] as string,
-        params[3],
-      );
-      callback(null, '');
-    },
-  );
-
-  rpcServer.on(
-    'newDevices',
-    function (
-      _err: Error,
-      params: unknown[],
-      callback: (err: null | Error, result?: string) => void,
-    ) {
-      console.log('🆕 New devices detected:', params);
-      callback(null, '');
-    },
-  );
-
-  rpcServer.on(
-    'deleteDevices',
-    function (
-      _err: Error,
-      params: unknown[],
-      callback: (err: null | Error, result?: string) => void,
-    ) {
-      console.log('🗑️ Devices deleted:', params);
-      callback(null, '');
-    },
-  );
-
   // Required RPC methods that CCU calls
   rpcServer.on(
     'system.listMethods',
@@ -206,15 +158,7 @@ function initRPC(): void {
       callback: (err: null | Error, result?: string[]) => void,
     ) {
       console.log('📋 system.listMethods called');
-      callback(null, [
-        'event',
-        'system.listMethods',
-        'system.multicall',
-        'listDevices',
-        'newDevices',
-        'deleteDevices',
-        'updateDevice',
-      ]);
+      callback(null, ['system.listMethods', 'system.multicall', 'listDevices']);
     },
   );
 
@@ -227,18 +171,6 @@ function initRPC(): void {
     ) {
       console.log('📱 listDevices called');
       callback(null, []);
-    },
-  );
-
-  rpcServer.on(
-    'updateDevice',
-    function (
-      _err: Error,
-      params: unknown[],
-      callback: (err: null | Error, result?: string) => void,
-    ) {
-      console.log('🔄 updateDevice called:', params);
-      callback(null, '');
     },
   );
 

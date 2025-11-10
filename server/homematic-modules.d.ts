@@ -51,27 +51,19 @@ declare module 'homematic-xmlrpc' {
       ) => void,
     ): void;
     on(
-      event: 'event',
+      event: 'system.listMethods',
       handler: (
         err: Error,
         params: unknown[],
-        callback: (err: null | Error, result?: string) => void,
+        callback: (err: null | Error, result?: string[]) => void,
       ) => void,
     ): void;
     on(
-      event: 'newDevices',
+      event: 'listDevices',
       handler: (
         err: Error,
         params: unknown[],
-        callback: (err: null | Error, result?: string) => void,
-      ) => void,
-    ): void;
-    on(
-      event: 'deleteDevices',
-      handler: (
-        err: Error,
-        params: unknown[],
-        callback: (err: null | Error, result?: string) => void,
+        callback: (err: null | Error, result?: unknown[]) => void,
       ) => void,
     ): void;
   }
