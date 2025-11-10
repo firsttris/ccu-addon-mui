@@ -33,13 +33,9 @@ This project is built with a robust set of technologies to ensure high performan
 
 # Prerequisites for CCU3
 
-1. **Configure Rooms and Assign Channels (Devices)**
+**Configure Rooms and Assign Channels (Devices)**
 
    To ensure this add-on functions properly, you need to have rooms configured in your CCU3. Each room should have channels assigned with appropriate names, as the add-on queries the rooms, their channels, and the datapoints of those channels. Without this setup, the add-on will not work.
-
-2. **Node.js Installation (Usually Pre-installed)**
-
-   The CCU3 typically comes with Node.js pre-installed (required for the integrated WebSocket server). If not, you may need to install it manually.
 
 # Installation
 

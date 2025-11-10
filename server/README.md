@@ -10,10 +10,8 @@ Der WebSocket-Server ersetzt den bisherigen Node-RED Flow und läuft als optimie
 - **XML-RPC Integration** für BidCos-RF und HmIP-RF Geräte
 - **Event-Handling** - empfängt und verteilt CCU-Events an alle verbundenen Clients
 - **ReGa Script Execution** - führt Homematic-Scripts aus
-- **Auto-Start** beim CCU3-Boot
 - **TypeScript** - Type-safe Development
 - **Bun Build** - Optimierter Bundle-Prozess
-- **Minimal Dependencies** - Nur 3 native Module (ws, homematic-xmlrpc, homematic-rega)
 
 ## Architektur
 
@@ -216,7 +214,7 @@ ssh root@192.168.178.26
 scp server/dist/websocket-server.js root@192.168.178.26:/tmp/
 ```
 
-### Laufenden Prozess finden und stoppen
+### Option 1: Server manuell testen (temporär)
 
 ```bash
 # Finde den laufenden Prozess
@@ -224,13 +222,23 @@ ps aux | grep websocket-server
 
 # Stoppe ihn (ersetze <PID> mit der Prozess-ID)
 kill <PID>
-```
 
-### Server manuell testen
-
-```bash
 # Starte den Server direkt mit node
 /usr/local/addons/mui/node/bin/node /tmp/websocket-server.js
+```
+
+### Option 2: Server im Addon ersetzen und über rc.d neustarten
+
+```bash
+# Server-Bundle ins Addon-Verzeichnis kopieren
+scp server/dist/websocket-server.js root@192.168.178.26:/usr/local/addons/mui/server/
+
+# Via SSH auf der CCU: Server über rc.d neustarten
+ssh root@192.168.178.26
+/usr/local/etc/config/rc.d/mui restart
+
+# Logs prüfen
+tail -f /var/log/mui-websocket-server.log
 ```
 
 ## Konfiguration
