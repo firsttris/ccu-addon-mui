@@ -13,6 +13,7 @@ const RPC_SERVER_PORT = 9099;
 const CCU_HOST = process.env.CCU_HOST || 'localhost';
 const CCU_USER = process.env.CCU_USER;
 const CCU_PASS = process.env.CCU_PASS;
+const DEBUG = process.env.DEBUG === 'true'; // Enable verbose logging with DEBUG=true
 
 // CALLBACK_HOST is the IP/hostname where THIS server runs and CCU can reach it
 // - On CCU itself: use 'localhost' or '127.0.0.1'
@@ -23,10 +24,21 @@ const CALLBACK_HOST = process.env.CALLBACK_HOST || '127.0.0.1';
 // Port 8181 is used for remote connections (auth required)
 const REGA_PORT = CCU_HOST === 'localhost' ? 8183 : 8181;
 
-console.log(`CCU Host: ${CCU_HOST}`);
-console.log(`Callback Host: ${CALLBACK_HOST}`);
-console.log(`Rega Port: ${REGA_PORT}`);
-console.log(`CCU Auth: ${CCU_USER ? 'enabled' : 'disabled'}`);
+// Logging helper
+const log = {
+  info: (...args: unknown[]) => console.log(...args),
+  error: (...args: unknown[]) => console.error(...args),
+  debug: (...args: unknown[]) => {
+    if (DEBUG) console.log(...args);
+  },
+};
+
+log.info(`🚀 WebSocket Server starting...`);
+log.info(`   CCU Host: ${CCU_HOST}`);
+log.info(`   Callback Host: ${CALLBACK_HOST}`);
+log.info(`   Rega Port: ${REGA_PORT}`);
+log.info(`   Debug Mode: ${DEBUG ? 'ON' : 'OFF'}`);
+if (CCU_USER) log.info(`   Auth: enabled`);
 
 // Types
 interface CCUEvent {
@@ -85,16 +97,16 @@ const regaConnection = new Rega({
 
 // Test CCU connection
 async function testCCUConnection(): Promise<void> {
-  console.log(`Testing connection to CCU Rega at ${CCU_HOST}:${REGA_PORT}...`);
+  log.debug(`Testing connection to CCU Rega at ${CCU_HOST}:${REGA_PORT}...`);
   try {
     await executeRegaScript('Write("Hello from WebSocket Server");');
-    console.log('✅ CCU Rega connection successful');
+    log.info('✅ CCU Rega connection successful');
   } catch (err) {
-    console.error(
+    log.error(
       '❌ CCU Rega connection failed:',
       err instanceof Error ? err.message : String(err),
     );
-    console.error(`Make sure ${CCU_HOST}:${REGA_PORT} is reachable`);
+    log.error(`   Make sure ${CCU_HOST}:${REGA_PORT} is reachable`);
   }
 }
 
@@ -104,7 +116,7 @@ const rpcClients: Record<string, RPCClient> = {};
 
 // Initialize RPC connections
 function initRPC(): void {
-  console.log('🚀 Initializing RPC connections...');
+  log.debug('🚀 Initializing RPC connections...');
 
   // Create RPC server to receive events
   // Bind to 0.0.0.0 to accept connections from CCU (if running remotely)
@@ -115,7 +127,7 @@ function initRPC(): void {
 
   // Use rpcHttpServer and manually handle XML-RPC requests
   rpcServer = xmlrpc.createServer({ host: bindHost, port: RPC_SERVER_PORT });
-  console.log(`✅ RPC Server created on ${bindHost}:${RPC_SERVER_PORT}`);
+  log.debug(`✅ RPC Server created on ${bindHost}:${RPC_SERVER_PORT}`);
   rpcServer.on(
     'system.multicall',
     function (
@@ -123,7 +135,7 @@ function initRPC(): void {
       params: unknown[],
       callback: (err: null | Error, result?: string) => void,
     ) {
-      console.log(
+      log.debug(
         '📨 Received system.multicall with',
         params[0] ? (params[0] as Array<unknown>).length : 0,
         'events',
@@ -131,7 +143,7 @@ function initRPC(): void {
       (
         params[0] as Array<{ params: [string, string, string, unknown] }>
       ).forEach(function (event, index) {
-        console.log(
+        log.debug(
           `  Event ${index + 1}:`,
           event.params[0],
           event.params[1],
@@ -157,7 +169,7 @@ function initRPC(): void {
       params: unknown[],
       callback: (err: null | Error, result?: string[]) => void,
     ) {
-      console.log('📋 system.listMethods called');
+      log.debug('📋 system.listMethods called');
       callback(null, ['system.listMethods', 'system.multicall', 'listDevices']);
     },
   );
@@ -169,7 +181,7 @@ function initRPC(): void {
       params: unknown[],
       callback: (err: null | Error, result?: unknown[]) => void,
     ) {
-      console.log('📱 listDevices called');
+      log.debug('📱 listDevices called');
       callback(null, []);
     },
   );
@@ -178,14 +190,14 @@ function initRPC(): void {
   connectToCCU('BidCos-RF', RPC_PORT);
   connectToCCU('HmIP-RF', HMIP_PORT);
 
-  console.log(`✅ RPC Server started and listening for callbacks from CCU`);
-  console.log(
-    `📍 CCU will send events to: http://${CALLBACK_HOST}:${RPC_SERVER_PORT}`,
+  log.info(`✅ RPC Server started and listening for callbacks from CCU`);
+  log.info(
+    `   CCU will send events to: http://${CALLBACK_HOST}:${RPC_SERVER_PORT}`,
   );
 }
 
 function connectToCCU(interfaceName: string, port: number): void {
-  console.log(
+  log.debug(
     `🔌 Attempting to connect to ${interfaceName} at ${CCU_HOST}:${port}...`,
   );
 
@@ -200,7 +212,7 @@ function connectToCCU(interfaceName: string, port: number): void {
 
   // Add basic auth if credentials are provided
   if (CCU_USER && CCU_PASS) {
-    console.log(`🔑 Using basic auth for ${interfaceName}`);
+    log.debug(`🔑 Using basic auth for ${interfaceName}`);
     clientOptions.basic_auth = {
       user: CCU_USER,
       pass: CCU_PASS,
@@ -213,7 +225,7 @@ function connectToCCU(interfaceName: string, port: number): void {
   // Build callback URL that CCU can reach
   const callbackUrl = `http://${CALLBACK_HOST}:${RPC_SERVER_PORT}`;
 
-  console.log(
+  log.debug(
     `📞 Calling init on ${interfaceName} with callback URL: ${callbackUrl}`,
   );
 
@@ -226,13 +238,13 @@ function connectToCCU(interfaceName: string, port: number): void {
     [callbackUrl, interfaceId],
     function (err: Error | null) {
       if (err) {
-        console.error(`❌ Failed to initialize ${interfaceName}:`, err.message);
-        console.error(`   Make sure ${CCU_HOST}:${port} is reachable`);
-        console.error(`   Full error:`, err);
+        log.error(`❌ Failed to initialize ${interfaceName}:`, err.message);
+        log.error(`   Make sure ${CCU_HOST}:${port} is reachable`);
+        log.debug(`   Full error:`, err);
       } else {
-        console.log(`✅ Connected to ${interfaceName} on ${CCU_HOST}:${port}`);
-        console.log(
-          `✅ ${interfaceName} will now send events to ${callbackUrl} with ID: ${interfaceId}`,
+        log.info(`✅ Connected to ${interfaceName} on ${CCU_HOST}:${port}`);
+        log.debug(
+          `   ${interfaceName} will now send events to ${callbackUrl} with ID: ${interfaceId}`,
         );
       }
     },
@@ -246,7 +258,7 @@ function handleCCUEvent(
   datapoint: string,
   value: unknown,
 ): void {
-  console.log('🔔 CCU Event:', {
+  log.debug('🔔 CCU Event:', {
     interface: interfaceName,
     address: address,
     datapoint: datapoint,
@@ -265,7 +277,7 @@ function handleCCUEvent(
 
   // Broadcast to all connected WebSocket clients
   broadcastToClients(event);
-  console.log('📤 Event broadcasted to', clients.size, 'WebSocket clients');
+  log.debug('📤 Event broadcasted to', clients.size, 'WebSocket clients');
 }
 
 // Broadcast message to all WebSocket clients
@@ -293,7 +305,7 @@ async function executeRegaScript(script: string): Promise<unknown> {
 
 // WebSocket server
 wss.on('connection', (ws: WebSocket) => {
-  console.log(
+  log.info(
     '🔗 New WebSocket client connected. Total clients:',
     clients.size + 1,
   );
@@ -345,7 +357,7 @@ wss.on('connection', (ws: WebSocket) => {
         ws.send(typeof result === 'string' ? result : JSON.stringify(result));
       }
     } catch (err) {
-      console.error('Error handling message:', err);
+      log.error('Error handling message:', err);
       ws.send(
         JSON.stringify({
           type: 'error',
@@ -356,7 +368,7 @@ wss.on('connection', (ws: WebSocket) => {
   });
 
   ws.on('close', () => {
-    console.log(
+    log.info(
       '🔌 WebSocket client disconnected. Remaining clients:',
       clients.size - 1,
     );
@@ -364,15 +376,15 @@ wss.on('connection', (ws: WebSocket) => {
   });
 
   ws.on('error', (err: Error) => {
-    console.error('❌ WebSocket error:', err);
+    log.error('❌ WebSocket error:', err);
     clients.delete(ws);
   });
 });
 
 // Start WebSocket server
 server.listen(WS_PORT, () => {
-  console.log(`WebSocket Server running on port ${WS_PORT}`);
-  console.log(`WebSocket URL: ws://localhost:${WS_PORT}`);
+  log.info(`WebSocket Server running on port ${WS_PORT}`);
+  log.info(`WebSocket URL: ws://localhost:${WS_PORT}`);
 });
 
 // Initialize RPC
@@ -385,16 +397,16 @@ setTimeout(() => {
 
 // Cleanup on exit
 process.on('SIGTERM', () => {
-  console.log('🛑 Shutting down...');
+  log.info('🛑 Shutting down...');
 
   // Unregister from CCU interfaces
   Object.keys(rpcClients).forEach((interfaceName) => {
     const interfaceId = `websocket-server-${interfaceName}`;
-    console.log(`📤 Unregistering ${interfaceId}...`);
+    log.info(`📤 Unregistering ${interfaceId}...`);
     rpcClients[interfaceName].methodCall('init', ['', ''], (err) => {
       if (err)
-        console.error(`❌ Failed to unregister ${interfaceName}:`, err.message);
-      else console.log(`✅ Unregistered ${interfaceId}`);
+        log.error(`❌ Failed to unregister ${interfaceName}:`, err.message);
+      else log.info(`✅ Unregistered ${interfaceId}`);
     });
   });
 
@@ -404,6 +416,6 @@ process.on('SIGTERM', () => {
 });
 
 process.on('SIGINT', () => {
-  console.log('🛑 Shutting down (SIGINT)...');
+  log.info('🛑 Shutting down (SIGINT)...');
   process.exit(0);
 });
