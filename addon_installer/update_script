@@ -49,13 +49,6 @@ fi
 
 cp -af lighttpd.conf /usr/local/etc/config/lighttpd/mui.conf
 
-# Reload lighttpd configuration
-if [ -x /etc/init.d/S50lighttpd ]; then
-  /etc/init.d/S50lighttpd reload
-fi
-
-# No need to install dependencies - everything is bundled in websocket-server.js
-
 sync
 
 exit 0
