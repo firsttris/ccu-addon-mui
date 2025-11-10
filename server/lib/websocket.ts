@@ -5,9 +5,11 @@ import type {
   WebSocketMessage,
   ScriptMessage,
   SetValueMessage,
+  SubscribeMessage,
 } from './types';
 import { config } from './config';
 import { log } from './logger';
+import { createDeviceSubscriptionManager } from './device-subscriptions';
 
 export const createWebSocketServer = (
   executeScript: (script: string) => Promise<unknown>,
@@ -16,13 +18,38 @@ export const createWebSocketServer = (
   const wss = new WebSocketServer({ server });
   const clients = new Set<WebSocket>();
 
+  // Store deviceId for each WebSocket connection
+  const clientDeviceIds = new Map<WebSocket, string>();
+  const subscriptionManager = createDeviceSubscriptionManager();
+
   const broadcastToClients = (data: CCUEvent): void => {
     const message = JSON.stringify(data);
+    let sentCount = 0;
+    let filteredCount = 0;
+
     clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
+        const deviceId = clientDeviceIds.get(client);
+
+        // Device must have a subscription to receive events
+        if (
+          !deviceId ||
+          !subscriptionManager.shouldReceiveEvent(deviceId, data)
+        ) {
+          filteredCount++;
+          return;
+        }
+
         client.send(message);
+        sentCount++;
       }
     });
+
+    if (filteredCount > 0) {
+      log.debug(
+        `📤 Event ${data.event.channel}:${data.event.datapoint} sent to ${sentCount}/${clients.size} clients (${filteredCount} filtered)`,
+      );
+    }
   };
 
   const handleScriptMessage = async (
@@ -55,6 +82,34 @@ export const createWebSocketServer = (
     );
   };
 
+  const handleSubscribeMessage = (
+    ws: WebSocket,
+    msg: SubscribeMessage,
+  ): void => {
+    const { deviceId, channels } = msg;
+
+    // Store deviceId for this connection
+    clientDeviceIds.set(ws, deviceId);
+
+    // Subscribe device to channels
+    subscriptionManager.subscribe(deviceId, channels);
+
+    const stats = subscriptionManager.getStats();
+    log.info(
+      `📝 Device ${deviceId} subscribed to ${channels.length} channels. Total: ${stats.devices} devices, ${stats.totalChannels} channels`,
+    );
+
+    ws.send(
+      JSON.stringify({
+        type: 'subscribe_response',
+        success: true,
+        deviceId,
+        channels: subscriptionManager.getSubscriptions(deviceId),
+        requestId: msg.requestId,
+      }),
+    );
+  };
+
   const handleJsonMessage = async (
     ws: WebSocket,
     data: WebSocketMessage,
@@ -63,6 +118,8 @@ export const createWebSocketServer = (
       await handleScriptMessage(ws, data);
     } else if (data.type === 'setValue') {
       await handleSetValueMessage(ws, data);
+    } else if (data.type === 'subscribe') {
+      handleSubscribeMessage(ws, data);
     }
   };
 
@@ -103,16 +160,31 @@ export const createWebSocketServer = (
     ws.on('message', (message) => handleMessage(ws, message));
 
     ws.on('close', () => {
+      const deviceId = clientDeviceIds.get(ws);
       log.info(
         '🔌 WebSocket client disconnected. Remaining clients:',
         clients.size - 1,
       );
       clients.delete(ws);
+
+      // Cleanup device subscription
+      if (deviceId) {
+        subscriptionManager.unsubscribe(deviceId);
+        clientDeviceIds.delete(ws);
+        log.debug(`📝 Unsubscribed device ${deviceId}`);
+      }
     });
 
     ws.on('error', (err: Error) => {
+      const deviceId = clientDeviceIds.get(ws);
       log.error('❌ WebSocket error:', err);
       clients.delete(ws);
+
+      // Cleanup device subscription
+      if (deviceId) {
+        subscriptionManager.unsubscribe(deviceId);
+        clientDeviceIds.delete(ws);
+      }
     });
   };
 

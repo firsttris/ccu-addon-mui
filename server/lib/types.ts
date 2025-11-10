@@ -30,7 +30,17 @@ export interface SetValueMessage {
   requestId?: string;
 }
 
-export type WebSocketMessage = ScriptMessage | SetValueMessage;
+export interface SubscribeMessage {
+  type: 'subscribe';
+  deviceId: string;
+  channels: string[];
+  requestId?: string;
+}
+
+export type WebSocketMessage =
+  | ScriptMessage
+  | SetValueMessage
+  | SubscribeMessage;
 
 export interface Config {
   wsPort: number;
