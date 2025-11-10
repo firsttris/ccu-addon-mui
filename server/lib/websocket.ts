@@ -5,12 +5,9 @@ import type {
   WebSocketMessage,
   ScriptMessage,
   SetValueMessage,
-  SubscribeMessage,
-  UnsubscribeMessage,
 } from './types';
 import { config } from './config';
 import { log } from './logger';
-import { createEventFilter } from './event-filter';
 
 export const createWebSocketServer = (
   executeScript: (script: string) => Promise<unknown>,
@@ -18,28 +15,14 @@ export const createWebSocketServer = (
   const server = createServer();
   const wss = new WebSocketServer({ server });
   const clients = new Set<WebSocket>();
-  const eventFilter = createEventFilter();
 
   const broadcastToClients = (data: CCUEvent): void => {
-    // Filter events before broadcasting
-    if (!eventFilter.shouldBroadcast(data)) {
-      log.debug(
-        '🚫 Event filtered:',
-        data.event.channel,
-        data.event.datapoint,
-      );
-      return;
-    }
-
     const message = JSON.stringify(data);
-    let broadcastCount = 0;
     clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message);
-        broadcastCount++;
       }
     });
-    log.debug(`📤 Event broadcasted to ${broadcastCount} clients`);
   };
 
   const handleScriptMessage = async (
@@ -72,45 +55,6 @@ export const createWebSocketServer = (
     );
   };
 
-  const handleSubscribeMessage = (
-    ws: WebSocket,
-    msg: SubscribeMessage,
-  ): void => {
-    eventFilter.subscribeChannels(msg.channels);
-    const stats = eventFilter.getStats();
-    log.info(
-      `📝 Client subscribed to ${msg.channels.length} channels. Total: ${stats.channels} channels, ${stats.datapoints} datapoints`,
-    );
-    ws.send(
-      JSON.stringify({
-        type: 'subscribe_response',
-        success: true,
-        stats,
-        requestId: msg.requestId,
-      }),
-    );
-  };
-
-  const handleUnsubscribeMessage = (
-    ws: WebSocket,
-    msg: UnsubscribeMessage,
-  ): void => {
-    if (msg.channels) {
-      msg.channels.forEach((channel) => eventFilter.unsubscribeChannel(channel));
-      log.info(`📝 Client unsubscribed from ${msg.channels.length} channels`);
-    } else {
-      eventFilter.clearSubscriptions();
-      log.info('📝 Client cleared all subscriptions');
-    }
-    ws.send(
-      JSON.stringify({
-        type: 'unsubscribe_response',
-        success: true,
-        requestId: msg.requestId,
-      }),
-    );
-  };
-
   const handleJsonMessage = async (
     ws: WebSocket,
     data: WebSocketMessage,
@@ -119,10 +63,6 @@ export const createWebSocketServer = (
       await handleScriptMessage(ws, data);
     } else if (data.type === 'setValue') {
       await handleSetValueMessage(ws, data);
-    } else if (data.type === 'subscribe') {
-      handleSubscribeMessage(ws, data);
-    } else if (data.type === 'unsubscribe') {
-      handleUnsubscribeMessage(ws, data);
     }
   };
 
