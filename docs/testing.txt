@@ -1,0 +1,10 @@
+copy to ccu3: 
+
+scp server/dist/websocket-server.js root@192.168.178.26:/tmp/
+
+
+# Finde den laufenden Prozess
+ps aux | grep websocket-server
+
+# Stoppe ihn (ersetze PID mit der Prozess-ID)
+kill <PID>

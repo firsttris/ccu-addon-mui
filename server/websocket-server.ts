@@ -113,6 +113,7 @@ function initRPC(): void {
       ? '127.0.0.1'
       : '0.0.0.0';
 
+  // Use rpcHttpServer and manually handle XML-RPC requests
   rpcServer = xmlrpc.createServer({ host: bindHost, port: RPC_SERVER_PORT });
   console.log(`✅ RPC Server created on ${bindHost}:${RPC_SERVER_PORT}`);
   rpcServer.on(
@@ -192,6 +193,51 @@ function initRPC(): void {
       callback: (err: null | Error, result?: string) => void,
     ) {
       console.log('🗑️ Devices deleted:', params);
+      callback(null, '');
+    },
+  );
+
+  // Required RPC methods that CCU calls
+  rpcServer.on(
+    'system.listMethods',
+    function (
+      _err: Error,
+      params: unknown[],
+      callback: (err: null | Error, result?: string[]) => void,
+    ) {
+      console.log('📋 system.listMethods called');
+      callback(null, [
+        'event',
+        'system.listMethods',
+        'system.multicall',
+        'listDevices',
+        'newDevices',
+        'deleteDevices',
+        'updateDevice',
+      ]);
+    },
+  );
+
+  rpcServer.on(
+    'listDevices',
+    function (
+      _err: Error,
+      params: unknown[],
+      callback: (err: null | Error, result?: unknown[]) => void,
+    ) {
+      console.log('📱 listDevices called');
+      callback(null, []);
+    },
+  );
+
+  rpcServer.on(
+    'updateDevice',
+    function (
+      _err: Error,
+      params: unknown[],
+      callback: (err: null | Error, result?: string) => void,
+    ) {
+      console.log('🔄 updateDevice called:', params);
       callback(null, '');
     },
   );
