@@ -5,7 +5,7 @@
   "main": "websocket-server.ts",
   "scripts": {
     "start": "bun websocket-server.ts",
-    "build": "bun build --target=node --minify --sourcemap ./websocket-server.ts --outdir dist && chmod +x dist/websocket-server.js"
+    "build": "bun build --target=node --format=cjs --minify --sourcemap ./websocket-server.ts --outdir dist && chmod +x dist/websocket-server.js"
   },
   "dependencies": {
     "ws": "^8.14.2",
