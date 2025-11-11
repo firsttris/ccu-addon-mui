@@ -43,3 +43,13 @@ Thumbs.db
 .nx/workspace-data
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+# TanStack Router
+routeTree.gen.ts
+
+# Addon build artifacts
+addon_installer/dist/
+addon_installer/server/
+addon_installer/node/
+addon_installer/VERSION
+addon_installer/server/websocket-server.js

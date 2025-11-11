@@ -11,7 +11,7 @@ const OuterBox = styled.div({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: '10px'
+  padding: '10px',
 });
 
 const InnerBox = styled.div({
@@ -28,7 +28,7 @@ const StyledTypography = styled('span', {
   shouldForwardProp: (prop) => prop !== 'uncertain',
 })<StyledTypographyProps>(({ uncertain }) => ({
   display: uncertain ? 'block' : 'none',
-  marginTop: '10px'
+  marginTop: '10px',
 }));
 
 interface DoorControlProps {

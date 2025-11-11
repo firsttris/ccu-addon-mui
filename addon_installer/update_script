@@ -12,10 +12,40 @@ fi
 mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
 cp -af dist/* $ADDON_DIR
 
-ln -sf $ADDON_DIR $WWW_DIR
+# Copy Node.js binary (minimal - only the node binary)
+mkdir -p $ADDON_DIR/node/bin
+cp -af node/bin/node $ADDON_DIR/node/bin/
+chmod +x $ADDON_DIR/node/bin/node
+
+# Copy LICENSE if exists
+if [ -f node/LICENSE ]; then
+  cp -af node/LICENSE $ADDON_DIR/node/
+fi
+
+# Copy WebSocket server (all dependencies are bundled)
+mkdir -p $ADDON_DIR/server
+cp -af server/websocket-server.js $ADDON_DIR/server/
+chmod +x $ADDON_DIR/server/websocket-server.js
+
+# Create symlink only if it doesn't exist
+if [ ! -L $WWW_DIR/mui ]; then
+  ln -sf $ADDON_DIR $WWW_DIR/mui
+fi
 
 cp -af rc.d/mui $RC_DIR/
 chmod +x $RC_DIR/mui
+
+# Copy version file if it exists
+if [ -f VERSION ]; then
+  cp -af VERSION $ADDON_DIR/
+fi
+
+# Copy update-check CGI script
+if [ -f www/update-check.cgi ]; then
+  mkdir -p $ADDON_DIR/www
+  cp -af www/update-check.cgi $ADDON_DIR/www/
+  chmod +x $ADDON_DIR/www/update-check.cgi
+fi
 
 cp -af lighttpd.conf /usr/local/etc/config/lighttpd/mui.conf
 

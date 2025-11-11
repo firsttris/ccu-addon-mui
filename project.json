@@ -9,6 +9,7 @@
       "executor": "@nx/vite:build",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
+      "dependsOn": ["server:build"],
       "options": {
         "outputPath": "dist/ccu-addon-mui",
         "baseHref": "/addons/mui/"

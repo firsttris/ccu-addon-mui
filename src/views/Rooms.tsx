@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import styled from '@emotion/styled';
 import { ListItem } from '../components/ChannelGroup';
 import { useWebSocketContext } from '../hooks/useWebsocket';
@@ -31,10 +31,10 @@ export const ListItemText = styled.p({
 
 export const Rooms = () => {
   const navigate = useNavigate();
-  const {getRooms, rooms, setChannels } = useWebSocketContext();
+  const { getRooms, rooms, setChannels } = useWebSocketContext();
 
   useEffect(() => {
-      getRooms();
+    getRooms();
   }, []);
 
   if (rooms) {
@@ -42,11 +42,17 @@ export const Rooms = () => {
       <Container>
         <List>
           {rooms.map((room, index) => (
-            <ListItem key={index} onClick={() => {
-              setChannels([])
-              navigate(`/room/${room.id}`)
-            }}>
-              <TeenyiconsFloorplanSolid width={35}/>
+            <ListItem
+              key={index}
+              onClick={() => {
+                setChannels([]);
+                navigate({
+                  to: '/room/$roomId',
+                  params: { roomId: String(room.id) },
+                });
+              }}
+            >
+              <TeenyiconsFloorplanSolid width={35} />
               <ListItemText>{room.name}</ListItemText>
             </ListItem>
           ))}

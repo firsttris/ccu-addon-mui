@@ -99,7 +99,7 @@ export const ChannelGroup: React.FC<ChannelGroupProps> = ({
 
   const localizedText = t(channelType);
 
-  if(!localizedText) {
+  if (!localizedText) {
     return null;
   }
 

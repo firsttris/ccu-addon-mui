@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { VitePWA } from 'vite-plugin-pwa';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import fs from 'fs';
 
 export default defineConfig({
@@ -21,6 +22,10 @@ export default defineConfig({
   },
 
   plugins: [
+    tanstackRouter({
+      target: 'react',
+      autoCodeSplitting: true,
+    }),
     react(),
     nxViteTsPaths(),
     VitePWA({
@@ -33,7 +38,7 @@ export default defineConfig({
             src: 'android-chrome-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-          }
+          },
         ],
       },
     }),

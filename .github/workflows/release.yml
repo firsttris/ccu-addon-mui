@@ -2,45 +2,49 @@ name: Create Release
 
 on: [workflow_dispatch]
 jobs:
-    release:
-      runs-on: ubuntu-latest
-  
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4.1.1
-          with:
-            fetch-depth: 0
-  
-        - name: Set up Node.js
-          uses: actions/setup-node@v4
-  
-        - name: Install dependencies
-          run: npm ci
-  
-        - name: Bump version
-          run: |
-            git config --local user.email "action@github.com"
-            git config --local user.name "GitHub Action"
-            npm version patch -m "Bump to %s"
-            git push
-  
-        - name: Build app
-          run: npm run build
-  
-        - name: Get version
-          id: packagejson
-          uses: martinbeentjes/npm-get-version-action@v1.3.1
+  release:
+    runs-on: ubuntu-latest
 
-        - name: Create Changelog with commits since last release
-          run: |
-            chmod +x ./.github/scripts/get_commits.sh
-            ./.github/scripts/get_commits.sh > commit_log.txt
-  
-        - name: Upload Release
-          uses: ncipollo/release-action@v1.13.0
-          with:
-            artifacts: 'mui-${{ steps.packagejson.outputs.current-version }}.tar.gz'
-            token: ${{ secrets.GITHUB_TOKEN }}
-            tag: ${{ steps.packagejson.outputs.current-version }}
-            bodyFile: commit_log.txt
-  
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bump version
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          npm version patch -m "Bump to %s"
+          git push
+
+      - name: Build app
+        run: npm run build
+
+      - name: Get version
+        id: packagejson
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
+
+      - name: Create Changelog with commits since last release
+        run: |
+          chmod +x ./.github/scripts/get_commits.sh
+          ./.github/scripts/get_commits.sh > commit_log.txt
+
+      - name: Upload Release
+        uses: ncipollo/release-action@v1.13.0
+        with:
+          artifacts: 'mui-${{ steps.packagejson.outputs.current-version }}.tar.gz'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.packagejson.outputs.current-version }}
+          bodyFile: commit_log.txt

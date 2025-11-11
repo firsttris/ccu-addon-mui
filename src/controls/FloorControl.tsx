@@ -68,10 +68,14 @@ export const FloorControl = (props: FloorControlProps) => {
 
   return (
     <Container>
-      <ChannelName name={props.channel.name} maxWidth='250px'/>
+      <ChannelName name={props.channel.name} maxWidth="250px" />
       <Content>
         <FlexBox>
-        <MdiPipeValve color={getColor(value)} style={{ marginRight: '5px'}} width={40}/>
+          <MdiPipeValve
+            color={getColor(value)}
+            style={{ marginRight: '5px' }}
+            width={40}
+          />
           <ProgressBarContainer>
             <ProgressBar value={value} />
           </ProgressBarContainer>

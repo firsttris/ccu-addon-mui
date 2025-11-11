@@ -112,13 +112,13 @@ export type Channel =
   | FloorClimateControlTransceiverChannel
   | KeymaticChannel;
 
-  export interface Room {
-    name: string;
-    id: number;
-  }
+export interface Room {
+  name: string;
+  id: number;
+}
 
-  export interface HmEvent {
-    channel: string;
-    datapoint: string;
-    value: string | number | boolean;
-  }
+export interface HmEvent {
+  channel: string;
+  datapoint: string;
+  value: string | number | boolean;
+}

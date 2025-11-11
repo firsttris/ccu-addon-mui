@@ -1,137 +1,121 @@
 [
-    {
-        "id": "879d0092.a6c38",
-        "type": "ccu-rpc-event",
-        "z": "427fc89b.e34038",
-        "name": "",
-        "iface": "HmIP-RF",
-        "ccuConfig": "38263145.35ea0e",
-        "rooms": "",
-        "roomsRx": "str",
-        "functions": "",
-        "functionsRx": "str",
-        "device": "",
-        "deviceRx": "str",
-        "deviceName": "",
-        "deviceNameRx": "str",
-        "deviceType": "",
-        "deviceTypeRx": "str",
-        "channel": "",
-        "channelRx": "str",
-        "channelName": "",
-        "channelNameRx": "str",
-        "channelType": "",
-        "channelTypeRx": "str",
-        "channelIndex": "",
-        "channelIndexRx": "str",
-        "datapoint": "",
-        "datapointRx": "str",
-        "change": true,
-        "working": true,
-        "cache": true,
-        "topic": "${CCU}/${Interface}/${channelName}/${datapoint}",
-        "x": 1060,
-        "y": 80,
-        "wires": [
-            [
-                "4683e8de.ad2c98"
-            ]
-        ]
-    },
-    {
-        "id": "5beeb396.ea475c",
-        "type": "websocket out",
-        "z": "427fc89b.e34038",
-        "name": "",
-        "server": "50036b05.4f1d24",
-        "client": "",
-        "x": 1660,
-        "y": 80,
-        "wires": []
-    },
-    {
-        "id": "edb1ced7.b13f1",
-        "type": "websocket in",
-        "z": "427fc89b.e34038",
-        "name": "",
-        "server": "50036b05.4f1d24",
-        "client": "",
-        "x": 1020,
-        "y": 240,
-        "wires": [
-            [
-                "7b89f6bd.448e88"
-            ]
-        ]
-    },
-    {
-        "id": "5cd2274a.4e2828",
-        "type": "websocket out",
-        "z": "427fc89b.e34038",
-        "name": "",
-        "server": "50036b05.4f1d24",
-        "client": "",
-        "x": 1700,
-        "y": 240,
-        "wires": []
-    },
-    {
-        "id": "7b89f6bd.448e88",
-        "type": "ccu-script",
-        "z": "427fc89b.e34038",
-        "name": "",
-        "script": "",
-        "ccuConfig": "38263145.35ea0e",
-        "topic": "${CCU}/${Interface}",
-        "x": 1320,
-        "y": 240,
-        "wires": [
-            [
-                "5cd2274a.4e2828"
-            ]
-        ]
-    },
-    {
-        "id": "4683e8de.ad2c98",
-        "type": "function",
-        "z": "427fc89b.e34038",
-        "name": "toString",
-        "func": "msg.payload = { event: {\n    channel: msg.channel,\n    datapoint: msg.datapoint,\n    value: msg.value\n} };\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "x": 1310,
-        "y": 80,
-        "wires": [
-            [
-                "5beeb396.ea475c"
-            ]
-        ]
-    },
-    {
-        "id": "38263145.35ea0e",
-        "type": "ccu-connection",
-        "name": "localhost",
-        "host": "localhost",
-        "regaEnabled": true,
-        "bcrfEnabled": true,
-        "iprfEnabled": true,
-        "virtEnabled": true,
-        "bcwiEnabled": false,
-        "cuxdEnabled": false,
-        "regaPoll": true,
-        "regaInterval": "30",
-        "rpcPingTimeout": "60",
-        "rpcInitAddress": "127.0.0.1",
-        "rpcServerHost": "127.0.0.1",
-        "rpcBinPort": "2047",
-        "rpcXmlPort": "2048"
-    },
-    {
-        "id": "50036b05.4f1d24",
-        "type": "websocket-listener",
-        "path": "/ws/webapp",
-        "wholemsg": "false"
-    }
+  {
+    "id": "879d0092.a6c38",
+    "type": "ccu-rpc-event",
+    "z": "427fc89b.e34038",
+    "name": "",
+    "iface": "HmIP-RF",
+    "ccuConfig": "38263145.35ea0e",
+    "rooms": "",
+    "roomsRx": "str",
+    "functions": "",
+    "functionsRx": "str",
+    "device": "",
+    "deviceRx": "str",
+    "deviceName": "",
+    "deviceNameRx": "str",
+    "deviceType": "",
+    "deviceTypeRx": "str",
+    "channel": "",
+    "channelRx": "str",
+    "channelName": "",
+    "channelNameRx": "str",
+    "channelType": "",
+    "channelTypeRx": "str",
+    "channelIndex": "",
+    "channelIndexRx": "str",
+    "datapoint": "",
+    "datapointRx": "str",
+    "change": true,
+    "working": true,
+    "cache": true,
+    "topic": "${CCU}/${Interface}/${channelName}/${datapoint}",
+    "x": 1060,
+    "y": 80,
+    "wires": [["4683e8de.ad2c98"]]
+  },
+  {
+    "id": "5beeb396.ea475c",
+    "type": "websocket out",
+    "z": "427fc89b.e34038",
+    "name": "",
+    "server": "50036b05.4f1d24",
+    "client": "",
+    "x": 1660,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "edb1ced7.b13f1",
+    "type": "websocket in",
+    "z": "427fc89b.e34038",
+    "name": "",
+    "server": "50036b05.4f1d24",
+    "client": "",
+    "x": 1020,
+    "y": 240,
+    "wires": [["7b89f6bd.448e88"]]
+  },
+  {
+    "id": "5cd2274a.4e2828",
+    "type": "websocket out",
+    "z": "427fc89b.e34038",
+    "name": "",
+    "server": "50036b05.4f1d24",
+    "client": "",
+    "x": 1700,
+    "y": 240,
+    "wires": []
+  },
+  {
+    "id": "7b89f6bd.448e88",
+    "type": "ccu-script",
+    "z": "427fc89b.e34038",
+    "name": "",
+    "script": "",
+    "ccuConfig": "38263145.35ea0e",
+    "topic": "${CCU}/${Interface}",
+    "x": 1320,
+    "y": 240,
+    "wires": [["5cd2274a.4e2828"]]
+  },
+  {
+    "id": "4683e8de.ad2c98",
+    "type": "function",
+    "z": "427fc89b.e34038",
+    "name": "toString",
+    "func": "msg.payload = { event: {\n    channel: msg.channel,\n    datapoint: msg.datapoint,\n    value: msg.value\n} };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "x": 1310,
+    "y": 80,
+    "wires": [["5beeb396.ea475c"]]
+  },
+  {
+    "id": "38263145.35ea0e",
+    "type": "ccu-connection",
+    "name": "localhost",
+    "host": "localhost",
+    "regaEnabled": true,
+    "bcrfEnabled": true,
+    "iprfEnabled": true,
+    "virtEnabled": true,
+    "bcwiEnabled": false,
+    "cuxdEnabled": false,
+    "regaPoll": true,
+    "regaInterval": "30",
+    "rpcPingTimeout": "60",
+    "rpcInitAddress": "127.0.0.1",
+    "rpcServerHost": "127.0.0.1",
+    "rpcBinPort": "2047",
+    "rpcXmlPort": "2048"
+  },
+  {
+    "id": "50036b05.4f1d24",
+    "type": "websocket-listener",
+    "path": "/ws/webapp",
+    "wholemsg": "false"
+  }
 ]

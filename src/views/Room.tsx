@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { ChannelGroup } from '../components/ChannelGroup';
 import styled from '@emotion/styled';
 import { useWebSocketContext } from '../hooks/useWebsocket';
@@ -11,7 +11,7 @@ const Container = styled.div`
   flex-direction: column;
   gap: 10px;
   max-width: 1280px;
-  margin: 0 auto; 
+  margin: 0 auto;
   padding-top: 25px;
 `;
 
@@ -36,7 +36,7 @@ const IconButton = styled.button`
   }
 
   &:hover {
-    background-color: #e0e0e0; 
+    background-color: #e0e0e0;
     border-radius: 50%;
   }
 `;
@@ -55,7 +55,7 @@ const Header = styled.div`
 `;
 
 export const Room = () => {
-  const { roomId } = useParams<{ roomId: string }>();
+  const { roomId } = useParams({ from: '/room/$roomId' });
   const navigate = useNavigate();
 
   const { getChannelsForRoomId, channels } = useWebSocketContext();
@@ -79,9 +79,12 @@ export const Room = () => {
   }, [channels]);
 
   return (
-    <div style={{ margin: '15px'}}>
+    <div style={{ margin: '15px' }}>
       <Header>
-        <IconButton onClick={() => navigate('/')} aria-label="Back to home">
+        <IconButton
+          onClick={() => navigate({ to: '/' })}
+          aria-label="Back to home"
+        >
           <MdiMenu width={35} />
         </IconButton>
       </Header>

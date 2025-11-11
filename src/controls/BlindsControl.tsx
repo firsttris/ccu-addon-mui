@@ -17,10 +17,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const blindValue = Number(datapoints.LEVEL) * 100;
   return (
     <div style={{ width: '250px', margin: '10px' }}>
-      <ChannelName
-        name={name}
-        maxWidth='250px'
-      />
+      <ChannelName name={name} maxWidth="250px" />
       <div>
         <div
           style={{
@@ -30,13 +27,13 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             alignItems: 'center',
           }}
         >
-          <div style={{ fontSize: '13px', marginBottom: '1px'}}>
+          <div style={{ fontSize: '13px', marginBottom: '1px' }}>
             {blindValue === 0 ? 'geschlossen' : `${blindValue} % geöffnet`}
           </div>
           <Shutters
             percent={blindValue}
             onLamellaClick={(percent) => {
-              setDataPoint(interfaceName, address, 'LEVEL', percent / 100 );
+              setDataPoint(interfaceName, address, 'LEVEL', percent / 100);
             }}
           />
           <div

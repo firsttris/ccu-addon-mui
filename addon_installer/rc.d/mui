@@ -1,29 +1,102 @@
 #!/bin/sh
 
 ADDON_DIR="/usr/local/addons/mui"
+SERVER_DIR="$ADDON_DIR/server"
+NODE_BIN="$ADDON_DIR/node/bin/node"
+PID_FILE="/var/run/mui-websocket-server.pid"
+LOG_FILE="/var/log/mui-websocket-server.log"
+
+start() {
+    if [ -f $PID_FILE ]; then
+        PID=$(cat $PID_FILE)
+        if kill -0 $PID 2>/dev/null; then
+            echo "WebSocket Server is already running (PID: $PID)"
+            return 0
+        else
+            rm -f $PID_FILE
+        fi
+    fi
+    
+    echo "Starting MUI WebSocket Server..."
+    cd $SERVER_DIR
+    $NODE_BIN websocket-server.js >> $LOG_FILE 2>&1 &
+    echo $! > $PID_FILE
+    echo "MUI WebSocket Server started (PID: $(cat $PID_FILE))"
+}
+
+stop() {
+    if [ -f $PID_FILE ]; then
+        PID=$(cat $PID_FILE)
+        echo "Stopping MUI WebSocket Server (PID: $PID)..."
+        kill $PID 2>/dev/null
+        
+        # Wait for process to stop (max 10 seconds)
+        for i in 1 2 3 4 5 6 7 8 9 10; do
+            if ! kill -0 $PID 2>/dev/null; then
+                break
+            fi
+            sleep 1
+        done
+        
+        # Force kill if still running
+        if kill -0 $PID 2>/dev/null; then
+            echo "Process did not stop, forcing..."
+            kill -9 $PID 2>/dev/null
+        fi
+        
+        rm -f $PID_FILE
+        echo "MUI WebSocket Server stopped"
+    else
+        echo "MUI WebSocket Server is not running"
+    fi
+}
+
+restart() {
+    stop
+    sleep 2
+    start
+}
 
 case "$1" in
     
-    ""|start|restart|stop)
-        exit 0
+    ""|start)
+        start
+    ;;
+    
+    stop)
+        stop
+    ;;
+    
+    restart)
+        restart
     ;;
     
     info)
+        # Read version from VERSION file if it exists, otherwise use fallback
+        VERSION="0.0.55"
+        if [ -f "$ADDON_DIR/VERSION" ]; then
+            VERSION=$(cat "$ADDON_DIR/VERSION")
+        fi
+        
         echo "Info: <b>MUI CCU Addon</b><br>"
         echo "Info: <a href='https://github.com/firsttris/ccu-addon-mui'>https://github.com/firsttris/ccu-addon-mui</a>"
         echo "Name: MUI CCU Addon"
-        echo "Version: 0.0.1"
-        echo "Operations: uninstall"
+        echo "Version: $VERSION"
+        echo "Operations: uninstall restart"
         echo "Config-Url: /addons/mui/"
-        echo "Update: not implemented yet"
+        echo "Update: /addons/mui/update-check.cgi"
     ;;
+    
     uninstall)
         echo "Deinstalliere MUI Addon..."
+        stop
         rm -rf $ADDON_DIR
+        rm -f $LOG_FILE
         echo "Deinstallation abgeschlossen."
     ;;
+    
     *)
-        echo "Usage: $0 {info|uninstall}" >&2
+        echo "Usage: $0 {start|stop|restart|info|uninstall}" >&2
         exit 1
     ;;
 esac

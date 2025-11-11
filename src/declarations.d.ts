@@ -1,4 +1,4 @@
-declare module "*.tcl" {
-    const content: string;
-    export default content;
-  }
+declare module '*.tcl' {
+  const content: string;
+  export default content;
+}

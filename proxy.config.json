@@ -1,6 +1,6 @@
 {
-  "/addons/red/ws/webapp": {
-    "target": "ws://192.168.178.26",
+  "/ws/mui": {
+    "target": "ws://localhost:8088",
     "ws": true,
     "changeOrigin": true
   }

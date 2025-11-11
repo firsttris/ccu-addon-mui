@@ -10,7 +10,9 @@ interface ControlComponentProps {
   channel: Channel;
 }
 
-export const ControlComponent: React.FC<ControlComponentProps> = ({ channel }) => {
+export const ControlComponent: React.FC<ControlComponentProps> = ({
+  channel,
+}) => {
   switch (channel.type) {
     case ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER:
       return <FloorControl channel={channel} />;
