@@ -44,11 +44,7 @@ To install this add-on:
 1. Download the latest addon `tar.gz` file from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases).
 2. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
    ![Screenshot](docs/ccu3-install.png)
-3. After installation, the add-on will automatically:
-   - Install the WebSocket server and dependencies
-   - Start the server service
-   - Configure lighttpd proxy for WebSocket connections
-   - Set up version tracking for update checks
+3. Please Note: Upload and Reboot takes some time, depending on your Box ccu3 vs raspberry. (This is because we need to copy the nodejs binary)
 4. The add-on will be available at `http://192.168.178.111/addons/mui` (replace with your CCU IP).
 
 **Note:** Node-RED is **no longer required**! This add-on now includes its own integrated WebSocket server that:
