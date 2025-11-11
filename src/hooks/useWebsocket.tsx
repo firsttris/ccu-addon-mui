@@ -50,6 +50,7 @@ export const useWebsocket = () => {
   };
 
   // Subscribe to channels when they change
+  // Only re-subscribe when channel addresses actually change, not when datapoints update
   useEffect(() => {
     if (readyState === ReadyState.OPEN && channels.length > 0) {
       const channelAddresses = channels.map((channel) => channel.address);
@@ -64,7 +65,9 @@ export const useWebsocket = () => {
         `📝 Device ${deviceId} subscribed to ${channelAddresses.length} channels`,
       );
     }
-  }, [channels, readyState, deviceId, sendMessage]);
+    // Only depend on the stringified addresses to avoid re-subscribing on datapoint changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(channels.map((c) => c.address)), readyState, deviceId]);
 
   useEffect(() => {
     if (lastMessage !== null) {

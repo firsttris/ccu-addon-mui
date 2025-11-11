@@ -66,22 +66,6 @@ export const createWebSocketServer = (
     );
   };
 
-  const handleSetValueMessage = async (
-    ws: WebSocket,
-    msg: SetValueMessage,
-  ): Promise<void> => {
-    const { address, datapoint, value } = msg;
-    const script = `dom.GetObject("${address}").DPByHssDP("${datapoint}").State(${value});`;
-    const result = await executeScript(script);
-    ws.send(
-      JSON.stringify({
-        type: 'setValue_response',
-        result,
-        requestId: msg.requestId,
-      }),
-    );
-  };
-
   const handleSubscribeMessage = (
     ws: WebSocket,
     msg: SubscribeMessage,
@@ -114,11 +98,7 @@ export const createWebSocketServer = (
     ws: WebSocket,
     data: WebSocketMessage,
   ): Promise<void> => {
-    if (data.type === 'script') {
-      await handleScriptMessage(ws, data);
-    } else if (data.type === 'setValue') {
-      await handleSetValueMessage(ws, data);
-    } else if (data.type === 'subscribe') {
+    if (data.type === 'subscribe') {
       handleSubscribeMessage(ws, data);
     }
   };
@@ -137,7 +117,6 @@ export const createWebSocketServer = (
   ): Promise<void> => {
     try {
       const messageStr = message.toString();
-
       try {
         const data = JSON.parse(messageStr) as WebSocketMessage;
         await handleJsonMessage(ws, data);
