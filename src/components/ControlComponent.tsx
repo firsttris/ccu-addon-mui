@@ -1,10 +1,21 @@
 import React from 'react';
+import styled from '@emotion/styled';
 import { FloorControl } from '../controls/FloorControl';
 import { SwitchControl } from '../controls/SwitchControl';
 import { BlindsControl } from '../controls/BlindsControl';
 import { ThermostatControl } from '../controls/ThermostatControl';
 import { DoorControl } from '../controls/DoorControl';
 import { Channel, ChannelType } from '../types/types';
+
+const ErrorCard = styled.div`
+  background-color: #ffebee;
+  border: 1px solid #f44336;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 8px;
+  color: #c62828;
+  font-weight: bold;
+`;
 
 interface ControlComponentProps {
   channel: Channel;
@@ -25,7 +36,13 @@ export const ControlComponent: React.FC<ControlComponentProps> = ({
     case ChannelType.KEYMATIC:
       return <DoorControl channel={channel} />;
     default:
-      console.error(`${(channel as any).type} not implemented`);
-      return null;
+      return (
+        <ErrorCard>
+          <div>Unsupported Channel</div>
+          <pre style={{ fontSize: '12px', marginTop: '8px' }}>
+            {JSON.stringify(channel, null, 2)}
+          </pre>
+        </ErrorCard>
+      );
   }
 };

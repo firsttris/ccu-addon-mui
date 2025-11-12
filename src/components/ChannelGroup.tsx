@@ -101,7 +101,6 @@ export const ChannelGroup: React.FC<ChannelGroupProps> = ({
 
   if (!localizedText) {
     console.error('No localization found for channel type:', channelType);
-    return null;
   }
 
   return (
