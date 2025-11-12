@@ -35,7 +35,7 @@ export const Trades = () => {
 
   useEffect(() => {
     getTrades();
-  }, [getTrades]);
+  }, []);
 
   if (trades) {
     return (
