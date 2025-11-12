@@ -31,9 +31,7 @@ const ListItem = styled.li`
 
 export const Trade: React.FC = () => {
   const { tradeId } = useParams({ from: '/trade/$tradeId' });
-  const { getChannelsForTrade, channels, trades } = useWebSocketContext();
-
-  const trade = trades.find((t) => t.id === Number(tradeId));
+  const { getChannelsForTrade, channels } = useWebSocketContext();
 
   useEffect(() => {
     if (tradeId) {

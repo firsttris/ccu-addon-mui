@@ -23,13 +23,16 @@ foreach(channelId, functionObject.EnumUsedIDs()) {
     foreach(datapointId, channelObject.DPs().EnumUsedIDs()) {
         object datapointObject = dom.GetObject(datapointId);
         var value = datapointObject.Value();
-        if (value.ToString() != "") {
-            if (isFirstDatapoint == false) {
-                Write(',');
-            } else {
-                isFirstDatapoint = false;
-            }
-            Write('"' # datapointObject.HssType() # '":' # value);
+        if (isFirstDatapoint == false) {
+            Write(',');
+        } else {
+            isFirstDatapoint = false;
+        }
+        Write('"' # datapointObject.HssType() # '":');
+        if (value.ToString() == "") {
+            Write('null');
+        } else {
+            Write(value);
         }
     }
 

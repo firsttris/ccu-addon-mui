@@ -52,7 +52,6 @@ export const Trades = () => {
                 });
               }}
             >
-              <TeenyiconsFloorplanSolid />
               <ListItemText>{trade.name}</ListItemText>
             </ListItem>
           ))}
