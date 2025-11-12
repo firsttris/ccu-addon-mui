@@ -48,21 +48,33 @@ const Header = styled.div`
   align-items: center;
   //padding: 10px;
   //background-color: aliceblue;
-  //width: 100%;
-  z-index: 1;
-  //border: 1px solid #ccc;
-  //box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 10px;
 `;
 
-export const Room = () => {
-  const { roomId } = useParams({ from: '/room/$roomId' });
-  const navigate = useNavigate();
+const Title = styled.h1`
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+`;
 
-  const { getChannelsForRoomId, channels } = useWebSocketContext();
+export const Trade = () => {
+  const navigate = useNavigate();
+  const { tradeId } = useParams({ from: '/trade/$tradeId' });
+  const { getChannelsForTrade, channels, trades } = useWebSocketContext();
 
   useEffect(() => {
-    getChannelsForRoomId(Number(roomId));
-  }, [roomId, getChannelsForRoomId]);
+    if (tradeId) {
+      getChannelsForTrade(Number(tradeId));
+    }
+  }, [tradeId, getChannelsForTrade]);
+
+  const trade = trades.find((t) => t.id === Number(tradeId));
 
   const channelsPerType = useMemo(() => {
     return channels?.reduce((acc, channel) => {
@@ -79,14 +91,13 @@ export const Room = () => {
   }, [channels]);
 
   return (
-    <div style={{ margin: '15px' }}>
+    <>
       <Header>
-        <IconButton
-          onClick={() => navigate({ to: '/rooms' })}
-          aria-label="Back to rooms"
-        >
-          <MdiMenu width={35} />
+        <IconButton onClick={() => navigate({ to: '/trades' })}>
+          <MdiMenu />
         </IconButton>
+        <Title>{trade?.name || 'Trade'}</Title>
+        <div></div>
       </Header>
       <Container>
         <List>
@@ -102,6 +113,6 @@ export const Room = () => {
           })}
         </List>
       </Container>
-    </div>
+    </>
   );
 };

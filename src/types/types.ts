@@ -117,6 +117,11 @@ export interface Room {
   id: number;
 }
 
+export interface Trade {
+  id: number;
+  name: string;
+}
+
 export interface HmEvent {
   channel: string;
   datapoint: string;

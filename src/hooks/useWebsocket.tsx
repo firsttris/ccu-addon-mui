@@ -2,14 +2,17 @@ import { ReactNode, useEffect, useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import regaGetRoomsScript from './../rega/getRooms.tcl';
 import regaGetChannelsScript from './../rega/getChannelsForRoomId.tcl';
+import regaGetTradesScript from './../rega/getTrades.tcl';
+import regaGetChannelsForTradeScript from './../rega/getChannelsForTradeId.tcl';
 import getSetDataPoint from './../rega/setDatapoint.tcl';
-import { Channel, HmEvent, Room } from 'src/types/types';
+import { Channel, HmEvent, Room, Trade } from 'src/types/types';
 
 import React, { createContext, useContext } from 'react';
 import { useUniqueDeviceID } from './useUniqueDeviceID';
 
 interface Response {
   rooms?: Room[];
+  trades?: Trade[];
   channels?: Channel[];
   event?: HmEvent;
   deviceId?: string;
@@ -18,6 +21,7 @@ interface Response {
 
 export const useWebsocket = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [trades, setTrades] = useState<Trade[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
 
   const deviceId = useUniqueDeviceID();
@@ -105,6 +109,10 @@ export const useWebsocket = () => {
             setRooms(response.rooms);
             return;
           }
+          if (response.trades) {
+            setTrades(response.trades);
+            return;
+          }
           if (response.channels) {
             setChannels(response.channels);
             return;
@@ -124,9 +132,24 @@ export const useWebsocket = () => {
     sendMessage(script);
   };
 
+  const getTrades = () => {
+    const script = regaGetTradesScript.replace(
+      /DEVICEID_PLACEHOLDER/g,
+      deviceId,
+    );
+    sendMessage(script);
+  };
+
   const getChannelsForRoomId = (roomId: number) => {
     const script = regaGetChannelsScript
       .replace(/ROOMID_PLACEHOLDER/g, roomId.toString())
+      .replace(/DEVICEID_PLACEHOLDER/g, deviceId);
+    sendMessage(script);
+  };
+
+  const getChannelsForTrade = (tradeId: number) => {
+    const script = regaGetChannelsForTradeScript
+      .replace(/TRADEID_PLACEHOLDER/g, tradeId.toString())
       .replace(/DEVICEID_PLACEHOLDER/g, deviceId);
     sendMessage(script);
   };
@@ -158,9 +181,12 @@ export const useWebsocket = () => {
     setChannels,
     setDataPoint,
     getChannelsForRoomId,
+    getChannelsForTrade,
     getRooms,
+    getTrades,
     channels,
     rooms,
+    trades,
     connectionStatus,
   };
 };
