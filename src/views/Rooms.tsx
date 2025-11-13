@@ -9,6 +9,7 @@ const Container = styled.div`
   max-width: 1280px;
   margin: 0 auto;
   padding: 16px;
+  padding-top: 60px;
 `;
 
 const List = styled.ul`

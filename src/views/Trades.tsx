@@ -3,12 +3,12 @@ import styled from '@emotion/styled';
 import { ListItem } from '../components/ChannelGroup';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useEffect } from 'react';
-import { TeenyiconsFloorplanSolid } from '../components/icons/TeenyiconsFloorplanSolid';
 
 const Container = styled.div`
   max-width: 1280px;
   margin: 0 auto;
   padding: 16px;
+  padding-top: 60px;
 `;
 
 const List = styled.ul`

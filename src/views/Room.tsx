@@ -11,7 +11,7 @@ const Container = styled.div`
   gap: 10px;
   max-width: 1280px;
   margin: 0 auto;
-  padding-top: 25px;
+  padding-top: 60px;
 `;
 
 const List = styled.ul`
