@@ -47,6 +47,6 @@ export const ui = {
 
 export const useTranslations = () => {
   return (key: keyof (typeof ui)[typeof defaultLang]) => {
-    return ui[defaultLang][key] || ui[defaultLang][key];
+    return ui[defaultLang][key] || key;
   };
 };

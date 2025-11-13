@@ -29,7 +29,7 @@ chmod +x $ADDON_DIR/server/websocket-server.js
 
 # Create symlink only if it doesn't exist
 if [ ! -L $WWW_DIR/mui ]; then
-  ln -sf $ADDON_DIR $WWW_DIR/mui
+  ln -sf $ADDON_DIR/www $WWW_DIR/mui
 fi
 
 cp -af rc.d/mui $RC_DIR/
