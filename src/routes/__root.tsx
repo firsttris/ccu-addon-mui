@@ -1,8 +1,9 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 import { css, Global } from '@emotion/react';
+import { Header } from '../components/Header';
 
-export const Route = createRootRoute({
-  component: () => (
+const RootComponent = () => {
+  return (
     <>
       <Global
         styles={css`
@@ -15,7 +16,12 @@ export const Route = createRootRoute({
           }
         `}
       />
+      <Header />
       <Outlet />
     </>
-  ),
+  );
+};
+
+export const Route = createRootRoute({
+  component: RootComponent,
 });

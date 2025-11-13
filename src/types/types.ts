@@ -4,6 +4,7 @@ export enum ChannelType {
   HEATING_CLIMATECONTROL_TRANSCEIVER = 'HEATING_CLIMATECONTROL_TRANSCEIVER',
   CLIMATECONTROL_FLOOR_TRANSCEIVER = 'CLIMATECONTROL_FLOOR_TRANSCEIVER',
   KEYMATIC = 'KEYMATIC',
+  KEY_TRANSCEIVER = 'KEY_TRANSCEIVER',
 }
 
 export type SwitchVirtualReceiverDatapoint = {
@@ -115,6 +116,11 @@ export type Channel =
 export interface Room {
   name: string;
   id: number;
+}
+
+export interface Trade {
+  id: number;
+  name: string;
 }
 
 export interface HmEvent {

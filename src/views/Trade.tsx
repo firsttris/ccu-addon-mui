@@ -18,16 +18,26 @@ const List = styled.ul`
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 `;
 
-export const Room = () => {
-  const { roomId } = useParams({ from: '/room/$roomId' });
+const ListItem = styled.li`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
 
-  const { getChannelsForRoomId, channels } = useWebSocketContext();
+export const Trade: React.FC = () => {
+  const { tradeId } = useParams({ from: '/trade/$tradeId' });
+  const { getChannelsForTrade, channels } = useWebSocketContext();
 
   useEffect(() => {
-    getChannelsForRoomId(Number(roomId));
-  }, [roomId, getChannelsForRoomId]);
+    if (tradeId) {
+      getChannelsForTrade(Number(tradeId));
+    }
+  }, [tradeId, getChannelsForTrade]);
 
   const channelsPerType = useMemo(() => {
     return channels?.reduce((acc, channel) => {
@@ -49,12 +59,13 @@ export const Room = () => {
         <List>
           {Array.from(channelsPerType).map(([channelType, channels], index) => {
             return channels.length ? (
-              <ChannelGroup
-                key={index}
-                index={index}
-                channelType={channelType}
-                channels={channels}
-              />
+              <ListItem key={index}>
+                <ChannelGroup
+                  index={index}
+                  channelType={channelType}
+                  channels={channels}
+                />
+              </ListItem>
             ) : null;
           })}
         </List>

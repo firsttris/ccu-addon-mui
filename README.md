@@ -33,9 +33,9 @@ This project is built with a robust set of technologies to ensure high performan
 
 # Prerequisites for CCU3
 
-**Configure Rooms and Assign Channels (Devices)**
+**Configure Rooms and or Trades (Gewerke) and Assign Channels (Devices)**
 
-   To ensure this add-on functions properly, you need to have rooms configured in your CCU3. Each room should have channels assigned with appropriate names, as the add-on queries the rooms, their channels, and the datapoints of those channels. Without this setup, the add-on will not work.
+   To ensure this add-on functions properly, you need to have rooms or trades configured in your CCU3. Each room should have channels assigned with appropriate names, as the add-on queries the rooms, their channels, and the datapoints of those channels. Without this setup, the add-on will not work.
 
 # Installation
 
