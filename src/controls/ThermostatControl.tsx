@@ -7,6 +7,10 @@ import { MdiMinus } from '../components/icons/MdiMinus';
 import { MdiPlus } from '../components/icons/MdiPlus';
 import { ChannelName } from '../components/ChannelName';
 import { MaterialSymbolsLightWindowOpen } from '../components/icons/MaterialSymbolsLightWindowOpen';
+import { MaterialSymbolsSchedule } from '../components/icons/MaterialSymbolsSchedule';
+import { MaterialSymbolsTouchApp } from '../components/icons/MaterialSymbolsTouchApp';
+import { MaterialSymbolsCelebration } from '../components/icons/MaterialSymbolsCelebration';
+import { MaterialSymbolsBolt } from '../components/icons/MaterialSymbolsBolt';
 
 type ThermostatProps = {
   channel: HeatingClimateControlTransceiverChannel;
@@ -105,6 +109,9 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const targetTemperature = datapoints.SET_POINT_TEMPERATURE;
   const currentTemperature = datapoints.ACTUAL_TEMPERATURE;
   const humidity = datapoints.HUMIDITY;
+  const setPointMode = datapoints.SET_POINT_MODE ?? 0;
+  const boostMode = datapoints.BOOST_MODE ?? false;
+  const partyMode = datapoints.PARTY_MODE ?? false;
 
   const { setDataPoint } = useWebSocketContext();
 
@@ -122,7 +129,33 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
       'SET_POINT_TEMPERATURE',
       targetTemperature + 0.5,
     );
-  // const boostMode = () => setDataPoint(channel.interfaceName, channel.address, 'BOOST_MODE', true);
+
+  const setMode = (mode: number) => {
+    setDataPoint(
+      channel.interfaceName,
+      channel.address,
+      'SET_POINT_MODE',
+      mode,
+    );
+  };
+
+  const toggleBoost = () => {
+    setDataPoint(
+      channel.interfaceName,
+      channel.address,
+      'BOOST_MODE',
+      !boostMode,
+    );
+  };
+
+  const toggleParty = () => {
+    setDataPoint(
+      channel.interfaceName,
+      channel.address,
+      'PARTY_MODE',
+      !partyMode,
+    );
+  };
 
   return (
     <Container>
@@ -157,12 +190,87 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
           <MdiPlus />
         </Button>
       </Controls>
+      {/* Mode controls */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '5px',
+          marginTop: '10px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <Button
+          onClick={() => setMode(0)}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '6px',
+            borderRadius: '8px',
+            background: setPointMode === 0 ? '#4CAF50' : 'transparent',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            minWidth: '50px',
+          }}
+        >
+          <MaterialSymbolsSchedule fontSize={18} />
+          <span style={{ fontSize: '9px', marginTop: '2px' }}>Auto</span>
+        </Button>
+        <Button
+          onClick={() => setMode(1)}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '6px',
+            borderRadius: '8px',
+            background: setPointMode === 1 ? '#2196F3' : 'transparent',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            minWidth: '50px',
+          }}
+        >
+          <MaterialSymbolsTouchApp fontSize={18} />
+          <span style={{ fontSize: '9px', marginTop: '2px' }}>Manual</span>
+        </Button>
+        <Button
+          onClick={toggleParty}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '6px',
+            borderRadius: '8px',
+            background: partyMode ? '#FF9800' : 'transparent',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            minWidth: '50px',
+          }}
+        >
+          <MaterialSymbolsCelebration fontSize={18} />
+          <span style={{ fontSize: '9px', marginTop: '2px' }}>Party</span>
+        </Button>
+        <Button
+          onClick={toggleBoost}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '6px',
+            borderRadius: '8px',
+            background: boostMode ? '#F44336' : 'transparent',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            minWidth: '50px',
+          }}
+        >
+          <MaterialSymbolsBolt fontSize={18} />
+          <span style={{ fontSize: '9px', marginTop: '2px' }}>Boost</span>
+        </Button>
+      </div>
       <div>
         {humidity ? (
           <div
             style={{
               position: 'absolute',
-              bottom: 165,
+              bottom: 220,
               left: 110,
               display: 'flex',
               alignItems: 'center',
