@@ -17,6 +17,10 @@ const Card = styled.div({
   alignItems: 'center',
   width: '200px',
   backgroundColor: '#ffffff',
+  transition: 'box-shadow 0.2s ease',
+  '&:hover': {
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)',
+  },
 });
 
 const Title = styled.h3({
@@ -42,6 +46,13 @@ const ButtonWrapper = styled.div({
 
 const ButtonLabel = styled.span({
   fontSize: '12px',
+  color: '#666666',
+  textAlign: 'center',
+});
+
+const StatusText = styled.span({
+  marginTop: '12px',
+  fontSize: '14px',
   color: '#666666',
   textAlign: 'center',
 });
@@ -110,6 +121,9 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
           <ButtonLabel>{t('OPEN')}</ButtonLabel>
         </ButtonWrapper>
       </ButtonContainer>
+      <StatusText>
+        {isUncertain ? '' : (isUnlocked ? t('UNLOCKED') : t('LOCKED'))}
+      </StatusText>
       <StyledTypography uncertain={isUncertain}>
         {t('DOOR_STATE_UNKNOWN')}
       </StyledTypography>

@@ -11,8 +11,10 @@ export const Button = styled.button`
   align-items: center;
   justify-content: center;
   font-size: 25px;
+  transition: all 0.2s ease;
 
   &:hover {
     background: #f0f0f0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 `;

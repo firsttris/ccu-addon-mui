@@ -28,6 +28,8 @@ export const ui = {
     LOCK: 'Lock',
     UNLOCK: 'Unlock',
     OPEN: 'Open',
+    LOCKED: 'Locked',
+    UNLOCKED: 'Unlocked',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
@@ -48,6 +50,8 @@ export const ui = {
     LOCK: 'Sperren',
     UNLOCK: 'Entsperren',
     OPEN: 'Öffnen',
+    LOCKED: 'Gesperrt',
+    UNLOCKED: 'Entsperrt',
   },
 } as const;
 
