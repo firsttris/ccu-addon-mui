@@ -12,18 +12,6 @@ const Container = styled.div`
   max-width: 1280px;
   margin: 0 auto;
   padding-top: 60px;
-
-  @media (max-width: 400px) {
-    padding-top: 80px;
-  }
-`;
-
-const OuterContainer = styled.div`
-  margin: 15px;
-
-  @media (max-width: 400px) {
-    margin: 5px;
-  }
 `;
 
 const List = styled.ul`
@@ -56,7 +44,7 @@ export const Room = () => {
   }, [channels]);
 
   return (
-    <OuterContainer>
+    <div style={{ margin: '15px' }}>
       <Container>
         <List>
           {Array.from(channelsPerType).map(([channelType, channels], index) => {
@@ -71,6 +59,6 @@ export const Room = () => {
           })}
         </List>
       </Container>
-    </OuterContainer>
+    </div>
   );
 };

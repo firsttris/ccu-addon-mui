@@ -7,55 +7,18 @@ import { MaterialSymbolsDoorOpenOutline } from '../components/icons/MaterialSymb
 import { MaterialSymbolsLockOutline } from '../components/icons/MaterialSymbolsLockOutline';
 import { MaterialSymbolsLockOpenOutline } from '../components/icons/MaterialSymbolsLockOpenOutline';
 
-const Card = styled.div`
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 200px;
-  background-color: ${props => props.theme.colors.surface};
-  transition: box-shadow 0.2s ease;
-  &:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-`;
-
-const Title = styled.h3`
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  font-weight: 500;
-  color: ${props => props.theme.colors.text};
-  text-align: center;
-`;
-
-const ButtonContainer = styled.div({
-  display: 'flex',
-  gap: '12px',
-  alignItems: 'center',
-});
-
-const ButtonWrapper = styled.div({
+const OuterBox = styled.div({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  gap: '4px',
+  padding: '10px',
 });
 
-const ButtonLabel = styled.span`
-  font-size: 12px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-align: center;
-`;
-
-const StatusText = styled.span`
-  margin-top: 12px;
-  font-size: 14px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-align: center;
-`;
+const InnerBox = styled.div({
+  display: 'flex',
+  gap: '10px',
+  alignItems: 'center',
+});
 
 interface StyledTypographyProps {
   uncertain: boolean;
@@ -63,13 +26,10 @@ interface StyledTypographyProps {
 
 const StyledTypography = styled('span', {
   shouldForwardProp: (prop) => prop !== 'uncertain',
-})<StyledTypographyProps>`
-  display: ${props => props.uncertain ? 'block' : 'none'};
-  margin-top: 12px;
-  font-size: 14px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-align: center;
-`;
+})<StyledTypographyProps>(({ uncertain }) => ({
+  display: uncertain ? 'block' : 'none',
+  marginTop: '10px',
+}));
 
 interface DoorControlProps {
   channel: KeymaticChannel;
@@ -80,7 +40,6 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   const { setDataPoint } = useWebSocketContext();
   const {
     datapoints: { STATE, STATE_UNCERTAIN },
-    name,
   } = channel;
 
   const isUncertain = STATE_UNCERTAIN === true;
@@ -99,34 +58,21 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   };
 
   return (
-    <Card>
-      <Title>{name}</Title>
-      <ButtonContainer>
-        <ButtonWrapper>
-          <Button onClick={lockDoor}>
-            <MaterialSymbolsLockOutline />
-          </Button>
-          <ButtonLabel>{t('LOCK')}</ButtonLabel>
-        </ButtonWrapper>
-        <ButtonWrapper>
-          <Button onClick={unlockDoor}>
-            <MaterialSymbolsLockOpenOutline />
-          </Button>
-          <ButtonLabel>{t('UNLOCK')}</ButtonLabel>
-        </ButtonWrapper>
-        <ButtonWrapper>
-          <Button onClick={openDoor}>
-            <MaterialSymbolsDoorOpenOutline />
-          </Button>
-          <ButtonLabel>{t('OPEN')}</ButtonLabel>
-        </ButtonWrapper>
-      </ButtonContainer>
-      <StatusText>
-        {isUncertain ? '' : (isUnlocked ? t('UNLOCKED') : t('LOCKED'))}
-      </StatusText>
+    <OuterBox>
+      <InnerBox>
+        <Button onClick={lockDoor}>
+          <MaterialSymbolsLockOutline />
+        </Button>
+        <Button onClick={unlockDoor}>
+          <MaterialSymbolsLockOpenOutline />
+        </Button>
+        <Button onClick={openDoor}>
+          <MaterialSymbolsDoorOpenOutline />
+        </Button>
+      </InnerBox>
       <StyledTypography uncertain={isUncertain}>
         {t('DOOR_STATE_UNKNOWN')}
       </StyledTypography>
-    </Card>
+    </OuterBox>
   );
 };

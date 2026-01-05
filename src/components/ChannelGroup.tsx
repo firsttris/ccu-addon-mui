@@ -18,13 +18,13 @@ const ExpandMore = styled(UiwDown, {
   fontSize: '25px',
 }));
 
-const Card = styled.div`
-  background: ${props => props.theme.colors.surface};
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 4px;
-  overflow: hidden;
-`;
+const Card = styled.div({
+  background: '#f5f5f5',
+  boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.2)',
+  border: '1px solid #ccc',
+  borderRadius: '4px',
+  overflow: 'hidden',
+});
 
 const ChannelContainer = styled.div({
   marginTop: '15px',
@@ -42,39 +42,35 @@ const ChannelContainer = styled.div({
   },
 });
 
-export const ListItem = styled.div`
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  border-bottom: 1px solid ${props => props.theme.colors.border};
-  cursor: pointer;
-  background: ${props => props.theme.colors.background};
-  &:hover {
-    background: ${props => props.theme.colors.hover};
-  }
-`;
+export const ListItem = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  padding: '8px 16px',
+  borderBottom: '1px solid #e0e0e0',
+  cursor: 'pointer',
+});
 
-export const Typography = styled.p`
-  color: ${props => props.theme.colors.text};
-  max-width: 300px;
-  overflow: hidden;
-  white-space: wrap;
-  text-overflow: ellipsis;
-  font-weight: 600;
-  margin: 10px 0;
-  font-size: 20px;
-  @media (max-width: 800px) {
-    margin-left: 70px;
-  }
-`;
+export const Typography = styled.p({
+  color: '#000',
+  maxWidth: '300px',
+  overflow: 'hidden',
+  whiteSpace: 'wrap',
+  textOverflow: 'ellipsis',
+  fontWeight: 600,
+  margin: '10px 0',
+  fontSize: '20px',
+  '@media (max-width: 800px)': {
+    marginLeft: '70px',
+  },
+});
 
-const Divider = styled.hr`
-  width: 100%;
-  border: none;
-  border-top: 1px solid ${props => props.theme.colors.border};
-  margin-top: 16px;
-  margin-bottom: 0px;
-`;
+const Divider = styled.hr({
+  width: '100%',
+  border: 'none',
+  borderTop: '1px solid #e0e0e0',
+  marginTop: '16px',
+  marginBottom: '0px',
+});
 
 const Collapse = styled('div', {
   shouldForwardProp: (prop) => prop !== 'in',
