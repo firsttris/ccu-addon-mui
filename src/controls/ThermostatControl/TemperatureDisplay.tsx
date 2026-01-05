@@ -39,6 +39,7 @@ const TemperatureUnit = styled.span`
   font-weight: 300;
   margin-left: 2px;
   opacity: 0.5;
+  vertical-align: super;
 `;
 
 const Separator = styled.div`
