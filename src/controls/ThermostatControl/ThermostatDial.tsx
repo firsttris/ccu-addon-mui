@@ -13,8 +13,8 @@ interface ThermostatDialProps {
 
 const ThermostatWrapper = styled.div`
   position: relative;
-  width: 260px;
-  height: 260px;
+  width: 100%;
+  height: 100%;
   margin: 0;
   user-select: none;
 `;

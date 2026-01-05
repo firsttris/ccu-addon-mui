@@ -19,15 +19,15 @@ const MenuItem = styled(Link)`
   display: flex;
   align-items: center;
   padding: 16px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid ${props => props.theme.colors.border};
   border-radius: 8px;
   text-decoration: none;
-  color: #000;
-  background: #f9f9f9;
+  color: ${props => props.theme.colors.text};
+  background: ${props => props.theme.colors.surface};
   transition: background 0.2s;
 
   &:hover {
-    background: #f0f0f0;
+    background: ${props => props.theme.colors.hover};
   }
 `;
 

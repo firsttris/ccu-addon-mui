@@ -9,7 +9,7 @@ export function MdiMenu(props: SVGProps<SVGSVGElement>) {
       viewBox="0 0 24 24"
       {...props}
     >
-      <path fill="black" d="M3 6h18v3H3zm0 5h18v3H3zm0 5h18v3H3z"></path>
+      <path fill="currentColor" d="M3 6h18v3H3zm0 5h18v3H3zm0 5h18v3H3z"></path>
     </svg>
   );
 }

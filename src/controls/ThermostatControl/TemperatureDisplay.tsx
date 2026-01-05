@@ -23,7 +23,7 @@ const CenterContent = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 0px;
 `;
 
 const MainTemperature = styled.div`
@@ -54,6 +54,7 @@ const StatsRow = styled.div`
   justify-content: center;
   gap: 20px;
   width: 100%;
+  margin-top: 4px;
 `;
 
 const StatItem = styled.div`

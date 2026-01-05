@@ -10,7 +10,7 @@ const shimmer = keyframes`
     transform: translateX(-100%);
   }
   100% {
-    transform: translateX(100%);
+    transform: translateX(0%);
   }
 `;
 
@@ -25,7 +25,6 @@ const Container = styled.div`
 `;
 
 const Content = styled.div`
-  padding-top: 12px;
 `;
 
 const FlexBox = styled.div`
@@ -54,7 +53,7 @@ const ProgressBarContainer = styled.div`
 
 const ProgressBar = styled.div<{ value: number }>`
   height: 18px;
-  background: linear-gradient(to right, #e8e8e8, #f0f0f0);
+  background: ${props => props.theme.colors.border};
   border-radius: 10px;
   overflow: hidden;
   position: relative;
