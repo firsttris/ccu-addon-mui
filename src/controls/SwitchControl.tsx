@@ -26,6 +26,11 @@ const Name = styled.div`
   font-size: 13px;
 `;
 
+const IconContainer = styled.div<{ checked: boolean }>`
+  margin-top: 10px;
+  filter: ${({ checked }) => checked ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none'};
+`;
+
 export const SwitchControl = ({ channel }: ControlProps) => {
   const { setDataPoint } = useWebSocketContext();
   const { datapoints, name, address, interfaceName } = channel;
@@ -38,9 +43,9 @@ export const SwitchControl = ({ channel }: ControlProps) => {
   return (
     <CardHeader onClick={onHandleChange}>
       <Name>{name}</Name>
-      <div style={{ marginTop: '10px' }}>
+      <IconContainer checked={checked}>
         {checked ? <EmojioneLightBulb /> : <EmojioneMonotoneLightBulb />}
-      </div>
+      </IconContainer>
     </CardHeader>
   );
 };
