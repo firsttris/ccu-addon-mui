@@ -12,14 +12,6 @@ const Container = styled.div`
   width: 250px;
   padding: 16px;
   border-radius: 12px;
-  background: linear-gradient(145deg, #ffffff, #f5f5f5);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
-  }
 `;
 
 const Content = styled.div`
