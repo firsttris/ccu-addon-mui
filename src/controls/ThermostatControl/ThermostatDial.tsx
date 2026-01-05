@@ -23,6 +23,7 @@ const SVGContainer = styled.svg`
   width: 100%;
   height: 100%;
   overflow: visible;
+  touch-action: none;
 
   &.dragging {
     cursor: grabbing;
