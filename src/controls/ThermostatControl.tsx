@@ -16,13 +16,19 @@ type ThermostatProps = {
 
 const Container = styled.div`
   position: relative;
-  width: 300px;
+  width: 100%;
+  max-width: 300px;
   padding: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   background: ${props => props.theme.colors.surface};
   border-radius: 16px;
+
+  @media (max-width: 400px) {
+    max-width: 250px;
+    padding: 16px;
+  }
 `;
 
 const Header = styled.div`
@@ -35,8 +41,9 @@ const Header = styled.div`
 
 const ThermostatWrapper = styled.div`
   position: relative;
-  width: 260px;
-  height: 260px;
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 1;
   margin: 0;
 `;
 

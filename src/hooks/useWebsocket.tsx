@@ -1,10 +1,10 @@
 import { ReactNode, useEffect, useState, useCallback } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import regaGetRoomsScript from './../rega/getRooms.tcl';
-import regaGetChannelsScript from './../rega/getChannelsForRoomId.tcl';
-import regaGetTradesScript from './../rega/getTrades.tcl';
-import regaGetChannelsForTradeScript from './../rega/getChannelsForTradeId.tcl';
-import getSetDataPoint from './../rega/setDatapoint.tcl';
+import regaGetRoomsScript from './../rega/getRooms.tcl?raw';
+import regaGetChannelsScript from './../rega/getChannelsForRoomId.tcl?raw';
+import regaGetTradesScript from './../rega/getTrades.tcl?raw';
+import regaGetChannelsForTradeScript from './../rega/getChannelsForTradeId.tcl?raw';
+import getSetDataPoint from './../rega/setDatapoint.tcl?raw';
 import { Channel, HmEvent, Room, Trade } from 'src/types/types';
 
 import React, { createContext, useContext } from 'react';

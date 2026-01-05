@@ -1,8 +1,3 @@
-declare module '*.tcl' {
-  const content: string;
-  export default content;
-}
-
 import '@emotion/react';
 
 declare module '@emotion/react' {
