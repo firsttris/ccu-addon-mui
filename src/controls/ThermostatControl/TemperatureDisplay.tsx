@@ -95,7 +95,6 @@ const pulse = keyframes`
 `;
 
 const WindowIconWrapper = styled.div<{ windowOpen: boolean }>`
-  margin-bottom: 2px;
   animation: ${({ windowOpen }) => windowOpen ? css`${pulse} 2s infinite` : 'none'};
   color: ${props => props.theme.colors.textSecondary};
 `;
