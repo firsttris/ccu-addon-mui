@@ -1,4 +1,5 @@
 import styled from '@emotion/styled';
+import { keyframes, css } from '@emotion/react';
 import { MaterialSymbolsLightWindowOpen } from '../../components/icons/MaterialSymbolsLightWindowOpen';
 import { MaterialSymbolsLightWindowClosed } from '../../components/icons/MaterialSymbolsLightWindowClosed';
 
@@ -74,6 +75,29 @@ const StatLabel = styled.div`
   letter-spacing: 0.5px;
 `;
 
+const pulse = keyframes`
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+    filter: drop-shadow(0 0 4px rgba(33, 150, 243, 0.4));
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
+  }
+`;
+
+const WindowIconWrapper = styled.div<{ windowOpen: boolean }>`
+  margin-bottom: 2px;
+  animation: ${({ windowOpen }) => windowOpen ? css`${pulse} 2s infinite` : 'none'};
+`;
+
 export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
   localTarget,
   currentTemperature,
@@ -82,11 +106,13 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
 }) => {
   return (
     <CenterContent>
-      {windowOpen ? (
-        <MaterialSymbolsLightWindowOpen fontSize={24} color="#80a7c4" style={{ marginBottom: '2px' }} />
-      ) : (
-        <MaterialSymbolsLightWindowClosed fontSize={24} color="#757575" style={{ marginBottom: '2px', opacity: 0.3 }} />
-      )}
+      <WindowIconWrapper windowOpen={windowOpen}>
+        {windowOpen ? (
+          <MaterialSymbolsLightWindowOpen fontSize={24} color="#2196F3" />
+        ) : (
+          <MaterialSymbolsLightWindowClosed fontSize={24} color="#757575" style={{ opacity: 0.3 }} />
+        )}
+      </WindowIconWrapper>
       <MainTemperature>
         {localTarget.toFixed(1)}
         <TemperatureUnit>°C</TemperatureUnit>
