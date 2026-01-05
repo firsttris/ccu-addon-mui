@@ -2,6 +2,7 @@ import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
 import { MaterialSymbolsLightWindowOpen } from '../../components/icons/MaterialSymbolsLightWindowOpen';
 import { MaterialSymbolsLightWindowClosed } from '../../components/icons/MaterialSymbolsLightWindowClosed';
+import { useTranslations } from '../../i18n/utils';
 
 interface TemperatureDisplayProps {
   localTarget: number;
@@ -105,6 +106,8 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
   humidity,
   windowOpen,
 }) => {
+  const t = useTranslations();
+
   return (
     <CenterContent>
       <WindowIconWrapper windowOpen={windowOpen}>
@@ -124,12 +127,12 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
       <StatsRow>
         <StatItem>
           <StatValue>{currentTemperature.toFixed(1)}°C</StatValue>
-          <StatLabel>Aktuell</StatLabel>
+          <StatLabel>{t('CURRENT_TEMPERATURE')}</StatLabel>
         </StatItem>
         {humidity !== undefined && humidity > 0 && (
           <StatItem>
             <StatValue>{humidity}%</StatValue>
-            <StatLabel>Luftfeuchte</StatLabel>
+            <StatLabel>{t('HUMIDITY')}</StatLabel>
           </StatItem>
         )}
       </StatsRow>

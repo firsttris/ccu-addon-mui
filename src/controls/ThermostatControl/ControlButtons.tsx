@@ -2,6 +2,7 @@ import styled from '@emotion/styled';
 import { MdiMinus } from '../../components/icons/MdiMinus';
 import { MdiPlus } from '../../components/icons/MdiPlus';
 import { ControlButton } from '../../components/ControlButton';
+import { useTranslations } from '../../i18n/utils';
 
 interface ControlButtonsProps {
   onDecrease: () => void;
@@ -18,13 +19,15 @@ const Controls = styled.div`
 `;
 
 export const ControlButtons: React.FC<ControlButtonsProps> = ({ onDecrease, onIncrease }) => {
+  const t = useTranslations();
+
   return (
     <Controls>
-      <ControlButton onClick={onDecrease} title="Temperatur verringern">
+      <ControlButton onClick={onDecrease} title={t('DECREASE_TEMPERATURE')}>
         <MdiMinus />
       </ControlButton>
 
-      <ControlButton onClick={onIncrease} title="Temperatur erhöhen">
+      <ControlButton onClick={onIncrease} title={t('INCREASE_TEMPERATURE')}>
         <MdiPlus />
       </ControlButton>
     </Controls>
