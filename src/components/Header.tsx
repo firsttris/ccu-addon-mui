@@ -1,10 +1,11 @@
 import styled from '@emotion/styled';
 import { useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MdiMenu } from '../components/icons/MdiMenu';
 import { TeenyiconsFloorplanSolid } from '../components/icons/TeenyiconsFloorplanSolid';
 import { MdiPipeValve } from '../components/icons/MdiPipeValve';
 import { useTheme } from '../contexts/ThemeContext';
+import { useWebSocketContext } from '../hooks/useWebsocket';
 
 const HeaderContainer = styled.div`
   position: fixed;
@@ -91,33 +92,44 @@ const CloseButton = styled.button`
   }
 `;
 
-const MenuItem = styled.button`
+const MenuSection = styled.div`
+  border-bottom: 1px solid ${props => props.theme.colors.border};
+  &:last-of-type {
+    border-bottom: none;
+  }
+`;
+
+const MenuSectionTitle = styled.div`
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: ${props => props.theme.colors.text};
+  background: ${props => props.theme.colors.surface};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const SubMenuItem = styled.button`
   background: none;
   border: none;
-  padding: 12px 16px;
+  padding: 8px 16px 8px 40px;
   width: 100%;
   text-align: left;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 16px;
+  font-size: 14px;
   color: ${props => props.theme.colors.textSecondary};
   transition: background-color 0.2s ease;
-  border-bottom: 1px solid ${props => props.theme.colors.border};
 
   &:hover {
     background-color: ${props => props.theme.colors.hover};
   }
 
-  &:last-of-type {
-    border-bottom: none;
-    border-radius: 0 0 8px 0;
-  }
-
   svg {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     flex-shrink: 0;
   }
 `;
@@ -126,6 +138,14 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { getRooms, rooms, getTrades, trades, setChannels } = useWebSocketContext();
+
+  useEffect(() => {
+    if (menuOpen && (!rooms.length || !trades.length)) {
+      getRooms();
+      getTrades();
+    }
+  }, [menuOpen, rooms.length, trades.length, getRooms, getTrades]);
 
   return (
     <HeaderContainer>
@@ -139,24 +159,44 @@ export const Header: React.FC = () => {
             Navigation
             <CloseButton onClick={() => setMenuOpen(false)}>×</CloseButton>
           </MenuHeader>
-          <MenuItem
-            onClick={() => {
-              navigate({ to: '/rooms' });
-              setMenuOpen(false);
-            }}
-          >
-            <TeenyiconsFloorplanSolid />
-            Räume
-          </MenuItem>
-          <MenuItem
-            onClick={() => {
-              navigate({ to: '/trades' });
-              setMenuOpen(false);
-            }}
-          >
-            <MdiPipeValve />
-            Gewerke
-          </MenuItem>
+          <MenuSection>
+            <MenuSectionTitle>Räume</MenuSectionTitle>
+            {rooms.map((room) => (
+              <SubMenuItem
+                key={room.id}
+                onClick={() => {
+                  setChannels([]);
+                  navigate({
+                    to: '/room/$roomId',
+                    params: { roomId: String(room.id) },
+                  });
+                  setMenuOpen(false);
+                }}
+              >
+                <TeenyiconsFloorplanSolid />
+                {room.name}
+              </SubMenuItem>
+            ))}
+          </MenuSection>
+          <MenuSection>
+            <MenuSectionTitle>Gewerke</MenuSectionTitle>
+            {trades.map((trade) => (
+              <SubMenuItem
+                key={trade.id}
+                onClick={() => {
+                  setChannels([]);
+                  navigate({
+                    to: '/trade/$tradeId',
+                    params: { tradeId: trade.id.toString() },
+                  });
+                  setMenuOpen(false);
+                }}
+              >
+                <MdiPipeValve />
+                {trade.name}
+              </SubMenuItem>
+            ))}
+          </MenuSection>
         </Menu>
         <IconButton onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
           <MdiMenu />
