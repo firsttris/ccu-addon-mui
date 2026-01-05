@@ -1,7 +1,6 @@
 import styled from '@emotion/styled';
 import { HeatingClimateControlTransceiverChannel } from 'src/types/types';
 import { useWebSocketContext } from '../hooks/useWebsocket';
-import { Button } from '../components/Button';
 import { MdiMinus } from '../components/icons/MdiMinus';
 import { MdiPlus } from '../components/icons/MdiPlus';
 import { ChannelName } from '../components/ChannelName';
@@ -258,29 +257,6 @@ const Controls = styled.div`
   width: 100%;
 `;
 
-const TargetDisplay = styled.div`
-  display: flex;
-  align-items: baseline;
-  border: 1px solid var(--divider-color, #e0e0e0);
-  border-radius: 8px;
-  padding: 10px 20px;
-  min-width: 100px;
-  justify-content: center;
-  background: var(--card-background-color, #fff);
-`;
-
-const TargetTemp = styled.span`
-  font-size: 32px;
-  font-weight: 400;
-  color: var(--primary-text-color, #000);
-`;
-
-const TargetUnit = styled.span`
-  font-size: 16px;
-  margin-left: 4px;
-  color: var(--secondary-text-color, #666);
-`;
-
 const CurrentTempHandle = styled.circle<{ fill: string }>`
   fill: ${(props) => props.fill};
   stroke: white;
@@ -369,9 +345,13 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const [boostMode, setBoostMode] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastUserInteractionRef = useRef<number>(0);
 
   useEffect(() => {
-    setLocalTarget(targetTemperature);
+    // Ignore backend updates for 3 seconds after user interaction to prevent jumping
+    if (Date.now() - lastUserInteractionRef.current > 3000) {
+      setLocalTarget(targetTemperature);
+    }
   }, [targetTemperature]);
 
   // Temperature range
@@ -410,6 +390,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const targetHandlePos = polarToCartesian(centerX, centerY, RADIUS, targetAngle);
 
   const handleInteractionStart = (clientX: number, clientY: number) => {
+    lastUserInteractionRef.current = Date.now();
     setIsDragging(true);
     updateTemperatureFromPosition(clientX, clientY);
   };
@@ -536,6 +517,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   }, []);
 
   const decreaseTemperature = () => {
+    lastUserInteractionRef.current = Date.now();
     const newTemp = Math.max(minTemp, localTarget - step);
     setLocalTarget(newTemp);
     setDataPoint(
@@ -547,6 +529,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   };
 
   const increaseTemperature = () => {
+    lastUserInteractionRef.current = Date.now();
     const newTemp = Math.min(maxTemp, localTarget + step);
     setLocalTarget(newTemp);
     setDataPoint(
