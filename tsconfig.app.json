@@ -24,6 +24,6 @@
     "src/**/*.jsx",
     "src/**/*.ts",
     "src/**/*.tsx",
-    "src/declarations.d.ts"
+    "declarations.d.ts"
   ]
 }

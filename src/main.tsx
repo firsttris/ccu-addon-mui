@@ -2,7 +2,6 @@
 import * as ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { WebSocketProvider } from './hooks/useWebsocket';
-import { ThemeProvider } from './contexts/ThemeContext';
 import '@fontsource/roboto';
 
 // Import the generated route tree
@@ -39,9 +38,7 @@ const root = ReactDOM.createRoot(
 );
 
 root.render(
-  <ThemeProvider>
-    <WebSocketProvider>
-      <RouterProvider router={router} />
-    </WebSocketProvider>
-  </ThemeProvider>,
+  <WebSocketProvider>
+    <RouterProvider router={router} />
+  </WebSocketProvider>,
 );
