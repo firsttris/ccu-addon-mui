@@ -2,9 +2,6 @@
 
 A modern, fast, and responsive Progressive Web App (PWA) for your CCU3 with an integrated WebSocket server.
 
-Whether you're a developer looking to contribute or a user seeking a better interface for your CCU3,
-this project has something for you. Dive in to explore the features, installation steps, and how you can get involved.
-
 # Motivation
 
 My motivation was to have a user-friendly app for the tablet in our kitchen, allowing us to conveniently control all devices in the house.
@@ -43,22 +40,8 @@ To install this add-on:
 
 1. Download the latest addon `tar.gz` file from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases).
 2. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
-   ![Screenshot](docs/ccu3-install.png)
-3. Please Note: Upload and Reboot takes some time, depending on your Box ccu3 vs raspberry. (This is because we need to copy the nodejs binary)
-4. The add-on will be available at `http://192.168.178.111/addons/mui` (replace with your CCU IP).
-
-**Note:** Node-RED is **no longer required**! This add-on now includes its own integrated WebSocket server that:
-- Runs natively on the CCU3
-- Uses port 8183 for local ReGa connections (no authentication needed)
-- Automatically handles CCU events via XML-RPC
-- Provides real-time updates via WebSocket
-
-## Updates
-
-The CCU3 will automatically check for new versions via GitHub Releases. When an update is available:
-1. Go to Settings → Additional Software
-2. Check for updates
-3. Download and install the new version
+3. Please Note: Upload and Reboot takes some time, depending on your Box ccu3. (Zip File is big because it includes the node binary)
+4. The add-on will be available at `http://192.168.178.123/addons/mui` (replace with your CCU IP).
 
 ## Setting Insecure CCU3 Origin as Secure
 
