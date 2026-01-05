@@ -7,9 +7,10 @@ import { ChannelName } from '../components/ChannelName';
 import { MaterialSymbolsLightWindowOpen } from '../components/icons/MaterialSymbolsLightWindowOpen';
 import { MaterialSymbolsLightWindowClosed } from '../components/icons/MaterialSymbolsLightWindowClosed';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MdiLeaf } from '../components/icons/MdiLeaf';
 import { MdiFlame } from '../components/icons/MdiFlame';
 import { MdiPowerStandby } from '../components/icons/MdiPowerStandby';
+import { MdiCalendarAuto } from '../components/icons/MdiCalendarAuto';
+import { MdiHandManual } from '../components/icons/MdiHandManual';
 
 type ThermostatProps = {
   channel: HeatingClimateControlTransceiverChannel;
@@ -337,12 +338,12 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const currentTemperature = datapoints.ACTUAL_TEMPERATURE;
   const humidity = datapoints.HUMIDITY;
   const windowOpen = datapoints.WINDOW_STATE === 1;
+  const isRadiatorThermostat = datapoints.VALVE_STATE !== undefined;
+  const manualMode = datapoints.SET_POINT_MODE === 1;
 
   const { setDataPoint } = useWebSocketContext();
   const [isDragging, setIsDragging] = useState(false);
   const [localTarget, setLocalTarget] = useState(targetTemperature);
-  const [ecoMode, setEcoMode] = useState(false);
-  const [boostMode, setBoostMode] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastUserInteractionRef = useRef<number>(0);
@@ -618,25 +619,36 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
 
       <IconButtons>
         <IconButton
-          active={boostMode}
-          onClick={() => setBoostMode(!boostMode)}
-          title="Boost"
-        >
-          <MdiFlame />
-        </IconButton>
-        <IconButton
-          active={ecoMode}
-          onClick={() => setEcoMode(!ecoMode)}
-          title="Eco"
-        >
-          <MdiLeaf />
-        </IconButton>
-        <IconButton
-          onClick={() => console.log('Power off')}
+          onClick={() => {
+            setDataPoint(channel.interfaceName, channel.address, 'SET_POINT_TEMPERATURE', 5);
+          }}
           title="Ausschalten"
         >
           <MdiPowerStandby />
         </IconButton>
+        <IconButton
+          active={manualMode}
+          onClick={() => {
+            const newMode = manualMode ? 0 : 1;
+            // Write to CONTROL_MODE to change mode (0=Auto, 1=Manual). 
+            // SET_POINT_MODE is read-only/status.
+            setDataPoint(channel.interfaceName, channel.address, 'CONTROL_MODE', newMode);
+          }}
+          title={manualMode ? "Manuell" : "Automatisch"}
+        >
+          {manualMode ? <MdiHandManual /> : <MdiCalendarAuto />}
+        </IconButton>
+        {isRadiatorThermostat && (
+          <IconButton
+            active={datapoints.BOOST_MODE}
+            onClick={() => {
+              setDataPoint(channel.interfaceName, channel.address, 'BOOST_MODE', !datapoints.BOOST_MODE);
+            }}
+            title="Boost"
+          >
+            <MdiFlame />
+          </IconButton>
+        )}
       </IconButtons>
 
       <Controls>
