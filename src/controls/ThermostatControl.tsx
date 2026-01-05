@@ -579,8 +579,9 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
             <BackgroundArc d={backgroundPath} />
 
             {/* Current temperature arc (thin, with handle) */}
-            <CurrentTempArc d={currentPath} stroke={currentColor} />
+            <CurrentTempArc key={`arc-current-${currentColor}`} d={currentPath} stroke={currentColor} />
             <CurrentTempHandle
+              key={`handle-current-${currentColor}`}
               cx={currentHandlePos.x}
               cy={currentHandlePos.y}
               r={5}
@@ -589,11 +590,13 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
 
             {/* Target temperature arc (thick, interactive with handle) */}
             <TargetTempArc
+              key={`arc-target-${targetColor}`}
               d={targetPath}
               stroke={targetColor}
               isActive={isDragging}
             />
             <TargetTempHandle
+              key={`handle-target-${targetColor}`}
               cx={targetHandlePos.x}
               cy={targetHandlePos.y}
               fill={targetColor}
