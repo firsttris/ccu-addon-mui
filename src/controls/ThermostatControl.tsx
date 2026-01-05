@@ -18,7 +18,7 @@ const Container = styled.div`
   position: relative;
   width: 100%;
   max-width: 300px;
-  padding: 24px;
+  padding: 16px 24px 16px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,7 +27,7 @@ const Container = styled.div`
 
   @media (max-width: 400px) {
     max-width: 250px;
-    padding: 16px;
+    padding: 12px 16px 12px 16px;
   }
 `;
 
