@@ -21,7 +21,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--card-background-color, #fff);
+  background: ${props => props.theme.colors.surface};
   border-radius: 16px;
 `;
 

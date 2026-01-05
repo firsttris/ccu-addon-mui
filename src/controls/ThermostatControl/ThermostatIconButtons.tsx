@@ -30,15 +30,15 @@ const IconButton = styled.button<{ active?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${props => props.active ? 'var(--primary-color, #03A9F4)' : 'var(--disabled-text-color, #bdbdbd)'};
+  color: ${props => props.active ? '#03A9F4' : props.theme.colors.textSecondary};
   transition: color 0.3s ease, transform 0.2s ease;
   border-radius: 50%;
   width: 40px;
   height: 40px;
 
   &:hover {
-    color: ${props => props.active ? 'var(--primary-color, #03A9F4)' : 'var(--secondary-text-color, #757575)'};
-    background: rgba(0, 0, 0, 0.05);
+    color: ${props => props.active ? '#03A9F4' : props.theme.colors.text};
+    background: ${props => props.theme.colors.hover};
   }
 
   &:active {

@@ -8,12 +8,12 @@ import { DoorControl } from '../controls/DoorControl';
 import { Channel, ChannelType } from '../types/types';
 
 const ErrorCard = styled.div`
-  background-color: #ffebee;
-  border: 1px solid #f44336;
+  background-color: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.border};
   border-radius: 8px;
   padding: 16px;
   margin: 8px;
-  color: #c62828;
+  color: ${props => props.theme.colors.text};
   font-weight: bold;
 `;
 

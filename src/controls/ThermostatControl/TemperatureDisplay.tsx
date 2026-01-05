@@ -29,7 +29,7 @@ const MainTemperature = styled.div`
   font-size: 72px;
   font-weight: 400;
   line-height: 1;
-  color: var(--primary-text-color, #212121);
+  color: ${props => props.theme.colors.text};
   letter-spacing: -3px;
 `;
 
@@ -43,7 +43,7 @@ const TemperatureUnit = styled.span`
 const Separator = styled.div`
   width: 40px;
   height: 1px;
-  background: var(--divider-color, #e0e0e0);
+  background: ${props => props.theme.colors.border};
   margin: 4px auto;
 `;
 
@@ -65,12 +65,12 @@ const StatItem = styled.div`
 const StatValue = styled.div`
   font-size: 14px;
   font-weight: 500;
-  color: var(--primary-text-color, #212121);
+  color: ${props => props.theme.colors.text};
 `;
 
 const StatLabel = styled.div`
   font-size: 10px;
-  color: var(--secondary-text-color, #757575);
+  color: ${props => props.theme.colors.textSecondary};
   text-transform: uppercase;
   letter-spacing: 0.5px;
 `;
@@ -96,6 +96,7 @@ const pulse = keyframes`
 const WindowIconWrapper = styled.div<{ windowOpen: boolean }>`
   margin-bottom: 2px;
   animation: ${({ windowOpen }) => windowOpen ? css`${pulse} 2s infinite` : 'none'};
+  color: ${props => props.theme.colors.textSecondary};
 `;
 
 export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
@@ -110,7 +111,7 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
         {windowOpen ? (
           <MaterialSymbolsLightWindowOpen fontSize={24} color="#2196F3" />
         ) : (
-          <MaterialSymbolsLightWindowClosed fontSize={24} color="#757575" style={{ opacity: 0.3 }} />
+          <MaterialSymbolsLightWindowClosed fontSize={24} style={{ opacity: 0.3 }} />
         )}
       </WindowIconWrapper>
       <MainTemperature>

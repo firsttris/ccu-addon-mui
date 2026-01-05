@@ -7,29 +7,29 @@ import { MaterialSymbolsDoorOpenOutline } from '../components/icons/MaterialSymb
 import { MaterialSymbolsLockOutline } from '../components/icons/MaterialSymbolsLockOutline';
 import { MaterialSymbolsLockOpenOutline } from '../components/icons/MaterialSymbolsLockOpenOutline';
 
-const Card = styled.div({
-  border: '1px solid #e0e0e0',
-  borderRadius: '8px',
-  padding: '16px',
-  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  width: '200px',
-  backgroundColor: '#ffffff',
-  transition: 'box-shadow 0.2s ease',
-  '&:hover': {
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)',
-  },
-});
+const Card = styled.div`
+  border: 1px solid ${props => props.theme.colors.border};
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 200px;
+  background-color: ${props => props.theme.colors.surface};
+  transition: box-shadow 0.2s ease;
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+`;
 
-const Title = styled.h3({
-  margin: '0 0 12px 0',
-  fontSize: '16px',
-  fontWeight: '500',
-  color: '#333333',
-  textAlign: 'center',
-});
+const Title = styled.h3`
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: ${props => props.theme.colors.text};
+  text-align: center;
+`;
 
 const ButtonContainer = styled.div({
   display: 'flex',
@@ -44,18 +44,18 @@ const ButtonWrapper = styled.div({
   gap: '4px',
 });
 
-const ButtonLabel = styled.span({
-  fontSize: '12px',
-  color: '#666666',
-  textAlign: 'center',
-});
+const ButtonLabel = styled.span`
+  font-size: 12px;
+  color: ${props => props.theme.colors.textSecondary};
+  text-align: center;
+`;
 
-const StatusText = styled.span({
-  marginTop: '12px',
-  fontSize: '14px',
-  color: '#666666',
-  textAlign: 'center',
-});
+const StatusText = styled.span`
+  margin-top: 12px;
+  font-size: 14px;
+  color: ${props => props.theme.colors.textSecondary};
+  text-align: center;
+`;
 
 interface StyledTypographyProps {
   uncertain: boolean;
@@ -63,13 +63,13 @@ interface StyledTypographyProps {
 
 const StyledTypography = styled('span', {
   shouldForwardProp: (prop) => prop !== 'uncertain',
-})<StyledTypographyProps>(({ uncertain }) => ({
-  display: uncertain ? 'block' : 'none',
-  marginTop: '12px',
-  fontSize: '14px',
-  color: '#ff9800',
-  textAlign: 'center',
-}));
+})<StyledTypographyProps>`
+  display: ${props => props.uncertain ? 'block' : 'none'};
+  margin-top: 12px;
+  font-size: 14px;
+  color: ${props => props.theme.colors.textSecondary};
+  text-align: center;
+`;
 
 interface DoorControlProps {
   channel: KeymaticChannel;

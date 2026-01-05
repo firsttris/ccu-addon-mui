@@ -18,7 +18,7 @@ const Controls = styled.div`
 
 const ControlButton = styled.button`
   background: transparent;
-  border: 2px solid var(--divider-color, #e0e0e0);
+  border: 2px solid ${props => props.theme.colors.border};
   border-radius: 50%;
   width: 56px;
   height: 56px;
@@ -26,12 +26,12 @@ const ControlButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--primary-text-color, #212121);
+  color: ${props => props.theme.colors.text};
   transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.05);
-    border-color: var(--primary-color, #03A9F4);
+    background: ${props => props.theme.colors.hover};
+    border-color: #03A9F4;
   }
 
   &:active {

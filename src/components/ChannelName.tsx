@@ -13,7 +13,7 @@ const IconWrapper = styled.div`
   align-items: center;
   margin-right: 6px;
   margin-bottom: 4px;
-  color: var(--secondary-text-color, #757575);
+  color: ${props => props.theme.colors.textSecondary};
   flex-shrink: 0;
   
   svg {

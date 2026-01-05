@@ -18,17 +18,17 @@ const List = styled.ul`
   margin: 0;
 `;
 
-export const ListItemText = styled.p({
-  color: '#000',
-  maxWidth: '300px',
-  overflow: 'hidden',
-  whiteSpace: 'wrap',
-  textOverflow: 'ellipsis',
-  fontWeight: 600,
-  margin: '10px 0',
-  fontSize: '20px',
-  marginLeft: '20px',
-});
+export const ListItemText = styled.p`
+  color: ${props => props.theme.colors.text};
+  max-width: 300px;
+  overflow: hidden;
+  white-space: wrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  margin: 10px 0;
+  font-size: 20px;
+  margin-left: 20px;
+`;
 
 export const Rooms = () => {
   const navigate = useNavigate();

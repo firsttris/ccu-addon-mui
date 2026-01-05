@@ -6,6 +6,7 @@ import { UiwDown } from '../components/icons/UiwDown';
 import { UiwUp } from '../components/icons/UiwUp';
 import { MaterialSymbolsStop } from '../components/icons/MaterialSymbolsStop';
 import { ChannelName } from '../components/ChannelName';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;
@@ -13,6 +14,7 @@ interface ControlProps {
 
 export const BlindsControl = ({ channel }: ControlProps) => {
   const { setDataPoint } = useWebSocketContext();
+  const { theme } = useTheme();
   const { datapoints, name, address, interfaceName } = channel;
   const blindValue = Number(datapoints.LEVEL) * 100;
   return (
@@ -35,6 +37,9 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             onLamellaClick={(percent) => {
               setDataPoint(interfaceName, address, 'LEVEL', percent / 100);
             }}
+            frameColor={theme.colors.surface}
+            strokeColor={theme.colors.text}
+            lamellaColor={theme.colors.textSecondary}
           />
           <div
             style={{

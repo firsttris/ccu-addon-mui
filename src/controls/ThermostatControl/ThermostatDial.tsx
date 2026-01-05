@@ -31,7 +31,7 @@ const SVGContainer = styled.svg`
 
 const BackgroundArc = styled.path`
   fill: none;
-  stroke: var(--disabled-color, #e7e7e8);
+  stroke: ${props => props.theme.colors.border};
   stroke-width: 24;
   stroke-linecap: round;
   opacity: 0.3;
