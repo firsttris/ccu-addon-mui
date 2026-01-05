@@ -88,23 +88,23 @@ const CurrentTempArc = styled.path<{ stroke: string }>`
   stroke-width: 10;
   stroke-linecap: round;
   opacity: 0.4;
+  pointer-events: none;
   transition: stroke 0.5s ease;
   filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.15));
 `;
 
-const TargetTempArc = styled.path<{ stroke: string; isActive?: boolean }>`
+const TargetTempArc = styled.path<{ stroke: string; isActive?: boolean; opacity?: number }>`
   fill: none;
   stroke: ${(props) => props.stroke};
   stroke-width: ${(props) => (props.isActive ? '28' : '24')};
   stroke-linecap: round;
-  transition: stroke 0.5s ease, stroke-width 0.2s ease;
+  transition: stroke 0.5s ease, stroke-width 0.2s ease, opacity 0.2s ease;
   pointer-events: all;
   filter: drop-shadow(0px 0px 3px rgba(0, 0, 0, 0.25));
-  opacity: 0.95;
+  opacity: ${(props) => props.opacity ?? 1};
 
   &:hover {
     stroke-width: 28;
-    opacity: 1;
   }
 `;
 
@@ -384,7 +384,13 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   // Create arc paths
   const backgroundPath = createArcPath(centerX, centerY, RADIUS, 0, MAX_ANGLE);
   const currentPath = createArcPath(centerX, centerY, RADIUS, 0, currentAngle);
-  const targetPath = createArcPath(centerX, centerY, RADIUS, 0, targetAngle);
+  
+  // Split target path into two segments
+  const minAngle = Math.min(currentAngle, targetAngle);
+  const maxAngle = Math.max(currentAngle, targetAngle);
+  
+  const targetPathSolid = createArcPath(centerX, centerY, RADIUS, 0, minAngle);
+  const targetPathDiff = createArcPath(centerX, centerY, RADIUS, minAngle, maxAngle);
 
   // Calculate handle positions
   const currentHandlePos = polarToCartesian(centerX, centerY, RADIUS, currentAngle);
@@ -562,8 +568,30 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
             {/* Background arc */}
             <BackgroundArc d={backgroundPath} />
 
-            {/* Current temperature arc (thin, with handle) */}
+            {/* Current temperature arc (thin, sits behind target) */}
             <CurrentTempArc key={`arc-current-${currentColor}`} d={currentPath} stroke={currentColor} />
+
+            {/* Target temperature arc - Solid Part (0 to Min) */}
+            <TargetTempArc
+              key={`arc-target-solid-${targetColor}`}
+              d={targetPathSolid}
+              stroke={targetColor}
+              isActive={isDragging}
+              opacity={1}
+            />
+
+            {/* Target temperature arc - Diff Part (Min to Max) */}
+            {targetAngle > currentAngle && (
+              <TargetTempArc
+                key={`arc-target-diff-${targetColor}`}
+                d={targetPathDiff}
+                stroke={targetColor}
+                isActive={isDragging}
+                opacity={0.5}
+              />
+            )}
+
+            {/* Current temperature handle (sits on top of target arc) */}
             <CurrentTempHandle
               key={`handle-current-${currentColor}`}
               cx={currentHandlePos.x}
@@ -572,13 +600,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
               fill={currentColor}
             />
 
-            {/* Target temperature arc (thick, interactive with handle) */}
-            <TargetTempArc
-              key={`arc-target-${targetColor}`}
-              d={targetPath}
-              stroke={targetColor}
-              isActive={isDragging}
-            />
+            {/* Target temperature handle (topmost) */}
             <TargetTempHandle
               key={`handle-target-${targetColor}`}
               cx={targetHandlePos.x}
