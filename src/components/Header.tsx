@@ -83,7 +83,7 @@ const CloseButton = styled.button`
   font-size: 24px;
   color: ${props => props.theme.colors.textSecondary};
   cursor: pointer;
-  padding: 4px;
+  padding: 8px;
   border-radius: 4px;
   transition: background-color 0.2s ease;
 
@@ -100,8 +100,8 @@ const MenuSection = styled.div`
 `;
 
 const MenuSectionTitle = styled.div`
-  padding: 12px 16px;
-  font-size: 14px;
+  padding: 16px 16px;
+  font-size: 16px;
   font-weight: 600;
   color: ${props => props.theme.colors.text};
   background: ${props => props.theme.colors.surface};
@@ -112,14 +112,14 @@ const MenuSectionTitle = styled.div`
 const SubMenuItem = styled.button`
   background: none;
   border: none;
-  padding: 8px 16px 8px 40px;
+  padding: 12px 16px 12px 40px;
   width: 100%;
   text-align: left;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 14px;
+  font-size: 16px;
   color: ${props => props.theme.colors.textSecondary};
   transition: background-color 0.2s ease;
 
@@ -128,8 +128,8 @@ const SubMenuItem = styled.button`
   }
 
   svg {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
   }
 `;
