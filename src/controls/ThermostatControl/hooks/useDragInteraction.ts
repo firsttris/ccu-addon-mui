@@ -62,70 +62,45 @@ export const useDragInteraction = ({ onTemperatureChange, onInteractionEnd, curr
   }, [updateTemperatureFromPosition]);
 
   const handleInteractionMove = useCallback((clientX: number, clientY: number) => {
-    if (isDragging) {
-      updateTemperatureFromPosition(clientX, clientY);
-    }
-  }, [isDragging, updateTemperatureFromPosition]);
+    updateTemperatureFromPosition(clientX, clientY);
+  }, [updateTemperatureFromPosition]);
 
   const handleInteractionEnd = useCallback(() => {
-    if (isDragging) {
-      setIsDragging(false);
-      // Debounce the actual update
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(() => {
-        onInteractionEnd(currentTemp);
-      }, 500);
+    setIsDragging(false);
+    // Debounce the actual update
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-  }, [isDragging, onInteractionEnd, currentTemp]);
+    timeoutRef.current = setTimeout(() => {
+      onInteractionEnd(currentTemp);
+    }, 500);
+  }, [onInteractionEnd, currentTemp]);
 
-  // Mouse events
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  // Pointer events (works for mouse, touch, and pen)
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
+    if (svgRef.current) {
+      svgRef.current.setPointerCapture(e.pointerId);
+    }
     handleInteractionStart(e.clientX, e.clientY);
   }, [handleInteractionStart]);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    handleInteractionMove(e.clientX, e.clientY);
-  }, [handleInteractionMove]);
-
-  const handleMouseUp = useCallback(() => {
-    handleInteractionEnd();
-  }, [handleInteractionEnd]);
-
-  // Touch events
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    handleInteractionStart(touch.clientX, touch.clientY);
-  }, [handleInteractionStart]);
-
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    e.preventDefault();
-    const touch = e.touches[0];
-    handleInteractionMove(touch.clientX, touch.clientY);
-  }, [handleInteractionMove]);
-
-  const handleTouchEnd = useCallback(() => {
-    handleInteractionEnd();
-  }, [handleInteractionEnd]);
-
-  useEffect(() => {
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-      window.addEventListener('touchmove', handleTouchMove, { passive: false });
-      window.addEventListener('touchend', handleTouchEnd);
-
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('mouseup', handleMouseUp);
-        window.removeEventListener('touchmove', handleTouchMove);
-        window.removeEventListener('touchend', handleTouchEnd);
-      };
+      e.preventDefault();
+      handleInteractionMove(e.clientX, e.clientY);
     }
-  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+  }, [isDragging, handleInteractionMove]);
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (isDragging) {
+      e.preventDefault();
+      if (svgRef.current) {
+        svgRef.current.releasePointerCapture(e.pointerId);
+      }
+      handleInteractionEnd();
+    }
+  }, [isDragging, handleInteractionEnd]);
 
   useEffect(() => {
     return () => {
@@ -138,7 +113,8 @@ export const useDragInteraction = ({ onTemperatureChange, onInteractionEnd, curr
   return {
     isDragging,
     svgRef,
-    handleMouseDown,
-    handleTouchStart,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
   };
 };

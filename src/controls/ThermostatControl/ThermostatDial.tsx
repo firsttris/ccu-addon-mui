@@ -101,7 +101,7 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
   onInteractionEnd,
 }) => {
   const { tempToAngle } = useTemperatureConversion();
-  const { isDragging: dragState, svgRef, handleMouseDown, handleTouchStart } = useDragInteraction({
+  const { isDragging: dragState, svgRef, handlePointerDown, handlePointerMove, handlePointerUp } = useDragInteraction({
     onTemperatureChange,
     onInteractionEnd,
     currentTemp: localTarget,
@@ -134,8 +134,10 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
         ref={svgRef}
         viewBox="0 0 260 260"
         className={dragState ? 'dragging' : ''}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
       >
         <g transform={`rotate(${ROTATE_ANGLE} ${CENTER_X} ${CENTER_Y})`}>
           {/* Background arc */}
