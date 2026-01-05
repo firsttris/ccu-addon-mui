@@ -67,6 +67,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsDark(!isDark);
   };
 
+  const setThemeBasedOnTime = () => {
+    const now = new Date();
+    const hour = now.getHours();
+    const isNightTime = hour >= 18 || hour < 6;
+    setIsDark(isNightTime);
+  };
+
+  useEffect(() => {
+    // Initial check
+    setThemeBasedOnTime();
+
+    // Check every hour
+    const interval = setInterval(setThemeBasedOnTime, 60 * 60 * 1000); // 1 hour
+
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
     document.body.style.backgroundColor = theme.colors.background;
