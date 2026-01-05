@@ -2,6 +2,8 @@ import styled from '@emotion/styled';
 import { HeatingClimateControlTransceiverChannel } from '../types/types';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { ChannelName } from '../components/ChannelName';
+import { RadiatorThermostatIcon } from '../components/icons/RadiatorThermostatIcon';
+import { WallThermostatIcon } from '../components/icons/WallThermostatIcon';
 import { ThermostatDial } from './ThermostatControl/ThermostatDial';
 import { TemperatureDisplay } from './ThermostatControl/TemperatureDisplay';
 import { ControlButtons } from './ThermostatControl/ControlButtons';
@@ -82,7 +84,11 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   return (
     <Container>
       <Header>
-        <ChannelName name={channel.name} maxWidth="220px" />
+        <ChannelName 
+          name={channel.name} 
+          maxWidth="220px"
+          icon={isRadiatorThermostat ? <RadiatorThermostatIcon /> : <WallThermostatIcon />}
+        />
       </Header>
 
       <ThermostatWrapper>
