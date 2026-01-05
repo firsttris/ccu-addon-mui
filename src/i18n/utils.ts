@@ -25,6 +25,9 @@ export const ui = {
     DOOR_STATE_UNKNOWN: 'Door state is uncertain',
     SIGN_IN: 'Sign in',
     rememberMe: 'Remember me',
+    LOCK: 'Lock',
+    UNLOCK: 'Unlock',
+    OPEN: 'Open',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
@@ -42,6 +45,9 @@ export const ui = {
     DOOR_STATE_UNKNOWN: 'Türzustand ist ungewiss',
     SIGN_IN: 'Anmelden',
     rememberMe: 'Erinnere dich an mich',
+    LOCK: 'Sperren',
+    UNLOCK: 'Entsperren',
+    OPEN: 'Öffnen',
   },
 } as const;
 

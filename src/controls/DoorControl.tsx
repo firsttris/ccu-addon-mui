@@ -7,17 +7,43 @@ import { MaterialSymbolsDoorOpenOutline } from '../components/icons/MaterialSymb
 import { MaterialSymbolsLockOutline } from '../components/icons/MaterialSymbolsLockOutline';
 import { MaterialSymbolsLockOpenOutline } from '../components/icons/MaterialSymbolsLockOpenOutline';
 
-const OuterBox = styled.div({
+const Card = styled.div({
+  border: '1px solid #e0e0e0',
+  borderRadius: '8px',
+  padding: '16px',
+  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: '10px',
+  width: '200px',
+  backgroundColor: '#ffffff',
 });
 
-const InnerBox = styled.div({
+const Title = styled.h3({
+  margin: '0 0 12px 0',
+  fontSize: '16px',
+  fontWeight: '500',
+  color: '#333333',
+  textAlign: 'center',
+});
+
+const ButtonContainer = styled.div({
   display: 'flex',
-  gap: '10px',
+  gap: '12px',
   alignItems: 'center',
+});
+
+const ButtonWrapper = styled.div({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '4px',
+});
+
+const ButtonLabel = styled.span({
+  fontSize: '12px',
+  color: '#666666',
+  textAlign: 'center',
 });
 
 interface StyledTypographyProps {
@@ -28,7 +54,10 @@ const StyledTypography = styled('span', {
   shouldForwardProp: (prop) => prop !== 'uncertain',
 })<StyledTypographyProps>(({ uncertain }) => ({
   display: uncertain ? 'block' : 'none',
-  marginTop: '10px',
+  marginTop: '12px',
+  fontSize: '14px',
+  color: '#ff9800',
+  textAlign: 'center',
 }));
 
 interface DoorControlProps {
@@ -40,6 +69,7 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   const { setDataPoint } = useWebSocketContext();
   const {
     datapoints: { STATE, STATE_UNCERTAIN },
+    name,
   } = channel;
 
   const isUncertain = STATE_UNCERTAIN === true;
@@ -58,21 +88,31 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   };
 
   return (
-    <OuterBox>
-      <InnerBox>
-        <Button onClick={lockDoor}>
-          <MaterialSymbolsLockOutline />
-        </Button>
-        <Button onClick={unlockDoor}>
-          <MaterialSymbolsLockOpenOutline />
-        </Button>
-        <Button onClick={openDoor}>
-          <MaterialSymbolsDoorOpenOutline />
-        </Button>
-      </InnerBox>
+    <Card>
+      <Title>{name}</Title>
+      <ButtonContainer>
+        <ButtonWrapper>
+          <Button onClick={lockDoor}>
+            <MaterialSymbolsLockOutline />
+          </Button>
+          <ButtonLabel>{t('LOCK')}</ButtonLabel>
+        </ButtonWrapper>
+        <ButtonWrapper>
+          <Button onClick={unlockDoor}>
+            <MaterialSymbolsLockOpenOutline />
+          </Button>
+          <ButtonLabel>{t('UNLOCK')}</ButtonLabel>
+        </ButtonWrapper>
+        <ButtonWrapper>
+          <Button onClick={openDoor}>
+            <MaterialSymbolsDoorOpenOutline />
+          </Button>
+          <ButtonLabel>{t('OPEN')}</ButtonLabel>
+        </ButtonWrapper>
+      </ButtonContainer>
       <StyledTypography uncertain={isUncertain}>
         {t('DOOR_STATE_UNKNOWN')}
       </StyledTypography>
-    </OuterBox>
+    </Card>
   );
 };
