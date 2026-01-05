@@ -4,23 +4,25 @@ import { useState } from 'react';
 import { MdiMenu } from '../components/icons/MdiMenu';
 import { TeenyiconsFloorplanSolid } from '../components/icons/TeenyiconsFloorplanSolid';
 import { MdiPipeValve } from '../components/icons/MdiPipeValve';
+import { useTheme } from '../contexts/ThemeContext';
 
 const HeaderContainer = styled.div`
   position: fixed;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  width: auto;
+  width: 100%;
   top: 0;
   left: 0;
   z-index: 1000;
-  background-color: white;
-  padding: 10px;
+  background-color: ${props => props.theme.colors.primary};
+  padding: 10px 20px;
+  box-sizing: border-box;
 `;
 
 const IconButton = styled.button`
-  background: #fff;
-  border: 2px solid #ddd;
+  background: ${props => props.theme.colors.primary};
+  border: 2px solid ${props => props.theme.colors.border};
   padding: 10px;
   cursor: pointer;
   display: flex;
@@ -32,8 +34,8 @@ const IconButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: #f0f0f0;
-    border-color: #bbb;
+    background: ${props => props.theme.colors.hover};
+    border-color: ${props => props.theme.colors.border};
     transform: scale(1.05);
   }
 
@@ -46,8 +48,8 @@ const Menu = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  background: #f9f9f9;
-  border: 1px solid #ddd;
+  background: ${props => props.theme.colors.surface};
+  border: 1px solid ${props => props.theme.colors.border};
   border-left: none;
   border-radius: 0 8px 8px 0;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
@@ -64,9 +66,9 @@ const MenuHeader = styled.div`
   padding: 10px 16px;
   font-size: 18px;
   font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #ddd;
-  background: #fff;
+  color: ${props => props.theme.colors.text};
+  border-bottom: 1px solid ${props => props.theme.colors.border};
+  background: ${props => props.theme.colors.primary};
   border-radius: 0 8px 0 0;
   display: flex;
   justify-content: space-between;
@@ -77,14 +79,14 @@ const CloseButton = styled.button`
   background: none;
   border: none;
   font-size: 24px;
-  color: #666;
+  color: ${props => props.theme.colors.textSecondary};
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
   transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: #eee;
+    background-color: ${props => props.theme.colors.hover};
   }
 `;
 
@@ -99,12 +101,12 @@ const MenuItem = styled.button`
   align-items: center;
   gap: 12px;
   font-size: 16px;
-  color: #555;
+  color: ${props => props.theme.colors.textSecondary};
   transition: background-color 0.2s ease;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid ${props => props.theme.colors.border};
 
   &:hover {
-    background-color: #e0e0e0;
+    background-color: ${props => props.theme.colors.hover};
   }
 
   &:last-of-type {
@@ -121,6 +123,7 @@ const MenuItem = styled.button`
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -158,6 +161,9 @@ export const Header: React.FC = () => {
           <MdiMenu />
         </IconButton>
       </div>
+      <IconButton onClick={toggleTheme} aria-label="Toggle Theme">
+        {theme.mode === 'light' ? '🌙' : '☀️'}
+      </IconButton>
     </HeaderContainer>
   );
 };

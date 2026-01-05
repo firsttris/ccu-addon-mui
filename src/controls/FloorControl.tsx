@@ -1,7 +1,18 @@
 import styled from '@emotion/styled';
+import { keyframes } from '@emotion/react';
 import { FloorClimateControlTransceiverChannel } from 'src/types/types';
 import { MdiPipeValve } from '../components/icons/MdiPipeValve';
 import { ChannelName } from '../components/ChannelName';
+import { getPercentageColor, getPercentageGradient } from '../utils/colors';
+
+const shimmer = keyframes`
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+`;
 
 interface FloorControlProps {
   channel: FloorClimateControlTransceiverChannel;
@@ -9,59 +20,88 @@ interface FloorControlProps {
 
 const Container = styled.div`
   width: 250px;
-  padding: 10px;
+  padding: 16px;
+  border-radius: 12px;
 `;
 
 const Content = styled.div`
-  padding-top: 0px;
+  padding-top: 12px;
 `;
 
 const FlexBox = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+`;
+
+const IconWrapper = styled.div<{ value: number }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+
+  &:hover {
+    transform: scale(1.1) rotate(5deg);
+  }
 `;
 
 const ProgressBarContainer = styled.div`
   width: 100%;
-  margin-right: 8px;
+  position: relative;
 `;
 
 const ProgressBar = styled.div<{ value: number }>`
-  height: 14px;
-  background-color: #e0e0e0;
-  border-radius: 2px;
+  height: 18px;
+  background: linear-gradient(to right, #e8e8e8, #f0f0f0);
+  border-radius: 10px;
   overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
 
   &::after {
     content: '';
     display: block;
     width: ${({ value }) => value}%;
     height: 100%;
-    background-color: ${({ value }) => getColor(value)};
+    background: ${({ value }) => getPercentageGradient(value)};
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                background 0.4s ease-in-out;
+    box-shadow: 0 2px 6px ${({ value }) => getPercentageColor(value)}40;
+    position: relative;
+    overflow: hidden;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: ${({ value }) => value}%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    animation: ${shimmer} 2s infinite;
+    z-index: 1;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
 `;
 
-const Caption = styled.span`
-  font-size: 12px;
-  color: #757575;
+const Caption = styled.span<{ value: number }>`
+  font-size: 13px;
+  font-weight: 600;
+  color: ${({ value }) => getPercentageColor(value)};
+  min-width: 40px;
+  text-align: right;
+  transition: color 0.4s ease-in-out;
+  letter-spacing: 0.5px;
 `;
-
-const getColor = (value: number): string => {
-  if (value === 0) {
-    return '#3498DB'; // Blau für niedrigen Durchfluss
-  } else if (value > 0 && value < 25) {
-    return '#2ECC71'; // Grün für mittleren Durchfluss
-  } else if (value >= 25 && value < 50) {
-    return '#F1C40F'; // Gelb für erhöhten Durchfluss
-  } else if (value >= 50 && value < 75) {
-    return '#E67E22'; // Orange für hohen Durchfluss
-  } else if (value >= 75 && value <= 100) {
-    return '#E74C3C'; // Rot für sehr hohen Durchfluss
-  } else {
-    return '#3498DB'; // Standardfarbe Blau
-  }
-};
 
 export const FloorControl = (props: FloorControlProps) => {
   const value = Math.round(Number(props.channel.datapoints.LEVEL) * 100);
@@ -71,15 +111,13 @@ export const FloorControl = (props: FloorControlProps) => {
       <ChannelName name={props.channel.name} maxWidth="250px" />
       <Content>
         <FlexBox>
-          <MdiPipeValve
-            color={getColor(value)}
-            style={{ marginRight: '5px' }}
-            width={40}
-          />
+          <IconWrapper value={value}>
+            <MdiPipeValve color={getPercentageColor(value)} width={40} />
+          </IconWrapper>
           <ProgressBarContainer>
             <ProgressBar value={value} />
           </ProgressBarContainer>
-          <Caption>{`${value}%`}</Caption>
+          <Caption value={value}>{`${value}%`}</Caption>
         </FlexBox>
       </Content>
     </Container>

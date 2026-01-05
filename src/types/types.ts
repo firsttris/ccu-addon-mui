@@ -41,6 +41,7 @@ export type HeatingClimateControlTransceiverDatapoint = {
   PARTY_SET_POINT_TEMPERATURE: number;
   QUICK_VETO_TIME: number;
   SET_POINT_MODE: number;
+  CONTROL_MODE?: number;
   SET_POINT_TEMPERATURE: number;
   SWITCH_POINT_OCCURED: boolean;
   WINDOW_STATE: number;
