@@ -1,8 +1,18 @@
 import styled from '@emotion/styled';
+import { keyframes } from '@emotion/react';
 import { FloorClimateControlTransceiverChannel } from 'src/types/types';
 import { MdiPipeValve } from '../components/icons/MdiPipeValve';
 import { ChannelName } from '../components/ChannelName';
 import { getPercentageColor, getPercentageGradient } from '../utils/colors';
+
+const shimmer = keyframes`
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+`;
 
 interface FloorControlProps {
   channel: FloorClimateControlTransceiverChannel;
@@ -77,18 +87,9 @@ const ProgressBar = styled.div<{ value: number }>`
       rgba(255, 255, 255, 0.3),
       transparent
     );
-    animation: shimmer 2s infinite;
+    animation: ${shimmer} 2s infinite;
     z-index: 1;
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  @keyframes shimmer {
-    0% {
-      transform: translateX(-100%);
-    }
-    100% {
-      transform: translateX(100%);
-    }
   }
 `;
 

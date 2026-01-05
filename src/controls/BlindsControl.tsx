@@ -6,7 +6,6 @@ import { UiwUp } from '../components/icons/UiwUp';
 import { MaterialSymbolsStop } from '../components/icons/MaterialSymbolsStop';
 import { ChannelName } from '../components/ChannelName';
 import { ControlButton } from '../components/ControlButton';
-import styled from '@emotion/styled';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;

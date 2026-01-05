@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useWebSocketContext } from '../../../hooks/useWebsocket';
 import { MIN_TEMP, MAX_TEMP, STEP } from '../constants';
+import { Channel } from '../../../types/types';
 
 interface UseThermostatStateProps {
   targetTemperature: number;
-  channel: any; // Replace with proper type
+  channel: Channel;
 }
 
 export const useThermostatState = ({ targetTemperature, channel }: UseThermostatStateProps) => {

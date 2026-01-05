@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ThemeProvider as EmotionThemeProvider } from '@emotion/react';
 
 export interface Theme {
@@ -57,8 +57,9 @@ export const useTheme = () => {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    return saved === 'dark';
+    const now = new Date();
+    const hour = now.getHours();
+    return hour >= 18 || hour < 6;
   });
 
   const theme = isDark ? darkTheme : lightTheme;
@@ -67,12 +68,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsDark(!isDark);
   };
 
-  const setThemeBasedOnTime = () => {
+  const setThemeBasedOnTime = useCallback(() => {
     const now = new Date();
     const hour = now.getHours();
     const isNightTime = hour >= 18 || hour < 6;
     setIsDark(isNightTime);
-  };
+  }, []);
 
   useEffect(() => {
     // Initial check
@@ -82,10 +83,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const interval = setInterval(setThemeBasedOnTime, 60 * 60 * 1000); // 1 hour
 
     return () => clearInterval(interval);
-  }, []);
+  }, [setThemeBasedOnTime]);
 
   useEffect(() => {
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
     document.body.style.backgroundColor = theme.colors.background;
     document.body.style.color = theme.colors.text;
   }, [isDark, theme]);

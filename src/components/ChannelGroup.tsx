@@ -24,6 +24,8 @@ const Card = styled.div`
   border: 1px solid ${props => props.theme.colors.border};
   border-radius: 4px;
   overflow: hidden;
+  display: flex;
+  justify-content: center;
 `;
 
 const ChannelContainer = styled.div({
@@ -58,7 +60,7 @@ export const Typography = styled.p`
   color: ${props => props.theme.colors.text};
   max-width: 300px;
   overflow: hidden;
-  white-space: wrap;
+  white-space: nowrap;
   text-overflow: ellipsis;
   font-weight: 600;
   margin: 10px 0;

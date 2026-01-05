@@ -71,7 +71,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   };
 
   const handleInteractionEnd = (temp: number) => {
-    commitTemperatureChange(localTarget);
+    commitTemperatureChange(temp);
   };
 
   const handlePowerOff = () => {
