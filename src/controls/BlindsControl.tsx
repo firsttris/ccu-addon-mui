@@ -27,7 +27,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             alignItems: 'center',
           }}
         >
-          <div style={{ fontSize: '13px', marginBottom: '1px' }}>
+          <div style={{ fontSize: '13px', marginBottom: '5px' }}>
             {blindValue === 0 ? 'geschlossen' : `${blindValue} % geöffnet`}
           </div>
           <Shutters
