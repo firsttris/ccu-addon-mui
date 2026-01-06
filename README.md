@@ -2,7 +2,7 @@
 
 # CCU3 Add-on: Moderne Web-UI
 
-Eine moderne, schnelle und responsive Progressive Web App (PWA) für Ihre CCU3 mit integriertem WebSocket-Server.
+Eine moderne, schnelle und responsive Progressive Web App (PWA) mit integriertem WebSocket-Server für Ihre CCU3.
 
 # Funktionen
 
@@ -21,7 +21,7 @@ Meine Motivation war es, die bewährte CCU3 mit moderner Software aufzufrischen 
 
 # Technologie-Stack
 
-Dieses Projekt wurde mit einem robusten Satz von Technologien entwickelt, um hohe Leistung und Wartbarkeit zu gewährleisten:
+Dieses Projekt wurde mit einem robusten Satz von Technologien entwickelt:
 
 ## Frontend
 
