@@ -1,244 +1,245 @@
-# CCU3 Add-on: Modern Web UI
+[English Version](README.en.md)
 
-A modern, fast, and responsive Progressive Web App (PWA) for your CCU3 with an integrated WebSocket server.
+# CCU3 Add-on: Moderne Web-UI
 
-# Features
+Eine moderne, schnelle und responsive Progressive Web App (PWA) für Ihre CCU3 mit integriertem WebSocket-Server.
 
-- **Modern UI**: Responsive design optimized for tablets and mobile devices.
-- **Device Support**: Control switches, thermostats, blinds, doors, and floor heating systems.
-- **Real-time Updates**: WebSocket-based communication for instant device status updates.
-- **PWA Ready**: Installable as a native app on Android and iOS home screens.
-- **WakeLock Support**: Prevents screen standby for continuous control.
-- **Easy Installation**: Simple add-on installation for CCU3 systems.
+# Funktionen
 
+- **Moderne UI**: Responsives Design, optimiert für Tablets und mobile Geräte.
+- **Geräteunterstützung**: Steuerung von Schaltern, Thermostaten, Jalousien, Türen und Fußbodenheizungen.
+- **Echtzeit-Updates**: WebSocket-basierte Kommunikation für sofortige Gerätestatus-Updates.
+- **PWA-Bereit**: Installierbar als native App auf Android- und iOS-Startbildschirmen.
+- **WakeLock-Unterstützung**: Verhindert Bildschirm-Standby für kontinuierliche Steuerung.
+- **Einfache Installation**: Einfache Add-on-Installation für CCU3-Systeme.
 
 # Motivation
 
-My motivation was to have a user-friendly app for the tablet in our kitchen, allowing us to conveniently control all devices in the house.
+Meine Motivation war es, eine benutzerfreundliche App für das Tablet in unserer Küche zu haben, um bequem alle Geräte im Haus zu steuern.
 
 ![Screenshot](docs/tablet-screen.jpg)
 
-# Technology Stack
+# Technologie-Stack
 
-This project is built with a robust set of technologies to ensure high performance and maintainability:
+Dieses Projekt wurde mit einem robusten Satz von Technologien entwickelt, um hohe Leistung und Wartbarkeit zu gewährleisten:
 
 ## Frontend
 
-- [React](https://reactjs.org/): A JavaScript library for building user interfaces.
-- [TypeScript](https://www.typescriptlang.org/): A strongly typed superset of JavaScript that adds static types.
-- [Emotion](https://emotion.sh/docs/introduction): A library designed for writing CSS styles with JavaScript.
-- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API): Two-way messaging between browser and server.
-- [Vite](https://vitejs.dev/): Next generation frontend tooling.
-- [Nx](https://nx.dev/): Smart, fast and extensible build system.
+- [React](https://reactjs.org/): Eine JavaScript-Bibliothek zum Erstellen von Benutzeroberflächen.
+- [TypeScript](https://www.typescriptlang.org/): Eine stark typisierte Obermenge von JavaScript, die statische Typen hinzufügt.
+- [Emotion](https://emotion.sh/docs/introduction): Eine Bibliothek zum Schreiben von CSS-Stilen mit JavaScript.
+- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API): Zwei-Wege-Nachrichten zwischen Browser und Server.
+- [Vite](https://vitejs.dev/): Nächste Generation Frontend-Tooling.
+- [Nx](https://nx.dev/): Intelligentes, schnelles und erweiterbares Build-System.
 
 ## Backend
 
-- [Bun](https://bun.sh/): Fast all-in-one JavaScript runtime and bundler.
-- [TypeScript](https://www.typescriptlang.org/): Type-safe server code.
-- [WebSocket Server](https://github.com/websockets/ws): WebSocket implementation for Node.js.
-- [Homematic Libraries](https://github.com/hobbyquaker): XML-RPC and ReGa script support.
+- [Bun](https://bun.sh/): Schnelle All-in-One JavaScript-Laufzeit und Bundler.
+- [TypeScript](https://www.typescriptlang.org/): Typsichere Server-Code.
+- [WebSocket Server](https://github.com/websockets/ws): WebSocket-Implementierung für Node.js.
+- [Homematic Libraries](https://github.com/hobbyquaker): XML-RPC und ReGa-Script-Unterstützung.
 
-# Prerequisites for CCU3
+# Voraussetzungen für CCU3
 
-**Configure Rooms and or Trades (Gewerke) and Assign Channels (Devices)**
+**Räume und/oder Gewerke konfigurieren und Kanäle (Geräte) zuweisen**
 
-   To ensure this add-on functions properly, you need to have rooms or trades configured in your CCU3. Each room should have channels assigned with appropriate names, as the add-on queries the rooms, their channels, and the datapoints of those channels. Without this setup, the add-on will not work.
+   Damit dieses Add-on ordnungsgemäß funktioniert, müssen Sie Räume oder Gewerke in Ihrer CCU3 konfiguriert haben. Jedem Raum sollten Kanäle mit geeigneten Namen zugewiesen sein, da das Add-on die Räume, ihre Kanäle und die Datenpunkte dieser Kanäle abfragt. Ohne diese Einrichtung funktioniert das Add-on nicht.
 
-# Device Support
+# Geräteunterstützung
 
-This project currently supports the following devices:
+Dieses Projekt unterstützt derzeit die folgenden Geräte:
 
-### [Switch](src/controls/SwitchControl.tsx)
+### [Schalter](src/controls/SwitchControl.tsx)
 
-**Channel Type:** `SWITCH_VIRTUAL_RECEIVER`
+**Kanaltyp:** `SWITCH_VIRTUAL_RECEIVER`
 
 ![Screenshot](docs/controls/switch.png)
 
-**Features:**
+**Funktionen:**
 
-- Display Light Status
-- Switch Light On/Off
+- Lichtstatus anzeigen
+- Licht ein-/ausschalten
 
 ### [Thermostat](src/controls/ThermostatControl.tsx)
 
-**Channel Type:** `HEATING_CLIMATECONTROL_TRANSCEIVER`
+**Kanaltyp:** `HEATING_CLIMATECONTROL_TRANSCEIVER`
 
 ![Screenshot](docs/controls/thermostat.png)
 
-**Features:**
+**Funktionen:**
 
-- Show Current Humidity
-- Show Target Temperature
-- Show Current Temperature
-- Show Window Open State
-- Set Target Temperature
-- Switch between Manual and Automatic Mode
-- Turn Thermostat off
-- Boost mode only for Heizkörperthermostats
+- Aktuelle Luftfeuchtigkeit anzeigen
+- Zieltemperatur anzeigen
+- Aktuelle Temperatur anzeigen
+- Fenster-offen-Status anzeigen
+- Zieltemperatur einstellen
+- Zwischen manuellem und automatischem Modus wechseln
+- Thermostat ausschalten
+- Boost-Modus nur für Heizkörperthermostate
 
-### [Blinds](src/controls/BlindsControl.tsx)
+### [Jalousien](src/controls/BlindsControl.tsx)
 
-**Channel Type:** `BLIND_VIRTUAL_RECEIVER`
+**Kanaltyp:** `BLIND_VIRTUAL_RECEIVER`
 
 ![Screenshot](docs/controls/blinds.png)
 
-**Features:**
+**Funktionen:**
 
-- Show open percentage
-- Open/Close
-- Stop
-- Set the open percentage of the blinds by clicking on them
+- Öffnungsprozentsatz anzeigen
+- Öffnen/Schließen
+- Stoppen
+- Öffnungsprozentsatz der Jalousien durch Anklicken einstellen
 
-_For this to work properly, you need to measure and configure the opening and closing times for your blinds in the CCU3._
+_Damit dies ordnungsgemäß funktioniert, müssen Sie die Öffnungs- und Schließzeiten für Ihre Jalousien in der CCU3 messen und konfigurieren._
 
-### [Door Operator](src/controls/DoorControl.tsx)
+### [Türöffner](src/controls/DoorControl.tsx)
 
-**Channel Type:** `KEYMATIC`
+**Kanaltyp:** `KEYMATIC`
 
 ![Screenshot](docs/controls/door-operator.png)
 
-**Features:**
+**Funktionen:**
 
-- Show Door Status
-- Unlock Door
-- Lock Door
-- Open Door
+- Türstatus anzeigen
+- Tür entriegeln
+- Tür verriegeln
+- Tür öffnen
 
-### [Floor Heating](src/controls/FloorControl.tsx)
+### [Fußbodenheizung](src/controls/FloorControl.tsx)
 
-**Channel Type:** `CLIMATECONTROL_FLOOR_TRANSCEIVER`
+**Kanaltyp:** `CLIMATECONTROL_FLOOR_TRANSCEIVER`
 
 ![Screenshot](docs/controls/floor-heating.png)
 
-**Features:**
+**Funktionen:**
 
-- Display the opening percentage of the floor heating valve
-- Set target temperature
-- Show current temperature
+- Öffnungsprozentsatz des Fußbodenheizungsventils anzeigen
+- Zieltemperatur einstellen
+- Aktuelle Temperatur anzeigen
 
-# User Interface Overview
+# Benutzeroberfläche-Übersicht
 
-The current user interface represents a responsive version of the rooms & trades (gewerke) of the CCU3.
+Die aktuelle Benutzeroberfläche stellt eine responsive Version der Räume & Gewerke der CCU3 dar.
 
-## Channels View
+## Kanäle-Ansicht
 
-This is the channels view.  
-Here you can see and change the state of the channels associated with the selected room.
+Dies ist die Kanäle-Ansicht.  
+Hier können Sie den Status der Kanäle sehen und ändern, die dem ausgewählten Raum zugeordnet sind.
 
 ![Screenshot](/docs/channel1.png)
 ![Screenshot](/docs/channel2.png)
 
 # Installation
 
-## To install this add-on:
+## So installieren Sie dieses Add-on:
 
-1. Download the latest addon `tar.gz` file from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases).
-2. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
-3. Please Note: Upload and Reboot takes some time, depending on your Box ccu3. (Zip File is big because it includes the node binary)
-4. The add-on will be available at `http://192.168.178.123/addons/mui` (replace with your CCU IP).
+1. Laden Sie die neueste Addon-`tar.gz`-Datei von der [Releases-Seite](https://github.com/firsttris/ccu-addon-mui/releases) herunter.
+2. Installieren Sie es als Plugin auf Ihrer CCU3 über die Einstellungsseite unter "Zusätzliche Software".
+3. Hinweis: Hochladen und Neustart dauern einige Zeit, abhängig von Ihrer CCU3-Box. (Zip-Datei ist groß, da sie die Node-Binärdatei enthält)
+4. Das Add-on ist unter `http://192.168.178.123/addons/mui` verfügbar (ersetzen Sie mit Ihrer CCU-IP).
 
-## Setting Insecure CCU3 Origin as Secure
+## Unsicheren CCU3-Ursprung als sicher einstellen
 
-In the latest Chrome version, Progressive Web App (PWA) features and WakeLock only work with HTTPS.
-You need to set up the IP of your CCU3 as a secure origin to make it work without HTTPS in Chrome.
+In der neuesten Chrome-Version funktionieren Progressive Web App (PWA)-Funktionen und WakeLock nur mit HTTPS.
+Sie müssen die IP Ihrer CCU3 als sicheren Ursprung einrichten, damit es ohne HTTPS in Chrome funktioniert.
 
-1. Open Chrome and go to `chrome://flags`.
-2. Search for `Insecure origins treated as secure`
-3. Enter IP Adress of CCU3 e.g. `http://192.168.178.111` (replace with your IP).
-4. Enable
-5. Save and relaunch Chrome
+1. Öffnen Sie Chrome und gehen Sie zu `chrome://flags`.
+2. Suchen Sie nach `Insecure origins treated as secure`
+3. Geben Sie die IP-Adresse der CCU3 ein, z.B. `http://192.168.178.111` (ersetzen Sie mit Ihrer IP).
+4. Aktivieren
+5. Speichern und Chrome neu starten
 
-## Adding the PWA to Your Home Screen
+## Die PWA zum Startbildschirm hinzufügen
 
-Progressive Web Apps (PWAs) can be installed on your device like native apps. Follow these steps to add our PWA to your home screen:
+Progressive Web Apps (PWAs) können auf Ihrem Gerät wie native Apps installiert werden. Befolgen Sie diese Schritte, um unsere PWA zu Ihrem Startbildschirm hinzuzufügen:
 
-### On Android:
+### Auf Android:
 
-1. Open the PWA in your browser (e.g., Chrome, Firefox).
-2. Tap the browser's menu (usually three dots in the top right corner).
-3. Select "Add to Home screen".
+1. Öffnen Sie die PWA in Ihrem Browser (z.B. Chrome, Firefox).
+2. Tippen Sie auf das Browser-Menü (normalerweise drei Punkte in der oberen rechten Ecke).
+3. Wählen Sie "Zum Startbildschirm hinzufügen".
 
-### On iOS:
+### Auf iOS:
 
-1. Open the PWA in Safari.
-2. Tap the Share button (the box with an upward arrow).
-3. Scroll down and select "Add to Home Screen".
+1. Öffnen Sie die PWA in Safari.
+2. Tippen Sie auf die Teilen-Schaltfläche (das Kästchen mit einem nach oben gerichteten Pfeil).
+3. Scrollen Sie nach unten und wählen Sie "Zum Startbildschirm hinzufügen".
 
-After these steps, the PWA will appear as an icon on your home screen, and you can use it just like a native app.
+Nach diesen Schritten erscheint die PWA als Symbol auf Ihrem Startbildschirm, und Sie können sie wie eine native App verwenden.
 
-## Use WakeLock to prevent Screen from Standby
+## WakeLock verwenden, um Bildschirm-Standby zu verhindern
 
-To perevent the PWA from going into standby, we use the [WakeLock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API).
+Um zu verhindern, dass die PWA in den Standby-Modus geht, verwenden wir die [WakeLock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API).
 
-Steps to enable WakeLock experimental API in Chrome:
+Schritte zur Aktivierung der experimentellen WakeLock-API in Chrome:
 
-NOTE: The WakeLock API may no longer be experimental by the time you read this.
+HINWEIS: Die WakeLock-API ist möglicherweise nicht mehr experimentell, wenn Sie dies lesen.
 
-1. Open Chrome and go to `chrome://flags`.
-2. Search for and enable `Experimental Web Platform features`.
-3. Save and relaunch Chrome.
+1. Öffnen Sie Chrome und gehen Sie zu `chrome://flags`.
+2. Suchen Sie nach und aktivieren Sie `Experimental Web Platform features`.
+3. Speichern und Chrome neu starten.
 
-After these steps, the WakeLock API should be enabled, preventing your screen from going into standby while using the PWA.
+Nach diesen Schritten sollte die WakeLock-API aktiviert sein, wodurch verhindert wird, dass Ihr Bildschirm in den Standby-Modus geht, während Sie die PWA verwenden.
 
-To verify if WakeLock is working, check the browser console for the following error:
+Um zu überprüfen, ob WakeLock funktioniert, prüfen Sie die Browser-Konsole auf den folgenden Fehler:
 ![Screenshot](docs/WakeLock_error.png)
-This error indicates the WakeLock API is unavailable, review the steps above.
+Dieser Fehler zeigt an, dass die WakeLock-API nicht verfügbar ist; überprüfen Sie die oben genannten Schritte.
 
-# Development and Build
+# Entwicklung und Build
 
-## Prerequisites
+## Voraussetzungen
 
-To build this project, you need:
+Um dieses Projekt zu bauen, benötigen Sie:
 
-- **[Node.js](https://nodejs.org/)** (v18 or higher) - for npm and build tools
-- **[Bun](https://bun.sh/)** (latest) - for bundling the WebSocket server
+- **[Node.js](https://nodejs.org/)** (v18 oder höher) - für npm und Build-Tools
+- **[Bun](https://bun.sh/)** (neueste Version) - für das Bündeln des WebSocket-Servers
   ```bash
-  # Install Bun
+  # Bun installieren
   curl -fsSL https://bun.sh/install | bash
   ```
 
-## Setup
+## Einrichtung
 
-To develop and build this project, follow these steps:
+Um dieses Projekt zu entwickeln und zu bauen, folgen Sie diesen Schritten:
 
-1. Clone the repository: `git clone https://github.com/firsttris/ccu-addon-mui.git`
-2. Navigate into the project directory: `cd ccu-addon-mui`
-3. Install the dependencies: `npm install`
-4. Set your CCU3 IP in: [proxy.config.json](proxy.config.json)
-5. Start the development server: `npm start`
-6. To build the project, use: `npm run build`
+1. Repository klonen: `git clone https://github.com/firsttris/ccu-addon-mui.git`
+2. In das Projektverzeichnis navigieren: `cd ccu-addon-mui`
+3. Abhängigkeiten installieren: `npm install`
+4. Ihre CCU3-IP in [proxy.config.json](proxy.config.json) setzen
+5. Entwicklungsserver starten: `npm start`
+6. Um das Projekt zu bauen, verwenden Sie: `npm run build`
 
-This will:
-- Build the frontend React app
-- Bundle the WebSocket server with all dependencies
-- Download the Node.js ARM32 binary for CCU3
-- Create a `.tar.gz` addon package ready for installation
+Dies wird:
+- Die Frontend React-App bauen
+- Den WebSocket-Server mit allen Abhängigkeiten bündeln
+- Die Node.js ARM32-Binärdatei für CCU3 herunterladen
+- Ein `.tar.gz` Addon-Paket erstellen, das zur Installation bereit ist
 
-## WebSocket Testing
+## WebSocket-Test
 
-To test your WebSocket connection, you can use the [WebSocket Test Client](https://chromewebstore.google.com/detail/websocket-test-client/fgponpodhbmadfljofbimhhlengambbn) Chrome Addon:
+Um Ihre WebSocket-Verbindung zu testen, können Sie das [WebSocket Test Client](https://chromewebstore.google.com/detail/websocket-test-client/fgponpodhbmadfljofbimhhlengambbn) Chrome-Addon verwenden:
 
-1. Open the WebSocket Test Client and go to "Options".
-2. Enter your WebSocket Endpoint URL: `ws://192.168.178.111/addons/red/ws/webapp` (replace with your actual IP).
-3. Press "Connect". (Status "OPEN" indicates a successful connection.)
-4. Test the connection by sending the content of the [getRooms.tcl](src/rega/getRooms.tcl) script as payload.
+1. Öffnen Sie den WebSocket Test Client und gehen Sie zu "Options".
+2. Geben Sie Ihre WebSocket-Endpunkt-URL ein: `ws://192.168.178.111/addons/red/ws/webapp` (ersetzen Sie mit Ihrer tatsächlichen IP).
+3. Drücken Sie "Connect". (Status "OPEN" zeigt eine erfolgreiche Verbindung an.)
+4. Testen Sie die Verbindung, indem Sie den Inhalt des [getRooms.tcl](src/rega/getRooms.tcl) Skripts als Payload senden.
 
-## Homematic API Summary
+## Homematic API-Zusammenfassung
 
-I have collected an API Summary, where you have an quick overview of all methods for the different homematic API's
+Ich habe eine API-Zusammenfassung gesammelt, wo Sie einen schnellen Überblick über alle Methoden für die verschiedenen Homematic-APIs haben
 
-[API Summary](/docs/api/README.md)
+[API-Zusammenfassung](/docs/api/README.md)
 
-# Issues
+# Probleme
 
-Want to start contributing to this project?
+Möchten Sie zu diesem Projekt beitragen?
 
-Please visit our [issues page](https://github.com/firsttris/ccu-addon-mui/issues) for the latest issues and feature requests.
+Besuchen Sie bitte unsere [Issues-Seite](https://github.com/firsttris/ccu-addon-mui/issues) für die neuesten Issues und Feature-Anfragen.
 
-# Contributions
+# Beiträge
 
-We welcome pull requests to add features or support for new devices. Your contributions are appreciated!
+Wir freuen uns über Pull-Requests, um Funktionen oder Unterstützung für neue Geräte hinzuzufügen. Ihre Beiträge werden geschätzt!
 
-# License
+# Lizenz
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Dieses Projekt ist unter der MIT-Lizenz lizenziert - siehe die [LICENSE](LICENSE)-Datei für Details.

@@ -1,6 +1,6 @@
-[English Version](./README.en.md)
+[German Version](./README.de.md)
 
-# API-Dokumentation
+# API Documentation
 
 [JSON-RPC](/docs/api/JSON-RPC/README.md)
 
