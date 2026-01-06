@@ -14,7 +14,7 @@ A modern, fast, and responsive Progressive Web App (PWA) for your CCU3 with an i
 
 # Motivation
 
-My motivation was to have a user-friendly app for the tablet in our kitchen, allowing us to conveniently control all devices in the house.
+My motivation was to refresh the proven CCU3 with modern software and give it a contemporary, responsive interface.
 
 ![Screenshot](docs/tablet-screen.jpg)
 
