@@ -2,6 +2,16 @@
 
 A modern, fast, and responsive Progressive Web App (PWA) for your CCU3 with an integrated WebSocket server.
 
+# Features
+
+- **Modern UI**: Responsive design optimized for tablets and mobile devices.
+- **Device Support**: Control switches, thermostats, blinds, doors, and floor heating systems.
+- **Real-time Updates**: WebSocket-based communication for instant device status updates.
+- **PWA Ready**: Installable as a native app on Android and iOS home screens.
+- **WakeLock Support**: Prevents screen standby for continuous control.
+- **Easy Installation**: Simple add-on installation for CCU3 systems.
+
+
 # Motivation
 
 My motivation was to have a user-friendly app for the tablet in our kitchen, allowing us to conveniently control all devices in the house.
@@ -120,7 +130,7 @@ Here you can see and change the state of the channels associated with the select
 
 # Installation
 
-To install this add-on:
+## To install this add-on:
 
 1. Download the latest addon `tar.gz` file from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases).
 2. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
@@ -228,3 +238,7 @@ Please visit our [issues page](https://github.com/firsttris/ccu-addon-mui/issues
 # Contributions
 
 We welcome pull requests to add features or support for new devices. Your contributions are appreciated!
+
+# License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
