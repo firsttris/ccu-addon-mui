@@ -1,0 +1,97 @@
+#!/bin/sh
+
+# Updated start script for Go server
+
+ADDON_DIR="/usr/local/addons/mui"
+SERVER_DIR="$ADDON_DIR/go-server"
+GO_BIN="$SERVER_DIR/ccu-addon-mui-server"
+PID_FILE="/var/run/mui-websocket-server.pid"
+LOG_FILE="/var/log/mui-websocket-server.log"
+
+start() {
+    if [ -f $PID_FILE ]; then
+        PID=$(cat $PID_FILE)
+        if kill -0 $PID 2>/dev/null; then
+            echo "WebSocket Server is already running (PID: $PID)"
+            return 0
+        else
+            rm -f $PID_FILE
+        fi
+    fi
+    
+    echo "Starting MUI WebSocket Server (Go)..."
+    cd $SERVER_DIR
+    $GO_BIN >> $LOG_FILE 2>&1 &
+    echo $! > $PID_FILE
+    echo "MUI WebSocket Server started (PID: $(cat $PID_FILE))"
+}
+
+stop() {
+    if [ -f $PID_FILE ]; then
+        PID=$(cat $PID_FILE)
+        echo "Stopping MUI WebSocket Server (PID: $PID)..."
+        kill $PID 2>/dev/null
+        
+        # Wait for process to stop (max 10 seconds)
+        for i in 1 2 3 4 5 6 7 8 9 10; do
+            if ! kill -0 $PID 2>/dev/null; then
+                break
+            fi
+            sleep 1
+        done
+        
+        # Force kill if still running
+        if kill -0 $PID 2>/dev/null; then
+            echo "Process did not stop, forcing..."
+            kill -9 $PID 2>/dev/null
+        fi
+        
+        rm -f $PID_FILE
+        echo "MUI WebSocket Server stopped"
+    else
+        echo "MUI WebSocket Server is not running"
+    fi
+}
+
+restart() {
+    stop
+    sleep 2
+    start
+}
+
+status() {
+    if [ -f $PID_FILE ]; then
+        PID=$(cat $PID_FILE)
+        if kill -0 $PID 2>/dev/null; then
+            echo "MUI WebSocket Server is running (PID: $PID)"
+            return 0
+        else
+            echo "MUI WebSocket Server is not running (stale PID file)"
+            return 1
+        fi
+    else
+        echo "MUI WebSocket Server is not running"
+        return 1
+    fi
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    status)
+        status
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac
+
+exit 0
