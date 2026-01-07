@@ -4,6 +4,8 @@
   "license": "MIT",
   "scripts": {
     "start:fe": "nx serve --host=0.0.0.0",
+    "start:fe:local": "nx serve --configuration=local --host=0.0.0.0",
+    "start:fe:ccu3": "nx serve --configuration=ccu3 --host=0.0.0.0",
     "start:server": "cd go-server && go run main.go",
     "build": "nx build",
     "postbuild": "npm run remove:build && npm run copy:build && npm run tar:gz",
