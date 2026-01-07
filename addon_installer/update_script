@@ -12,6 +12,14 @@ fi
 mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
 cp -af dist/* $ADDON_DIR
 
+# Cleanup old Node.js server files (migration from old version)
+if [ -d "$ADDON_DIR/node" ]; then
+  rm -rf $ADDON_DIR/node
+fi
+if [ -d "$ADDON_DIR/server" ]; then
+  rm -rf $ADDON_DIR/server
+fi
+
 # Copy Go server binary
 mkdir -p $ADDON_DIR/go-server
 cp -af go-server/ccu-addon-mui-server-arm $ADDON_DIR/go-server/ccu-addon-mui-server
