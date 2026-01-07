@@ -24,13 +24,21 @@ foreach(channelId, roomObject.EnumUsedIDs()) {
     foreach(datapointId, channelObject.DPs().EnumUsedIDs()) {
         object datapointObject = dom.GetObject(datapointId);
         var value = datapointObject.Value();
-        if (value.ToString() != "") {
-            if (isFirstDatapoint == false) {
-                Write(',');
+        if (isFirstDatapoint == false) {
+            Write(',');
+        } else {
+            isFirstDatapoint = false;
+        }
+        Write('"' # datapointObject.HssType() # '":');
+        if (value.ToString() == "") {
+            Write('null');
+        } else {
+            integer valueType = datapointObject.ValueType();
+            if ((valueType == 2) || (valueType == 4) || (valueType == 16)) {
+                Write(value);
             } else {
-                isFirstDatapoint = false;
+                Write('"' # value # '"');
             }
-            Write('"' # datapointObject.HssType() # '":' # value);
         }
     }
 

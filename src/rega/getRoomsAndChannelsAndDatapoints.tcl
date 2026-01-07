@@ -36,12 +36,23 @@ foreach (roomId, dom.GetObject(ID_ROOMS).EnumUsedIDs()) {
 
         foreach(datapointId, channelObject.DPs().EnumUsedIDs()) {
             object datapointObject = dom.GetObject(datapointId);
+            var value = datapointObject.Value();
             if (isFirstDatapoint == false) {
                 Write(',');
             } else {
                 isFirstDatapoint = false;
             }
-            Write('"' # datapointObject.HssType() # '": "' # datapointObject.Value() # '"');
+            Write('"' # datapointObject.HssType() # '":');
+            if (value.ToString() == "") {
+                Write('null');
+            } else {
+                integer valueType = datapointObject.ValueType();
+                if ((valueType == 2) || (valueType == 4) || (valueType == 16)) {
+                    Write(value);
+                } else {
+                    Write('"' # value # '"');
+                }
+            }
         }
 
         Write('}}');

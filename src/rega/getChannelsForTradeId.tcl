@@ -32,7 +32,12 @@ foreach(channelId, functionObject.EnumUsedIDs()) {
         if (value.ToString() == "") {
             Write('null');
         } else {
-            Write(value);
+            integer valueType = datapointObject.ValueType();
+            if ((valueType == 2) || (valueType == 4) || (valueType == 16)) {
+                Write(value);
+            } else {
+                Write('"' # value # '"');
+            }
         }
     }
 
