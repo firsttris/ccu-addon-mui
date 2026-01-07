@@ -10,7 +10,15 @@ if [ $? -eq 1 ]; then
 fi
 
 mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
-cp -af dist/* $ADDON_DIR
+
+# Copy CGI script first (directly to addon root)
+if [ -f update-check.cgi ]; then
+  cp -af update-check.cgi $ADDON_DIR/update-check.cgi
+  chmod +x $ADDON_DIR/update-check.cgi
+fi
+
+# Copy React app to addon directory
+cp -af dist/* $ADDON_DIR/
 
 # Cleanup old Node.js server files (migration from old version)
 if [ -d "$ADDON_DIR/node" ]; then
@@ -27,7 +35,7 @@ chmod +x $ADDON_DIR/go-server/ccu-addon-mui-server
 
 # Create symlink only if it doesn't exist
 if [ ! -L $WWW_DIR/mui ]; then
-  ln -sf $ADDON_DIR/www $WWW_DIR/mui
+  ln -sf $ADDON_DIR $WWW_DIR/mui
 fi
 
 cp -af rc.d/mui $RC_DIR/
@@ -36,13 +44,6 @@ chmod +x $RC_DIR/mui
 # Copy version file if it exists
 if [ -f VERSION ]; then
   cp -af VERSION $ADDON_DIR/
-fi
-
-# Copy update-check CGI script
-if [ -f www/update-check.cgi ]; then
-  mkdir -p $ADDON_DIR/www
-  cp -af www/update-check.cgi $ADDON_DIR/www/
-  chmod +x $ADDON_DIR/www/update-check.cgi
 fi
 
 cp -af lighttpd.conf /usr/local/etc/config/lighttpd/mui.conf

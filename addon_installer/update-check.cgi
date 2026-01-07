@@ -17,10 +17,10 @@ if {[info exists cmd] && $cmd == "download"} {
     puts -nonewline "Content-Type: text/html; charset=utf-8\r\n\r\n"
     puts "<html><head><meta http-equiv='refresh' content='0; url=$downloadURL' /></head></html>"
 } else {
-    puts -nonewline "Content-Type: text/html; charset=utf-8\r\n\r\n"
+    puts -nonewline "Content-Type: text/plain; charset=utf-8\r\n\r\n"
     
     catch {
-        regexp {"tag_name"\s*:\s*"v?([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z]+\.[0-9]+)?)"} [exec /usr/bin/env wget -qO- --no-check-certificate $checkURL] match newversion
+        regexp {"tag_name"\s*:\s*"v?([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z]+\.[0-9]+)?)"} [exec /usr/bin/wget -qO- --no-check-certificate $checkURL] match newversion
     }
     
     if {[info exists newversion]} {
