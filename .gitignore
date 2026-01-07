@@ -53,3 +53,4 @@ addon_installer/server/
 addon_installer/node/
 addon_installer/VERSION
 addon_installer/server/websocket-server.js
+addon_installer/go-server/

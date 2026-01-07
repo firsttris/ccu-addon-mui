@@ -1,8 +1,8 @@
 #!/bin/sh
 
 ADDON_DIR="/usr/local/addons/mui"
-SERVER_DIR="$ADDON_DIR/server"
-NODE_BIN="$ADDON_DIR/node/bin/node"
+SERVER_DIR="$ADDON_DIR/go-server"
+GO_BIN="$SERVER_DIR/ccu-addon-mui-server"
 PID_FILE="/var/run/mui-websocket-server.pid"
 LOG_FILE="/var/log/mui-websocket-server.log"
 
@@ -17,9 +17,9 @@ start() {
         fi
     fi
     
-    echo "Starting MUI WebSocket Server..."
+    echo "Starting MUI WebSocket Server (Go)..."
     cd $SERVER_DIR
-    $NODE_BIN websocket-server.js >> $LOG_FILE 2>&1 &
+    $GO_BIN >> $LOG_FILE 2>&1 &
     echo $! > $PID_FILE
     echo "MUI WebSocket Server started (PID: $(cat $PID_FILE))"
 }
@@ -57,6 +57,22 @@ restart() {
     start
 }
 
+status() {
+    if [ -f $PID_FILE ]; then
+        PID=$(cat $PID_FILE)
+        if kill -0 $PID 2>/dev/null; then
+            echo "MUI WebSocket Server is running (PID: $PID)"
+            return 0
+        else
+            echo "MUI WebSocket Server is not running (stale PID file)"
+            return 1
+        fi
+    else
+        echo "MUI WebSocket Server is not running"
+        return 1
+    fi
+}
+
 case "$1" in
     
     ""|start)
@@ -69,6 +85,10 @@ case "$1" in
     
     restart)
         restart
+    ;;
+    
+    status)
+        status
     ;;
     
     info)
@@ -92,7 +112,7 @@ case "$1" in
         stop
         rm -rf $ADDON_DIR
         rm -f $LOG_FILE
-        echo "Deinstallation abgeschlossen."
+        echo "Deinstallation abgeschlossen."status|
     ;;
     
     *)
