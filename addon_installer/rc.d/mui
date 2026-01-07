@@ -112,7 +112,7 @@ case "$1" in
         stop
         rm -rf $ADDON_DIR
         rm -f $LOG_FILE
-        echo "Deinstallation abgeschlossen."status|
+        echo "Deinstallation abgeschlossen."
     ;;
     
     *)
