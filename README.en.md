@@ -33,10 +33,9 @@ This project is built with a robust set of technologies to ensure high performan
 
 ## Backend
 
-- [Bun](https://bun.sh/): Fast all-in-one JavaScript runtime and bundler.
-- [TypeScript](https://www.typescriptlang.org/): Type-safe server code.
-- [WebSocket Server](https://github.com/websockets/ws): WebSocket implementation for Node.js.
-- [Homematic Libraries](https://github.com/hobbyquaker): XML-RPC and ReGa script support.
+- [Go](https://golang.org/): Fast, statically compiled programming language.
+- [Gorilla WebSocket](https://github.com/gorilla/websocket): WebSocket implementation for Go.
+- Native XML-RPC and ReGa script support.
 
 # Prerequisites for CCU3
 
@@ -134,7 +133,7 @@ Here you can see and change the state of the channels associated with the select
 
 1. Download the latest addon `tar.gz` file from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases).
 2. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
-3. Please Note: Upload and Reboot takes some time, depending on your Box ccu3. (Zip File is big because it includes the node binary)
+3. Please Note: Upload and Reboot takes some time, depending on your Box ccu3.
 4. The add-on will be available at `http://192.168.178.123/addons/mui` (replace with your CCU IP).
 
 ## Setting Insecure CCU3 Origin as Secure
@@ -191,10 +190,10 @@ This error indicates the WakeLock API is unavailable, review the steps above.
 To build this project, you need:
 
 - **[Node.js](https://nodejs.org/)** (v18 or higher) - for npm and build tools
-- **[Bun](https://bun.sh/)** (latest) - for bundling the WebSocket server
+- **[Go](https://golang.org/)** (v1.21 or higher) - for the WebSocket server
   ```bash
-  # Install Bun
-  curl -fsSL https://bun.sh/install | bash
+  # Install Go (Fedora/RHEL)
+  sudo dnf install golang
   ```
 
 ## Setup
