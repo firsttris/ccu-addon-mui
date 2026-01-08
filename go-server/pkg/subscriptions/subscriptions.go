@@ -6,20 +6,17 @@ import (
 	"ccu-addon-mui-server/pkg/types"
 )
 
-// Manager handles device subscriptions to channels
 type Manager struct {
 	mu            sync.RWMutex
 	subscriptions map[string]map[string]bool // deviceId -> channel -> exists
 }
 
-// NewManager creates a new subscription manager
 func NewManager() *Manager {
 	return &Manager{
 		subscriptions: make(map[string]map[string]bool),
 	}
 }
 
-// Subscribe adds channel subscriptions for a device
 func (m *Manager) Subscribe(deviceID string, channels []string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -31,7 +28,6 @@ func (m *Manager) Subscribe(deviceID string, channels []string) {
 	m.subscriptions[deviceID] = channelSet
 }
 
-// Unsubscribe removes all subscriptions for a device
 func (m *Manager) Unsubscribe(deviceID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -39,7 +35,6 @@ func (m *Manager) Unsubscribe(deviceID string) {
 	delete(m.subscriptions, deviceID)
 }
 
-// ShouldReceiveEvent checks if a device should receive this event
 func (m *Manager) ShouldReceiveEvent(deviceID string, event *types.CCUEvent) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -53,7 +48,6 @@ func (m *Manager) ShouldReceiveEvent(deviceID string, event *types.CCUEvent) boo
 	return hasChannel
 }
 
-// GetSubscriptions returns all subscribed channels for a device
 func (m *Manager) GetSubscriptions(deviceID string) []string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -70,13 +64,11 @@ func (m *Manager) GetSubscriptions(deviceID string) []string {
 	return result
 }
 
-// Stats represents subscription statistics
 type Stats struct {
 	Devices       int
 	TotalChannels int
 }
 
-// GetStats returns current subscription statistics
 func (m *Manager) GetStats() Stats {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

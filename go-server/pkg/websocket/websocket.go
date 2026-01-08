@@ -16,7 +16,6 @@ import (
 	"ccu-addon-mui-server/pkg/types"
 )
 
-// min returns the minimum of two integers
 func min(a, b int) int {
 	if a < b {
 		return a
@@ -26,18 +25,16 @@ func min(a, b int) int {
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
-		return true // Allow all origins
+		return true
 	},
 }
 
-// Client represents a WebSocket client
 type Client struct {
 	conn     *websocket.Conn
 	send     chan []byte
 	deviceID string
 }
 
-// Server handles WebSocket connections
 type Server struct {
 	cfg                *config.Config
 	regaClient         *rega.Client
@@ -50,7 +47,6 @@ type Server struct {
 	broadcast          chan []byte
 }
 
-// NewServer creates a new WebSocket server
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 	return &Server{
 		cfg:             cfg,
@@ -63,9 +59,7 @@ func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 	}
 }
 
-// Start starts the WebSocket server
 func (s *Server) Start(ctx context.Context) error {
-	// Start hub
 	go s.run(ctx)
 
 	mux := http.NewServeMux()
@@ -85,7 +79,6 @@ func (s *Server) Start(ctx context.Context) error {
 	return nil
 }
 
-// Close gracefully shuts down the WebSocket server
 func (s *Server) Close(ctx context.Context) error {
 	if s.httpServer != nil {
 		return s.httpServer.Shutdown(ctx)
@@ -93,7 +86,6 @@ func (s *Server) Close(ctx context.Context) error {
 	return nil
 }
 
-// run manages client registration, unregistration, and broadcasting
 func (s *Server) run(ctx context.Context) {
 	for {
 		select {
@@ -120,9 +112,8 @@ func (s *Server) run(ctx context.Context) {
 	}
 }
 
-// BroadcastToClients sends a CCU event to all subscribed clients
 func (s *Server) BroadcastToClients(event *types.CCUEvent) {
-	logger.Info(fmt.Sprintf("📡 Broadcasting event: %s.%s = %v", 
+	logger.Debug(fmt.Sprintf("📡 Broadcasting event: %s.%s = %v", 
 		event.Event.Channel, event.Event.Datapoint, event.Event.Value))
 	
 	message, err := json.Marshal(event)
@@ -137,7 +128,7 @@ func (s *Server) BroadcastToClients(event *types.CCUEvent) {
 	sentCount := 0
 	filteredCount := 0
 
-	logger.Info(fmt.Sprintf("   Connected clients: %d", len(s.clients)))
+	logger.Debug(fmt.Sprintf("   Connected clients: %d", len(s.clients)))
 
 	for client := range s.clients {
 		if client.deviceID == "" {
@@ -156,20 +147,18 @@ func (s *Server) BroadcastToClients(event *types.CCUEvent) {
 		select {
 		case client.send <- message:
 			sentCount++
-			logger.Info(fmt.Sprintf("   ✅ Sent to device %s", client.deviceID))
+			logger.Debug(fmt.Sprintf("   ✅ Sent to device %s", client.deviceID))
 		default:
-			// Client send buffer is full, close connection
 			logger.Error(fmt.Sprintf("   ❌ Device %s buffer full, closing", client.deviceID))
 			close(client.send)
 			delete(s.clients, client)
 		}
 	}
 
-	logger.Info(fmt.Sprintf("📊 Broadcast complete: %d sent, %d filtered, %d total", 
+	logger.Debug(fmt.Sprintf("📊 Broadcast complete: %d sent, %d filtered, %d total", 
 		sentCount, filteredCount, len(s.clients)))
 }
 
-// handleWebSocket handles incoming WebSocket connections
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -184,12 +173,10 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	s.register <- client
 
-	// Start goroutines for reading and writing
 	go s.writePump(client)
 	go s.readPump(client)
 }
 
-// readPump handles incoming messages from a client
 func (s *Server) readPump(client *Client) {
 	defer func() {
 		s.unregister <- client
@@ -209,7 +196,6 @@ func (s *Server) readPump(client *Client) {
 	}
 }
 
-// writePump sends messages to a client
 func (s *Server) writePump(client *Client) {
 	defer client.conn.Close()
 
@@ -221,9 +207,7 @@ func (s *Server) writePump(client *Client) {
 	}
 }
 
-// handleMessage processes incoming messages from clients
 func (s *Server) handleMessage(client *Client, message []byte) {
-	// Try to parse as JSON
 	var baseMsg map[string]interface{}
 	if err := json.Unmarshal(message, &baseMsg); err != nil {
 		s.sendError(client, "invalid JSON: "+err.Error())
@@ -236,7 +220,6 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		return
 	}
 
-	// Handle different message types
 	switch msgType {
 	case "subscribe":
 		s.handleSubscribe(client, message)
@@ -253,7 +236,6 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 	}
 }
 
-// handleSubscribe handles subscription requests
 func (s *Server) handleSubscribe(client *Client, message []byte) {
 	var msg types.SubscribeMessage
 	if err := json.Unmarshal(message, &msg); err != nil {
@@ -265,10 +247,9 @@ func (s *Server) handleSubscribe(client *Client, message []byte) {
 	s.subscriptionMgr.Subscribe(msg.DeviceID, msg.Channels)
 
 	stats := s.subscriptionMgr.GetStats()
-	logger.Info(fmt.Sprintf("📝 Device %s subscribed to %d channels", msg.DeviceID, len(msg.Channels)))
-	logger.Info(fmt.Sprintf("   Total: %d devices, %d channels", stats.Devices, stats.TotalChannels))
+	logger.Debug(fmt.Sprintf("📝 Device %s subscribed to %d channels", msg.DeviceID, len(msg.Channels)))
+	logger.Debug(fmt.Sprintf("   Total: %d devices, %d channels", stats.Devices, stats.TotalChannels))
 	
-	// Log first few channels for debugging
 	if len(msg.Channels) > 0 {
 		preview := msg.Channels
 		if len(preview) > 5 {
@@ -289,7 +270,6 @@ func (s *Server) handleSubscribe(client *Client, message []byte) {
 	s.sendJSON(client, response)
 }
 
-// handleGetRooms handles getRooms requests
 func (s *Server) handleGetRooms(client *Client, message []byte) {
 	var msg struct {
 		Type     string `json:"type"`
@@ -311,11 +291,9 @@ func (s *Server) handleGetRooms(client *Client, message []byte) {
 		return
 	}
 
-	// Send the result directly (it's already JSON from the script)
 	client.send <- []byte(result)
 }
 
-// handleGetTrades handles getTrades requests
 func (s *Server) handleGetTrades(client *Client, message []byte) {
 	var msg struct {
 		Type     string `json:"type"`
@@ -340,7 +318,6 @@ func (s *Server) handleGetTrades(client *Client, message []byte) {
 	client.send <- []byte(result)
 }
 
-// handleGetChannels handles getChannels requests (for room or trade)
 func (s *Server) handleGetChannels(client *Client, message []byte) {
 	var msg struct {
 		Type     string `json:"type"`
@@ -378,7 +355,6 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 	client.send <- []byte(result)
 }
 
-// handleSetDatapoint handles setDatapoint requests
 func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 	var msg struct {
 		Type          string      `json:"type"`
@@ -397,7 +373,6 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		return
 	}
 
-	// Convert value to string for script
 	valueStr := fmt.Sprintf("%v", msg.Value)
 	
 	result, err := s.regaClient.SetDatapoint(msg.InterfaceName, msg.Address, msg.Attribute, valueStr)
@@ -409,7 +384,6 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 	client.send <- []byte(result)
 }
 
-// sendJSON sends a JSON response to a client
 func (s *Server) sendJSON(client *Client, data interface{}) {
 	message, err := json.Marshal(data)
 	if err != nil {
@@ -419,7 +393,6 @@ func (s *Server) sendJSON(client *Client, data interface{}) {
 	client.send <- message
 }
 
-// sendError sends an error response to a client
 func (s *Server) sendError(client *Client, errorMsg string) {
 	response := types.ErrorResponse{
 		Type:  "error",
@@ -428,7 +401,6 @@ func (s *Server) sendError(client *Client, errorMsg string) {
 	s.sendJSON(client, response)
 }
 
-// GetClientsCount returns the number of connected clients
 func (s *Server) GetClientsCount() int {
 	s.clientsMu.RLock()
 	defer s.clientsMu.RUnlock()

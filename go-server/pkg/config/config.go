@@ -5,11 +5,10 @@ import (
 	"strconv"
 )
 
-// Config holds all configuration for the server
 type Config struct {
 	WSPort        int
-	RPCPort       int    // BidCos-RF port
-	HmIPPort      int    // HmIP-RF port
+	RPCPort       int
+	HmIPPort      int
 	RPCServerPort int
 	CCUHost       string
 	CCUUser       string
@@ -19,7 +18,6 @@ type Config struct {
 	RegaPort      int
 }
 
-// Load reads configuration from environment variables with defaults
 func Load() *Config {
 	ccuHost := getEnv("CCU_HOST", "localhost")
 	

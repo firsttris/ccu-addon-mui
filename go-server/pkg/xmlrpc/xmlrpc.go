@@ -19,16 +19,13 @@ import (
 )
 
 func init() {
-	// Set charset reader for ISO-8859-1 support (CCU3 uses this encoding)
 	xmlrpc.CharsetReader = func(label string, input io.Reader) (io.Reader, error) {
 		return charset.NewReader(label, input)
 	}
 }
 
-// EventHandler is called when a CCU event is received
 type EventHandler func(*types.CCUEvent)
 
-// Server handles XML-RPC communication with the CCU
 type Server struct {
 	cfg          *config.Config
 	httpServer   *http.Server
@@ -37,7 +34,6 @@ type Server struct {
 	clientsMu    sync.Mutex
 }
 
-// XML-RPC request/response structures
 type methodCall struct {
 	XMLName    xml.Name `xml:"methodCall"`
 	MethodName string   `xml:"methodName"`
@@ -80,7 +76,6 @@ type member struct {
 	Value value  `xml:"value"`
 }
 
-// NewServer creates a new XML-RPC server
 func NewServer(cfg *config.Config, eventHandler EventHandler) *Server {
 	return &Server{
 		cfg:          cfg,
@@ -89,7 +84,6 @@ func NewServer(cfg *config.Config, eventHandler EventHandler) *Server {
 	}
 }
 
-// Start starts the XML-RPC server and registers with CCU interfaces
 func (s *Server) Start(ctx context.Context) error {
 	bindHost := "0.0.0.0"
 	if s.cfg.CallbackHost == "127.0.0.1" || s.cfg.CallbackHost == "localhost" {
@@ -97,8 +91,6 @@ func (s *Server) Start(ctx context.Context) error {
 	}
 
 	mux := http.NewServeMux()
-	
-	// Handle XML-RPC calls directly
 	mux.HandleFunc("/", s.handleXMLRPC)
 
 	s.httpServer = &http.Server{
@@ -108,7 +100,6 @@ func (s *Server) Start(ctx context.Context) error {
 
 	logger.Debug(fmt.Sprintf("✅ RPC Server created on %s:%d", bindHost, s.cfg.RPCServerPort))
 
-	// Connect to CCU interfaces
 	go s.connectToCCU("BidCos-RF", s.cfg.RPCPort)
 	go s.connectToCCU("HmIP-RF", s.cfg.HmIPPort)
 
@@ -121,7 +112,6 @@ func (s *Server) Start(ctx context.Context) error {
 	return nil
 }
 
-// Close gracefully shuts down the XML-RPC server
 func (s *Server) Close(ctx context.Context) error {
 	if s.httpServer != nil {
 		return s.httpServer.Shutdown(ctx)
@@ -129,7 +119,6 @@ func (s *Server) Close(ctx context.Context) error {
 	return nil
 }
 
-// Unregister unregisters all RPC clients from the CCU
 func (s *Server) Unregister(ctx context.Context) error {
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
@@ -138,7 +127,6 @@ func (s *Server) Unregister(ctx context.Context) error {
 		interfaceID := fmt.Sprintf("websocket-server-%s", interfaceName)
 		logger.Info("📤 Unregistering", interfaceID, "...")
 
-		// Call init with empty URL to unregister
 		var result interface{}
 		if err := client.Call("init", []interface{}{"", ""}, &result); err != nil {
 			logger.Error(fmt.Sprintf("❌ Failed to unregister %s:", interfaceName), err)
@@ -150,13 +138,11 @@ func (s *Server) Unregister(ctx context.Context) error {
 	return nil
 }
 
-// connectToCCU connects to a CCU interface and registers for events
 func (s *Server) connectToCCU(interfaceName string, port int) {
 	logger.Debug(fmt.Sprintf("🔌 Attempting to connect to %s at %s:%d...", interfaceName, s.cfg.CCUHost, port))
 
 	url := fmt.Sprintf("http://%s:%d", s.cfg.CCUHost, port)
 
-	// Create XML-RPC client with optional basic auth
 	var transport http.RoundTripper
 	
 	if s.cfg.CCUUser != "" && s.cfg.CCUPass != "" {
@@ -173,12 +159,10 @@ func (s *Server) connectToCCU(interfaceName string, port int) {
 		return
 	}
 
-	// Store client
 	s.clientsMu.Lock()
 	s.clients[interfaceName] = client
 	s.clientsMu.Unlock()
 
-	// Register with CCU
 	callbackURL := fmt.Sprintf("http://%s:%d", s.cfg.CallbackHost, s.cfg.RPCServerPort)
 	interfaceID := fmt.Sprintf("websocket-server-%s", interfaceName)
 
@@ -195,7 +179,6 @@ func (s *Server) connectToCCU(interfaceName string, port int) {
 	}
 }
 
-// basicAuthTransport implements http.RoundTripper with basic auth
 type basicAuthTransport struct {
 	username string
 	password string
@@ -206,9 +189,8 @@ func (t *basicAuthTransport) RoundTrip(req *http.Request) (*http.Response, error
 	return http.DefaultTransport.RoundTrip(req)
 }
 
-// handleXMLRPC handles incoming XML-RPC requests from the CCU
 func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
-	logger.Info(fmt.Sprintf("📥 HTTP %s request from %s", r.Method, r.RemoteAddr))
+	logger.Debug(fmt.Sprintf("📥 HTTP %s request from %s", r.Method, r.RemoteAddr))
 	logger.Debug(fmt.Sprintf("   URL: %s", r.URL.Path))
 	logger.Debug(fmt.Sprintf("   Content-Type: %s", r.Header.Get("Content-Type")))
 
@@ -217,7 +199,6 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Read request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Error("Failed to read request body:", err)
@@ -228,7 +209,6 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 
 	logger.Debug(fmt.Sprintf("   Request body: %s", string(body)))
 
-	// Parse XML-RPC method call with charset support
 	var call methodCall
 	decoder := xml.NewDecoder(bytes.NewReader(body))
 	decoder.CharsetReader = func(label string, input io.Reader) (io.Reader, error) {
@@ -240,9 +220,8 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Info(fmt.Sprintf("📞 Method call: %s", call.MethodName))
+	logger.Debug(fmt.Sprintf("📞 Method call: %s", call.MethodName))
 
-	// Handle different methods
 	var response string
 	switch call.MethodName {
 	case "system.multicall":
@@ -258,18 +237,15 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 		response = s.serializeMethodResponse("")
 	}
 
-	// Send response
 	w.Header().Set("Content-Type", "text/xml")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(response)))
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(response))
 }
 
-// handleInit handles the init() method call from CCU
 func (s *Server) handleInit(call *methodCall) string {
-	logger.Info("📞 init() called by CCU")
+	logger.Debug("📞 init() called by CCU")
 	
-	// Extract callback URL and interface ID from params
 	if len(call.Params.Param) >= 2 {
 		callbackURL := ""
 		interfaceID := ""
@@ -285,32 +261,30 @@ func (s *Server) handleInit(call *methodCall) string {
 		logger.Debug(fmt.Sprintf("   Interface ID: %s", interfaceID))
 		
 		if callbackURL == "" && interfaceID == "" {
-			logger.Info("   Deregistration request (empty params)")
+			logger.Debug("   Deregistration request (empty params)")
 		} else {
-			logger.Info(fmt.Sprintf("   ✅ Registered interface '%s' with callback '%s'", interfaceID, callbackURL))
+			logger.Debug(fmt.Sprintf("   ✅ Registered interface '%s' with callback '%s'", interfaceID, callbackURL))
 		}
 	}
 	
 	return s.serializeMethodResponse("")
 }
 
-// handleSystemMulticall handles system.multicall from CCU
 func (s *Server) handleSystemMulticall(call *methodCall) string {
-	logger.Info("📨 system.multicall received from CCU")
+	logger.Debug("📨 system.multicall received from CCU")
 
 	if len(call.Params.Param) == 0 {
 		logger.Debug("   Empty multicall, no events")
 		return s.serializeMethodResponse("")
 	}
 
-	// Extract array of calls from first parameter
 	if call.Params.Param[0].Value.Array == nil {
 		logger.Debug("   No array in multicall")
 		return s.serializeMethodResponse("")
 	}
 
 	calls := call.Params.Param[0].Value.Array.Data.Value
-	logger.Info(fmt.Sprintf("   Processing %d events from CCU", len(calls)))
+	logger.Debug(fmt.Sprintf("   Processing %d events from CCU", len(calls)))
 
 	for i, callValue := range calls {
 		if callValue.Struct == nil {
@@ -318,20 +292,17 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 			continue
 		}
 
-		// Extract methodName and params from struct
 		var methodName string
 		var params []interface{}
 
 		for _, m := range callValue.Struct.Member {
 			if m.Name == "methodName" {
-				// Extract methodName from value (could be String or Text)
 				if m.Value.String != nil {
 					methodName = *m.Value.String
 				} else if m.Value.Text != "" {
 					methodName = m.Value.Text
 				}
 			} else if m.Name == "params" && m.Value.Array != nil {
-				// Extract params
 				for _, p := range m.Value.Array.Data.Value {
 					params = append(params, s.extractValue(&p))
 				}
@@ -344,7 +315,7 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 			datapoint := fmt.Sprint(params[2])
 			value := params[3]
 
-			logger.Info(fmt.Sprintf("   ✅ Event %d: %s | %s | %s = %v", i+1, interfaceName, address, datapoint, value))
+			logger.Debug(fmt.Sprintf("   ✅ Event %d: %s | %s | %s = %v", i+1, interfaceName, address, datapoint, value))
 			s.handleCCUEvent(interfaceName, address, datapoint, value)
 		}
 	}
@@ -352,22 +323,19 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 	return s.serializeMethodResponse("")
 }
 
-// handleSystemListMethods handles system.listMethods request from CCU
 func (s *Server) handleSystemListMethods() string {
-	logger.Info("📋 system.listMethods called by CCU")
+	logger.Debug("📋 system.listMethods called by CCU")
 	methods := []string{"system.listMethods", "system.multicall", "listDevices", "init", "event"}
 	logger.Debug(fmt.Sprintf("   Returning methods: %v", methods))
 	return s.serializeArrayResponse(methods)
 }
 
-// handleListDevices handles listDevices request from CCU
 func (s *Server) handleListDevices() string {
-	logger.Info("📱 listDevices called by CCU")
+	logger.Debug("📱 listDevices called by CCU")
 	logger.Debug("   Returning empty device list")
 	return s.serializeArrayResponse([]string{})
 }
 
-// extractValue extracts a Go value from an XML-RPC value
 func (s *Server) extractValue(v *value) interface{} {
 	if v.String != nil {
 		return *v.String
@@ -384,14 +352,12 @@ func (s *Server) extractValue(v *value) interface{} {
 	if v.Boolean != nil {
 		return *v.Boolean != 0
 	}
-	// Fallback to text content (for <value>text</value>)
 	if v.Text != "" {
 		return v.Text
 	}
 	return nil
 }
 
-// serializeMethodResponse creates an XML-RPC method response
 func (s *Server) serializeMethodResponse(result string) string {
 	return fmt.Sprintf(`<?xml version="1.0"?>
 <methodResponse>
@@ -403,7 +369,6 @@ func (s *Server) serializeMethodResponse(result string) string {
 </methodResponse>`, result)
 }
 
-// serializeArrayResponse creates an XML-RPC method response with an array
 func (s *Server) serializeArrayResponse(items []string) string {
 	var arrayItems bytes.Buffer
 	for _, item := range items {
@@ -426,14 +391,12 @@ func (s *Server) serializeArrayResponse(items []string) string {
 </methodResponse>`, arrayItems.String())
 }
 
-// handleCCUEvent processes a CCU event and broadcasts it to WebSocket clients
 func (s *Server) handleCCUEvent(interfaceName, address, datapoint string, value interface{}) {
-	logger.Info(fmt.Sprintf("🔔 Processing CCU Event: %s | %s.%s = %v", interfaceName, address, datapoint, value))
+	logger.Debug(fmt.Sprintf("🔔 Processing CCU Event: %s | %s.%s = %v", interfaceName, address, datapoint, value))
 
 	event := types.NewCCUEvent(interfaceName, address, datapoint, value)
 	
-	// Call event handler in goroutine to not block XML-RPC response
 	go s.eventHandler(event)
 
-	logger.Info("   📤 Event sent to WebSocket handler")
+	logger.Debug("   📤 Event sent to WebSocket handler")
 }

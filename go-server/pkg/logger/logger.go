@@ -9,29 +9,24 @@ import (
 
 var debugMode bool
 
-// SetDebugMode enables or disables debug logging
 func SetDebugMode(enabled bool) {
 	debugMode = enabled
 }
 
-// Info logs informational messages
 func Info(args ...interface{}) {
 	log.Println(args...)
 }
 
-// Error logs error messages
 func Error(args ...interface{}) {
 	log.Println(args...)
 }
 
-// Debug logs debug messages if debug mode is enabled
 func Debug(args ...interface{}) {
 	if debugMode {
 		log.Println(args...)
 	}
 }
 
-// LogStartupInfo logs startup configuration
 func LogStartupInfo(cfg *config.Config) {
 	SetDebugMode(cfg.Debug)
 	
