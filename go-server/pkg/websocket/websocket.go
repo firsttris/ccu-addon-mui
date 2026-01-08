@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 
@@ -22,6 +23,17 @@ func min(a, b int) int {
 	}
 	return b
 }
+
+const (
+	// Time allowed to write a message to the peer
+	writeWait = 10 * time.Second
+	
+	// Time allowed to read the next pong message from the peer
+	pongWait = 60 * time.Second
+	
+	// Send pings to peer with this period (must be less than pongWait)
+	pingPeriod = (pongWait * 9) / 10
+)
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -183,6 +195,13 @@ func (s *Server) readPump(client *Client) {
 		client.conn.Close()
 	}()
 
+	// Set up pong handler
+	client.conn.SetReadDeadline(time.Now().Add(pongWait))
+	client.conn.SetPongHandler(func(string) error {
+		client.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
 	for {
 		_, message, err := client.conn.ReadMessage()
 		if err != nil {
@@ -192,17 +211,41 @@ func (s *Server) readPump(client *Client) {
 			break
 		}
 
+		// Update read deadline on every message
+		client.conn.SetReadDeadline(time.Now().Add(pongWait))
 		s.handleMessage(client, message)
 	}
 }
 
 func (s *Server) writePump(client *Client) {
-	defer client.conn.Close()
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		client.conn.Close()
+	}()
 
-	for message := range client.send {
-		if err := client.conn.WriteMessage(websocket.TextMessage, message); err != nil {
-			logger.Error("WebSocket write error:", err)
-			return
+	for {
+		select {
+		case message, ok := <-client.send:
+			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				// Channel was closed
+				client.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+
+			if err := client.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				logger.Error("WebSocket write error:", err)
+				return
+			}
+		
+		case <-ticker.C:
+			// Send ping to keep connection alive
+			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := client.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				logger.Debug(fmt.Sprintf("Ping failed for device %s: %v", client.deviceID, err))
+				return
+			}
 		}
 	}
 }
