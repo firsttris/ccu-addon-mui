@@ -127,6 +127,7 @@ func (s *Server) BroadcastToClients(event *types.CCUEvent) {
 
 	sentCount := 0
 	filteredCount := 0
+	droppedCount := 0
 
 	logger.Debug(fmt.Sprintf("   Connected clients: %d", len(s.clients)))
 
@@ -149,14 +150,13 @@ func (s *Server) BroadcastToClients(event *types.CCUEvent) {
 			sentCount++
 			logger.Debug(fmt.Sprintf("   ✅ Sent to device %s", client.deviceID))
 		default:
-			logger.Error(fmt.Sprintf("   ❌ Device %s buffer full, closing", client.deviceID))
-			close(client.send)
-			delete(s.clients, client)
+			logger.Error(fmt.Sprintf("   ⚠️ Device %s buffer full, dropping message", client.deviceID))
+			droppedCount++
 		}
 	}
 
-	logger.Debug(fmt.Sprintf("📊 Broadcast complete: %d sent, %d filtered, %d total", 
-		sentCount, filteredCount, len(s.clients)))
+	logger.Debug(fmt.Sprintf("📊 Broadcast complete: %d sent, %d filtered, %d dropped, %d total", 
+		sentCount, filteredCount, droppedCount, len(s.clients)))
 }
 
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -168,7 +168,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	client := &Client{
 		conn: conn,
-		send: make(chan []byte, 256),
+		send: make(chan []byte, 1024),
 	}
 
 	s.register <- client
