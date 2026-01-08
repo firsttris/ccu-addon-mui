@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState, useCallback, useMemo } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import { Channel, ChannelType, HmEvent, Room, Trade } from 'src/types/types';
+import { Channel, ChannelType, HmEvent, Room, Trade } from './../types/types';
 
 import React, { createContext, useContext } from 'react';
 import { useUniqueDeviceID } from './useUniqueDeviceID';
@@ -32,11 +32,13 @@ export const useWebsocket = () => {
       return acc;
     }, new Map<ChannelType, Channel[]>());
 
-    const typeOrder = {
+    const typeOrder: Partial<Record<ChannelType, number>> = {
       [ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER]: 1,
       [ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER]: 2,
       [ChannelType.SWITCH_VIRTUAL_RECEIVER]: 3,
       [ChannelType.BLIND_VIRTUAL_RECEIVER]: 4,
+      [ChannelType.KEYMATIC]: 5,
+      [ChannelType.KEY_TRANSCEIVER]: 6,
     };
 
     return Array.from(channelsPerType).sort(([typeA], [typeB]) => {
