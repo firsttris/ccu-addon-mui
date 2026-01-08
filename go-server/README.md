@@ -100,6 +100,21 @@ DEBUG=false                   # Enable debug logging
 
 ## Testing
 
+### Quick Local Testing
+
+Use the provided test script (make it executable first):
+```bash
+chmod +x test-local.sh
+./test-local.sh
+```
+
+The script will:
+- Load settings from `.env` file if present
+- Build the local binary
+- Start the server with test configuration
+
+### Manual Testing
+
 Run on your development machine:
 ```bash
 CCU_HOST=192.168.178.111 DEBUG=true make run
