@@ -210,7 +210,6 @@ To develop and build this project, follow these steps:
 This will:
 - Build the frontend React app
 - Bundle the WebSocket server with all dependencies
-- Download the Node.js ARM32 binary for CCU3
 - Create a `.tar.gz` addon package ready for installation
 
 ## WebSocket Testing
@@ -220,7 +219,10 @@ To test your WebSocket connection, you can use the [WebSocket Test Client](https
 1. Open the WebSocket Test Client and go to "Options".
 2. Enter your WebSocket Endpoint URL: `ws://192.168.178.111/addons/red/ws/webapp` (replace with your actual IP).
 3. Press "Connect". (Status "OPEN" indicates a successful connection.)
-4. Test the connection by sending the content of the [getRooms.tcl](src/rega/getRooms.tcl) script as payload.
+4. Test the connection by sending the following JSON message:
+   ```json
+   {"type": "getRooms", "deviceId": "test-device"}
+   ```
 
 ## Homematic API Summary
 
