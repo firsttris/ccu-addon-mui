@@ -237,13 +237,20 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		return
 	}
 
-	// Only handle 'subscribe' type - match Node.js behavior
+	// Handle different message types
 	switch msgType {
 	case "subscribe":
 		s.handleSubscribe(client, message)
+	case "getRooms":
+		s.handleGetRooms(client, message)
+	case "getTrades":
+		s.handleGetTrades(client, message)
+	case "getChannels":
+		s.handleGetChannels(client, message)
+	case "setDatapoint":
+		s.handleSetDatapoint(client, message)
 	default:
-		// Unknown types are not handled in Node.js version
-		// They would fall through to plain script handler
+		// Unknown types fall through to plain script handler (backwards compatibility)
 		s.handlePlainScript(client, string(message))
 	}
 }
@@ -282,6 +289,126 @@ func (s *Server) handleSubscribe(client *Client, message []byte) {
 	}
 
 	s.sendJSON(client, response)
+}
+
+// handleGetRooms handles getRooms requests
+func (s *Server) handleGetRooms(client *Client, message []byte) {
+	var msg struct {
+		Type     string `json:"type"`
+		DeviceID string `json:"deviceId"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendError(client, "invalid getRooms message: "+err.Error())
+		return
+	}
+
+	if msg.DeviceID == "" {
+		s.sendError(client, "deviceId is required")
+		return
+	}
+
+	result, err := s.regaClient.GetRooms(msg.DeviceID)
+	if err != nil {
+		s.sendError(client, "getRooms failed: "+err.Error())
+		return
+	}
+
+	// Send the result directly (it's already JSON from the script)
+	client.send <- []byte(result)
+}
+
+// handleGetTrades handles getTrades requests
+func (s *Server) handleGetTrades(client *Client, message []byte) {
+	var msg struct {
+		Type     string `json:"type"`
+		DeviceID string `json:"deviceId"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendError(client, "invalid getTrades message: "+err.Error())
+		return
+	}
+
+	if msg.DeviceID == "" {
+		s.sendError(client, "deviceId is required")
+		return
+	}
+
+	result, err := s.regaClient.GetTrades(msg.DeviceID)
+	if err != nil {
+		s.sendError(client, "getTrades failed: "+err.Error())
+		return
+	}
+
+	client.send <- []byte(result)
+}
+
+// handleGetChannels handles getChannels requests (for room or trade)
+func (s *Server) handleGetChannels(client *Client, message []byte) {
+	var msg struct {
+		Type     string `json:"type"`
+		DeviceID string `json:"deviceId"`
+		RoomID   string `json:"roomId,omitempty"`
+		TradeID  string `json:"tradeId,omitempty"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendError(client, "invalid getChannels message: "+err.Error())
+		return
+	}
+
+	if msg.DeviceID == "" {
+		s.sendError(client, "deviceId is required")
+		return
+	}
+
+	var result string
+	var err error
+
+	if msg.RoomID != "" {
+		result, err = s.regaClient.GetChannelsForRoom(msg.RoomID, msg.DeviceID)
+	} else if msg.TradeID != "" {
+		result, err = s.regaClient.GetChannelsForTrade(msg.TradeID, msg.DeviceID)
+	} else {
+		s.sendError(client, "either roomId or tradeId is required")
+		return
+	}
+
+	if err != nil {
+		s.sendError(client, "getChannels failed: "+err.Error())
+		return
+	}
+
+	client.send <- []byte(result)
+}
+
+// handleSetDatapoint handles setDatapoint requests
+func (s *Server) handleSetDatapoint(client *Client, message []byte) {
+	var msg struct {
+		Type          string      `json:"type"`
+		InterfaceName string      `json:"interfaceName"`
+		Address       string      `json:"address"`
+		Attribute     string      `json:"attribute"`
+		Value         interface{} `json:"value"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendError(client, "invalid setDatapoint message: "+err.Error())
+		return
+	}
+
+	if msg.InterfaceName == "" || msg.Address == "" || msg.Attribute == "" {
+		s.sendError(client, "interfaceName, address, and attribute are required")
+		return
+	}
+
+	// Convert value to string for script
+	valueStr := fmt.Sprintf("%v", msg.Value)
+	
+	result, err := s.regaClient.SetDatapoint(msg.InterfaceName, msg.Address, msg.Attribute, valueStr)
+	if err != nil {
+		s.sendError(client, "setDatapoint failed: "+err.Error())
+		return
+	}
+
+	client.send <- []byte(result)
 }
 
 // handleScript handles Rega script execution requests

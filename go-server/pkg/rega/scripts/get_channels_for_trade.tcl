@@ -1,15 +1,14 @@
-string  roomId = "ROOMID_PLACEHOLDER";
-string  deviceId = "DEVICEID_PLACEHOLDER";
+string  tradeId = "{{TRADE_ID}}";
+string  deviceId = "{{DEVICE_ID}}";
 string  channelId;
 string  datapointId;
 boolean isFirstChannel = true;
 boolean isFirstDatapoint  = true;
 
-object roomObject = dom.GetObject(roomId);
+object functionObject = dom.GetObject(tradeId);
 Write('{"deviceId":"' # deviceId # '", "channels":[');
-isFirstChannel = true;
 
-foreach(channelId, roomObject.EnumUsedIDs()) {
+foreach(channelId, functionObject.EnumUsedIDs()) {
     object channelObject = dom.GetObject(channelId);
     if (isFirstChannel == false) {
         Write(',');

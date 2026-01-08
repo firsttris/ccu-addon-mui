@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 	"unicode/utf8"
 
@@ -108,4 +109,42 @@ func (c *Client) TestConnection() error {
 	logger.Info("✅ CCU Rega connection successful")
 	logger.Debug("   Response:", result)
 	return nil
+}
+
+// GetRooms returns all rooms with the given deviceID
+func (c *Client) GetRooms(deviceID string) (string, error) {
+	script := strings.ReplaceAll(getRoomsScript, "{{DEVICE_ID}}", deviceID)
+	return c.Execute(script)
+}
+
+// GetTrades returns all trades/functions with the given deviceID
+func (c *Client) GetTrades(deviceID string) (string, error) {
+	script := strings.ReplaceAll(getTradesScript, "{{DEVICE_ID}}", deviceID)
+	return c.Execute(script)
+}
+
+// GetChannelsForRoom returns all channels for a specific room
+func (c *Client) GetChannelsForRoom(roomID, deviceID string) (string, error) {
+	script := getChannelsForRoomScript
+	script = strings.ReplaceAll(script, "{{ROOM_ID}}", roomID)
+	script = strings.ReplaceAll(script, "{{DEVICE_ID}}", deviceID)
+	return c.Execute(script)
+}
+
+// GetChannelsForTrade returns all channels for a specific trade/function
+func (c *Client) GetChannelsForTrade(tradeID, deviceID string) (string, error) {
+	script := getChannelsForTradeScript
+	script = strings.ReplaceAll(script, "{{TRADE_ID}}", tradeID)
+	script = strings.ReplaceAll(script, "{{DEVICE_ID}}", deviceID)
+	return c.Execute(script)
+}
+
+// SetDatapoint sets a datapoint value
+func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (string, error) {
+	script := setDatapointScript
+	script = strings.ReplaceAll(script, "{{INTERFACE}}", interfaceName)
+	script = strings.ReplaceAll(script, "{{ADDRESS}}", address)
+	script = strings.ReplaceAll(script, "{{ATTRIBUTE}}", attribute)
+	script = strings.ReplaceAll(script, "{{VALUE}}", value)
+	return c.Execute(script)
 }

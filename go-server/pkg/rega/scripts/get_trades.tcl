@@ -1,6 +1,6 @@
 object  functionObject;
 string  functionId;
-string  deviceId = "DEVICEID_PLACEHOLDER";
+string  deviceId = "{{DEVICE_ID}}";
 boolean isFirstFunction = true;
 
 Write('{"deviceId":"' # deviceId # '", "trades":[');

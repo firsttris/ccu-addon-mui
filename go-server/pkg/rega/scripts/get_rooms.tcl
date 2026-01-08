@@ -1,6 +1,6 @@
 object  roomObject;
 string  roomId;
-string  deviceId = "DEVICEID_PLACEHOLDER";
+string  deviceId = "{{DEVICE_ID}}";
 boolean isFirstRoom = true;
 
 Write('{"deviceId":"' # deviceId # '", "rooms":[');
