@@ -38,6 +38,16 @@
         "production": {
           "buildTarget": "ccu-addon-mui:build:production",
           "hmr": false
+        },
+        "local": {
+          "buildTarget": "ccu-addon-mui:build:development",
+          "hmr": true,
+          "proxyConfig": "proxy.config.json"
+        },
+        "ccu3": {
+          "buildTarget": "ccu-addon-mui:build:development",
+          "hmr": true,
+          "proxyConfig": "proxy.config.ccu3.json"
         }
       }
     },

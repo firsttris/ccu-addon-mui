@@ -1,10 +1,5 @@
 import { ReactNode, useEffect, useState, useCallback } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import regaGetRoomsScript from './../rega/getRooms.tcl?raw';
-import regaGetChannelsScript from './../rega/getChannelsForRoomId.tcl?raw';
-import regaGetTradesScript from './../rega/getTrades.tcl?raw';
-import regaGetChannelsForTradeScript from './../rega/getChannelsForTradeId.tcl?raw';
-import getSetDataPoint from './../rega/setDatapoint.tcl?raw';
 import { Channel, HmEvent, Room, Trade } from 'src/types/types';
 
 import React, { createContext, useContext } from 'react';
@@ -125,37 +120,45 @@ export const useWebsocket = () => {
   }, [lastMessage, deviceId]);
 
   const getRooms = useCallback(() => {
-    const script = regaGetRoomsScript.replace(
-      /DEVICEID_PLACEHOLDER/g,
-      deviceId,
+    sendMessage(
+      JSON.stringify({
+        type: 'getRooms',
+        deviceId: deviceId,
+      }),
     );
-    sendMessage(script);
   }, [deviceId, sendMessage]);
 
   const getTrades = useCallback(() => {
-    const script = regaGetTradesScript.replace(
-      /DEVICEID_PLACEHOLDER/g,
-      deviceId,
+    sendMessage(
+      JSON.stringify({
+        type: 'getTrades',
+        deviceId: deviceId,
+      }),
     );
-    sendMessage(script);
   }, [deviceId, sendMessage]);
 
   const getChannelsForRoomId = useCallback(
     (roomId: number) => {
-      const script = regaGetChannelsScript
-        .replace(/ROOMID_PLACEHOLDER/g, roomId.toString())
-        .replace(/DEVICEID_PLACEHOLDER/g, deviceId);
-      sendMessage(script);
+      sendMessage(
+        JSON.stringify({
+          type: 'getChannels',
+          deviceId: deviceId,
+          roomId: roomId.toString(),
+        }),
+      );
     },
     [deviceId, sendMessage],
   );
 
   const getChannelsForTrade = useCallback(
     (tradeId: number) => {
-      const script = regaGetChannelsForTradeScript
-        .replace(/TRADEID_PLACEHOLDER/g, tradeId.toString())
-        .replace(/DEVICEID_PLACEHOLDER/g, deviceId);
-      sendMessage(script);
+      sendMessage(
+        JSON.stringify({
+          type: 'getChannels',
+          deviceId: deviceId,
+          tradeId: tradeId.toString(),
+        }),
+      );
     },
     [deviceId, sendMessage],
   );
@@ -167,12 +170,15 @@ export const useWebsocket = () => {
       attributeName: string,
       value: string | number | boolean,
     ) => {
-      const script = getSetDataPoint
-        .replace(/INTERFACE_PLACEHOLDER/g, interfaceName)
-        .replace(/ADDRESS_PLACEHOLDER/g, address)
-        .replace(/ATTRIBUTE_PLACEHOLDER/g, attributeName)
-        .replace(/VALUE_PLACEHOLDER/g, value.toString());
-      sendMessage(script);
+      sendMessage(
+        JSON.stringify({
+          type: 'setDatapoint',
+          interfaceName: interfaceName,
+          address: address,
+          attribute: attributeName,
+          value: value,
+        }),
+      );
       updateChannels({ channel: address, datapoint: attributeName, value });
     },
     [sendMessage],

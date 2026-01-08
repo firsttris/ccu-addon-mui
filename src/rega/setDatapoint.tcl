@@ -1,3 +1,0 @@
-var dp = dom.GetObject("INTERFACE_PLACEHOLDER.ADDRESS_PLACEHOLDER.ATTRIBUTE_PLACEHOLDER");
-dp.State(VALUE_PLACEHOLDER);
-Write('{"success": true}');

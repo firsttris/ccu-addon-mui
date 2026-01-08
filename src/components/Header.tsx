@@ -165,7 +165,6 @@ export const Header: React.FC = () => {
               <SubMenuItem
                 key={room.id}
                 onClick={() => {
-                  setChannels([]);
                   navigate({
                     to: '/room/$roomId',
                     params: { roomId: String(room.id) },
@@ -184,7 +183,6 @@ export const Header: React.FC = () => {
               <SubMenuItem
                 key={trade.id}
                 onClick={() => {
-                  setChannels([]);
                   navigate({
                     to: '/trade/$tradeId',
                     params: { tradeId: trade.id.toString() },
