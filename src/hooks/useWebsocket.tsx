@@ -1,6 +1,6 @@
-import { ReactNode, useEffect, useState, useCallback } from 'react';
+import { ReactNode, useEffect, useState, useCallback, useMemo } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import { Channel, HmEvent, Room, Trade } from 'src/types/types';
+import { Channel, ChannelType, HmEvent, Room, Trade } from 'src/types/types';
 
 import React, { createContext, useContext } from 'react';
 import { useUniqueDeviceID } from './useUniqueDeviceID';
@@ -20,6 +20,31 @@ export const useWebsocket = () => {
   const [channels, setChannels] = useState<Channel[]>([]);
 
   const deviceId = useUniqueDeviceID();
+
+  const sortedChannelsByType = useMemo(() => {
+    const channelsPerType = channels.reduce((acc, channel) => {
+      const channels = acc.get(channel.type);
+      if (channels) {
+        channels.push(channel);
+      } else {
+        acc.set(channel.type, [channel]);
+      }
+      return acc;
+    }, new Map<ChannelType, Channel[]>());
+
+    const typeOrder = {
+      [ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER]: 1,
+      [ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER]: 2,
+      [ChannelType.SWITCH_VIRTUAL_RECEIVER]: 3,
+      [ChannelType.BLIND_VIRTUAL_RECEIVER]: 4,
+    };
+
+    return Array.from(channelsPerType).sort(([typeA], [typeB]) => {
+      const orderA = typeOrder[typeA] ?? 999;
+      const orderB = typeOrder[typeB] ?? 999;
+      return orderA - orderB;
+    });
+  }, [channels]);
 
   // Connect to WebSocket server via same host (works in dev and production)
   const wsUrl =
@@ -200,6 +225,7 @@ export const useWebsocket = () => {
     getRooms,
     getTrades,
     channels,
+    sortedChannelsByType,
     rooms,
     trades,
     connectionStatus,
