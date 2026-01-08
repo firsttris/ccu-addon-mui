@@ -226,8 +226,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 	// Try to parse as JSON
 	var baseMsg map[string]interface{}
 	if err := json.Unmarshal(message, &baseMsg); err != nil {
-		// Not JSON, treat as plain Rega script (Node-RED compatible)
-		s.handlePlainScript(client, string(message))
+		s.sendError(client, "invalid JSON: "+err.Error())
 		return
 	}
 
@@ -250,8 +249,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 	case "setDatapoint":
 		s.handleSetDatapoint(client, message)
 	default:
-		// Unknown types fall through to plain script handler (backwards compatibility)
-		s.handlePlainScript(client, string(message))
+		s.sendError(client, fmt.Sprintf("unknown message type: %s", msgType))
 	}
 }
 
@@ -408,53 +406,6 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		return
 	}
 
-	client.send <- []byte(result)
-}
-
-// handleScript handles Rega script execution requests
-func (s *Server) handleScript(client *Client, message []byte) {
-	var msg types.ScriptMessage
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendError(client, "invalid script message: "+err.Error())
-		return
-	}
-
-	result, err := s.regaClient.Execute(msg.Script)
-	if err != nil {
-		s.sendError(client, "script execution failed: "+err.Error())
-		return
-	}
-
-	response := types.ScriptResponse{
-		Type:      "script_response",
-		Result:    result,
-		RequestID: msg.RequestID,
-	}
-
-	s.sendJSON(client, response)
-}
-
-// handleSetValue handles setValue requests (not implemented in original, but included for completeness)
-func (s *Server) handleSetValue(client *Client, message []byte) {
-	var msg types.SetValueMessage
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendError(client, "invalid setValue message: "+err.Error())
-		return
-	}
-
-	// This would need XML-RPC implementation to set values
-	s.sendError(client, "setValue not yet implemented")
-}
-
-// handlePlainScript handles plain text Rega scripts (Node-RED compatibility)
-func (s *Server) handlePlainScript(client *Client, script string) {
-	result, err := s.regaClient.Execute(script)
-	if err != nil {
-		s.sendError(client, "script execution failed: "+err.Error())
-		return
-	}
-
-	// Send plain result back
 	client.send <- []byte(result)
 }
 
