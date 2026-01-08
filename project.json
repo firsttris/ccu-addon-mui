@@ -47,7 +47,7 @@
         "ccu3": {
           "buildTarget": "ccu-addon-mui:build:development",
           "hmr": true,
-          "proxyConfig": "proxy.config ccu3.json"
+          "proxyConfig": "proxy.config.ccu3.json"
         }
       }
     },
