@@ -25,6 +25,9 @@ type Client struct {
 	baseURL    string
 }
 
+var safeIdentifierRegex = regexp.MustCompile(`^[a-zA-Z0-9_:.-]+$`)
+var numberRegex = regexp.MustCompile(`^-?[0-9]+\.?[0-9]*$`)
+
 func NewClient(cfg *config.Config) *Client {
 	return &Client{
 		cfg: cfg,
@@ -33,6 +36,17 @@ func NewClient(cfg *config.Config) *Client {
 		},
 		baseURL: fmt.Sprintf("http://%s:%d", cfg.CCUHost, cfg.RegaPort),
 	}
+}
+
+func sanitizeRegaValue(value string) string {
+	// Numbers and booleans are safe as-is
+	if value == "true" || value == "false" || numberRegex.MatchString(value) {
+		return value
+	}
+	// Escape and quote strings
+	escaped := strings.ReplaceAll(value, "\\", "\\\\")
+	escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
+	return "\"" + escaped + "\""
 }
 
 func (c *Client) Execute(script string) (string, error) {
@@ -123,10 +137,14 @@ func (c *Client) GetChannelsForTrade(tradeID, deviceID string) (string, error) {
 }
 
 func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (string, error) {
-	script := setDatapointScript
-	script = strings.ReplaceAll(script, "{{INTERFACE}}", interfaceName)
+	// Validate identifiers to prevent script injection
+	if !safeIdentifierRegex.MatchString(interfaceName) || !safeIdentifierRegex.MatchString(address) || !safeIdentifierRegex.MatchString(attribute) {
+		return "", fmt.Errorf("invalid identifier in interfaceName, address, or attribute")
+	}
+	
+	script := strings.ReplaceAll(setDatapointScript, "{{INTERFACE}}", interfaceName)
 	script = strings.ReplaceAll(script, "{{ADDRESS}}", address)
 	script = strings.ReplaceAll(script, "{{ATTRIBUTE}}", attribute)
-	script = strings.ReplaceAll(script, "{{VALUE}}", value)
+	script = strings.ReplaceAll(script, "{{VALUE}}", sanitizeRegaValue(value))
 	return c.Execute(script)
 }
