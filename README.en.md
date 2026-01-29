@@ -1,245 +1,159 @@
-# CCU3 Add-on: Modern Web UI
+<div align="center">
 
-A modern, fast, and responsive Progressive Web App (PWA) for your CCU3 with an integrated WebSocket server.
+# CCU3 Add-on: Modern Web-UI
 
-# Features
+<img src="docs/tablet-screen.jpg" alt="Tablet Screen" height="400" />
 
-- **Modern UI**: Responsive design optimized for tablets and mobile devices.
-- **Device Support**: Control switches, thermostats, blinds, doors, and floor heating systems.
-- **Real-time Updates**: WebSocket-based communication for instant device status updates.
-- **PWA Ready**: Installable as a native app on Android and iOS home screens.
-- **WakeLock Support**: Prevents screen standby for continuous control.
-- **Easy Installation**: Simple add-on installation for CCU3 systems.
+[![Build](https://github.com/firsttris/ccu-addon-mui/actions/workflows/build.yml/badge.svg)](https://github.com/firsttris/ccu-addon-mui/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org/)
+[![Nx](https://img.shields.io/badge/Nx-143055?style=for-the-badge&logo=nx&logoColor=white)](https://nx.dev/)
 
-# Motivation
+**A modern, fast, and responsive Progressive Web App (PWA) with integrated WebSocket server for your CCU3.**
 
 My motivation was to refresh the proven CCU3 with modern software and give it a contemporary, responsive interface.
 
-![Screenshot](docs/tablet-screen.jpg)
+[Deutsche Version](README.md)
 
-# Technology Stack
+</div>
 
-This project is built with a robust set of technologies to ensure high performance and maintainability:
+## 🚀 Features
 
-## Frontend
+- **Modern UI**: Responsive design, optimized for tablets and mobile devices.
+- **Device Support**: Control of switches, thermostats, blinds, doors, and floor heating.
+- **Real-time Updates**: WebSocket-based communication for instant device status updates.
+- **PWA-Ready**: Installable as a native app on Android and iOS home screens.
+- **WakeLock Support**: Prevents screen standby for continuous control.
+- **Easy Installation**: Simple add-on installation for CCU3 systems.
 
-- [React](https://reactjs.org/): A JavaScript library for building user interfaces.
-- [TypeScript](https://www.typescriptlang.org/): A strongly typed superset of JavaScript that adds static types.
-- [Emotion](https://emotion.sh/docs/introduction): A library designed for writing CSS styles with JavaScript.
-- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API): Two-way messaging between browser and server.
-- [Vite](https://vitejs.dev/): Next generation frontend tooling.
-- [Nx](https://nx.dev/): Smart, fast and extensible build system.
+## 🏗️ Installation
 
-## Backend
+### Install Add-on
+1.  Download the latest addon `tar.gz` file from the [Releases Page](https://github.com/firsttris/ccu-addon-mui/releases).
+2.  Install it as a plugin on your CCU3 under "Additional Software".
+    *   _Note: Upload and reboot take some time._
+3.  The add-on is available at `http://<Your-CCU-IP>/addons/mui`.
 
-- [Go](https://golang.org/): Fast, statically compiled programming language.
-- [Gorilla WebSocket](https://github.com/gorilla/websocket): WebSocket implementation for Go.
-- Native XML-RPC and ReGa script support.
+### Prerequisites for CCU3
+*   **Rooms & Trades**: For the add-on to work, you must have rooms or trades configured in your CCU3 and channels assigned.
 
-# Prerequisites for CCU3
+### HTTPS Workaround (Chrome)
+Features like PWA and WakeLock require a secure context (HTTPS). Since the CCU3 uses local HTTP by default:
+1.  Open `chrome://flags` in Chrome.
+2.  Search for `Insecure origins treated as secure`.
+3.  Add your CCU3 IP (e.g., `http://192.168.178.111`).
+4.  Restart Chrome.
 
-**Configure Rooms and or Trades (Gewerke) and Assign Channels (Devices)**
+## ℹ️ User Interface Overview
 
-   To ensure this add-on functions properly, you need to have rooms or trades configured in your CCU3. Each room should have channels assigned with appropriate names, as the add-on queries the rooms, their channels, and the datapoints of those channels. Without this setup, the add-on will not work.
+### Channels View
+Here you can see and change the status of the channels assigned to the selected room.
 
-# Device Support
+<div align="center">
+  <img src="./docs/channel1.png" alt="Channel View 1" height="400" />
+  <img src="./docs/channel2.png" alt="Channel View 2" height="400" />
+</div>
 
-This project currently supports the following devices:
+<details>
+<summary><strong>📱 Device Support</strong></summary>
 
 ### [Switch](src/controls/SwitchControl.tsx)
-
 **Channel Type:** `SWITCH_VIRTUAL_RECEIVER`
 
-![Screenshot](docs/controls/switch.png)
+<img src="docs/controls/switch.png" alt="Switch Control" width="300" />
 
-**Features:**
-
-- Display Light Status
-- Switch Light On/Off
+- Show light status
+- Switch light on/off
 
 ### [Thermostat](src/controls/ThermostatControl.tsx)
-
 **Channel Type:** `HEATING_CLIMATECONTROL_TRANSCEIVER`
 
-![Screenshot](docs/controls/thermostat.png)
+<img src="docs/controls/thermostat.png" alt="Thermostat Control" width="300" />
 
-**Features:**
-
-- Show Current Humidity
-- Show Target Temperature
-- Show Current Temperature
-- Show Window Open State
-- Set Target Temperature
-- Switch between Manual and Automatic Mode
-- Turn Thermostat off
-- Boost mode only for Heizkörperthermostats
+- Show current humidity
+- Show target temperature and current temperature
+- Show window open status
+- Set target temperature
+- Switch between manual and automatic mode
+- Turn thermostat off
+- Boost mode (only for radiator thermostats)
 
 ### [Blinds](src/controls/BlindsControl.tsx)
-
 **Channel Type:** `BLIND_VIRTUAL_RECEIVER`
 
-![Screenshot](docs/controls/blinds.png)
+<img src="docs/controls/blinds.png" alt="Blinds Control" width="300" />
 
-**Features:**
+- Show opening percentage
+- Open/Close/Stop
+- Set opening percentage by clicking
 
-- Show open percentage
-- Open/Close
-- Stop
-- Set the open percentage of the blinds by clicking on them
+_For this to work properly, you must measure and configure the opening and closing times for your blinds in the CCU3._
 
-_For this to work properly, you need to measure and configure the opening and closing times for your blinds in the CCU3._
-
-### [Door Operator](src/controls/DoorControl.tsx)
-
+### [Door Opener](src/controls/DoorControl.tsx)
 **Channel Type:** `KEYMATIC`
 
-![Screenshot](docs/controls/door-operator.png)
+<img src="docs/controls/door-operator.png" alt="Door Control" width="300" />
 
-**Features:**
-
-- Show Door Status
-- Unlock Door
-- Lock Door
-- Open Door
+- Show door status
+- Unlock/Lock/Open door
 
 ### [Floor Heating](src/controls/FloorControl.tsx)
-
 **Channel Type:** `CLIMATECONTROL_FLOOR_TRANSCEIVER`
 
-![Screenshot](docs/controls/floor-heating.png)
+<img src="docs/controls/floor-heating.png" alt="Floor Control" width="300" />
 
-**Features:**
+- Show valve opening percentage
+- Show target temperature and current temperature
 
-- Display the opening percentage of the floor heating valve
-- Set target temperature
-- Show current temperature
+</details>
 
-# User Interface Overview
+## 📲 Add PWA to Home Screen
 
-The current user interface represents a responsive version of the rooms & trades (gewerke) of the CCU3.
+### Android
+1.  Open the PWA in the browser.
+2.  Menu (three dots) -> "Add to Home screen".
 
-## Channels View
+### iOS
+1.  Open the PWA in Safari.
+2.  Share button -> "Add to Home Screen".
 
-This is the channels view.  
-Here you can see and change the state of the channels associated with the selected room.
+### WakeLock
+Prevents standby. If it doesn't work, check `chrome://flags` -> `Experimental Web Platform features` (usually active by default in newer versions).
 
-![Screenshot](/docs/channel1.png)
-![Screenshot](/docs/channel2.png)
+## 💻 Development and Build
 
-# Installation
+### Prerequisites
+- **Node.js**: v18+
+- **Go**: v1.21+
 
-## To install this add-on:
+### Quick Start
+```bash
+git clone https://github.com/firsttris/ccu-addon-mui.git
+cd ccu-addon-mui
+npm install
+# Adjust IP in proxy.config.json
+npm start
+```
 
-1. Download the latest addon `tar.gz` file from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases).
-2. Install it as a plugin on your CCU3 via the settings page under "Additional Software".
-3. Please Note: Upload and Reboot takes some time, depending on your Box ccu3.
-4. The add-on will be available at `http://192.168.178.123/addons/mui` (replace with your CCU IP).
+### Build
+```bash
+npm run build
+```
+Creates React app, Go server, and an installable `.tar.gz` archive.
 
-## Setting Insecure CCU3 Origin as Secure
+### WebSocket Test
+Use a [WebSocket Test Client](https://chromewebstore.google.com/detail/websocket-test-client/fgponpodhbmadfljofbimhhlengambbn).
+URL: `ws://<CCU-IP>/addons/red/ws/webapp`
+Test message: `{"type": "getRooms", "deviceId": "test-device"}`
 
-In the latest Chrome version, Progressive Web App (PWA) features and WakeLock only work with HTTPS.
-You need to set up the IP of your CCU3 as a secure origin to make it work without HTTPS in Chrome.
+## 🤝 Contributions
 
-1. Open Chrome and go to `chrome://flags`.
-2. Search for `Insecure origins treated as secure`
-3. Enter IP Adress of CCU3 e.g. `http://192.168.178.111` (replace with your IP).
-4. Enable
-5. Save and relaunch Chrome
+We welcome pull requests! Visit our [Issues Page](https://github.com/firsttris/ccu-addon-mui/issues).
 
-## Adding the PWA to Your Home Screen
+## ⚖️ License
 
-Progressive Web Apps (PWAs) can be installed on your device like native apps. Follow these steps to add our PWA to your home screen:
-
-### On Android:
-
-1. Open the PWA in your browser (e.g., Chrome, Firefox).
-2. Tap the browser's menu (usually three dots in the top right corner).
-3. Select "Add to Home screen".
-
-### On iOS:
-
-1. Open the PWA in Safari.
-2. Tap the Share button (the box with an upward arrow).
-3. Scroll down and select "Add to Home Screen".
-
-After these steps, the PWA will appear as an icon on your home screen, and you can use it just like a native app.
-
-## Use WakeLock to prevent Screen from Standby
-
-To perevent the PWA from going into standby, we use the [WakeLock API](https://developer.mozilla.org/en-US/docs/Web/API/Screen_Wake_Lock_API).
-
-Steps to enable WakeLock experimental API in Chrome:
-
-NOTE: The WakeLock API may no longer be experimental by the time you read this.
-
-1. Open Chrome and go to `chrome://flags`.
-2. Search for and enable `Experimental Web Platform features`.
-3. Save and relaunch Chrome.
-
-After these steps, the WakeLock API should be enabled, preventing your screen from going into standby while using the PWA.
-
-To verify if WakeLock is working, check the browser console for the following error:
-![Screenshot](docs/WakeLock_error.png)
-This error indicates the WakeLock API is unavailable, review the steps above.
-
-# Development and Build
-
-## Prerequisites
-
-To build this project, you need:
-
-- **[Node.js](https://nodejs.org/)** (v18 or higher) - for npm and build tools
-- **[Go](https://golang.org/)** (v1.21 or higher) - for the WebSocket server
-  ```bash
-  # Install Go (Fedora/RHEL)
-  sudo dnf install golang
-  ```
-
-## Setup
-
-To develop and build this project, follow these steps:
-
-1. Clone the repository: `git clone https://github.com/firsttris/ccu-addon-mui.git`
-2. Navigate into the project directory: `cd ccu-addon-mui`
-3. Install the dependencies: `npm install`
-4. Set your CCU3 IP in: [proxy.config.json](proxy.config.json)
-5. Start the development server: `npm start`
-6. To build the project, use: `npm run build`
-
-This will:
-- Build the frontend React app
-- Bundle the WebSocket server with all dependencies
-- Create a `.tar.gz` addon package ready for installation
-
-## WebSocket Testing
-
-To test your WebSocket connection, you can use the [WebSocket Test Client](https://chromewebstore.google.com/detail/websocket-test-client/fgponpodhbmadfljofbimhhlengambbn) Chrome Addon:
-
-1. Open the WebSocket Test Client and go to "Options".
-2. Enter your WebSocket Endpoint URL: `ws://192.168.178.111/addons/red/ws/webapp` (replace with your actual IP).
-3. Press "Connect". (Status "OPEN" indicates a successful connection.)
-4. Test the connection by sending the following JSON message:
-   ```json
-   {"type": "getRooms", "deviceId": "test-device"}
-   ```
-
-## Homematic API Summary
-
-I have collected an API Summary, where you have an quick overview of all methods for the different homematic API's
-
-[API Summary](/docs/api/README.md)
-
-# Issues
-
-Want to start contributing to this project?
-
-Please visit our [issues page](https://github.com/firsttris/ccu-addon-mui/issues) for the latest issues and feature requests.
-
-# Contributions
-
-We welcome pull requests to add features or support for new devices. Your contributions are appreciated!
-
-# License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Licensed under the [MIT License](LICENSE).
