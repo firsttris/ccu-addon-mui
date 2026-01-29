@@ -1,30 +1,27 @@
+<div align="center">
+
 # CCU3 MUI Go Server
 
-Go implementation of the WebSocket server for the CCU3 MUI Add-on.
+[![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](../LICENSE)
 
-## Why Go?
+**High-performance, static WebSocket server implementation for the CCU3 MUI Add-on.**
+
+</div>
+
+---
+
+## ⚡ Why Go?
 
 | Feature | Node.js | Go |
 |---------|---------|-----|
-| Binary Size | 71 MB | 5-10 MB |
-| RAM Usage | 30-50 MB | 5-15 MB |
-| Dependencies | GLIBC 2.24+ | None (static) |
-| Startup Time | 1-2 seconds | <100ms |
-| Platform Support | Limited by GLIBC | Universal |
+| **Binary Size** | 71 MB | **5-10 MB** |
+| **RAM Usage** | 30-50 MB | **5-15 MB** |
+| **Dependencies** | GLIBC 2.24+ | **None (static)** |
+| **Startup Time** | 1-2 seconds | **<100ms** |
+| **Platform Support** | Limited by GLIBC | **Universal** |
 
-## Features
-
-✅ **Identical functionality** to Node.js server:
-- WebSocket server for client connections
-- XML-RPC server for CCU event callbacks
-- XML-RPC clients for BidCos-RF and HmIP-RF
-- Rega script execution via HTTP
-- Device-based channel subscriptions
-- Event filtering and broadcasting
-- Basic authentication support
-- Node-RED compatibility (plain text Rega scripts)
-
-## Building
+## 🏗️ Building
 
 ### Local Development
 ```bash
@@ -38,16 +35,16 @@ make build-ccu3
 ```
 
 This creates a **statically linked** binary with no dependencies:
-- No Node.js runtime needed
-- No GLIBC version requirements
-- Runs on old Linux kernels (CCU3)
+- ✅ No Node.js runtime needed
+- ✅ No GLIBC version requirements
+- ✅ Runs on old Linux kernels (CCU3)
 
 ### Install to Addon
 ```bash
 make install-addon
 ```
 
-## Binary Size Comparison
+## 📦 Binary Size Comparison
 
 ```bash
 make size
@@ -62,7 +59,7 @@ ccu-addon-mui-server-arm 7.2M (CCU3)
 
 Compare to Node.js: **71 MB** → **~90% smaller!**
 
-## Configuration
+## ⚙️ Configuration
 
 ### Using .env File
 
@@ -94,11 +91,12 @@ DEBUG=false                   # Enable debug logging
 | `CALLBACK_HOST` | 127.0.0.1 | Callback IP for CCU |
 | `DEBUG` | false | Enable debug logging |
 
-**Important for CALLBACK_HOST:**
-- When running on the CCU3: Use `127.0.0.1`
-- When running on a separate machine: Use the **actual IP** of that machine that the CCU3 can reach (e.g., `192.168.178.134`)
+> [!IMPORTANT]
+> **CALLBACK_HOST**:
+> - When running on the CCU3: Use `127.0.0.1`
+> - When running on a separate machine: Use the **actual IP** of that machine (e.g., `192.168.178.134`)
 
-## Testing
+## 🧪 Testing
 
 ### Quick Local Testing
 
@@ -109,9 +107,9 @@ chmod +x test-local.sh
 ```
 
 The script will:
-- Load settings from `.env` file if present
-- Build the local binary
-- Start the server with test configuration
+1. Load settings from `.env` file if present
+2. Build the local binary
+3. Start the server with test configuration
 
 ### Manual Testing
 
@@ -120,21 +118,21 @@ Run on your development machine:
 CCU_HOST=192.168.178.111 DEBUG=true make run
 ```
 
-## Deployment to CCU3
+## 🚀 Deployment to CCU3
 
-1. Build for ARM:
-   ```bash
-   make build-ccu3
-   ```
+1. **Build for ARM**:
+    ```bash
+    make build-ccu3
+    ```
 
-2. Copy to CCU3:
-   ```bash
-   scp ccu-addon-mui-server-arm root@ccu3-ip:/usr/local/addons/mui/server/
-   ```
+2. **Copy to CCU3**:
+    ```bash
+    scp ccu-addon-mui-server-arm root@ccu3-ip:/usr/local/addons/mui/server/
+    ```
 
 3. Update rc.d script to use Go binary instead of Node.js
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 go-server/
@@ -152,14 +150,14 @@ go-server/
 └── README.md                  # This file
 ```
 
-## Dependencies
+## 🧩 Dependencies
 
 - `github.com/gorilla/websocket` - WebSocket implementation
 - `github.com/kolo/xmlrpc` - XML-RPC client/server
 
-All dependencies are vendored into the static binary.
+*All dependencies are vendored into the static binary.*
 
-## Cross-Compilation
+## 🛠️ Cross-Compilation
 
 The Makefile uses these settings for CCU3:
 ```bash
@@ -171,7 +169,7 @@ GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=0
 - `-ldflags="-s -w"`: Strip debug info for smaller binary
 - `-tags netgo`: Pure Go DNS resolver (no libc)
 
-## Advantages for CCU3
+## ✨ Advantages for CCU3
 
 1. **No Node.js dependency** - CCU3 has limited storage
 2. **Works on old GLIBC** - CCU3 has Debian with GLIBC 2.24
@@ -180,7 +178,7 @@ GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=0
 5. **Faster startup** - Better UX when addon starts
 6. **Single binary** - No node_modules, no complications
 
-## Performance
+## 📈 Performance
 
 Expected resource usage on CCU3:
 - **Memory**: ~8-12 MB (vs 40-60 MB Node.js)
