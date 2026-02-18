@@ -47,6 +47,11 @@ vitest.config.*.timestamp*
 # TanStack Router
 routeTree.gen.ts
 
+# Playwright artifacts
+playwright-report/
+test-results/
+blob-report/
+
 # Addon build artifacts
 addon_installer/dist/
 addon_installer/go-server/
