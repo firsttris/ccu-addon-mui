@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './helpers/coverageTest';
 import { installWebSocketMock } from './helpers/websocketMock';
 
 test.beforeEach(async ({ page }) => {

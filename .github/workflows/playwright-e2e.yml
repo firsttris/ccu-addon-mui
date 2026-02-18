@@ -18,7 +18,7 @@ on:
 
 jobs:
   e2e-frontend-mocked:
-    name: Frontend E2E (Mocked WebSocket)
+    name: Frontend E2E
     runs-on: ubuntu-latest
 
     steps:
@@ -37,8 +37,12 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      - name: Run mocked frontend E2E tests
-        run: npx playwright test e2e/frontend-mocked-websocket.spec.ts --project=chromium --reporter=github
+      - name: Run frontend E2E tests with coverage
+        run: rm -rf .nyc_output coverage/playwright && mkdir -p .nyc_output && PW_COVERAGE=1 npx playwright test e2e/frontend-mocked-websocket.spec.ts --project=chromium --reporter=github
+
+      - name: Generate Playwright coverage report
+        if: always()
+        run: npx nyc report --temp-dir .nyc_output --reporter=text-summary --reporter=html --reporter=lcov --report-dir coverage/playwright
 
       - name: Upload Playwright report
         if: always()
@@ -54,4 +58,12 @@ jobs:
         with:
           name: playwright-test-results
           path: test-results/
+          if-no-files-found: ignore
+
+      - name: Upload Playwright coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-coverage-report
+          path: coverage/playwright/
           if-no-files-found: ignore

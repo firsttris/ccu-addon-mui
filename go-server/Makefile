@@ -34,6 +34,12 @@ build-ccu3:
 test:
 	$(GOTEST) -v ./...
 
+## Run tests with coverage and generate reports
+coverage:
+	$(GOTEST) ./... -coverprofile=coverage.out
+	$(GOCMD) tool cover -func=coverage.out
+	$(GOCMD) tool cover -html=coverage.out -o coverage.html
+
 ## Clean build artifacts
 clean:
 	$(GOCLEAN)
@@ -62,4 +68,4 @@ install-addon: build-ccu3
 	chmod +x ../addon_installer/go-server/$(BINARY_NAME)
 	@echo "✅ Installed to ../addon_installer/go-server/"
 
-.PHONY: all build build-ccu3 test clean deps run size install-addon
+.PHONY: all build build-ccu3 test coverage clean deps run size install-addon
