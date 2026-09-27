@@ -40,15 +40,17 @@ func NewClient(cfg *config.Config) *Client {
 	}
 }
 
-func sanitizeRegaValue(value string) string {
+func sanitizeRegaValue(value string) (string, error) {
 	// Numbers and booleans are safe as-is
 	if value == "true" || value == "false" || numberRegex.MatchString(value) {
-		return value
+		return value, nil
 	}
-	// Escape and quote strings
-	escaped := strings.ReplaceAll(value, "\\", "\\\\")
-	escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
-	return "\"" + escaped + "\""
+	// ReGa has no reliable escape sequences inside string literals, so
+	// characters that could end the literal are rejected instead of escaped.
+	if strings.ContainsAny(value, "\"\\\r\n") {
+		return "", fmt.Errorf("value contains unsupported characters")
+	}
+	return "\"" + value + "\"", nil
 }
 
 func (c *Client) Execute(script string) (string, error) {
@@ -81,7 +83,7 @@ func (c *Client) Execute(script string) (string, error) {
 	}
 
 	result := string(body)
-	
+
 	if !utf8.Valid(body) {
 		decoder := charmap.ISO8859_1.NewDecoder()
 		utf8Body, err := io.ReadAll(transform.NewReader(bytes.NewReader(body), decoder))
@@ -90,8 +92,7 @@ func (c *Client) Execute(script string) (string, error) {
 		}
 		result = string(utf8Body)
 	}
-	
-	
+
 	if matches := xmlWrapperRegex.FindStringSubmatch(result); len(matches) > 1 {
 		return matches[1], nil
 	}
@@ -170,10 +171,15 @@ func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (
 	if !safeIdentifierRegex.MatchString(interfaceName) || !safeIdentifierRegex.MatchString(address) || !safeIdentifierRegex.MatchString(attribute) {
 		return "", fmt.Errorf("invalid identifier in interfaceName, address, or attribute")
 	}
-	
+
+	regaValue, err := sanitizeRegaValue(value)
+	if err != nil {
+		return "", err
+	}
+
 	script := strings.ReplaceAll(setDatapointScript, "{{INTERFACE}}", interfaceName)
 	script = strings.ReplaceAll(script, "{{ADDRESS}}", address)
 	script = strings.ReplaceAll(script, "{{ATTRIBUTE}}", attribute)
-	script = strings.ReplaceAll(script, "{{VALUE}}", sanitizeRegaValue(value))
+	script = strings.ReplaceAll(script, "{{VALUE}}", regaValue)
 	return c.Execute(script)
 }

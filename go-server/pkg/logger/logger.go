@@ -29,7 +29,7 @@ func Debug(args ...interface{}) {
 
 func LogStartupInfo(cfg *config.Config) {
 	SetDebugMode(cfg.Debug)
-	
+
 	Info("🚀 WebSocket Server starting...")
 	Info(fmt.Sprintf("   CCU Host: %s", cfg.CCUHost))
 	Info(fmt.Sprintf("   Callback Host: %s", cfg.CallbackHost))

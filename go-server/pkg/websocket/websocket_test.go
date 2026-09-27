@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/rega"
@@ -127,7 +128,7 @@ func TestSubscriptionsAreIsolatedPerConnectionWithSameDeviceID(t *testing.T) {
 	}
 
 	// Closing tab B must not unsubscribe tab A.
-	s.subscriptionMgr.Unsubscribe(tabB.id)
+	s.removeClient(tabB)
 	s.BroadcastToClients(&types.CCUEvent{Event: types.Event{Channel: "A:1"}})
 	select {
 	case <-tabA.send:
@@ -174,6 +175,82 @@ func TestGetRoomsRejectsScriptInjectionInDeviceID(t *testing.T) {
 	s.handleMessage(client, []byte(`{"type":"getRooms","deviceId":"x\"; system.Exec(\"reboot\"); string y = \""}`))
 
 	assertErrorMessageContains(t, <-client.send, "invalid deviceId")
+}
+
+func TestFormatValue(t *testing.T) {
+	tests := []struct {
+		input   interface{}
+		want    string
+		wantErr bool
+	}{
+		{input: true, want: "true"},
+		{input: float64(21.5), want: "21.5"},
+		{input: float64(1000000), want: "1000000"},
+		{input: "on", want: "on"},
+		{input: nil, wantErr: true},
+		{input: map[string]interface{}{}, wantErr: true},
+	}
+
+	for _, tt := range tests {
+		got, err := formatValue(tt.input)
+		if tt.wantErr {
+			if err == nil {
+				t.Fatalf("formatValue(%#v) = %q, want error", tt.input, got)
+			}
+			continue
+		}
+		if err != nil || got != tt.want {
+			t.Fatalf("formatValue(%#v) = %q, %v, want %q", tt.input, got, err, tt.want)
+		}
+	}
+}
+
+func TestSetDatapointRejectsNullValue(t *testing.T) {
+	s := NewServer(nil, nil)
+	client := &Client{send: make(chan []byte, 1)}
+
+	s.handleMessage(client, []byte(`{"type":"setDatapoint","interfaceName":"HmIP-RF","address":"000A:4","attribute":"LEVEL","value":null}`))
+
+	assertErrorMessageContains(t, <-client.send, "value must be")
+}
+
+func TestSendDoesNotBlockOnFullBuffer(t *testing.T) {
+	s := NewServer(nil, nil)
+	client := &Client{send: make(chan []byte, 1)}
+
+	done := make(chan struct{})
+	go func() {
+		s.sendError(client, "first")
+		s.sendError(client, "second") // buffer full, must be dropped
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("send blocked on a full client buffer")
+	}
+}
+
+func TestRemoveClientUnsubscribesOnlyThatConnection(t *testing.T) {
+	s := NewServer(nil, nil)
+	tabA := newClient(nil)
+	tabB := newClient(nil)
+	s.clients[tabA] = true
+	s.clients[tabB] = true
+	s.subscriptionMgr.Subscribe(tabA.id, []string{"A:1"})
+	s.subscriptionMgr.Subscribe(tabB.id, []string{"A:1"})
+
+	s.removeClient(tabB)
+
+	if _, ok := <-tabB.send; ok {
+		t.Fatal("expected send channel of removed client to be closed")
+	}
+	if got := s.subscriptionMgr.GetSubscriptions(tabA.id); len(got) != 1 {
+		t.Fatalf("expected tab A to keep its subscription, got %v", got)
+	}
+	// Removing twice must not panic on the closed channel.
+	s.removeClient(tabB)
 }
 
 func assertErrorMessageContains(t *testing.T, msg []byte, want string) {

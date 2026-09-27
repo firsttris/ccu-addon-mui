@@ -13,22 +13,33 @@ import (
 
 func TestSanitizeRegaValue(t *testing.T) {
 	tests := []struct {
-		name  string
-		input string
-		want  string
+		name    string
+		input   string
+		want    string
+		wantErr bool
 	}{
 		{name: "boolean true", input: "true", want: "true"},
 		{name: "boolean false", input: "false", want: "false"},
 		{name: "integer", input: "-12", want: "-12"},
 		{name: "float", input: "12.5", want: "12.5"},
 		{name: "string quoted", input: "hello", want: "\"hello\""},
-		{name: "string escaped", input: "a\\b\"c", want: "\"a\\\\b\\\"c\""},
+		{name: "string with umlaut and spaces", input: "Küche an", want: "\"Küche an\""},
+		{name: "quote rejected", input: `a"); system.Exec("x`, wantErr: true},
+		{name: "backslash rejected", input: `a\b`, wantErr: true},
+		{name: "newline rejected", input: "a\nb", wantErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := sanitizeRegaValue(tt.input); got != tt.want {
-				t.Fatalf("sanitizeRegaValue(%q) = %q, want %q", tt.input, got, tt.want)
+			got, err := sanitizeRegaValue(tt.input)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("sanitizeRegaValue(%q) = %q, want error", tt.input, got)
+				}
+				return
+			}
+			if err != nil || got != tt.want {
+				t.Fatalf("sanitizeRegaValue(%q) = %q, %v, want %q", tt.input, got, err, tt.want)
 			}
 		})
 	}

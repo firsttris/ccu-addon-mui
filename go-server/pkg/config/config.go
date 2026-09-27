@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 	"strconv"
 )
@@ -20,7 +21,7 @@ type Config struct {
 
 func Load() *Config {
 	ccuHost := getEnv("CCU_HOST", "localhost")
-	
+
 	regaPort := 8181
 	if ccuHost == "localhost" {
 		regaPort = 8183
@@ -52,6 +53,7 @@ func getEnvInt(key string, defaultValue int) int {
 		if intValue, err := strconv.Atoi(value); err == nil {
 			return intValue
 		}
+		log.Printf("⚠️ Invalid value %q for %s, using default %d", value, key, defaultValue)
 	}
 	return defaultValue
 }
