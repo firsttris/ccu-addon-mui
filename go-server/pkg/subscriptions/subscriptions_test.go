@@ -37,14 +37,14 @@ func TestUnsubscribeAndStats(t *testing.T) {
 	mgr.Subscribe("device-2", []string{"Y:1"})
 
 	stats := mgr.GetStats()
-	if stats.Devices != 2 || stats.TotalChannels != 3 {
+	if stats.Subscribers != 2 || stats.TotalChannels != 3 {
 		t.Fatalf("unexpected stats before unsubscribe: %+v", stats)
 	}
 
 	mgr.Unsubscribe("device-1")
 
 	stats = mgr.GetStats()
-	if stats.Devices != 1 || stats.TotalChannels != 1 {
+	if stats.Subscribers != 1 || stats.TotalChannels != 1 {
 		t.Fatalf("unexpected stats after unsubscribe: %+v", stats)
 	}
 

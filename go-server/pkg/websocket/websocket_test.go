@@ -2,8 +2,11 @@ package websocket
 
 import (
 	"encoding/json"
+	"net/http/httptest"
 	"testing"
 
+	"ccu-addon-mui-server/pkg/config"
+	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/types"
 )
 
@@ -41,8 +44,8 @@ func TestHandleMessageSubscribeSetsDeviceAndReturnsResponse(t *testing.T) {
 
 	s.handleMessage(client, []byte(`{"type":"subscribe","deviceId":"dev-1","channels":["A:1","A:2"],"requestId":"req-1"}`))
 
-	if client.deviceID != "dev-1" {
-		t.Fatalf("expected deviceID dev-1, got %q", client.deviceID)
+	if client.DeviceID() != "dev-1" {
+		t.Fatalf("expected deviceID dev-1, got %q", client.DeviceID())
 	}
 
 	select {
@@ -65,16 +68,16 @@ func TestHandleMessageSubscribeSetsDeviceAndReturnsResponse(t *testing.T) {
 func TestBroadcastToClientsFiltersBySubscription(t *testing.T) {
 	s := NewServer(nil, nil)
 
-	matching := &Client{send: make(chan []byte, 1), deviceID: "dev-1"}
-	nonMatching := &Client{send: make(chan []byte, 1), deviceID: "dev-2"}
-	noDevice := &Client{send: make(chan []byte, 1)}
+	matching := &Client{id: "1", send: make(chan []byte, 1), deviceID: "dev-1"}
+	nonMatching := &Client{id: "2", send: make(chan []byte, 1), deviceID: "dev-2"}
+	noDevice := &Client{id: "3", send: make(chan []byte, 1)}
 
 	s.clients[matching] = true
 	s.clients[nonMatching] = true
 	s.clients[noDevice] = true
 
-	s.subscriptionMgr.Subscribe("dev-1", []string{"A:1"})
-	s.subscriptionMgr.Subscribe("dev-2", []string{"B:1"})
+	s.subscriptionMgr.Subscribe(matching.id, []string{"A:1"})
+	s.subscriptionMgr.Subscribe(nonMatching.id, []string{"B:1"})
 
 	event := &types.CCUEvent{Event: types.Event{Channel: "A:1", Datapoint: "STATE", Value: true}}
 	s.BroadcastToClients(event)
@@ -99,6 +102,78 @@ func TestBroadcastToClientsFiltersBySubscription(t *testing.T) {
 	default:
 		// expected
 	}
+}
+
+func TestSubscriptionsAreIsolatedPerConnectionWithSameDeviceID(t *testing.T) {
+	s := NewServer(nil, nil)
+
+	// Two browser tabs share the deviceId from localStorage.
+	tabA := newClient(nil)
+	tabB := newClient(nil)
+	s.clients[tabA] = true
+	s.clients[tabB] = true
+
+	s.handleMessage(tabA, []byte(`{"type":"subscribe","deviceId":"dev-1","channels":["A:1"]}`))
+	s.handleMessage(tabB, []byte(`{"type":"subscribe","deviceId":"dev-1","channels":["B:1"]}`))
+	<-tabA.send
+	<-tabB.send
+
+	// Tab B's subscription must not overwrite tab A's.
+	s.BroadcastToClients(&types.CCUEvent{Event: types.Event{Channel: "A:1"}})
+	select {
+	case <-tabA.send:
+	default:
+		t.Fatal("expected tab A to still receive events for A:1")
+	}
+
+	// Closing tab B must not unsubscribe tab A.
+	s.subscriptionMgr.Unsubscribe(tabB.id)
+	s.BroadcastToClients(&types.CCUEvent{Event: types.Event{Channel: "A:1"}})
+	select {
+	case <-tabA.send:
+	default:
+		t.Fatal("expected tab A to receive events after tab B disconnected")
+	}
+}
+
+func TestCheckOrigin(t *testing.T) {
+	tests := []struct {
+		name    string
+		host    string
+		headers map[string]string
+		want    bool
+	}{
+		{name: "no origin", host: "127.0.0.1:8088", want: true},
+		{name: "same host", host: "ccu3:8088", headers: map[string]string{"Origin": "http://ccu3:8088"}, want: true},
+		{name: "dev proxy on other port", host: "localhost:8088", headers: map[string]string{"Origin": "http://localhost:4200"}, want: true},
+		{name: "lighttpd X-Forwarded-Host", host: "127.0.0.1", headers: map[string]string{"Origin": "https://ccu3-abc", "X-Forwarded-Host": "ccu3-abc"}, want: true},
+		{name: "lighttpd X-Host", host: "127.0.0.1", headers: map[string]string{"Origin": "https://192.168.1.10", "X-Host": "192.168.1.10"}, want: true},
+		{name: "case insensitive", host: "CCU3:8088", headers: map[string]string{"Origin": "http://ccu3"}, want: true},
+		{name: "foreign site", host: "127.0.0.1", headers: map[string]string{"Origin": "https://evil.example", "X-Forwarded-Host": "ccu3-abc"}, want: false},
+		{name: "invalid origin", host: "ccu3", headers: map[string]string{"Origin": "null"}, want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := httptest.NewRequest("GET", "/ws/mui", nil)
+			r.Host = tt.host
+			for k, v := range tt.headers {
+				r.Header.Set(k, v)
+			}
+			if got := checkOrigin(r); got != tt.want {
+				t.Fatalf("checkOrigin() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetRoomsRejectsScriptInjectionInDeviceID(t *testing.T) {
+	s := NewServer(nil, rega.NewClient(&config.Config{CCUHost: "127.0.0.1", RegaPort: 1}))
+	client := &Client{send: make(chan []byte, 1)}
+
+	s.handleMessage(client, []byte(`{"type":"getRooms","deviceId":"x\"; system.Exec(\"reboot\"); string y = \""}`))
+
+	assertErrorMessageContains(t, <-client.send, "invalid deviceId")
 }
 
 func assertErrorMessageContains(t *testing.T, msg []byte, want string) {

@@ -46,6 +46,50 @@ func TestSetDatapointRejectsInvalidIdentifiers(t *testing.T) {
 	}
 }
 
+func TestQueriesRejectInvalidIDs(t *testing.T) {
+	// No HTTP server: validation must fail before any request is made.
+	client := &Client{}
+	injection := `x"; system.Exec("reboot"); string y = "`
+
+	calls := map[string]func() (string, error){
+		"GetRooms deviceId":             func() (string, error) { return client.GetRooms(injection) },
+		"GetTrades deviceId":            func() (string, error) { return client.GetTrades(injection) },
+		"GetChannelsForRoom deviceId":   func() (string, error) { return client.GetChannelsForRoom("1234", injection) },
+		"GetChannelsForRoom roomId":     func() (string, error) { return client.GetChannelsForRoom(injection, "id-abc") },
+		"GetChannelsForTrade deviceId":  func() (string, error) { return client.GetChannelsForTrade("1234", injection) },
+		"GetChannelsForTrade tradeId":   func() (string, error) { return client.GetChannelsForTrade(injection, "id-abc") },
+		"GetChannelsForRoom empty room": func() (string, error) { return client.GetChannelsForRoom("", "id-abc") },
+		"GetRooms empty deviceId":       func() (string, error) { return client.GetRooms("") },
+	}
+
+	for name, call := range calls {
+		t.Run(name, func(t *testing.T) {
+			if _, err := call(); err == nil || !strings.Contains(err.Error(), "invalid") {
+				t.Fatalf("expected validation error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestQueriesAcceptValidIDs(t *testing.T) {
+	var gotScript string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, "{}")
+	}))
+	defer ts.Close()
+
+	client := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+
+	if _, err := client.GetChannelsForRoom("1234", "id-k3j4h5g6f7"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(gotScript, `"1234"`) || !strings.Contains(gotScript, `"id-k3j4h5g6f7"`) {
+		t.Fatalf("expected ids in script, got %s", gotScript)
+	}
+}
+
 func TestExecuteStripsXMLWrapper(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

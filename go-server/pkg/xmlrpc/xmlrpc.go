@@ -119,16 +119,24 @@ func (s *Server) Close(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) callbackURL() string {
+	return fmt.Sprintf("http://%s:%d", s.cfg.CallbackHost, s.cfg.RPCServerPort)
+}
+
 func (s *Server) Unregister(ctx context.Context) error {
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
+
+	// The CCU identifies a registration by its callback URL; init(url, "")
+	// removes it. An empty URL would not match any registration.
+	callbackURL := s.callbackURL()
 
 	for interfaceName, client := range s.clients {
 		interfaceID := fmt.Sprintf("websocket-server-%s", interfaceName)
 		logger.Info("📤 Unregistering", interfaceID, "...")
 
 		var result interface{}
-		if err := client.Call("init", []interface{}{"", ""}, &result); err != nil {
+		if err := client.Call("init", []interface{}{callbackURL, ""}, &result); err != nil {
 			logger.Error(fmt.Sprintf("❌ Failed to unregister %s:", interfaceName), err)
 		} else {
 			logger.Info(fmt.Sprintf("✅ Unregistered %s", interfaceID))
@@ -163,7 +171,7 @@ func (s *Server) connectToCCU(interfaceName string, port int) {
 	s.clients[interfaceName] = client
 	s.clientsMu.Unlock()
 
-	callbackURL := fmt.Sprintf("http://%s:%d", s.cfg.CallbackHost, s.cfg.RPCServerPort)
+	callbackURL := s.callbackURL()
 	interfaceID := fmt.Sprintf("websocket-server-%s", interfaceName)
 
 	logger.Debug(fmt.Sprintf("📞 Calling init on %s with callback URL: %s", interfaceName, callbackURL))
@@ -395,8 +403,10 @@ func (s *Server) handleCCUEvent(interfaceName, address, datapoint string, value 
 	logger.Debug(fmt.Sprintf("🔔 Processing CCU Event: %s | %s.%s = %v", interfaceName, address, datapoint, value))
 
 	event := types.NewCCUEvent(interfaceName, address, datapoint, value)
-	
-	go s.eventHandler(event)
+
+	// Called synchronously so events reach clients in the order the CCU sent
+	// them. The handler only does non-blocking channel sends.
+	s.eventHandler(event)
 
 	logger.Debug("   📤 Event sent to WebSocket handler")
 }

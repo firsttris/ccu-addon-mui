@@ -26,6 +26,8 @@ type Client struct {
 }
 
 var safeIdentifierRegex = regexp.MustCompile(`^[a-zA-Z0-9_:.-]+$`)
+var deviceIDRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
+var objectIDRegex = regexp.MustCompile(`^[0-9]{1,10}$`)
 var numberRegex = regexp.MustCompile(`^-?[0-9]+\.?[0-9]*$`)
 
 func NewClient(cfg *config.Config) *Client {
@@ -112,17 +114,41 @@ func (c *Client) TestConnection() error {
 	return nil
 }
 
+// validateIDs guards the values substituted into ReGa scripts: they end up
+// inside string literals, so anything outside the whitelist could break out
+// and run arbitrary ReGa code (including system.Exec).
+func validateIDs(deviceID string, objectIDs ...string) error {
+	if !deviceIDRegex.MatchString(deviceID) {
+		return fmt.Errorf("invalid deviceId")
+	}
+	for _, id := range objectIDs {
+		if !objectIDRegex.MatchString(id) {
+			return fmt.Errorf("invalid room or trade id")
+		}
+	}
+	return nil
+}
+
 func (c *Client) GetRooms(deviceID string) (string, error) {
+	if err := validateIDs(deviceID); err != nil {
+		return "", err
+	}
 	script := strings.ReplaceAll(getRoomsScript, "{{DEVICE_ID}}", deviceID)
 	return c.Execute(script)
 }
 
 func (c *Client) GetTrades(deviceID string) (string, error) {
+	if err := validateIDs(deviceID); err != nil {
+		return "", err
+	}
 	script := strings.ReplaceAll(getTradesScript, "{{DEVICE_ID}}", deviceID)
 	return c.Execute(script)
 }
 
 func (c *Client) GetChannelsForRoom(roomID, deviceID string) (string, error) {
+	if err := validateIDs(deviceID, roomID); err != nil {
+		return "", err
+	}
 	script := getChannelsForRoomScript
 	script = strings.ReplaceAll(script, "{{ROOM_ID}}", roomID)
 	script = strings.ReplaceAll(script, "{{DEVICE_ID}}", deviceID)
@@ -130,6 +156,9 @@ func (c *Client) GetChannelsForRoom(roomID, deviceID string) (string, error) {
 }
 
 func (c *Client) GetChannelsForTrade(tradeID, deviceID string) (string, error) {
+	if err := validateIDs(deviceID, tradeID); err != nil {
+		return "", err
+	}
 	script := getChannelsForTradeScript
 	script = strings.ReplaceAll(script, "{{TRADE_ID}}", tradeID)
 	script = strings.ReplaceAll(script, "{{DEVICE_ID}}", deviceID)
