@@ -5,6 +5,7 @@ export enum ChannelType {
   CLIMATECONTROL_FLOOR_TRANSCEIVER = 'CLIMATECONTROL_FLOOR_TRANSCEIVER',
   KEYMATIC = 'KEYMATIC',
   KEY_TRANSCEIVER = 'KEY_TRANSCEIVER',
+  ENERGIE_METER_TRANSMITTER = 'ENERGIE_METER_TRANSMITTER',
 }
 
 export type SwitchVirtualReceiverDatapoint = {
@@ -66,6 +67,16 @@ export type RainDesctionTransmitterDatapoint = {
   HEATER_STATE: string;
 };
 
+// HmIP-ESI: channel 1 has the current power/flow, channels 2-4 the meter
+// readings. Which values are set depends on the connected sensor.
+export type EnergyMeterDatapoint = {
+  CHANNEL_OPERATION_MODE?: number;
+  POWER?: number; // W
+  ENERGY_COUNTER?: number; // Wh
+  GAS_FLOW?: number; // m³/h
+  GAS_VOLUME?: number; // m³
+};
+
 export type KeymaticDatapoint = {
   ERROR: string;
   INHIBIT: string;
@@ -116,12 +127,18 @@ export interface KeymaticChannel extends BaseChannel {
   datapoints: KeymaticDatapoint;
 }
 
+export interface EnergyMeterChannel extends BaseChannel {
+  type: ChannelType.ENERGIE_METER_TRANSMITTER;
+  datapoints: EnergyMeterDatapoint;
+}
+
 export type Channel =
   | SwitchVirtualReceiverChannel
   | BlindVirtualReceiverChannel
   | HeatingClimateControlTransceiverChannel
   | FloorClimateControlTransceiverChannel
-  | KeymaticChannel;
+  | KeymaticChannel
+  | EnergyMeterChannel;
 
 export interface Room {
   name: string;
@@ -137,4 +154,13 @@ export interface HmEvent {
   channel: string;
   datapoint: string;
   value: string | number | boolean;
+}
+
+export interface DeviceProblem {
+  address: string;
+  name: string;
+  roomId?: number;
+  roomName?: string;
+  lowBat: boolean;
+  unreach: boolean;
 }

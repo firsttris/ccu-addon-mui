@@ -87,6 +87,9 @@ DEBUG=false                   # Enable debug logging
 | `CCU_USER` | - | Basic auth username |
 | `CCU_PASS` | - | Basic auth password |
 | `WS_PORT` | 8088 | WebSocket server port |
+| `AUTH_MODE` | ccu | `ccu`: log in once per device with a CCU WebUI user; `none`: no login (everyone on the network can control all devices) |
+| `CCU_WEBUI_URL` | http://`CCU_HOST` | CCU WebUI whose JSON-RPC API (`/api/homematic.cgi`) verifies logins |
+| `AUTH_KEY_FILE` | /usr/local/etc/config/mui-auth.key (CCU), ./mui-auth.key (local) | Key that signs the login tokens; created on first start. Deleting it logs out all devices |
 | `WS_BIND_HOST` | 127.0.0.1 | Address the WebSocket server listens on (lighttpd proxies to it; use `0.0.0.0` to expose it directly) |
 | `RPC_SERVER_PORT` | 9099 | XML-RPC callback port |
 | `CALLBACK_HOST` | 127.0.0.1 | Callback IP for CCU |

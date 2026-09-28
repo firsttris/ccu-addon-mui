@@ -1,3 +1,4 @@
+import { Page } from '@playwright/test';
 import { expect, test } from './helpers/coverageTest';
 import { installWebSocketMock } from './helpers/websocketMock';
 
@@ -9,7 +10,7 @@ test('lädt Räume ohne echte CCU3-Verbindung', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.getByRole('heading', { name: 'CCU Addon MUI' })).toBeVisible();
-  await page.getByRole('link', { name: /Räume/ }).click();
+  await page.getByRole('link', { name: /Räume|Rooms/ }).click();
 
   await expect(page.getByText('Wohnzimmer').first()).toBeVisible();
   await expect(page.getByText('Küche').first()).toBeVisible();
@@ -147,4 +148,81 @@ test('zeigt schwache Batterie und nicht erreichbare Geräte an', async ({ page }
 
   await expect(page.getByRole('status').filter({ hasText: /Not reachable|Nicht erreichbar/ })).toHaveCount(0);
   await expect(page.getByRole('status').filter({ hasText: /Battery low|Batterie schwach/ })).toBeVisible();
+});
+
+type MockWindow = Window & {
+  __wsMock?: {
+    sentMessages: () => Array<{ type: string; value?: unknown; attribute?: string }>;
+    failNextSet: (code: string) => void;
+  };
+};
+
+const sentSetDatapoints = (page: Page) =>
+  page.evaluate(() =>
+    ((window as MockWindow).__wsMock?.sentMessages() ?? []).filter((m) => m.type === 'setDatapoint'),
+  );
+
+test('meldet einen fehlgeschlagenen Befehl und nimmt die Änderung zurück', async ({ page }) => {
+  await page.goto('/room/1');
+  await page.getByText(/Switch|Schalter/).first().click();
+  await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
+
+  await page.evaluate(() => (window as MockWindow).__wsMock?.failNextSet('UNREACH'));
+  await page.getByText('Wohnzimmer Licht').click();
+
+  await expect(page.getByRole('alert')).toHaveText(/Device not reachable|Gerät nicht erreichbar/);
+
+  // Rolled back to "off": the next click tries to switch on again
+  await page.getByText('Wohnzimmer Licht').click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).map((m) => m.value)).toEqual([true, true]);
+});
+
+test('zeigt Geräte mit Problemen auf der Startseite', async ({ page }) => {
+  await page.goto('/');
+
+  const list = page.getByRole('list', { name: /Devices with problems|Geräte mit Problemen/ });
+  await expect(list.getByText('Wandthermostat Flur')).toBeVisible();
+  await expect(list.getByText('Fensterkontakt Bad')).toBeVisible();
+  await expect(list.getByText(/Not reachable|Nicht erreichbar/)).toHaveCount(1);
+  await expect(list.getByText(/Battery low|Batterie schwach/)).toHaveCount(1);
+
+  await list.getByRole('link', { name: 'Wohnzimmer' }).click();
+  await expect(page).toHaveURL(/\/room\/1$/);
+});
+
+test('zeigt Energiezähler zusammengefasst und keine Rohdaten', async ({ page }) => {
+  await page.goto('/room/3');
+  await page.getByText(/^(Energy|Energie)$/).click();
+
+  // One card for the four channels of the meter
+  await expect(page.getByText(/Electricity|Strom$/)).toHaveCount(1);
+  await expect(page.getByText('87 W')).toBeVisible();
+  await expect(page.getByText(/^20[.,]054[.,]8 kWh$/)).toBeVisible();
+  await expect(page.getByText(/^13[.,]678[.,]5 kWh$/)).toBeVisible();
+
+  // The week profile has no control and must not appear as raw JSON
+  await expect(page.getByText('Wochenprofil')).toHaveCount(0);
+  await expect(page.getByText('WEEK_PROGRAM_CHANNEL_LOCKS')).toHaveCount(0);
+});
+
+test('fragt vor dem Öffnen der Tür nach', async ({ page }) => {
+  await page.goto('/room/3');
+  await page.getByText('Keymatic').click();
+  await expect(page.getByText('Haustür')).toBeVisible();
+
+  // The door buttons are icons; find them by the label below
+  const openButton = () => page.getByText(/^(Open|Öffnen)$/).locator('..').getByRole('button');
+
+  await openButton().click();
+  await expect(page.getByText(/Really open the door\?|Tür wirklich öffnen\?/)).toBeVisible();
+  expect(await sentSetDatapoints(page)).toHaveLength(0);
+
+  await page.getByRole('button', { name: /^(Cancel|Abbrechen)$/ }).click();
+  expect(await sentSetDatapoints(page)).toHaveLength(0);
+
+  await openButton().click();
+  await page.getByRole('button', { name: /^(Yes|Ja)$/ }).click();
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
+    .toEqual([['OPEN', true]]);
 });

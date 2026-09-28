@@ -18,6 +18,14 @@ type Config struct {
 	Debug         bool
 	CallbackHost  string
 	RegaPort      int
+
+	// AuthMode is "ccu" (log in with a CCU WebUI user) or "none".
+	AuthMode string
+	// WebUIURL is the CCU WebUI, whose JSON-RPC API verifies logins.
+	WebUIURL string
+	// AuthKeyFile holds the key that signs login tokens. It must not be
+	// inside the addon directory, which lighttpd serves to the web.
+	AuthKeyFile string
 }
 
 func Load() *Config {
@@ -42,7 +50,21 @@ func Load() *Config {
 		Debug:         getEnv("DEBUG", "false") == "true",
 		CallbackHost:  getEnv("CALLBACK_HOST", "127.0.0.1"),
 		RegaPort:      getEnvInt("REGA_PORT", regaPort),
+		AuthMode:      getEnv("AUTH_MODE", "ccu"),
+		WebUIURL:      getEnv("CCU_WEBUI_URL", "http://"+ccuHost),
+		AuthKeyFile:   getEnv("AUTH_KEY_FILE", defaultAuthKeyFile()),
 	}
+}
+
+// defaultAuthKeyFile uses the CCU's persistent config directory (kept across
+// addon updates and included in CCU backups), or the working directory when
+// running locally.
+func defaultAuthKeyFile() string {
+	const ccuConfigDir = "/usr/local/etc/config"
+	if info, err := os.Stat(ccuConfigDir); err == nil && info.IsDir() {
+		return ccuConfigDir + "/mui-auth.key"
+	}
+	return "mui-auth.key"
 }
 
 func getEnv(key, defaultValue string) string {

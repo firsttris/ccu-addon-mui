@@ -15,3 +15,6 @@ var getChannelsScript string
 
 //go:embed scripts/set_datapoint.tcl
 var setDatapointScript string
+
+//go:embed scripts/get_device_problems.tcl
+var getDeviceProblemsScript string

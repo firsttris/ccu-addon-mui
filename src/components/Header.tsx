@@ -6,6 +6,38 @@ import { TeenyiconsFloorplanSolid } from '../components/icons/TeenyiconsFloorpla
 import { MdiPipeValve } from '../components/icons/MdiPipeValve';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
+import { useTranslations } from '../i18n/utils';
+
+// A short reconnect (e.g. at startup) should not flash a warning
+const CONNECTION_WARNING_DELAY_MS = 2000;
+
+const ConnectionBanner = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  color: #fff;
+  background: #c62828;
+`;
+
+const ConnectionDot = styled('span', {
+  shouldForwardProp: (prop) => prop !== 'connected',
+})<{ connected: boolean }>`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: ${({ connected }) => (connected ? '#43a047' : '#c62828')};
+`;
+
+const RightGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+`;
 
 const HeaderContainer = styled.div`
   position: fixed;
@@ -141,7 +173,20 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { getRooms, rooms, getTrades, trades } = useWebSocketContext();
+  const t = useTranslations();
+  const { getRooms, rooms, getTrades, trades, connectionStatus, authRequired, logout } =
+    useWebSocketContext();
+
+  const connected = connectionStatus === 'Open';
+  const [showConnectionWarning, setShowConnectionWarning] = useState(false);
+  useEffect(() => {
+    if (connected) {
+      setShowConnectionWarning(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowConnectionWarning(true), CONNECTION_WARNING_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [connected]);
 
   // Only on opening: re-running when the first response arrives would
   // request the other list a second time.
@@ -166,11 +211,11 @@ export const Header: React.FC = () => {
           }}
         >
           <MenuHeader>
-            Navigation
+            {t('NAVIGATION')}
             <CloseButton onClick={() => setMenuOpen(false)}>×</CloseButton>
           </MenuHeader>
           <MenuSection>
-            <MenuSectionTitle>Räume</MenuSectionTitle>
+            <MenuSectionTitle>{t('ROOMS')}</MenuSectionTitle>
             {rooms.map((room) => (
               <SubMenuItem
                 key={room.id}
@@ -188,7 +233,7 @@ export const Header: React.FC = () => {
             ))}
           </MenuSection>
           <MenuSection>
-            <MenuSectionTitle>Gewerke</MenuSectionTitle>
+            <MenuSectionTitle>{t('TRADES')}</MenuSectionTitle>
             {trades.map((trade) => (
               <SubMenuItem
                 key={trade.id}
@@ -205,14 +250,37 @@ export const Header: React.FC = () => {
               </SubMenuItem>
             ))}
           </MenuSection>
+          {authRequired && (
+            <MenuSection>
+              <SubMenuItem
+                onClick={() => {
+                  setMenuOpen(false);
+                  logout();
+                }}
+              >
+                {t('LOGOUT')}
+              </SubMenuItem>
+            </MenuSection>
+          )}
         </Menu>
         <IconButton onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
           <MdiMenu />
         </IconButton>
       </div>
-      <IconButton onClick={toggleTheme} aria-label="Toggle Theme">
-        {theme.mode === 'light' ? '🌙' : '☀️'}
-      </IconButton>
+      <RightGroup>
+        <ConnectionDot
+          connected={connected}
+          role="img"
+          aria-label={connected ? t('CONNECTED') : t('CONNECTING')}
+          title={connected ? t('CONNECTED') : t('CONNECTING')}
+        />
+        <IconButton onClick={toggleTheme} aria-label="Toggle Theme">
+          {theme.mode === 'light' ? '🌙' : '☀️'}
+        </IconButton>
+      </RightGroup>
+      {showConnectionWarning && (
+        <ConnectionBanner role="status">{t('CONNECTION_LOST')}</ConnectionBanner>
+      )}
     </HeaderContainer>
   );
 };

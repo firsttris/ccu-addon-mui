@@ -21,3 +21,6 @@ vendor/
 
 # Environment files with secrets
 .env
+
+# Signing key for login tokens (created on first start)
+mui-auth.key

@@ -25,6 +25,8 @@ My motivation was to refresh the proven CCU3 with modern software and give it a 
 - **Modern UI**: Responsive design, optimized for tablets and mobile devices.
 - **Device Support**: Control of switches, thermostats, blinds, doors, and floor heating.
 - **Real-time Updates**: WebSocket-based communication for instant device status updates.
+- **Device Health**: Low batteries and unreachable devices are shown on the card and collected on the start page.
+- **Login with a CCU user**: Log in once per device, it then stays logged in.
 - **PWA-Ready**: Installable as a native app on Android and iOS home screens.
 - **WakeLock Support**: Prevents screen standby for continuous control.
 - **Easy Installation**: Simple add-on installation for CCU3 systems.
@@ -39,6 +41,11 @@ My motivation was to refresh the proven CCU3 with modern software and give it a 
 
 ### Prerequisites for CCU3
 *   **Rooms & Trades**: For the add-on to work, you must have rooms or trades configured in your CCU3 and channels assigned.
+
+### Login
+On first use, log in with a **CCU WebUI user** (like RedMatic). The device then stays logged in – also after closing the app or a restart; the login is renewed automatically whenever it is used. The password is not stored.
+
+Without logging in, nobody on the network can read or control devices. To turn the login off, create `/usr/local/etc/config/mui.conf` containing `AUTH_MODE=none` and restart the add-on. To log out all devices, delete `/usr/local/etc/config/mui-auth.key` and restart the add-on.
 
 ### HTTPS Workaround (Chrome)
 Features like PWA and WakeLock require a secure context (HTTPS). Since the CCU3 uses local HTTP by default:
@@ -98,7 +105,13 @@ _For this to work properly, you must measure and configure the opening and closi
 <img src="docs/controls/door-operator.png" alt="Door Control" width="300" />
 
 - Show door status
-- Unlock/Lock/Open door
+- Unlock/Lock/Open door (unlocking and opening ask for confirmation)
+
+### [Energy Meter](src/controls/EnergyMeterControl.tsx)
+**Channel Type:** `ENERGIE_METER_TRANSMITTER` (HmIP-ESI)
+
+- Current power and meter readings (electricity) or meter reading and flow (gas)
+- One card per meter
 
 ### [Floor Heating](src/controls/FloorControl.tsx)
 **Channel Type:** `CLIMATECONTROL_FLOOR_TRANSCEIVER`

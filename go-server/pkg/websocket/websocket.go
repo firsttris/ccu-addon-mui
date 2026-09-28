@@ -15,6 +15,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"ccu-addon-mui-server/pkg/auth"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/rega"
@@ -91,6 +92,10 @@ type Client struct {
 
 	mu       sync.Mutex
 	deviceID string
+
+	// authenticated is only accessed by the read pump, which handles all
+	// messages of this client.
+	authenticated bool
 }
 
 func newClient(conn *websocket.Conn) *Client {
@@ -120,6 +125,9 @@ type Server struct {
 	clientsMu       sync.RWMutex
 	subscriptionMgr *subscriptions.Manager
 	httpServer      *http.Server
+
+	// auth is nil when authentication is disabled (AUTH_MODE=none).
+	auth *auth.Authenticator
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -129,6 +137,12 @@ func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 		clients:         make(map[*Client]bool),
 		subscriptionMgr: subscriptions.NewManager(),
 	}
+}
+
+// SetAuthenticator requires clients to log in with a CCU user before they
+// can read or control anything.
+func (s *Server) SetAuthenticator(a *auth.Authenticator) {
+	s.auth = a
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -326,6 +340,20 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 	}
 
 	switch msgType {
+	case "auth":
+		s.handleAuth(client, message)
+		return
+	case "login":
+		s.handleLogin(client, message)
+		return
+	}
+
+	if s.auth != nil && !client.authenticated {
+		s.sendErrorCode(client, "authentication required", "AUTH_REQUIRED")
+		return
+	}
+
+	switch msgType {
 	case "subscribe":
 		s.handleSubscribe(client, message)
 	case "getRooms":
@@ -336,6 +364,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleGetChannels(client, message)
 	case "setDatapoint":
 		s.handleSetDatapoint(client, message)
+	case "getDeviceProblems":
+		s.handleGetDeviceProblems(client)
 	default:
 		s.sendError(client, fmt.Sprintf("unknown message type: %s", msgType))
 	}
@@ -478,9 +508,91 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 	})
 }
 
+type authResponse struct {
+	Type         string `json:"type"`
+	Success      bool   `json:"success"`
+	AuthRequired bool   `json:"authRequired"`
+	User         string `json:"user,omitempty"`
+	Token        string `json:"token,omitempty"`
+	Error        string `json:"error,omitempty"`
+	Code         string `json:"code,omitempty"`
+}
+
+// handleAuth checks a stored token. Every client sends this first after
+// connecting; a valid token is renewed, so a device in regular use never
+// has to log in again.
+func (s *Server) handleAuth(client *Client, message []byte) {
+	var msg struct {
+		Token string `json:"token"`
+	}
+	_ = json.Unmarshal(message, &msg)
+
+	if s.auth == nil {
+		client.authenticated = true
+		s.sendJSON(client, authResponse{Type: "auth_response", Success: true})
+		return
+	}
+
+	user, token, err := s.auth.Refresh(msg.Token)
+	if err != nil {
+		client.authenticated = false
+		s.sendJSON(client, authResponse{Type: "auth_response", AuthRequired: true, Code: "LOGIN_REQUIRED"})
+		return
+	}
+
+	client.authenticated = true
+	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: user, Token: token})
+}
+
+// handleLogin verifies CCU credentials and returns a token for the client
+// to store.
+func (s *Server) handleLogin(client *Client, message []byte) {
+	var msg struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendErrorCode(client, "invalid login message", "INVALID_MESSAGE")
+		return
+	}
+
+	if s.auth == nil {
+		client.authenticated = true
+		s.sendJSON(client, authResponse{Type: "auth_response", Success: true})
+		return
+	}
+
+	token, err := s.auth.Login(msg.Username, msg.Password)
+	if err != nil {
+		code := "CCU_UNREACHABLE"
+		switch err {
+		case auth.ErrInvalidCredentials:
+			code = "INVALID_CREDENTIALS"
+		case auth.ErrTooManyAttempts:
+			code = "TOO_MANY_ATTEMPTS"
+		}
+		logger.Info(fmt.Sprintf("🔒 Login failed for user %q: %v", msg.Username, err))
+		s.sendJSON(client, authResponse{Type: "auth_response", AuthRequired: true, Error: err.Error(), Code: code})
+		return
+	}
+
+	logger.Info(fmt.Sprintf("🔓 User %q logged in", msg.Username))
+	client.authenticated = true
+	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: msg.Username, Token: token})
+}
+
+type setDatapointResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	Success   bool   `json:"success"`
+	Error     string `json:"error,omitempty"`
+	Code      string `json:"code,omitempty"`
+}
+
 func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 	var msg struct {
 		Type          string      `json:"type"`
+		RequestID     string      `json:"requestId"`
 		InterfaceName string      `json:"interfaceName"`
 		Address       string      `json:"address"`
 		Attribute     string      `json:"attribute"`
@@ -491,24 +603,53 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		return
 	}
 
+	// Every outcome is answered with the requestId, so the client can undo
+	// its optimistic update and tell the user.
+	fail := func(code, errorMsg string) {
+		s.sendJSON(client, setDatapointResponse{
+			Type: "setDatapoint_response", RequestID: msg.RequestID, Code: code, Error: errorMsg,
+		})
+	}
+
 	if msg.InterfaceName == "" || msg.Address == "" || msg.Attribute == "" {
-		s.sendError(client, "interfaceName, address, and attribute are required")
+		fail("INVALID_REQUEST", "interfaceName, address, and attribute are required")
 		return
 	}
 
 	valueStr, err := formatValue(msg.Value)
 	if err != nil {
-		s.sendError(client, err.Error())
+		fail("INVALID_REQUEST", err.Error())
 		return
 	}
 
 	result, err := s.regaClient.SetDatapoint(msg.InterfaceName, msg.Address, msg.Attribute, valueStr)
 	if err != nil {
-		s.sendError(client, "setDatapoint failed: "+err.Error())
+		fail("CCU_ERROR", "setDatapoint failed: "+err.Error())
 		return
 	}
 
-	s.send(client, []byte(result))
+	switch result {
+	case rega.SetOK:
+		s.sendJSON(client, setDatapointResponse{Type: "setDatapoint_response", RequestID: msg.RequestID, Success: true})
+	case rega.SetUnreach:
+		fail("UNREACH", "device is not reachable")
+	default:
+		fail("NOT_FOUND", "datapoint not found")
+	}
+}
+
+type deviceProblemsResponse struct {
+	Type    string               `json:"type"`
+	Devices []rega.DeviceProblem `json:"devices"`
+}
+
+func (s *Server) handleGetDeviceProblems(client *Client) {
+	devices, err := s.regaClient.GetDeviceProblems()
+	if err != nil {
+		s.sendError(client, "getDeviceProblems failed: "+err.Error())
+		return
+	}
+	s.sendJSON(client, deviceProblemsResponse{Type: "deviceProblems", Devices: devices})
 }
 
 // formatValue converts a JSON value into the string form expected by
@@ -548,9 +689,14 @@ func (s *Server) sendJSON(client *Client, data interface{}) {
 }
 
 func (s *Server) sendError(client *Client, errorMsg string) {
+	s.sendErrorCode(client, errorMsg, "")
+}
+
+func (s *Server) sendErrorCode(client *Client, errorMsg, code string) {
 	response := types.ErrorResponse{
 		Type:  "error",
 		Error: errorMsg,
+		Code:  code,
 	}
 	s.sendJSON(client, response)
 }

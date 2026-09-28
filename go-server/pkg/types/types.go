@@ -44,4 +44,5 @@ type SubscribeResponse struct {
 type ErrorResponse struct {
 	Type  string `json:"type"`
 	Error string `json:"error"`
+	Code  string `json:"code,omitempty"`
 }

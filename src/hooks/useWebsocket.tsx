@@ -7,14 +7,29 @@ import {
   useRef,
 } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import { Channel, ChannelType, HmEvent, Room, Trade } from './../types/types';
+import {
+  Channel,
+  ChannelType,
+  DeviceProblem,
+  HmEvent,
+  Room,
+  Trade,
+} from './../types/types';
 
 import React, { createContext, useContext } from 'react';
 import { useUniqueDeviceID } from './useUniqueDeviceID';
+import { useToast } from '../contexts/ToastContext';
+import { useTranslations } from '../i18n/utils';
 
 interface Response {
-  type?: 'subscribe_response' | 'error';
+  type?:
+    | 'subscribe_response'
+    | 'error'
+    | 'auth_response'
+    | 'setDatapoint_response'
+    | 'deviceProblems';
   error?: string;
+  code?: string;
   rooms?: Room[];
   trades?: Trade[];
   channels?: Channel[];
@@ -23,17 +38,62 @@ interface Response {
   event?: HmEvent;
   deviceId?: string;
   success?: boolean;
+  // auth_response
+  authRequired?: boolean;
+  token?: string;
+  user?: string;
+  // setDatapoint_response
+  requestId?: string;
+  // deviceProblems
+  devices?: DeviceProblem[];
 }
 
 type ChannelRequest = { roomId: string } | { tradeId: string };
 
+// 'pending' until the server answered the auth message sent on connect
+export type AuthState = 'pending' | 'authenticated' | 'loginRequired';
+
+type Value = string | number | boolean;
+
+interface PendingSet {
+  address: string;
+  attribute: string;
+  previous: Value | undefined;
+  sent: Value;
+  timeout: ReturnType<typeof setTimeout>;
+}
+
+// Only types with a control are shown; their order on the page
 const typeOrder: Partial<Record<ChannelType, number>> = {
   [ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER]: 1,
   [ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER]: 2,
   [ChannelType.SWITCH_VIRTUAL_RECEIVER]: 3,
   [ChannelType.BLIND_VIRTUAL_RECEIVER]: 4,
   [ChannelType.KEYMATIC]: 5,
-  [ChannelType.KEY_TRANSCEIVER]: 6,
+  [ChannelType.ENERGIE_METER_TRANSMITTER]: 6,
+};
+
+const TOKEN_STORAGE_KEY = 'ccu-addon-mui_AuthToken';
+const SET_DATAPOINT_TIMEOUT_MS = 15000;
+
+const readToken = () => {
+  try {
+    return localStorage.getItem(TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+};
+
+const writeToken = (token: string | null) => {
+  try {
+    if (token) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    // Without storage the user has to log in again after a reload
+  }
 };
 
 // Connect to WebSocket server via same host (works in dev and production)
@@ -46,15 +106,36 @@ export const useWebsocket = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [deviceProblems, setDeviceProblems] = useState<DeviceProblem[] | null>(null);
+  const [authState, setAuthState] = useState<AuthState>('pending');
+  const [authRequired, setAuthRequired] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const deviceId = useUniqueDeviceID();
+  const { showToast } = useToast();
+  const t = useTranslations();
 
   // The room or trade currently shown. It is (re)sent whenever the
-  // connection opens, so the values are fresh again after a reconnect.
+  // connection is ready, so the values are fresh again after a reconnect.
   const channelRequestRef = useRef<ChannelRequest | null>(null);
+
+  // Requests made before the connection is open and authenticated. Keyed by
+  // type, so e.g. several getRooms calls are only sent once.
+  const queuedRef = useRef(new Map<string, string>());
+  const readyRef = useRef(false);
+
+  const channelsRef = useRef(channels);
+  channelsRef.current = channels;
+
+  const pendingSetsRef = useRef(new Map<string, PendingSet>());
+  const nextRequestIdRef = useRef(0);
 
   const sortedChannelsByType = useMemo(() => {
     const channelsPerType = channels.reduce((acc, channel) => {
+      if (typeOrder[channel.type] === undefined) {
+        // No control for this type (e.g. a week profile): don't show raw data
+        return acc;
+      }
       const channels = acc.get(channel.type);
       if (channels) {
         channels.push(channel);
@@ -64,44 +145,69 @@ export const useWebsocket = () => {
       return acc;
     }, new Map<ChannelType, Channel[]>());
 
-    return Array.from(channelsPerType).sort(([typeA], [typeB]) => {
-      const orderA = typeOrder[typeA] ?? 999;
-      const orderB = typeOrder[typeB] ?? 999;
-      return orderA - orderB;
-    });
+    return Array.from(channelsPerType).sort(
+      ([typeA], [typeB]) => (typeOrder[typeA] ?? 999) - (typeOrder[typeB] ?? 999),
+    );
   }, [channels]);
 
-  const updateChannels = useCallback((event: HmEvent) => {
-    // BidCos devices call it LOWBAT, HmIP devices LOW_BAT
-    const statusType = event.datapoint === 'LOWBAT' ? 'LOW_BAT' : event.datapoint;
-    const isStatusEvent = statusType === 'LOW_BAT' || statusType === 'UNREACH';
+  const updateChannels = useCallback(
+    (event: HmEvent, onlyIfCurrent?: { value: Value }) => {
+      // BidCos devices call it LOWBAT, HmIP devices LOW_BAT
+      const statusType = event.datapoint === 'LOWBAT' ? 'LOW_BAT' : event.datapoint;
+      const isStatusEvent = statusType === 'LOW_BAT' || statusType === 'UNREACH';
 
-    setChannels((prevChannels) => {
-      let changed = false;
-      const nextChannels = prevChannels.map((channel) => {
-        if (channel.address === event.channel) {
-          changed = true;
-          return {
-            ...channel,
-            datapoints: {
-              ...channel.datapoints,
-              [event.datapoint]: event.value,
-            },
-          } as Channel;
-        }
-        // One device's status applies to all of its channels
-        if (isStatusEvent && channel.statusAddress === event.channel) {
-          changed = true;
-          return {
-            ...channel,
-            status: { ...channel.status, [statusType]: event.value === true },
-          };
-        }
-        return channel;
+      setChannels((prevChannels) => {
+        let changed = false;
+        const nextChannels = prevChannels.map((channel) => {
+          if (channel.address === event.channel) {
+            const datapoints = channel.datapoints as Record<string, unknown>;
+            // A rollback must not overwrite a value an event brought in since
+            if (onlyIfCurrent && datapoints[event.datapoint] !== onlyIfCurrent.value) {
+              return channel;
+            }
+            changed = true;
+            return {
+              ...channel,
+              datapoints: {
+                ...channel.datapoints,
+                [event.datapoint]: event.value,
+              },
+            } as Channel;
+          }
+          // One device's status applies to all of its channels
+          if (isStatusEvent && channel.statusAddress === event.channel) {
+            changed = true;
+            return {
+              ...channel,
+              status: { ...channel.status, [statusType]: event.value === true },
+            };
+          }
+          return channel;
+        });
+        return changed ? nextChannels : prevChannels;
       });
-      return changed ? nextChannels : prevChannels;
-    });
-  }, []);
+    },
+    [],
+  );
+
+  const failSet = useCallback(
+    (requestId: string, message: string) => {
+      const pending = pendingSetsRef.current.get(requestId);
+      if (!pending) {
+        return;
+      }
+      clearTimeout(pending.timeout);
+      pendingSetsRef.current.delete(requestId);
+      if (pending.previous !== undefined) {
+        updateChannels(
+          { channel: pending.address, datapoint: pending.attribute, value: pending.previous },
+          { value: pending.sent },
+        );
+      }
+      showToast(message);
+    },
+    [showToast, updateChannels],
+  );
 
   // Every message is handled here as it arrives. lastMessage would be
   // overwritten when several messages come in before React renders (e.g. a
@@ -119,16 +225,41 @@ export const useWebsocket = () => {
         return;
       }
 
-      if (response.type === 'error') {
-        console.error('WebSocket server error:', response.error);
-        return;
-      }
-
-      // Acknowledgements of subscribe and setDatapoint. A subscribe_response
-      // also carries a "channels" list (the subscribed addresses), which must
-      // not be taken for channel data.
-      if (response.type === 'subscribe_response' || response.success !== undefined) {
-        return;
+      switch (response.type) {
+        case 'auth_response':
+          handleAuthResponse(response);
+          return;
+        case 'setDatapoint_response':
+          if (response.requestId) {
+            if (response.success) {
+              const pending = pendingSetsRef.current.get(response.requestId);
+              if (pending) {
+                clearTimeout(pending.timeout);
+                pendingSetsRef.current.delete(response.requestId);
+              }
+            } else {
+              failSet(
+                response.requestId,
+                response.code === 'UNREACH' ? t('SET_UNREACH') : t('SET_FAILED'),
+              );
+            }
+          }
+          return;
+        case 'deviceProblems':
+          setDeviceProblems(response.devices ?? []);
+          return;
+        case 'error':
+          if (response.code === 'AUTH_REQUIRED') {
+            setAuthState('loginRequired');
+            return;
+          }
+          console.error('WebSocket server error:', response.error);
+          showToast(`${t('SERVER_ERROR')}: ${response.error}`);
+          return;
+        case 'subscribe_response':
+          // Also carries a "channels" list (the subscribed addresses), which
+          // must not be taken for channel data.
+          return;
       }
 
       if (response.rooms) {
@@ -157,8 +288,10 @@ export const useWebsocket = () => {
     }
   };
 
-  const { sendMessage, readyState } = useWebSocket(wsUrl, {
+  const { sendMessage, readyState, getWebSocket } = useWebSocket(wsUrl, {
     shouldReconnect: () => true,
+    reconnectInterval: 3000,
+    reconnectAttempts: Infinity,
     onMessage: handleMessage,
     // Messages are handled in onMessage; don't store them as lastMessage,
     // which would re-render on every message.
@@ -166,24 +299,69 @@ export const useWebsocket = () => {
   });
 
   const sendChannelRequest = useCallback(() => {
-    if (channelRequestRef.current) {
-      // Not queued while disconnected: the effect below sends it on open.
+    if (channelRequestRef.current && readyRef.current) {
       sendMessage(
-        JSON.stringify({
-          type: 'getChannels',
-          deviceId,
-          ...channelRequestRef.current,
-        }),
+        JSON.stringify({ type: 'getChannels', deviceId, ...channelRequestRef.current }),
         false,
       );
     }
   }, [deviceId, sendMessage]);
 
+  // Sends right away when ready, otherwise once logged in
+  const send = useCallback(
+    (message: { type: string } & Record<string, unknown>) => {
+      const json = JSON.stringify(message);
+      if (readyRef.current) {
+        sendMessage(json, false);
+      } else {
+        queuedRef.current.set(message.type, json);
+      }
+    },
+    [sendMessage],
+  );
+
+  const handleAuthResponse = (response: Response) => {
+    setAuthRequired(response.authRequired === true);
+    if (!response.success) {
+      readyRef.current = false;
+      if (response.code === 'LOGIN_REQUIRED') {
+        // No or an outdated token: not an error the user has to see
+        writeToken(null);
+        setLoginError(null);
+      } else {
+        setLoginError(response.code ?? 'INVALID_CREDENTIALS');
+      }
+      setAuthState('loginRequired');
+      return;
+    }
+
+    if (response.token) {
+      // Renewed on every connect, so a device in regular use stays logged in
+      writeToken(response.token);
+    }
+    setLoginError(null);
+    setAuthState('authenticated');
+    readyRef.current = true;
+
+    for (const json of queuedRef.current.values()) {
+      sendMessage(json, false);
+    }
+    queuedRef.current.clear();
+    sendChannelRequest();
+  };
+
+  // Authenticate first on every (re)connect; the server rejects everything else
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
-      sendChannelRequest();
+      // Without a token the answer will be "log in"; don't flash the app meanwhile
+      setAuthState((prev) => (prev === 'loginRequired' && !readToken() ? prev : 'pending'));
+      sendMessage(JSON.stringify({ type: 'auth', token: readToken() ?? undefined }), false);
+    } else {
+      readyRef.current = false;
     }
-  }, [readyState, sendChannelRequest]);
+  }, [readyState, sendMessage]);
+
+  const ready = readyState === ReadyState.OPEN && authState === 'authenticated';
 
   // Only re-subscribe when channel addresses actually change, not when datapoints update.
   // The maintenance channels are included for battery and reachability events.
@@ -199,38 +377,42 @@ export const useWebsocket = () => {
   }, [channels]);
 
   useEffect(() => {
-    if (readyState === ReadyState.OPEN && channelAddressesKey !== '') {
+    if (ready && channelAddressesKey !== '') {
       const channelAddresses = channelAddressesKey.split('\n');
       sendMessage(
-        JSON.stringify({
-          type: 'subscribe',
-          deviceId: deviceId,
-          channels: channelAddresses,
-        }),
-      );
-      console.log(
-        `📝 Device ${deviceId} subscribed to ${channelAddresses.length} channels`,
+        JSON.stringify({ type: 'subscribe', deviceId, channels: channelAddresses }),
+        false,
       );
     }
-  }, [channelAddressesKey, readyState, deviceId, sendMessage]);
+  }, [channelAddressesKey, ready, deviceId, sendMessage]);
+
+  const login = useCallback(
+    (username: string, password: string) => {
+      setLoginError(null);
+      sendMessage(JSON.stringify({ type: 'login', username, password }), false);
+    },
+    [sendMessage],
+  );
+
+  const logout = useCallback(() => {
+    writeToken(null);
+    readyRef.current = false;
+    setAuthState('loginRequired');
+    // The server still treats this connection as logged in; reconnect
+    getWebSocket()?.close();
+  }, [getWebSocket]);
 
   const getRooms = useCallback(() => {
-    sendMessage(
-      JSON.stringify({
-        type: 'getRooms',
-        deviceId: deviceId,
-      }),
-    );
-  }, [deviceId, sendMessage]);
+    send({ type: 'getRooms', deviceId });
+  }, [deviceId, send]);
 
   const getTrades = useCallback(() => {
-    sendMessage(
-      JSON.stringify({
-        type: 'getTrades',
-        deviceId: deviceId,
-      }),
-    );
-  }, [deviceId, sendMessage]);
+    send({ type: 'getTrades', deviceId });
+  }, [deviceId, send]);
+
+  const getDeviceProblems = useCallback(() => {
+    send({ type: 'getDeviceProblems' });
+  }, [send]);
 
   const requestChannels = useCallback(
     (request: ChannelRequest) => {
@@ -253,24 +435,42 @@ export const useWebsocket = () => {
   );
 
   const setDataPoint = useCallback(
-    (
-      interfaceName: string,
-      address: string,
-      attributeName: string,
-      value: string | number | boolean,
-    ) => {
+    (interfaceName: string, address: string, attributeName: string, value: Value) => {
+      if (!readyRef.current) {
+        // Commands are not queued: switching a light minutes later would be a surprise
+        showToast(t('NOT_CONNECTED'));
+        return;
+      }
+
+      const requestId = String(nextRequestIdRef.current++);
+      const channel = channelsRef.current.find((c) => c.address === address);
+      const previous = channel
+        ? ((channel.datapoints as Record<string, unknown>)[attributeName] as Value | undefined)
+        : undefined;
+
+      pendingSetsRef.current.set(requestId, {
+        address,
+        attribute: attributeName,
+        previous,
+        sent: value,
+        timeout: setTimeout(() => failSet(requestId, t('SET_TIMEOUT')), SET_DATAPOINT_TIMEOUT_MS),
+      });
+
       sendMessage(
         JSON.stringify({
           type: 'setDatapoint',
-          interfaceName: interfaceName,
-          address: address,
+          requestId,
+          interfaceName,
+          address,
           attribute: attributeName,
-          value: value,
+          value,
         }),
+        false,
       );
+      // Optimistic: undone by failSet if the CCU reports an error
       updateChannels({ channel: address, datapoint: attributeName, value });
     },
-    [sendMessage, updateChannels],
+    [sendMessage, updateChannels, failSet, showToast, t],
   );
 
   const connectionStatus = {
@@ -281,7 +481,7 @@ export const useWebsocket = () => {
     [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
   }[readyState];
 
-  // All functions are stable, so this object only changes on reconnect
+  // All functions are stable, so this object doesn't change on events
   const actions = useMemo(
     () => ({
       setDataPoint,
@@ -289,8 +489,20 @@ export const useWebsocket = () => {
       getChannelsForTrade,
       getRooms,
       getTrades,
+      getDeviceProblems,
+      login,
+      logout,
     }),
-    [setDataPoint, getChannelsForRoomId, getChannelsForTrade, getRooms, getTrades],
+    [
+      setDataPoint,
+      getChannelsForRoomId,
+      getChannelsForTrade,
+      getRooms,
+      getTrades,
+      getDeviceProblems,
+      login,
+      logout,
+    ],
   );
 
   const state = useMemo(
@@ -300,9 +512,24 @@ export const useWebsocket = () => {
       sortedChannelsByType,
       rooms,
       trades,
+      deviceProblems,
       connectionStatus,
+      authState,
+      authRequired,
+      loginError,
     }),
-    [actions, channels, sortedChannelsByType, rooms, trades, connectionStatus],
+    [
+      actions,
+      channels,
+      sortedChannelsByType,
+      rooms,
+      trades,
+      deviceProblems,
+      connectionStatus,
+      authState,
+      authRequired,
+      loginError,
+    ],
   );
 
   return { actions, state };

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { KeymaticChannel } from '../types/types';
 import { useTranslations } from '../i18n/utils';
 import styled from '@emotion/styled';
@@ -71,6 +72,38 @@ const StyledTypography = styled('span', {
   text-align: center;
 `;
 
+const ConfirmBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 72px;
+`;
+
+const ConfirmText = styled.span`
+  font-size: 15px;
+  font-weight: 600;
+  color: ${props => props.theme.colors.text};
+`;
+
+const ConfirmButtons = styled.div`
+  display: flex;
+  gap: 10px;
+`;
+
+const TextButton = styled('button', {
+  shouldForwardProp: (prop) => prop !== 'primary',
+})<{ primary?: boolean }>`
+  font-size: 15px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid ${props => props.theme.colors.border};
+  color: ${props => (props.primary ? '#fff' : props.theme.colors.text)};
+  background: ${props => (props.primary ? '#c62828' : props.theme.colors.primary)};
+`;
+
 interface DoorControlProps {
   channel: KeymaticChannel;
 }
@@ -86,41 +119,67 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   const isUncertain = STATE_UNCERTAIN === true;
   const isUnlocked = STATE === true;
 
-  const unlockDoor = async () => {
+  // Unlocking and opening ask first, so a stray tap (e.g. while wiping the
+  // kitchen tablet) can't open the front door. Locking needs no confirmation.
+  const [confirming, setConfirming] = useState<'unlock' | 'open' | null>(null);
+
+  const unlockDoor = () => {
     setDataPoint(channel.interfaceName, channel.address, 'STATE', true);
   };
 
-  const lockDoor = async () => {
+  const lockDoor = () => {
     setDataPoint(channel.interfaceName, channel.address, 'STATE', false);
   };
 
-  const openDoor = async () => {
+  const openDoor = () => {
     setDataPoint(channel.interfaceName, channel.address, 'OPEN', true);
   };
 
   return (
     <Card>
       <Title>{name}</Title>
-      <ButtonContainer>
-        <ButtonWrapper>
-          <Button onClick={lockDoor}>
-            <MaterialSymbolsLockOutline />
-          </Button>
-          <ButtonLabel>{t('LOCK')}</ButtonLabel>
-        </ButtonWrapper>
-        <ButtonWrapper>
-          <Button onClick={unlockDoor}>
-            <MaterialSymbolsLockOpenOutline />
-          </Button>
-          <ButtonLabel>{t('UNLOCK')}</ButtonLabel>
-        </ButtonWrapper>
-        <ButtonWrapper>
-          <Button onClick={openDoor}>
-            <MaterialSymbolsDoorOpenOutline />
-          </Button>
-          <ButtonLabel>{t('OPEN')}</ButtonLabel>
-        </ButtonWrapper>
-      </ButtonContainer>
+      {confirming ? (
+        <ConfirmBox>
+          <ConfirmText>{confirming === 'open' ? t('CONFIRM_OPEN') : t('CONFIRM_UNLOCK')}</ConfirmText>
+          <ConfirmButtons>
+            <TextButton onClick={() => setConfirming(null)}>{t('CANCEL')}</TextButton>
+            <TextButton
+              primary
+              onClick={() => {
+                if (confirming === 'open') {
+                  openDoor();
+                } else {
+                  unlockDoor();
+                }
+                setConfirming(null);
+              }}
+            >
+              {t('YES')}
+            </TextButton>
+          </ConfirmButtons>
+        </ConfirmBox>
+      ) : (
+        <ButtonContainer>
+          <ButtonWrapper>
+            <Button onClick={lockDoor}>
+              <MaterialSymbolsLockOutline />
+            </Button>
+            <ButtonLabel>{t('LOCK')}</ButtonLabel>
+          </ButtonWrapper>
+          <ButtonWrapper>
+            <Button onClick={() => setConfirming('unlock')}>
+              <MaterialSymbolsLockOpenOutline />
+            </Button>
+            <ButtonLabel>{t('UNLOCK')}</ButtonLabel>
+          </ButtonWrapper>
+          <ButtonWrapper>
+            <Button onClick={() => setConfirming('open')}>
+              <MaterialSymbolsDoorOpenOutline />
+            </Button>
+            <ButtonLabel>{t('OPEN')}</ButtonLabel>
+          </ButtonWrapper>
+        </ButtonContainer>
+      )}
       <StatusText>
         {isUncertain ? '' : (isUnlocked ? t('UNLOCKED') : t('LOCKED'))}
       </StatusText>

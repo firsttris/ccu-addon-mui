@@ -6,6 +6,10 @@ GO_BIN="$SERVER_DIR/ccu-addon-mui-server"
 PID_FILE="/var/run/mui-websocket-server.pid"
 LOG_FILE="/var/log/mui-websocket-server.log"
 LOG_MAX_BYTES=1048576
+# Optional settings (e.g. AUTH_MODE=none). Kept outside the addon directory,
+# which is served to the web, and preserved across updates.
+CONFIG_FILE="/usr/local/etc/config/mui.conf"
+AUTH_KEY_FILE="/usr/local/etc/config/mui-auth.key"
 
 start() {
     if [ -f $PID_FILE ]; then
@@ -25,6 +29,11 @@ start() {
 
     echo "Starting MUI WebSocket Server (Go)..."
     cd $SERVER_DIR
+    if [ -f $CONFIG_FILE ]; then
+        set -a
+        . $CONFIG_FILE
+        set +a
+    fi
     $GO_BIN >> $LOG_FILE 2>&1 &
     echo $! > $PID_FILE
     echo "MUI WebSocket Server started (PID: $(cat $PID_FILE))"
@@ -117,7 +126,7 @@ case "$1" in
         echo "Deinstalliere MUI Addon..."
         stop
         rm -rf $ADDON_DIR
-        rm -f $LOG_FILE
+        rm -f $LOG_FILE $LOG_FILE.old $CONFIG_FILE $AUTH_KEY_FILE
         echo "Deinstallation abgeschlossen."
     ;;
     

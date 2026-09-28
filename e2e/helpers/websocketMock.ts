@@ -12,13 +12,26 @@ type Message = {
   [key: string]: unknown;
 };
 
-export const installWebSocketMock = async (page: Page) => {
-  await page.addInitScript(() => {
+export type WebSocketMockOptions = {
+  // Like the go-server with AUTH_MODE=ccu: only Admin/secret can log in
+  requireLogin?: boolean;
+};
+
+export const VALID_TOKEN = 'test-token';
+
+export const installWebSocketMock = async (page: Page, options: WebSocketMockOptions = {}) => {
+  await page.addInitScript(({ requireLogin, validToken }) => {
     type AnyPayload = Record<string, unknown>;
 
     const rooms = [
       { id: 1, name: 'Wohnzimmer' },
       { id: 2, name: 'Küche' },
+      { id: 3, name: 'Heizungsraum' },
+    ];
+
+    const deviceProblems = [
+      { address: '000A9D89A7AF25', name: 'Wandthermostat Flur', roomId: 1, roomName: 'Wohnzimmer', lowBat: false, unreach: true },
+      { address: '003660C9930AB6', name: 'Fensterkontakt Bad', lowBat: true, unreach: false },
     ];
 
     const trades = [
@@ -86,6 +99,51 @@ export const installWebSocketMock = async (page: Page) => {
       ],
     };
 
+    roomChannels['3'] = [
+      // HmIP-ESI with an electricity meter: one card for all four channels
+      {
+        id: 501,
+        name: 'Stromzähler',
+        address: '003FA2698BC439:1',
+        interfaceName: 'HmIP-RF',
+        type: 'ENERGIE_METER_TRANSMITTER',
+        datapoints: { CHANNEL_OPERATION_MODE: 4, GAS_FLOW: 0, POWER: 87 },
+      },
+      {
+        id: 502,
+        name: 'HmIP-ESI 003FA2698BC439:2',
+        address: '003FA2698BC439:2',
+        interfaceName: 'HmIP-RF',
+        type: 'ENERGIE_METER_TRANSMITTER',
+        datapoints: { ENERGY_COUNTER: 20054800.9, GAS_VOLUME: 0 },
+      },
+      {
+        id: 503,
+        name: 'HmIP-ESI 003FA2698BC439:4',
+        address: '003FA2698BC439:4',
+        interfaceName: 'HmIP-RF',
+        type: 'ENERGIE_METER_TRANSMITTER',
+        datapoints: { ENERGY_COUNTER: 13678471 },
+      },
+      // No control exists for this type: must not show up as raw data
+      {
+        id: 504,
+        name: 'Wochenprofil',
+        address: '00195F29B04142:9',
+        interfaceName: 'HmIP-RF',
+        type: 'SWITCH_WEEK_PROFILE',
+        datapoints: { WEEK_PROGRAM_CHANNEL_LOCKS: 0 },
+      },
+      {
+        id: 505,
+        name: 'Haustür',
+        address: 'KEQ1063873:1',
+        interfaceName: 'BidCos-RF',
+        type: 'KEYMATIC',
+        datapoints: { ERROR: 0, INHIBIT: false, OPEN: false, RELOCK_DELAY: 0, STATE: false, STATE_UNCERTAIN: false },
+      },
+    ];
+
     const tradeChannels: Record<string, AnyPayload[]> = {
       '10': [
         {
@@ -137,10 +195,14 @@ export const installWebSocketMock = async (page: Page) => {
       sockets: unknown[];
       sentMessages: Message[];
       subscriptions: string[];
+      authenticated: boolean;
+      failNextSet: string | null;
     } = {
       sockets: [],
       sentMessages: [],
       subscriptions: [],
+      authenticated: !requireLogin,
+      failNextSet: null,
     };
 
     const broadcast = (payload: AnyPayload) => {
@@ -155,6 +217,40 @@ export const installWebSocketMock = async (page: Page) => {
 
     const handleClientMessage = (message: Message) => {
       state.sentMessages.push(message);
+
+      if (message.type === 'auth') {
+        if (!requireLogin) {
+          delayedBroadcast({ type: 'auth_response', success: true, authRequired: false });
+          return;
+        }
+        state.authenticated = message.token === validToken;
+        delayedBroadcast(
+          state.authenticated
+            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', token: validToken }
+            : { type: 'auth_response', success: false, authRequired: true, code: 'LOGIN_REQUIRED' },
+        );
+        return;
+      }
+
+      if (message.type === 'login') {
+        state.authenticated = message.username === 'Admin' && message.password === 'secret';
+        delayedBroadcast(
+          state.authenticated
+            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', token: validToken }
+            : { type: 'auth_response', success: false, authRequired: true, code: 'INVALID_CREDENTIALS' },
+        );
+        return;
+      }
+
+      if (!state.authenticated) {
+        delayedBroadcast({ type: 'error', error: 'authentication required', code: 'AUTH_REQUIRED' });
+        return;
+      }
+
+      if (message.type === 'getDeviceProblems') {
+        delayedBroadcast({ type: 'deviceProblems', devices: deviceProblems });
+        return;
+      }
 
       if (message.type === 'getRooms') {
         delayedBroadcast({
@@ -201,7 +297,13 @@ export const installWebSocketMock = async (page: Page) => {
       }
 
       if (message.type === 'setDatapoint') {
-        delayedBroadcast({ success: true });
+        const failCode = state.failNextSet;
+        state.failNextSet = null;
+        delayedBroadcast(
+          failCode
+            ? { type: 'setDatapoint_response', requestId: message.requestId, success: false, code: failCode }
+            : { type: 'setDatapoint_response', requestId: message.requestId, success: true },
+        );
         if (typeof message.channel === 'string' && typeof message.datapoint === 'string') {
           delayedBroadcast({
             event: {
@@ -291,6 +393,9 @@ export const installWebSocketMock = async (page: Page) => {
       },
       sentMessages: () => state.sentMessages,
       subscriptions: () => state.subscriptions,
+      failNextSet: (code: string) => {
+        state.failNextSet = code;
+      },
     };
-  });
+  }, { requireLogin: options.requireLogin === true, validToken: VALID_TOKEN });
 };

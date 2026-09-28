@@ -6,10 +6,12 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strconv"
 	"testing"
 	"time"
 
+	"ccu-addon-mui-server/pkg/auth"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/types"
@@ -242,9 +244,109 @@ func TestSetDatapointRejectsNullValue(t *testing.T) {
 	s := NewServer(nil, nil)
 	client := &Client{send: make(chan []byte, 1)}
 
-	s.handleMessage(client, []byte(`{"type":"setDatapoint","interfaceName":"HmIP-RF","address":"000A:4","attribute":"LEVEL","value":null}`))
+	s.handleMessage(client, []byte(`{"type":"setDatapoint","requestId":"r1","interfaceName":"HmIP-RF","address":"000A:4","attribute":"LEVEL","value":null}`))
 
-	assertErrorMessageContains(t, <-client.send, "value must be")
+	var resp setDatapointResponse
+	if err := json.Unmarshal(<-client.send, &resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.Type != "setDatapoint_response" || resp.Success || resp.RequestID != "r1" || !contains(resp.Error, "value must be") {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+}
+
+// fakeCCUWebUI accepts the login Admin/secret.
+func fakeCCUWebUI() *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Method string            `json:"method"`
+			Params map[string]string `json:"params"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		if req.Method == "Session.login" && req.Params["username"] == "Admin" && req.Params["password"] == "secret" {
+			_, _ = io.WriteString(w, `{"result":"session","error":null}`)
+			return
+		}
+		if req.Method == "Session.logout" {
+			_, _ = io.WriteString(w, `{"result":true,"error":null}`)
+			return
+		}
+		_, _ = io.WriteString(w, `{"result":null,"error":{"code":501,"message":"invalid credentials"}}`)
+	}))
+}
+
+func readAuthResponse(t *testing.T, client *Client) authResponse {
+	t.Helper()
+	var resp authResponse
+	if err := json.Unmarshal(<-client.send, &resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.Type != "auth_response" {
+		t.Fatalf("expected auth_response, got %+v", resp)
+	}
+	return resp
+}
+
+func TestAuthRequiredBeforeAnyRequest(t *testing.T) {
+	webUI := fakeCCUWebUI()
+	defer webUI.Close()
+	a, err := auth.New(webUI.URL, filepath.Join(t.TempDir(), "key"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := NewServer(nil, nil)
+	s.SetAuthenticator(a)
+	client := &Client{send: make(chan []byte, 4)}
+
+	// Nothing works before logging in
+	s.handleMessage(client, []byte(`{"type":"subscribe","deviceId":"dev-1","channels":["A:1"]}`))
+	assertErrorMessageContains(t, <-client.send, "authentication required")
+	if len(s.subscriptionMgr.GetSubscriptions(client.id)) != 0 {
+		t.Fatal("an unauthenticated client must not be able to subscribe")
+	}
+
+	// A connection without token is asked to log in
+	s.handleMessage(client, []byte(`{"type":"auth"}`))
+	if resp := readAuthResponse(t, client); resp.Success || !resp.AuthRequired || resp.Code != "LOGIN_REQUIRED" {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"login","username":"Admin","password":"wrong"}`))
+	if resp := readAuthResponse(t, client); resp.Success || resp.Code != "INVALID_CREDENTIALS" {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"login","username":"Admin","password":"secret"}`))
+	login := readAuthResponse(t, client)
+	if !login.Success || login.Token == "" || login.User != "Admin" {
+		t.Fatalf("unexpected response: %+v", login)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"subscribe","deviceId":"dev-1","channels":["A:1"]}`))
+	if len(s.subscriptionMgr.GetSubscriptions(client.id)) != 1 {
+		t.Fatal("expected subscribe to work after login")
+	}
+	<-client.send
+
+	// A new connection (e.g. after the app was closed) logs in with the stored token
+	other := &Client{send: make(chan []byte, 1)}
+	s.handleMessage(other, []byte(`{"type":"auth","token":"`+login.Token+`"}`))
+	if resp := readAuthResponse(t, other); !resp.Success || resp.Token == "" {
+		t.Fatalf("expected the stored token to be accepted and renewed: %+v", resp)
+	}
+	if !other.authenticated {
+		t.Fatal("expected the client to be authenticated")
+	}
+}
+
+func TestAuthDisabledAcceptsEveryone(t *testing.T) {
+	s := NewServer(nil, nil)
+	client := &Client{send: make(chan []byte, 1)}
+
+	s.handleMessage(client, []byte(`{"type":"auth"}`))
+	if resp := readAuthResponse(t, client); !resp.Success || resp.AuthRequired {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
 }
 
 func TestSendDoesNotBlockOnFullBuffer(t *testing.T) {

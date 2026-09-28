@@ -142,6 +142,37 @@ func normalizeStatusType(statusType string) string {
 	return statusType
 }
 
+type DeviceProblem struct {
+	Address  string `json:"address"`
+	Name     string `json:"name"`
+	RoomID   int64  `json:"roomId,omitempty"`
+	RoomName string `json:"roomName,omitempty"`
+	LowBat   bool   `json:"lowBat"`
+	Unreach  bool   `json:"unreach"`
+}
+
+// parseDeviceProblems parses the output of get_device_problems.tcl.
+func parseDeviceProblems(output string) []DeviceProblem {
+	isRecord := func(line string) bool { return strings.HasPrefix(line, "P\t") }
+
+	problems := []DeviceProblem{}
+	for _, fields := range splitRecords(output, isRecord) {
+		if len(fields) < 7 || fields[0] != "P" {
+			continue
+		}
+		roomID, _ := strconv.ParseInt(fields[4], 10, 64)
+		problems = append(problems, DeviceProblem{
+			Address:  fields[1],
+			LowBat:   fields[2] == "true",
+			Unreach:  fields[3] == "true",
+			RoomID:   roomID,
+			RoomName: fields[5],
+			Name:     rejoin(fields, 6),
+		})
+	}
+	return problems
+}
+
 // parseValue converts a datapoint value as written by ReGa into its JSON
 // type. An empty value (datapoint never set) becomes null.
 func parseValue(valueType, value string) interface{} {

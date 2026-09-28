@@ -1,5 +1,6 @@
 import { useTranslations } from '../i18n/utils';
-import { Channel, ChannelStatus, ChannelType } from '../types/types';
+import { Channel, ChannelStatus, ChannelType, EnergyMeterChannel } from '../types/types';
+import { EnergyMeterControl } from '../controls/EnergyMeterControl';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import styled from '@emotion/styled';
 import { ControlComponent } from './ControlComponent';
@@ -128,6 +129,16 @@ const Collapse = styled('div', {
   display: inProp ? 'block' : 'none',
 }));
 
+// Groups channels by device (the address before ":"), in order of appearance
+const groupByDevice = <T extends Channel>(channels: T[]) => {
+  const devices = new Map<string, T[]>();
+  for (const channel of channels) {
+    const deviceAddress = channel.address.split(':')[0];
+    devices.set(deviceAddress, [...(devices.get(deviceAddress) ?? []), channel]);
+  }
+  return Array.from(devices);
+};
+
 interface ChannelGroupProps {
   channelType: ChannelType;
   channels: Channel[];
@@ -159,14 +170,24 @@ export const ChannelGroup: React.FC<ChannelGroupProps> = ({
       </ListItem>
       <Collapse in={expanded}>
         <ChannelContainer>
-          {channels.map((channel) => (
-            <Card key={channel.address}>
-              <CardBody unreachable={channel.status?.UNREACH === true}>
-                <ControlComponent channel={channel} />
-              </CardBody>
-              <ChannelStatusBar status={channel.status} />
-            </Card>
-          ))}
+          {channelType === ChannelType.ENERGIE_METER_TRANSMITTER
+            ? // One card per energy meter instead of one per channel
+              groupByDevice(channels as EnergyMeterChannel[]).map(([deviceAddress, deviceChannels]) => (
+                <Card key={deviceAddress}>
+                  <CardBody unreachable={deviceChannels[0].status?.UNREACH === true}>
+                    <EnergyMeterControl channels={deviceChannels} />
+                  </CardBody>
+                  <ChannelStatusBar status={deviceChannels[0].status} />
+                </Card>
+              ))
+            : channels.map((channel) => (
+                <Card key={channel.address}>
+                  <CardBody unreachable={channel.status?.UNREACH === true}>
+                    <ControlComponent channel={channel} />
+                  </CardBody>
+                  <ChannelStatusBar status={channel.status} />
+                </Card>
+              ))}
         </ChannelContainer>
         <Divider />
       </Collapse>

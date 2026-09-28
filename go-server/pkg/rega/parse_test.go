@@ -103,6 +103,21 @@ func TestParseChannelsStatus(t *testing.T) {
 	}
 }
 
+func TestParseDeviceProblems(t *testing.T) {
+	output := "" +
+		"P\t000A9D89A7AF25\tfalse\ttrue\t4658\tOG\tWandthermostat OG Flur, Anbau\r\n" +
+		"P\t003660C9930AB6\ttrue\ttrue\t\t\tFensterkontakt Bad OG\r\n"
+
+	got := parseDeviceProblems(output)
+	want := []DeviceProblem{
+		{Address: "000A9D89A7AF25", Name: "Wandthermostat OG Flur, Anbau", RoomID: 4658, RoomName: "OG", Unreach: true},
+		{Address: "003660C9930AB6", Name: "Fensterkontakt Bad OG", LowBat: true, Unreach: true},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("parseDeviceProblems() =\n%+v\nwant\n%+v", got, want)
+	}
+}
+
 func TestParseChannelsIgnoresMalformedLines(t *testing.T) {
 	output := "D\tSTATE\t2\ttrue\r\nC\tnot-a-number\tA:1\tX\tY\tZ\r\nC\t1\tA:1\r\n"
 	if got := parseChannels(output); len(got) != 0 {

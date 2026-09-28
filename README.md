@@ -25,6 +25,8 @@ Meine Motivation war es, die bewährte CCU3 mit moderner Software aufzufrischen 
 - **Moderne UI**: Responsives Design, optimiert für Tablets und mobile Geräte.
 - **Geräteunterstützung**: Steuerung von Schaltern, Thermostaten, Jalousien, Türen und Fußbodenheizungen.
 - **Echtzeit-Updates**: WebSocket-basierte Kommunikation für sofortige Gerätestatus-Updates.
+- **Gerätezustand**: Schwache Batterien und nicht erreichbare Geräte werden an der Kachel und gesammelt auf der Startseite angezeigt.
+- **Anmeldung mit CCU-Benutzer**: Einmal pro Gerät anmelden, danach bleibt es angemeldet.
 - **PWA-Bereit**: Installierbar als native App auf Android- und iOS-Startbildschirmen.
 - **WakeLock-Unterstützung**: Verhindert Bildschirm-Standby für kontinuierliche Steuerung.
 - **Einfache Installation**: Einfache Add-on-Installation für CCU3-Systeme.
@@ -39,6 +41,11 @@ Meine Motivation war es, die bewährte CCU3 mit moderner Software aufzufrischen 
 
 ### Voraussetzungen für CCU3
 *   **Räume & Gewerke**: Damit das Add-on funktioniert, müssen Sie Räume oder Gewerke in Ihrer CCU3 konfiguriert und Kanäle zugewiesen haben.
+
+### Anmeldung
+Beim ersten Öffnen melden Sie sich mit einem **Benutzer der CCU-WebUI** an (wie bei RedMatic). Das Gerät bleibt danach angemeldet – auch nach dem Schließen der App oder einem Neustart; die Anmeldung verlängert sich bei jeder Nutzung automatisch. Das Passwort wird nicht gespeichert.
+
+Ohne Anmeldung kann niemand im Netzwerk Geräte lesen oder schalten. Wer das nicht möchte, kann die Anmeldung abschalten: Datei `/usr/local/etc/config/mui.conf` mit dem Inhalt `AUTH_MODE=none` anlegen und das Add-on neu starten. Um alle Geräte abzumelden, `/usr/local/etc/config/mui-auth.key` löschen und das Add-on neu starten.
 
 ### HTTPS Workaround (Chrome)
 Funktionen wie PWA und WakeLock benötigen einen sicheren Kontext (HTTPS). Da die CCU3 standardmäßig lokales HTTP nutzt:
@@ -100,7 +107,13 @@ _Damit dies ordnungsgemäß funktioniert, müssen Sie die Öffnungs- und Schlie�
 <img src="docs/controls/door-operator.png" alt="Door Control" width="300" />
 
 - Türstatus anzeigen
-- Tür entriegeln/verriegeln/öffnen
+- Tür entriegeln/verriegeln/öffnen (Entriegeln und Öffnen mit Rückfrage)
+
+### [Energiezähler](src/controls/EnergyMeterControl.tsx)
+**Kanaltyp:** `ENERGIE_METER_TRANSMITTER` (HmIP-ESI)
+
+- Aktuelle Leistung und Zählerstände (Strom) bzw. Zählerstand und Durchfluss (Gas)
+- Eine Kachel pro Zähler
 
 ### [Fußbodenheizung](src/controls/FloorControl.tsx)
 **Kanaltyp:** `CLIMATECONTROL_FLOOR_TRANSCEIVER`

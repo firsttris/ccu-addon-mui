@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"ccu-addon-mui-server/pkg/auth"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/rega"
@@ -23,6 +24,24 @@ func main() {
 
 	regaClient := rega.NewClient(cfg)
 	wsServer := websocket.NewServer(cfg, regaClient)
+
+	switch cfg.AuthMode {
+	case "ccu":
+		authenticator, err := auth.New(cfg.WebUIURL, cfg.AuthKeyFile)
+		if err != nil {
+			// Fail closed: without the key nobody could log in, and running
+			// without authentication would expose all devices.
+			logger.Error("❌ Failed to initialise authentication:", err)
+			os.Exit(1)
+		}
+		wsServer.SetAuthenticator(authenticator)
+		logger.Info("🔒 Authentication: CCU users (" + cfg.WebUIURL + ")")
+	case "none":
+		logger.Info("⚠️ Authentication disabled (AUTH_MODE=none): everyone on the network can control all devices")
+	default:
+		logger.Error("❌ Invalid AUTH_MODE, expected \"ccu\" or \"none\":", cfg.AuthMode)
+		os.Exit(1)
+	}
 	rpcServer := xmlrpc.NewServer(cfg, wsServer.BroadcastToClients)
 
 	go func() {

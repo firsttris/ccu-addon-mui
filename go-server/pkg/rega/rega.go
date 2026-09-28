@@ -153,6 +153,15 @@ func (c *Client) GetChannels(objectID string) ([]Channel, error) {
 	return parseChannels(output), nil
 }
 
+// Results of SetDatapoint
+const (
+	SetOK       = "OK"
+	SetNotFound = "NOT_FOUND"
+	SetUnreach  = "UNREACH"
+)
+
+// SetDatapoint sets a datapoint and returns SetOK, SetNotFound or
+// SetUnreach (the device is unreachable, so nothing was sent).
 func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (string, error) {
 	// Validate identifiers to prevent script injection
 	if !safeIdentifierRegex.MatchString(interfaceName) || !safeIdentifierRegex.MatchString(address) || !safeIdentifierRegex.MatchString(attribute) {
@@ -164,9 +173,33 @@ func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (
 		return "", err
 	}
 
+	// Battery and reachability are on the device's channel 0
+	deviceAddress, _, _ := strings.Cut(address, ":")
+
 	script := strings.ReplaceAll(setDatapointScript, "{{INTERFACE}}", interfaceName)
 	script = strings.ReplaceAll(script, "{{ADDRESS}}", address)
+	script = strings.ReplaceAll(script, "{{DEVICE_ADDRESS}}", deviceAddress)
 	script = strings.ReplaceAll(script, "{{ATTRIBUTE}}", attribute)
 	script = strings.ReplaceAll(script, "{{VALUE}}", regaValue)
-	return c.Execute(script)
+	output, err := c.Execute(script)
+	if err != nil {
+		return "", err
+	}
+
+	switch result := strings.TrimSpace(output); result {
+	case SetOK, SetNotFound, SetUnreach:
+		return result, nil
+	default:
+		return "", fmt.Errorf("unexpected response from ReGa: %q", result)
+	}
+}
+
+// GetDeviceProblems returns all devices with a low battery or that are
+// unreachable.
+func (c *Client) GetDeviceProblems() ([]DeviceProblem, error) {
+	output, err := c.Execute(getDeviceProblemsScript)
+	if err != nil {
+		return nil, err
+	}
+	return parseDeviceProblems(output), nil
 }

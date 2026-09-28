@@ -1,21 +1,10 @@
 import React from 'react';
-import styled from '@emotion/styled';
 import { FloorControl } from '../controls/FloorControl';
 import { SwitchControl } from '../controls/SwitchControl';
 import { BlindsControl } from '../controls/BlindsControl';
 import { ThermostatControl } from '../controls/ThermostatControl';
 import { DoorControl } from '../controls/DoorControl';
 import { Channel, ChannelType } from '../types/types';
-
-const ErrorCard = styled.div`
-  background-color: ${props => props.theme.colors.surface};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 8px;
-  padding: 16px;
-  margin: 8px;
-  color: ${props => props.theme.colors.text};
-  font-weight: bold;
-`;
 
 interface ControlComponentProps {
   channel: Channel;
@@ -38,13 +27,7 @@ export const ControlComponent = React.memo(function ControlComponent({
     case ChannelType.KEYMATIC:
       return <DoorControl channel={channel} />;
     default:
-      return (
-        <ErrorCard>
-          <div>Unsupported Channel</div>
-          <pre style={{ fontSize: '12px', marginTop: '8px' }}>
-            {JSON.stringify(channel, null, 2)}
-          </pre>
-        </ErrorCard>
-      );
+      // Types without a control are filtered out before; show nothing
+      return null;
   }
 });
