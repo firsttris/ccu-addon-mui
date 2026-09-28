@@ -131,7 +131,7 @@ Verhindert Standby. Falls es nicht geht, prüfen Sie `chrome://flags` -> `Experi
 
 ### Voraussetzungen
 - **Node.js**: v22.12+
-- **Go**: v1.21+
+- **Go**: v1.27+
 
 ### Quick Start
 ```bash

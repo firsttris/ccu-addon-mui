@@ -127,7 +127,7 @@ Prevents standby. If it doesn't work, check `chrome://flags` -> `Experimental We
 
 ### Prerequisites
 - **Node.js**: v22.12+
-- **Go**: v1.21+
+- **Go**: v1.27+
 
 ### Quick Start
 ```bash
