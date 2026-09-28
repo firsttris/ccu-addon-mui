@@ -72,20 +72,32 @@ export const useWebsocket = () => {
   }, [channels]);
 
   const updateChannels = useCallback((event: HmEvent) => {
+    // BidCos devices call it LOWBAT, HmIP devices LOW_BAT
+    const statusType = event.datapoint === 'LOWBAT' ? 'LOW_BAT' : event.datapoint;
+    const isStatusEvent = statusType === 'LOW_BAT' || statusType === 'UNREACH';
+
     setChannels((prevChannels) => {
       let changed = false;
       const nextChannels = prevChannels.map((channel) => {
-        if (channel.address !== event.channel) {
-          return channel;
+        if (channel.address === event.channel) {
+          changed = true;
+          return {
+            ...channel,
+            datapoints: {
+              ...channel.datapoints,
+              [event.datapoint]: event.value,
+            },
+          } as Channel;
         }
-        changed = true;
-        return {
-          ...channel,
-          datapoints: {
-            ...channel.datapoints,
-            [event.datapoint]: event.value,
-          },
-        } as Channel;
+        // One device's status applies to all of its channels
+        if (isStatusEvent && channel.statusAddress === event.channel) {
+          changed = true;
+          return {
+            ...channel,
+            status: { ...channel.status, [statusType]: event.value === true },
+          };
+        }
+        return channel;
       });
       return changed ? nextChannels : prevChannels;
     });
@@ -173,11 +185,18 @@ export const useWebsocket = () => {
     }
   }, [readyState, sendChannelRequest]);
 
-  // Only re-subscribe when channel addresses actually change, not when datapoints update
-  const channelAddressesKey = useMemo(
-    () => channels.map((channel) => channel.address).join('\n'),
-    [channels],
-  );
+  // Only re-subscribe when channel addresses actually change, not when datapoints update.
+  // The maintenance channels are included for battery and reachability events.
+  const channelAddressesKey = useMemo(() => {
+    const addresses = new Set<string>();
+    for (const channel of channels) {
+      addresses.add(channel.address);
+      if (channel.statusAddress) {
+        addresses.add(channel.statusAddress);
+      }
+    }
+    return Array.from(addresses).join('\n');
+  }, [channels]);
 
   useEffect(() => {
     if (readyState === ReadyState.OPEN && channelAddressesKey !== '') {

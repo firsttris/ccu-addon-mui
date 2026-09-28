@@ -25,6 +25,11 @@ type Channel struct {
 	Type          string                 `json:"type"`
 	InterfaceName string                 `json:"interfaceName"`
 	Datapoints    map[string]interface{} `json:"datapoints"`
+
+	// StatusAddress is the device's maintenance channel (":0"), which
+	// reports Status (LOW_BAT, UNREACH) and sends the events for it.
+	StatusAddress string          `json:"statusAddress,omitempty"`
+	Status        map[string]bool `json:"status,omitempty"`
 }
 
 // splitRecords splits the script output into lines of tab separated fields.
@@ -81,7 +86,7 @@ func parseNamedObjects(output string) []NamedObject {
 // parseChannels parses the output of get_channels.tcl.
 func parseChannels(output string) []Channel {
 	isRecord := func(line string) bool {
-		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "D\t")
+		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t")
 	}
 
 	channels := []Channel{}
@@ -103,6 +108,21 @@ func parseChannels(output string) []Channel {
 				Name:          rejoin(fields, 5),
 				Datapoints:    map[string]interface{}{},
 			})
+		case "S":
+			if len(fields) < 4 || len(channels) == 0 {
+				continue
+			}
+			value, err := strconv.ParseBool(fields[3])
+			if err != nil {
+				// Never reported by the device
+				continue
+			}
+			channel := &channels[len(channels)-1]
+			if channel.Status == nil {
+				channel.Status = map[string]bool{}
+			}
+			channel.StatusAddress = fields[1]
+			channel.Status[normalizeStatusType(fields[2])] = value
 		case "D":
 			if len(fields) < 4 || len(channels) == 0 {
 				continue
@@ -112,6 +132,14 @@ func parseChannels(output string) []Channel {
 		}
 	}
 	return channels
+}
+
+// normalizeStatusType maps the BidCos name LOWBAT to the HmIP name LOW_BAT.
+func normalizeStatusType(statusType string) string {
+	if statusType == "LOWBAT" {
+		return "LOW_BAT"
+	}
+	return statusType
 }
 
 // parseValue converts a datapoint value as written by ReGa into its JSON

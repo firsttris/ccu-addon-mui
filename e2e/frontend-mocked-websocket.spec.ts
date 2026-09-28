@@ -102,3 +102,49 @@ test('verarbeitet mehrere direkt aufeinanderfolgende Events', async ({ page }) =
   await expect(page.getByText(/^29 % (open|geöffnet)$/)).toBeVisible();
   await expect(page.getByText(/^75 % (open|geöffnet)$/)).toBeVisible();
 });
+
+test('zeigt schwache Batterie und nicht erreichbare Geräte an', async ({ page }) => {
+  await page.goto('/room/1');
+
+  await page.getByText(/Switch|Schalter/).first().click();
+  await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
+  await expect(page.getByRole('status')).toHaveCount(0);
+
+  // The maintenance channel must be subscribed to receive status events
+  await expect.poll(async () => {
+    return page.evaluate(() => {
+      const mock = (window as Window & {
+        __wsMock?: { subscriptions: () => string[] };
+      }).__wsMock;
+      return mock?.subscriptions() ?? [];
+    });
+  }).toContain('BidCos-RF.LEQ0000001:0');
+
+  await page.evaluate(() => {
+    const mock = (window as Window & {
+      __wsMock?: {
+        emitEvent: (event: { channel: string; datapoint: string; value: boolean }) => void;
+      };
+    }).__wsMock;
+
+    // BidCos devices report LOWBAT instead of LOW_BAT
+    mock?.emitEvent({ channel: 'BidCos-RF.LEQ0000001:0', datapoint: 'LOWBAT', value: true });
+    mock?.emitEvent({ channel: 'BidCos-RF.LEQ0000001:0', datapoint: 'UNREACH', value: true });
+  });
+
+  await expect(page.getByRole('status').filter({ hasText: /Battery low|Batterie schwach/ })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: /Not reachable|Nicht erreichbar/ })).toBeVisible();
+
+  await page.evaluate(() => {
+    const mock = (window as Window & {
+      __wsMock?: {
+        emitEvent: (event: { channel: string; datapoint: string; value: boolean }) => void;
+      };
+    }).__wsMock;
+
+    mock?.emitEvent({ channel: 'BidCos-RF.LEQ0000001:0', datapoint: 'UNREACH', value: false });
+  });
+
+  await expect(page.getByRole('status').filter({ hasText: /Not reachable|Nicht erreichbar/ })).toHaveCount(0);
+  await expect(page.getByRole('status').filter({ hasText: /Battery low|Batterie schwach/ })).toBeVisible();
+});

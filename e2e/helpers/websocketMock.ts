@@ -34,6 +34,8 @@ export const installWebSocketMock = async (page: Page) => {
           address: 'BidCos-RF.LEQ0000001:1',
           interfaceName: 'BidCos-RF',
           type: 'SWITCH_VIRTUAL_RECEIVER',
+          statusAddress: 'BidCos-RF.LEQ0000001:0',
+          status: { LOW_BAT: false, UNREACH: false },
           datapoints: {
             PROCESS: 0,
             SECTION: 0,

@@ -1,5 +1,5 @@
 import { useTranslations } from '../i18n/utils';
-import { Channel, ChannelType } from '../types/types';
+import { Channel, ChannelStatus, ChannelType } from '../types/types';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import styled from '@emotion/styled';
 import { ControlComponent } from './ControlComponent';
@@ -25,8 +25,52 @@ const Card = styled.div`
   border-radius: 4px;
   overflow: hidden;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
 `;
+
+const CardBody = styled('div', {
+  shouldForwardProp: (prop) => prop !== 'unreachable',
+})<{ unreachable: boolean }>`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  /* The values of an unreachable device are stale (often all 0) */
+  ${({ unreachable }) => (unreachable ? 'opacity: 0.45; filter: grayscale(1);' : '')}
+`;
+
+const StatusBar = styled('div', {
+  shouldForwardProp: (prop) => prop !== 'severity',
+})<{ severity: 'warning' | 'error' }>`
+  /* Fills the card's width without making narrow cards wider */
+  width: 0;
+  min-width: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  color: ${(props) => props.theme.colors.text};
+  background: ${({ severity }) =>
+    severity === 'error' ? 'rgba(244, 67, 54, 0.2)' : 'rgba(255, 193, 7, 0.25)'};
+`;
+
+const ChannelStatusBar = ({ status }: { status?: ChannelStatus }) => {
+  const t = useTranslations();
+  return (
+    <>
+      {status?.UNREACH && (
+        <StatusBar role="status" severity="error">
+          📡 {t('UNREACH')}
+        </StatusBar>
+      )}
+      {status?.LOW_BAT && (
+        <StatusBar role="status" severity="warning">
+          🪫 {t('LOW_BAT')}
+        </StatusBar>
+      )}
+    </>
+  );
+};
 
 const ChannelContainer = styled.div({
   marginTop: '15px',
@@ -117,7 +161,10 @@ export const ChannelGroup: React.FC<ChannelGroupProps> = ({
         <ChannelContainer>
           {channels.map((channel) => (
             <Card key={channel.address}>
-              <ControlComponent channel={channel} />
+              <CardBody unreachable={channel.status?.UNREACH === true}>
+                <ControlComponent channel={channel} />
+              </CardBody>
+              <ChannelStatusBar status={channel.status} />
             </Card>
           ))}
         </ChannelContainer>

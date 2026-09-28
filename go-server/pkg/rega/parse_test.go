@@ -3,6 +3,7 @@ package rega
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -65,6 +66,40 @@ func TestParseChannels(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("parseChannels() =\n%+v\nwant\n%+v", got, want)
+	}
+}
+
+func TestParseChannelsStatus(t *testing.T) {
+	output := "" +
+		"C\t1\t000A9D89A7AF25:1\tHEATING_CLIMATECONTROL_TRANSCEIVER\tHmIP-RF\tFlur\r\n" +
+		"S\t000A9D89A7AF25:0\tLOW_BAT\tfalse\r\n" +
+		"S\t000A9D89A7AF25:0\tUNREACH\ttrue\r\n" +
+		"D\tACTUAL_TEMPERATURE\t4\t0.000000\r\n" +
+		"C\t2\tKEQ1063873:1\tKEYMATIC\tBidCos-RF\tTür\r\n" +
+		"S\tKEQ1063873:0\tLOWBAT\ttrue\r\n" +
+		"S\tKEQ1063873:0\tUNREACH\t\r\n" +
+		"C\t3\tINT0000001:1\tSWITCH_VIRTUAL_RECEIVER\tVirtualDevices\tOhne Status\r\n"
+
+	got := parseChannels(output)
+	if len(got) != 3 {
+		t.Fatalf("expected 3 channels, got %+v", got)
+	}
+	if got[0].StatusAddress != "000A9D89A7AF25:0" || !reflect.DeepEqual(got[0].Status, map[string]bool{"LOW_BAT": false, "UNREACH": true}) {
+		t.Fatalf("unexpected status for HmIP channel: %q %+v", got[0].StatusAddress, got[0].Status)
+	}
+	if got[0].Datapoints["ACTUAL_TEMPERATURE"] != float64(0) {
+		t.Fatalf("datapoints after status lines must still be parsed: %+v", got[0].Datapoints)
+	}
+	// LOWBAT (BidCos) is normalised; a value that was never set is left out
+	if !reflect.DeepEqual(got[1].Status, map[string]bool{"LOW_BAT": true}) {
+		t.Fatalf("unexpected status for BidCos channel: %+v", got[1].Status)
+	}
+	if got[2].Status != nil || got[2].StatusAddress != "" {
+		t.Fatalf("expected no status for channel without maintenance channel: %+v", got[2])
+	}
+	b, _ := json.Marshal(got[2])
+	if strings.Contains(string(b), "status") {
+		t.Fatalf("status fields must be omitted when empty: %s", b)
 	}
 }
 

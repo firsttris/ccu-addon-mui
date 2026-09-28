@@ -75,11 +75,20 @@ export type KeymaticDatapoint = {
   STATE_UNCERTAIN: boolean;
 };
 
+// Battery and reachability of the device, reported on its maintenance
+// channel (statusAddress, e.g. "000A9D89A7AF25:0")
+export type ChannelStatus = {
+  LOW_BAT?: boolean;
+  UNREACH?: boolean;
+};
+
 interface BaseChannel {
   id: number;
   name: string;
   address: string;
   interfaceName: string;
+  statusAddress?: string;
+  status?: ChannelStatus;
 }
 
 export interface SwitchVirtualReceiverChannel extends BaseChannel {

@@ -40,6 +40,8 @@ export const ui = {
     INCREASE_TEMPERATURE: 'Increase Temperature',
     BLIND_CLOSED: 'closed',
     BLIND_OPEN: 'open',
+    LOW_BAT: 'Battery low',
+    UNREACH: 'Not reachable',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
@@ -72,6 +74,8 @@ export const ui = {
     INCREASE_TEMPERATURE: 'Temperatur erhöhen',
     BLIND_CLOSED: 'geschlossen',
     BLIND_OPEN: 'geöffnet',
+    LOW_BAT: 'Batterie schwach',
+    UNREACH: 'Nicht erreichbar',
   },
 } as const;
 
