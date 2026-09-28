@@ -38,6 +38,8 @@ export const ui = {
     BOOST: 'Boost',
     DECREASE_TEMPERATURE: 'Decrease Temperature',
     INCREASE_TEMPERATURE: 'Increase Temperature',
+    BLIND_CLOSED: 'closed',
+    BLIND_OPEN: 'open',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
@@ -68,6 +70,8 @@ export const ui = {
     BOOST: 'Boost',
     DECREASE_TEMPERATURE: 'Temperatur verringern',
     INCREASE_TEMPERATURE: 'Temperatur erhöhen',
+    BLIND_CLOSED: 'geschlossen',
+    BLIND_OPEN: 'geöffnet',
   },
 } as const;
 

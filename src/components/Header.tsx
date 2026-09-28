@@ -62,6 +62,9 @@ const Menu = styled.div`
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
+  /* Long names must not stick out of the hidden menu; many rooms scroll */
+  overflow-x: hidden;
+  overflow-y: auto;
 `;
 
 const MenuHeader = styled.div`
@@ -138,14 +141,21 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { getRooms, rooms, getTrades, trades, setChannels } = useWebSocketContext();
+  const { getRooms, rooms, getTrades, trades } = useWebSocketContext();
 
+  // Only on opening: re-running when the first response arrives would
+  // request the other list a second time.
   useEffect(() => {
-    if (menuOpen && (!rooms.length || !trades.length)) {
+    if (!menuOpen) {
+      return;
+    }
+    if (!rooms.length) {
       getRooms();
+    }
+    if (!trades.length) {
       getTrades();
     }
-  }, [menuOpen, rooms.length, trades.length, getRooms, getTrades]);
+  }, [menuOpen, getRooms, getTrades]);
 
   return (
     <HeaderContainer>

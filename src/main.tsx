@@ -32,7 +32,19 @@ const requestWakeLock = async () => {
   }
 };
 
-requestWakeLock();
+// The Wake Lock API only exists in a secure context (HTTPS or localhost).
+if ('wakeLock' in navigator) {
+  requestWakeLock();
+  // The browser releases the lock whenever the page is hidden (tab switch,
+  // screen off), so request it again when it becomes visible.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      requestWakeLock();
+    }
+  });
+} else {
+  console.info('Wake Lock nicht verfügbar (nur über HTTPS).');
+}
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,

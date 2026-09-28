@@ -17,8 +17,6 @@ import (
 	"ccu-addon-mui-server/pkg/logger"
 )
 
-var xmlWrapperRegex = regexp.MustCompile(`(?s)(.*?)<xml>.*?</xml>\s*$`)
-
 type Client struct {
 	cfg        *config.Config
 	httpClient *http.Client
@@ -26,7 +24,6 @@ type Client struct {
 }
 
 var safeIdentifierRegex = regexp.MustCompile(`^[a-zA-Z0-9_:.-]+$`)
-var deviceIDRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 var objectIDRegex = regexp.MustCompile(`^[0-9]{1,10}$`)
 var numberRegex = regexp.MustCompile(`^-?[0-9]+\.?[0-9]*$`)
 
@@ -93,15 +90,17 @@ func (c *Client) Execute(script string) (string, error) {
 		result = string(utf8Body)
 	}
 
-	if matches := xmlWrapperRegex.FindStringSubmatch(result); len(matches) > 1 {
-		return matches[1], nil
+	// rega.exe appends its variables as <xml>...</xml>. Search from the end,
+	// the script output itself may contain "<xml>".
+	if i := strings.LastIndex(result, "<xml>"); i >= 0 && strings.HasSuffix(strings.TrimSpace(result), "</xml>") {
+		return result[:i], nil
 	}
 
 	return result, nil
 }
 
 func (c *Client) TestConnection() error {
-	logger.Debug(fmt.Sprintf("Testing connection to CCU Rega at %s:%d...", c.cfg.CCUHost, c.cfg.RegaPort))
+	logger.Debugf("Testing connection to CCU Rega at %s:%d...", c.cfg.CCUHost, c.cfg.RegaPort)
 
 	result, err := c.Execute("Write(\"Hello from WebSocket Server\");")
 	if err != nil {
@@ -115,55 +114,43 @@ func (c *Client) TestConnection() error {
 	return nil
 }
 
-// validateIDs guards the values substituted into ReGa scripts: they end up
-// inside string literals, so anything outside the whitelist could break out
-// and run arbitrary ReGa code (including system.Exec).
-func validateIDs(deviceID string, objectIDs ...string) error {
-	if !deviceIDRegex.MatchString(deviceID) {
-		return fmt.Errorf("invalid deviceId")
-	}
-	for _, id := range objectIDs {
-		if !objectIDRegex.MatchString(id) {
-			return fmt.Errorf("invalid room or trade id")
-		}
+// validateObjectID guards the room or trade id substituted into the ReGa
+// script: it ends up inside a string literal, so anything outside the
+// whitelist could break out and run arbitrary ReGa code (including
+// system.Exec).
+func validateObjectID(id string) error {
+	if !objectIDRegex.MatchString(id) {
+		return fmt.Errorf("invalid room or trade id")
 	}
 	return nil
 }
 
-func (c *Client) GetRooms(deviceID string) (string, error) {
-	if err := validateIDs(deviceID); err != nil {
-		return "", err
+func (c *Client) GetRooms() ([]NamedObject, error) {
+	output, err := c.Execute(getRoomsScript)
+	if err != nil {
+		return nil, err
 	}
-	script := strings.ReplaceAll(getRoomsScript, "{{DEVICE_ID}}", deviceID)
-	return c.Execute(script)
+	return parseNamedObjects(output), nil
 }
 
-func (c *Client) GetTrades(deviceID string) (string, error) {
-	if err := validateIDs(deviceID); err != nil {
-		return "", err
+func (c *Client) GetTrades() ([]NamedObject, error) {
+	output, err := c.Execute(getTradesScript)
+	if err != nil {
+		return nil, err
 	}
-	script := strings.ReplaceAll(getTradesScript, "{{DEVICE_ID}}", deviceID)
-	return c.Execute(script)
+	return parseNamedObjects(output), nil
 }
 
-func (c *Client) GetChannelsForRoom(roomID, deviceID string) (string, error) {
-	if err := validateIDs(deviceID, roomID); err != nil {
-		return "", err
+// GetChannels returns the channels of a room or trade.
+func (c *Client) GetChannels(objectID string) ([]Channel, error) {
+	if err := validateObjectID(objectID); err != nil {
+		return nil, err
 	}
-	script := getChannelsForRoomScript
-	script = strings.ReplaceAll(script, "{{ROOM_ID}}", roomID)
-	script = strings.ReplaceAll(script, "{{DEVICE_ID}}", deviceID)
-	return c.Execute(script)
-}
-
-func (c *Client) GetChannelsForTrade(tradeID, deviceID string) (string, error) {
-	if err := validateIDs(deviceID, tradeID); err != nil {
-		return "", err
+	output, err := c.Execute(strings.ReplaceAll(getChannelsScript, "{{OBJECT_ID}}", objectID))
+	if err != nil {
+		return nil, err
 	}
-	script := getChannelsForTradeScript
-	script = strings.ReplaceAll(script, "{{TRADE_ID}}", tradeID)
-	script = strings.ReplaceAll(script, "{{DEVICE_ID}}", deviceID)
-	return c.Execute(script)
+	return parseChannels(output), nil
 }
 
 func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (string, error) {

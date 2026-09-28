@@ -21,9 +21,22 @@ func Error(args ...interface{}) {
 	log.Println(args...)
 }
 
+// DebugEnabled lets callers skip building expensive debug output.
+func DebugEnabled() bool {
+	return debugMode
+}
+
 func Debug(args ...interface{}) {
 	if debugMode {
 		log.Println(args...)
+	}
+}
+
+// Debugf only formats when debug mode is on, so hot paths don't pay for
+// messages that are thrown away.
+func Debugf(format string, args ...interface{}) {
+	if debugMode {
+		log.Printf(format, args...)
 	}
 }
 

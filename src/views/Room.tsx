@@ -44,16 +44,13 @@ export const Room = () => {
     <OuterContainer>
       <Container>
         <List>
-          {sortedChannelsByType.map(([channelType, channels], index) => {
-            return channels.length ? (
-              <ChannelGroup
-                key={index}
-                index={index}
-                channelType={channelType}
-                channels={channels}
-              />
-            ) : null;
-          })}
+          {sortedChannelsByType.map(([channelType, channels]) => (
+            <ChannelGroup
+              key={channelType}
+              channelType={channelType}
+              channels={channels}
+            />
+          ))}
         </List>
       </Container>
     </OuterContainer>

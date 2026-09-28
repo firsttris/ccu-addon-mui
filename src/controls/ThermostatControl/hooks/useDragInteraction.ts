@@ -1,17 +1,18 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { CENTER_X, CENTER_Y, ROTATE_ANGLE, MAX_ANGLE } from '../constants';
 import { useTemperatureConversion } from './useTemperatureConversion';
 
 interface UseDragInteractionProps {
   onTemperatureChange: (temp: number) => void;
   onInteractionEnd: (temp: number) => void;
-  currentTemp: number;
 }
 
-export const useDragInteraction = ({ onTemperatureChange, onInteractionEnd, currentTemp }: UseDragInteractionProps) => {
+export const useDragInteraction = ({ onTemperatureChange, onInteractionEnd }: UseDragInteractionProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // The value of the last move: pointerup can fire before React has
+  // rendered that move, so the localTarget prop may still be one step behind.
+  const lastTempRef = useRef<number | null>(null);
   const { angleToTemp } = useTemperatureConversion();
 
   const updateTemperatureFromPosition = useCallback((clientX: number, clientY: number) => {
@@ -53,6 +54,7 @@ export const useDragInteraction = ({ onTemperatureChange, onInteractionEnd, curr
     }
 
     const newTemp = angleToTemp(angle);
+    lastTempRef.current = newTemp;
     onTemperatureChange(newTemp);
   }, [angleToTemp, onTemperatureChange]);
 
@@ -67,14 +69,10 @@ export const useDragInteraction = ({ onTemperatureChange, onInteractionEnd, curr
 
   const handleInteractionEnd = useCallback(() => {
     setIsDragging(false);
-    // Debounce the actual update
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    if (lastTempRef.current !== null) {
+      onInteractionEnd(lastTempRef.current);
     }
-    timeoutRef.current = setTimeout(() => {
-      onInteractionEnd(currentTemp);
-    }, 500);
-  }, [onInteractionEnd, currentTemp]);
+  }, [onInteractionEnd]);
 
   // Pointer events (works for mouse, touch, and pen)
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -101,14 +99,6 @@ export const useDragInteraction = ({ onTemperatureChange, onInteractionEnd, curr
       handleInteractionEnd();
     }
   }, [isDragging, handleInteractionEnd]);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
 
   return {
     isDragging,

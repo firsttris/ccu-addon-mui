@@ -1,20 +1,23 @@
 import { BlindVirtualReceiverChannel } from '../types/types';
 import { Shutters } from '../components/icons/Shutters';
-import { useWebSocketContext } from '../hooks/useWebsocket';
+import { useWebSocketActions } from '../hooks/useWebsocket';
 import { UiwDown } from '../components/icons/UiwDown';
 import { UiwUp } from '../components/icons/UiwUp';
 import { MaterialSymbolsStop } from '../components/icons/MaterialSymbolsStop';
 import { ChannelName } from '../components/ChannelName';
 import { ControlButton } from '../components/ControlButton';
+import { useTranslations } from '../i18n/utils';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;
 }
 
 export const BlindsControl = ({ channel }: ControlProps) => {
-  const { setDataPoint } = useWebSocketContext();
+  const t = useTranslations();
+  const { setDataPoint } = useWebSocketActions();
   const { datapoints, name, address, interfaceName } = channel;
-  const blindValue = Number(datapoints.LEVEL) * 100;
+  // Rounded: e.g. 0.29 * 100 is 28.999999999999996 in floating point
+  const blindValue = Math.round(Number(datapoints.LEVEL) * 100);
   return (
     <div style={{ width: '100%', maxWidth: '250px', margin: '10px' }}>
       <ChannelName name={name} maxWidth="100%" />
@@ -28,7 +31,9 @@ export const BlindsControl = ({ channel }: ControlProps) => {
           }}
         >
           <div style={{ fontSize: '13px', marginBottom: '5px' }}>
-            {blindValue === 0 ? 'geschlossen' : `${blindValue} % geöffnet`}
+            {blindValue === 0
+              ? t('BLIND_CLOSED')
+              : `${blindValue} % ${t('BLIND_OPEN')}`}
           </div>
           <Shutters
             percent={blindValue}

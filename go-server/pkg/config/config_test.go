@@ -11,8 +11,13 @@ func TestLoadDefaultsForLocalhost(t *testing.T) {
 	t.Setenv("REGA_PORT", "")
 	t.Setenv("DEBUG", "")
 	t.Setenv("CALLBACK_HOST", "")
+	t.Setenv("WS_BIND_HOST", "")
 
 	cfg := Load()
+
+	if cfg.WSBindHost != "127.0.0.1" {
+		t.Fatalf("expected WSBindHost 127.0.0.1, got %q", cfg.WSBindHost)
+	}
 
 	if cfg.CCUHost != "localhost" {
 		t.Fatalf("expected CCUHost localhost, got %q", cfg.CCUHost)

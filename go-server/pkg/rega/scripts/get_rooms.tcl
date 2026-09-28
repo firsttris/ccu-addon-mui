@@ -1,21 +1,5 @@
-object  roomObject;
-string  roomId;
-string  deviceId = "{{DEVICE_ID}}";
-boolean isFirstRoom = true;
-
-Write('{"deviceId":"' # deviceId # '", "rooms":[');
-
+! Writes one line per room: <id> <name>, tab separated.
+string roomId;
 foreach (roomId, dom.GetObject(ID_ROOMS).EnumUsedIDs()) {
-    if (isFirstRoom == false) {
-        WriteLine(',');
-    } else {
-        isFirstRoom = false;
-    }
-
-    roomObject = dom.GetObject(roomId);
-    Write('{"id": ' # roomId # ', "name": "');
-    Write(roomObject.Name());
-    Write('"}');
+    WriteLine(roomId # "\t" # dom.GetObject(roomId).Name());
 }
-
-Write(']}');

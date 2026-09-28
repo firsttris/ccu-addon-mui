@@ -21,9 +21,11 @@ interface ControlComponentProps {
   channel: Channel;
 }
 
-export const ControlComponent: React.FC<ControlComponentProps> = ({
+// Memoized: an event creates a new object only for the channel it concerns,
+// so all other controls can skip rendering.
+export const ControlComponent = React.memo(function ControlComponent({
   channel,
-}) => {
+}: ControlComponentProps) {
   switch (channel.type) {
     case ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER:
       return <FloorControl channel={channel} />;
@@ -45,4 +47,4 @@ export const ControlComponent: React.FC<ControlComponentProps> = ({
         </ErrorCard>
       );
   }
-};
+});

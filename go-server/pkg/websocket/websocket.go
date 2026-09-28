@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -30,7 +31,13 @@ const (
 
 	// Send pings to peer with this period (must be less than pongWait)
 	pingPeriod = (pongWait * 9) / 10
+
+	// Maximum size of a message from the client. The largest one is a
+	// subscribe with all channel addresses of a room or trade.
+	maxMessageSize = 128 << 10
 )
+
+var deviceIDRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: checkOrigin,
@@ -129,13 +136,12 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("/", s.handleWebSocket)
 
 	s.httpServer = &http.Server{
-		Addr:              fmt.Sprintf(":%d", s.cfg.WSPort),
+		Addr:              fmt.Sprintf("%s:%d", s.cfg.WSBindHost, s.cfg.WSPort),
 		Handler:           mux,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
-	logger.Info(fmt.Sprintf("WebSocket Server running on port %d", s.cfg.WSPort))
-	logger.Info(fmt.Sprintf("WebSocket URL: ws://localhost:%d", s.cfg.WSPort))
+	logger.Info(fmt.Sprintf("WebSocket Server running on %s", s.httpServer.Addr))
 
 	if err := s.httpServer.ListenAndServe(); err != http.ErrServerClosed {
 		return err
@@ -186,14 +192,18 @@ func (s *Server) removeClient(client *Client) {
 }
 
 func (s *Server) BroadcastToClients(event *types.CCUEvent) {
-	logger.Debug(fmt.Sprintf("📡 Broadcasting event: %s.%s = %v",
-		event.Event.Channel, event.Event.Datapoint, event.Event.Value))
+	logger.Debugf("📡 Broadcasting event: %s.%s = %v",
+		event.Event.Channel, event.Event.Datapoint, event.Event.Value)
 
 	message, err := json.Marshal(event)
 	if err != nil {
 		logger.Error("Failed to marshal event:", err)
 		return
 	}
+
+	// Checked once: the per-client debug lines below would otherwise lock
+	// each client for DeviceID() on every event.
+	debug := logger.DebugEnabled()
 
 	s.clientsMu.RLock()
 	defer s.clientsMu.RUnlock()
@@ -202,12 +212,8 @@ func (s *Server) BroadcastToClients(event *types.CCUEvent) {
 	filteredCount := 0
 	droppedCount := 0
 
-	logger.Debug(fmt.Sprintf("   Connected clients: %d", len(s.clients)))
-
 	for client := range s.clients {
 		if !s.subscriptionMgr.ShouldReceiveEvent(client.id, event) {
-			logger.Debug(fmt.Sprintf("   Device %s not subscribed to %s, filtering",
-				client.DeviceID(), event.Event.Channel))
 			filteredCount++
 			continue
 		}
@@ -215,15 +221,17 @@ func (s *Server) BroadcastToClients(event *types.CCUEvent) {
 		select {
 		case client.send <- message:
 			sentCount++
-			logger.Debug(fmt.Sprintf("   ✅ Sent to device %s", client.DeviceID()))
+			if debug {
+				logger.Debugf("   ✅ Sent to device %s", client.DeviceID())
+			}
 		default:
 			logger.Error(fmt.Sprintf("   ⚠️ Device %s buffer full, dropping message", client.DeviceID()))
 			droppedCount++
 		}
 	}
 
-	logger.Debug(fmt.Sprintf("📊 Broadcast complete: %d sent, %d filtered, %d dropped, %d total",
-		sentCount, filteredCount, droppedCount, len(s.clients)))
+	logger.Debugf("📊 Broadcast complete: %d sent, %d filtered, %d dropped, %d total",
+		sentCount, filteredCount, droppedCount, len(s.clients))
 }
 
 func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
@@ -246,6 +254,8 @@ func (s *Server) readPump(client *Client) {
 		s.removeClient(client)
 		client.conn.Close()
 	}()
+
+	client.conn.SetReadLimit(maxMessageSize)
 
 	// Set up pong handler
 	client.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -295,7 +305,7 @@ func (s *Server) writePump(client *Client) {
 			// Send ping to keep connection alive
 			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := client.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				logger.Debug(fmt.Sprintf("Ping failed for device %s: %v", client.DeviceID(), err))
+				logger.Debugf("Ping failed for device %s: %v", client.DeviceID(), err)
 				return
 			}
 		}
@@ -342,16 +352,16 @@ func (s *Server) handleSubscribe(client *Client, message []byte) {
 	s.subscriptionMgr.Subscribe(client.id, msg.Channels)
 
 	stats := s.subscriptionMgr.GetStats()
-	logger.Debug(fmt.Sprintf("📝 Device %s subscribed to %d channels", msg.DeviceID, len(msg.Channels)))
-	logger.Debug(fmt.Sprintf("   Total: %d connections, %d channels", stats.Subscribers, stats.TotalChannels))
+	logger.Debugf("📝 Device %s subscribed to %d channels", msg.DeviceID, len(msg.Channels))
+	logger.Debugf("   Total: %d connections, %d channels", stats.Subscribers, stats.TotalChannels)
 
 	if len(msg.Channels) > 0 {
 		preview := msg.Channels
 		if len(preview) > 5 {
 			preview = preview[:5]
 		}
-		logger.Debug(fmt.Sprintf("   Channels: %v%s", preview,
-			map[bool]string{true: " ...", false: ""}[len(msg.Channels) > 5]))
+		logger.Debugf("   Channels: %v%s", preview,
+			map[bool]string{true: " ...", false: ""}[len(msg.Channels) > 5])
 	}
 
 	response := types.SubscribeResponse{
@@ -365,89 +375,107 @@ func (s *Server) handleSubscribe(client *Client, message []byte) {
 	s.sendJSON(client, response)
 }
 
-func (s *Server) handleGetRooms(client *Client, message []byte) {
-	var msg struct {
-		Type     string `json:"type"`
-		DeviceID string `json:"deviceId"`
-	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendError(client, "invalid getRooms message: "+err.Error())
-		return
-	}
+// request is a getRooms, getTrades or getChannels message.
+type request struct {
+	DeviceID string `json:"deviceId"`
+	RoomID   string `json:"roomId"`
+	TradeID  string `json:"tradeId"`
+}
 
+// parseRequest parses a request and validates its deviceId, which is echoed
+// back in the response.
+func (s *Server) parseRequest(client *Client, message []byte) (request, bool) {
+	var msg request
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendError(client, "invalid message: "+err.Error())
+		return msg, false
+	}
 	if msg.DeviceID == "" {
 		s.sendError(client, "deviceId is required")
+		return msg, false
+	}
+	if !deviceIDRegex.MatchString(msg.DeviceID) {
+		s.sendError(client, "invalid deviceId")
+		return msg, false
+	}
+	return msg, true
+}
+
+type roomsResponse struct {
+	DeviceID string             `json:"deviceId"`
+	Rooms    []rega.NamedObject `json:"rooms"`
+}
+
+type tradesResponse struct {
+	DeviceID string             `json:"deviceId"`
+	Trades   []rega.NamedObject `json:"trades"`
+}
+
+type channelsResponse struct {
+	DeviceID string         `json:"deviceId"`
+	RoomID   string         `json:"roomId,omitempty"`
+	TradeID  string         `json:"tradeId,omitempty"`
+	Channels []rega.Channel `json:"channels"`
+}
+
+func (s *Server) handleGetRooms(client *Client, message []byte) {
+	msg, ok := s.parseRequest(client, message)
+	if !ok {
 		return
 	}
 
-	result, err := s.regaClient.GetRooms(msg.DeviceID)
+	rooms, err := s.regaClient.GetRooms()
 	if err != nil {
 		s.sendError(client, "getRooms failed: "+err.Error())
 		return
 	}
 
-	s.send(client, []byte(result))
+	s.sendJSON(client, roomsResponse{DeviceID: msg.DeviceID, Rooms: rooms})
 }
 
 func (s *Server) handleGetTrades(client *Client, message []byte) {
-	var msg struct {
-		Type     string `json:"type"`
-		DeviceID string `json:"deviceId"`
-	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendError(client, "invalid getTrades message: "+err.Error())
+	msg, ok := s.parseRequest(client, message)
+	if !ok {
 		return
 	}
 
-	if msg.DeviceID == "" {
-		s.sendError(client, "deviceId is required")
-		return
-	}
-
-	result, err := s.regaClient.GetTrades(msg.DeviceID)
+	trades, err := s.regaClient.GetTrades()
 	if err != nil {
 		s.sendError(client, "getTrades failed: "+err.Error())
 		return
 	}
 
-	s.send(client, []byte(result))
+	s.sendJSON(client, tradesResponse{DeviceID: msg.DeviceID, Trades: trades})
 }
 
 func (s *Server) handleGetChannels(client *Client, message []byte) {
-	var msg struct {
-		Type     string `json:"type"`
-		DeviceID string `json:"deviceId"`
-		RoomID   string `json:"roomId,omitempty"`
-		TradeID  string `json:"tradeId,omitempty"`
-	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendError(client, "invalid getChannels message: "+err.Error())
+	msg, ok := s.parseRequest(client, message)
+	if !ok {
 		return
 	}
 
-	if msg.DeviceID == "" {
-		s.sendError(client, "deviceId is required")
-		return
+	// Rooms and trades are both ReGa enumerations, read the same way.
+	objectID := msg.RoomID
+	if objectID == "" {
+		objectID = msg.TradeID
 	}
-
-	var result string
-	var err error
-
-	if msg.RoomID != "" {
-		result, err = s.regaClient.GetChannelsForRoom(msg.RoomID, msg.DeviceID)
-	} else if msg.TradeID != "" {
-		result, err = s.regaClient.GetChannelsForTrade(msg.TradeID, msg.DeviceID)
-	} else {
+	if objectID == "" {
 		s.sendError(client, "either roomId or tradeId is required")
 		return
 	}
 
+	channels, err := s.regaClient.GetChannels(objectID)
 	if err != nil {
 		s.sendError(client, "getChannels failed: "+err.Error())
 		return
 	}
 
-	s.send(client, []byte(result))
+	s.sendJSON(client, channelsResponse{
+		DeviceID: msg.DeviceID,
+		RoomID:   msg.RoomID,
+		TradeID:  msg.TradeID,
+		Channels: channels,
+	})
 }
 
 func (s *Server) handleSetDatapoint(client *Client, message []byte) {

@@ -1,21 +1,5 @@
-object  functionObject;
-string  functionId;
-string  deviceId = "{{DEVICE_ID}}";
-boolean isFirstFunction = true;
-
-Write('{"deviceId":"' # deviceId # '", "trades":[');
-
+! Writes one line per trade: <id> <name>, tab separated.
+string functionId;
 foreach (functionId, dom.GetObject(ID_FUNCTIONS).EnumUsedIDs()) {
-    if (isFirstFunction == false) {
-        WriteLine(',');
-    } else {
-        isFirstFunction = false;
-    }
-
-    functionObject = dom.GetObject(functionId);
-    Write('{"id": ' # functionId # ', "name": "');
-    Write(functionObject.Name());
-    Write('"}');
+    WriteLine(functionId # "\t" # dom.GetObject(functionId).Name());
 }
-
-Write(']}');

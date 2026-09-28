@@ -1,6 +1,6 @@
 import { SwitchVirtualReceiverChannel } from '../types/types';
 import styled from '@emotion/styled';
-import { useWebSocketContext } from '../hooks/useWebsocket';
+import { useWebSocketActions } from '../hooks/useWebsocket';
 import { EmojioneLightBulb } from '../components/icons/EmojioneLightBlub';
 import { EmojioneMonotoneLightBulb } from '../components/icons/EmojioneMonotoneLightBulb';
 
@@ -32,7 +32,7 @@ const IconContainer = styled.div<{ checked: boolean }>`
 `;
 
 export const SwitchControl = ({ channel }: ControlProps) => {
-  const { setDataPoint } = useWebSocketContext();
+  const { setDataPoint } = useWebSocketActions();
   const { datapoints, name, address, interfaceName } = channel;
   const checked = datapoints.STATE === true;
 

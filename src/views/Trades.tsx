@@ -31,34 +31,29 @@ export const ListItemText = styled.p`
 
 export const Trades = () => {
   const navigate = useNavigate();
-  const { getTrades, trades, setChannels } = useWebSocketContext();
+  const { getTrades, trades } = useWebSocketContext();
 
   useEffect(() => {
     getTrades();
   }, []);
 
-  if (trades) {
-    return (
-      <Container>
-        <List>
-          {trades.map((trade, index) => (
-            <ListItem
-              key={index}
-              onClick={() => {
-                setChannels([]);
-                navigate({
-                  to: '/trade/$tradeId',
-                  params: { tradeId: trade.id.toString() },
-                });
-              }}
-            >
-              <ListItemText>{trade.name}</ListItemText>
-            </ListItem>
-          ))}
-        </List>
-      </Container>
-    );
-  }
-
-  return <div>Loading trades...</div>;
+  return (
+    <Container>
+      <List>
+        {trades.map((trade) => (
+          <ListItem
+            key={trade.id}
+            onClick={() => {
+              navigate({
+                to: '/trade/$tradeId',
+                params: { tradeId: trade.id.toString() },
+              });
+            }}
+          >
+            <ListItemText>{trade.name}</ListItemText>
+          </ListItem>
+        ))}
+      </List>
+    </Container>
+  );
 };

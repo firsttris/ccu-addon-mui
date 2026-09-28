@@ -78,3 +78,27 @@ test('sendet setDatapoint und verarbeitet Event-Updates', async ({ page }) => {
     });
   }).toBeGreaterThan(0);
 });
+
+test('verarbeitet mehrere direkt aufeinanderfolgende Events', async ({ page }) => {
+  await page.goto('/room/2');
+
+  await page.getByText(/Blind|Rolladen/).first().click();
+  await expect(page.getByText('Küche Fenster')).toBeVisible();
+
+  // Both events are dispatched in the same task, like a multicall from the
+  // CCU. Neither may get lost.
+  await page.evaluate(() => {
+    const mock = (window as Window & {
+      __wsMock?: {
+        emitEvent: (event: { channel: string; datapoint: string; value: number }) => void;
+      };
+    }).__wsMock;
+
+    mock?.emitEvent({ channel: 'BidCos-RF.LEQ0000002:1', datapoint: 'LEVEL', value: 0.29 });
+    mock?.emitEvent({ channel: 'BidCos-RF.LEQ0000005:1', datapoint: 'LEVEL', value: 0.75 });
+  });
+
+  // 0.29 * 100 must be shown rounded, not as 28.999999999999996
+  await expect(page.getByText(/^29 % (open|geöffnet)$/)).toBeVisible();
+  await expect(page.getByText(/^75 % (open|geöffnet)$/)).toBeVisible();
+});

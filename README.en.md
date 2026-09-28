@@ -134,8 +134,20 @@ Prevents standby. If it doesn't work, check `chrome://flags` -> `Experimental We
 git clone https://github.com/firsttris/ccu-addon-mui.git
 cd ccu-addon-mui
 npm install
-# Adjust CCU IP in vite.config.mts (proxyTargets), then: npm run start:fe:ccu3
-npm start
+```
+
+**Frontend and Go server locally, against the real CCU:**
+```bash
+cp go-server/.env.example go-server/.env
+# Set CCU_HOST, CCU_USER/CCU_PASS and CALLBACK_HOST (this machine's IP) in .env
+npm run dev
+```
+Starts the Go server and the frontend (http://localhost:4200) together; Ctrl+C stops both and unregisters the server from the CCU. The CCU must be able to reach this machine on port 9099, otherwise no events arrive.
+
+**Frontend only, against the add-on installed on the CCU:**
+```bash
+# Adjust CCU IP in vite.config.mts (proxyTargets), then:
+npm run start:fe:ccu3
 ```
 
 ### Build
@@ -146,7 +158,7 @@ Creates React app, Go server, and an installable `.tar.gz` archive.
 
 ### WebSocket Test
 Use a [WebSocket Test Client](https://chromewebstore.google.com/detail/websocket-test-client/fgponpodhbmadfljofbimhhlengambbn).
-URL: `ws://<CCU-IP>/addons/red/ws/webapp`
+URL: `ws://<CCU-IP>/ws/mui`
 Test message: `{"type": "getRooms", "deviceId": "test-device"}`
 
 ## 🤝 Contributions

@@ -2,7 +2,11 @@ package websocket
 
 import (
 	"encoding/json"
+	"io"
+	"net"
+	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -175,6 +179,35 @@ func TestGetRoomsRejectsScriptInjectionInDeviceID(t *testing.T) {
 	s.handleMessage(client, []byte(`{"type":"getRooms","deviceId":"x\"; system.Exec(\"reboot\"); string y = \""}`))
 
 	assertErrorMessageContains(t, <-client.send, "invalid deviceId")
+}
+
+func TestGetChannelsReturnsValidJSONAndEchoesRoomID(t *testing.T) {
+	regaServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.WriteString(w, "C\t1\tA:1\tSWITCH_VIRTUAL_RECEIVER\tHmIP-RF\tKinderzimmer \"Paul\"\r\nD\tSTATE\t2\tfalse\r\n")
+	}))
+	defer regaServer.Close()
+
+	host, port, _ := net.SplitHostPort(regaServer.Listener.Addr().String())
+	portNum, _ := strconv.Atoi(port)
+	s := NewServer(nil, rega.NewClient(&config.Config{CCUHost: host, RegaPort: portNum}))
+	client := &Client{send: make(chan []byte, 1)}
+
+	s.handleMessage(client, []byte(`{"type":"getChannels","deviceId":"dev-1","roomId":"1234"}`))
+
+	var resp struct {
+		DeviceID string         `json:"deviceId"`
+		RoomID   string         `json:"roomId"`
+		Channels []rega.Channel `json:"channels"`
+	}
+	if err := json.Unmarshal(<-client.send, &resp); err != nil {
+		t.Fatalf("response is not valid JSON: %v", err)
+	}
+	if resp.DeviceID != "dev-1" || resp.RoomID != "1234" {
+		t.Fatalf("expected deviceId and roomId to be echoed, got %+v", resp)
+	}
+	if len(resp.Channels) != 1 || resp.Channels[0].Name != `Kinderzimmer "Paul"` {
+		t.Fatalf("unexpected channels: %+v", resp.Channels)
+	}
 }
 
 func TestFormatValue(t *testing.T) {

@@ -145,7 +145,7 @@ func (s *Server) Start(ctx context.Context) error {
 		return err
 	}
 
-	logger.Debug(fmt.Sprintf("✅ RPC Server created on %s:%d", bindHost, s.cfg.RPCServerPort))
+	logger.Debugf("✅ RPC Server created on %s:%d", bindHost, s.cfg.RPCServerPort)
 
 	s.startRegistration(ctx, "BidCos-RF", s.cfg.RPCPort)
 	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort)
@@ -221,7 +221,7 @@ func (s *Server) newCCUClient(interfaceName string, port int) (*xmlrpc.Client, e
 	}
 
 	if s.cfg.CCUUser != "" && s.cfg.CCUPass != "" {
-		logger.Debug(fmt.Sprintf("🔑 Using basic auth for port %d", port))
+		logger.Debugf("🔑 Using basic auth for port %d", port)
 		transport = &basicAuthTransport{
 			username: s.cfg.CCUUser,
 			password: s.cfg.CCUPass,
@@ -286,7 +286,7 @@ func (s *Server) maintainRegistration(ctx context.Context, client *xmlrpc.Client
 			// which resets the idle time if the registration is still alive.
 			var result interface{}
 			if err := client.Call("ping", []interface{}{interfaceID}, &result); err != nil {
-				logger.Debug(fmt.Sprintf("Ping to %s failed: %v", interfaceName, err))
+				logger.Debugf("Ping to %s failed: %v", interfaceName, err)
 			}
 		}
 
@@ -302,7 +302,7 @@ func (s *Server) initInterface(client *xmlrpc.Client, interfaceName string, port
 	callbackURL := s.callbackURL()
 	interfaceID := interfaceIDFor(interfaceName)
 
-	logger.Debug(fmt.Sprintf("📞 Calling init on %s with callback URL: %s", interfaceName, callbackURL))
+	logger.Debugf("📞 Calling init on %s with callback URL: %s", interfaceName, callbackURL)
 
 	var result interface{}
 	if err := client.Call("init", []interface{}{callbackURL, interfaceID}, &result); err != nil {
@@ -312,7 +312,7 @@ func (s *Server) initInterface(client *xmlrpc.Client, interfaceName string, port
 	}
 
 	logger.Info(fmt.Sprintf("✅ Connected to %s on %s:%d", interfaceName, s.cfg.CCUHost, port))
-	logger.Debug(fmt.Sprintf("   %s will now send events to %s with ID: %s", interfaceName, callbackURL, interfaceID))
+	logger.Debugf("   %s will now send events to %s with ID: %s", interfaceName, callbackURL, interfaceID)
 	return nil
 }
 
@@ -346,9 +346,9 @@ func (t *basicAuthTransport) RoundTrip(req *http.Request) (*http.Response, error
 }
 
 func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
-	logger.Debug(fmt.Sprintf("📥 HTTP %s request from %s", r.Method, r.RemoteAddr))
-	logger.Debug(fmt.Sprintf("   URL: %s", r.URL.Path))
-	logger.Debug(fmt.Sprintf("   Content-Type: %s", r.Header.Get("Content-Type")))
+	logger.Debugf("📥 HTTP %s request from %s", r.Method, r.RemoteAddr)
+	logger.Debugf("   URL: %s", r.URL.Path)
+	logger.Debugf("   Content-Type: %s", r.Header.Get("Content-Type"))
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -362,7 +362,7 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Debug(fmt.Sprintf("   Request body: %s", string(body)))
+	logger.Debugf("   Request body: %s", body)
 
 	var call methodCall
 	decoder := xml.NewDecoder(bytes.NewReader(body))
@@ -375,7 +375,7 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Debug(fmt.Sprintf("📞 Method call: %s", call.MethodName))
+	logger.Debugf("📞 Method call: %s", call.MethodName)
 
 	var response string
 	switch call.MethodName {
@@ -390,7 +390,7 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 	case "init":
 		response = s.handleInit(&call)
 	default:
-		logger.Debug(fmt.Sprintf("   Unknown method: %s", call.MethodName))
+		logger.Debugf("   Unknown method: %s", call.MethodName)
 		response = s.serializeMethodResponse("")
 	}
 
@@ -414,13 +414,13 @@ func (s *Server) handleInit(call *methodCall) string {
 			interfaceID = *call.Params.Param[1].Value.String
 		}
 
-		logger.Debug(fmt.Sprintf("   Callback URL: %s", callbackURL))
-		logger.Debug(fmt.Sprintf("   Interface ID: %s", interfaceID))
+		logger.Debugf("   Callback URL: %s", callbackURL)
+		logger.Debugf("   Interface ID: %s", interfaceID)
 
 		if callbackURL == "" && interfaceID == "" {
 			logger.Debug("   Deregistration request (empty params)")
 		} else {
-			logger.Debug(fmt.Sprintf("   ✅ Registered interface '%s' with callback '%s'", interfaceID, callbackURL))
+			logger.Debugf("   ✅ Registered interface '%s' with callback '%s'", interfaceID, callbackURL)
 		}
 	}
 
@@ -441,11 +441,11 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 	}
 
 	calls := call.Params.Param[0].Value.Array.Data.Value
-	logger.Debug(fmt.Sprintf("   Processing %d events from CCU", len(calls)))
+	logger.Debugf("   Processing %d events from CCU", len(calls))
 
 	for i, callValue := range calls {
 		if callValue.Struct == nil {
-			logger.Debug(fmt.Sprintf("   Event %d: No struct", i+1))
+			logger.Debugf("   Event %d: No struct", i+1)
 			continue
 		}
 
@@ -467,7 +467,7 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 		}
 
 		if methodName == "event" {
-			logger.Debug(fmt.Sprintf("   Event %d", i+1))
+			logger.Debugf("   Event %d", i+1)
 			s.dispatchEvent(params)
 		}
 	}
@@ -490,7 +490,7 @@ func (s *Server) handleEvent(call *methodCall) string {
 // (interfaceID, address, datapoint, value).
 func (s *Server) dispatchEvent(params []interface{}) {
 	if len(params) < 4 {
-		logger.Debug(fmt.Sprintf("   Ignoring event with %d params", len(params)))
+		logger.Debugf("   Ignoring event with %d params", len(params))
 		return
 	}
 
@@ -501,14 +501,14 @@ func (s *Server) dispatchEvent(params []interface{}) {
 
 	s.markSeen(interfaceID)
 
-	logger.Debug(fmt.Sprintf("   ✅ Event: %s | %s | %s = %v", interfaceID, address, datapoint, value))
+	logger.Debugf("   ✅ Event: %s | %s | %s = %v", interfaceID, address, datapoint, value)
 	s.handleCCUEvent(interfaceID, address, datapoint, value)
 }
 
 func (s *Server) handleSystemListMethods() string {
 	logger.Debug("📋 system.listMethods called by CCU")
 	methods := []string{"system.listMethods", "system.multicall", "listDevices", "init", "event"}
-	logger.Debug(fmt.Sprintf("   Returning methods: %v", methods))
+	logger.Debugf("   Returning methods: %v", methods)
 	return s.serializeArrayResponse(methods)
 }
 
@@ -594,7 +594,7 @@ func (s *Server) serializeArrayResponse(items []string) string {
 }
 
 func (s *Server) handleCCUEvent(interfaceName, address, datapoint string, value interface{}) {
-	logger.Debug(fmt.Sprintf("🔔 Processing CCU Event: %s | %s.%s = %v", interfaceName, address, datapoint, value))
+	logger.Debugf("🔔 Processing CCU Event: %s | %s.%s = %v", interfaceName, address, datapoint, value)
 
 	event := types.NewCCUEvent(interfaceName, address, datapoint, value)
 

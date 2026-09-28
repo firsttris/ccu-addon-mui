@@ -1,6 +1,8 @@
+import { useState } from 'react';
+
 const LOCAL_STORAGE_KEY = 'ccu-addon-mui_DeviceId';
 
-export const useUniqueDeviceID = () => {
+const getOrCreateDeviceID = () => {
   // Check if a unique ID already exists in localStorage
   let uniqueId = localStorage.getItem(LOCAL_STORAGE_KEY);
 
@@ -10,5 +12,11 @@ export const useUniqueDeviceID = () => {
     // Store the unique ID in localStorage
     localStorage.setItem(LOCAL_STORAGE_KEY, uniqueId);
   }
+  return uniqueId;
+};
+
+export const useUniqueDeviceID = () => {
+  // Read localStorage only once, not on every render
+  const [uniqueId] = useState(getOrCreateDeviceID);
   return uniqueId;
 };

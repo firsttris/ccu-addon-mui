@@ -5,6 +5,7 @@ SERVER_DIR="$ADDON_DIR/go-server"
 GO_BIN="$SERVER_DIR/ccu-addon-mui-server"
 PID_FILE="/var/run/mui-websocket-server.pid"
 LOG_FILE="/var/log/mui-websocket-server.log"
+LOG_MAX_BYTES=1048576
 
 start() {
     if [ -f $PID_FILE ]; then
@@ -17,6 +18,11 @@ start() {
         fi
     fi
     
+    # /var/log is a tmpfs on the CCU: keep one old log instead of growing forever
+    if [ -f $LOG_FILE ] && [ $(wc -c < $LOG_FILE) -gt $LOG_MAX_BYTES ]; then
+        mv -f $LOG_FILE $LOG_FILE.old
+    fi
+
     echo "Starting MUI WebSocket Server (Go)..."
     cd $SERVER_DIR
     $GO_BIN >> $LOG_FILE 2>&1 &

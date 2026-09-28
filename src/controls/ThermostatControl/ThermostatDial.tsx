@@ -104,7 +104,6 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
   const { isDragging: dragState, svgRef, handlePointerDown, handlePointerMove, handlePointerUp } = useDragInteraction({
     onTemperatureChange,
     onInteractionEnd,
-    currentTemp: localTarget,
   });
 
   const currentAngle = tempToAngle(currentTemperature);

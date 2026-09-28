@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	WSPort        int
+	WSBindHost    string
 	RPCPort       int
 	HmIPPort      int
 	RPCServerPort int
@@ -28,7 +29,10 @@ func Load() *Config {
 	}
 
 	return &Config{
-		WSPort:        getEnvInt("WS_PORT", 8088),
+		WSPort: getEnvInt("WS_PORT", 8088),
+		// Only lighttpd (or the Vite dev proxy) needs to reach the
+		// WebSocket server; it must not be reachable directly from the LAN.
+		WSBindHost:    getEnv("WS_BIND_HOST", "127.0.0.1"),
 		RPCPort:       getEnvInt("RPC_PORT", 2001),
 		HmIPPort:      getEnvInt("HMIP_PORT", 2010),
 		RPCServerPort: getEnvInt("RPC_SERVER_PORT", 9099),

@@ -62,6 +62,25 @@ export const installWebSocketMock = async (page: Page) => {
             STOP: 'false',
           },
         },
+        {
+          id: 202,
+          name: 'Küche Fenster',
+          address: 'BidCos-RF.LEQ0000005:1',
+          interfaceName: 'BidCos-RF',
+          type: 'BLIND_VIRTUAL_RECEIVER',
+          datapoints: {
+            ACTIVITY_STATE: '0',
+            COMBINED_PARAMETER: '0',
+            LEVEL: '0',
+            LEVEL_2: '0',
+            LEVEL_2_STATUS: '0',
+            LEVEL_STATUS: '0',
+            PROCESS: '0',
+            SECTION: '0',
+            SECTION_STATUS: '0',
+            STOP: 'false',
+          },
+        },
       ],
     };
 
@@ -159,6 +178,8 @@ export const installWebSocketMock = async (page: Page) => {
         delayedBroadcast({
           channels,
           deviceId: message.deviceId,
+          roomId: message.roomId,
+          tradeId: message.tradeId,
         });
         return;
       }
@@ -167,7 +188,13 @@ export const installWebSocketMock = async (page: Page) => {
         state.subscriptions = Array.isArray(message.channels)
           ? message.channels
           : [];
-        delayedBroadcast({ success: true });
+        // Same shape as the go-server's subscribe_response
+        delayedBroadcast({
+          type: 'subscribe_response',
+          success: true,
+          deviceId: message.deviceId,
+          channels: state.subscriptions,
+        });
         return;
       }
 

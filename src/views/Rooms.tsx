@@ -32,35 +32,30 @@ export const ListItemText = styled.p`
 
 export const Rooms = () => {
   const navigate = useNavigate();
-  const { getRooms, rooms, setChannels } = useWebSocketContext();
+  const { getRooms, rooms } = useWebSocketContext();
 
   useEffect(() => {
     getRooms();
   }, []);
 
-  if (rooms) {
-    return (
-      <Container>
-        <List>
-          {rooms.map((room, index) => (
-            <ListItem
-              key={index}
-              onClick={() => {
-                setChannels([]);
-                navigate({
-                  to: '/room/$roomId',
-                  params: { roomId: String(room.id) },
-                });
-              }}
-            >
-              <TeenyiconsFloorplanSolid width={35} />
-              <ListItemText>{room.name}</ListItemText>
-            </ListItem>
-          ))}
-        </List>
-      </Container>
-    );
-  } else {
-    return null;
-  }
+  return (
+    <Container>
+      <List>
+        {rooms.map((room) => (
+          <ListItem
+            key={room.id}
+            onClick={() => {
+              navigate({
+                to: '/room/$roomId',
+                params: { roomId: String(room.id) },
+              });
+            }}
+          >
+            <TeenyiconsFloorplanSolid width={35} />
+            <ListItemText>{room.name}</ListItemText>
+          </ListItem>
+        ))}
+      </List>
+    </Container>
+  );
 };

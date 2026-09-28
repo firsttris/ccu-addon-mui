@@ -85,13 +85,11 @@ const Collapse = styled('div', {
 }));
 
 interface ChannelGroupProps {
-  index: number;
   channelType: ChannelType;
   channels: Channel[];
 }
 
 export const ChannelGroup: React.FC<ChannelGroupProps> = ({
-  index,
   channelType,
   channels,
 }) => {
@@ -110,15 +108,15 @@ export const ChannelGroup: React.FC<ChannelGroupProps> = ({
   }
 
   return (
-    <div key={index}>
+    <div>
       <ListItem onClick={handleExpandClick}>
         <Typography>{localizedText}</Typography>
         <ExpandMore expanded={expanded} width={30} />
       </ListItem>
       <Collapse in={expanded}>
         <ChannelContainer>
-          {channels.map((channel, index) => (
-            <Card key={index}>
+          {channels.map((channel) => (
+            <Card key={channel.address}>
               <ControlComponent channel={channel} />
             </Card>
           ))}

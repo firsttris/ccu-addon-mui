@@ -87,6 +87,7 @@ DEBUG=false                   # Enable debug logging
 | `CCU_USER` | - | Basic auth username |
 | `CCU_PASS` | - | Basic auth password |
 | `WS_PORT` | 8088 | WebSocket server port |
+| `WS_BIND_HOST` | 127.0.0.1 | Address the WebSocket server listens on (lighttpd proxies to it; use `0.0.0.0` to expose it directly) |
 | `RPC_SERVER_PORT` | 9099 | XML-RPC callback port |
 | `CALLBACK_HOST` | 127.0.0.1 | Callback IP for CCU |
 | `DEBUG` | false | Enable debug logging |
