@@ -1,4 +1,4 @@
-import { BlindVirtualReceiverChannel } from 'src/types/types';
+import { BlindVirtualReceiverChannel } from '../types/types';
 import { Shutters } from '../components/icons/Shutters';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { UiwDown } from '../components/icons/UiwDown';

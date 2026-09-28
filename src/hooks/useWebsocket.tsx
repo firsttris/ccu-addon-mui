@@ -92,7 +92,6 @@ export const useWebsocket = () => {
       );
     }
     // Only depend on the stringified addresses to avoid re-subscribing on datapoint changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(channels.map((c) => c.address)), readyState, deviceId]);
 
   useEffect(() => {

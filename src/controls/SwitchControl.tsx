@@ -1,4 +1,4 @@
-import { SwitchVirtualReceiverChannel } from 'src/types/types';
+import { SwitchVirtualReceiverChannel } from '../types/types';
 import styled from '@emotion/styled';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { EmojioneLightBulb } from '../components/icons/EmojioneLightBlub';

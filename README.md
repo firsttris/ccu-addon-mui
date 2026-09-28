@@ -11,7 +11,6 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org/)
-[![Nx](https://img.shields.io/badge/Nx-143055?style=for-the-badge&logo=nx&logoColor=white)](https://nx.dev/)
 
 **Eine moderne, schnelle und responsive Progressive Web App (PWA) mit integriertem WebSocket-Server für Ihre CCU3.**
 
@@ -131,7 +130,7 @@ Verhindert Standby. Falls es nicht geht, prüfen Sie `chrome://flags` -> `Experi
 ## 💻 Entwicklung und Build
 
 ### Voraussetzungen
-- **Node.js**: v18+
+- **Node.js**: v22.12+
 - **Go**: v1.21+
 
 ### Quick Start
@@ -139,7 +138,7 @@ Verhindert Standby. Falls es nicht geht, prüfen Sie `chrome://flags` -> `Experi
 git clone https://github.com/firsttris/ccu-addon-mui.git
 cd ccu-addon-mui
 npm install
-# IP in proxy.config.json anpassen
+# CCU-IP in vite.config.mts (proxyTargets) anpassen, dann: npm run start:fe:ccu3
 npm start
 ```
 

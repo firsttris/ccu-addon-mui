@@ -1,37 +1,21 @@
 {
   "compilerOptions": {
-    "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "bundler",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "target": "es2015",
+    "target": "es2020",
     "module": "esnext",
-    "lib": ["es2020", "dom"],
+    "lib": ["es2020", "dom", "dom.iterable"],
     "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "baseUrl": ".",
-    "paths": {},
     "jsx": "react-jsx",
+    "jsxImportSource": "@emotion/react",
     "allowJs": false,
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "jsxImportSource": "@emotion/react",
-    "types": ["vite/client", "vitest"]
+    "noEmit": true,
+    "types": ["vite/client", "node"]
   },
-  "files": [],
-  "include": [],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
-  ],
-  "compileOnSave": false,
-  "exclude": ["node_modules", "tmp"]
+  "include": ["src", "e2e", "vite.config.mts", "playwright.config.ts"],
+  "exclude": ["node_modules", "dist"]
 }

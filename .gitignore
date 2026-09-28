@@ -39,10 +39,7 @@ testem.log
 .DS_Store
 Thumbs.db
 
-.nx/cache
-.nx/workspace-data
 vite.config.*.timestamp*
-vitest.config.*.timestamp*
 
 # TanStack Router
 routeTree.gen.ts
@@ -56,3 +53,4 @@ blob-report/
 addon_installer/dist/
 addon_installer/go-server/
 addon_installer/VERSION
+.nyc_output/

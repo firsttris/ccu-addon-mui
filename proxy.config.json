@@ -1,7 +1,0 @@
-{
-  "/ws/mui": {
-    "target": "ws://localhost:8088",
-    "ws": true,
-    "changeOrigin": true
-  }
-}

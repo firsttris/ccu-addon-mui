@@ -1,7 +1,0 @@
-{
-  "/ws/mui": {
-    "target": "ws://192.168.178.26",
-    "ws": true,
-    "changeOrigin": true
-  }
-}

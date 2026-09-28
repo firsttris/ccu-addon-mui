@@ -1,19 +1,28 @@
-/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { VitePWA } from 'vite-plugin-pwa';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import fs from 'fs';
 
-export default defineConfig({
-  root: __dirname,
-  cacheDir: './node_modules/.vite/.',
-  base: process.env.NODE_ENV === 'production' ? '/addons/mui/' : '/',
+// WebSocket target of the go-server, selected via `vite --mode <name>`
+const proxyTargets: Record<string, string> = {
+  development: 'ws://localhost:8088',
+  ccu3: 'ws://192.168.178.26',
+};
+
+export default defineConfig(({ command, mode, isPreview }) => ({
+  base: command === 'build' || isPreview ? '/addons/mui/' : '/',
 
   server: {
     port: 4200,
-    host: 'localhost',
+    host: '0.0.0.0',
+    proxy: {
+      '/ws/mui': {
+        target: proxyTargets[mode] ?? proxyTargets.development,
+        ws: true,
+        changeOrigin: true,
+      },
+    },
   },
 
   preview: {
@@ -27,7 +36,6 @@ export default defineConfig({
       autoCodeSplitting: true,
     }),
     react(),
-    nxViteTsPaths(),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
@@ -57,31 +65,12 @@ export default defineConfig({
     },
   ],
 
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-
   build: {
-    outDir: './dist/.',
+    outDir: './dist/ccu-addon-mui',
+    emptyOutDir: true,
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
     },
   },
-
-  test: {
-    globals: true,
-    cache: {
-      dir: './node_modules/.vitest',
-    },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: './coverage/.',
-      provider: 'v8',
-    },
-  },
-});
+}));
