@@ -8,7 +8,7 @@
     "start:fe:ccu3": "vite --mode ccu3",
     "start:server": "cd go-server && if [ -f .env ]; then set -a; . ./.env; set +a; fi && go build -o ccu-addon-mui-server-local . && exec ./ccu-addon-mui-server-local",
     "dev": "concurrently --kill-others --names server,frontend --prefix-colors blue,green \"npm run start:server\" \"npm run start:fe\"",
-    "build": "tsc && vite build",
+    "build": "vite build && tsc",
     "preview": "vite preview",
     "postbuild": "npm run remove:build && npm run copy:build && npm run tar:gz",
     "test:e2e": "playwright test",
