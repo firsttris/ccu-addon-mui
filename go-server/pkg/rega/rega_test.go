@@ -13,22 +13,33 @@ import (
 
 func TestSanitizeRegaValue(t *testing.T) {
 	tests := []struct {
-		name  string
-		input string
-		want  string
+		name    string
+		input   string
+		want    string
+		wantErr bool
 	}{
 		{name: "boolean true", input: "true", want: "true"},
 		{name: "boolean false", input: "false", want: "false"},
 		{name: "integer", input: "-12", want: "-12"},
 		{name: "float", input: "12.5", want: "12.5"},
 		{name: "string quoted", input: "hello", want: "\"hello\""},
-		{name: "string escaped", input: "a\\b\"c", want: "\"a\\\\b\\\"c\""},
+		{name: "string with umlaut and spaces", input: "Küche an", want: "\"Küche an\""},
+		{name: "quote rejected", input: `a"); system.Exec("x`, wantErr: true},
+		{name: "backslash rejected", input: `a\b`, wantErr: true},
+		{name: "newline rejected", input: "a\nb", wantErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := sanitizeRegaValue(tt.input); got != tt.want {
-				t.Fatalf("sanitizeRegaValue(%q) = %q, want %q", tt.input, got, tt.want)
+			got, err := sanitizeRegaValue(tt.input)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("sanitizeRegaValue(%q) = %q, want error", tt.input, got)
+				}
+				return
+			}
+			if err != nil || got != tt.want {
+				t.Fatalf("sanitizeRegaValue(%q) = %q, %v, want %q", tt.input, got, err, tt.want)
 			}
 		})
 	}
@@ -43,6 +54,50 @@ func TestSetDatapointRejectsInvalidIdentifiers(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "invalid identifier") {
 		t.Fatalf("expected invalid identifier error, got %v", err)
+	}
+}
+
+func TestQueriesRejectInvalidIDs(t *testing.T) {
+	// No HTTP server: validation must fail before any request is made.
+	client := &Client{}
+	injection := `x"; system.Exec("reboot"); string y = "`
+
+	calls := map[string]func() (string, error){
+		"GetRooms deviceId":             func() (string, error) { return client.GetRooms(injection) },
+		"GetTrades deviceId":            func() (string, error) { return client.GetTrades(injection) },
+		"GetChannelsForRoom deviceId":   func() (string, error) { return client.GetChannelsForRoom("1234", injection) },
+		"GetChannelsForRoom roomId":     func() (string, error) { return client.GetChannelsForRoom(injection, "id-abc") },
+		"GetChannelsForTrade deviceId":  func() (string, error) { return client.GetChannelsForTrade("1234", injection) },
+		"GetChannelsForTrade tradeId":   func() (string, error) { return client.GetChannelsForTrade(injection, "id-abc") },
+		"GetChannelsForRoom empty room": func() (string, error) { return client.GetChannelsForRoom("", "id-abc") },
+		"GetRooms empty deviceId":       func() (string, error) { return client.GetRooms("") },
+	}
+
+	for name, call := range calls {
+		t.Run(name, func(t *testing.T) {
+			if _, err := call(); err == nil || !strings.Contains(err.Error(), "invalid") {
+				t.Fatalf("expected validation error, got %v", err)
+			}
+		})
+	}
+}
+
+func TestQueriesAcceptValidIDs(t *testing.T) {
+	var gotScript string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, "{}")
+	}))
+	defer ts.Close()
+
+	client := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+
+	if _, err := client.GetChannelsForRoom("1234", "id-k3j4h5g6f7"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(gotScript, `"1234"`) || !strings.Contains(gotScript, `"id-k3j4h5g6f7"`) {
+		t.Fatalf("expected ids in script, got %s", gotScript)
 	}
 }
 

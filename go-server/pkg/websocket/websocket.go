@@ -5,7 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -17,46 +21,98 @@ import (
 	"ccu-addon-mui-server/pkg/types"
 )
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 const (
 	// Time allowed to write a message to the peer
 	writeWait = 10 * time.Second
-	
+
 	// Time allowed to read the next pong message from the peer
 	pongWait = 60 * time.Second
-	
+
 	// Send pings to peer with this period (must be less than pongWait)
 	pingPeriod = (pongWait * 9) / 10
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+	CheckOrigin: checkOrigin,
 }
 
+// checkOrigin rejects cross-site WebSocket connections (a foreign web page
+// opening ws://<ccu>/ws/mui from the user's browser). Only hostnames are
+// compared: the UI is served through lighttpd (or the Vite dev proxy) on a
+// different port than this server. lighttpd rewrites Host to 127.0.0.1 but
+// passes the original one in X-Forwarded-Host / X-Host.
+func checkOrigin(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		// Non-browser clients don't send Origin and aren't a CSWSH vector.
+		return true
+	}
+
+	u, err := url.Parse(origin)
+	if err != nil || u.Host == "" {
+		return false
+	}
+	originHost := u.Hostname()
+
+	for _, h := range []string{r.Host, r.Header.Get("X-Forwarded-Host"), r.Header.Get("X-Host")} {
+		// X-Forwarded-Host may hold a comma-separated list; the first entry is the client-facing host.
+		h = strings.TrimSpace(strings.Split(h, ",")[0])
+		if h != "" && strings.EqualFold(hostname(h), originHost) {
+			return true
+		}
+	}
+
+	logger.Error(fmt.Sprintf("❌ Rejected WebSocket connection from origin %q (host %q)", origin, r.Host))
+	return false
+}
+
+func hostname(hostport string) string {
+	if u, err := url.Parse("//" + hostport); err == nil && u.Hostname() != "" {
+		return u.Hostname()
+	}
+	return hostport
+}
+
+var clientIDCounter atomic.Uint64
+
 type Client struct {
-	conn     *websocket.Conn
-	send     chan []byte
+	// id identifies this connection in the subscription manager. It is
+	// immutable, so it can be read from any goroutine without locking.
+	id   string
+	conn *websocket.Conn
+	send chan []byte
+
+	mu       sync.Mutex
 	deviceID string
 }
 
+func newClient(conn *websocket.Conn) *Client {
+	return &Client{
+		id:   strconv.FormatUint(clientIDCounter.Add(1), 10),
+		conn: conn,
+		send: make(chan []byte, 1024),
+	}
+}
+
+func (c *Client) DeviceID() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.deviceID
+}
+
+func (c *Client) setDeviceID(deviceID string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.deviceID = deviceID
+}
+
 type Server struct {
-	cfg                *config.Config
-	regaClient         *rega.Client
-	clients            map[*Client]bool
-	clientsMu          sync.RWMutex
-	subscriptionMgr    *subscriptions.Manager
-	httpServer         *http.Server
-	register           chan *Client
-	unregister         chan *Client
-	broadcast          chan []byte
+	cfg             *config.Config
+	regaClient      *rega.Client
+	clients         map[*Client]bool
+	clientsMu       sync.RWMutex
+	subscriptionMgr *subscriptions.Manager
+	httpServer      *http.Server
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -65,21 +121,17 @@ func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 		regaClient:      regaClient,
 		clients:         make(map[*Client]bool),
 		subscriptionMgr: subscriptions.NewManager(),
-		register:        make(chan *Client),
-		unregister:      make(chan *Client),
-		broadcast:       make(chan []byte, 256),
 	}
 }
 
 func (s *Server) Start(ctx context.Context) error {
-	go s.run(ctx)
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handleWebSocket)
 
 	s.httpServer = &http.Server{
-		Addr:    fmt.Sprintf(":%d", s.cfg.WSPort),
-		Handler: mux,
+		Addr:              fmt.Sprintf(":%d", s.cfg.WSPort),
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	logger.Info(fmt.Sprintf("WebSocket Server running on port %d", s.cfg.WSPort))
@@ -92,42 +144,51 @@ func (s *Server) Start(ctx context.Context) error {
 }
 
 func (s *Server) Close(ctx context.Context) error {
+	var err error
 	if s.httpServer != nil {
-		return s.httpServer.Shutdown(ctx)
+		err = s.httpServer.Shutdown(ctx)
 	}
-	return nil
+
+	// Shutdown doesn't track hijacked (upgraded) connections, close them
+	// explicitly. The read pumps then remove the clients.
+	s.clientsMu.RLock()
+	for client := range s.clients {
+		client.conn.Close()
+	}
+	s.clientsMu.RUnlock()
+
+	return err
 }
 
-func (s *Server) run(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case client := <-s.register:
-			s.clientsMu.Lock()
-			s.clients[client] = true
-			s.clientsMu.Unlock()
-			logger.Info("🔗 New WebSocket client connected. Total clients:", len(s.clients))
-		case client := <-s.unregister:
-			s.clientsMu.Lock()
-			if _, ok := s.clients[client]; ok {
-				delete(s.clients, client)
-				close(client.send)
-				if client.deviceID != "" {
-					s.subscriptionMgr.Unsubscribe(client.deviceID)
-					logger.Debug("📝 Unsubscribed device", client.deviceID)
-				}
-			}
-			s.clientsMu.Unlock()
-			logger.Info("🔌 WebSocket client disconnected. Remaining clients:", len(s.clients))
-		}
+func (s *Server) addClient(client *Client) {
+	s.clientsMu.Lock()
+	s.clients[client] = true
+	count := len(s.clients)
+	s.clientsMu.Unlock()
+
+	logger.Info("🔗 New WebSocket client connected. Total clients:", count)
+}
+
+func (s *Server) removeClient(client *Client) {
+	s.clientsMu.Lock()
+	if _, ok := s.clients[client]; ok {
+		delete(s.clients, client)
+		// Safe: BroadcastToClients only sends while holding the read lock,
+		// and handler replies run on the read pump, which calls us last.
+		close(client.send)
+		s.subscriptionMgr.Unsubscribe(client.id)
+		logger.Debug("📝 Unsubscribed device", client.DeviceID())
 	}
+	count := len(s.clients)
+	s.clientsMu.Unlock()
+
+	logger.Info("🔌 WebSocket client disconnected. Remaining clients:", count)
 }
 
 func (s *Server) BroadcastToClients(event *types.CCUEvent) {
-	logger.Debug(fmt.Sprintf("📡 Broadcasting event: %s.%s = %v", 
+	logger.Debug(fmt.Sprintf("📡 Broadcasting event: %s.%s = %v",
 		event.Event.Channel, event.Event.Datapoint, event.Event.Value))
-	
+
 	message, err := json.Marshal(event)
 	if err != nil {
 		logger.Error("Failed to marshal event:", err)
@@ -144,15 +205,9 @@ func (s *Server) BroadcastToClients(event *types.CCUEvent) {
 	logger.Debug(fmt.Sprintf("   Connected clients: %d", len(s.clients)))
 
 	for client := range s.clients {
-		if client.deviceID == "" {
-			logger.Debug(fmt.Sprintf("   Client has no deviceID, skipping"))
-			filteredCount++
-			continue
-		}
-		
-		if !s.subscriptionMgr.ShouldReceiveEvent(client.deviceID, event) {
-			logger.Debug(fmt.Sprintf("   Device %s not subscribed to %s, filtering", 
-				client.deviceID, event.Event.Channel))
+		if !s.subscriptionMgr.ShouldReceiveEvent(client.id, event) {
+			logger.Debug(fmt.Sprintf("   Device %s not subscribed to %s, filtering",
+				client.DeviceID(), event.Event.Channel))
 			filteredCount++
 			continue
 		}
@@ -160,14 +215,14 @@ func (s *Server) BroadcastToClients(event *types.CCUEvent) {
 		select {
 		case client.send <- message:
 			sentCount++
-			logger.Debug(fmt.Sprintf("   ✅ Sent to device %s", client.deviceID))
+			logger.Debug(fmt.Sprintf("   ✅ Sent to device %s", client.DeviceID()))
 		default:
-			logger.Error(fmt.Sprintf("   ⚠️ Device %s buffer full, dropping message", client.deviceID))
+			logger.Error(fmt.Sprintf("   ⚠️ Device %s buffer full, dropping message", client.DeviceID()))
 			droppedCount++
 		}
 	}
 
-	logger.Debug(fmt.Sprintf("📊 Broadcast complete: %d sent, %d filtered, %d dropped, %d total", 
+	logger.Debug(fmt.Sprintf("📊 Broadcast complete: %d sent, %d filtered, %d dropped, %d total",
 		sentCount, filteredCount, droppedCount, len(s.clients)))
 }
 
@@ -178,12 +233,9 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &Client{
-		conn: conn,
-		send: make(chan []byte, 1024),
-	}
+	client := newClient(conn)
 
-	s.register <- client
+	s.addClient(client)
 
 	go s.writePump(client)
 	go s.readPump(client)
@@ -191,7 +243,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) readPump(client *Client) {
 	defer func() {
-		s.unregister <- client
+		s.removeClient(client)
 		client.conn.Close()
 	}()
 
@@ -238,12 +290,12 @@ func (s *Server) writePump(client *Client) {
 				logger.Error("WebSocket write error:", err)
 				return
 			}
-		
+
 		case <-ticker.C:
 			// Send ping to keep connection alive
 			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := client.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				logger.Debug(fmt.Sprintf("Ping failed for device %s: %v", client.deviceID, err))
+				logger.Debug(fmt.Sprintf("Ping failed for device %s: %v", client.DeviceID(), err))
 				return
 			}
 		}
@@ -286,19 +338,19 @@ func (s *Server) handleSubscribe(client *Client, message []byte) {
 		return
 	}
 
-	client.deviceID = msg.DeviceID
-	s.subscriptionMgr.Subscribe(msg.DeviceID, msg.Channels)
+	client.setDeviceID(msg.DeviceID)
+	s.subscriptionMgr.Subscribe(client.id, msg.Channels)
 
 	stats := s.subscriptionMgr.GetStats()
 	logger.Debug(fmt.Sprintf("📝 Device %s subscribed to %d channels", msg.DeviceID, len(msg.Channels)))
-	logger.Debug(fmt.Sprintf("   Total: %d devices, %d channels", stats.Devices, stats.TotalChannels))
-	
+	logger.Debug(fmt.Sprintf("   Total: %d connections, %d channels", stats.Subscribers, stats.TotalChannels))
+
 	if len(msg.Channels) > 0 {
 		preview := msg.Channels
 		if len(preview) > 5 {
 			preview = preview[:5]
 		}
-		logger.Debug(fmt.Sprintf("   Channels: %v%s", preview, 
+		logger.Debug(fmt.Sprintf("   Channels: %v%s", preview,
 			map[bool]string{true: " ...", false: ""}[len(msg.Channels) > 5]))
 	}
 
@@ -306,7 +358,7 @@ func (s *Server) handleSubscribe(client *Client, message []byte) {
 		Type:      "subscribe_response",
 		Success:   true,
 		DeviceID:  msg.DeviceID,
-		Channels:  s.subscriptionMgr.GetSubscriptions(msg.DeviceID),
+		Channels:  s.subscriptionMgr.GetSubscriptions(client.id),
 		RequestID: msg.RequestID,
 	}
 
@@ -334,7 +386,7 @@ func (s *Server) handleGetRooms(client *Client, message []byte) {
 		return
 	}
 
-	client.send <- []byte(result)
+	s.send(client, []byte(result))
 }
 
 func (s *Server) handleGetTrades(client *Client, message []byte) {
@@ -358,7 +410,7 @@ func (s *Server) handleGetTrades(client *Client, message []byte) {
 		return
 	}
 
-	client.send <- []byte(result)
+	s.send(client, []byte(result))
 }
 
 func (s *Server) handleGetChannels(client *Client, message []byte) {
@@ -395,7 +447,7 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 		return
 	}
 
-	client.send <- []byte(result)
+	s.send(client, []byte(result))
 }
 
 func (s *Server) handleSetDatapoint(client *Client, message []byte) {
@@ -416,15 +468,46 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		return
 	}
 
-	valueStr := fmt.Sprintf("%v", msg.Value)
-	
+	valueStr, err := formatValue(msg.Value)
+	if err != nil {
+		s.sendError(client, err.Error())
+		return
+	}
+
 	result, err := s.regaClient.SetDatapoint(msg.InterfaceName, msg.Address, msg.Attribute, valueStr)
 	if err != nil {
 		s.sendError(client, "setDatapoint failed: "+err.Error())
 		return
 	}
 
-	client.send <- []byte(result)
+	s.send(client, []byte(result))
+}
+
+// formatValue converts a JSON value into the string form expected by
+// rega.SetDatapoint. fmt's %v would turn large numbers into exponent notation
+// (1e+06) and null into "<nil>".
+func formatValue(v interface{}) (string, error) {
+	switch x := v.(type) {
+	case bool:
+		return strconv.FormatBool(x), nil
+	case float64:
+		return strconv.FormatFloat(x, 'f', -1, 64), nil
+	case string:
+		return x, nil
+	default:
+		return "", fmt.Errorf("value must be a string, number or boolean")
+	}
+}
+
+// send queues a message without blocking. A full buffer means the write pump
+// is gone or the client stopped reading; blocking here would hang the read
+// pump, so the client would never be removed.
+func (s *Server) send(client *Client, message []byte) {
+	select {
+	case client.send <- message:
+	default:
+		logger.Error(fmt.Sprintf("⚠️ Device %s buffer full, dropping response", client.DeviceID()))
+	}
 }
 
 func (s *Server) sendJSON(client *Client, data interface{}) {
@@ -433,7 +516,7 @@ func (s *Server) sendJSON(client *Client, data interface{}) {
 		logger.Error("Failed to marshal response:", err)
 		return
 	}
-	client.send <- message
+	s.send(client, message)
 }
 
 func (s *Server) sendError(client *Client, errorMsg string) {
@@ -442,10 +525,4 @@ func (s *Server) sendError(client *Client, errorMsg string) {
 		Error: errorMsg,
 	}
 	s.sendJSON(client, response)
-}
-
-func (s *Server) GetClientsCount() int {
-	s.clientsMu.RLock()
-	defer s.clientsMu.RUnlock()
-	return len(s.clients)
 }

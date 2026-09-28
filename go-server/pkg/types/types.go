@@ -26,7 +26,6 @@ func NewCCUEvent(interfaceName, channel, datapoint string, value interface{}) *C
 	}
 }
 
-
 type SubscribeMessage struct {
 	Type      string   `json:"type"`
 	DeviceID  string   `json:"deviceId"`

@@ -6,8 +6,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/kolo/xmlrpc"
 	"github.com/rogpeppe/go-charset/charset"
@@ -26,12 +28,39 @@ func init() {
 
 type EventHandler func(*types.CCUEvent)
 
+// maxRequestBodySize limits callbacks from the CCU. The largest regular
+// payload is newDevices after init, which stays well below this.
+const maxRequestBodySize = 8 << 20
+
+// Timings for keeping the CCU registration alive. The CCU silently drops
+// registrations (e.g. when rfd or the HmIP server restarts), so an interface
+// that has been quiet is pinged, and re-initialised if even that stays
+// unanswered.
+const (
+	defaultCheckInterval  = 1 * time.Minute
+	defaultPingAfter      = 3 * time.Minute
+	defaultReinitAfter    = 6 * time.Minute
+	defaultInitialBackoff = 5 * time.Second
+	defaultMaxBackoff     = 5 * time.Minute
+)
+
 type Server struct {
 	cfg          *config.Config
 	httpServer   *http.Server
 	eventHandler EventHandler
 	clients      map[string]*xmlrpc.Client
 	clientsMu    sync.Mutex
+
+	lastSeen   map[string]time.Time // interfaceID -> last callback from the CCU
+	lastSeenMu sync.Mutex
+
+	registrations sync.WaitGroup
+
+	checkInterval  time.Duration
+	pingAfter      time.Duration
+	reinitAfter    time.Duration
+	initialBackoff time.Duration
+	maxBackoff     time.Duration
 }
 
 type methodCall struct {
@@ -49,14 +78,17 @@ type param struct {
 }
 
 type value struct {
-	Array   *array       `xml:"array,omitempty"`
-	Struct  *structValue `xml:"struct,omitempty"`
-	String  *string      `xml:"string,omitempty"`
-	Int     *int         `xml:"int,omitempty"`
-	I4      *int         `xml:"i4,omitempty"`
-	Double  *float64     `xml:"double,omitempty"`
-	Boolean *int         `xml:"boolean,omitempty"`
-	Text    string       `xml:",chardata"` // Fallback for plain text content
+	Array    *array       `xml:"array,omitempty"`
+	Struct   *structValue `xml:"struct,omitempty"`
+	String   *string      `xml:"string,omitempty"`
+	Int      *int         `xml:"int,omitempty"`
+	I4       *int         `xml:"i4,omitempty"`
+	I8       *int64       `xml:"i8,omitempty"`
+	DateTime *string      `xml:"dateTime.iso8601,omitempty"`
+	Base64   *string      `xml:"base64,omitempty"`
+	Double   *float64     `xml:"double,omitempty"`
+	Boolean  *int         `xml:"boolean,omitempty"`
+	Text     string       `xml:",chardata"` // Fallback for plain text content
 }
 
 type array struct {
@@ -81,6 +113,13 @@ func NewServer(cfg *config.Config, eventHandler EventHandler) *Server {
 		cfg:          cfg,
 		eventHandler: eventHandler,
 		clients:      make(map[string]*xmlrpc.Client),
+		lastSeen:     make(map[string]time.Time),
+
+		checkInterval:  defaultCheckInterval,
+		pingAfter:      defaultPingAfter,
+		reinitAfter:    defaultReinitAfter,
+		initialBackoff: defaultInitialBackoff,
+		maxBackoff:     defaultMaxBackoff,
 	}
 }
 
@@ -94,19 +133,27 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("/", s.handleXMLRPC)
 
 	s.httpServer = &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", bindHost, s.cfg.RPCServerPort),
-		Handler: mux,
+		Addr:              fmt.Sprintf("%s:%d", bindHost, s.cfg.RPCServerPort),
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
+	// Bind before calling init: the CCU calls back (listDevices, newDevices)
+	// right away and would fail if the port weren't open yet.
+	listener, err := net.Listen("tcp", s.httpServer.Addr)
+	if err != nil {
+		return err
 	}
 
 	logger.Debug(fmt.Sprintf("✅ RPC Server created on %s:%d", bindHost, s.cfg.RPCServerPort))
 
-	go s.connectToCCU("BidCos-RF", s.cfg.RPCPort)
-	go s.connectToCCU("HmIP-RF", s.cfg.HmIPPort)
+	s.startRegistration(ctx, "BidCos-RF", s.cfg.RPCPort)
+	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort)
 
 	logger.Info("✅ RPC Server started and listening for callbacks from CCU")
-	logger.Info(fmt.Sprintf("   CCU will send events to: http://%s:%d", s.cfg.CallbackHost, s.cfg.RPCServerPort))
+	logger.Info(fmt.Sprintf("   CCU will send events to: %s", s.callbackURL()))
 
-	if err := s.httpServer.ListenAndServe(); err != http.ErrServerClosed {
+	if err := s.httpServer.Serve(listener); err != http.ErrServerClosed {
 		return err
 	}
 	return nil
@@ -119,16 +166,38 @@ func (s *Server) Close(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) callbackURL() string {
+	return fmt.Sprintf("http://%s:%d", s.cfg.CallbackHost, s.cfg.RPCServerPort)
+}
+
+// Unregister removes the callback registrations from the CCU. The context
+// passed to Start must be cancelled first, so the registration loops stop and
+// can't re-register afterwards.
 func (s *Server) Unregister(ctx context.Context) error {
+	done := make(chan struct{})
+	go func() {
+		s.registrations.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
+
+	// The CCU identifies a registration by its callback URL; init(url, "")
+	// removes it. An empty URL would not match any registration.
+	callbackURL := s.callbackURL()
 
 	for interfaceName, client := range s.clients {
 		interfaceID := fmt.Sprintf("websocket-server-%s", interfaceName)
 		logger.Info("📤 Unregistering", interfaceID, "...")
 
 		var result interface{}
-		if err := client.Call("init", []interface{}{"", ""}, &result); err != nil {
+		if err := client.Call("init", []interface{}{callbackURL, ""}, &result); err != nil {
 			logger.Error(fmt.Sprintf("❌ Failed to unregister %s:", interfaceName), err)
 		} else {
 			logger.Info(fmt.Sprintf("✅ Unregistered %s", interfaceID))
@@ -138,33 +207,100 @@ func (s *Server) Unregister(ctx context.Context) error {
 	return nil
 }
 
-func (s *Server) connectToCCU(interfaceName string, port int) {
-	logger.Debug(fmt.Sprintf("🔌 Attempting to connect to %s at %s:%d...", interfaceName, s.cfg.CCUHost, port))
+func interfaceIDFor(interfaceName string) string {
+	return fmt.Sprintf("websocket-server-%s", interfaceName)
+}
 
+func (s *Server) newCCUClient(interfaceName string, port int) (*xmlrpc.Client, error) {
 	url := fmt.Sprintf("http://%s:%d", s.cfg.CCUHost, port)
 
-	var transport http.RoundTripper
-	
+	// Without timeouts a hanging CCU would block the registration loop forever.
+	var transport http.RoundTripper = &http.Transport{
+		DialContext:           (&net.Dialer{Timeout: 5 * time.Second}).DialContext,
+		ResponseHeaderTimeout: 30 * time.Second,
+	}
+
 	if s.cfg.CCUUser != "" && s.cfg.CCUPass != "" {
 		logger.Debug(fmt.Sprintf("🔑 Using basic auth for port %d", port))
 		transport = &basicAuthTransport{
 			username: s.cfg.CCUUser,
 			password: s.cfg.CCUPass,
+			base:     transport,
 		}
 	}
 
 	client, err := xmlrpc.NewClient(url, transport)
 	if err != nil {
-		logger.Error(fmt.Sprintf("❌ Failed to create XML-RPC client for %s:", interfaceName), err)
-		return
+		return nil, err
 	}
 
 	s.clientsMu.Lock()
 	s.clients[interfaceName] = client
 	s.clientsMu.Unlock()
 
-	callbackURL := fmt.Sprintf("http://%s:%d", s.cfg.CallbackHost, s.cfg.RPCServerPort)
-	interfaceID := fmt.Sprintf("websocket-server-%s", interfaceName)
+	return client, nil
+}
+
+func (s *Server) startRegistration(ctx context.Context, interfaceName string, port int) {
+	client, err := s.newCCUClient(interfaceName, port)
+	if err != nil {
+		logger.Error(fmt.Sprintf("❌ Failed to create XML-RPC client for %s:", interfaceName), err)
+		return
+	}
+
+	s.registrations.Add(1)
+	go func() {
+		defer s.registrations.Done()
+		s.maintainRegistration(ctx, client, interfaceName, port)
+	}()
+}
+
+// maintainRegistration registers the callback with init, retrying with
+// backoff while the interface isn't reachable (e.g. during CCU boot), and
+// re-registers when the CCU stops sending callbacks.
+func (s *Server) maintainRegistration(ctx context.Context, client *xmlrpc.Client, interfaceName string, port int) {
+	interfaceID := interfaceIDFor(interfaceName)
+	registered := false
+	backoff := s.initialBackoff
+
+	for {
+		wait := s.checkInterval
+
+		idle := s.idleTime(interfaceID)
+		switch {
+		case !registered || idle >= s.reinitAfter:
+			if registered {
+				logger.Info(fmt.Sprintf("🔄 No callbacks from %s for %s, re-registering", interfaceName, idle.Round(time.Second)))
+			}
+			if err := s.initInterface(client, interfaceName, port); err != nil {
+				registered = false
+				wait = backoff
+				backoff = min(backoff*2, s.maxBackoff)
+			} else {
+				registered = true
+				backoff = s.initialBackoff
+				s.markSeen(interfaceID)
+			}
+		case idle >= s.pingAfter:
+			// The CCU answers a ping with a PONG event to our callback,
+			// which resets the idle time if the registration is still alive.
+			var result interface{}
+			if err := client.Call("ping", []interface{}{interfaceID}, &result); err != nil {
+				logger.Debug(fmt.Sprintf("Ping to %s failed: %v", interfaceName, err))
+			}
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(wait):
+		}
+	}
+}
+
+func (s *Server) initInterface(client *xmlrpc.Client, interfaceName string, port int) error {
+	callbackURL := s.callbackURL()
+	interfaceID := interfaceIDFor(interfaceName)
 
 	logger.Debug(fmt.Sprintf("📞 Calling init on %s with callback URL: %s", interfaceName, callbackURL))
 
@@ -172,21 +308,41 @@ func (s *Server) connectToCCU(interfaceName string, port int) {
 	if err := client.Call("init", []interface{}{callbackURL, interfaceID}, &result); err != nil {
 		logger.Error(fmt.Sprintf("❌ Failed to initialize %s:", interfaceName), err.Error())
 		logger.Error(fmt.Sprintf("   Make sure %s:%d is reachable", s.cfg.CCUHost, port))
-		logger.Debug("   Full error:", err)
-	} else {
-		logger.Info(fmt.Sprintf("✅ Connected to %s on %s:%d", interfaceName, s.cfg.CCUHost, port))
-		logger.Debug(fmt.Sprintf("   %s will now send events to %s with ID: %s", interfaceName, callbackURL, interfaceID))
+		return err
 	}
+
+	logger.Info(fmt.Sprintf("✅ Connected to %s on %s:%d", interfaceName, s.cfg.CCUHost, port))
+	logger.Debug(fmt.Sprintf("   %s will now send events to %s with ID: %s", interfaceName, callbackURL, interfaceID))
+	return nil
+}
+
+func (s *Server) markSeen(interfaceID string) {
+	s.lastSeenMu.Lock()
+	defer s.lastSeenMu.Unlock()
+	s.lastSeen[interfaceID] = time.Now()
+}
+
+func (s *Server) idleTime(interfaceID string) time.Duration {
+	s.lastSeenMu.Lock()
+	defer s.lastSeenMu.Unlock()
+	last, ok := s.lastSeen[interfaceID]
+	if !ok {
+		return 0
+	}
+	return time.Since(last)
 }
 
 type basicAuthTransport struct {
 	username string
 	password string
+	base     http.RoundTripper
 }
 
 func (t *basicAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	// A RoundTripper must not modify the caller's request.
+	req = req.Clone(req.Context())
 	req.SetBasicAuth(t.username, t.password)
-	return http.DefaultTransport.RoundTrip(req)
+	return t.base.RoundTrip(req)
 }
 
 func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
@@ -199,13 +355,12 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := io.ReadAll(r.Body)
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxRequestBodySize))
 	if err != nil {
 		logger.Error("Failed to read request body:", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
 
 	logger.Debug(fmt.Sprintf("   Request body: %s", string(body)))
 
@@ -228,8 +383,10 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 		response = s.handleSystemMulticall(&call)
 	case "system.listMethods":
 		response = s.handleSystemListMethods()
+	case "event":
+		response = s.handleEvent(&call)
 	case "listDevices":
-		response = s.handleListDevices()
+		response = s.handleListDevices(&call)
 	case "init":
 		response = s.handleInit(&call)
 	default:
@@ -238,35 +395,35 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/xml")
-	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(response)))
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(response))
+	if _, err := io.WriteString(w, response); err != nil {
+		logger.Debug("Failed to write XML-RPC response:", err)
+	}
 }
 
 func (s *Server) handleInit(call *methodCall) string {
 	logger.Debug("📞 init() called by CCU")
-	
+
 	if len(call.Params.Param) >= 2 {
 		callbackURL := ""
 		interfaceID := ""
-		
+
 		if call.Params.Param[0].Value.String != nil {
 			callbackURL = *call.Params.Param[0].Value.String
 		}
 		if call.Params.Param[1].Value.String != nil {
 			interfaceID = *call.Params.Param[1].Value.String
 		}
-		
+
 		logger.Debug(fmt.Sprintf("   Callback URL: %s", callbackURL))
 		logger.Debug(fmt.Sprintf("   Interface ID: %s", interfaceID))
-		
+
 		if callbackURL == "" && interfaceID == "" {
 			logger.Debug("   Deregistration request (empty params)")
 		} else {
 			logger.Debug(fmt.Sprintf("   ✅ Registered interface '%s' with callback '%s'", interfaceID, callbackURL))
 		}
 	}
-	
+
 	return s.serializeMethodResponse("")
 }
 
@@ -309,18 +466,43 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 			}
 		}
 
-		if methodName == "event" && len(params) >= 4 {
-			interfaceName := fmt.Sprint(params[0])
-			address := fmt.Sprint(params[1])
-			datapoint := fmt.Sprint(params[2])
-			value := params[3]
-
-			logger.Debug(fmt.Sprintf("   ✅ Event %d: %s | %s | %s = %v", i+1, interfaceName, address, datapoint, value))
-			s.handleCCUEvent(interfaceName, address, datapoint, value)
+		if methodName == "event" {
+			logger.Debug(fmt.Sprintf("   Event %d", i+1))
+			s.dispatchEvent(params)
 		}
 	}
 
 	return s.serializeMethodResponse("")
+}
+
+// handleEvent handles a direct event call, which the CCU uses instead of
+// system.multicall for single events on some interfaces.
+func (s *Server) handleEvent(call *methodCall) string {
+	params := make([]interface{}, 0, len(call.Params.Param))
+	for i := range call.Params.Param {
+		params = append(params, s.extractValue(&call.Params.Param[i].Value))
+	}
+	s.dispatchEvent(params)
+	return s.serializeMethodResponse("")
+}
+
+// dispatchEvent takes the params of an event call:
+// (interfaceID, address, datapoint, value).
+func (s *Server) dispatchEvent(params []interface{}) {
+	if len(params) < 4 {
+		logger.Debug(fmt.Sprintf("   Ignoring event with %d params", len(params)))
+		return
+	}
+
+	interfaceID := fmt.Sprint(params[0])
+	address := fmt.Sprint(params[1])
+	datapoint := fmt.Sprint(params[2])
+	value := params[3]
+
+	s.markSeen(interfaceID)
+
+	logger.Debug(fmt.Sprintf("   ✅ Event: %s | %s | %s = %v", interfaceID, address, datapoint, value))
+	s.handleCCUEvent(interfaceID, address, datapoint, value)
 }
 
 func (s *Server) handleSystemListMethods() string {
@@ -330,8 +512,13 @@ func (s *Server) handleSystemListMethods() string {
 	return s.serializeArrayResponse(methods)
 }
 
-func (s *Server) handleListDevices() string {
+func (s *Server) handleListDevices(call *methodCall) string {
 	logger.Debug("📱 listDevices called by CCU")
+	if len(call.Params.Param) > 0 {
+		if id, ok := s.extractValue(&call.Params.Param[0].Value).(string); ok {
+			s.markSeen(id)
+		}
+	}
 	logger.Debug("   Returning empty device list")
 	return s.serializeArrayResponse([]string{})
 }
@@ -346,13 +533,28 @@ func (s *Server) extractValue(v *value) interface{} {
 	if v.I4 != nil {
 		return *v.I4
 	}
+	if v.I8 != nil {
+		return *v.I8
+	}
 	if v.Double != nil {
 		return *v.Double
 	}
 	if v.Boolean != nil {
 		return *v.Boolean != 0
 	}
+	if v.DateTime != nil {
+		return *v.DateTime
+	}
+	if v.Base64 != nil {
+		return *v.Base64
+	}
+	if v.Array != nil || v.Struct != nil {
+		// Not used in events; the chardata would only be the whitespace
+		// between the child elements.
+		return nil
+	}
 	if v.Text != "" {
+		// An untyped <value> is a string per the XML-RPC spec.
 		return v.Text
 	}
 	return nil
@@ -374,7 +576,7 @@ func (s *Server) serializeArrayResponse(items []string) string {
 	for _, item := range items {
 		arrayItems.WriteString(fmt.Sprintf("<value><string>%s</string></value>", item))
 	}
-	
+
 	return fmt.Sprintf(`<?xml version="1.0"?>
 <methodResponse>
 <params>
@@ -395,8 +597,10 @@ func (s *Server) handleCCUEvent(interfaceName, address, datapoint string, value 
 	logger.Debug(fmt.Sprintf("🔔 Processing CCU Event: %s | %s.%s = %v", interfaceName, address, datapoint, value))
 
 	event := types.NewCCUEvent(interfaceName, address, datapoint, value)
-	
-	go s.eventHandler(event)
+
+	// Called synchronously so events reach clients in the order the CCU sent
+	// them. The handler only does non-blocking channel sends.
+	s.eventHandler(event)
 
 	logger.Debug("   📤 Event sent to WebSocket handler")
 }

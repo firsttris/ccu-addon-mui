@@ -26,6 +26,8 @@ type Client struct {
 }
 
 var safeIdentifierRegex = regexp.MustCompile(`^[a-zA-Z0-9_:.-]+$`)
+var deviceIDRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
+var objectIDRegex = regexp.MustCompile(`^[0-9]{1,10}$`)
 var numberRegex = regexp.MustCompile(`^-?[0-9]+\.?[0-9]*$`)
 
 func NewClient(cfg *config.Config) *Client {
@@ -38,15 +40,17 @@ func NewClient(cfg *config.Config) *Client {
 	}
 }
 
-func sanitizeRegaValue(value string) string {
+func sanitizeRegaValue(value string) (string, error) {
 	// Numbers and booleans are safe as-is
 	if value == "true" || value == "false" || numberRegex.MatchString(value) {
-		return value
+		return value, nil
 	}
-	// Escape and quote strings
-	escaped := strings.ReplaceAll(value, "\\", "\\\\")
-	escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
-	return "\"" + escaped + "\""
+	// ReGa has no reliable escape sequences inside string literals, so
+	// characters that could end the literal are rejected instead of escaped.
+	if strings.ContainsAny(value, "\"\\\r\n") {
+		return "", fmt.Errorf("value contains unsupported characters")
+	}
+	return "\"" + value + "\"", nil
 }
 
 func (c *Client) Execute(script string) (string, error) {
@@ -79,7 +83,7 @@ func (c *Client) Execute(script string) (string, error) {
 	}
 
 	result := string(body)
-	
+
 	if !utf8.Valid(body) {
 		decoder := charmap.ISO8859_1.NewDecoder()
 		utf8Body, err := io.ReadAll(transform.NewReader(bytes.NewReader(body), decoder))
@@ -88,8 +92,7 @@ func (c *Client) Execute(script string) (string, error) {
 		}
 		result = string(utf8Body)
 	}
-	
-	
+
 	if matches := xmlWrapperRegex.FindStringSubmatch(result); len(matches) > 1 {
 		return matches[1], nil
 	}
@@ -112,17 +115,41 @@ func (c *Client) TestConnection() error {
 	return nil
 }
 
+// validateIDs guards the values substituted into ReGa scripts: they end up
+// inside string literals, so anything outside the whitelist could break out
+// and run arbitrary ReGa code (including system.Exec).
+func validateIDs(deviceID string, objectIDs ...string) error {
+	if !deviceIDRegex.MatchString(deviceID) {
+		return fmt.Errorf("invalid deviceId")
+	}
+	for _, id := range objectIDs {
+		if !objectIDRegex.MatchString(id) {
+			return fmt.Errorf("invalid room or trade id")
+		}
+	}
+	return nil
+}
+
 func (c *Client) GetRooms(deviceID string) (string, error) {
+	if err := validateIDs(deviceID); err != nil {
+		return "", err
+	}
 	script := strings.ReplaceAll(getRoomsScript, "{{DEVICE_ID}}", deviceID)
 	return c.Execute(script)
 }
 
 func (c *Client) GetTrades(deviceID string) (string, error) {
+	if err := validateIDs(deviceID); err != nil {
+		return "", err
+	}
 	script := strings.ReplaceAll(getTradesScript, "{{DEVICE_ID}}", deviceID)
 	return c.Execute(script)
 }
 
 func (c *Client) GetChannelsForRoom(roomID, deviceID string) (string, error) {
+	if err := validateIDs(deviceID, roomID); err != nil {
+		return "", err
+	}
 	script := getChannelsForRoomScript
 	script = strings.ReplaceAll(script, "{{ROOM_ID}}", roomID)
 	script = strings.ReplaceAll(script, "{{DEVICE_ID}}", deviceID)
@@ -130,6 +157,9 @@ func (c *Client) GetChannelsForRoom(roomID, deviceID string) (string, error) {
 }
 
 func (c *Client) GetChannelsForTrade(tradeID, deviceID string) (string, error) {
+	if err := validateIDs(deviceID, tradeID); err != nil {
+		return "", err
+	}
 	script := getChannelsForTradeScript
 	script = strings.ReplaceAll(script, "{{TRADE_ID}}", tradeID)
 	script = strings.ReplaceAll(script, "{{DEVICE_ID}}", deviceID)
@@ -141,10 +171,15 @@ func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (
 	if !safeIdentifierRegex.MatchString(interfaceName) || !safeIdentifierRegex.MatchString(address) || !safeIdentifierRegex.MatchString(attribute) {
 		return "", fmt.Errorf("invalid identifier in interfaceName, address, or attribute")
 	}
-	
+
+	regaValue, err := sanitizeRegaValue(value)
+	if err != nil {
+		return "", err
+	}
+
 	script := strings.ReplaceAll(setDatapointScript, "{{INTERFACE}}", interfaceName)
 	script = strings.ReplaceAll(script, "{{ADDRESS}}", address)
 	script = strings.ReplaceAll(script, "{{ATTRIBUTE}}", attribute)
-	script = strings.ReplaceAll(script, "{{VALUE}}", sanitizeRegaValue(value))
+	script = strings.ReplaceAll(script, "{{VALUE}}", regaValue)
 	return c.Execute(script)
 }

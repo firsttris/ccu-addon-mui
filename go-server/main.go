@@ -39,7 +39,6 @@ func main() {
 		}
 	}()
 
-	time.Sleep(1 * time.Second)
 	if err := regaClient.TestConnection(); err != nil {
 		logger.Error("CCU connection test failed:", err)
 	}
@@ -55,7 +54,11 @@ func main() {
 	}
 
 	logger.Info("🛑 Shutting down...")
-	
+
+	// Stop the CCU registration loops before unregistering, so they can't
+	// re-register in between.
+	cancel()
+
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
 
