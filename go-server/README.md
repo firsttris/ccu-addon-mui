@@ -87,6 +87,9 @@ DEBUG=false                   # Enable debug logging
 | `CCU_USER` | - | Basic auth username |
 | `CCU_PASS` | - | Basic auth password |
 | `WS_PORT` | 8088 | WebSocket server port |
+| `REGA_PORT` | 8181 (8183 for `localhost`) | ReGa script port |
+| `RPC_PORT` | 2001 | BidCos-RF XML-RPC port of the CCU |
+| `HMIP_PORT` | 2010 | HmIP-RF XML-RPC port of the CCU |
 | `AUTH_MODE` | ccu | `ccu`: log in once per device with a CCU WebUI user; `none`: no login (everyone on the network can control all devices) |
 | `CCU_WEBUI_URL` | http://`CCU_HOST` | CCU WebUI whose JSON-RPC API (`/api/homematic.cgi`) verifies logins |
 | `AUTH_KEY_FILE` | /usr/local/etc/config/mui-auth.key (CCU), ./mui-auth.key (local) | Key that signs the login tokens; created on first start. Deleting it logs out all devices |
@@ -100,9 +103,30 @@ DEBUG=false                   # Enable debug logging
 > - When running on the CCU3: Use `127.0.0.1`
 > - When running on a separate machine: Use the **actual IP** of that machine (e.g., `192.168.178.134`)
 
+On the CCU, settings go into `/usr/local/etc/config/mui.conf` (e.g. `AUTH_MODE=none`), which the rc.d script loads on start. It is kept across add-on updates and, unlike the add-on directory, not served to the web.
+
+## 🔌 WebSocket Protocol
+
+All messages are JSON objects with a `type`. With `AUTH_MODE=ccu`, a connection must log in (`login`) or present a stored token (`auth`) first; everything else is answered with `{"type": "error", "code": "AUTH_REQUIRED"}`.
+
+| Request | Response |
+|---------|----------|
+| `{"type": "auth", "token": "…"}` | `{"type": "auth_response", "success", "authRequired", "token"}`: the token is renewed, store the new one |
+| `{"type": "login", "username", "password"}` | `auth_response` with a token (valid for a year) or a `code`: `INVALID_CREDENTIALS`, `TOO_MANY_ATTEMPTS`, `CCU_UNREACHABLE` |
+| `{"type": "getRooms", "deviceId"}` | `{"deviceId", "rooms": [{"id", "name"}]}` |
+| `{"type": "getTrades", "deviceId"}` | `{"deviceId", "trades": [{"id", "name"}]}` |
+| `{"type": "getChannels", "deviceId", "roomId" \| "tradeId"}` | `{"deviceId", "roomId" \| "tradeId", "channels": [{"id", "address", "name", "type", "interfaceName", "datapoints", "statusAddress", "status": {"LOW_BAT", "UNREACH"}}]}` |
+| `{"type": "subscribe", "deviceId", "channels": ["<address>"]}` | `subscribe_response`; then `{"event": {"channel", "datapoint", "value"}}` for these channels |
+| `{"type": "setDatapoint", "requestId", "interfaceName", "address", "attribute", "value"}` | `{"type": "setDatapoint_response", "requestId", "success", "code"}`; `code` is `UNREACH` (not sent), `NOT_FOUND`, `INVALID_REQUEST` or `CCU_ERROR` |
+| `{"type": "getDeviceProblems"}` | `{"type": "deviceProblems", "devices": [{"address", "name", "roomId", "roomName", "lowBat", "unreach"}]}` |
+
 ## 🧪 Testing
 
 ### Quick Local Testing
+
+To run the server together with the frontend, use `npm run dev` in the repository root (loads `go-server/.env`).
+
+To run only the server:
 
 Use the provided test script (make it executable first):
 ```bash
@@ -124,17 +148,20 @@ CCU_HOST=192.168.178.111 DEBUG=true make run
 
 ## 🚀 Deployment to CCU3
 
+Normally the server is part of the add-on: `npm run build` in the repository root creates the installable `mui-<version>.tar.gz`.
+
+To replace only the server binary on a CCU with the add-on installed:
+
 1. **Build for ARM**:
     ```bash
     make build-ccu3
     ```
 
-2. **Copy to CCU3**:
+2. **Copy to CCU3 and restart**:
     ```bash
-    scp ccu-addon-mui-server-arm root@ccu3-ip:/usr/local/addons/mui/server/
+    scp ccu-addon-mui-server-arm root@ccu3-ip:/usr/local/addons/mui/go-server/ccu-addon-mui-server
+    ssh root@ccu3-ip /usr/local/etc/config/rc.d/mui restart
     ```
-
-3. Update rc.d script to use Go binary instead of Node.js
 
 ## 📂 Project Structure
 
@@ -142,6 +169,7 @@ CCU_HOST=192.168.178.111 DEBUG=true make run
 go-server/
 ├── main.go                    # Entry point
 ├── pkg/
+│   ├── auth/                 # Login with CCU users, tokens
 │   ├── config/               # Configuration
 │   ├── logger/               # Logging
 │   ├── types/                # Type definitions
@@ -157,9 +185,11 @@ go-server/
 ## 🧩 Dependencies
 
 - `github.com/gorilla/websocket` - WebSocket implementation
-- `github.com/kolo/xmlrpc` - XML-RPC client/server
+- `github.com/kolo/xmlrpc` - XML-RPC client
+- `github.com/rogpeppe/go-charset` - ISO-8859-1 support for XML-RPC callbacks
+- `golang.org/x/text` - ISO-8859-1 decoding of ReGa responses
 
-*All dependencies are vendored into the static binary.*
+*All dependencies are compiled into the static binary.*
 
 ## 🛠️ Cross-Compilation
 

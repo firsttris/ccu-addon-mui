@@ -23,7 +23,7 @@ Meine Motivation war es, die bewährte CCU3 mit moderner Software aufzufrischen 
 ## 🚀 Funktionen
 
 - **Moderne UI**: Responsives Design, optimiert für Tablets und mobile Geräte.
-- **Geräteunterstützung**: Steuerung von Schaltern, Thermostaten, Jalousien, Türen und Fußbodenheizungen.
+- **Geräteunterstützung**: Steuerung von Schaltern, Thermostaten, Jalousien, Türen und Fußbodenheizungen, Anzeige von Energiezählern.
 - **Echtzeit-Updates**: WebSocket-basierte Kommunikation für sofortige Gerätestatus-Updates.
 - **Gerätezustand**: Schwache Batterien und nicht erreichbare Geräte werden an der Kachel und gesammelt auf der Startseite angezeigt.
 - **Anmeldung mit CCU-Benutzer**: Einmal pro Gerät anmelden, danach bleibt es angemeldet.
@@ -174,9 +174,13 @@ npm run build
 Erstellt React-App, Go-Server und ein installierbares `.tar.gz` Archiv.
 
 ### WebSocket-Test
-Nutzen Sie einen [WebSocket Test Client](https://chromewebstore.google.com/detail/websocket-test-client/fgponpodhbmadfljofbimhhlengambbn).
-URL: `ws://<CCU-IP>/ws/mui`
-Test-Nachricht: `{"type": "getRooms", "deviceId": "test-device"}`
+Am einfachsten mit [websocat](https://github.com/vi/websocat) auf der Kommandozeile. Browser-Erweiterungen werden von der Origin-Prüfung des Servers abgelehnt.
+```bash
+websocat ws://<CCU-IP>/ws/mui
+{"type": "login", "username": "Admin", "password": "<CCU-Passwort>"}
+{"type": "getRooms", "deviceId": "test-device"}
+```
+Ohne vorheriges `login` antwortet der Server mit `authentication required` (außer bei `AUTH_MODE=none`). Alle Nachrichten sind in der [README des Go-Servers](go-server/README.md#-websocket-protocol) beschrieben.
 
 ## 🤝 Beiträge
 
