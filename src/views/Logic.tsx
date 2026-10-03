@@ -20,22 +20,22 @@ const Container = ({ children }: Children) => (
   <div className="flex max-w-3xl flex-col gap-4">{children}</div>
 );
 
-const List = ({ children, ...props }: HTMLAttributes<HTMLUListElement>) => (
+export const List = ({ children, ...props }: HTMLAttributes<HTMLUListElement>) => (
   <ul className="tile-edge flex flex-col divide-y overflow-hidden rounded-2xl border bg-card" {...props}>
     {children}
     <li className="hidden px-4 py-8 text-center text-sm text-muted-foreground only:block">{m.EMPTY_LIST()}</li>
   </ul>
 );
 
-const Item = ({ children }: Children) => (
+export const Item = ({ children }: Children) => (
   <li className="flex min-h-16 items-center justify-between gap-3 px-4 py-3">{children}</li>
 );
 
-const Name = ({ children }: Children) => (
+export const Name = ({ children }: Children) => (
   <span className="flex min-w-0 flex-wrap items-center gap-2 font-medium wrap-anywhere">{children}</span>
 );
 
-const Controls = ({ children }: Children) => <span className="flex shrink-0 items-center gap-2">{children}</span>;
+export const Controls = ({ children }: Children) => <span className="flex shrink-0 items-center gap-2">{children}</span>;
 
 const Toggle = ({ on, alarm, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { on: boolean; alarm?: boolean }) => (
   <button
@@ -88,7 +88,7 @@ const DraftInput = ({
   );
 };
 
-const SysvarControl = ({ sysvar, onSet }: { sysvar: Sysvar; onSet: (value: string | number | boolean) => void }) => {
+export const SysvarControl = ({ sysvar, onSet }: { sysvar: Sysvar; onSet: (value: string | number | boolean) => void }) => {
   switch (sysvar.kind) {
     case 'bool':
     case 'alarm': {

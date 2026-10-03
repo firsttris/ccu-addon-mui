@@ -416,5 +416,20 @@
   "ALARMS_MORE": "+{count} weitere",
   "ALARM_TIMES": "{count}× ausgelöst",
   "ALARM_ACTIVE": "Ausgelöst",
-  "ALARM_OVER": "Vorbei, noch nicht bestätigt"
+  "ALARM_OVER": "Vorbei, noch nicht bestätigt",
+  "FAVORITES": "Favoriten",
+  "NO_FAVORITES": "Noch keine Favoriten",
+  "FAVORITES_HINT": "Stell dir eigene Listen aus Geräten, Systemvariablen und Programmen zusammen, zum Beispiel „Abends“ oder „Urlaub“. Sie gelten auch in der CCU-Oberfläche.",
+  "NEW_FAVORITE_LIST": "Neue Liste",
+  "FAVORITE_LIST_NAME": "Name der Liste",
+  "EDIT_FAVORITE_LIST": "Liste bearbeiten",
+  "EDIT": "Bearbeiten",
+  "FAVORITE_EMPTY": "Diese Liste ist noch leer. Über „Bearbeiten“ fügst du Geräte, Systemvariablen und Programme hinzu.",
+  "FAVORITE_ITEMS": "In der Liste",
+  "FAVORITE_ADD_ITEMS": "Hinzufügen",
+  "FAVORITE_SEARCH": "Gerät, Variable oder Programm suchen",
+  "REMOVE_FROM_LIST": "Aus der Liste entfernen",
+  "ADD_TO_LIST": "Zur Liste hinzufügen",
+  "SECTION_LOGIC": "Systemvariablen & Programme",
+  "DELETE_FAVORITE_CONFIRM": "Die Liste wird gelöscht, die Geräte, Variablen und Programme darin bleiben erhalten."
 }

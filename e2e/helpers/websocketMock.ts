@@ -4,6 +4,7 @@ type Message = {
   type: string;
   roomId?: string;
   tradeId?: string;
+  favoriteId?: string;
   deviceId?: string;
   channel?: string;
   datapoint?: string;
@@ -36,6 +37,27 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
     // Alarm messages: none unless a test sets them (__wsMock.setAlarms)
     let alarms: AnyPayload[] = [];
+
+    const sysvars = [
+      { id: 950, name: 'Anwesenheit', visible: true, kind: 'bool', value: true, trueName: 'anwesend', falseName: 'abwesend' },
+    ];
+    const programs = [{ id: 1201, name: 'Rollläden abends schließen', active: true, visible: true }];
+
+    // Favorite lists of the logged-in user
+    let nextFavoriteId = 1400;
+    let favorites: { id: number; name: string; items: { id: number; type: string }[] }[] = [
+      {
+        id: 1300,
+        name: 'Abends',
+        items: [
+          { id: 101, type: 'CHANNEL' },
+          { id: 301, type: 'CHANNEL' },
+          { id: 950, type: 'SYSVAR' },
+          { id: 1201, type: 'PROGRAM' },
+        ],
+      },
+      { id: 1301, name: 'Gäste', items: [{ id: 301, type: 'CHANNEL' }] },
+    ];
 
     let serviceMessages = [
       { id: 501, type: 'UNREACH', timestamp: '2026-01-15 09:12:00', address: '000A9D89A7AF25', name: 'Wandthermostat Flur', roomId: 1, roomName: 'Wohnzimmer' },
@@ -540,6 +562,50 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         return;
       }
 
+      if (message.type === 'getSysvars') {
+        delayedBroadcast({ type: 'getSysvars_response', sysvars, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'getPrograms') {
+        delayedBroadcast({ type: 'getPrograms_response', programs, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'setSysvar' || message.type === 'runProgram') {
+        const sysvar = sysvars.find((sv) => sv.id === message.id);
+        if (sysvar && message.type === 'setSysvar') sysvar.value = message.value as boolean;
+        delayedBroadcast({ type: `${message.type}_response`, success: true, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'getFavorites') {
+        delayedBroadcast({ type: 'getFavorites_response', favorites, requestId: message.requestId });
+        return;
+      }
+
+      if (['createFavorite', 'renameFavorite', 'deleteFavorite', 'addFavoriteItem', 'removeFavoriteItem'].includes(message.type)) {
+        const response: AnyPayload = { type: `${message.type}_response`, success: true, requestId: message.requestId };
+        const list = favorites.find((f) => f.id === message.id);
+        if (message.type === 'createFavorite') {
+          response.id = nextFavoriteId++;
+          favorites = [...favorites, { id: response.id as number, name: message.name as string, items: [] }];
+        } else if (message.type === 'deleteFavorite') {
+          favorites = favorites.filter((f) => f !== list);
+        } else if (list && message.type === 'renameFavorite') {
+          list.name = message.name as string;
+        } else if (list) {
+          const itemId = message.itemId as number;
+          list.items = list.items.filter((item) => item.id !== itemId);
+          if (message.type === 'addFavoriteItem') {
+            const type = sysvars.some((sv) => sv.id === itemId) ? 'SYSVAR' : programs.some((p) => p.id === itemId) ? 'PROGRAM' : 'CHANNEL';
+            list.items.push({ id: itemId, type });
+          }
+        }
+        delayedBroadcast(response);
+        return;
+      }
+
       if (message.type === 'getDeviceProblems') {
         delayedBroadcast({ type: 'deviceProblems', devices: deviceProblems, requestId: message.requestId });
         return;
@@ -565,6 +631,17 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
       if (message.type === 'getChannels' && message.all === true) {
         delayedBroadcast({ channels: allChannels(), deviceId: message.deviceId, all: true, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'getChannels' && message.favoriteId) {
+        const ids = new Set(favorites.find((f) => String(f.id) === message.favoriteId)?.items.map((item) => item.id));
+        delayedBroadcast({
+          channels: allChannels().filter((channel) => ids.has(channel.id as number)),
+          deviceId: message.deviceId,
+          favoriteId: message.favoriteId,
+          requestId: message.requestId,
+        });
         return;
       }
 

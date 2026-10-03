@@ -14,14 +14,18 @@ import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 
-// --- Tabs of rooms or trades, with a marker that glides to the active one
+// --- Tabs of rooms, trades or favorite lists, with a marker that glides
+// to the active one
 
 interface NavTabsProps {
   label: string;
   items: { id: number; name: string }[];
   activeId: string;
-  to: '/room/$roomId' | '/trade/$tradeId';
+  to: '/room/$roomId' | '/trade/$tradeId' | '/favorite/$favoriteId';
 }
+
+const tabParams = (to: NavTabsProps['to'], id: string) =>
+  to === '/room/$roomId' ? { roomId: id } : to === '/trade/$tradeId' ? { tradeId: id } : { favoriteId: id };
 
 export const NavTabs = ({ label, items, activeId, to }: NavTabsProps) => {
   const effects = useEffects();
@@ -76,7 +80,7 @@ export const NavTabs = ({ label, items, activeId, to }: NavTabsProps) => {
             <Link
               key={item.id}
               to={to}
-              params={to === '/room/$roomId' ? { roomId: String(item.id) } : { tradeId: String(item.id) }}
+              params={tabParams(to, String(item.id)) as never}
               aria-current={active ? 'page' : undefined}
               className={cn(
                 'press relative flex h-11 flex-1 items-center justify-center rounded-lg px-4 text-[15px] font-medium whitespace-nowrap',
@@ -281,9 +285,13 @@ interface DashboardProps {
   tabs?: ReactNode;
   channelsByType: [string, Channel[]][];
   isLoading?: boolean;
+  // Shown after the sections (a favorite list's variables and programs)
+  extra?: ReactNode;
+  // Instead of "no channels" when there is nothing to show
+  empty?: ReactNode;
 }
 
-export const Dashboard = ({ tabs, channelsByType, isLoading }: DashboardProps) => {
+export const Dashboard = ({ tabs, channelsByType, isLoading, extra, empty }: DashboardProps) => {
   const effects = useEffects();
   const channels = useMemo(() => channelsByType.flatMap(([, list]) => list), [channelsByType]);
   const lightsOn = channels.filter(isLightOn).length;
@@ -313,8 +321,9 @@ export const Dashboard = ({ tabs, channelsByType, isLoading }: DashboardProps) =
       {groupIntoSections(channelsByType).map((group) => (
         <Section key={group.key} group={group} />
       ))}
-      {!isLoading && channelsByType.length === 0 && (
-        <p className="py-12 text-center text-muted-foreground">{m.NO_CHANNELS()}</p>
+      {extra}
+      {!isLoading && channelsByType.length === 0 && !extra && (
+        <p className="py-12 text-center text-muted-foreground">{empty ?? m.NO_CHANNELS()}</p>
       )}
     </div>
   );

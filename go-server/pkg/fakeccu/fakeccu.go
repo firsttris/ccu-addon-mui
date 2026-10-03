@@ -14,6 +14,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -329,6 +330,10 @@ func (c *CCU) runScript(body string) (string, error) {
 				}
 			}
 			return "NOT_FOUND", nil
+		case "get_favorites":
+			return c.getFavorites(values["USERNAME"]), nil
+		case "favorite_change":
+			return c.changeFavorite(values), nil
 		case "get_user_level":
 			for _, user := range c.fixture.Users {
 				if user.Name == values["USERNAME"] {
@@ -339,6 +344,80 @@ func (c *CCU) runScript(body string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("unknown script")
+}
+
+// itemType says what a favorite list entry is, as get_favorites.tcl
+// writes it, or "" if there is no such object.
+func (c *CCU) itemType(id int64) string {
+	if c.channelByID(id) != nil {
+		return "CHANNEL"
+	}
+	for _, sv := range c.fixture.Sysvars {
+		if sv.ID == id {
+			return "SYSVAR"
+		}
+	}
+	for _, p := range c.fixture.Programs {
+		if p.ID == id {
+			return "PROGRAM"
+		}
+	}
+	return ""
+}
+
+func (c *CCU) getFavorites(username string) string {
+	var b strings.Builder
+	for _, f := range c.fixture.Favorites {
+		if username != "" && !slices.Contains(f.Users, username) {
+			continue
+		}
+		fmt.Fprintf(&b, "L\t%d\t%s\n", f.ID, f.Name)
+		for _, id := range f.Items {
+			if t := c.itemType(id); t != "" {
+				fmt.Fprintf(&b, "I\t%d\t%s\n", id, t)
+			}
+		}
+	}
+	return b.String()
+}
+
+func (c *CCU) changeFavorite(values map[string]string) string {
+	if values["ACTION"] == "create" {
+		users := []string{}
+		for _, u := range c.fixture.Users {
+			if values["USERNAME"] == "" || u.Name == values["USERNAME"] {
+				users = append(users, u.Name)
+			}
+		}
+		id := c.nextID()
+		c.fixture.Favorites = append(c.fixture.Favorites, Favorite{ID: id, Name: values["NAME"], Users: users, Items: []int64{}})
+		return fmt.Sprintf("OK\t%d", id)
+	}
+	listID, _ := strconv.ParseInt(values["LIST_ID"], 10, 64)
+	itemID, _ := strconv.ParseInt(values["ITEM_ID"], 10, 64)
+	for i := range c.fixture.Favorites {
+		f := &c.fixture.Favorites[i]
+		if f.ID != listID {
+			continue
+		}
+		previous := f.Name
+		switch values["ACTION"] {
+		case "rename":
+			f.Name = values["NAME"]
+		case "delete":
+			c.fixture.Favorites = append(c.fixture.Favorites[:i], c.fixture.Favorites[i+1:]...)
+		case "add", "remove":
+			if c.itemType(itemID) == "" {
+				return "NOT_FOUND"
+			}
+			f.Items = slices.DeleteFunc(f.Items, func(id int64) bool { return id == itemID })
+			if values["ACTION"] == "add" {
+				f.Items = append(f.Items, itemID)
+			}
+		}
+		return "OK\t" + previous
+	}
+	return "NOT_FOUND"
 }
 
 // groups returns the rooms or trades for a ReGa list constant.
@@ -366,6 +445,9 @@ func (c *CCU) nextID() int64 {
 	}
 	for _, p := range c.fixture.Programs {
 		highest = max(highest, p.ID)
+	}
+	for _, f := range c.fixture.Favorites {
+		highest = max(highest, f.ID)
 	}
 	return highest + 1
 }
@@ -433,6 +515,16 @@ func (c *CCU) getChannels(objectID string) string {
 		}
 	} else {
 		id, _ := strconv.ParseInt(objectID, 10, 64)
+		// Favorite lists hold channels among system variables and programs
+		for _, f := range c.fixture.Favorites {
+			if f.ID == id {
+				for _, itemID := range f.Items {
+					if ch := c.channelByID(itemID); ch != nil {
+						channels = append(channels, ch)
+					}
+				}
+			}
+		}
 		for _, g := range append(append([]Group{}, c.fixture.Rooms...), c.fixture.Trades...) {
 			if g.ID != id {
 				continue

@@ -22,7 +22,10 @@ type Fixture struct {
 	Programs    []Program         `json:"programs,omitempty"`
 	DeviceNames map[string]string `json:"deviceNames,omitempty"`
 	// Inbox holds the addresses of paired devices not yet accepted
-	Inbox      []string                  `json:"inbox,omitempty"`
+	Inbox []string `json:"inbox,omitempty"`
+	// Favorites are the favorite lists; Items hold channel, sysvar and
+	// program ids
+	Favorites  []Favorite                `json:"favorites,omitempty"`
 	Interfaces map[string]*InterfaceData `json:"interfaces,omitempty"`
 }
 
@@ -63,6 +66,15 @@ type Group struct {
 	ID       int64   `json:"id"`
 	Name     string  `json:"name"`
 	Channels []int64 `json:"channels"`
+}
+
+// Favorite is a favorite list and the users who see it (the WebUI's
+// "_USER<id>" objects).
+type Favorite struct {
+	ID    int64    `json:"id"`
+	Name  string   `json:"name"`
+	Users []string `json:"users"`
+	Items []int64  `json:"items"`
 }
 
 type User struct {

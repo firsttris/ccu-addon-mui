@@ -358,9 +358,9 @@ export const useConfigChange = () => {
   });
 };
 
-export type ChannelsRequest = { roomId: string } | { tradeId: string } | { all: true };
+export type ChannelsRequest = { roomId: string } | { tradeId: string } | { favoriteId: string } | { all: true };
 
-// The channels of a room, a trade or all devices, kept up to date by
+// The channels of a room, a trade, a favorite list or all devices, kept up to date by
 // events, grouped by type in display order.
 export const useChannels = (channelsRequest: ChannelsRequest) => {
   const { request, subscribe } = useWebSocketActions();
@@ -562,5 +562,47 @@ export const useAcknowledgeServiceMessage = () => {
       queryClient.invalidateQueries({ queryKey: ['serviceMessages'] });
       queryClient.invalidateQueries({ queryKey: ['deviceProblems'] });
     },
+  });
+};
+
+// The favorite lists of the logged-in CCU user, as the WebUI's
+// "Favoriten" (rega/esp/favorites.fn)
+export const useFavorites = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['favorites'],
+    queryFn: async () => (await request({ type: 'getFavorites' })).favorites ?? [],
+  });
+};
+
+export type FavoriteChange =
+  | { type: 'createFavorite'; name: string }
+  | { type: 'renameFavorite'; id: number; name: string }
+  | { type: 'deleteFavorite'; id: number }
+  | { type: 'addFavoriteItem' | 'removeFavoriteItem'; id: number; itemId: number };
+
+// Creates, renames or deletes a favorite list, or adds and removes entries
+export const useFavoriteChange = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (change: FavoriteChange) => request(change, { queue: false }),
+    // Awaited, so a new list is known before the page switches to it
+    onSettled: (_, __, change) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['favorites'] }),
+        'id' in change && queryClient.invalidateQueries({ queryKey: ['channels', { favoriteId: String(change.id) }] }),
+      ]),
+  });
+};
+
+// The channels of all devices once, without subscribing to their events
+// (to pick channels, e.g. for a favorite list)
+export const useChannelList = ({ enabled = true }: { enabled?: boolean } = {}) => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['channels', { all: true }],
+    queryFn: async () => (await request({ type: 'getChannels', all: true })).channels ?? [],
+    enabled,
   });
 };

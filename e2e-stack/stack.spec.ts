@@ -520,3 +520,21 @@ test('zeigt einen Alarm und bestätigt ihn in der CCU', async ({ page }) => {
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
   await expect(page.getByRole('alert', { name: 'Alarme' })).toHaveCount(0);
 });
+
+test('zeigt die Favoriten des Benutzers und ändert sie in der CCU', async ({ page }) => {
+  await login(page);
+  await page.goto('/favorites');
+  await expect(page).toHaveURL(/\/favorite\/1300$/);
+  await expect(page.getByTitle('Küche Rollo')).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Systemvariablen & Programme' })).toContainText('Rollläden abends schließen');
+
+  await page.getByRole('button', { name: 'Bearbeiten' }).click();
+  await page.getByRole('searchbox', { name: 'Gerät, Variable oder Programm suchen' }).fill('Zirkulation');
+  await page.getByRole('button', { name: 'Zur Liste hinzufügen: Zirkulationspumpe', exact: true }).click();
+  await expect(page.getByRole('list', { name: 'In der Liste' })).toContainText('Zirkulationspumpe');
+  await page.keyboard.press('Escape');
+
+  // Stored in the (fake) CCU: still there after a reload
+  await page.reload();
+  await expect(page.getByTitle('Zirkulationspumpe')).toBeVisible();
+});

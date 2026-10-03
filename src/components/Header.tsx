@@ -4,6 +4,7 @@ import MenuIcon from '~icons/lucide/menu';
 import TriangleAlertIcon from '~icons/lucide/triangle-alert';
 import HomeIcon from '~icons/lucide/house';
 import TagIcon from '~icons/lucide/tag';
+import StarIcon from '~icons/lucide/star';
 import ListIcon from '~icons/lucide/list';
 import BracesIcon from '~icons/lucide/braces';
 import PlayIcon from '~icons/lucide/play';
@@ -117,6 +118,9 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
             ))}
           </NavSection>
           <NavSection title={m.VIEWS()}>
+            <NavLink icon={<StarIcon />} onClick={() => go(() => navigate({ to: '/favorites' }))}>
+              {m.FAVORITES()}
+            </NavLink>
             <NavLink icon={<ListIcon />} onClick={() => go(() => navigate({ to: '/devices' }))}>
               {m.ALL_DEVICES()}
             </NavLink>

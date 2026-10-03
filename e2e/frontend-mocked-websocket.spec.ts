@@ -391,6 +391,49 @@ test('bedient BidCos-Thermostat, Lamellen und zeigt die Sirene', async ({ page }
   await expect(page.getByRole('group', { name: 'Sirene Flur' }).getByRole('status')).toHaveText(/Ruhig|Quiet/);
 });
 
+test('zeigt Favoritenlisten und bearbeitet sie', async ({ page }) => {
+  await page.goto('/favorites');
+
+  // The first list with the room view's tiles, its variables and programs
+  await expect(page).toHaveURL(/\/favorite\/1300$/);
+  await expect(page.getByRole('navigation', { name: /^(Favoriten|Favorites)$/ })).toContainText('Gäste');
+  await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
+  await expect(page.getByText('Flur Licht')).toBeVisible();
+  await expect(page.getByText('Fenstergriff Wohnzimmer')).toHaveCount(0);
+  const logic = page.getByRole('list', { name: /Systemvariablen|System variables/ });
+  await expect(logic).toContainText('Anwesenheit');
+  await logic.getByRole('button', { name: /(Ausführen|Run) Rollläden abends schließen/ }).click();
+
+  // Remove a channel, add another one
+  await page.getByRole('button', { name: /^(Bearbeiten|Edit)$/ }).click();
+  const inList = page.getByRole('list', { name: /^(In der Liste|In the list)$/ });
+  await inList.getByRole('button', { name: /(Aus der Liste entfernen|Remove from list): Flur Licht/ }).click();
+  await expect(inList).not.toContainText('Flur Licht');
+  await page.getByRole('searchbox', { name: /suchen|Search/ }).fill('Fenstergriff');
+  await page.getByRole('button', { name: /(Zur Liste hinzufügen|Add to list): Fenstergriff Wohnzimmer/ }).click();
+  await expect(inList).toContainText('Fenstergriff Wohnzimmer');
+  await page.keyboard.press('Escape');
+  await expect(page.getByTitle('Fenstergriff Wohnzimmer')).toBeVisible();
+  await expect(page.getByText('Flur Licht')).toHaveCount(0);
+
+  // A new list opens with its editor; deleting it goes back to the first
+  await page.getByRole('button', { name: /^(Neue Liste|New list)$/ }).click();
+  await page.getByRole('textbox', { name: /^(Name der Liste|Name of the list)$/ }).fill('Urlaub');
+  await page.getByRole('button', { name: /^(Hinzufügen|Add)$/ }).click();
+  await expect(page).toHaveURL(/\/favorite\/1400/);
+  await expect(page.getByRole('heading', { name: /^(Liste bearbeiten|Edit list)$/ })).toBeVisible();
+  await page.getByRole('button', { name: /^(Urlaub löschen|Delete Urlaub)$/ }).click();
+  await page.getByRole('dialog', { name: /Urlaub/ }).getByRole('button', { name: /^(Löschen|Delete)$/ }).click();
+  await expect(page).toHaveURL(/\/favorite\/1300$/);
+
+  const sent = await page.evaluate(() =>
+    ((window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string }> } }).__wsMock?.sentMessages() ?? [])
+      .map((m) => m.type)
+      .filter((type) => /^(create|rename|delete|add|remove)Favorite|runProgram/.test(type)),
+  );
+  expect(sent).toEqual(['runProgram', 'removeFavoriteItem', 'addFavoriteItem', 'createFavorite', 'deleteFavorite']);
+});
+
 test('zeigt Alarme und bestätigt sie', async ({ page }) => {
   await page.addInitScript(() => {
     // Before the app asks for them
