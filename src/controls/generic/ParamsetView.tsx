@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   DatapointValue,
   Operation,
@@ -8,21 +8,13 @@ import {
 } from '../../types/types';
 import { defaultLang, TranslationKey, useTranslations } from '../../i18n/utils';
 import { m } from '../../paraglide/messages';
+import { Switch } from '../../components/ui/switch';
+import { Input } from '../../components/ui/input';
+import { NativeSelect } from '../../components/ui/select';
+import { Button } from '../../components/ui/button';
 
 // Renders a channel's parameters from its paramset description: the element
 // follows the parameter's type, writable parameters get inputs.
-
-// font: inherit, then 12px (as one utility each, so their order can't matter)
-const inputFont = 'font-[inherit] [font-style:inherit] [font-weight:inherit] leading-[inherit] text-[12px] box-border';
-
-const Toggle = ({ checked, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { checked: boolean }) => (
-  <button
-    className={`w-9 h-5 p-[2px] border-none rounded-[10px] cursor-pointer flex after:content-[''] after:w-4 after:h-4 after:rounded-full after:bg-white ${
-      checked ? 'bg-[#43a047] justify-end' : 'bg-[#9e9e9e] justify-start'
-    }`}
-    {...props}
-  />
-);
 
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 2 });
 
@@ -102,8 +94,8 @@ const NumberParameter = ({ name, parameter, value, onSet }: ParameterProps) => {
 
   return (
     <>
-      <input
-        className={`${inputFont} max-w-[110px] w-20 text-right`}
+      <Input
+        className="h-8 w-24 text-right tabular-nums md:text-[13px]"
         aria-label={name}
         inputMode="decimal"
         value={draft}
@@ -114,8 +106,8 @@ const NumberParameter = ({ name, parameter, value, onSet }: ParameterProps) => {
             commit();
           }
         }}
-      />{' '}
-      {unitOf(parameter)}
+      />
+      {unitOf(parameter) && <span className="ml-1.5 text-muted-foreground">{unitOf(parameter)}</span>}
     </>
   );
 };
@@ -134,21 +126,14 @@ const ParameterValue = (props: ParameterProps) => {
         return <>–</>;
       }
       return (
-        <button className={`${inputFont} cursor-pointer`} type="button" onClick={() => onSet(name, true)}>
+        <Button size="sm" variant="outline" type="button" onClick={() => onSet(name, true)}>
           {m.RUN()}
-        </button>
+        </Button>
       );
     case 'BOOL':
       if (writable) {
         return (
-          <Toggle
-            type="button"
-            role="switch"
-            aria-label={name}
-            aria-checked={value === true}
-            checked={value === true}
-            onClick={() => onSet(name, value !== true)}
-          />
+          <Switch aria-label={name} checked={value === true} onCheckedChange={() => onSet(name, value !== true)} />
         );
       }
       return <>{value === null || value === undefined ? '–' : value ? m.YES() : m.NO()}</>;
@@ -156,8 +141,8 @@ const ParameterValue = (props: ParameterProps) => {
       const options = parameter.valueList ?? [];
       if (writable) {
         return (
-          <select
-            className={`${inputFont} max-w-[110px]`}
+          <NativeSelect
+            className="h-8 max-w-[160px] md:text-[13px]"
             aria-label={name}
             value={typeof value === 'number' ? value : ''}
             onChange={(event) => onSet(name, Number(event.target.value))}
@@ -167,7 +152,7 @@ const ParameterValue = (props: ParameterProps) => {
                 {option}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         );
       }
       return <>{typeof value === 'number' ? options[value] ?? value : value ?? '–'}</>;
@@ -206,14 +191,17 @@ interface ParamsetViewProps {
 export const ParamsetView = ({ label, description, values, onSet, readOnly, changed }: ParamsetViewProps) => {
   const t = useTranslations();
   return (
-    <dl aria-label={label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 m-0 text-[12px]">
+    <dl aria-label={label} className="m-0 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 text-[13px]">
       {shownParameters(description).map(([name, parameter]) => (
         <div key={name} style={{ display: 'contents' }}>
-          <dt className="overflow-hidden text-ellipsis whitespace-nowrap text-text-secondary" title={name} style={changed?.has(name) ? { fontWeight: 700 } : undefined}>
-            {t(name as TranslationKey)}
-            {changed?.has(name) ? ' •' : ''}
+          <dt
+            className={`flex min-w-0 items-center gap-1.5 text-muted-foreground ${changed?.has(name) ? 'font-semibold text-foreground' : ''}`}
+            title={name}
+          >
+            <span className="truncate">{t(name as TranslationKey)}</span>
+            {changed?.has(name) && <span aria-label="•" className="size-1.5 shrink-0 rounded-full bg-blue-600" />}
           </dt>
-          <dd className="m-0 text-right tabular-nums text-text">
+          <dd className="m-0 flex items-center justify-end text-right tabular-nums">
             <ParameterValue name={name} parameter={parameter} value={values[name]} onSet={onSet} readOnly={readOnly} />
           </dd>
         </div>

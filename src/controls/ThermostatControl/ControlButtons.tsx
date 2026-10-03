@@ -1,6 +1,5 @@
-import MdiMinus from '~icons/mdi/minus';
-import MdiPlus from '~icons/mdi/plus';
-import { ControlButton } from '../../components/ControlButton';
+import MinusIcon from '~icons/lucide/minus';
+import PlusIcon from '~icons/lucide/plus';
 import { m } from '../../paraglide/messages';
 
 interface ControlButtonsProps {
@@ -8,16 +7,16 @@ interface ControlButtonsProps {
   onIncrease: () => void;
 }
 
-export const ControlButtons: React.FC<ControlButtonsProps> = ({ onDecrease, onIncrease }) => {
-  return (
-    <div className="flex justify-center items-center gap-4 -mt-3 w-full">
-      <ControlButton onClick={onDecrease} title={m.DECREASE_TEMPERATURE()}>
-        <MdiMinus />
-      </ControlButton>
+const stepButton =
+  'press flex h-12 items-center justify-center rounded-xl border bg-background/60 hover:bg-accent [&_svg]:size-5';
 
-      <ControlButton onClick={onIncrease} title={m.INCREASE_TEMPERATURE()}>
-        <MdiPlus />
-      </ControlButton>
-    </div>
-  );
-};
+export const ControlButtons: React.FC<ControlButtonsProps> = ({ onDecrease, onIncrease }) => (
+  <div className="grid w-full grid-cols-2 gap-2">
+    <button className={stepButton} onClick={onDecrease} title={m.DECREASE_TEMPERATURE()} aria-label={m.DECREASE_TEMPERATURE()}>
+      <MinusIcon />
+    </button>
+    <button className={stepButton} onClick={onIncrease} title={m.INCREASE_TEMPERATURE()} aria-label={m.INCREASE_TEMPERATURE()}>
+      <PlusIcon />
+    </button>
+  </div>
+);

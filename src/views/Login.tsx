@@ -28,7 +28,7 @@ export const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 box-border">
       <form
-        className="w-full max-w-[340px] flex flex-col gap-[14px] p-6 rounded-xl border border-solid border-border bg-surface text-text"
+        className="w-full max-w-[340px] flex flex-col gap-[14px] p-6 rounded-xl border border-solid border-border bg-card text-foreground"
         onSubmit={(event) => {
           event.preventDefault();
           setSubmitting(true);
@@ -36,11 +36,11 @@ export const Login = () => {
         }}
       >
         <h1 className="m-0 text-[22px] text-center">CCU Addon MUI</h1>
-        <p className="m-0 text-[14px] text-text-secondary text-center">{m.LOGIN_HINT()}</p>
+        <p className="m-0 text-[14px] text-muted-foreground text-center">{m.LOGIN_HINT()}</p>
         <label className="flex flex-col gap-1 text-[14px]">
           {m.USERNAME()}
           <input
-            className="text-[17px] py-[10px] px-3 rounded-lg border border-solid border-border bg-background text-text"
+            className="text-[17px] py-[10px] px-3 rounded-lg border border-solid border-border bg-background text-foreground"
             name="username"
             autoComplete="username"
             value={username}
@@ -50,7 +50,7 @@ export const Login = () => {
         <label className="flex flex-col gap-1 text-[14px]">
           {m.PASSWORD()}
           <input
-            className="text-[17px] py-[10px] px-3 rounded-lg border border-solid border-border bg-background text-text"
+            className="text-[17px] py-[10px] px-3 rounded-lg border border-solid border-border bg-background text-foreground"
             name="password"
             type="password"
             autoComplete="current-password"
@@ -62,7 +62,7 @@ export const Login = () => {
         {loginError && (
           <p role="alert" className="m-0 text-[#c62828] text-[14px] text-center">{t(errorMessages[loginError] ?? 'INVALID_CREDENTIALS')}</p>
         )}
-        {!connected && <p className="m-0 text-[14px] text-text-secondary text-center">{m.CONNECTING()}</p>}
+        {!connected && <p className="m-0 text-[14px] text-muted-foreground text-center">{m.CONNECTING()}</p>}
         <button
           className="text-[17px] font-semibold p-3 border-none rounded-lg text-white bg-[#1976d2] cursor-pointer disabled:opacity-50 disabled:cursor-default"
           type="submit"

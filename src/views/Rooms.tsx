@@ -1,36 +1,46 @@
-import { useNavigate } from '@tanstack/react-router';
-import { ListItem } from '../components/ChannelGroup';
-import { useRooms } from '../queries';
-import TeenyiconsFloorplanSolid from '~icons/teenyicons/floorplan-solid';
+import { Link } from '@tanstack/react-router';
+import HomeIcon from '~icons/lucide/house';
+import TagIcon from '~icons/lucide/tag';
+import ChevronRightIcon from '~icons/lucide/chevron-right';
+import { useRooms, useTrades } from '../queries';
+import { usePageTitle } from '../contexts/PageTitleContext';
+import { m } from '../paraglide/messages';
 
-export const ListItemText = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-text max-w-[300px] overflow-hidden whitespace-nowrap text-ellipsis font-semibold my-[10px] mr-0 ml-5 text-[20px]">
-    {children}
-  </p>
-);
+const linkClass =
+  'tile-edge press flex h-16 items-center gap-3 rounded-2xl border bg-card px-4 text-[17px] font-medium hover:bg-accent [&>svg]:shrink-0';
 
 export const Rooms = () => {
-  const navigate = useNavigate();
   const { data: rooms = [] } = useRooms();
-
+  usePageTitle(m.ROOMS());
   return (
-    <div className="max-w-[1280px] mx-auto p-4 pt-[60px]">
-      <ul className="list-none p-0 m-0">
-        {rooms.map((room) => (
-          <ListItem
-            key={room.id}
-            onClick={() => {
-              navigate({
-                to: '/room/$roomId',
-                params: { roomId: String(room.id) },
-              });
-            }}
-          >
-            <TeenyiconsFloorplanSolid width={35} />
-            <ListItemText>{room.name}</ListItemText>
-          </ListItem>
-        ))}
-      </ul>
-    </div>
+    <ul className="mx-auto grid max-w-[1400px] gap-3 px-4 pt-2 pb-10 sm:px-6 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
+      {rooms.map((room) => (
+        <li key={room.id}>
+          <Link to="/room/$roomId" params={{ roomId: String(room.id) }} className={linkClass}>
+            <HomeIcon className="size-5 text-muted-foreground" />
+            <span className="flex-1 truncate">{room.name}</span>
+            <ChevronRightIcon className="size-4 text-muted-foreground" />
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+export const Trades = () => {
+  const { data: trades = [] } = useTrades();
+  usePageTitle(m.TRADES());
+  return (
+    <ul className="mx-auto grid max-w-[1400px] gap-3 px-4 pt-2 pb-10 sm:px-6 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
+      {trades.map((trade) => (
+        <li key={trade.id}>
+          <Link to="/trade/$tradeId" params={{ tradeId: String(trade.id) }} className={linkClass}>
+            <TagIcon className="size-5 text-muted-foreground" />
+            <span className="flex-1 truncate">{trade.name}</span>
+            <ChevronRightIcon className="size-4 text-muted-foreground" />
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 };

@@ -1,19 +1,11 @@
-import { ChannelGroup } from '../components/ChannelGroup';
 import { useChannels } from '../queries';
+import { usePageTitle } from '../contexts/PageTitleContext';
+import { Dashboard } from './Dashboard';
+import { m } from '../paraglide/messages';
 
 // All devices, also those not assigned to a room or trade
 export const AllDevices = () => {
-  const { channelsByType } = useChannels({ all: true });
-
-  return (
-    <div className="m-[15px] max-[400px]:m-[5px]">
-      <div className="flex flex-col gap-[10px] max-w-[1280px] mx-auto pt-[60px] max-[400px]:pt-[80px]">
-        <ul className="list-none p-0 m-0">
-          {channelsByType.map(([channelType, channels]) => (
-            <ChannelGroup key={channelType} channelType={channelType} channels={channels} />
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+  const { channelsByType, isLoading } = useChannels({ all: true });
+  usePageTitle(m.ALL_DEVICES());
+  return <Dashboard channelsByType={channelsByType} isLoading={isLoading} />;
 };

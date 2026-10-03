@@ -18,7 +18,7 @@ import { m } from '../../paraglide/messages';
 
 const Section = (props: HTMLAttributes<HTMLElement>) => (
   <section
-    className="my-4 mx-0 py-3 px-4 max-w-[520px] border border-solid border-border rounded-lg bg-surface [&_h2]:mt-0 [&_h2]:mx-0 [&_h2]:mb-[10px] [&_h2]:text-[16px]"
+    className="my-4 mx-0 py-3 px-4 max-w-[520px] border border-solid border-border rounded-lg bg-card [&_h2]:mt-0 [&_h2]:mx-0 [&_h2]:mb-[10px] [&_h2]:text-[16px]"
     {...props}
   />
 );

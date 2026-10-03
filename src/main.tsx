@@ -4,8 +4,10 @@ import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WebSocketProvider } from './hooks/useWebsocket';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { EffectsProvider } from './contexts/EffectsContext';
 import { ToastProvider } from './contexts/ToastContext';
-import '@fontsource/roboto';
+import '@fontsource-variable/geist';
+import '@fontsource-variable/geist-mono';
 import './styles.css';
 
 // Import the generated route tree
@@ -61,18 +63,18 @@ const queryClient = new QueryClient({
   },
 });
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement,
-);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
 root.render(
   <ThemeProvider>
-    <ToastProvider>
-      <QueryClientProvider client={queryClient}>
-        <WebSocketProvider>
-          <RouterProvider router={router} />
-        </WebSocketProvider>
-      </QueryClientProvider>
-    </ToastProvider>
+    <EffectsProvider>
+      <ToastProvider>
+        <QueryClientProvider client={queryClient}>
+          <WebSocketProvider>
+            <RouterProvider router={router} />
+          </WebSocketProvider>
+        </QueryClientProvider>
+      </ToastProvider>
+    </EffectsProvider>
   </ThemeProvider>,
 );

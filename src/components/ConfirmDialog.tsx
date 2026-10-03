@@ -8,7 +8,7 @@ export const DialogButton = ({
 }: ComponentPropsWithRef<'button'> & { primary?: boolean }) => (
   <button
     className={`[font:inherit] py-2 px-[14px] rounded-md cursor-pointer border border-solid border-border disabled:opacity-50 disabled:cursor-default ${
-      primary ? 'text-white bg-[#1976d2]' : 'text-text bg-background'
+      primary ? 'text-white bg-[#1976d2]' : 'text-foreground bg-background'
     } ${className}`}
     {...props}
   />
@@ -45,7 +45,7 @@ export const ConfirmDialog = ({ title, children, confirmLabel, busy, onConfirm, 
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
-        className="w-[min(480px,100%)] max-h-[calc(100vh_-_32px)] overflow-y-auto box-border p-5 rounded-lg text-text bg-surface shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+        className="w-[min(480px,100%)] max-h-[calc(100vh_-_32px)] overflow-y-auto box-border p-5 rounded-lg text-foreground bg-card shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
       >
         <h2 className="mt-0 mx-0 mb-3 text-[18px]">{title}</h2>
         {children}

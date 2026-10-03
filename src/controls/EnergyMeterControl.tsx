@@ -1,6 +1,9 @@
 import React, { ReactNode } from 'react';
 import { EnergyMeterChannel } from '../types/types';
+import ZapIcon from '~icons/lucide/zap';
+import FlameIcon from '~icons/lucide/flame';
 import { defaultLang } from '../i18n/utils';
+import { Tile } from '../components/Tile';
 import { m } from '../paraglide/messages';
 
 // All channels of one HmIP-ESI: channel 1 has the current power or gas flow,
@@ -12,14 +15,19 @@ interface EnergyMeterControlProps {
 
 const Section = ({ children }: { children: ReactNode }) => <div className="flex flex-col gap-1">{children}</div>;
 
-const Kind = ({ children }: { children: ReactNode }) => <div className="text-[15px] font-semibold">{children}</div>;
+const Kind = ({ icon, tint, children }: { icon: ReactNode; tint: string; children: ReactNode }) => (
+  <div className="flex items-center gap-2 text-sm font-medium">
+    <span className={`flex size-7 items-center justify-center rounded-lg [&_svg]:size-4 ${tint}`}>{icon}</span>
+    {children}
+  </div>
+);
 
 const MainValue = ({ children }: { children: ReactNode }) => (
-  <div className="text-[30px] font-light">{children}</div>
+  <div className="text-3xl font-semibold tracking-tight tabular-nums">{children}</div>
 );
 
 const Row = ({ children }: { children: ReactNode }) => (
-  <div className="flex justify-between gap-2 text-[13px] text-text-secondary">{children}</div>
+  <div className="flex justify-between gap-2 text-[13px] text-muted-foreground tabular-nums">{children}</div>
 );
 
 const locale = defaultLang === 'de' ? 'de-DE' : 'en-US';
@@ -29,12 +37,9 @@ const format = (value: number, maximumFractionDigits: number) =>
 
 const channelNumber = (address: string) => Number(address.split(':')[1] ?? 0);
 
-const isSet = (value: number | undefined): value is number =>
-  typeof value === 'number' && value > 0;
+const isSet = (value: number | undefined): value is number => typeof value === 'number' && value > 0;
 
-export const EnergyMeterControl = React.memo(function EnergyMeterControl({
-  channels,
-}: EnergyMeterControlProps) {
+export const EnergyMeterControl = React.memo(function EnergyMeterControl({ channels }: EnergyMeterControlProps) {
   const sorted = [...channels].sort((a, b) => channelNumber(a.address) - channelNumber(b.address));
 
   const power = sorted.find((c) => c.datapoints.POWER !== undefined)?.datapoints.POWER;
@@ -49,44 +54,45 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({
   const name = sorted[0]?.name ?? '';
 
   return (
-    <div className="w-[230px] py-[14px] px-4 flex flex-col gap-[10px] text-text">
-      <div
-        title={name}
-        className="text-[13px] text-center text-text-secondary whitespace-nowrap overflow-hidden text-ellipsis"
-      >
-        {name}
-      </div>
+    <Tile status={sorted[0]?.status}>
+      <div className="flex flex-col gap-3 p-4">
+        <div title={name} className="truncate text-[15px] font-medium">
+          {name}
+        </div>
 
-      {isElectricity && (
-        <Section>
-          <Kind>⚡ {m.ELECTRICITY()}</Kind>
-          <MainValue>{format(power ?? 0, 0)} W</MainValue>
-          {energyCounters.map((channel, index) => (
-            <Row key={channel.address}>
-              <span>
-                {m.METER_READING()}
-                {index > 0 && ` (${m.CHANNEL()} ${channelNumber(channel.address)})`}
-              </span>
-              <span>{format((channel.datapoints.ENERGY_COUNTER ?? 0) / 1000, 1)} kWh</span>
+        {isElectricity && (
+          <Section>
+            <Kind icon={<ZapIcon />} tint="bg-yellow-500/15 text-yellow-700 dark:text-yellow-300">
+              {m.ELECTRICITY()}
+            </Kind>
+            <MainValue>{format(power ?? 0, 0)} W</MainValue>
+            {energyCounters.map((channel, index) => (
+              <Row key={channel.address}>
+                <span>
+                  {m.METER_READING()}
+                  {index > 0 && ` (${m.CHANNEL()} ${channelNumber(channel.address)})`}
+                </span>
+                <span>{format((channel.datapoints.ENERGY_COUNTER ?? 0) / 1000, 1)} kWh</span>
+              </Row>
+            ))}
+          </Section>
+        )}
+
+        {isGas && (
+          <Section>
+            <Kind icon={<FlameIcon />} tint="bg-orange-500/15 text-orange-700 dark:text-orange-300">
+              {m.GAS()}
+            </Kind>
+            <MainValue>{format(gasCounters[0]?.datapoints.GAS_VOLUME ?? 0, 2)} m³</MainValue>
+            <Row>
+              <span>{m.GAS_FLOW()}</span>
+              <span>{format(gasFlow ?? 0, 2)} m³/h</span>
             </Row>
-          ))}
-        </Section>
-      )}
+          </Section>
+        )}
 
-      {isGas && (
-        <Section>
-          <Kind>🔥 {m.GAS()}</Kind>
-          <MainValue>
-            {format(gasCounters[0]?.datapoints.GAS_VOLUME ?? 0, 2)} m³
-          </MainValue>
-          <Row>
-            <span>{m.GAS_FLOW()}</span>
-            <span>{format(gasFlow ?? 0, 2)} m³/h</span>
-          </Row>
-        </Section>
-      )}
-
-      {!isElectricity && !isGas && <Row>{m.NO_METER_DATA()}</Row>}
-    </div>
+        {!isElectricity && !isGas && <Row>{m.NO_METER_DATA()}</Row>}
+      </div>
+    </Tile>
   );
 });

@@ -20,7 +20,7 @@ import { ElevateDialog } from '../../components/ElevateDialog';
 import { m } from '../../paraglide/messages';
 
 export const SetupContainer = ({ children }: { children: ReactNode }) => (
-  <div className="max-w-[1280px] mx-auto p-4 pt-[76px] text-text">{children}</div>
+  <div className="max-w-[1280px] mx-auto p-4 pt-[76px] text-foreground">{children}</div>
 );
 
 export const Notice = (props: HTMLAttributes<HTMLParagraphElement>) => (
@@ -107,7 +107,7 @@ export const Setup = () => {
       {userLevel === 'admin' && elevated && <Pairing />}
       {userLevel === 'admin' && elevated && authRequired && <Sessions />}
       <input
-        className="[font:inherit] w-full max-w-[320px] py-2 px-[10px] mb-3 box-border border border-solid border-border rounded-md text-text bg-background"
+        className="[font:inherit] w-full max-w-[320px] py-2 px-[10px] mb-3 box-border border border-solid border-border rounded-md text-foreground bg-background"
         type="search"
         aria-label={m.SEARCH()}
         placeholder={m.SEARCH()}

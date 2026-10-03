@@ -48,7 +48,7 @@ export const SystemInfo = () => {
               </li>
             ))}
           </ul>
-          <p className="text-[12px] mt-1 mx-0 mb-0 text-text-secondary">{m.DUTY_CYCLE_HINT()}</p>
+          <p className="text-[12px] mt-1 mx-0 mb-0 text-muted-foreground">{m.DUTY_CYCLE_HINT()}</p>
         </>
       )}
     </Panel>

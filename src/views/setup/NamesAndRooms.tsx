@@ -23,7 +23,7 @@ const NameField = ({ label, name, onRename }: { label: string; name: string; onR
     >
       <Row>
         <input
-          className="[font:inherit] flex-1 min-w-40 py-[6px] px-2 border border-solid border-border rounded-md text-text bg-background"
+          className="[font:inherit] flex-1 min-w-40 py-[6px] px-2 border border-solid border-border rounded-md text-foreground bg-background"
           aria-label={label} value={draft} onChange={(event) => setDraft(event.target.value)} />
         <DialogButton type="submit" disabled={!changed}>
           {m.RENAME()}
@@ -76,7 +76,7 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
             <fieldset
               key={legend}
               aria-label={`${legend} ${channel.address}`}
-              className="border-none mt-1 mx-0 mb-3 p-0 flex flex-wrap gap-x-[14px] gap-y-1 text-[14px] [&_legend]:text-[12px] [&_legend]:p-0 [&_legend]:mb-[2px] [&_legend]:text-text-secondary"
+              className="border-none mt-1 mx-0 mb-3 p-0 flex flex-wrap gap-x-[14px] gap-y-1 text-[14px] [&_legend]:text-[12px] [&_legend]:p-0 [&_legend]:mb-[2px] [&_legend]:text-muted-foreground"
             >
               <legend>{legend}</legend>
               {groups.map((group) => (

@@ -45,7 +45,7 @@ export const ElevateDialog = ({ onDone, onCancel }: { onDone: () => void; onCanc
         <label>
           {m.ELEVATE_HINT()}
           <input
-            className="[font:inherit] w-full box-border py-2 px-[10px] mt-2 border border-solid border-border rounded-md text-text bg-background"
+            className="[font:inherit] w-full box-border py-2 px-[10px] mt-2 border border-solid border-border rounded-md text-foreground bg-background"
             type="password"
             aria-label={m.PASSWORD()}
             autoComplete="current-password"

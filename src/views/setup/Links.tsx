@@ -34,7 +34,7 @@ const LinkParameters = ({ interfaceName, link }: { interfaceName: string; link: 
 
   return (
     <>
-      <p className="text-[12px] text-text-secondary">{m.LINK_PROFILES_HINT()}</p>
+      <p className="text-[12px] text-muted-foreground">{m.LINK_PROFILES_HINT()}</p>
       {shownParameters(description.data).length > 0 && (
         <ParamsetView
           label={`${m.LINK_PARAMETERS()} ${link.sender} ${link.receiver}`}

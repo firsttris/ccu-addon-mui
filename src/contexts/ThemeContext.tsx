@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
-// Light or dark, switched in the header. The colors are CSS variables in
-// styles.css, selected by data-theme on <html>.
+// Light or dark: the system's choice until switched in the menu. The colors
+// are CSS variables in styles.css, selected by data-theme on <html>.
 export interface Theme {
   mode: 'light' | 'dark';
 }
@@ -22,16 +22,28 @@ export const useTheme = () => {
   return context;
 };
 
+const darkQuery = () => window.matchMedia?.('(prefers-color-scheme: dark)');
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDark, setIsDark] = useLocalStorage('theme-dark', false);
-  const mode = isDark ? 'dark' : 'light';
+  // null: follow the system
+  const [storedDark, setStoredDark] = useLocalStorage<boolean | null>('theme-dark', null);
+  const [systemDark, setSystemDark] = useState(() => darkQuery()?.matches ?? false);
+  const mode = (storedDark ?? systemDark) ? 'dark' : 'light';
+
+  useEffect(() => {
+    const query = darkQuery();
+    if (!query) return;
+    const onChange = (event: MediaQueryListEvent) => setSystemDark(event.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = mode;
   }, [mode]);
 
   return (
-    <ThemeContext.Provider value={{ theme: { mode }, toggleTheme: () => setIsDark(!isDark) }}>
+    <ThemeContext.Provider value={{ theme: { mode }, toggleTheme: () => setStoredDark(mode !== 'dark') }}>
       {children}
     </ThemeContext.Provider>
   );

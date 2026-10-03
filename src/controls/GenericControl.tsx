@@ -3,6 +3,7 @@ import { useParamsetDescription, useSetDataPoint } from '../queries';
 import { ParamsetView, shownParameters } from './generic/ParamsetView';
 import { defaultLang } from '../i18n/utils';
 import { WebUILink } from '../components/WebUILink';
+import { Tile } from '../components/Tile';
 import { m } from '../paraglide/messages';
 
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 2 });
@@ -35,24 +36,28 @@ export const GenericControlView = ({ channel, description, onSet = () => {} }: V
   const datapoints = Object.entries(channel.datapoints).sort(([a], [b]) => a.localeCompare(b));
 
   return (
-    <div className="flex flex-col p-[10px] w-[200px] box-border">
-      <div className="text-[13px] font-semibold mb-2 wrap-anywhere text-text">{channel.name}</div>
-      {description && shownParameters(description).length > 0 ? (
-        <ParamsetView label={channel.name} description={description} values={channel.datapoints} onSet={onSet} />
-      ) : (
-        <dl aria-label={channel.name} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-2 gap-y-[2px] m-0 text-[12px]">
-          {datapoints.map(([key, value]) => (
-            <div key={key} style={{ display: 'contents' }}>
-              <dt title={key} className="overflow-hidden text-ellipsis whitespace-nowrap text-text-secondary">{key}</dt>
-              <dd className="m-0 text-right tabular-nums text-text">{format(value)}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      <div className="mt-2 text-right">
-        <WebUILink />
+    <Tile status={channel.status}>
+      <div className="flex flex-col gap-2 p-4">
+        <div className="text-[15px] font-medium wrap-anywhere">{channel.name}</div>
+        {description && shownParameters(description).length > 0 ? (
+          <ParamsetView label={channel.name} description={description} values={channel.datapoints} onSet={onSet} />
+        ) : (
+          <dl aria-label={channel.name} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 m-0 text-[13px]">
+            {datapoints.map(([key, value]) => (
+              <div key={key} style={{ display: 'contents' }}>
+                <dt title={key} className="overflow-hidden text-ellipsis whitespace-nowrap text-muted-foreground">
+                  {key}
+                </dt>
+                <dd className="m-0 text-right tabular-nums text-foreground">{format(value)}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        <div className="mt-auto pt-1 text-right">
+          <WebUILink />
+        </div>
       </div>
-    </div>
+    </Tile>
   );
 };
 

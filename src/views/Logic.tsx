@@ -9,11 +9,11 @@ import { m } from '../paraglide/messages';
 type Children = { children: ReactNode };
 
 const Container = ({ children }: Children) => (
-  <div className="max-w-[800px] mx-auto p-4 pt-[76px] text-text">{children}</div>
+  <div className="max-w-[800px] mx-auto p-4 pt-[76px] text-foreground">{children}</div>
 );
 
 const List = (props: HTMLAttributes<HTMLUListElement>) => (
-  <ul className="list-none m-0 p-0 border border-solid border-border rounded-lg overflow-hidden bg-surface" {...props} />
+  <ul className="list-none m-0 p-0 border border-solid border-border rounded-lg overflow-hidden bg-card" {...props} />
 );
 
 const Item = ({ children }: Children) => (
@@ -37,7 +37,7 @@ const Toggle = ({ on, alarm, ...props }: ButtonHTMLAttributes<HTMLButtonElement>
 
 const Input = (props: InputHTMLAttributes<HTMLInputElement>) => (
   <input
-    className="[font:inherit] w-[110px] py-[6px] px-2 border border-solid border-border rounded-md text-text bg-background"
+    className="[font:inherit] w-[110px] py-[6px] px-2 border border-solid border-border rounded-md text-foreground bg-background"
     {...props}
   />
 );

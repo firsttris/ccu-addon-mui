@@ -1,93 +1,259 @@
-import { useNavigate } from '@tanstack/react-router';
-import { ButtonHTMLAttributes, HTMLAttributes, useState, useEffect } from 'react';
-import MdiMenu from '~icons/mui/menu';
-import TeenyiconsFloorplanSolid from '~icons/teenyicons/floorplan-solid';
-import MdiPipeValve from '~icons/mdi/pipe-valve';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from '@tanstack/react-router';
+import MenuIcon from '~icons/lucide/menu';
+import TriangleAlertIcon from '~icons/lucide/triangle-alert';
+import HomeIcon from '~icons/lucide/house';
+import TagIcon from '~icons/lucide/tag';
+import ListIcon from '~icons/lucide/list';
+import BracesIcon from '~icons/lucide/braces';
+import PlayIcon from '~icons/lucide/play';
+import SlidersIcon from '~icons/lucide/sliders-horizontal';
+import LogOutIcon from '~icons/lucide/log-out';
+import RadioIcon from '~icons/lucide/radio-tower';
+import BatteryLowIcon from '~icons/lucide/battery-low';
 import { useTheme } from '../contexts/ThemeContext';
+import { EffectsLevel, useEffects } from '../contexts/EffectsContext';
+import { usePageTitleValue } from '../contexts/PageTitleContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useDeviceProblems, useRooms, useTrades } from '../queries';
+import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
+import { cn } from '../lib/utils';
+import { Button } from './ui/button';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './ui/sheet';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
+import { Separator } from './ui/separator';
+import { WebUILink } from './WebUILink';
 
 // A short reconnect (e.g. at startup) should not flash a warning
 const CONNECTION_WARNING_DELAY_MS = 2000;
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
-type DivProps = HTMLAttributes<HTMLDivElement>;
+const useNow = () => {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 15_000);
+    return () => clearInterval(timer);
+  }, []);
+  return now;
+};
 
-const ProblemBadge = (props: ButtonProps) => (
+const Clock = () => {
+  const now = useNow();
+  const locale = getLocale();
+  const date = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
+  const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(now);
+  return (
+    <span className="truncate text-sm text-muted-foreground">
+      {date} · {time}
+    </span>
+  );
+};
+
+const NavLink = ({ onClick, icon, children }: { onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) => (
   <button
-    className="flex items-center gap-1 px-[10px] py-[6px] border-none rounded-[14px] cursor-pointer text-[14px] font-semibold text-white bg-[#e65100]"
-    {...props}
-  />
+    onClick={onClick}
+    className="flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-accent [&_svg]:size-[18px] [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
+  >
+    {icon}
+    <span className="truncate">{children}</span>
+  </button>
 );
 
-const ConnectionBanner = (props: DivProps) => (
-  <div
-    className="absolute top-full left-0 right-0 px-4 py-[6px] text-[14px] font-semibold text-center text-white bg-[#c62828]"
-    {...props}
-  />
+const NavSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <div className="flex flex-col gap-0.5">
+    <div className="px-3 pb-1 text-xs font-medium text-muted-foreground">{title}</div>
+    {children}
+  </div>
 );
 
-const ConnectionDot = ({ connected, ...props }: HTMLAttributes<HTMLSpanElement> & { connected: boolean }) => (
-  <span className={`w-[10px] h-[10px] rounded-full ${connected ? 'bg-[#43a047]' : 'bg-[#c62828]'}`} {...props} />
-);
+const effectLevels: { level: EffectsLevel; label: () => string }[] = [
+  { level: 'off', label: m.EFFECTS_OFF },
+  { level: 'subtle', label: m.EFFECTS_SUBTLE },
+  { level: 'strong', label: m.EFFECTS_STRONG },
+];
 
-const IconButton = (props: ButtonProps) => (
-  <button
-    className="bg-primary border-2 border-solid border-border p-[10px] cursor-pointer flex items-center justify-center text-[20px] rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-all duration-200 ease-[ease] text-text hover:bg-hover hover:border-border hover:scale-105 active:scale-95"
-    {...props}
-  />
-);
-
-// Moved out of view with an inline transform when closed
-const Menu = (props: DivProps & { inert?: boolean }) => (
-  <div
-    className="fixed top-0 left-0 bg-surface border border-solid border-border border-l-0 rounded-[0_8px_8px_0] shadow-[2px_0_8px_rgba(0,0,0,0.1)] z-[999] w-[220px] h-screen transition-transform duration-300 ease-[ease] flex flex-col overflow-x-hidden overflow-y-auto"
-    {...props}
-  />
-);
-
-const MenuHeader = (props: DivProps) => (
-  <div
-    className="py-[10px] px-4 text-[18px] font-semibold text-text border-b border-border bg-primary rounded-[0_8px_0_0] flex justify-between items-center"
-    {...props}
-  />
-);
-
-const CloseButton = (props: ButtonProps) => (
-  <button
-    className="bg-transparent border-none text-[24px] text-text-secondary cursor-pointer p-2 rounded transition-[background-color] duration-200 ease-[ease] hover:bg-hover"
-    {...props}
-  />
-);
-
-const MenuSection = (props: DivProps) => (
-  <div className="border-b border-border last-of-type:border-b-0" {...props} />
-);
-
-const MenuSectionTitle = (props: DivProps) => (
-  <div className="p-4 text-[16px] font-semibold text-text bg-surface uppercase tracking-[0.5px]" {...props} />
-);
-
-const SubMenuItem = (props: ButtonProps) => (
-  <button
-    className="bg-transparent border-none pt-3 pr-4 pb-3 pl-10 w-full text-left cursor-pointer flex items-center gap-3 text-[16px] text-text-secondary transition-[background-color] duration-200 ease-[ease] hover:bg-hover [&_svg]:w-5 [&_svg]:h-5 [&_svg]:shrink-0"
-    {...props}
-  />
-);
-
-export const Header: React.FC = () => {
+const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const {
-    connectionStatus,
-    authRequired,
-    logout,
-    userLevel,
-  } = useWebSocketContext();
-  const { data: deviceProblems } = useDeviceProblems();
+  const effects = useEffects();
+  const { authRequired, logout, userLevel } = useWebSocketContext();
+  // Loaded when the menu is first opened, then kept in the query cache
+  const { data: rooms = [] } = useRooms({ enabled: open });
+  const { data: trades = [] } = useTrades({ enabled: open });
 
+  const go = (navigateTo: () => void) => {
+    navigateTo();
+    onOpenChange(false);
+  };
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="left" className="w-80 gap-0 overflow-y-auto">
+        <SheetHeader className="pb-2">
+          <SheetTitle>{m.NAVIGATION()}</SheetTitle>
+          <SheetDescription className="sr-only">{m.MENU()}</SheetDescription>
+        </SheetHeader>
+        <nav className="flex flex-col gap-5 px-2 pb-4">
+          <NavSection title={m.ROOMS()}>
+            {rooms.map((room) => (
+              <NavLink
+                key={room.id}
+                icon={<HomeIcon />}
+                onClick={() => go(() => navigate({ to: '/room/$roomId', params: { roomId: String(room.id) } }))}
+              >
+                {room.name}
+              </NavLink>
+            ))}
+          </NavSection>
+          <NavSection title={m.TRADES()}>
+            {trades.map((trade) => (
+              <NavLink
+                key={trade.id}
+                icon={<TagIcon />}
+                onClick={() => go(() => navigate({ to: '/trade/$tradeId', params: { tradeId: String(trade.id) } }))}
+              >
+                {trade.name}
+              </NavLink>
+            ))}
+          </NavSection>
+          <NavSection title={m.VIEWS()}>
+            <NavLink icon={<ListIcon />} onClick={() => go(() => navigate({ to: '/devices' }))}>
+              {m.ALL_DEVICES()}
+            </NavLink>
+            <NavLink icon={<BracesIcon />} onClick={() => go(() => navigate({ to: '/sysvars' }))}>
+              {m.SYSVARS()}
+            </NavLink>
+            <NavLink icon={<PlayIcon />} onClick={() => go(() => navigate({ to: '/programs' }))}>
+              {m.PROGRAMS()}
+            </NavLink>
+            {userLevel === 'admin' && (
+              <NavLink icon={<SlidersIcon />} onClick={() => go(() => navigate({ to: '/setup' }))}>
+                {m.SETUP()}
+              </NavLink>
+            )}
+          </NavSection>
+          <Separator />
+          <NavSection title={m.APPEARANCE()}>
+            <div className="flex h-11 items-center justify-between px-3">
+              <Label htmlFor="dark-mode" className="text-[15px] font-normal">
+                {m.DARK_MODE()}
+              </Label>
+              <Switch id="dark-mode" checked={theme.mode === 'dark'} onCheckedChange={toggleTheme} />
+            </div>
+            <div className="flex flex-col gap-2 px-3 pt-1">
+              <span id="effects-label" className="text-[15px]">
+                {m.EFFECTS()}
+              </span>
+              <div
+                role="radiogroup"
+                aria-labelledby="effects-label"
+                className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1"
+              >
+                {effectLevels.map(({ level, label }) => (
+                  <button
+                    key={level}
+                    role="radio"
+                    aria-checked={effects.level === level}
+                    onClick={() => effects.setLevel(level)}
+                    className={cn(
+                      'h-9 rounded-md text-sm font-medium transition-colors',
+                      effects.level === level
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {label()}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs text-muted-foreground">{m.EFFECTS_HINT()}</span>
+            </div>
+          </NavSection>
+          {authRequired && (
+            <>
+              <Separator />
+              <NavLink
+                icon={<LogOutIcon />}
+                onClick={() => {
+                  onOpenChange(false);
+                  logout();
+                }}
+              >
+                {m.LOGOUT()}
+              </NavLink>
+            </>
+          )}
+        </nav>
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+const ProblemsSheet = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
+  const { data: problems = [] } = useDeviceProblems();
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-[min(420px,90vw)] gap-0 sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>{m.DEVICE_PROBLEMS()}</SheetTitle>
+          <SheetDescription>
+            <WebUILink />
+          </SheetDescription>
+        </SheetHeader>
+        {problems.length === 0 ? (
+          <p className="px-4 text-sm text-muted-foreground">{m.NO_DEVICE_PROBLEMS()}</p>
+        ) : (
+          <ul aria-label={m.DEVICE_PROBLEMS()} className="flex flex-col gap-2 overflow-y-auto px-4 pb-4">
+            {problems.map((problem) => (
+              <li key={problem.address} className="flex flex-col gap-2 rounded-xl border bg-card p-3">
+                <div className="flex flex-col">
+                  <span className="font-medium">{problem.name}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {problem.roomId ? (
+                      <Link
+                        to="/room/$roomId"
+                        params={{ roomId: String(problem.roomId) }}
+                        onClick={() => onOpenChange(false)}
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {problem.roomName}
+                      </Link>
+                    ) : (
+                      m.NO_ROOM()
+                    )}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {problem.unreach && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-700 dark:text-red-300">
+                      <RadioIcon className="size-3" />
+                      {m.UNREACH()}
+                    </span>
+                  )}
+                  {problem.lowBat && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300">
+                      <BatteryLowIcon className="size-3" />
+                      {m.LOW_BAT()}
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+};
+
+export const Header: React.FC = () => {
+  const title = usePageTitleValue();
+  const effects = useEffects();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [problemsOpen, setProblemsOpen] = useState(false);
+  const { connectionStatus } = useWebSocketContext();
+  const { data: deviceProblems } = useDeviceProblems();
   const problemCount = deviceProblems?.length ?? 0;
 
   const connected = connectionStatus === 'Open';
@@ -101,137 +267,51 @@ export const Header: React.FC = () => {
     return () => clearTimeout(timer);
   }, [connected]);
 
-  // Loaded when the menu is first opened, then kept in the query cache
-  const { data: rooms = [] } = useRooms({ enabled: menuOpen });
-  const { data: trades = [] } = useTrades({ enabled: menuOpen });
-
   return (
-    <div className="fixed flex justify-between items-center w-full top-0 left-0 z-[1000] bg-primary py-[10px] px-5 box-border">
-      <div style={{ position: 'relative' }}>
-        <Menu
-          // Closed, it is only moved out of view: keep it out of reach of
-          // keyboard and screen readers
-          inert={!menuOpen}
-          style={{
-            transform: menuOpen ? 'translateX(0)' : 'translateX(-100%)',
-          }}
-        >
-          <MenuHeader>
-            {m.NAVIGATION()}
-            <CloseButton onClick={() => setMenuOpen(false)}>×</CloseButton>
-          </MenuHeader>
-          <MenuSection>
-            <MenuSectionTitle>{m.ROOMS()}</MenuSectionTitle>
-            {rooms.map((room) => (
-              <SubMenuItem
-                key={room.id}
-                onClick={() => {
-                  navigate({
-                    to: '/room/$roomId',
-                    params: { roomId: String(room.id) },
-                  });
-                  setMenuOpen(false);
-                }}
-              >
-                <TeenyiconsFloorplanSolid />
-                {room.name}
-              </SubMenuItem>
-            ))}
-          </MenuSection>
-          <MenuSection>
-            <MenuSectionTitle>{m.TRADES()}</MenuSectionTitle>
-            {trades.map((trade) => (
-              <SubMenuItem
-                key={trade.id}
-                onClick={() => {
-                  navigate({
-                    to: '/trade/$tradeId',
-                    params: { tradeId: trade.id.toString() },
-                  });
-                  setMenuOpen(false);
-                }}
-              >
-                <MdiPipeValve />
-                {trade.name}
-              </SubMenuItem>
-            ))}
-          </MenuSection>
-          <MenuSection>
-            <SubMenuItem
-              onClick={() => {
-                navigate({ to: '/devices' });
-                setMenuOpen(false);
-              }}
-            >
-              {m.ALL_DEVICES()}
-            </SubMenuItem>
-            <SubMenuItem
-              onClick={() => {
-                navigate({ to: '/sysvars' });
-                setMenuOpen(false);
-              }}
-            >
-              {m.SYSVARS()}
-            </SubMenuItem>
-            <SubMenuItem
-              onClick={() => {
-                navigate({ to: '/programs' });
-                setMenuOpen(false);
-              }}
-            >
-              {m.PROGRAMS()}
-            </SubMenuItem>
-            {userLevel === 'admin' && (
-              <SubMenuItem
-                onClick={() => {
-                  navigate({ to: '/setup' });
-                  setMenuOpen(false);
-                }}
-              >
-                {m.SETUP()}
-              </SubMenuItem>
-            )}
-          </MenuSection>
-          {authRequired && (
-            <MenuSection>
-              <SubMenuItem
-                onClick={() => {
-                  setMenuOpen(false);
-                  logout();
-                }}
-              >
-                {m.LOGOUT()}
-              </SubMenuItem>
-            </MenuSection>
-          )}
-        </Menu>
-        <IconButton onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
-          <MdiMenu />
-        </IconButton>
-      </div>
-      <div className="flex items-center gap-[14px]">
+    <header className="sticky top-0 z-40 border-b border-transparent bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto flex h-[72px] max-w-[1400px] items-center gap-3 px-4 sm:px-6">
+        <Button variant="outline" size="icon-lg" onClick={() => setMenuOpen(true)} aria-label={m.MENU()}>
+          <MenuIcon className="size-5" />
+        </Button>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-xl leading-tight font-semibold tracking-tight sm:text-2xl">{title}</span>
+          <Clock />
+        </div>
         {problemCount > 0 && (
-          <ProblemBadge
-            onClick={() => navigate({ to: '/' })}
+          <button
+            onClick={() => setProblemsOpen(true)}
             aria-label={`${m.DEVICE_PROBLEMS()}: ${problemCount}`}
-            title={m.DEVICE_PROBLEMS()}
+            className="press flex h-11 items-center gap-2.5 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 text-[15px] font-medium text-amber-700 sm:px-4 dark:text-amber-300"
+            style={
+              effects.on ? { boxShadow: `0 0 ${20 * effects.k}px -4px rgba(251,191,36,${Math.min(1, 0.4 * effects.k)})` } : undefined
+            }
           >
-            ⚠️ {problemCount}
-          </ProblemBadge>
+            <span className="relative block size-2">
+              {effects.on && <span className="absolute inset-0 animate-ping rounded-full bg-amber-400" />}
+              <span className="absolute inset-0 rounded-full bg-amber-400" />
+            </span>
+            <TriangleAlertIcon className="size-4 sm:hidden" />
+            <span className="hidden sm:inline">
+              {problemCount === 1 ? m.PROBLEMS_ONE() : m.PROBLEMS_MANY({ count: problemCount })}
+            </span>
+            <span className="sm:hidden">{problemCount}</span>
+          </button>
         )}
-        <ConnectionDot
-          connected={connected}
+        <span
           role="img"
           aria-label={connected ? m.CONNECTED() : m.CONNECTING()}
-          title={connected ? m.CONNECTED() : m.CONNECTING()}
+          title={connected ? m.CONNECTION_OK() : m.CONNECTING()}
+          className={cn('size-2.5 shrink-0 rounded-full', connected ? 'bg-green-500' : 'bg-red-500')}
+          style={connected && effects.on ? { boxShadow: `0 0 ${8 * effects.k}px rgba(34,197,94,0.7)` } : undefined}
         />
-        <IconButton onClick={toggleTheme} aria-label="Toggle Theme">
-          {theme.mode === 'light' ? '🌙' : '☀️'}
-        </IconButton>
       </div>
       {showConnectionWarning && (
-        <ConnectionBanner role="status">{m.CONNECTION_LOST()}</ConnectionBanner>
+        <div role="status" className="bg-red-600 px-4 py-1.5 text-center text-sm font-medium text-white">
+          {m.CONNECTION_LOST()}
+        </div>
       )}
-    </div>
+      <NavMenu open={menuOpen} onOpenChange={setMenuOpen} />
+      <ProblemsSheet open={problemsOpen} onOpenChange={setProblemsOpen} />
+    </header>
   );
 };

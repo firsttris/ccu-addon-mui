@@ -1,21 +1,32 @@
+import { useEffect } from 'react';
 import { useParams } from '@tanstack/react-router';
-import { ChannelGroup } from '../components/ChannelGroup';
-import { useChannels } from '../queries';
+import { useChannels, useRooms } from '../queries';
+import { usePageTitle } from '../contexts/PageTitleContext';
+import { Dashboard, NavTabs } from './Dashboard';
+import { m } from '../paraglide/messages';
+
+// The start page opens the room shown last
+export const LAST_ROOM_KEY = 'last-room';
 
 export const Room = () => {
   const { roomId } = useParams({ from: '/room/$roomId' });
+  const { data: rooms = [] } = useRooms();
+  const { channelsByType, isLoading } = useChannels({ roomId });
+  usePageTitle(rooms.find((room) => String(room.id) === roomId)?.name ?? m.ROOMS());
 
-  const { channelsByType } = useChannels({ roomId });
+  useEffect(() => {
+    try {
+      localStorage.setItem(LAST_ROOM_KEY, roomId);
+    } catch {
+      // Private mode: start with the first room
+    }
+  }, [roomId]);
 
   return (
-    <div className="m-[15px] max-[400px]:m-[5px]">
-      <div className="flex flex-col gap-[10px] max-w-[1280px] mx-auto pt-[60px] max-[400px]:pt-[80px]">
-        <ul className="list-none p-0 m-0">
-          {channelsByType.map(([channelType, channels]) => (
-            <ChannelGroup key={channelType} channelType={channelType} channels={channels} />
-          ))}
-        </ul>
-      </div>
-    </div>
+    <Dashboard
+      tabs={<NavTabs label={m.ROOMS()} items={rooms} activeId={roomId} to="/room/$roomId" />}
+      channelsByType={channelsByType}
+      isLoading={isLoading}
+    />
   );
 };

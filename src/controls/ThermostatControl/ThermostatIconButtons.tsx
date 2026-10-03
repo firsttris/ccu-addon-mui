@@ -1,9 +1,10 @@
-import { ButtonHTMLAttributes } from 'react';
-import MdiPowerStandby from '~icons/mdi/power-standby';
-import MdiCalendarAuto from '~icons/mdi/thermostat-auto';
-import MdiHandManual from '~icons/mdi/thermostat-cog';
-import MdiFlame from '~icons/mdi/fire';
+import PowerIcon from '~icons/lucide/power';
+import CalendarIcon from '~icons/lucide/calendar-clock';
+import HandIcon from '~icons/lucide/hand';
+import FlameIcon from '~icons/lucide/flame';
+import { useEffects } from '../../contexts/EffectsContext';
 import { m } from '../../paraglide/messages';
+import { cn } from '../../lib/utils';
 
 interface ThermostatIconButtonsProps {
   manualMode: boolean;
@@ -14,14 +15,8 @@ interface ThermostatIconButtonsProps {
   onToggleBoost: () => void;
 }
 
-const IconButton = ({ active, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) => (
-  <button
-    className={`bg-transparent border-none cursor-pointer p-2 flex items-center justify-center [transition:color_0.3s_ease,transform_0.2s_ease] rounded-full w-10 h-10 hover:bg-hover active:[transform:scale(0.95)] [&_svg]:w-6 [&_svg]:h-6 ${
-      active ? 'text-[#03A9F4] hover:text-[#03A9F4]' : 'text-text-secondary hover:text-text'
-    }`}
-    {...props}
-  />
-);
+const iconButton =
+  'press flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground [&_svg]:size-5';
 
 export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
   manualMode,
@@ -31,26 +26,35 @@ export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
   onToggleMode,
   onToggleBoost,
 }) => {
+  const effects = useEffects();
   return (
-    <div className="flex gap-2 -mt-12 mb-3 justify-center z-10">
-      <IconButton onClick={onPowerOff} title={m.POWER_OFF()}>
-        <MdiPowerStandby />
-      </IconButton>
-      <IconButton
-        active={manualMode}
+    <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1">
+      <button className={iconButton} onClick={onPowerOff} title={m.POWER_OFF()} aria-label={m.POWER_OFF()}>
+        <PowerIcon />
+      </button>
+      <button
+        className={cn(iconButton, manualMode && 'bg-sky-500/15 text-sky-600 hover:text-sky-600 dark:text-sky-300')}
         onClick={onToggleMode}
-        title={manualMode ? m.MANUAL() : m.AUTOMATIC()}
+        title={manualMode ? m.SWITCH_MANUAL() : m.SWITCH_AUTO()}
+        aria-label={manualMode ? m.MANUAL() : m.AUTOMATIC()}
       >
-        {manualMode ? <MdiHandManual /> : <MdiCalendarAuto />}
-      </IconButton>
+        {manualMode ? <HandIcon /> : <CalendarIcon />}
+      </button>
       {isRadiatorThermostat && (
-        <IconButton
-          active={boostMode}
+        <button
+          className={cn(iconButton, boostMode && 'bg-orange-500/15 text-orange-600 hover:text-orange-600 dark:text-orange-300')}
           onClick={onToggleBoost}
           title={m.BOOST()}
+          aria-label={m.BOOST()}
+          aria-pressed={boostMode}
+          style={
+            boostMode && effects.on
+              ? { boxShadow: `0 0 ${16 * effects.k}px rgba(255,112,67,${Math.min(1, 0.45 * effects.k)})` }
+              : undefined
+          }
         >
-          <MdiFlame />
-        </IconButton>
+          <FlameIcon />
+        </button>
       )}
     </div>
   );
