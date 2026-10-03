@@ -211,6 +211,12 @@
     },
     "setChannelOption": {
       "$ref": "#/definitions/SetChannelOptionCall"
+    },
+    "getHistory": {
+      "$ref": "#/definitions/GetHistoryCall"
+    },
+    "clearHistory": {
+      "$ref": "#/definitions/ClearHistoryCall"
     }
   },
   "required": [
@@ -282,7 +288,9 @@
     "getUsers",
     "saveUser",
     "deleteUser",
-    "setChannelOption"
+    "setChannelOption",
+    "getHistory",
+    "clearHistory"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2718,6 +2726,12 @@
         },
         {
           "$ref": "#/definitions/SetChannelOptionResponse"
+        },
+        {
+          "$ref": "#/definitions/GetHistoryResponse"
+        },
+        {
+          "$ref": "#/definitions/ClearHistoryResponse"
         }
       ]
     },
@@ -6031,6 +6045,169 @@
         "response"
       ],
       "additionalProperties": false
+    },
+    "GetHistoryRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getHistory"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "0 is the newest entry"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getHistory_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HistoryEntry"
+          }
+        },
+        "total": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "entries",
+        "total"
+      ],
+      "additionalProperties": false
+    },
+    "GetHistoryCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetHistoryRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetHistoryResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "ClearHistoryRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "clearHistory"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ClearHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "clearHistory_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "ClearHistoryCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ClearHistoryRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ClearHistoryResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "HistoryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group",
+        "time",
+        "kind",
+        "name",
+        "value"
+      ],
+      "description": "One entry of the system protocol (dom.GetHistoryData)",
+      "properties": {
+        "group": {
+          "type": "integer",
+          "description": "entries of one event share a group"
+        },
+        "time": {
+          "type": "string",
+          "description": "YYYY-MM-DD HH:MM:SS"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "channel",
+            "sysvar"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "datapoint": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string",
+          "description": "the value as the WebUI writes it (system variables)"
+        }
+      }
     }
   }
 }

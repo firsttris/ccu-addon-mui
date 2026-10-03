@@ -1357,3 +1357,34 @@ func TestStackChannelOptions(t *testing.T) {
 		t.Fatalf("expected INVALID_VALUE, got %v", m)
 	}
 }
+
+func TestStackHistory(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
+	receive(t, conn, byRequestID("e"))
+
+	send(t, conn, message{"type": "setChannelOption", "requestId": "o", "id": 101, "option": "logged", "value": true})
+	receive(t, conn, byRequestID("o"))
+	send(t, conn, message{"type": "getHistory", "requestId": "h1", "start": 0, "count": 50})
+	history := receive(t, conn, byRequestID("h1"))
+	entries := history["entries"].([]interface{})
+	if history["total"] != 1.0 || len(entries) != 1 {
+		t.Fatalf("unexpected history: %v", history)
+	}
+	if e := entries[0].(map[string]interface{}); e["name"] != "Wohnzimmer Licht" || e["datapoint"] != "STATE" || e["kind"] != "channel" {
+		t.Fatalf("unexpected entry: %v", e)
+	}
+	send(t, conn, message{"type": "getHistory", "requestId": "h2", "start": 0, "count": 501})
+	if m := receive(t, conn, byRequestID("h2")); m["code"] != "INVALID_REQUEST" {
+		t.Fatalf("expected INVALID_REQUEST, got %v", m)
+	}
+	send(t, conn, message{"type": "clearHistory", "requestId": "h3"})
+	if m := receive(t, conn, byRequestID("h3")); m["success"] != true {
+		t.Fatalf("clearHistory failed: %v", m)
+	}
+	send(t, conn, message{"type": "getHistory", "requestId": "h4"})
+	if m := receive(t, conn, byRequestID("h4")); m["total"] != 0.0 {
+		t.Fatalf("history not cleared: %v", m)
+	}
+}

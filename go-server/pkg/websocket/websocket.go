@@ -521,6 +521,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSystemInfo(client, requestID)
 	case "getUsers", "saveUser", "deleteUser":
 		s.handleUsers(client, msgType, message)
+	case "getHistory", "clearHistory":
+		s.handleHistory(client, msgType, message)
 	case "getSystemSettings", "setLocation", "powerAction":
 		s.handleSystemSettings(client, msgType, message)
 	case "listSessions", "revokeSession", "logout":

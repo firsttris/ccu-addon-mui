@@ -124,6 +124,8 @@ func Scripts() map[string]string {
 		"delete_user":                 deleteUserScript,
 		"set_channel_option":          setChannelOptionScript,
 		"get_read_only_channels":      getReadOnlyChannelsScript,
+		"get_history":                 getHistoryScript,
+		"clear_history":               clearHistoryScript,
 	}
 }
 
@@ -174,3 +176,9 @@ var setChannelOptionScript string
 
 //go:embed scripts/get_read_only_channels.tcl
 var getReadOnlyChannelsScript string
+
+//go:embed scripts/get_history.tcl
+var getHistoryScript string
+
+//go:embed scripts/clear_history.tcl
+var clearHistoryScript string
