@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ccu-addon-mui-server/pkg/addons"
 	"context"
 	"fmt"
 	"os"
@@ -86,6 +87,9 @@ func run(ctx context.Context, cfg *config.Config) error {
 		return fmt.Errorf("failed to create the XML-RPC client: %w", err)
 	}
 	wsServer.SetDeviceRPC(deviceRPC)
+
+	// The add-ons; this one's rc.d script is "mui" (addon_installer/rc.d)
+	wsServer.SetAddons(addons.New(cfg.AddonsDir, "mui", cfg.WebUIURL))
 
 	// Push notifications about new alarms and service messages
 	if store, err := push.OpenStore(cfg.PushFile); err != nil {
