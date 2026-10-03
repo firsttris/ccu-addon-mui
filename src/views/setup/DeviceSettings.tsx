@@ -3,7 +3,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { Link, useParams } from '@tanstack/react-router';
 import { useQueries } from '@tanstack/react-query';
 import { useDevices, useParamset, usePutParamset } from '../../queries';
-import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { ElevateDialog } from '../../components/ElevateDialog';
 import { useToast } from '../../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../../i18n/utils';
 import { DatapointValue, ParamsetDescription } from '../../types/types';
@@ -55,8 +56,10 @@ export const DeviceSettings = () => {
   const t = useTranslations();
   const { showToast } = useToast();
   const { request } = useWebSocketActions();
-  const { userLevel } = useWebSocketContext();
+  const { userLevel, elevated } = useWebSocketContext();
   const isAdmin = userLevel === 'admin';
+  const canEdit = isAdmin && elevated;
+  const [elevating, setElevating] = useState(false);
   const { data: devices } = useDevices();
   const names = useChannelNames();
   const putParamset = usePutParamset();
@@ -134,7 +137,12 @@ export const DeviceSettings = () => {
       setDrafts({});
       showToast(t('SAVED'), 'info');
     } catch (error) {
-      showToast(`${t('SAVE_FAILED')}: ${error instanceof Error ? error.message : error}`);
+      if (error instanceof RequestError && error.code === 'ELEVATION_REQUIRED') {
+        // The 8 hours are over: ask for the password, keep the changes
+        setElevating(true);
+      } else {
+        showToast(`${t('SAVE_FAILED')}: ${error instanceof Error ? error.message : error}`);
+      }
     } finally {
       setConfirming(false);
     }
@@ -153,6 +161,14 @@ export const DeviceSettings = () => {
         {device?.firmware ? ` · ${t('FIRMWARE')} ${device.firmware}` : ''} · <WebUILink />
       </p>
       {!isAdmin && <Notice role="status">{t('ADMIN_ONLY')}</Notice>}
+      {isAdmin && !elevated && (
+        <Notice role="status">
+          {t('ELEVATE_HINT')}{' '}
+          <DialogButton type="button" onClick={() => setElevating(true)}>
+            {t('ELEVATE')}
+          </DialogButton>
+        </Notice>
+      )}
       {configPending && <Notice role="status">{t('CONFIG_PENDING')}</Notice>}
 
       {sections.map((s) => {
@@ -168,7 +184,7 @@ export const DeviceSettings = () => {
               description={s.description}
               values={{ ...s.current, ...draft }}
               changed={new Set(Object.keys(draft))}
-              readOnly={!isAdmin}
+              readOnly={!canEdit}
               onSet={(name, value) => setDraft(s.address, s.current, name, value)}
             />
           </Section>
@@ -176,7 +192,7 @@ export const DeviceSettings = () => {
       })}
       {!loading && sections.length === 0 && <p>{t('NO_SETTINGS')}</p>}
 
-      {isAdmin && sections.length > 0 && (
+      {canEdit && sections.length > 0 && (
         <Toolbar>
           <DialogButton type="button" primary disabled={changes.length === 0} onClick={() => setConfirming(true)}>
             {t('SAVE')} {changes.length > 0 ? `(${changes.length})` : ''}
@@ -186,6 +202,8 @@ export const DeviceSettings = () => {
           </DialogButton>
         </Toolbar>
       )}
+
+      {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}
 
       {confirming && (
         <ConfirmDialog

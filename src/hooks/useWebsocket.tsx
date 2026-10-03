@@ -45,6 +45,9 @@ export interface Response {
   token?: string;
   user?: string;
   level?: UserLevel;
+  // auth_response, elevate_response: for changing settings
+  adminToken?: string;
+  elevated?: boolean;
   requestId?: string;
   // deviceProblems
   devices?: DeviceProblem[];
@@ -84,23 +87,25 @@ interface PendingRequest {
 }
 
 const TOKEN_STORAGE_KEY = 'ccu-addon-mui_AuthToken';
+// Short-lived token for changing settings (administrators)
+const ADMIN_TOKEN_STORAGE_KEY = 'ccu-addon-mui_AdminToken';
 // Includes the time a request waits in the queue until logged in
 const REQUEST_TIMEOUT_MS = 20000;
 
-const readToken = () => {
+const readToken = (key = TOKEN_STORAGE_KEY) => {
   try {
-    return localStorage.getItem(TOKEN_STORAGE_KEY);
+    return localStorage.getItem(key);
   } catch {
     return null;
   }
 };
 
-const writeToken = (token: string | null) => {
+const writeToken = (token: string | null, key = TOKEN_STORAGE_KEY) => {
   try {
     if (token) {
-      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      localStorage.setItem(key, token);
     } else {
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      localStorage.removeItem(key);
     }
   } catch {
     // Without storage the user has to log in again after a reload
@@ -117,6 +122,8 @@ export const useWebsocket = () => {
   const [authState, setAuthState] = useState<AuthState>('pending');
   const [authRequired, setAuthRequired] = useState(false);
   const [userLevel, setUserLevel] = useState<UserLevel>('');
+  // May change settings: password entered recently (admin token)
+  const [elevated, setElevated] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const deviceId = useUniqueDeviceID();
@@ -156,6 +163,10 @@ export const useWebsocket = () => {
         pendingRequestsRef.current.delete(response.requestId);
         if (response.type === 'error') {
           pendingRequest.reject(new RequestError(response.error ?? 'request failed', response.code));
+          if (response.code === 'ELEVATION_REQUIRED') {
+            // The admin token has expired
+            setElevated(false);
+          }
           // A rejected request may also mean the login has expired
           if (response.code !== 'AUTH_REQUIRED') {
             return;
@@ -274,8 +285,15 @@ export const useWebsocket = () => {
       // Renewed on every connect, so a device in regular use stays logged in
       writeToken(response.token);
     }
+    if (response.adminToken) {
+      writeToken(response.adminToken, ADMIN_TOKEN_STORAGE_KEY);
+    } else if (!response.elevated) {
+      // Expired
+      writeToken(null, ADMIN_TOKEN_STORAGE_KEY);
+    }
     setLoginError(null);
     setUserLevel(response.level ?? '');
+    setElevated(response.elevated === true);
     setAuthState('authenticated');
     readyRef.current = true;
 
@@ -298,7 +316,14 @@ export const useWebsocket = () => {
     if (readyState === ReadyState.OPEN) {
       // Without a token the answer will be "log in"; don't flash the app meanwhile
       setAuthState((prev) => (prev === 'loginRequired' && !readToken() ? prev : 'pending'));
-      sendMessage(JSON.stringify({ type: 'auth', token: readToken() ?? undefined }), false);
+      sendMessage(
+        JSON.stringify({
+          type: 'auth',
+          token: readToken() ?? undefined,
+          adminToken: readToken(ADMIN_TOKEN_STORAGE_KEY) ?? undefined,
+        }),
+        false,
+      );
     } else {
       readyRef.current = false;
     }
@@ -312,8 +337,23 @@ export const useWebsocket = () => {
     [sendMessage],
   );
 
+  // Enter the password again to change settings; rejects with the error
+  // code (INVALID_CREDENTIALS, TOO_MANY_ATTEMPTS, ...)
+  const elevate = useCallback(
+    async (password: string) => {
+      const response = await request({ type: 'elevate', password }, { queue: false });
+      if (response.adminToken) {
+        writeToken(response.adminToken, ADMIN_TOKEN_STORAGE_KEY);
+      }
+      setElevated(true);
+    },
+    [request],
+  );
+
   const logout = useCallback(() => {
     writeToken(null);
+    writeToken(null, ADMIN_TOKEN_STORAGE_KEY);
+    setElevated(false);
     readyRef.current = false;
     setAuthState('loginRequired');
     // The server still treats this connection as logged in; reconnect
@@ -330,13 +370,13 @@ export const useWebsocket = () => {
 
   // All functions are stable, so this object doesn't change on events
   const actions = useMemo(
-    () => ({ request, subscribe, addEventListener, login, logout }),
-    [request, subscribe, addEventListener, login, logout],
+    () => ({ request, subscribe, addEventListener, login, logout, elevate }),
+    [request, subscribe, addEventListener, login, logout, elevate],
   );
 
   const state = useMemo(
-    () => ({ ...actions, connectionStatus, authState, authRequired, userLevel, loginError }),
-    [actions, connectionStatus, authState, authRequired, userLevel, loginError],
+    () => ({ ...actions, connectionStatus, authState, authRequired, userLevel, elevated, loginError }),
+    [actions, connectionStatus, authState, authRequired, userLevel, elevated, loginError],
   );
 
   return { actions, state };

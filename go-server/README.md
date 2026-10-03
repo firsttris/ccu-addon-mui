@@ -113,8 +113,8 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 
 | Request | Response |
 |---------|----------|
-| `{"type": "auth", "token": "…"}` | `{"type": "auth_response", "success", "authRequired", "user", "level", "token"}`: the token is renewed, store the new one. `level` is the CCU user level (`admin`, `user`, `guest`, empty if unknown) |
-| `{"type": "login", "username", "password"}` | `auth_response` with a token (valid for a year) or a `code`: `INVALID_CREDENTIALS`, `TOO_MANY_ATTEMPTS`, `CCU_UNREACHABLE` |
+| `{"type": "auth", "token": "…", "adminToken": "…"}` | `{"type": "auth_response", "success", "authRequired", "user", "level", "token", "elevated"}`: the token is renewed, store the new one. `level` is the CCU user level (`admin`, `user`, `guest`, empty if unknown) |
+| `{"type": "login", "username", "password"}` | `auth_response` with a token (valid for a year, for operating; administrators also get an `adminToken` for 8 hours) or a `code`: `INVALID_CREDENTIALS`, `TOO_MANY_ATTEMPTS`, `CCU_UNREACHABLE` |
 | `{"type": "getRooms", "deviceId"}` | `{"deviceId", "rooms": [{"id", "name"}]}` |
 | `{"type": "getTrades", "deviceId"}` | `{"deviceId", "trades": [{"id", "name"}]}` |
 | `{"type": "getChannels", "deviceId", "roomId" \| "tradeId" \| "all": true}` | `{"deviceId", "roomId" \| "tradeId" \| "all", "channels": [{"id", "address", "name", "type", "interfaceName", "datapoints", "statusAddress", "status": {"LOW_BAT", "UNREACH"}}]}` |
@@ -123,6 +123,9 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 | `{"type": "getDeviceProblems"}` | `{"type": "deviceProblems", "devices": [{"address", "name", "roomId", "roomName", "lowBat", "unreach"}]}` |
 | `{"type": "getParamsetDescription", "interfaceName", "address", "paramsetKey": "VALUES" \| "MASTER"}` | `{"type": "paramsetDescription", "address", "paramsetKey", "description": {"<PARAM>": {"type", "operations", "flags", "min", "max", "default", "unit", "valueList", "special"}}}` (cached per device type and firmware) |
 | `{"type": "getParamset", "interfaceName", "address", "paramsetKey"}` | `{"type": "paramset", "address", "paramsetKey", "values"}` |
+| `{"type": "putParamset", "interfaceName", "address", "paramsetKey": "MASTER", "values"}` | `{"type": "putParamset_response", "success"}` or an error with `code` `FORBIDDEN` (not an administrator), `ELEVATION_REQUIRED` (password needed again), `INVALID_VALUE` (checked against the description), `CCU_ERROR`. Recorded in the audit log |
+| `{"type": "elevate", "password"}` | `{"type": "elevate_response", "success", "adminToken"}`: administrators get a token for changing settings, valid for 8 hours; pass it as `adminToken` in `auth` after a reconnect |
+| `{"type": "listDevices"}` | `{"type": "devices", "devices": [{"interfaceName", "address", "type", "firmware", "children", "paramsets"}]}` |
 
 ## 🧪 Testing
 

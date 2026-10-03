@@ -183,7 +183,7 @@ func TestLoginStoresUserLevelInToken(t *testing.T) {
 		t.Fatalf("Login = %+v, %v", session, err)
 	}
 	verified, err := a.Verify(token)
-	if err != nil || verified != (Session{User: "Admin", Level: LevelAdmin}) {
+	if err != nil || verified.User != "Admin" || verified.Level != LevelAdmin || verified.Scope != ScopeOperate {
 		t.Fatalf("Verify = %+v, %v", verified, err)
 	}
 }
@@ -230,5 +230,47 @@ func TestLevelFromCCU(t *testing.T) {
 		if got := LevelFromCCU(level); got != want {
 			t.Errorf("LevelFromCCU(%d) = %q, want %q", level, got, want)
 		}
+	}
+}
+
+func TestAdminTokens(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	a := newTestAuthenticator(t, ccu.URL)
+	now := time.Now()
+	a.now = func() time.Time { return now }
+	a.SetLevelFunc(func(string) (string, error) { return LevelAdmin, nil })
+
+	if _, err := a.IssueAdminToken(Session{User: "Gast", Level: LevelGuest}); err != ErrNotAdmin {
+		t.Fatalf("expected ErrNotAdmin, got %v", err)
+	}
+
+	token, err := a.Elevate("Admin", "secret")
+	if err != nil {
+		t.Fatal(err)
+	}
+	expiry, ok := a.VerifyAdmin(token, "Admin")
+	if _, other := a.VerifyAdmin(token, "Other"); !ok || other {
+		t.Fatal("admin token must be valid for its user only")
+	}
+	if expiry.Unix() != now.Add(adminTokenLifetime).Unix() {
+		t.Fatalf("unexpected expiry %v", expiry)
+	}
+	// An operating token is no admin token, and an admin token can't be renewed
+	if _, ok := a.VerifyAdmin(a.issueToken(Session{User: "Admin", Level: LevelAdmin}), "Admin"); ok {
+		t.Fatal("operating token accepted as admin token")
+	}
+	if _, _, err := a.Refresh(token); err != ErrInvalidToken {
+		t.Fatalf("admin token must not be renewed, got %v", err)
+	}
+
+	now = now.Add(adminTokenLifetime + time.Minute)
+	if _, ok := a.VerifyAdmin(token, "Admin"); ok {
+		t.Fatal("admin token must expire")
+	}
+
+	if _, err := a.Elevate("Admin", "wrong"); err != ErrInvalidCredentials {
+		t.Fatalf("expected ErrInvalidCredentials, got %v", err)
 	}
 }

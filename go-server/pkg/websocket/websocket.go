@@ -100,13 +100,26 @@ type Client struct {
 	authenticated bool
 	user          string
 	level         string
+	// elevatedUntil: until then the client may change settings (it proved
+	// the password recently: admin token). Zero means never; without
+	// authentication it is far in the future.
+	elevatedUntil time.Time
 }
+
+// elevated reports whether the client may change settings now.
+func (c *Client) elevated() bool {
+	return time.Now().Before(c.elevatedUntil)
+}
+
+// alwaysElevated is used when authentication is disabled.
+var alwaysElevated = time.Date(9999, 1, 1, 0, 0, 0, 0, time.UTC)
 
 // setSession marks the client as logged in as user with a CCU user level.
 func (c *Client) setSession(user, level string) {
 	c.authenticated = true
 	c.user = user
 	c.level = level
+	c.elevatedUntil = time.Time{}
 }
 
 // canOperate: everyone but guests may switch devices. An unknown level (it
@@ -115,9 +128,16 @@ func canOperate(level string) bool {
 	return level != auth.LevelGuest
 }
 
-// canConfigure: only administrators may change device settings.
-func canConfigure(level string) bool {
-	return level == auth.LevelAdmin
+// configureError says why a client may not change settings, or "" if it
+// may: administrators only, and only with a recent password (admin token).
+func configureError(c *Client) (code, message string) {
+	if c.level != auth.LevelAdmin {
+		return "FORBIDDEN", "only administrators may change device settings"
+	}
+	if !c.elevated() {
+		return "ELEVATION_REQUIRED", "enter the password again to change settings"
+	}
+	return "", ""
 }
 
 func newClient(conn *websocket.Conn) *Client {
@@ -424,6 +444,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handlePutParamset(client, message)
 	case "listDevices":
 		s.handleListDevices(client, requestID)
+	case "elevate":
+		s.handleElevate(client, message)
 	default:
 		s.sendRequestError(client, requestID, fmt.Sprintf("unknown message type: %s", msgType), "")
 	}
@@ -590,11 +612,15 @@ type authResponse struct {
 	AuthRequired bool   `json:"authRequired"`
 	User         string `json:"user,omitempty"`
 	// Level is the CCU user level ("admin", "user", "guest"), empty if
-	// unknown. Not enforced yet.
+	// unknown.
 	Level string `json:"level,omitempty"`
-	Token string `json:"token,omitempty"`
-	Error string `json:"error,omitempty"`
-	Code  string `json:"code,omitempty"`
+	// AdminToken (administrators, after entering the password) allows
+	// changing settings for a few hours; Elevated says whether it is valid.
+	AdminToken string `json:"adminToken,omitempty"`
+	Elevated   bool   `json:"elevated"`
+	Token      string `json:"token,omitempty"`
+	Error      string `json:"error,omitempty"`
+	Code       string `json:"code,omitempty"`
 }
 
 // handleAuth checks a stored token. Every client sends this first after
@@ -602,14 +628,16 @@ type authResponse struct {
 // has to log in again.
 func (s *Server) handleAuth(client *Client, message []byte) {
 	var msg struct {
-		Token string `json:"token"`
+		Token      string `json:"token"`
+		AdminToken string `json:"adminToken"`
 	}
 	_ = json.Unmarshal(message, &msg)
 
 	if s.auth == nil {
 		// Without authentication everyone can do everything
 		client.setSession("", auth.LevelAdmin)
-		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin})
+		client.elevatedUntil = alwaysElevated
+		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin, Elevated: true})
 		return
 	}
 
@@ -621,7 +649,15 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	}
 
 	client.setSession(session.User, session.Level)
-	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level, Token: token})
+	if msg.AdminToken != "" {
+		if expiry, ok := s.auth.VerifyAdmin(msg.AdminToken, session.User); ok {
+			client.elevatedUntil = expiry
+		}
+	}
+	s.sendJSON(client, authResponse{
+		Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level,
+		Token: token, Elevated: client.elevated(),
+	})
 }
 
 // handleLogin verifies CCU credentials and returns a token for the client
@@ -638,7 +674,8 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 
 	if s.auth == nil {
 		client.setSession("", auth.LevelAdmin)
-		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin})
+		client.elevatedUntil = alwaysElevated
+		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin, Elevated: true})
 		return
 	}
 
@@ -658,7 +695,58 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 
 	logger.Info(fmt.Sprintf("🔓 User %q logged in", msg.Username))
 	client.setSession(session.User, session.Level)
-	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level, Token: token})
+	// The password was just entered: administrators may set up right away
+	adminToken, err := s.auth.IssueAdminToken(session)
+	if err == nil {
+		client.elevatedUntil = s.auth.AdminTokenExpiry()
+	}
+	s.sendJSON(client, authResponse{
+		Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level,
+		Token: token, AdminToken: adminToken, Elevated: client.elevated(),
+	})
+}
+
+type elevateResponse struct {
+	Type       string `json:"type"`
+	RequestID  string `json:"requestId,omitempty"`
+	Success    bool   `json:"success"`
+	AdminToken string `json:"adminToken,omitempty"`
+}
+
+// handleElevate checks the password of the logged-in user again and
+// returns an admin token for changing settings.
+func (s *Server) handleElevate(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		Password  string `json:"password"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_MESSAGE")
+		return
+	}
+	if s.auth == nil {
+		client.elevatedUntil = alwaysElevated
+		s.sendJSON(client, elevateResponse{Type: "elevate_response", RequestID: msg.RequestID, Success: true})
+		return
+	}
+
+	adminToken, err := s.auth.Elevate(client.user, msg.Password)
+	if err != nil {
+		code := "CCU_UNREACHABLE"
+		switch err {
+		case auth.ErrInvalidCredentials:
+			code = "INVALID_CREDENTIALS"
+		case auth.ErrTooManyAttempts:
+			code = "TOO_MANY_ATTEMPTS"
+		case auth.ErrNotAdmin:
+			code = "FORBIDDEN"
+		}
+		logger.Info(fmt.Sprintf("🔒 Elevation failed for user %q: %v", client.user, err))
+		s.sendRequestError(client, msg.RequestID, err.Error(), code)
+		return
+	}
+	client.elevatedUntil = s.auth.AdminTokenExpiry()
+	s.sendJSON(client, elevateResponse{Type: "elevate_response", RequestID: msg.RequestID, Success: true, AdminToken: adminToken})
 }
 
 type setDatapointResponse struct {
@@ -881,8 +969,8 @@ func (s *Server) handlePutParamset(client *Client, message []byte) {
 		s.sendRequestError(client, msg.RequestID, errorMsg, code)
 	}
 
-	if !canConfigure(client.level) {
-		fail("FORBIDDEN", "only administrators may change device settings")
+	if code, errorMsg := configureError(client); code != "" {
+		fail(code, errorMsg)
 		return
 	}
 	if s.rpc == nil {

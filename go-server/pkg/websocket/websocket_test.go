@@ -560,7 +560,7 @@ func TestPutParamsetOnlyForAdministrators(t *testing.T) {
 	s := NewServer(nil, nil)
 	rpc := &fakeDeviceRPC{}
 	s.SetDeviceRPC(rpc)
-	client := &Client{send: make(chan []byte, 4)}
+	client := &Client{send: make(chan []byte, 6)}
 	put := `{"type":"putParamset","requestId":"q1","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"MASTER","values":{"STATE":false}}`
 
 	client.setSession("Gast", auth.LevelGuest)
@@ -572,6 +572,14 @@ func TestPutParamsetOnlyForAdministrators(t *testing.T) {
 	assertErrorMessageContains(t, <-client.send, "only administrators")
 
 	client.setSession("Admin", auth.LevelAdmin)
+	s.handleMessage(client, []byte(put))
+	assertErrorMessageContains(t, <-client.send, "password again")
+
+	client.elevatedUntil = time.Now().Add(-time.Second) // expired
+	s.handleMessage(client, []byte(put))
+	assertErrorMessageContains(t, <-client.send, "password again")
+
+	client.elevatedUntil = time.Now().Add(time.Hour)
 	s.handleMessage(client, []byte(`{"type":"putParamset","requestId":"q2","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"VALUES","values":{"STATE":false}}`))
 	assertErrorMessageContains(t, <-client.send, "only the MASTER paramset")
 

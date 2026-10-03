@@ -350,3 +350,61 @@ func TestStackListDevices(t *testing.T) {
 		t.Fatalf("unexpected devices: %v", types)
 	}
 }
+
+func TestStackAdminTokenForSettings(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	login := loginAs(t, conn, "Admin", "secret")
+	if login["elevated"] != true || login["adminToken"] == nil {
+		t.Fatalf("an administrator who just entered the password may set up: %v", login)
+	}
+	token := login["token"].(string)
+
+	put := func(c *websocket.Conn, id string) message {
+		send(t, c, message{"type": "putParamset", "requestId": id, "interfaceName": "HmIP-RF",
+			"address": "0000DBE9A5C1F2:1", "paramsetKey": "MASTER", "values": map[string]interface{}{"EVENT_DELAY_UNIT": 1}})
+		return receive(t, c, byRequestID(id))
+	}
+
+	// A new connection (e.g. the wall tablet next morning) with the
+	// long-lived token only: operating yes, setting up no
+	url := fmt.Sprintf("ws://%s/", conn.RemoteAddr().String())
+	tablet, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tablet.Close()
+	send(t, tablet, message{"type": "auth", "token": token})
+	if m := receive(t, tablet, func(m message) bool { return m["type"] == "auth_response" }); m["success"] != true || m["elevated"] != false {
+		t.Fatalf("unexpected auth: %v", m)
+	}
+	if m := put(tablet, "q1"); m["code"] != "ELEVATION_REQUIRED" {
+		t.Fatalf("expected ELEVATION_REQUIRED, got %v", m)
+	}
+
+	send(t, tablet, message{"type": "elevate", "requestId": "q2", "password": "wrong"})
+	if m := receive(t, tablet, byRequestID("q2")); m["code"] != "INVALID_CREDENTIALS" {
+		t.Fatalf("expected INVALID_CREDENTIALS, got %v", m)
+	}
+	send(t, tablet, message{"type": "elevate", "requestId": "q3", "password": "secret"})
+	elevate := receive(t, tablet, byRequestID("q3"))
+	if elevate["success"] != true || elevate["adminToken"] == nil {
+		t.Fatalf("unexpected elevate response: %v", elevate)
+	}
+	if m := put(tablet, "q4"); m["success"] != true {
+		t.Fatalf("putParamset failed: %v", m)
+	}
+
+	// After a reconnect the admin token keeps it elevated
+	again, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer again.Close()
+	send(t, again, message{"type": "auth", "token": token, "adminToken": elevate["adminToken"]})
+	if m := receive(t, again, func(m message) bool { return m["type"] == "auth_response" }); m["elevated"] != true {
+		t.Fatalf("expected the admin token to be accepted: %v", m)
+	}
+	if ccu.CallCount("HmIP-RF putParamset") != 1 {
+		t.Fatalf("expected one putParamset, got %d", ccu.CallCount("HmIP-RF putParamset"))
+	}
+}

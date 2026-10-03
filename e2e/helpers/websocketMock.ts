@@ -262,7 +262,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
       if (message.type === 'auth') {
         if (!requireLogin) {
-          delayedBroadcast({ type: 'auth_response', success: true, authRequired: false, level: 'admin' });
+          delayedBroadcast({ type: 'auth_response', success: true, authRequired: false, level: 'admin', elevated: true });
           return;
         }
         state.authenticated = message.token === validToken;

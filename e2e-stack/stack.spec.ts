@@ -148,3 +148,31 @@ test('zeigt Gästen die Einstellungen nur an', async ({ page }) => {
   await expect(page.getByRole('combobox')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Speichern/ })).toHaveCount(0);
 });
+
+test('verlangt nach Ablauf des Admin-Tokens das Passwort erneut', async ({ page }) => {
+  await login(page);
+  // As if the 8 hours were over: only the long-lived token is left
+  await page.evaluate(() => localStorage.removeItem('ccu-addon-mui_AdminToken'));
+  await page.goto('/device/HmIP-RF/0000DBE9A5C1F2');
+
+  const settings = page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' });
+  await expect(settings.getByText('100MS')).toBeVisible();
+  await expect(settings.getByRole('combobox')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Passwort eingeben' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Passwort eingeben' });
+  await dialog.getByLabel('Passwort').fill('falsch');
+  await dialog.getByRole('button', { name: 'Bestätigen' }).click();
+  await expect(dialog.getByRole('alert')).toBeVisible();
+
+  await dialog.getByLabel('Passwort').fill('secret');
+  await dialog.getByRole('button', { name: 'Bestätigen' }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(settings.getByRole('combobox', { name: 'EVENT_DELAY_UNIT' })).toBeVisible();
+
+  // Kept across a reload
+  await page.reload();
+  await expect(
+    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'EVENT_DELAY_UNIT' }),
+  ).toBeVisible();
+});

@@ -97,6 +97,9 @@ export const ui = {
     NO_SETTINGS: 'This device has no settings.',
     CONFIG_PENDING: 'Transfer pending: press a button on the device so it fetches the settings.',
     RESET: 'Discard changes',
+    ELEVATE_HINT: 'To change settings, enter your password again (valid for 8 hours).',
+    ELEVATE: 'Enter password',
+    CONFIRM: 'Confirm',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
@@ -186,6 +189,9 @@ export const ui = {
     NO_SETTINGS: 'Dieses Gerät hat keine Einstellungen.',
     CONFIG_PENDING: 'Übernahme ausstehend: Am Gerät eine Taste drücken, damit es die Einstellungen abholt.',
     RESET: 'Änderungen verwerfen',
+    ELEVATE_HINT: 'Zum Ändern der Einstellungen bitte das Passwort erneut eingeben (gilt 8 Stunden).',
+    ELEVATE: 'Passwort eingeben',
+    CONFIRM: 'Bestätigen',
   },
 } as const;
 
