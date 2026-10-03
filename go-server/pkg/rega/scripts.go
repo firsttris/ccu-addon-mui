@@ -111,6 +111,9 @@ func Scripts() map[string]string {
 		"get_favorites":               getFavoritesScript,
 		"favorite_change":             favoriteChangeScript,
 		"set_channel_tile":            setChannelTileScript,
+		"get_program":                 getProgramScript,
+		"save_program":                saveProgramScript,
+		"delete_program":              deleteProgramScript,
 	}
 }
 
@@ -122,3 +125,12 @@ var favoriteChangeScript string
 
 //go:embed scripts/set_channel_tile.tcl
 var setChannelTileScript string
+
+//go:embed scripts/get_program.tcl
+var getProgramScript string
+
+//go:embed scripts/save_program.tcl
+var saveProgramScript string
+
+//go:embed scripts/delete_program.tcl
+var deleteProgramScript string

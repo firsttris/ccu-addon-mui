@@ -73,7 +73,10 @@ export type ServerMessage =
   | DeleteFavoriteResponse
   | AddFavoriteItemResponse
   | RemoveFavoriteItemResponse
-  | SetChannelTileResponse;
+  | SetChannelTileResponse
+  | GetProgramResponse
+  | SaveProgramResponse
+  | DeleteProgramResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -131,6 +134,9 @@ export interface Protocol {
   addFavoriteItem: AddFavoriteItemCall;
   removeFavoriteItem: RemoveFavoriteItemCall;
   setChannelTile: SetChannelTileCall;
+  getProgram: GetProgramCall;
+  saveProgram: SaveProgramCall;
+  deleteProgram: DeleteProgramCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1835,6 +1841,178 @@ export interface SetChannelTileRequest {
  */
 export interface SetChannelTileResponse {
   type: "setChannelTile_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetProgramCall".
+ */
+export interface GetProgramCall {
+  request: GetProgramRequest;
+  response: GetProgramResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetProgramRequest".
+ */
+export interface GetProgramRequest {
+  type: "getProgram";
+  requestId?: string;
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetProgramResponse".
+ */
+export interface GetProgramResponse {
+  type: "getProgram_response";
+  requestId?: string;
+  program: ProgramDefinition;
+}
+/**
+ * A program with its WENN / SONST WENN rules and the SONST branch
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ProgramDefinition".
+ */
+export interface ProgramDefinition {
+  /**
+   * 0 for a new program
+   */
+  id: number;
+  name: string;
+  description: string;
+  active: boolean;
+  rules: ProgramRule[];
+  else?: ProgramBranch;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ProgramRule".
+ */
+export interface ProgramRule {
+  groupOperator: "or" | "and";
+  groups: ProgramCondition[][];
+  breakOnRestart: boolean;
+  destinations: ProgramDestination[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ProgramCondition".
+ */
+export interface ProgramCondition {
+  /**
+   * ivtObjectId, ivtSystemId, ivtCurrentDate, ivtEmpty or N:<number>
+   */
+  leftType: string;
+  leftValue: number;
+  channel: number;
+  datapoint?: string;
+  compare: number;
+  trigger: number;
+  value1Type: string;
+  value1: string;
+  value2Type: string;
+  value2: string;
+  time?: TimeModule;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "TimeModule".
+ */
+export interface TimeModule {
+  id: number;
+  changed?: boolean;
+  timerType: number;
+  time: string;
+  duration: number;
+  sunOffset: number;
+  period: number;
+  weekdays: number;
+  repetitionValue: number;
+  begin: string;
+  end: string;
+  repetitionCount: number;
+  repeatTime: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ProgramDestination".
+ */
+export interface ProgramDestination {
+  /**
+   * ivtObjectId, ivtSystemId, ivtString (script), ivtEmpty or N:<number>
+   */
+  param: string;
+  channel: number;
+  datapointId: number;
+  datapoint?: string;
+  valueType: string;
+  value: string;
+  /**
+   * seconds, 0 for at once
+   */
+  delay: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ProgramBranch".
+ */
+export interface ProgramBranch {
+  breakOnRestart: boolean;
+  destinations: ProgramDestination[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveProgramCall".
+ */
+export interface SaveProgramCall {
+  request: SaveProgramRequest;
+  response: SaveProgramResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveProgramRequest".
+ */
+export interface SaveProgramRequest {
+  type: "saveProgram";
+  requestId?: string;
+  program: ProgramDefinition;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveProgramResponse".
+ */
+export interface SaveProgramResponse {
+  type: "saveProgram_response";
+  requestId?: string;
+  success: boolean;
+  id?: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteProgramCall".
+ */
+export interface DeleteProgramCall {
+  request: DeleteProgramRequest;
+  response: DeleteProgramResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteProgramRequest".
+ */
+export interface DeleteProgramRequest {
+  type: "deleteProgram";
+  requestId?: string;
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteProgramResponse".
+ */
+export interface DeleteProgramResponse {
+  type: "deleteProgram_response";
   requestId?: string;
   success: boolean;
 }

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"ccu-addon-mui-server/pkg/rega"
 )
 
 // Fixture is the state of a CCU: the ReGa objects the add-on reads (rooms,
@@ -58,7 +60,11 @@ type Program struct {
 	Active  bool   `json:"active"`
 	Visible bool   `json:"visible"`
 	// Runs counts how often the program was run (not part of ReGa)
-	Runs int `json:"runs,omitempty"`
+	Runs        int    `json:"runs,omitempty"`
+	Description string `json:"description,omitempty"`
+	// The program's rules, as the program editor reads and writes them
+	Rules []rega.ProgramRule  `json:"rules,omitempty"`
+	Else  *rega.ProgramBranch `json:"else,omitempty"`
 }
 
 // Group is a room or trade with the ReGa ids of its channels.
