@@ -1,0 +1,13 @@
+#!/bin/sh
+# An add-on script for the stack tests (ADDONS_DIR), answering like the rc.d
+# scripts the WebUI's cp_software.cgi reads
+case "$1" in
+  info)
+    echo "Info: <b>CUx-Daemon</b>"
+    echo "Name: CUx-Daemon"
+    echo "Version: 2.11"
+    echo "Operations: restart uninstall"
+    echo "Config-Url: /addons/cuxd/"
+    ;;
+  restart) ;;
+esac

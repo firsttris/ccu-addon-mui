@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"ccu-addon-mui-server/pkg/addons"
 	"context"
 	"encoding/json"
 	"errors"
@@ -186,6 +187,7 @@ type Server struct {
 	cfg *config.Config
 	// Channels non-administrators may not operate
 	readOnly        readOnlyChannels
+	addons          *addons.Service
 	regaClient      *rega.Client
 	clients         map[*Client]bool
 	clientsMu       sync.RWMutex
@@ -262,6 +264,11 @@ const BackupPath = "/ws/mui/backup/"
 
 // SetPush enables push notifications: subscribing devices and test
 // notifications.
+// SetAddons enables the add-on list (Zusatzsoftware).
+func (s *Server) SetAddons(service *addons.Service) {
+	s.addons = service
+}
+
 func (s *Server) SetPush(store *push.Store, notifier *push.Notifier) {
 	s.pushStore = store
 	s.notifier = notifier
@@ -521,6 +528,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSystemInfo(client, requestID)
 	case "getUsers", "saveUser", "deleteUser":
 		s.handleUsers(client, msgType, message)
+	case "getAddons", "addonAction", "checkAddonUpdate":
+		s.handleAddons(client, msgType, message)
 	case "getHistory", "clearHistory":
 		s.handleHistory(client, msgType, message)
 	case "getSystemSettings", "setLocation", "powerAction":

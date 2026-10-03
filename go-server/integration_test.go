@@ -64,6 +64,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		BackupDir:          filepath.Join(t.TempDir(), "backups"),
 		PushFile:           filepath.Join(t.TempDir(), "push.json"),
 		PushSubject:        "mailto:test@example.com",
+		AddonsDir:          addonsDir(t),
 	}
 	auditLogs[ccu] = cfg.AuditLogFile
 
@@ -1386,5 +1387,47 @@ func TestStackHistory(t *testing.T) {
 	send(t, conn, message{"type": "getHistory", "requestId": "h4"})
 	if m := receive(t, conn, byRequestID("h4")); m["total"] != 0.0 {
 		t.Fatalf("history not cleared: %v", m)
+	}
+}
+
+// addonsDir is an rc.d directory with one add-on, which logs the operations
+// it runs to ops.log next to it
+func addonsDir(t *testing.T) string {
+	dir := filepath.Join(t.TempDir(), "rc.d")
+	_ = os.MkdirAll(dir, 0o755)
+	script := "#!/bin/sh\ncase \"$1\" in\ninfo) echo \"Name: CUxD\"; echo \"Version: 2.11\"; echo \"Operations: restart uninstall\"; echo \"Config-Url: /addons/cuxd/\";;\nrestart|uninstall) echo \"$1\" >> " + filepath.Join(dir, "..", "ops.log") + ";;\nesac\n"
+	_ = os.WriteFile(filepath.Join(dir, "cuxd"), []byte(script), 0o755)
+	return dir
+}
+
+func TestStackAddons(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
+	receive(t, conn, byRequestID("e"))
+
+	send(t, conn, message{"type": "getAddons", "requestId": "a1", "language": "de"})
+	list := receive(t, conn, byRequestID("a1"))["addons"].([]interface{})
+	if len(list) != 1 {
+		t.Fatalf("unexpected add-ons: %v", list)
+	}
+	if a := list[0].(map[string]interface{}); a["name"] != "CUxD" || a["version"] != "2.11" || a["configUrl"] != "/addons/cuxd/" {
+		t.Fatalf("unexpected add-on: %v", a)
+	}
+	send(t, conn, message{"type": "addonAction", "requestId": "a2", "id": "cuxd", "operation": "restart"})
+	if m := receive(t, conn, byRequestID("a2")); m["success"] != true {
+		t.Fatalf("restart failed: %v", m)
+	}
+	send(t, conn, message{"type": "addonAction", "requestId": "a3", "id": "../../bin/sh", "operation": "restart"})
+	if m := receive(t, conn, byRequestID("a3")); m["success"] == true {
+		t.Fatalf("ran a path: %v", m)
+	}
+	send(t, conn, message{"type": "addonAction", "requestId": "a4", "id": "cuxd", "operation": "uninstall"})
+	if m := receive(t, conn, byRequestID("a4")); m["success"] != true {
+		t.Fatalf("uninstall failed: %v", m)
+	}
+	send(t, conn, message{"type": "getAddons", "requestId": "a5"})
+	if list := receive(t, conn, byRequestID("a5"))["addons"].([]interface{}); len(list) != 0 {
+		t.Fatalf("add-on still listed: %v", list)
 	}
 }

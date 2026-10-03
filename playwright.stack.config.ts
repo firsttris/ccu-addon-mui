@@ -59,6 +59,7 @@ export default defineConfig({
         AUTH_KEY_FILE: path.join(stateDir, 'auth.key'),
         SESSIONS_FILE: path.join(stateDir, 'sessions.json'),
         AUDIT_LOG_FILE: path.join(stateDir, 'audit.log'),
+        ADDONS_DIR: path.resolve('fixtures/addons'),
       },
     },
     {

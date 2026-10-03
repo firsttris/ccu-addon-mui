@@ -792,3 +792,16 @@ test('zeigt das Systemprotokoll der protokollierten Kanäle', async ({ page }) =
   await options.getByLabel('protokolliert').click();
   await expect(options.getByLabel('protokolliert')).not.toBeChecked();
 });
+
+test('zeigt die Zusatzsoftware und startet ein Add-on neu', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Zusatzsoftware' });
+  const item = panel.getByRole('listitem').filter({ hasText: 'CUx-Daemon' });
+  await expect(item).toContainText('2.11');
+  await expect(item.getByRole('link', { name: 'Einstellungen' })).toHaveAttribute('href', /\/addons\/cuxd\/$/);
+
+  await item.getByRole('button', { name: 'Neu starten CUx-Daemon' }).click();
+  await page.getByRole('dialog', { name: 'Neu starten' }).getByRole('button', { name: 'Neu starten' }).click();
+  await expect(page.getByText('CUx-Daemon wird neu gestartet')).toBeVisible();
+});

@@ -92,7 +92,10 @@ export type ServerMessage =
   | DeleteUserResponse
   | SetChannelOptionResponse
   | GetHistoryResponse
-  | ClearHistoryResponse;
+  | ClearHistoryResponse
+  | GetAddonsResponse
+  | AddonActionResponse
+  | CheckAddonUpdateResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -169,6 +172,9 @@ export interface Protocol {
   setChannelOption: SetChannelOptionCall;
   getHistory: GetHistoryCall;
   clearHistory: ClearHistoryCall;
+  getAddons: GetAddonsCall;
+  addonAction: AddonActionCall;
+  checkAddonUpdate: CheckAddonUpdateCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2602,6 +2608,110 @@ export interface ClearHistoryResponse {
   type: "clearHistory_response";
   requestId?: string;
   success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetAddonsCall".
+ */
+export interface GetAddonsCall {
+  request: GetAddonsRequest;
+  response: GetAddonsResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetAddonsRequest".
+ */
+export interface GetAddonsRequest {
+  type: "getAddons";
+  requestId?: string;
+  language?: "de" | "en";
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetAddonsResponse".
+ */
+export interface GetAddonsResponse {
+  type: "getAddons_response";
+  requestId?: string;
+  addons: Addon[];
+}
+/**
+ * An add-on as its rc.d script describes itself (cp_software.cgi)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "Addon".
+ */
+export interface Addon {
+  /**
+   * the script's file name
+   */
+  id: string;
+  name: string;
+  version?: string;
+  info?: string[];
+  updateUrl?: string;
+  configUrl?: string;
+  operations: ("restart" | "uninstall")[];
+  /**
+   * this add-on
+   */
+  self?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddonActionCall".
+ */
+export interface AddonActionCall {
+  request: AddonActionRequest;
+  response: AddonActionResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddonActionRequest".
+ */
+export interface AddonActionRequest {
+  type: "addonAction";
+  requestId?: string;
+  id: string;
+  operation: "restart" | "uninstall";
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddonActionResponse".
+ */
+export interface AddonActionResponse {
+  type: "addonAction_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckAddonUpdateCall".
+ */
+export interface CheckAddonUpdateCall {
+  request: CheckAddonUpdateRequest;
+  response: CheckAddonUpdateResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckAddonUpdateRequest".
+ */
+export interface CheckAddonUpdateRequest {
+  type: "checkAddonUpdate";
+  requestId?: string;
+  id: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckAddonUpdateResponse".
+ */
+export interface CheckAddonUpdateResponse {
+  type: "checkAddonUpdate_response";
+  requestId?: string;
+  /**
+   * the newest version the add-on's update URL names
+   */
+  latest: string;
 }
 /**
  * Sent first on every connection

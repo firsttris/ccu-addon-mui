@@ -665,5 +665,20 @@
   "HIST_DP_POWER": "Leistung",
   "HIST_DP_ENERGY_COUNTER": "Energiezähler",
   "HIST_DP_WINDOW_STATE": "Fenster",
-  "HIST_DP_SMOKE_DETECTOR_ALARM_STATUS": "Rauchalarm"
+  "HIST_DP_SMOKE_DETECTOR_ALARM_STATUS": "Rauchalarm",
+  "ADDONS": "Zusatzsoftware",
+  "ADDONS_NEWER": "Version {version} verfügbar",
+  "ADDONS_CURRENT": "aktuell",
+  "ADDONS_CHECK_FAILED": "Prüfung fehlgeschlagen",
+  "ADDONS_SETTINGS": "Einstellungen",
+  "ADDONS_CHECK": "Auf Update prüfen",
+  "ADDONS_RESTART": "Neu starten",
+  "ADDONS_UNINSTALL": "Deinstallieren",
+  "ADDONS_RESTARTED": "{name} wird neu gestartet",
+  "ADDONS_UNINSTALLED": "{name} wurde deinstalliert",
+  "ADDONS_NONE": "Keine Zusatzsoftware installiert.",
+  "ADDONS_HINT": "Installieren und Aktualisieren geht über Einstellungen → Systemsteuerung → Zusatzsoftware in der alten WebUI.",
+  "ADDONS_RESTART_CONFIRM": "{name} wird neu gestartet und ist dabei kurz nicht verfügbar.",
+  "ADDONS_RESTART_SELF": "Diese App wird neu gestartet. Die Verbindung bricht kurz ab und baut sich dann von selbst wieder auf.",
+  "ADDONS_UNINSTALL_CONFIRM": "{name} wird von der CCU entfernt. Seine Einstellungen können dabei verloren gehen."
 }

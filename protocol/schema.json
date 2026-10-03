@@ -217,6 +217,15 @@
     },
     "clearHistory": {
       "$ref": "#/definitions/ClearHistoryCall"
+    },
+    "getAddons": {
+      "$ref": "#/definitions/GetAddonsCall"
+    },
+    "addonAction": {
+      "$ref": "#/definitions/AddonActionCall"
+    },
+    "checkAddonUpdate": {
+      "$ref": "#/definitions/CheckAddonUpdateCall"
     }
   },
   "required": [
@@ -290,7 +299,10 @@
     "deleteUser",
     "setChannelOption",
     "getHistory",
-    "clearHistory"
+    "clearHistory",
+    "getAddons",
+    "addonAction",
+    "checkAddonUpdate"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2732,6 +2744,15 @@
         },
         {
           "$ref": "#/definitions/ClearHistoryResponse"
+        },
+        {
+          "$ref": "#/definitions/GetAddonsResponse"
+        },
+        {
+          "$ref": "#/definitions/AddonActionResponse"
+        },
+        {
+          "$ref": "#/definitions/CheckAddonUpdateResponse"
         }
       ]
     },
@@ -6206,6 +6227,237 @@
         "text": {
           "type": "string",
           "description": "the value as the WebUI writes it (system variables)"
+        }
+      }
+    },
+    "GetAddonsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getAddons"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "de",
+            "en"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetAddonsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getAddons_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "addons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Addon"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "addons"
+      ],
+      "additionalProperties": false
+    },
+    "GetAddonsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetAddonsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetAddonsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "AddonActionRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "addonAction"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "restart",
+            "uninstall"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "operation"
+      ],
+      "additionalProperties": false
+    },
+    "AddonActionResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "addonAction_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "AddonActionCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/AddonActionRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/AddonActionResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CheckAddonUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "checkAddonUpdate"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "CheckAddonUpdateResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "checkAddonUpdate_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "latest": {
+          "type": "string",
+          "description": "the newest version the add-on's update URL names"
+        }
+      },
+      "required": [
+        "type",
+        "latest"
+      ],
+      "additionalProperties": false
+    },
+    "CheckAddonUpdateCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/CheckAddonUpdateRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/CheckAddonUpdateResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "Addon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "operations"
+      ],
+      "description": "An add-on as its rc.d script describes itself (cp_software.cgi)",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "the script's file name"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "info": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "updateUrl": {
+          "type": "string"
+        },
+        "configUrl": {
+          "type": "string"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "restart",
+              "uninstall"
+            ]
+          }
+        },
+        "self": {
+          "type": "boolean",
+          "description": "this add-on"
         }
       }
     }
