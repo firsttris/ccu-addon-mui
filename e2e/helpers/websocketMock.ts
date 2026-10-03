@@ -56,6 +56,15 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
             STATE: false,
           },
         },
+        // No own control: shown by GenericControl with its values
+        {
+          id: 102,
+          name: 'Fenstergriff Wohnzimmer',
+          address: '0000DBE9A5C1F2:1',
+          interfaceName: 'HmIP-RF',
+          type: 'ROTARY_HANDLE_TRANSCEIVER',
+          datapoints: { ERROR_CODE: 0, STATE: 2, SABOTAGE: false },
+        },
       ],
       '2': [
         {
@@ -191,6 +200,30 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       ],
     };
 
+    // In no room or trade: only listed under "all devices"
+    const unassignedChannels: AnyPayload[] = [
+      {
+        id: 601,
+        name: 'Rauchmelder Flur',
+        address: '000A1B2C3D4E5F:1',
+        interfaceName: 'HmIP-RF',
+        type: 'SMOKE_DETECTOR',
+        datapoints: { SMOKE_DETECTOR_ALARM_STATUS: 0, SMOKE_DETECTOR_TEST_RESULT: null },
+      },
+    ];
+
+    const allChannels = () => {
+      const byAddress = new Map<unknown, AnyPayload>();
+      for (const channel of [
+        ...Object.values(roomChannels).flat(),
+        ...Object.values(tradeChannels).flat(),
+        ...unassignedChannels,
+      ]) {
+        byAddress.set(channel.address, channel);
+      }
+      return Array.from(byAddress.values());
+    };
+
     const state: {
       sockets: unknown[];
       sentMessages: Message[];
@@ -220,13 +253,13 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
       if (message.type === 'auth') {
         if (!requireLogin) {
-          delayedBroadcast({ type: 'auth_response', success: true, authRequired: false });
+          delayedBroadcast({ type: 'auth_response', success: true, authRequired: false, level: 'admin' });
           return;
         }
         state.authenticated = message.token === validToken;
         delayedBroadcast(
           state.authenticated
-            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', token: validToken }
+            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken }
             : { type: 'auth_response', success: false, authRequired: true, code: 'LOGIN_REQUIRED' },
         );
         return;
@@ -236,7 +269,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         state.authenticated = message.username === 'Admin' && message.password === 'secret';
         delayedBroadcast(
           state.authenticated
-            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', token: validToken }
+            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken }
             : { type: 'auth_response', success: false, authRequired: true, code: 'INVALID_CREDENTIALS' },
         );
         return;
@@ -265,6 +298,11 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
           trades,
           deviceId: message.deviceId,
         });
+        return;
+      }
+
+      if (message.type === 'getChannels' && message.all === true) {
+        delayedBroadcast({ channels: allChannels(), deviceId: message.deviceId, all: true });
         return;
       }
 

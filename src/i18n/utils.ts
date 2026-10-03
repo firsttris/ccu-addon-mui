@@ -74,7 +74,9 @@ export const ui = {
     CONFIRM_UNLOCK: 'Really unlock the door?',
     CONFIRM_OPEN: 'Really open the door?',
     YES: 'Yes',
+    NO: 'No',
     CANCEL: 'Cancel',
+    ALL_DEVICES: 'All devices',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
@@ -141,7 +143,9 @@ export const ui = {
     CONFIRM_UNLOCK: 'Tür wirklich entsperren?',
     CONFIRM_OPEN: 'Tür wirklich öffnen?',
     YES: 'Ja',
+    NO: 'Nein',
     CANCEL: 'Abbrechen',
+    ALL_DEVICES: 'Alle Geräte',
   },
 } as const;
 

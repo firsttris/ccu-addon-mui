@@ -1,4 +1,4 @@
-import { useTranslations } from '../i18n/utils';
+import { TranslationKey, useTranslations } from '../i18n/utils';
 import { Channel, ChannelStatus, ChannelType, EnergyMeterChannel } from '../types/types';
 import { EnergyMeterControl } from '../controls/EnergyMeterControl';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -140,7 +140,7 @@ const groupByDevice = <T extends Channel>(channels: T[]) => {
 };
 
 interface ChannelGroupProps {
-  channelType: ChannelType;
+  channelType: string;
   channels: Channel[];
 }
 
@@ -156,11 +156,8 @@ export const ChannelGroup: React.FC<ChannelGroupProps> = ({
     setExpanded(!expanded);
   };
 
-  const localizedText = t(channelType as any);
-
-  if (!localizedText) {
-    console.error('No localization found for channel type:', channelType);
-  }
+  // Types without a translation (shown by GenericControl) keep the CCU's name
+  const localizedText = t(channelType as TranslationKey);
 
   return (
     <div>

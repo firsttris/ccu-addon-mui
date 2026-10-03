@@ -250,6 +250,16 @@ export const Header: React.FC = () => {
               </SubMenuItem>
             ))}
           </MenuSection>
+          <MenuSection>
+            <SubMenuItem
+              onClick={() => {
+                navigate({ to: '/devices' });
+                setMenuOpen(false);
+              }}
+            >
+              {t('ALL_DEVICES')}
+            </SubMenuItem>
+          </MenuSection>
           {authRequired && (
             <MenuSection>
               <SubMenuItem

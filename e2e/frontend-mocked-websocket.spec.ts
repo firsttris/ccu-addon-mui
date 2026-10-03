@@ -226,3 +226,39 @@ test('fragt vor dem Öffnen der Tür nach', async ({ page }) => {
     .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
     .toEqual([['OPEN', true]]);
 });
+
+test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
+  await page.goto('/room/1');
+  await page.getByText('ROTARY_HANDLE_TRANSCEIVER', { exact: true }).click();
+
+  const datapoints = page.getByLabel('Fenstergriff Wohnzimmer');
+  await expect(datapoints).toBeVisible();
+  await expect(datapoints.getByText('STATE', { exact: true })).toBeVisible();
+  await expect(datapoints.getByText('2', { exact: true })).toBeVisible();
+  await expect(datapoints.getByText(/^(No|Nein)$/)).toBeVisible();
+});
+
+test('listet unter „Alle Geräte“ auch Geräte ohne Raum', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /All devices|Alle Geräte/ }).click();
+  await expect(page).toHaveURL(/\/devices$/);
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const mock = (window as Window & {
+          __wsMock?: { sentMessages: () => Array<{ type: string; all?: boolean }> };
+        }).__wsMock;
+        return mock?.sentMessages().some((m) => m.type === 'getChannels' && m.all === true);
+      }),
+    )
+    .toBe(true);
+
+  await page.getByText('SMOKE_DETECTOR', { exact: true }).click();
+  await expect(page.getByText('Rauchmelder Flur')).toBeVisible();
+
+  // Channels from rooms and trades are listed as well
+  await page.getByText(/^(Switch|Schalter)$/).click();
+  await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
+  await expect(page.getByText('Flur Licht')).toBeVisible();
+});

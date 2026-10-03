@@ -14,6 +14,7 @@ import {
   HmEvent,
   Room,
   Trade,
+  UserLevel,
 } from './../types/types';
 
 import React, { createContext, useContext } from 'react';
@@ -35,6 +36,7 @@ interface Response {
   channels?: Channel[];
   roomId?: string;
   tradeId?: string;
+  all?: boolean;
   event?: HmEvent;
   deviceId?: string;
   success?: boolean;
@@ -42,13 +44,19 @@ interface Response {
   authRequired?: boolean;
   token?: string;
   user?: string;
+  level?: UserLevel;
   // setDatapoint_response
   requestId?: string;
   // deviceProblems
   devices?: DeviceProblem[];
 }
 
-type ChannelRequest = { roomId: string } | { tradeId: string };
+type ChannelRequest = { roomId: string } | { tradeId: string } | { all: true };
+
+const isSameRequest = (a: ChannelRequest, b: ChannelRequest) =>
+  ('roomId' in a && 'roomId' in b && a.roomId === b.roomId) ||
+  ('tradeId' in a && 'tradeId' in b && a.tradeId === b.tradeId) ||
+  ('all' in a && 'all' in b);
 
 // 'pending' until the server answered the auth message sent on connect
 export type AuthState = 'pending' | 'authenticated' | 'loginRequired';
@@ -63,8 +71,9 @@ interface PendingSet {
   timeout: ReturnType<typeof setTimeout>;
 }
 
-// Only types with a control are shown; their order on the page
-const typeOrder: Partial<Record<ChannelType, number>> = {
+// Types with a control come first, in this order; all others follow
+// alphabetically and are shown by GenericControl.
+const typeOrder: Partial<Record<string, number>> = {
   [ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER]: 1,
   [ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER]: 2,
   [ChannelType.SWITCH_VIRTUAL_RECEIVER]: 3,
@@ -72,6 +81,12 @@ const typeOrder: Partial<Record<ChannelType, number>> = {
   [ChannelType.KEYMATIC]: 5,
   [ChannelType.ENERGIE_METER_TRANSMITTER]: 6,
 };
+
+// Channels that only hold configuration, not a state worth showing
+const isHiddenChannel = (channel: Channel) =>
+  channel.type === 'MAINTENANCE' ||
+  channel.type.endsWith('_WEEK_PROFILE') ||
+  Object.keys(channel.datapoints).length === 0;
 
 const TOKEN_STORAGE_KEY = 'ccu-addon-mui_AuthToken';
 const SET_DATAPOINT_TIMEOUT_MS = 15000;
@@ -109,6 +124,7 @@ export const useWebsocket = () => {
   const [deviceProblems, setDeviceProblems] = useState<DeviceProblem[] | null>(null);
   const [authState, setAuthState] = useState<AuthState>('pending');
   const [authRequired, setAuthRequired] = useState(false);
+  const [userLevel, setUserLevel] = useState<UserLevel>('');
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const deviceId = useUniqueDeviceID();
@@ -132,8 +148,7 @@ export const useWebsocket = () => {
 
   const sortedChannelsByType = useMemo(() => {
     const channelsPerType = channels.reduce((acc, channel) => {
-      if (typeOrder[channel.type] === undefined) {
-        // No control for this type (e.g. a week profile): don't show raw data
+      if (isHiddenChannel(channel)) {
         return acc;
       }
       const channels = acc.get(channel.type);
@@ -143,10 +158,11 @@ export const useWebsocket = () => {
         acc.set(channel.type, [channel]);
       }
       return acc;
-    }, new Map<ChannelType, Channel[]>());
+    }, new Map<string, Channel[]>());
 
     return Array.from(channelsPerType).sort(
-      ([typeA], [typeB]) => (typeOrder[typeA] ?? 999) - (typeOrder[typeB] ?? 999),
+      ([typeA], [typeB]) =>
+        (typeOrder[typeA] ?? 999) - (typeOrder[typeB] ?? 999) || typeA.localeCompare(typeB),
     );
   }, [channels]);
 
@@ -271,14 +287,18 @@ export const useWebsocket = () => {
         return;
       }
       if (response.channels) {
-        // Ignore a late response for a room or trade that is no longer shown
+        // Ignore a late response for a room, trade or "all devices" that
+        // is no longer shown
         const current = channelRequestRef.current;
+        const answered: ChannelRequest | null = response.all
+          ? { all: true }
+          : response.roomId !== undefined
+            ? { roomId: response.roomId }
+            : response.tradeId !== undefined
+              ? { tradeId: response.tradeId }
+              : null;
         const isStale =
-          (response.roomId !== undefined || response.tradeId !== undefined) &&
-          (current === null ||
-            ('roomId' in current
-              ? current.roomId !== response.roomId
-              : current.tradeId !== response.tradeId));
+          answered !== null && (current === null || !isSameRequest(current, answered));
         if (!isStale) {
           setChannels(response.channels);
         }
@@ -340,6 +360,7 @@ export const useWebsocket = () => {
       writeToken(response.token);
     }
     setLoginError(null);
+    setUserLevel(response.level ?? '');
     setAuthState('authenticated');
     readyRef.current = true;
 
@@ -434,6 +455,8 @@ export const useWebsocket = () => {
     [requestChannels],
   );
 
+  const getAllChannels = useCallback(() => requestChannels({ all: true }), [requestChannels]);
+
   const setDataPoint = useCallback(
     (interfaceName: string, address: string, attributeName: string, value: Value) => {
       if (!readyRef.current) {
@@ -487,6 +510,7 @@ export const useWebsocket = () => {
       setDataPoint,
       getChannelsForRoomId,
       getChannelsForTrade,
+      getAllChannels,
       getRooms,
       getTrades,
       getDeviceProblems,
@@ -497,6 +521,7 @@ export const useWebsocket = () => {
       setDataPoint,
       getChannelsForRoomId,
       getChannelsForTrade,
+      getAllChannels,
       getRooms,
       getTrades,
       getDeviceProblems,
@@ -516,6 +541,7 @@ export const useWebsocket = () => {
       connectionStatus,
       authState,
       authRequired,
+      userLevel,
       loginError,
     }),
     [
@@ -528,6 +554,7 @@ export const useWebsocket = () => {
       connectionStatus,
       authState,
       authRequired,
+      userLevel,
       loginError,
     ],
   );

@@ -145,6 +145,12 @@ export const Home = () => {
         </span>
         <MenuText>{t('TRADES')}</MenuText>
       </MenuItem>
+      <MenuItem to="/devices">
+        <span role="img" aria-hidden>
+          📋
+        </span>
+        <MenuText>{t('ALL_DEVICES')}</MenuText>
+      </MenuItem>
 
       {deviceProblems !== null && (
         <>

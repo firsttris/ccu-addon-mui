@@ -4,7 +4,8 @@ import { SwitchControl } from '../controls/SwitchControl';
 import { BlindsControl } from '../controls/BlindsControl';
 import { ThermostatControl } from '../controls/ThermostatControl';
 import { DoorControl } from '../controls/DoorControl';
-import { Channel, ChannelType } from '../types/types';
+import { GenericControl } from '../controls/GenericControl';
+import { Channel, ChannelType, GenericChannel, KnownChannel } from '../types/types';
 
 interface ControlComponentProps {
   channel: Channel;
@@ -15,19 +16,22 @@ interface ControlComponentProps {
 export const ControlComponent = React.memo(function ControlComponent({
   channel,
 }: ControlComponentProps) {
-  switch (channel.type) {
+  // A GenericChannel's type is any string, so it would keep the switch from
+  // narrowing; the default case below covers it.
+  const known = channel as KnownChannel;
+  switch (known.type) {
     case ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER:
-      return <FloorControl channel={channel} />;
+      return <FloorControl channel={known} />;
     case ChannelType.SWITCH_VIRTUAL_RECEIVER:
-      return <SwitchControl channel={channel} />;
+      return <SwitchControl channel={known} />;
     case ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER:
-      return <ThermostatControl channel={channel} />;
+      return <ThermostatControl channel={known} />;
     case ChannelType.BLIND_VIRTUAL_RECEIVER:
-      return <BlindsControl channel={channel} />;
+      return <BlindsControl channel={known} />;
     case ChannelType.KEYMATIC:
-      return <DoorControl channel={channel} />;
+      return <DoorControl channel={known} />;
     default:
-      // Types without a control are filtered out before; show nothing
-      return null;
+      // Every other type shows its datapoints as plain values
+      return <GenericControl channel={channel as GenericChannel} />;
   }
 });

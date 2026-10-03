@@ -132,13 +132,28 @@ export interface EnergyMeterChannel extends BaseChannel {
   datapoints: EnergyMeterDatapoint;
 }
 
-export type Channel =
+export type DatapointValue = string | number | boolean | null;
+
+// Any channel type without its own control (e.g. a window contact); shown
+// by GenericControl with its datapoints as plain values.
+export interface GenericChannel extends BaseChannel {
+  type: string;
+  datapoints: Record<string, DatapointValue>;
+}
+
+// Channel types with their own control
+export type KnownChannel =
   | SwitchVirtualReceiverChannel
   | BlindVirtualReceiverChannel
   | HeatingClimateControlTransceiverChannel
   | FloorClimateControlTransceiverChannel
   | KeymaticChannel
   | EnergyMeterChannel;
+
+export type Channel = KnownChannel | GenericChannel;
+
+// CCU user level from the login, "" if unknown. Not enforced yet.
+export type UserLevel = 'admin' | 'user' | 'guest' | '';
 
 export interface Room {
   name: string;
