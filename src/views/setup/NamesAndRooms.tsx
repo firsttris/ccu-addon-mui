@@ -89,6 +89,26 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
               </NativeSelect>
             </label>
           )}
+          <fieldset
+            aria-label={`${m.CHANNEL_OPTIONS()} ${channel.address}`}
+            className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm [&_label]:flex [&_label]:items-center [&_label]:gap-1.5 [&_legend]:mb-1 [&_legend]:text-xs [&_legend]:text-muted-foreground"
+          >
+            <legend>{m.CHANNEL_OPTIONS()}</legend>
+            {[
+              { option: 'visible' as const, label: m.CHANNEL_VISIBLE(), checked: !channel.hidden },
+              { option: 'usable' as const, label: m.CHANNEL_USABLE(), checked: !channel.readOnly },
+              { option: 'logged' as const, label: m.CHANNEL_LOGGED(), checked: !!channel.logged },
+            ].map(({ option, label, checked }) => (
+              <label key={option}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(event) => run({ type: 'setChannelOption', id: channel.id, option, value: event.target.checked })}
+                />
+                {label}
+              </label>
+            ))}
+          </fieldset>
           {[
             { legend: m.ROOMS(), groups: rooms, member: channel.rooms ?? [], list: 'rooms' as const },
             { legend: m.TRADES(), groups: trades, member: channel.trades ?? [], list: 'trades' as const },

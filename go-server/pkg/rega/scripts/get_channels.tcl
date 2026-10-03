@@ -4,6 +4,7 @@
 !   D <type> <valueType> <value>
 !   M <roomIds> <tradeIds>                   comma separated
 !   T <tile>                                 light or switch, if chosen in the add-on
+!   F <visible> <usable> <logged>            the channel options of the WebUI
 ! The JSON is built in Go, so names and values need no escaping here.
 ! OBJECT_ID is a room, trade or favorite list id, or ALL for the channels of
 ! all devices.
@@ -58,6 +59,11 @@ if (parentObject) {
                 ! The tile chosen in the add-on, see set_channel_tile.tcl
                 if (channelObject.MetaData("muiTile") == "light") { WriteLine("T\tlight"); }
                 if (channelObject.MetaData("muiTile") == "switch") { WriteLine("T\tswitch"); }
+
+                ! Visible, usable for non-administrators and logged, as the
+                ! WebUI's Channel.setVisibility/setUsability/setLogging set them
+                boolean usable = (channelObject.UserAccessRights(iulOtherThanAdmin) == iarFullAccess);
+                WriteLine("F\t" # channelObject.Visible() # "\t" # usable # "\t" # channelObject.ChnArchive());
 
                 ! Battery and reachability are reported on the device's maintenance channel 0
                 if (deviceObject) {

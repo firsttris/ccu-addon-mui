@@ -183,7 +183,9 @@ func (c *Client) setDeviceID(deviceID string) {
 }
 
 type Server struct {
-	cfg             *config.Config
+	cfg *config.Config
+	// Channels non-administrators may not operate
+	readOnly        readOnlyChannels
 	regaClient      *rega.Client
 	clients         map[*Client]bool
 	clientsMu       sync.RWMutex
@@ -513,6 +515,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleRename(client, message)
 	case "setChannelTile":
 		s.handleSetChannelTile(client, message)
+	case "setChannelOption":
+		s.handleSetChannelOption(client, message)
 	case "getSystemInfo":
 		s.handleSystemInfo(client, requestID)
 	case "getUsers", "saveUser", "deleteUser":
@@ -916,6 +920,12 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 	valueStr, err := formatValue(msg.Value)
 	if err != nil {
 		fail("INVALID_REQUEST", err.Error())
+		return
+	}
+
+	// The WebUI's channel option "bedienbar": off, only administrators
+	if !s.operable(client, msg.Address) {
+		fail("FORBIDDEN", "only administrators may operate this channel")
 		return
 	}
 

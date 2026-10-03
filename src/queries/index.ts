@@ -331,7 +331,15 @@ export type ConfigChange =
   | { type: 'rename'; address: string; name: string }
   // list says where the group is, for the optimistic update
   | { type: 'setGroupMember'; groupId: number; channelId: number; member: boolean; list: 'rooms' | 'trades' }
-  | { type: 'setChannelTile'; id: number; tile: '' | 'light' | 'switch' };
+  | { type: 'setChannelTile'; id: number; tile: '' | 'light' | 'switch' }
+  | { type: 'setChannelOption'; id: number; option: 'visible' | 'usable' | 'logged'; value: boolean };
+
+// The channel field each option is shown in
+const optionFields = {
+  visible: (value: boolean) => ({ hidden: !value }),
+  usable: (value: boolean) => ({ readOnly: !value }),
+  logged: (value: boolean) => ({ logged: value }),
+};
 
 // Renames a device or channel, or changes the rooms and trades of a
 // channel (setup area, administrators). Memberships show at once and are
@@ -349,6 +357,12 @@ export const useConfigChange = () => {
       }
     },
     onMutate: (change) => {
+      if (change.type === 'setChannelOption') {
+        queryClient.setQueriesData<Channel[]>({ queryKey: ['channels'] }, (channels) =>
+          channels?.map((channel) => (channel.id === change.id ? { ...channel, ...optionFields[change.option](change.value) } : channel)),
+        );
+        return;
+      }
       if (change.type === 'setChannelTile') {
         queryClient.setQueriesData<Channel[]>({ queryKey: ['channels'] }, (channels) =>
           channels?.map((channel) =>
@@ -413,7 +427,8 @@ export const useChannels = (channelsRequest: ChannelsRequest) => {
     }
   }, [addressesKey, subscribe]);
 
-  const channelsByType = useMemo(() => groupChannelsByType(channels ?? []), [channels]);
+  // Channels the WebUI's option "sichtbar" hides stay out of the views
+  const channelsByType = useMemo(() => groupChannelsByType((channels ?? []).filter((c) => !c.hidden)), [channels]);
   return { ...query, channelsByType };
 };
 

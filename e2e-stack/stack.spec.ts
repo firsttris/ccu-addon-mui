@@ -724,3 +724,23 @@ test('legt CCU-Benutzer an, ändert ihre Rechte und löscht sie', async ({ page 
   await page.getByRole('dialog', { name: 'Benutzer löschen' }).getByRole('button', { name: 'Löschen' }).click();
   await expect(row).toHaveCount(0);
 });
+
+test('blendet Kanäle über die Option „sichtbar“ aus', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/BidCos-RF/LEQ0000002');
+  const options = page.getByRole('group', { name: 'Optionen LEQ0000002:1' });
+  await expect(options.getByLabel('sichtbar')).toBeChecked();
+  await expect(options.getByLabel('protokolliert')).not.toBeChecked();
+  await options.getByLabel('sichtbar').click();
+  await expect(options.getByLabel('sichtbar')).not.toBeChecked();
+
+  await page.goto('/room/2');
+  await expect(page.getByText('Küche Fenster')).toBeVisible();
+  await expect(page.getByText('Küche Rollo')).toHaveCount(0);
+
+  await page.goto('/device/BidCos-RF/LEQ0000002');
+  await options.getByLabel('sichtbar').click();
+  await expect(options.getByLabel('sichtbar')).toBeChecked();
+  await page.goto('/room/2');
+  await expect(page.getByText('Küche Rollo')).toBeVisible();
+});

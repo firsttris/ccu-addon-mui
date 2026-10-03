@@ -347,6 +347,30 @@ func (c *CCU) runScript(body string) (string, error) {
 				return "OK\t" + ch.Name, nil
 			}
 			return "NOT_FOUND", nil
+		case "set_channel_option":
+			id, _ := strconv.ParseInt(values["ID"], 10, 64)
+			ch := c.channelByID(id)
+			if ch == nil {
+				return "NOT_FOUND", nil
+			}
+			value := values["VALUE"] == "true"
+			switch values["OPTION"] {
+			case "visible":
+				ch.Hidden = !value
+			case "usable":
+				ch.ReadOnly = !value
+			case "logged":
+				ch.Logged = value
+			}
+			return "OK\t" + ch.Name, nil
+		case "get_read_only_channels":
+			var b strings.Builder
+			for _, ch := range c.fixture.Channels {
+				if ch.ReadOnly {
+					b.WriteString(ch.Address + "\n")
+				}
+			}
+			return b.String(), nil
 		case "get_program":
 			return c.getProgram(atoi64(values["ID"])), nil
 		case "save_program":
@@ -663,6 +687,7 @@ func (c *CCU) getChannels(objectID string) string {
 	for _, ch := range channels {
 		fmt.Fprintf(&b, "C\t%d\t%s\t%s\t%s\t%s\n", ch.ID, ch.Address, ch.Type, ch.Interface, ch.Name)
 		fmt.Fprintf(&b, "M\t%s\t%s\n", memberOf(c.fixture.Rooms, ch.ID), memberOf(c.fixture.Trades, ch.ID))
+		fmt.Fprintf(&b, "F\t%t\t%t\t%t\n", !ch.Hidden, !ch.ReadOnly, ch.Logged)
 		if ch.Tile != "" {
 			fmt.Fprintf(&b, "T\t%s\n", ch.Tile)
 		}
