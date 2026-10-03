@@ -1,60 +1,7 @@
-import styled from '@emotion/styled';
+import { CSSProperties } from 'react';
+import { Panel } from './Panel';
 import { useSystemInfo } from '../../queries';
 import { m } from '../../paraglide/messages';
-
-const Panel = styled.section`
-  margin: 16px 0;
-  padding: 12px 16px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 8px;
-  background: ${(props) => props.theme.colors.surface};
-
-  h2 {
-    margin: 0 0 8px;
-    font-size: 16px;
-  }
-
-  dl {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 4px 16px;
-    margin: 0 0 12px;
-  }
-
-  dd {
-    margin: 0;
-  }
-`;
-
-const Bar = styled.div<{ percent: number }>`
-  width: 160px;
-  height: 10px;
-  border-radius: 5px;
-  background: rgba(158, 158, 158, 0.3);
-  overflow: hidden;
-
-  &::after {
-    content: '';
-    display: block;
-    height: 100%;
-    width: ${({ percent }) => Math.min(100, percent)}%;
-    background: ${({ percent }) => (percent >= 80 ? '#c62828' : percent >= 50 ? '#f9a825' : '#43a047')};
-  }
-`;
-
-const Module = styled.li`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 4px 0;
-`;
-
-const Hint = styled.p`
-  font-size: 12px;
-  margin: 4px 0 0;
-  color: ${(props) => props.theme.colors.textSecondary};
-`;
 
 // Versions and the radio modules with their duty cycle
 export const SystemInfo = () => {
@@ -63,7 +10,7 @@ export const SystemInfo = () => {
     return null;
   }
   return (
-    <Panel aria-label={m.SYSTEM()}>
+    <Panel aria-label={m.SYSTEM()} className="[&_dl]:grid [&_dl]:grid-cols-[max-content_1fr] [&_dl]:gap-x-4 [&_dl]:gap-y-1 [&_dl]:mt-0 [&_dl]:mx-0 [&_dl]:mb-3 [&_dd]:m-0">
       <h2>{m.SYSTEM()}</h2>
       <dl>
         <dt>{m.ADDON_VERSION()}</dt>
@@ -76,13 +23,19 @@ export const SystemInfo = () => {
           <strong>{m.RADIO_MODULES()}</strong>
           <ul style={{ listStyle: 'none', padding: 0, margin: '4px 0 0' }} aria-label={m.RADIO_MODULES()}>
             {data.radioInterfaces.map((module) => (
-              <Module key={`${module.interfaceName}-${module.address}`}>
+              <li key={`${module.interfaceName}-${module.address}`} className="flex items-center gap-3 flex-wrap py-1 px-0">
                 <span style={{ minWidth: 220 }}>
                   {module.interfaceName} · {module.address}
                 </span>
                 <span>{module.connected ? m.CONNECTED() : m.DISCONNECTED()}</span>
-                <Bar
-                  percent={module.dutyCycle}
+                <div
+                  style={
+                    {
+                      '--percent': `${Math.min(100, module.dutyCycle)}%`,
+                      '--bar': module.dutyCycle >= 80 ? '#c62828' : module.dutyCycle >= 50 ? '#f9a825' : '#43a047',
+                    } as CSSProperties
+                  }
+                  className="w-40 h-[10px] rounded-[5px] bg-[rgba(158,158,158,0.3)] overflow-hidden after:content-[''] after:block after:h-full after:w-(--percent) after:bg-(--bar)"
                   role="meter"
                   aria-label={`${m.DUTY_CYCLE()} ${module.interfaceName}`}
                   aria-valuemin={0}
@@ -92,10 +45,10 @@ export const SystemInfo = () => {
                 <span>
                   {m.DUTY_CYCLE()} {module.dutyCycle} %
                 </span>
-              </Module>
+              </li>
             ))}
           </ul>
-          <Hint>{m.DUTY_CYCLE_HINT()}</Hint>
+          <p className="text-[12px] mt-1 mx-0 mb-0 text-text-secondary">{m.DUTY_CYCLE_HINT()}</p>
         </>
       )}
     </Panel>

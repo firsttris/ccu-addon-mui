@@ -1,56 +1,14 @@
-import styled from '@emotion/styled';
-import { useState } from 'react';
+import { Panel } from './Panel';
+import { ReactNode, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useInbox, useInstallMode, usePairingAction } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { m } from '../../paraglide/messages';
 
-const Panel = styled.section`
-  margin: 16px 0;
-  padding: 12px 16px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 8px;
-  background: ${(props) => props.theme.colors.surface};
-
-  h2 {
-    margin: 0 0 8px;
-    font-size: 16px;
-  }
-`;
-
-const Row = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin: 8px 0;
-`;
-
-const Select = styled.select`
-  font: inherit;
-  padding: 6px;
-`;
-
-const Inbox = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
-
-  li {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 0;
-    border-bottom: 1px solid ${(props) => props.theme.colors.border};
-  }
-
-  a {
-    color: inherit;
-    font-weight: 600;
-  }
-`;
+const Row = ({ children }: { children: ReactNode }) => (
+  <div className="flex gap-2 items-center flex-wrap my-2 mx-0">{children}</div>
+);
 
 const INTERFACES = ['HmIP-RF', 'BidCos-RF'];
 const PAIRING_SECONDS = 60;
@@ -76,11 +34,11 @@ export const Pairing = () => {
       <h2>{m.PAIRING()}</h2>
       <p>{m.PAIRING_HINT()}</p>
       <Row>
-        <Select aria-label={m.INTERFACE()} value={interfaceName} onChange={(e) => setInterfaceName(e.target.value)}>
+        <select className="[font:inherit] p-[6px]" aria-label={m.INTERFACE()} value={interfaceName} onChange={(e) => setInterfaceName(e.target.value)}>
           {INTERFACES.map((name) => (
             <option key={name}>{name}</option>
           ))}
-        </Select>
+        </select>
         {active ? (
           <>
             <span role="status">
@@ -111,7 +69,10 @@ export const Pairing = () => {
       {inbox.length === 0 ? (
         <p>{m.INBOX_EMPTY()}</p>
       ) : (
-        <Inbox aria-label={m.INBOX()}>
+        <ul
+          aria-label={m.INBOX()}
+          className="list-none m-0 p-0 [&_li]:flex [&_li]:gap-2 [&_li]:items-center [&_li]:justify-between [&_li]:py-[6px] [&_li]:px-0 [&_li]:border-b [&_li]:border-border [&_a]:text-inherit [&_a]:font-semibold"
+        >
           {inbox.map((device) => (
             <li key={device.address}>
               <span>
@@ -125,7 +86,7 @@ export const Pairing = () => {
               </DialogButton>
             </li>
           ))}
-        </Inbox>
+        </ul>
       )}
     </Panel>
   );

@@ -1,37 +1,9 @@
-import styled from '@emotion/styled';
+import { Panel } from './Panel';
 import { useRevokeSession, useSessions } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { defaultLang } from '../../i18n/utils';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { m } from '../../paraglide/messages';
-
-const Panel = styled.section`
-  margin: 16px 0;
-  padding: 12px 16px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 8px;
-  background: ${(props) => props.theme.colors.surface};
-  overflow-x: auto;
-
-  h2 {
-    margin: 0 0 8px;
-    font-size: 16px;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-
-  th,
-  td {
-    text-align: left;
-    padding: 6px 8px;
-    border-bottom: 1px solid ${(props) => props.theme.colors.border};
-    white-space: nowrap;
-  }
-`;
 
 const dateFormat = new Intl.DateTimeFormat(defaultLang, { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -46,7 +18,10 @@ export const Sessions = () => {
   }
 
   return (
-    <Panel aria-label={m.SESSIONS()}>
+    <Panel
+      aria-label={m.SESSIONS()}
+      className="overflow-x-auto [&_table]:w-full [&_table]:border-collapse [&_table]:text-[14px] [&_:is(th,td)]:text-left [&_:is(th,td)]:py-[6px] [&_:is(th,td)]:px-2 [&_:is(th,td)]:border-b [&_:is(th,td)]:border-border [&_:is(th,td)]:whitespace-nowrap"
+    >
       <h2>{m.SESSIONS()}</h2>
       <table>
         <thead>

@@ -1,5 +1,4 @@
-import styled from '@emotion/styled';
-import { useEffect, useState } from 'react';
+import { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode, useEffect, useState } from 'react';
 import { useLogicAction, usePrograms, useSysvars } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
@@ -7,76 +6,45 @@ import { Sysvar } from '../types/types';
 import { DialogButton } from '../components/ConfirmDialog';
 import { m } from '../paraglide/messages';
 
-const Container = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 16px;
-  padding-top: 76px;
-  color: ${(props) => props.theme.colors.text};
-`;
+type Children = { children: ReactNode };
 
-const List = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 8px;
-  overflow: hidden;
-  background: ${(props) => props.theme.colors.surface};
-`;
+const Container = ({ children }: Children) => (
+  <div className="max-w-[800px] mx-auto p-4 pt-[76px] text-text">{children}</div>
+);
 
-const Item = styled.li`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 16px;
-  border-bottom: 1px solid ${(props) => props.theme.colors.border};
+const List = (props: HTMLAttributes<HTMLUListElement>) => (
+  <ul className="list-none m-0 p-0 border border-solid border-border rounded-lg overflow-hidden bg-surface" {...props} />
+);
 
-  &:last-of-type {
-    border-bottom: none;
-  }
-`;
+const Item = ({ children }: Children) => (
+  <li className="flex items-center justify-between gap-3 py-[10px] px-4 border-b border-border last-of-type:border-b-0">
+    {children}
+  </li>
+);
 
-const Name = styled.span`
-  font-weight: 600;
-  min-width: 0;
-  overflow-wrap: anywhere;
-`;
+const Name = ({ children }: Children) => <span className="font-semibold min-w-0 wrap-anywhere">{children}</span>;
 
-const Controls = styled.span`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-`;
+const Controls = ({ children }: Children) => <span className="flex items-center gap-2 shrink-0">{children}</span>;
 
-const Toggle = styled.button<{ on: boolean; alarm?: boolean }>`
-  font: inherit;
-  padding: 6px 12px;
-  border-radius: 16px;
-  border: none;
-  cursor: pointer;
-  color: #fff;
-  background: ${({ on, alarm }) => (on ? (alarm ? '#c62828' : '#43a047') : '#757575')};
-`;
+const Toggle = ({ on, alarm, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { on: boolean; alarm?: boolean }) => (
+  <button
+    className={`[font:inherit] py-[6px] px-3 rounded-2xl border-none cursor-pointer text-white ${
+      on ? (alarm ? 'bg-[#c62828]' : 'bg-[#43a047]') : 'bg-[#757575]'
+    }`}
+    {...props}
+  />
+);
 
-const Input = styled.input`
-  font: inherit;
-  width: 110px;
-  padding: 6px 8px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 6px;
-  color: ${(props) => props.theme.colors.text};
-  background: ${(props) => props.theme.colors.background};
-`;
+const Input = (props: InputHTMLAttributes<HTMLInputElement>) => (
+  <input
+    className="[font:inherit] w-[110px] py-[6px] px-2 border border-solid border-border rounded-md text-text bg-background"
+    {...props}
+  />
+);
 
-const Badge = styled.span`
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: rgba(158, 158, 158, 0.3);
-`;
+const Badge = ({ children }: Children) => (
+  <span className="text-[12px] py-[2px] px-2 rounded-[10px] bg-[rgba(158,158,158,0.3)]">{children}</span>
+);
 
 // A text or number input that sets its value on Enter or when left
 const DraftInput = ({

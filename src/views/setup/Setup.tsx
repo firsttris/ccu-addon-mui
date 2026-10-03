@@ -1,5 +1,4 @@
-import styled from '@emotion/styled';
-import { useMemo, useState } from 'react';
+import { HTMLAttributes, ReactNode, useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   createColumnHelper,
@@ -20,65 +19,13 @@ import { DialogButton } from '../../components/ConfirmDialog';
 import { ElevateDialog } from '../../components/ElevateDialog';
 import { m } from '../../paraglide/messages';
 
-export const SetupContainer = styled.div`
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 16px;
-  padding-top: 76px;
-  color: ${(props) => props.theme.colors.text};
-`;
+export const SetupContainer = ({ children }: { children: ReactNode }) => (
+  <div className="max-w-[1280px] mx-auto p-4 pt-[76px] text-text">{children}</div>
+);
 
-export const Notice = styled.p`
-  padding: 10px 14px;
-  border-radius: 6px;
-  background: rgba(255, 193, 7, 0.2);
-`;
-
-const Search = styled.input`
-  font: inherit;
-  width: 100%;
-  max-width: 320px;
-  padding: 8px 10px;
-  margin-bottom: 12px;
-  box-sizing: border-box;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 6px;
-  color: ${(props) => props.theme.colors.text};
-  background: ${(props) => props.theme.colors.background};
-`;
-
-const TableWrapper = styled.div`
-  overflow-x: auto;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-
-  th,
-  td {
-    text-align: left;
-    padding: 8px 10px;
-    border-bottom: 1px solid ${(props) => props.theme.colors.border};
-    white-space: nowrap;
-  }
-
-  th button {
-    font: inherit;
-    font-weight: 600;
-    padding: 0;
-    border: none;
-    background: none;
-    color: inherit;
-    cursor: pointer;
-  }
-
-  a {
-    color: inherit;
-    font-weight: 600;
-  }
-`;
+export const Notice = (props: HTMLAttributes<HTMLParagraphElement>) => (
+  <p className="py-[10px] px-[14px] rounded-md bg-[rgba(255,193,7,0.2)]" {...props} />
+);
 
 interface DeviceRow {
   name: string;
@@ -159,15 +106,19 @@ export const Setup = () => {
       {userLevel === 'admin' && <SystemInfo />}
       {userLevel === 'admin' && elevated && <Pairing />}
       {userLevel === 'admin' && elevated && authRequired && <Sessions />}
-      <Search
+      <input
+        className="[font:inherit] w-full max-w-[320px] py-2 px-[10px] mb-3 box-border border border-solid border-border rounded-md text-text bg-background"
         type="search"
         aria-label={m.SEARCH()}
         placeholder={m.SEARCH()}
         value={filter}
         onChange={(event) => setFilter(event.target.value)}
       />
-      <TableWrapper>
-        <Table aria-label={m.DEVICES()}>
+      <div className="overflow-x-auto">
+        <table
+          aria-label={m.DEVICES()}
+          className="w-full border-collapse text-[14px] [&_:is(th,td)]:text-left [&_:is(th,td)]:py-2 [&_:is(th,td)]:px-[10px] [&_:is(th,td)]:border-b [&_:is(th,td)]:border-border [&_:is(th,td)]:whitespace-nowrap [&_th_button]:[font:inherit] [&_th_button]:font-semibold [&_th_button]:p-0 [&_th_button]:border-none [&_th_button]:bg-transparent [&_th_button]:text-inherit [&_th_button]:cursor-pointer [&_a]:text-inherit [&_a]:font-semibold"
+        >
           <thead>
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>
@@ -200,8 +151,8 @@ export const Setup = () => {
               </tr>
             ))}
           </tbody>
-        </Table>
-      </TableWrapper>
+        </table>
+      </div>
     </SetupContainer>
   );
 };
