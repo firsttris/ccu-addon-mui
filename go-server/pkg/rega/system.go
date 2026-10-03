@@ -35,7 +35,12 @@ func parseSystemSettings(output string) (SystemSettings, error) {
 	settings.Latitude, _ = strconv.ParseFloat(strings.TrimSpace(fields[1]), 64)
 	settings.Longitude, _ = strconv.ParseFloat(strings.TrimSpace(fields[2]), 64)
 	if offset, err := strconv.ParseFloat(strings.TrimSpace(fields[3]), 64); err == nil {
-		settings.TimeZoneOffset = int(offset)
+		// Whether ReGa counts hours or minutes is not documented; no zone is
+		// 1 to 14 minutes off UTC, so such small values are hours
+		if math.Abs(offset) <= 14 {
+			offset *= 60
+		}
+		settings.TimeZoneOffset = int(math.Round(offset))
 	}
 	settings.Time = strings.TrimSpace(fields[4])
 	return settings, nil

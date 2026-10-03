@@ -10,6 +10,9 @@ func TestParseSystemSettings(t *testing.T) {
 	if settings.Latitude != 52.52 || settings.Longitude != 13.405 || settings.TimeZoneOffset != 60 || settings.Time != "2026-10-03 22:15:00" {
 		t.Fatalf("got %+v", settings)
 	}
+	if hours, _ := parseSystemSettings("OK\t0\t0\t-3.5\t2026-10-03 22:15:00"); hours.TimeZoneOffset != -210 {
+		t.Fatalf("hours not read as such: %+v", hours)
+	}
 	if _, err := parseSystemSettings("garbage"); err == nil {
 		t.Fatal("expected an error")
 	}
