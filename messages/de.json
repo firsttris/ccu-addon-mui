@@ -318,5 +318,17 @@
   "WINDOW_TILTED": "Gekippt",
   "WINDOW_STATE_OPEN": "Offen",
   "WINDOW_UNKNOWN": "Zustand unbekannt",
-  "SABOTAGE": "Sabotage"
+  "SABOTAGE": "Sabotage",
+  "SECTION_SENSORS": "Klima & Wetter",
+  "AIR_DRY": "Trocken",
+  "AIR_COMFORTABLE": "Angenehm",
+  "AIR_HUMID": "Feucht",
+  "WIND": "Wind",
+  "RAIN": "Regen",
+  "DRY": "Trocken",
+  "BRIGHTNESS": "Helligkeit",
+  "SUNSHINE": "Sonne heute",
+  "DEW_POINT": "Taupunkt",
+  "TEMPERATURE": "Temperatur",
+  "IS_RAINING": "Es regnet"
 }

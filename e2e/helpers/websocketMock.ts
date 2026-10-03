@@ -134,6 +134,14 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
           type: 'ROTARY_HANDLE_SENSOR',
           datapoints: { ERROR: 0, LOWBAT: false, STATE: 1 },
         },
+        {
+          id: 204,
+          name: 'Küche Klima',
+          address: '000E1BE9A4C5D6:1',
+          interfaceName: 'HmIP-RF',
+          type: 'CLIMATE_TRANSCEIVER',
+          datapoints: { ACTUAL_TEMPERATURE: 21.4, HUMIDITY: 58 },
+        },
       ],
     };
 
@@ -254,6 +262,22 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         interfaceName: 'HmIP-RF',
         type: 'SMOKE_DETECTOR',
         datapoints: { SMOKE_DETECTOR_ALARM_STATUS: 0, SMOKE_DETECTOR_TEST_RESULT: null },
+      },
+      {
+        id: 602,
+        name: 'Wetterstation Garten',
+        address: '00099D89A1B2C3:1',
+        interfaceName: 'HmIP-RF',
+        type: 'WEATHER_TRANSMIT',
+        datapoints: {
+          ACTUAL_TEMPERATURE: 6.3,
+          HUMIDITY: 81,
+          ILLUMINATION: 4250,
+          RAINING: true,
+          RAIN_COUNTER: 3.2,
+          SUNSHINEDURATION: 42,
+          WIND_SPEED: 23.4,
+        },
       },
     ];
 

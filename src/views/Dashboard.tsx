@@ -180,6 +180,7 @@ const sectionTitles: Record<SectionId, () => string> = {
   blinds: m.SECTION_BLINDS,
   windows: m.SECTION_WINDOWS,
   doors: m.SECTION_DOORS,
+  sensors: m.SECTION_SENSORS,
   energy: m.SECTION_ENERGY,
 };
 
@@ -190,6 +191,7 @@ const sectionGrids: Record<SectionId | 'generic', string> = {
   blinds: '[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]',
   windows: '[grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]',
   doors: '[grid-template-columns:repeat(auto-fill,minmax(340px,1fr))]',
+  sensors: '[grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
   energy: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
   generic: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
 };

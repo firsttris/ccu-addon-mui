@@ -318,5 +318,17 @@
   "WINDOW_TILTED": "Tilted",
   "WINDOW_STATE_OPEN": "Open",
   "WINDOW_UNKNOWN": "State unknown",
-  "SABOTAGE": "Tampering"
+  "SABOTAGE": "Tampering",
+  "SECTION_SENSORS": "Climate & weather",
+  "AIR_DRY": "Dry",
+  "AIR_COMFORTABLE": "Comfortable",
+  "AIR_HUMID": "Humid",
+  "WIND": "Wind",
+  "RAIN": "Rain",
+  "DRY": "Dry",
+  "BRIGHTNESS": "Brightness",
+  "SUNSHINE": "Sunshine today",
+  "DEW_POINT": "Dew point",
+  "TEMPERATURE": "Temperature",
+  "IS_RAINING": "Raining"
 }
