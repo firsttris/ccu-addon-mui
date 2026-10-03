@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -50,16 +51,16 @@ func TestLoginIssuesVerifiableTokenAndLogsOutOfCCU(t *testing.T) {
 	defer ccu.Close()
 	a := newTestAuthenticator(t, ccu.URL)
 
-	token, err := a.Login("Admin", "secret")
+	_, token, err := a.Login("Admin", "secret")
 	if err != nil {
 		t.Fatalf("Login: %v", err)
 	}
 	if logouts != 1 {
 		t.Fatalf("expected the CCU session to be closed, got %d logouts", logouts)
 	}
-	user, err := a.Verify(token)
-	if err != nil || user != "Admin" {
-		t.Fatalf("Verify = %q, %v", user, err)
+	session, err := a.Verify(token)
+	if err != nil || session.User != "Admin" {
+		t.Fatalf("Verify = %+v, %v", session, err)
 	}
 }
 
@@ -69,7 +70,7 @@ func TestLoginRejectsWrongPassword(t *testing.T) {
 	defer ccu.Close()
 	a := newTestAuthenticator(t, ccu.URL)
 
-	if _, err := a.Login("Admin", "wrong"); err != ErrInvalidCredentials {
+	if _, _, err := a.Login("Admin", "wrong"); err != ErrInvalidCredentials {
 		t.Fatalf("expected ErrInvalidCredentials, got %v", err)
 	}
 }
@@ -83,15 +84,15 @@ func TestLoginLocksOutAfterRepeatedFailures(t *testing.T) {
 	a.now = func() time.Time { return now }
 
 	for i := 0; i < maxFailures; i++ {
-		_, _ = a.Login("Admin", "wrong")
+		_, _, _ = a.Login("Admin", "wrong")
 	}
 	// Even the right password is refused during the lockout
-	if _, err := a.Login("Admin", "secret"); err != ErrTooManyAttempts {
+	if _, _, err := a.Login("Admin", "secret"); err != ErrTooManyAttempts {
 		t.Fatalf("expected ErrTooManyAttempts, got %v", err)
 	}
 
 	now = now.Add(lockoutDuration + time.Second)
-	if _, err := a.Login("Admin", "secret"); err != nil {
+	if _, _, err := a.Login("Admin", "secret"); err != nil {
 		t.Fatalf("expected login to work after the lockout, got %v", err)
 	}
 }
@@ -100,10 +101,10 @@ func TestVerifyRejectsTamperedAndExpiredTokens(t *testing.T) {
 	a := newTestAuthenticator(t, "http://unused")
 	now := time.Now()
 	a.now = func() time.Time { return now }
-	token := a.issueToken("Admin")
+	token := a.issueToken(Session{User: "Admin"})
 
 	payload, signature, _ := strings.Cut(token, ".")
-	other := a.issueToken("Gast")
+	other := a.issueToken(Session{User: "Gast"})
 	otherPayload, _, _ := strings.Cut(other, ".")
 
 	for name, bad := range map[string]string{
@@ -127,7 +128,7 @@ func TestRefreshExtendsLifetime(t *testing.T) {
 	a := newTestAuthenticator(t, "http://unused")
 	now := time.Now()
 	a.now = func() time.Time { return now }
-	token := a.issueToken("Admin")
+	token := a.issueToken(Session{User: "Admin"})
 
 	now = now.Add(tokenLifetime - time.Hour)
 	_, refreshed, err := a.Refresh(token)
@@ -150,7 +151,7 @@ func TestKeyIsPersistedAcrossRestarts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	token := a1.issueToken("Admin")
+	token := a1.issueToken(Session{User: "Admin"})
 
 	a2, err := New("http://unused", keyFile)
 	if err != nil {
@@ -162,5 +163,72 @@ func TestKeyIsPersistedAcrossRestarts(t *testing.T) {
 	info, _ := os.Stat(keyFile)
 	if info.Mode().Perm() != 0o600 {
 		t.Fatalf("expected key file mode 0600, got %v", info.Mode().Perm())
+	}
+}
+
+func TestLoginStoresUserLevelInToken(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	a := newTestAuthenticator(t, ccu.URL)
+	a.SetLevelFunc(func(username string) (string, error) {
+		if username != "Admin" {
+			t.Errorf("level looked up for %q", username)
+		}
+		return LevelAdmin, nil
+	})
+
+	session, token, err := a.Login("Admin", "secret")
+	if err != nil || session.Level != LevelAdmin {
+		t.Fatalf("Login = %+v, %v", session, err)
+	}
+	verified, err := a.Verify(token)
+	if err != nil || verified != (Session{User: "Admin", Level: LevelAdmin}) {
+		t.Fatalf("Verify = %+v, %v", verified, err)
+	}
+}
+
+func TestLoginSucceedsWhenLevelLookupFails(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	a := newTestAuthenticator(t, ccu.URL)
+	a.SetLevelFunc(func(string) (string, error) { return "", errors.New("rega down") })
+
+	session, _, err := a.Login("Admin", "secret")
+	if err != nil || session.Level != LevelUnknown {
+		t.Fatalf("Login = %+v, %v", session, err)
+	}
+}
+
+func TestRefreshKeepsLevelAndFillsInMissingOne(t *testing.T) {
+	a := newTestAuthenticator(t, "http://unused")
+	lookups := 0
+	a.SetLevelFunc(func(string) (string, error) {
+		lookups++
+		return LevelUser, nil
+	})
+
+	// A token with a level keeps it without a new lookup
+	session, _, err := a.Refresh(a.issueToken(Session{User: "Admin", Level: LevelAdmin}))
+	if err != nil || session.Level != LevelAdmin || lookups != 0 {
+		t.Fatalf("Refresh = %+v, %v (%d lookups)", session, err, lookups)
+	}
+
+	// A token from before levels were stored gets one
+	session, refreshed, err := a.Refresh(a.issueToken(Session{User: "Gast"}))
+	if err != nil || session.Level != LevelUser || lookups != 1 {
+		t.Fatalf("Refresh = %+v, %v (%d lookups)", session, err, lookups)
+	}
+	if verified, _ := a.Verify(refreshed); verified.Level != LevelUser {
+		t.Fatalf("refreshed token has level %q", verified.Level)
+	}
+}
+
+func TestLevelFromCCU(t *testing.T) {
+	for level, want := range map[int]string{8: LevelAdmin, 2: LevelUser, 1: LevelGuest, 0: LevelUnknown, 4: LevelUnknown} {
+		if got := LevelFromCCU(level); got != want {
+			t.Errorf("LevelFromCCU(%d) = %q, want %q", level, got, want)
+		}
 	}
 }

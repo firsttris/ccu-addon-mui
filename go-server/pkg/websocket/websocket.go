@@ -410,6 +410,8 @@ type request struct {
 	DeviceID string `json:"deviceId"`
 	RoomID   string `json:"roomId"`
 	TradeID  string `json:"tradeId"`
+	// All requests the channels of all devices (getChannels only)
+	All bool `json:"all"`
 }
 
 // parseRequest parses a request and validates its deviceId, which is echoed
@@ -445,6 +447,7 @@ type channelsResponse struct {
 	DeviceID string         `json:"deviceId"`
 	RoomID   string         `json:"roomId,omitempty"`
 	TradeID  string         `json:"tradeId,omitempty"`
+	All      bool           `json:"all,omitempty"`
 	Channels []rega.Channel `json:"channels"`
 }
 
@@ -484,13 +487,23 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 		return
 	}
 
+	if msg.All {
+		channels, err := s.regaClient.GetAllChannels()
+		if err != nil {
+			s.sendError(client, "getChannels failed: "+err.Error())
+			return
+		}
+		s.sendJSON(client, channelsResponse{DeviceID: msg.DeviceID, All: true, Channels: channels})
+		return
+	}
+
 	// Rooms and trades are both ReGa enumerations, read the same way.
 	objectID := msg.RoomID
 	if objectID == "" {
 		objectID = msg.TradeID
 	}
 	if objectID == "" {
-		s.sendError(client, "either roomId or tradeId is required")
+		s.sendError(client, "roomId, tradeId or all is required")
 		return
 	}
 
@@ -513,9 +526,12 @@ type authResponse struct {
 	Success      bool   `json:"success"`
 	AuthRequired bool   `json:"authRequired"`
 	User         string `json:"user,omitempty"`
-	Token        string `json:"token,omitempty"`
-	Error        string `json:"error,omitempty"`
-	Code         string `json:"code,omitempty"`
+	// Level is the CCU user level ("admin", "user", "guest"), empty if
+	// unknown. Not enforced yet.
+	Level string `json:"level,omitempty"`
+	Token string `json:"token,omitempty"`
+	Error string `json:"error,omitempty"`
+	Code  string `json:"code,omitempty"`
 }
 
 // handleAuth checks a stored token. Every client sends this first after
@@ -529,11 +545,12 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 
 	if s.auth == nil {
 		client.authenticated = true
-		s.sendJSON(client, authResponse{Type: "auth_response", Success: true})
+		// Without authentication everyone can do everything
+		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin})
 		return
 	}
 
-	user, token, err := s.auth.Refresh(msg.Token)
+	session, token, err := s.auth.Refresh(msg.Token)
 	if err != nil {
 		client.authenticated = false
 		s.sendJSON(client, authResponse{Type: "auth_response", AuthRequired: true, Code: "LOGIN_REQUIRED"})
@@ -541,7 +558,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	}
 
 	client.authenticated = true
-	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: user, Token: token})
+	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level, Token: token})
 }
 
 // handleLogin verifies CCU credentials and returns a token for the client
@@ -558,11 +575,11 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 
 	if s.auth == nil {
 		client.authenticated = true
-		s.sendJSON(client, authResponse{Type: "auth_response", Success: true})
+		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin})
 		return
 	}
 
-	token, err := s.auth.Login(msg.Username, msg.Password)
+	session, token, err := s.auth.Login(msg.Username, msg.Password)
 	if err != nil {
 		code := "CCU_UNREACHABLE"
 		switch err {
@@ -578,7 +595,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 
 	logger.Info(fmt.Sprintf("🔓 User %q logged in", msg.Username))
 	client.authenticated = true
-	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: msg.Username, Token: token})
+	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level, Token: token})
 }
 
 type setDatapointResponse struct {

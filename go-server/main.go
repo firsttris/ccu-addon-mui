@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -34,6 +35,14 @@ func main() {
 			logger.Error("❌ Failed to initialise authentication:", err)
 			os.Exit(1)
 		}
+		authenticator.SetLevelFunc(func(username string) (string, error) {
+			level, err := regaClient.GetUserLevel(username)
+			if err != nil {
+				logger.Info(fmt.Sprintf("⚠️ Could not read the user level of %q: %v", username, err))
+				return auth.LevelUnknown, err
+			}
+			return auth.LevelFromCCU(level), nil
+		})
 		wsServer.SetAuthenticator(authenticator)
 		logger.Info("🔒 Authentication: CCU users (" + cfg.WebUIURL + ")")
 	case "none":

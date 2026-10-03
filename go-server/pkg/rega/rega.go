@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -151,6 +152,34 @@ func (c *Client) GetChannels(objectID string) ([]Channel, error) {
 		return nil, err
 	}
 	return parseChannels(output), nil
+}
+
+// GetAllChannels returns the channels of all devices, also those in no room
+// or trade. Maintenance channels and the CCU's virtual keys are left out.
+func (c *Client) GetAllChannels() ([]Channel, error) {
+	output, err := c.Execute(strings.ReplaceAll(getChannelsScript, "{{OBJECT_ID}}", "ALL"))
+	if err != nil {
+		return nil, err
+	}
+	return parseChannels(output), nil
+}
+
+// GetUserLevel returns the level of a CCU user as stored in ReGa
+// (1 = guest, 2 = user, 8 = admin).
+func (c *Client) GetUserLevel(username string) (int, error) {
+	// The name ends up inside a string literal, see sanitizeRegaValue
+	if username == "" || strings.ContainsAny(username, "\"\\\r\n") {
+		return 0, fmt.Errorf("invalid username")
+	}
+	output, err := c.Execute(strings.ReplaceAll(getUserLevelScript, "{{USERNAME}}", username))
+	if err != nil {
+		return 0, err
+	}
+	level, err := strconv.Atoi(strings.TrimSpace(output))
+	if err != nil {
+		return 0, fmt.Errorf("no user level for %q", username)
+	}
+	return level, nil
 }
 
 // Results of SetDatapoint

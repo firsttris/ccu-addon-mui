@@ -18,3 +18,6 @@ var setDatapointScript string
 
 //go:embed scripts/get_device_problems.tcl
 var getDeviceProblemsScript string
+
+//go:embed scripts/get_user_level.tcl
+var getUserLevelScript string

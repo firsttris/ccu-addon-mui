@@ -37,11 +37,44 @@ var (
 	ErrInvalidToken       = errors.New("invalid or expired token")
 )
 
+// User levels of the CCU. Stored in the token so that features can later
+// be restricted (operating from "user", setting up only for "admin").
+const (
+	LevelAdmin   = "admin"
+	LevelUser    = "user"
+	LevelGuest   = "guest"
+	LevelUnknown = ""
+)
+
+// LevelFromCCU maps the user level numbers ReGa uses to the levels above.
+func LevelFromCCU(level int) string {
+	switch level {
+	case 8:
+		return LevelAdmin
+	case 2:
+		return LevelUser
+	case 1:
+		return LevelGuest
+	default:
+		return LevelUnknown
+	}
+}
+
+// LevelFunc looks up the CCU user level of a user, e.g. via ReGa.
+type LevelFunc func(username string) (string, error)
+
+// Session is what a valid token says about its holder.
+type Session struct {
+	User  string
+	Level string
+}
+
 type Authenticator struct {
 	key        []byte
 	webUIURL   string
 	httpClient *http.Client
 	now        func() time.Time
+	level      LevelFunc
 
 	mu          sync.Mutex
 	failures    []time.Time
@@ -83,69 +116,94 @@ func loadOrCreateKey(keyFile string) ([]byte, error) {
 	return key, nil
 }
 
+// SetLevelFunc sets how the user level is looked up at login. Without it,
+// tokens carry LevelUnknown.
+func (a *Authenticator) SetLevelFunc(level LevelFunc) {
+	a.level = level
+}
+
+// lookupLevel returns the user's level, or LevelUnknown if it can't be read:
+// the level isn't enforced yet, so a failed lookup must not block the login.
+func (a *Authenticator) lookupLevel(username string) string {
+	if a.level == nil {
+		return LevelUnknown
+	}
+	level, err := a.level(username)
+	if err != nil {
+		return LevelUnknown
+	}
+	return level
+}
+
 // Login verifies the credentials against the CCU and returns a token.
-func (a *Authenticator) Login(username, password string) (string, error) {
+func (a *Authenticator) Login(username, password string) (Session, string, error) {
 	if err := a.checkLockout(); err != nil {
-		return "", err
+		return Session{}, "", err
 	}
 	if username == "" {
 		a.recordFailure()
-		return "", ErrInvalidCredentials
+		return Session{}, "", ErrInvalidCredentials
 	}
 
 	ok, err := a.verifyWithCCU(username, password)
 	if err != nil {
-		return "", err
+		return Session{}, "", err
 	}
 	if !ok {
 		a.recordFailure()
-		return "", ErrInvalidCredentials
+		return Session{}, "", ErrInvalidCredentials
 	}
-	return a.issueToken(username), nil
+	session := Session{User: username, Level: a.lookupLevel(username)}
+	return session, a.issueToken(session), nil
 }
 
 // Refresh verifies a token and returns a new one with a fresh lifetime, so
-// a device that is used regularly never has to log in again.
-func (a *Authenticator) Refresh(token string) (user, newToken string, err error) {
-	user, err = a.Verify(token)
+// a device that is used regularly never has to log in again. Tokens issued
+// before levels were stored get the level looked up now.
+func (a *Authenticator) Refresh(token string) (Session, string, error) {
+	session, err := a.Verify(token)
 	if err != nil {
-		return "", "", err
+		return Session{}, "", err
 	}
-	return user, a.issueToken(user), nil
+	if session.Level == LevelUnknown {
+		session.Level = a.lookupLevel(session.User)
+	}
+	return session, a.issueToken(session), nil
 }
 
-// Verify checks a token and returns the user it was issued to.
-func (a *Authenticator) Verify(token string) (string, error) {
+// Verify checks a token and returns the session it was issued for.
+func (a *Authenticator) Verify(token string) (Session, error) {
 	payload, signature, ok := strings.Cut(token, ".")
 	if !ok {
-		return "", ErrInvalidToken
+		return Session{}, ErrInvalidToken
 	}
 	expected := a.sign(payload)
 	if !hmac.Equal([]byte(signature), []byte(expected)) {
-		return "", ErrInvalidToken
+		return Session{}, ErrInvalidToken
 	}
 
 	data, err := base64.RawURLEncoding.DecodeString(payload)
 	if err != nil {
-		return "", ErrInvalidToken
+		return Session{}, ErrInvalidToken
 	}
 	var claims tokenClaims
 	if err := json.Unmarshal(data, &claims); err != nil {
-		return "", ErrInvalidToken
+		return Session{}, ErrInvalidToken
 	}
 	if a.now().After(time.Unix(claims.ExpiresAt, 0)) {
-		return "", ErrInvalidToken
+		return Session{}, ErrInvalidToken
 	}
-	return claims.User, nil
+	return Session{User: claims.User, Level: claims.Level}, nil
 }
 
 type tokenClaims struct {
 	User      string `json:"u"`
+	Level     string `json:"l,omitempty"`
 	ExpiresAt int64  `json:"exp"`
 }
 
-func (a *Authenticator) issueToken(username string) string {
-	data, _ := json.Marshal(tokenClaims{User: username, ExpiresAt: a.now().Add(tokenLifetime).Unix()})
+func (a *Authenticator) issueToken(session Session) string {
+	data, _ := json.Marshal(tokenClaims{User: session.User, Level: session.Level, ExpiresAt: a.now().Add(tokenLifetime).Unix()})
 	payload := base64.RawURLEncoding.EncodeToString(data)
 	return payload + "." + a.sign(payload)
 }

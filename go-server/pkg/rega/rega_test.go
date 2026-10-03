@@ -91,6 +91,44 @@ func TestGetChannelsSubstitutesIDAndParsesOutput(t *testing.T) {
 	}
 }
 
+func TestGetUserLevelRejectsInvalidNames(t *testing.T) {
+	// No HTTP server: validation must fail before any request is made.
+	client := &Client{}
+
+	for _, name := range []string{"", `x"); system.Exec("reboot"); ("`, "a\\b", "a\nb"} {
+		if _, err := client.GetUserLevel(name); err == nil || !strings.Contains(err.Error(), "invalid") {
+			t.Fatalf("GetUserLevel(%q): expected validation error, got %v", name, err)
+		}
+	}
+}
+
+func TestGetUserLevel(t *testing.T) {
+	var gotScript string
+	output := "8"
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, output+"<xml><exec>/rega.exe</exec></xml>")
+	}))
+	defer ts.Close()
+
+	client := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+
+	level, err := client.GetUserLevel("Tristan Teufel")
+	if err != nil || level != 8 {
+		t.Fatalf("GetUserLevel = %d, %v", level, err)
+	}
+	if !strings.Contains(gotScript, `Get("Tristan Teufel")`) {
+		t.Fatalf("expected the name in the script, got %s", gotScript)
+	}
+
+	// No such user: ReGa writes nothing
+	output = ""
+	if _, err := client.GetUserLevel("Nobody"); err == nil {
+		t.Fatal("expected an error for an unknown user")
+	}
+}
+
 func TestExecuteStripsXMLWrapper(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

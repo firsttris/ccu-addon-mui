@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -212,6 +213,38 @@ func TestGetChannelsReturnsValidJSONAndEchoesRoomID(t *testing.T) {
 	}
 }
 
+func TestGetChannelsAllRequestsAllDevices(t *testing.T) {
+	var gotScript string
+	regaServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, "C\t1\tA:1\tROTARY_HANDLE_TRANSCEIVER\tHmIP-RF\tFenster\r\nD\tSTATE\t16\t2\r\n")
+	}))
+	defer regaServer.Close()
+
+	host, port, _ := net.SplitHostPort(regaServer.Listener.Addr().String())
+	portNum, _ := strconv.Atoi(port)
+	s := NewServer(nil, rega.NewClient(&config.Config{CCUHost: host, RegaPort: portNum}))
+	client := &Client{send: make(chan []byte, 1)}
+
+	s.handleMessage(client, []byte(`{"type":"getChannels","deviceId":"dev-1","all":true}`))
+
+	var resp struct {
+		All      bool           `json:"all"`
+		RoomID   string         `json:"roomId"`
+		Channels []rega.Channel `json:"channels"`
+	}
+	if err := json.Unmarshal(<-client.send, &resp); err != nil {
+		t.Fatalf("response is not valid JSON: %v", err)
+	}
+	if !strings.Contains(gotScript, `"ALL"`) {
+		t.Fatalf("expected the script to read all channels, got %s", gotScript)
+	}
+	if !resp.All || resp.RoomID != "" || len(resp.Channels) != 1 || resp.Channels[0].Datapoints["STATE"] != 2.0 {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+}
+
 func TestFormatValue(t *testing.T) {
 	tests := []struct {
 		input   interface{}
@@ -294,6 +327,7 @@ func TestAuthRequiredBeforeAnyRequest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	a.SetLevelFunc(func(string) (string, error) { return auth.LevelUser, nil })
 	s := NewServer(nil, nil)
 	s.SetAuthenticator(a)
 	client := &Client{send: make(chan []byte, 4)}
@@ -318,7 +352,7 @@ func TestAuthRequiredBeforeAnyRequest(t *testing.T) {
 
 	s.handleMessage(client, []byte(`{"type":"login","username":"Admin","password":"secret"}`))
 	login := readAuthResponse(t, client)
-	if !login.Success || login.Token == "" || login.User != "Admin" {
+	if !login.Success || login.Token == "" || login.User != "Admin" || login.Level != auth.LevelUser {
 		t.Fatalf("unexpected response: %+v", login)
 	}
 
@@ -331,7 +365,7 @@ func TestAuthRequiredBeforeAnyRequest(t *testing.T) {
 	// A new connection (e.g. after the app was closed) logs in with the stored token
 	other := &Client{send: make(chan []byte, 1)}
 	s.handleMessage(other, []byte(`{"type":"auth","token":"`+login.Token+`"}`))
-	if resp := readAuthResponse(t, other); !resp.Success || resp.Token == "" {
+	if resp := readAuthResponse(t, other); !resp.Success || resp.Token == "" || resp.Level != auth.LevelUser {
 		t.Fatalf("expected the stored token to be accepted and renewed: %+v", resp)
 	}
 	if !other.authenticated {
@@ -344,7 +378,7 @@ func TestAuthDisabledAcceptsEveryone(t *testing.T) {
 	client := &Client{send: make(chan []byte, 1)}
 
 	s.handleMessage(client, []byte(`{"type":"auth"}`))
-	if resp := readAuthResponse(t, client); !resp.Success || resp.AuthRequired {
+	if resp := readAuthResponse(t, client); !resp.Success || resp.AuthRequired || resp.Level != auth.LevelAdmin {
 		t.Fatalf("unexpected response: %+v", resp)
 	}
 }
