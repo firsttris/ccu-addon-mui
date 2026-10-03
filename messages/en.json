@@ -714,5 +714,6 @@
   "COMTEST_HINT": "The CCU asks the device to answer. Battery devices only answer when they wake up; briefly press a button on the device for that.",
   "PRG_SAVE_AS_NEW": "Save as new program",
   "PRG_COPY_NAME": "{name} (copy)",
-  "PRG_COPIED": "Saved as a new program"
+  "PRG_COPIED": "Saved as a new program",
+  "CHANNEL_AES": "secured (AES)"
 }

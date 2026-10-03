@@ -363,6 +363,8 @@ func (c *CCU) runScript(body string) (string, error) {
 				ch.ReadOnly = !value
 			case "logged":
 				ch.Logged = value
+			case "aes":
+				ch.AES = value
 			}
 			return "OK\t" + ch.Name, nil
 		case "get_read_only_channels":
@@ -795,7 +797,7 @@ func (c *CCU) getChannels(objectID string) string {
 	for _, ch := range channels {
 		fmt.Fprintf(&b, "C\t%d\t%s\t%s\t%s\t%s\n", ch.ID, ch.Address, ch.Type, ch.Interface, ch.Name)
 		fmt.Fprintf(&b, "M\t%s\t%s\n", memberOf(c.fixture.Rooms, ch.ID), memberOf(c.fixture.Trades, ch.ID))
-		fmt.Fprintf(&b, "F\t%t\t%t\t%t\n", !ch.Hidden, !ch.ReadOnly, ch.Logged)
+		fmt.Fprintf(&b, "F\t%t\t%t\t%t\t%t\n", !ch.Hidden, !ch.ReadOnly, ch.Logged, ch.AES)
 		if ch.Tile != "" {
 			fmt.Fprintf(&b, "T\t%s\n", ch.Tile)
 		}

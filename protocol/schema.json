@@ -433,6 +433,10 @@
         "logged": {
           "type": "boolean",
           "description": "logged in the system protocol"
+        },
+        "aes": {
+          "type": "boolean",
+          "description": "secured transmission (AES), BidCos"
         }
       },
       "required": [
@@ -6065,7 +6069,8 @@
           "enum": [
             "visible",
             "usable",
-            "logged"
+            "logged",
+            "aes"
           ]
         },
         "value": {

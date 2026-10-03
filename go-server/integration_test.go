@@ -1353,6 +1353,16 @@ func TestStackChannelOptions(t *testing.T) {
 			t.Fatalf("options not listed: %v", c)
 		}
 	}
+	send(t, conn, message{"type": "setChannelOption", "requestId": "o4", "id": 101, "option": "aes", "value": true})
+	if m := receive(t, conn, byRequestID("o4")); m["success"] != true {
+		t.Fatalf("setting AES failed: %v", m)
+	}
+	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "requestId": "c2", "all": true})
+	for _, ch := range receive(t, conn, byRequestID("c2"))["channels"].([]interface{}) {
+		if c := ch.(map[string]interface{}); c["id"] == 101.0 && c["aes"] != true {
+			t.Fatalf("AES not listed: %v", c)
+		}
+	}
 	send(t, conn, message{"type": "setChannelOption", "requestId": "o3", "id": 101, "option": "sticky", "value": true})
 	if m := receive(t, conn, byRequestID("o3")); m["code"] != "INVALID_VALUE" {
 		t.Fatalf("expected INVALID_VALUE, got %v", m)

@@ -150,8 +150,8 @@ func TestParseChannelsTile(t *testing.T) {
 }
 
 func TestParseChannelsOptions(t *testing.T) {
-	channels := parseChannels("C\t1\tA:1\tSWITCH\tBidCos-RF\tLicht\nF\tfalse\tfalse\ttrue\nC\t2\tA:2\tSWITCH\tBidCos-RF\tSteckdose\nF\ttrue\ttrue\tfalse\n")
-	if len(channels) != 2 || !channels[0].Hidden || !channels[0].ReadOnly || !channels[0].Logged {
+	channels := parseChannels("C\t1\tA:1\tSWITCH\tBidCos-RF\tLicht\nF\tfalse\tfalse\ttrue\ttrue\nC\t2\tA:2\tSWITCH\tBidCos-RF\tSteckdose\nF\ttrue\ttrue\tfalse\n")
+	if len(channels) != 2 || !channels[0].Hidden || !channels[0].ReadOnly || !channels[0].Logged || !channels[0].AES || channels[1].AES {
 		t.Fatalf("got %+v", channels)
 	}
 	if channels[1].Hidden || channels[1].ReadOnly || channels[1].Logged {

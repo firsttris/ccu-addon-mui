@@ -323,6 +323,10 @@ export interface Channel {
    * logged in the system protocol
    */
   logged?: boolean;
+  /**
+   * secured transmission (AES), BidCos
+   */
+  aes?: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2531,7 +2535,7 @@ export interface SetChannelOptionRequest {
   type: "setChannelOption";
   requestId?: string;
   id: number;
-  option: "visible" | "usable" | "logged";
+  option: "visible" | "usable" | "logged" | "aes";
   value: boolean;
 }
 /**
