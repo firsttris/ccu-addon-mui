@@ -243,6 +243,7 @@ export const Favorite = () => {
             )}
           </div>
         }
+        layoutId={favorite?.id}
         channelsByType={channelsByType}
         isLoading={isLoading || !favorites}
         extra={favorite && hasLogic ? <LogicItems favorite={favorite} /> : undefined}

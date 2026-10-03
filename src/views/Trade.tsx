@@ -13,6 +13,7 @@ export const Trade: React.FC = () => {
   return (
     <Dashboard
       tabs={<NavTabs label={m.TRADES()} items={trades} activeId={tradeId} to="/trade/$tradeId" />}
+      layoutId={Number(tradeId)}
       channelsByType={channelsByType}
       isLoading={isLoading}
     />

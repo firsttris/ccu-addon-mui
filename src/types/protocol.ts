@@ -77,7 +77,9 @@ export type ServerMessage =
   | GetProgramResponse
   | SaveProgramResponse
   | DeleteProgramResponse
-  | GetAllLinksResponse;
+  | GetAllLinksResponse
+  | GetLayoutResponse
+  | SetLayoutResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -139,6 +141,8 @@ export interface Protocol {
   saveProgram: SaveProgramCall;
   deleteProgram: DeleteProgramCall;
   getAllLinks: GetAllLinksCall;
+  getLayout: GetLayoutCall;
+  setLayout: SetLayoutCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2055,6 +2059,68 @@ export interface InterfaceLink {
   receiver: string;
   name?: string;
   description?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetLayoutCall".
+ */
+export interface GetLayoutCall {
+  request: GetLayoutRequest;
+  response: GetLayoutResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetLayoutRequest".
+ */
+export interface GetLayoutRequest {
+  type: "getLayout";
+  requestId?: string;
+  /**
+   * room, trade or favorite list
+   */
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetLayoutResponse".
+ */
+export interface GetLayoutResponse {
+  type: "getLayout_response";
+  requestId?: string;
+  /**
+   * JSON, empty if none
+   */
+  layout: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLayoutCall".
+ */
+export interface SetLayoutCall {
+  request: SetLayoutRequest;
+  response: SetLayoutResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLayoutRequest".
+ */
+export interface SetLayoutRequest {
+  type: "setLayout";
+  requestId?: string;
+  id: number;
+  /**
+   * JSON; empty removes the layout
+   */
+  layout: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLayoutResponse".
+ */
+export interface SetLayoutResponse {
+  type: "setLayout_response";
+  requestId?: string;
+  success: boolean;
 }
 /**
  * Sent first on every connection

@@ -172,6 +172,12 @@
     },
     "getAllLinks": {
       "$ref": "#/definitions/GetAllLinksCall"
+    },
+    "getLayout": {
+      "$ref": "#/definitions/GetLayoutCall"
+    },
+    "setLayout": {
+      "$ref": "#/definitions/SetLayoutCall"
     }
   },
   "required": [
@@ -230,7 +236,9 @@
     "getProgram",
     "saveProgram",
     "deleteProgram",
-    "getAllLinks"
+    "getAllLinks",
+    "getLayout",
+    "setLayout"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2615,6 +2623,12 @@
         },
         {
           "$ref": "#/definitions/GetAllLinksResponse"
+        },
+        {
+          "$ref": "#/definitions/GetLayoutResponse"
+        },
+        {
+          "$ref": "#/definitions/SetLayoutResponse"
         }
       ]
     },
@@ -5008,6 +5022,125 @@
           "type": "string"
         }
       }
+    },
+    "GetLayoutRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLayout"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer",
+          "description": "room, trade or favorite list"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "GetLayoutResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLayout_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "layout": {
+          "type": "string",
+          "description": "JSON, empty if none"
+        }
+      },
+      "required": [
+        "type",
+        "layout"
+      ],
+      "additionalProperties": false
+    },
+    "GetLayoutCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetLayoutRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetLayoutResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetLayoutRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setLayout"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "layout": {
+          "type": "string",
+          "description": "JSON; empty removes the layout"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "layout"
+      ],
+      "additionalProperties": false
+    },
+    "SetLayoutResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setLayout_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetLayoutCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetLayoutRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetLayoutResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
     }
   }
 }

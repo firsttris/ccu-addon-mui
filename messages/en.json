@@ -571,5 +571,10 @@
   "PRG_VALUE_FIXED": "fixed value",
   "PRG_VALUE_OF_SYSVAR": "value of the system variable",
   "PRG_APPLY": "Apply",
-  "DEVICE": "Device"
+  "DEVICE": "Device",
+  "LAYOUT_ARRANGE": "Arrange",
+  "LAYOUT_DONE": "Done",
+  "LAYOUT_RESET": "Arrange automatically",
+  "LAYOUT_HINT": "Drag tiles; change the width at the right edge. Applies on all devices.",
+  "LAYOUT_SAVED": "Arrangement saved"
 }

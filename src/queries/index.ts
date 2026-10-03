@@ -652,3 +652,24 @@ export const useProgramChange = () => {
       ]),
   });
 };
+
+// The tile layout of a room, trade or favorite list (JSON, '' if none)
+export const useLayout = (id: number | undefined) => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['layout', id],
+    queryFn: async () => (await request({ type: 'getLayout', id: id ?? 0 })).layout ?? '',
+    enabled: id !== undefined && id > 0,
+    retry: false,
+  });
+};
+
+export const useSetLayout = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, layout }: { id: number; layout: string }) => request({ type: 'setLayout', id, layout }, { queue: false }),
+    onMutate: ({ id, layout }) => queryClient.setQueryData(['layout', id], layout),
+    onSettled: (_, __, { id }) => queryClient.invalidateQueries({ queryKey: ['layout', id] }),
+  });
+};

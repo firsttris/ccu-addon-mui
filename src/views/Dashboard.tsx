@@ -13,6 +13,13 @@ import { TranslationKey, useTranslations } from '../i18n/utils';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
+import LayoutGridIcon from '~icons/lucide/layout-grid';
+import { useLayout, useSetLayout } from '../queries';
+import { useWebSocketContext } from '../hooks/useWebsocket';
+import { useToast } from '../contexts/ToastContext';
+import { Button } from '../components/ui/button';
+import { GridDashboard, GridTile } from './grid/GridDashboard';
+import { parseLayout, SavedLayout } from './grid/tileLayout';
 
 // --- Tabs of rooms, trades or favorite lists, with a marker that glides
 // to the active one
@@ -200,6 +207,38 @@ const sectionTitles: Record<SectionId, () => string> = {
   system: m.SECTION_SYSTEM,
 };
 
+// The narrowest a tile of each section looks right (as the grids below)
+const sectionMinPx: Record<SectionId | 'generic', number> = {
+  climate: 232,
+  floor: 300,
+  lights: 150,
+  blinds: 300,
+  windows: 220,
+  doors: 340,
+  security: 250,
+  sensors: 250,
+  buttons: 240,
+  energy: 260,
+  system: 260,
+  generic: 240,
+};
+
+// Every tile of the sections in order, for arranging them in a grid
+const gridTiles = (channelsByType: [string, Channel[]][]): GridTile[] =>
+  groupIntoSections(channelsByType).flatMap((group) => {
+    const minPx = sectionMinPx[group.section ?? 'generic'];
+    return group.types.flatMap(([type, channels]) => {
+      const override = controlOverrides[type];
+      return override?.per === 'device'
+        ? groupByDevice(channels).map(([deviceAddress, deviceChannels]) => ({
+            key: `d:${deviceAddress}`,
+            minPx,
+            element: <override.component channels={deviceChannels} />,
+          }))
+        : channels.map((channel) => ({ key: `c:${channel.address}`, minPx, element: <ControlComponent channel={channel} /> }));
+    });
+  });
+
 const sectionGrids: Record<SectionId | 'generic', string> = {
   climate: '[grid-template-columns:repeat(auto-fill,minmax(232px,1fr))]',
   floor: '[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]',
@@ -283,6 +322,8 @@ const Section = ({ group }: { group: SectionGroup }) => {
 
 interface DashboardProps {
   tabs?: ReactNode;
+  // The room, trade or favorite list whose tiles can be arranged by hand
+  layoutId?: number;
   channelsByType: [string, Channel[]][];
   isLoading?: boolean;
   // Shown after the sections (a favorite list's variables and programs)
@@ -291,7 +332,27 @@ interface DashboardProps {
   empty?: ReactNode;
 }
 
-export const Dashboard = ({ tabs, channelsByType, isLoading, extra, empty }: DashboardProps) => {
+export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, empty }: DashboardProps) => {
+  const { userLevel } = useWebSocketContext();
+  const { data: layoutJson } = useLayout(layoutId);
+  const setLayout = useSetLayout();
+  const { showToast } = useToast();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<SavedLayout | null>(null);
+  const saved = useMemo(() => parseLayout(layoutJson), [layoutJson]);
+  const tiles = useMemo(() => gridTiles(channelsByType), [channelsByType]);
+  const canArrange = layoutId !== undefined && userLevel !== 'guest' && channelsByType.length > 0;
+  const store = (layout: string, after: () => void) =>
+    setLayout.mutate(
+      { id: layoutId ?? 0, layout },
+      {
+        onSuccess: () => {
+          after();
+          showToast(m.LAYOUT_SAVED(), 'info');
+        },
+        onError: (error) => showToast(`${m.SAVE_FAILED()}: ${error.message}`),
+      },
+    );
   const effects = useEffects();
   const channels = useMemo(() => channelsByType.flatMap(([, list]) => list), [channelsByType]);
   const lightsOn = channels.filter(isLightOn).length;
@@ -318,9 +379,37 @@ export const Dashboard = ({ tabs, channelsByType, isLoading, extra, empty }: Das
       <AlarmBanner onShowAll={() => setAlarmsOpen(true)} />
       <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
       <Overview channels={channels} />
-      {groupIntoSections(channelsByType).map((group) => (
-        <Section key={group.key} group={group} />
-      ))}
+      {canArrange && (
+        <div className="-mt-2 flex flex-wrap items-center justify-end gap-2">
+          {editing && <span className="mr-auto text-sm text-muted-foreground">{m.LAYOUT_HINT()}</span>}
+          {editing && saved && (
+            <Button variant="ghost" size="sm" onClick={() => store('', () => setEditing(false))}>
+              {m.LAYOUT_RESET()}
+            </Button>
+          )}
+          <Button
+            variant={editing ? 'default' : 'outline'}
+            size="sm"
+            disabled={setLayout.isPending}
+            onClick={() => {
+              if (!editing) return setEditing(true);
+              if (!draft) return setEditing(false);
+              store(JSON.stringify(draft), () => {
+                setEditing(false);
+                setDraft(null);
+              });
+            }}
+          >
+            <LayoutGridIcon />
+            {editing ? m.LAYOUT_DONE() : m.LAYOUT_ARRANGE()}
+          </Button>
+        </div>
+      )}
+      {saved || editing ? (
+        <GridDashboard tiles={tiles} saved={draft ?? saved} editing={editing} onChange={setDraft} />
+      ) : (
+        groupIntoSections(channelsByType).map((group) => <Section key={group.key} group={group} />)
+      )}
       {extra}
       {!isLoading && channelsByType.length === 0 && !extra && (
         <p className="py-12 text-center text-muted-foreground">{empty ?? m.NO_CHANNELS()}</p>

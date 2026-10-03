@@ -1158,3 +1158,25 @@ func TestStackAllLinks(t *testing.T) {
 		t.Fatalf("expected FORBIDDEN, got %v", m)
 	}
 }
+
+func TestStackLayout(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	layout := `{"v":1,"layouts":{"lg":[{"i":"c:LEQ0000001:1","x":0,"y":0,"w":2}]}}`
+	send(t, conn, message{"type": "setLayout", "requestId": "y1", "id": 1, "layout": layout})
+	if m := receive(t, conn, byRequestID("y1")); m["success"] != true {
+		t.Fatalf("setLayout failed: %v", m)
+	}
+	send(t, conn, message{"type": "getLayout", "requestId": "y2", "id": 1})
+	if m := receive(t, conn, byRequestID("y2")); m["layout"] != layout {
+		t.Fatalf("layout not stored: %v", m)
+	}
+	send(t, conn, message{"type": "setLayout", "requestId": "y3", "id": 1, "layout": `{"x":"^"}`})
+	if m := receive(t, conn, byRequestID("y3")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+	send(t, conn, message{"type": "getLayout", "requestId": "y4", "id": 424242})
+	if m := receive(t, conn, byRequestID("y4")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}
