@@ -1,5 +1,4 @@
-import styled from '@emotion/styled';
-import { useMemo, useState } from 'react';
+import { CSSProperties, ReactNode, useMemo, useState } from 'react';
 import { useDevices, useLinkAction, useLinkParamset, useLinks } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../../i18n/utils';
@@ -9,46 +8,11 @@ import { formatParameterValue, ParamsetView, shownParameters } from '../../contr
 import { useChannelNames } from './channelNames';
 import { m } from '../../paraglide/messages';
 
-const LinkList = styled.ul`
-  list-style: none;
-  margin: 0 0 12px;
-  padding: 0;
-
-  > li {
-    padding: 8px 0;
-    border-bottom: 1px solid ${(props) => props.theme.colors.border};
-  }
-`;
-
-const Row = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-`;
-
-const Form = styled.form`
-  display: grid;
-  gap: 8px;
-  max-width: 420px;
-
-  label {
-    display: grid;
-    gap: 2px;
-    font-size: 13px;
-  }
-
-  select,
-  input {
-    font: inherit;
-    padding: 6px;
-  }
-`;
-
-const Hint = styled.p`
-  font-size: 12px;
-  color: ${(props) => props.theme.colors.textSecondary};
-`;
+const Row = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
+  <div className="flex gap-2 items-center flex-wrap" style={style}>
+    {children}
+  </div>
+);
 
 const shareRole = (a: string[] = [], b: string[] = []) => a.some((role) => b.includes(role));
 
@@ -70,7 +34,7 @@ const LinkParameters = ({ interfaceName, link }: { interfaceName: string; link: 
 
   return (
     <>
-      <Hint>{m.LINK_PROFILES_HINT()}</Hint>
+      <p className="text-[12px] text-text-secondary">{m.LINK_PROFILES_HINT()}</p>
       {shownParameters(description.data).length > 0 && (
         <ParamsetView
           label={`${m.LINK_PARAMETERS()} ${link.sender} ${link.receiver}`}
@@ -193,7 +157,10 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
       {links.length === 0 ? (
         <p>{m.NO_LINKS()}</p>
       ) : (
-        <LinkList aria-label={m.LINKS()}>
+        <ul
+          aria-label={m.LINKS()}
+          className="list-none mt-0 mx-0 mb-3 p-0 [&>li]:py-2 [&>li]:px-0 [&>li]:border-b [&>li]:border-border"
+        >
           {links.map((link) => {
             const key = `${link.sender}>${link.receiver}`;
             return (
@@ -214,11 +181,12 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
               </li>
             );
           })}
-        </LinkList>
+        </ul>
       )}
 
       {linkable.length > 0 && (
-        <Form
+        <form
+          className="grid gap-2 max-w-[420px] [&_label]:grid [&_label]:gap-[2px] [&_label]:text-[13px] [&_:is(select,input)]:[font:inherit] [&_:is(select,input)]:p-[6px]"
           aria-label={m.ADD_LINK()}
           onSubmit={(event) => {
             event.preventDefault();
@@ -263,7 +231,7 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
               {m.LINK()}
             </DialogButton>
           </Row>
-        </Form>
+        </form>
       )}
 
       {removing && (

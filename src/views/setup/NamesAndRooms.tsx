@@ -1,51 +1,12 @@
-import styled from '@emotion/styled';
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useChannels, useConfigChange, useRooms, useTrades } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { m } from '../../paraglide/messages';
 
-const Row = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin: 6px 0;
-`;
-
-const NameInput = styled.input`
-  font: inherit;
-  flex: 1;
-  min-width: 160px;
-  padding: 6px 8px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 6px;
-  color: ${(props) => props.theme.colors.text};
-  background: ${(props) => props.theme.colors.background};
-`;
-
-const Groups = styled.fieldset`
-  border: none;
-  margin: 4px 0 12px;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  font-size: 14px;
-
-  legend {
-    font-size: 12px;
-    padding: 0;
-    margin-bottom: 2px;
-    color: ${(props) => props.theme.colors.textSecondary};
-  }
-`;
-
-const ChannelBlock = styled.div`
-  border-top: 1px solid ${(props) => props.theme.colors.border};
-  padding-top: 8px;
-  margin-top: 8px;
-`;
+const Row = ({ children }: { children: ReactNode }) => (
+  <div className="flex gap-2 items-center flex-wrap my-[6px] mx-0">{children}</div>
+);
 
 const NameField = ({ label, name, onRename }: { label: string; name: string; onRename: (name: string) => void }) => {
   const [draft, setDraft] = useState(name);
@@ -61,7 +22,9 @@ const NameField = ({ label, name, onRename }: { label: string; name: string; onR
       }}
     >
       <Row>
-        <NameInput aria-label={label} value={draft} onChange={(event) => setDraft(event.target.value)} />
+        <input
+          className="[font:inherit] flex-1 min-w-40 py-[6px] px-2 border border-solid border-border rounded-md text-text bg-background"
+          aria-label={label} value={draft} onChange={(event) => setDraft(event.target.value)} />
         <DialogButton type="submit" disabled={!changed}>
           {m.RENAME()}
         </DialogButton>
@@ -100,7 +63,7 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
         onRename={(name) => run({ type: 'rename', address: deviceAddress, name }, m.RENAMED())}
       />
       {channels.map((channel) => (
-        <ChannelBlock key={channel.address}>
+        <div key={channel.address} className="border-t border-border pt-2 mt-2">
           <NameField
             label={`${m.NAME()} ${channel.address}`}
             name={channel.name}
@@ -110,7 +73,11 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
             { legend: m.ROOMS(), groups: rooms, member: channel.rooms ?? [], list: 'rooms' as const },
             { legend: m.TRADES(), groups: trades, member: channel.trades ?? [], list: 'trades' as const },
           ].map(({ legend, groups, member, list }) => (
-            <Groups key={legend} aria-label={`${legend} ${channel.address}`}>
+            <fieldset
+              key={legend}
+              aria-label={`${legend} ${channel.address}`}
+              className="border-none mt-1 mx-0 mb-3 p-0 flex flex-wrap gap-x-[14px] gap-y-1 text-[14px] [&_legend]:text-[12px] [&_legend]:p-0 [&_legend]:mb-[2px] [&_legend]:text-text-secondary"
+            >
               <legend>{legend}</legend>
               {groups.map((group) => (
                 <label key={group.id}>
@@ -130,9 +97,9 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
                   {group.name}
                 </label>
               ))}
-            </Groups>
+            </fieldset>
           ))}
-        </ChannelBlock>
+        </div>
       ))}
     </>
   );

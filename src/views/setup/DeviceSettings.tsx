@@ -1,5 +1,4 @@
-import styled from '@emotion/styled';
-import { useCallback, useMemo, useState } from 'react';
+import { HTMLAttributes, ReactNode, useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { useQueries } from '@tanstack/react-query';
 import { useDevices, usePairingAction, useParamset, usePutParamset } from '../../queries';
@@ -17,37 +16,16 @@ import { NamesAndRooms } from './NamesAndRooms';
 import { Links } from './Links';
 import { m } from '../../paraglide/messages';
 
-const Section = styled.section`
-  margin: 16px 0;
-  padding: 12px 16px;
-  max-width: 520px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 8px;
-  background: ${(props) => props.theme.colors.surface};
+const Section = (props: HTMLAttributes<HTMLElement>) => (
+  <section
+    className="my-4 mx-0 py-3 px-4 max-w-[520px] border border-solid border-border rounded-lg bg-surface [&_h2]:mt-0 [&_h2]:mx-0 [&_h2]:mb-[10px] [&_h2]:text-[16px]"
+    {...props}
+  />
+);
 
-  h2 {
-    margin: 0 0 10px;
-    font-size: 16px;
-  }
-`;
-
-const Toolbar = styled.div`
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin: 12px 0;
-`;
-
-const Changes = styled.ul`
-  margin: 0;
-  padding-left: 18px;
-  font-size: 14px;
-
-  li {
-    margin: 4px 0;
-  }
-`;
+const Toolbar = ({ children }: { children: ReactNode }) => (
+  <div className="flex gap-2 items-center flex-wrap my-3 mx-0">{children}</div>
+);
 
 type Values = Record<string, DatapointValue>;
 
@@ -276,14 +254,14 @@ export const DeviceSettings = () => {
           onConfirm={save}
           onCancel={() => setConfirming(false)}
         >
-          <Changes>
+          <ul className="m-0 pl-[18px] text-[14px] [&_li]:my-1 [&_li]:mx-0">
             {changes.map((c) => (
               <li key={`${c.address}.${c.name}`}>
                 <strong>{t(c.name as TranslationKey)}</strong> ({names.get(c.address) ?? c.address}):{' '}
                 {formatParameterValue(c.parameter, c.previous, t)} → {formatParameterValue(c.parameter, c.value, t)}
               </li>
             ))}
-          </Changes>
+          </ul>
         </ConfirmDialog>
       )}
     </SetupContainer>
