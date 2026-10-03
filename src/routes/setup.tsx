@@ -1,6 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { Setup } from '../views/setup/Setup';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { SetupShell } from '../views/setup/SetupShell';
 
 export const Route = createFileRoute('/setup')({
-  component: Setup,
+  component: () => (
+    <SetupShell>
+      <Outlet />
+    </SetupShell>
+  ),
 });

@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { TranslationKey, useTranslations } from '../i18n/utils';
 import { m } from '../paraglide/messages';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
 
 const errorMessages: Record<string, TranslationKey> = {
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
@@ -26,31 +29,43 @@ export const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 box-border">
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 hidden dark:block"
+        style={{
+          background:
+            'radial-gradient(600px 400px at 80% 0%, rgba(251,146,60,0.10), transparent 70%), radial-gradient(600px 500px at 0% 100%, rgba(56,189,248,0.08), transparent 70%)',
+        }}
+      />
       <form
-        className="w-full max-w-[340px] flex flex-col gap-[14px] p-6 rounded-xl border border-solid border-border bg-card text-foreground"
+        className="tile-edge flex w-full max-w-sm flex-col gap-5 rounded-2xl border bg-card p-6 shadow-sm"
         onSubmit={(event) => {
           event.preventDefault();
           setSubmitting(true);
           login(username, password);
         }}
       >
-        <h1 className="m-0 text-[22px] text-center">CCU Addon MUI</h1>
-        <p className="m-0 text-[14px] text-muted-foreground text-center">{m.LOGIN_HINT()}</p>
-        <label className="flex flex-col gap-1 text-[14px]">
-          {m.USERNAME()}
-          <input
-            className="text-[17px] py-[10px] px-3 rounded-lg border border-solid border-border bg-background text-foreground"
+        <div className="flex flex-col gap-1.5 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">CCU Addon MUI</h1>
+          <p className="text-sm text-muted-foreground">{m.LOGIN_HINT()}</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="username">{m.USERNAME()}</Label>
+          <Input
+            id="username"
+            className="h-11 text-base"
             name="username"
             autoComplete="username"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-[14px]">
-          {m.PASSWORD()}
-          <input
-            className="text-[17px] py-[10px] px-3 rounded-lg border border-solid border-border bg-background text-foreground"
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="password">{m.PASSWORD()}</Label>
+          <Input
+            id="password"
+            className="h-11 text-base"
             name="password"
             type="password"
             autoComplete="current-password"
@@ -58,18 +73,16 @@ export const Login = () => {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
-        </label>
+        </div>
         {loginError && (
-          <p role="alert" className="m-0 text-[#c62828] text-[14px] text-center">{t(errorMessages[loginError] ?? 'INVALID_CREDENTIALS')}</p>
+          <p role="alert" className="text-center text-sm text-destructive">
+            {t(errorMessages[loginError] ?? 'INVALID_CREDENTIALS')}
+          </p>
         )}
-        {!connected && <p className="m-0 text-[14px] text-muted-foreground text-center">{m.CONNECTING()}</p>}
-        <button
-          className="text-[17px] font-semibold p-3 border-none rounded-lg text-white bg-[#1976d2] cursor-pointer disabled:opacity-50 disabled:cursor-default"
-          type="submit"
-          disabled={!connected || submitting || username === ''}
-        >
+        {!connected && <p className="text-center text-sm text-muted-foreground">{m.CONNECTING()}</p>}
+        <Button type="submit" size="lg" disabled={!connected || submitting || username === ''}>
           {m.SIGN_IN()}
-        </button>
+        </Button>
       </form>
     </div>
   );

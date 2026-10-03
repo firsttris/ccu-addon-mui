@@ -1,4 +1,4 @@
-import { CSSProperties, ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { useDevices, useLinkAction, useLinkParamset, useLinks } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../../i18n/utils';
@@ -7,12 +7,10 @@ import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import { formatParameterValue, ParamsetView, shownParameters } from '../../controls/generic/ParamsetView';
 import { useChannelNames } from './channelNames';
 import { m } from '../../paraglide/messages';
+import { NativeSelect } from '../../components/ui/select';
+import { Input } from '../../components/ui/input';
 
-const Row = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
-  <div className="flex gap-2 items-center flex-wrap" style={style}>
-    {children}
-  </div>
-);
+const Row = ({ children }: { children: ReactNode }) => <div className="flex flex-wrap items-center gap-2">{children}</div>;
 
 const shareRole = (a: string[] = [], b: string[] = []) => a.some((role) => b.includes(role));
 
@@ -34,7 +32,7 @@ const LinkParameters = ({ interfaceName, link }: { interfaceName: string; link: 
 
   return (
     <>
-      <p className="text-[12px] text-muted-foreground">{m.LINK_PROFILES_HINT()}</p>
+      <p className="text-xs text-muted-foreground">{m.LINK_PROFILES_HINT()}</p>
       {shownParameters(description.data).length > 0 && (
         <ParamsetView
           label={`${m.LINK_PARAMETERS()} ${link.sender} ${link.receiver}`}
@@ -50,7 +48,7 @@ const LinkParameters = ({ interfaceName, link }: { interfaceName: string; link: 
           }
         />
       )}
-      <Row style={{ marginTop: 8 }}>
+      <Row>
         <DialogButton type="button" primary disabled={changes.length === 0} onClick={() => setConfirming(true)}>
           {m.SAVE()} {changes.length > 0 ? `(${changes.length})` : ''}
         </DialogButton>
@@ -75,7 +73,7 @@ const LinkParameters = ({ interfaceName, link }: { interfaceName: string; link: 
             )
           }
         >
-          <ul>
+          <ul className="flex list-disc flex-col gap-1 pl-5">
             {changes.map(([name, value]) => (
               <li key={name}>
                 <strong>{t(name as TranslationKey)}</strong>:{' '}
@@ -159,14 +157,14 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
       ) : (
         <ul
           aria-label={m.LINKS()}
-          className="list-none mt-0 mx-0 mb-3 p-0 [&>li]:py-2 [&>li]:px-0 [&>li]:border-b [&>li]:border-border"
+          className="flex flex-col divide-y rounded-lg border [&>li]:flex [&>li]:flex-col [&>li]:gap-3 [&>li]:p-3"
         >
           {links.map((link) => {
             const key = `${link.sender}>${link.receiver}`;
             return (
               <li key={key}>
                 <Row>
-                  <span style={{ flex: 1, minWidth: 200 }}>
+                  <span className="min-w-[200px] flex-1 text-sm">
                     {label(link.sender)} → {label(link.receiver)}
                     {link.name ? ` · ${link.name}` : ''}
                   </span>
@@ -186,17 +184,17 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
 
       {linkable.length > 0 && (
         <form
-          className="grid gap-2 max-w-[420px] [&_label]:grid [&_label]:gap-[2px] [&_label]:text-[13px] [&_:is(select,input)]:[font:inherit] [&_:is(select,input)]:p-[6px]"
+          className="mt-2 grid max-w-[460px] gap-3 [&_label]:grid [&_label]:gap-1.5 [&_label]:text-sm [&_label]:text-muted-foreground"
           aria-label={m.ADD_LINK()}
           onSubmit={(event) => {
             event.preventDefault();
             add();
           }}
         >
-          <strong>{m.ADD_LINK()}</strong>
+          <strong className="text-sm">{m.ADD_LINK()}</strong>
           <label>
             {m.LINK_OWN_CHANNEL()}
-            <select
+            <NativeSelect
               value={own}
               onChange={(e) => {
                 setOwn(e.target.value);
@@ -209,22 +207,22 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
                   {label(c.address)}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           <label>
             {m.LINK_PARTNER()}
-            <select value={partner} disabled={!ownChannel} onChange={(e) => setPartner(e.target.value)}>
+            <NativeSelect value={partner} disabled={!ownChannel} onChange={(e) => setPartner(e.target.value)}>
               <option value="" />
               {partners.map((c) => (
                 <option key={c.address} value={c.address}>
                   {label(c.address)}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </label>
           <label>
             {m.LINK_NAME()}
-            <input value={linkName} onChange={(e) => setLinkName(e.target.value)} />
+            <Input value={linkName} onChange={(e) => setLinkName(e.target.value)} />
           </label>
           <Row>
             <DialogButton type="submit" primary disabled={!own || !partner || action.isPending}>

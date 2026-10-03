@@ -1,4 +1,4 @@
-import { HTMLAttributes, ReactNode, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   createColumnHelper,
@@ -9,23 +9,19 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { useDevices } from '../../queries';
-import { useWebSocketContext } from '../../hooks/useWebsocket';
+import SearchIcon from '~icons/lucide/search';
+import ArrowUpIcon from '~icons/lucide/arrow-up';
+import ArrowDownIcon from '~icons/lucide/arrow-down';
+import TriangleAlertIcon from '~icons/lucide/triangle-alert';
+import { useDeviceProblems, useDevices } from '../../queries';
+import { usePageTitle } from '../../contexts/PageTitleContext';
 import { useChannelNames } from './channelNames';
-import { Pairing } from './Pairing';
-import { SystemInfo } from './SystemInfo';
-import { Sessions } from './Sessions';
-import { DialogButton } from '../../components/ConfirmDialog';
-import { ElevateDialog } from '../../components/ElevateDialog';
+import { Input } from '../../components/ui/input';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { m } from '../../paraglide/messages';
-
-export const SetupContainer = ({ children }: { children: ReactNode }) => (
-  <div className="max-w-[1280px] mx-auto p-4 pt-[76px] text-foreground">{children}</div>
-);
-
-export const Notice = (props: HTMLAttributes<HTMLParagraphElement>) => (
-  <p className="py-[10px] px-[14px] rounded-md bg-[rgba(255,193,7,0.2)]" {...props} />
-);
+import { cn } from '../../lib/utils';
 
 interface DeviceRow {
   name: string;
@@ -33,30 +29,54 @@ interface DeviceRow {
   address: string;
   interfaceName: string;
   firmware: string;
+  unreach: boolean;
+  lowBat: boolean;
 }
 
 const column = createColumnHelper<DeviceRow>();
 
+const StatusBadge = ({ row }: { row: DeviceRow }) =>
+  row.unreach ? (
+    <Badge variant="destructive">
+      <span className="size-1.5 rounded-full bg-red-500" />
+      {m.UNREACH()}
+    </Badge>
+  ) : row.lowBat ? (
+    <Badge variant="warning">
+      <span className="size-1.5 rounded-full bg-amber-500" />
+      {m.LOW_BAT()}
+    </Badge>
+  ) : (
+    <Badge variant="success">
+      <span className="size-1.5 rounded-full bg-green-600" />
+      {m.STATUS_OK()}
+    </Badge>
+  );
+
 // The setup area's start: all devices of the CCU, searchable and sortable.
 export const Setup = () => {
-  const { userLevel, elevated, authRequired } = useWebSocketContext();
-  const [elevating, setElevating] = useState(false);
+  usePageTitle(m.SETUP());
   const { data: devices = [] } = useDevices();
+  const { data: problems = [] } = useDeviceProblems();
   const names = useChannelNames();
   const [filter, setFilter] = useState('');
+  const [onlyProblems, setOnlyProblems] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
 
-  const rows = useMemo<DeviceRow[]>(
-    () =>
-      devices.map((device) => ({
-        name: names.get(device.address) ?? device.name ?? device.address,
-        type: device.type,
-        address: device.address,
-        interfaceName: device.interfaceName,
-        firmware: device.firmware ?? '',
-      })),
-    [devices, names],
-  );
+  const rows = useMemo<DeviceRow[]>(() => {
+    const problemOf = (address: string) => problems.find((p) => p.address.split(':')[0] === address);
+    return devices.map((device) => ({
+      name: names.get(device.address) ?? device.name ?? device.address,
+      type: device.type,
+      address: device.address,
+      interfaceName: device.interfaceName,
+      firmware: device.firmware ?? '',
+      unreach: problemOf(device.address)?.unreach ?? false,
+      lowBat: problemOf(device.address)?.lowBat ?? false,
+    }));
+  }, [devices, names, problems]);
+  const problemCount = rows.filter((r) => r.unreach || r.lowBat).length;
+  const shownRows = useMemo(() => (onlyProblems ? rows.filter((r) => r.unreach || r.lowBat) : rows), [rows, onlyProblems]);
 
   const columns = useMemo(
     () => [
@@ -66,21 +86,30 @@ export const Setup = () => {
           <Link
             to="/device/$interfaceName/$address"
             params={{ interfaceName: info.row.original.interfaceName, address: info.row.original.address }}
+            className="font-medium after:absolute after:inset-0 hover:underline"
           >
             {info.getValue()}
           </Link>
         ),
       }),
       column.accessor('type', { header: m.DEVICE_TYPE() }),
-      column.accessor('address', { header: m.ADDRESS() }),
+      column.accessor('address', {
+        header: m.ADDRESS(),
+        cell: (info) => <span className="font-mono text-[13px] text-muted-foreground">{info.getValue()}</span>,
+      }),
       column.accessor('interfaceName', { header: m.INTERFACE() }),
       column.accessor('firmware', { header: m.FIRMWARE() }),
+      column.accessor((row) => (row.unreach ? 0 : row.lowBat ? 1 : 2), {
+        id: 'status',
+        header: m.STATUS(),
+        cell: (info) => <StatusBadge row={info.row.original} />,
+      }),
     ],
     [],
   );
 
   const table = useReactTable({
-    data: rows,
+    data: shownRows,
     columns,
     state: { globalFilter: filter, sorting },
     onGlobalFilterChange: setFilter,
@@ -91,68 +120,81 @@ export const Setup = () => {
   });
 
   return (
-    <SetupContainer>
-      <h1>{m.DEVICES()}</h1>
-      {userLevel !== 'admin' && <Notice role="status">{m.ADMIN_ONLY()}</Notice>}
-      {userLevel === 'admin' && !elevated && (
-        <Notice role="status">
-          {m.ELEVATE_HINT()}{' '}
-          <DialogButton type="button" onClick={() => setElevating(true)}>
-            {m.ELEVATE()}
-          </DialogButton>
-        </Notice>
-      )}
-      {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}
-      {userLevel === 'admin' && <SystemInfo />}
-      {userLevel === 'admin' && elevated && <Pairing />}
-      {userLevel === 'admin' && elevated && authRequired && <Sessions />}
-      <input
-        className="[font:inherit] w-full max-w-[320px] py-2 px-[10px] mb-3 box-border border border-solid border-border rounded-md text-foreground bg-background"
-        type="search"
-        aria-label={m.SEARCH()}
-        placeholder={m.SEARCH()}
-        value={filter}
-        onChange={(event) => setFilter(event.target.value)}
-      />
-      <div className="overflow-x-auto">
-        <table
-          aria-label={m.DEVICES()}
-          className="w-full border-collapse text-[14px] [&_:is(th,td)]:text-left [&_:is(th,td)]:py-2 [&_:is(th,td)]:px-[10px] [&_:is(th,td)]:border-b [&_:is(th,td)]:border-border [&_:is(th,td)]:whitespace-nowrap [&_th_button]:[font:inherit] [&_th_button]:font-semibold [&_th_button]:p-0 [&_th_button]:border-none [&_th_button]:bg-transparent [&_th_button]:text-inherit [&_th_button]:cursor-pointer [&_a]:text-inherit [&_a]:font-semibold"
-        >
-          <thead>
-            {table.getHeaderGroups().map((group) => (
-              <tr key={group.id}>
-                {group.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    aria-sort={
-                      header.column.getIsSorted() === 'asc'
-                        ? 'ascending'
-                        : header.column.getIsSorted() === 'desc'
-                          ? 'descending'
-                          : 'none'
-                    }
-                  >
-                    <button type="button" onClick={header.column.getToggleSortingHandler()}>
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {{ asc: ' ▲', desc: ' ▼' }[header.column.getIsSorted() as string] ?? ''}
-                    </button>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight">{m.DEVICES()}</h1>
+        <p className="text-sm text-muted-foreground">{m.SETUP_DEVICES_HINT()}</p>
       </div>
-    </SetupContainer>
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-[220px] flex-1 sm:max-w-sm">
+          <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            aria-label={m.SEARCH()}
+            placeholder={m.SEARCH()}
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            className="pl-9"
+          />
+        </div>
+        {problemCount > 0 && (
+          <Button
+            variant="outline"
+            aria-pressed={onlyProblems}
+            onClick={() => setOnlyProblems(!onlyProblems)}
+            className={cn('border-dashed', onlyProblems && 'border-solid bg-accent')}
+          >
+            <TriangleAlertIcon className="text-amber-600" />
+            {m.ONLY_PROBLEMS()} ({problemCount})
+          </Button>
+        )}
+      </div>
+      <div className="overflow-hidden rounded-xl border bg-card">
+        <Table aria-label={m.DEVICES()}>
+          <TableHeader className="bg-muted/50">
+            {table.getHeaderGroups().map((group) => (
+              <TableRow key={group.id} className="hover:bg-transparent">
+                {group.headers.map((header) => {
+                  const sorted = header.column.getIsSorted();
+                  return (
+                    <TableHead
+                      key={header.id}
+                      aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none'}
+                    >
+                      <button
+                        type="button"
+                        onClick={header.column.getToggleSortingHandler()}
+                        className="inline-flex items-center gap-1 hover:text-foreground"
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {sorted === 'asc' && <ArrowUpIcon className="size-3.5" />}
+                        {sorted === 'desc' && <ArrowDownIcon className="size-3.5" />}
+                      </button>
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} className="relative">
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                ))}
+              </TableRow>
+            ))}
+            {table.getRowModel().rows.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="py-8 text-center text-muted-foreground">
+                  {m.NO_RESULTS()}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      <p className="text-sm text-muted-foreground">{m.DEVICE_COUNT({ count: table.getRowModel().rows.length })}</p>
+    </>
   );
 };

@@ -3,9 +3,10 @@ import { useChannels, useConfigChange, useRooms, useTrades } from '../../queries
 import { useToast } from '../../contexts/ToastContext';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { m } from '../../paraglide/messages';
+import { Input } from '../../components/ui/input';
 
 const Row = ({ children }: { children: ReactNode }) => (
-  <div className="flex gap-2 items-center flex-wrap my-[6px] mx-0">{children}</div>
+  <div className="flex flex-wrap items-center gap-2">{children}</div>
 );
 
 const NameField = ({ label, name, onRename }: { label: string; name: string; onRename: (name: string) => void }) => {
@@ -22,9 +23,7 @@ const NameField = ({ label, name, onRename }: { label: string; name: string; onR
       }}
     >
       <Row>
-        <input
-          className="[font:inherit] flex-1 min-w-40 py-[6px] px-2 border border-solid border-border rounded-md text-foreground bg-background"
-          aria-label={label} value={draft} onChange={(event) => setDraft(event.target.value)} />
+        <Input className="min-w-40 flex-1" aria-label={label} value={draft} onChange={(event) => setDraft(event.target.value)} />
         <DialogButton type="submit" disabled={!changed}>
           {m.RENAME()}
         </DialogButton>
@@ -63,7 +62,7 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
         onRename={(name) => run({ type: 'rename', address: deviceAddress, name }, m.RENAMED())}
       />
       {channels.map((channel) => (
-        <div key={channel.address} className="border-t border-border pt-2 mt-2">
+        <div key={channel.address} className="flex flex-col gap-2 border-t pt-3">
           <NameField
             label={`${m.NAME()} ${channel.address}`}
             name={channel.name}
@@ -76,7 +75,7 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
             <fieldset
               key={legend}
               aria-label={`${legend} ${channel.address}`}
-              className="border-none mt-1 mx-0 mb-3 p-0 flex flex-wrap gap-x-[14px] gap-y-1 text-[14px] [&_legend]:text-[12px] [&_legend]:p-0 [&_legend]:mb-[2px] [&_legend]:text-muted-foreground"
+              className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm [&_label]:flex [&_label]:items-center [&_label]:gap-1.5 [&_legend]:mb-1 [&_legend]:text-xs [&_legend]:text-muted-foreground"
             >
               <legend>{legend}</legend>
               {groups.map((group) => (
@@ -93,7 +92,7 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
                         list,
                       })
                     }
-                  />{' '}
+                  />
                   {group.name}
                 </label>
               ))}

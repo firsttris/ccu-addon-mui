@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ConfirmDialog } from './ConfirmDialog';
+import { Input } from './ui/input';
 import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
 import { TranslationKey, useTranslations } from '../i18n/utils';
 import { m } from '../paraglide/messages';
@@ -42,10 +43,10 @@ export const ElevateDialog = ({ onDone, onCancel }: { onDone: () => void; onCanc
           }
         }}
       >
-        <label>
+        <label className="flex flex-col gap-3 text-muted-foreground">
           {m.ELEVATE_HINT()}
-          <input
-            className="[font:inherit] w-full box-border py-2 px-[10px] mt-2 border border-solid border-border rounded-md text-foreground bg-background"
+          <Input
+            className="h-10"
             type="password"
             aria-label={m.PASSWORD()}
             autoComplete="current-password"
@@ -55,7 +56,7 @@ export const ElevateDialog = ({ onDone, onCancel }: { onDone: () => void; onCanc
           />
         </label>
         {error && (
-          <p role="alert" className="mt-2 mx-0 mb-0 text-[#c62828]">
+          <p role="alert" className="mt-2 text-destructive">
             {error}
           </p>
         )}

@@ -48,10 +48,13 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             key={toast.id}
             role="alert"
             onClick={() => dismiss(toast.id)}
-            className={`py-3 px-4 rounded-lg text-[15px] text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)] cursor-pointer ${
-              toast.kind === 'error' ? 'bg-[#c62828]' : 'bg-[#424242]'
+            className={`flex animate-in cursor-pointer items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-lg backdrop-blur-md duration-300 fade-in-0 slide-in-from-bottom-4 ${
+              toast.kind === 'error'
+                ? 'border-red-500/30 bg-red-600/95 text-white'
+                : 'border-border bg-popover/95 text-popover-foreground'
             }`}
           >
+            <span className={`size-2 shrink-0 rounded-full ${toast.kind === 'error' ? 'bg-white' : 'bg-green-500'}`} />
             {toast.message}
           </div>
         ))}

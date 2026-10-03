@@ -1,9 +1,13 @@
 import { HTMLAttributes } from 'react';
+import { cn } from '../../lib/utils';
 
 // A card in the setup area, with a small heading
-export const Panel = ({ className = '', ...props }: HTMLAttributes<HTMLElement>) => (
+export const Panel = ({ className, ...props }: HTMLAttributes<HTMLElement>) => (
   <section
-    className={`my-4 mx-0 py-3 px-4 border border-solid border-border rounded-lg bg-card [&_h2]:mt-0 [&_h2]:mx-0 [&_h2]:mb-2 [&_h2]:text-[16px] ${className}`}
+    className={cn(
+      'flex flex-col gap-3 rounded-xl border bg-card p-5 text-card-foreground shadow-xs [&_h2]:text-base [&_h2]:font-semibold [&_p]:text-sm [&_p]:text-muted-foreground',
+      className,
+    )}
     {...props}
   />
 );

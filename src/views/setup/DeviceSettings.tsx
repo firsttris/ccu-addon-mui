@@ -1,4 +1,4 @@
-import { HTMLAttributes, ReactNode, useCallback, useMemo, useState } from 'react';
+import { HTMLAttributes, useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { useQueries } from '@tanstack/react-query';
 import { useDevices, usePairingAction, useParamset, usePutParamset } from '../../queries';
@@ -10,22 +10,19 @@ import { DatapointValue, ParamsetDescription } from '../../types/types';
 import { formatParameterValue, ParamsetView, shownParameters } from '../../controls/generic/ParamsetView';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import { WebUILink } from '../../components/WebUILink';
-import { Notice, SetupContainer } from './Setup';
+import ChevronLeftIcon from '~icons/lucide/chevron-left';
+import TrashIcon from '~icons/lucide/trash-2';
+import { Notice } from './SetupShell';
+import { Panel } from './Panel';
+import { usePageTitle } from '../../contexts/PageTitleContext';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
 import { useChannelNames } from './channelNames';
 import { NamesAndRooms } from './NamesAndRooms';
 import { Links } from './Links';
 import { m } from '../../paraglide/messages';
 
-const Section = (props: HTMLAttributes<HTMLElement>) => (
-  <section
-    className="my-4 mx-0 py-3 px-4 max-w-[520px] border border-solid border-border rounded-lg bg-card [&_h2]:mt-0 [&_h2]:mx-0 [&_h2]:mb-[10px] [&_h2]:text-[16px]"
-    {...props}
-  />
-);
-
-const Toolbar = ({ children }: { children: ReactNode }) => (
-  <div className="flex gap-2 items-center flex-wrap my-3 mx-0">{children}</div>
-);
+const Section = (props: HTMLAttributes<HTMLElement>) => <Panel {...props} />;
 
 type Values = Record<string, DatapointValue>;
 
@@ -134,80 +131,104 @@ export const DeviceSettings = () => {
   };
 
   const loading = descriptions.some((d) => d.isPending);
+  const title = names.get(address) ?? address;
+  usePageTitle(title);
 
   return (
-    <SetupContainer>
-      <p>
-        <Link to="/setup">← {m.DEVICES()}</Link>
-      </p>
-      <h1>{names.get(address) ?? address}</h1>
-      <p>
-        {device?.type} · {address} · {interfaceName}
-        {device?.firmware ? ` · ${m.FIRMWARE()} ${device.firmware}` : ''} · <WebUILink />
-      </p>
-      {!isAdmin && <Notice role="status">{m.ADMIN_ONLY()}</Notice>}
-      {isAdmin && !elevated && (
-        <Notice role="status">
-          {m.ELEVATE_HINT()}{' '}
-          <DialogButton type="button" onClick={() => setElevating(true)}>
-            {m.ELEVATE()}
-          </DialogButton>
-        </Notice>
-      )}
+    <>
+      <div className="flex flex-col gap-3">
+        <Link
+          to="/setup"
+          className="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ChevronLeftIcon className="size-4" />
+          {m.DEVICES()}
+        </Link>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-2">
+            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              {device?.type && <Badge variant="outline">{device.type}</Badge>}
+              <span className="font-mono text-[13px]">{address}</span>
+              <span>· {interfaceName}</span>
+              {device?.firmware && (
+                <span>
+                  · {m.FIRMWARE()} {device.firmware}
+                </span>
+              )}
+              <span>·</span>
+              <WebUILink />
+            </div>
+          </div>
+          {canEdit && device && (
+            <Button
+              type="button"
+              variant="outline"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setDeleting(true)}
+            >
+              <TrashIcon />
+              {m.DELETE_DEVICE()}
+            </Button>
+          )}
+        </div>
+      </div>
       {configPending && <Notice role="status">{m.CONFIG_PENDING()}</Notice>}
 
-      {canEdit && (
-        <Section aria-label={m.NAMES_AND_ROOMS()}>
-          <h2>{m.NAMES_AND_ROOMS()}</h2>
-          <NamesAndRooms deviceAddress={address} deviceName={names.get(address) ?? address} />
-        </Section>
-      )}
+      <div className="grid items-start gap-5 xl:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-5">
+          {sections.map((s) => {
+            const draft = drafts[s.address] ?? {};
+            const label = s.address === address ? m.DEVICE_SETTINGS() : (names.get(s.address) ?? s.address);
+            return (
+              <Section key={s.address} aria-label={label}>
+                <h2 className="flex items-baseline justify-between gap-2">
+                  <span className="truncate">{label}</span>
+                  {label !== s.address && (
+                    <span className="shrink-0 font-mono text-xs font-normal text-muted-foreground">{s.address}</span>
+                  )}
+                </h2>
+                <ParamsetView
+                  label={`${label} ${s.address}`}
+                  description={s.description}
+                  values={{ ...s.current, ...draft }}
+                  changed={new Set(Object.keys(draft))}
+                  readOnly={!canEdit}
+                  onSet={(name, value) => setDraft(s.address, s.current, name, value)}
+                />
+              </Section>
+            );
+          })}
+          {!loading && sections.length === 0 && <p className="text-sm text-muted-foreground">{m.NO_SETTINGS()}</p>}
+        </div>
+        <div className="flex min-w-0 flex-col gap-5">
+          {canEdit && (
+            <Section aria-label={m.NAMES_AND_ROOMS()}>
+              <h2>{m.NAMES_AND_ROOMS()}</h2>
+              <NamesAndRooms deviceAddress={address} deviceName={title} />
+            </Section>
+          )}
+          {canEdit &&
+            device &&
+            (device.channels ?? []).some((c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length) && (
+              <Section aria-label={m.LINKS()}>
+                <h2>{m.LINKS()}</h2>
+                <Links interfaceName={interfaceName} deviceAddress={address} channels={device.channels ?? []} />
+              </Section>
+            )}
+        </div>
+      </div>
 
-      {sections.map((s) => {
-        const draft = drafts[s.address] ?? {};
-        const label = s.address === address ? m.DEVICE_SETTINGS() : (names.get(s.address) ?? s.address);
-        return (
-          <Section key={s.address} aria-label={label}>
-            <h2>
-              {label} <small>({s.address})</small>
-            </h2>
-            <ParamsetView
-              label={`${label} ${s.address}`}
-              description={s.description}
-              values={{ ...s.current, ...draft }}
-              changed={new Set(Object.keys(draft))}
-              readOnly={!canEdit}
-              onSet={(name, value) => setDraft(s.address, s.current, name, value)}
-            />
-          </Section>
-        );
-      })}
-      {!loading && sections.length === 0 && <p>{m.NO_SETTINGS()}</p>}
-
-      {canEdit && sections.length > 0 && (
-        <Toolbar>
-          <DialogButton type="button" primary disabled={changes.length === 0} onClick={() => setConfirming(true)}>
-            {m.SAVE()} {changes.length > 0 ? `(${changes.length})` : ''}
-          </DialogButton>
+      {canEdit && changes.length > 0 && (
+        <div className="sticky bottom-4 animate-in fade-in-0 slide-in-from-bottom-4 z-10 flex flex-wrap items-center justify-end gap-2 rounded-xl border bg-background/85 p-3 shadow-lg backdrop-blur-md">
+          <span className="mr-auto" />
           <DialogButton type="button" disabled={changes.length === 0} onClick={() => setDrafts({})}>
             {m.RESET()}
           </DialogButton>
-        </Toolbar>
-      )}
-
-      {canEdit && device && (device.channels ?? []).some((c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length) && (
-        <Section aria-label={m.LINKS()}>
-          <h2>{m.LINKS()}</h2>
-          <Links interfaceName={interfaceName} deviceAddress={address} channels={device.channels ?? []} />
-        </Section>
-      )}
-
-      {canEdit && device && (
-        <Toolbar>
-          <DialogButton type="button" onClick={() => setDeleting(true)} style={{ color: '#c62828' }}>
-            {m.DELETE_DEVICE()}
+          <DialogButton type="button" primary disabled={changes.length === 0} onClick={() => setConfirming(true)}>
+            {m.SAVE()} {changes.length > 0 ? `(${changes.length})` : ''}
           </DialogButton>
-        </Toolbar>
+        </div>
       )}
 
       {deleting && (
@@ -215,6 +236,7 @@ export const DeviceSettings = () => {
           title={m.DELETE_DEVICE()}
           confirmLabel={m.DELETE()}
           busy={pairingAction.isPending}
+          destructive
           onCancel={() => setDeleting(false)}
           onConfirm={() =>
             pairingAction.mutate(
@@ -232,12 +254,12 @@ export const DeviceSettings = () => {
         >
           <p>{m.DELETE_DEVICE_CONFIRM()}</p>
           {(['reset', 'force'] as const).map((option) => (
-            <label key={option} style={{ display: 'block', margin: '6px 0' }}>
+            <label key={option} className="mt-2 flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={deleteOptions[option]}
                 onChange={(event) => setDeleteOptions((prev) => ({ ...prev, [option]: event.target.checked }))}
-              />{' '}
+              />
               {t(option === 'reset' ? 'DELETE_RESET' : 'DELETE_FORCE')}
             </label>
           ))}
@@ -254,7 +276,7 @@ export const DeviceSettings = () => {
           onConfirm={save}
           onCancel={() => setConfirming(false)}
         >
-          <ul className="m-0 pl-[18px] text-[14px] [&_li]:my-1 [&_li]:mx-0">
+          <ul className="flex list-disc flex-col gap-1 pl-5">
             {changes.map((c) => (
               <li key={`${c.address}.${c.name}`}>
                 <strong>{t(c.name as TranslationKey)}</strong> ({names.get(c.address) ?? c.address}):{' '}
@@ -264,6 +286,6 @@ export const DeviceSettings = () => {
           </ul>
         </ConfirmDialog>
       )}
-    </SetupContainer>
+    </>
   );
 };

@@ -5,45 +5,52 @@ import { useToast } from '../contexts/ToastContext';
 import { Sysvar } from '../types/types';
 import { DialogButton } from '../components/ConfirmDialog';
 import { m } from '../paraglide/messages';
+import { Input as UiInput } from '../components/ui/input';
+import { NativeSelect } from '../components/ui/select';
+import { usePageTitle } from '../contexts/PageTitleContext';
+import { cn } from '../lib/utils';
 
 type Children = { children: ReactNode };
 
 const Container = ({ children }: Children) => (
-  <div className="max-w-[800px] mx-auto p-4 pt-[76px] text-foreground">{children}</div>
+  <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 pt-2 pb-10 sm:px-6">{children}</div>
 );
 
-const List = (props: HTMLAttributes<HTMLUListElement>) => (
-  <ul className="list-none m-0 p-0 border border-solid border-border rounded-lg overflow-hidden bg-card" {...props} />
+const List = ({ children, ...props }: HTMLAttributes<HTMLUListElement>) => (
+  <ul className="tile-edge flex flex-col divide-y overflow-hidden rounded-2xl border bg-card" {...props}>
+    {children}
+    <li className="hidden px-4 py-8 text-center text-sm text-muted-foreground only:block">{m.EMPTY_LIST()}</li>
+  </ul>
 );
 
 const Item = ({ children }: Children) => (
-  <li className="flex items-center justify-between gap-3 py-[10px] px-4 border-b border-border last-of-type:border-b-0">
-    {children}
-  </li>
+  <li className="flex min-h-16 items-center justify-between gap-3 px-4 py-3">{children}</li>
 );
 
-const Name = ({ children }: Children) => <span className="font-semibold min-w-0 wrap-anywhere">{children}</span>;
+const Name = ({ children }: Children) => (
+  <span className="flex min-w-0 flex-wrap items-center gap-2 font-medium wrap-anywhere">{children}</span>
+);
 
-const Controls = ({ children }: Children) => <span className="flex items-center gap-2 shrink-0">{children}</span>;
+const Controls = ({ children }: Children) => <span className="flex shrink-0 items-center gap-2">{children}</span>;
 
 const Toggle = ({ on, alarm, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { on: boolean; alarm?: boolean }) => (
   <button
-    className={`[font:inherit] py-[6px] px-3 rounded-2xl border-none cursor-pointer text-white ${
-      on ? (alarm ? 'bg-[#c62828]' : 'bg-[#43a047]') : 'bg-[#757575]'
-    }`}
+    className={cn(
+      'press h-10 min-w-16 rounded-full px-4 text-sm font-medium',
+      on
+        ? alarm
+          ? 'bg-red-600 text-white shadow-[0_0_18px_-4px_rgba(220,38,38,0.6)]'
+          : 'bg-green-600 text-white shadow-[0_0_18px_-4px_rgba(22,163,74,0.6)]'
+        : 'bg-muted text-muted-foreground',
+    )}
     {...props}
   />
 );
 
-const Input = (props: InputHTMLAttributes<HTMLInputElement>) => (
-  <input
-    className="[font:inherit] w-[110px] py-[6px] px-2 border border-solid border-border rounded-md text-foreground bg-background"
-    {...props}
-  />
-);
+const Input = (props: InputHTMLAttributes<HTMLInputElement>) => <UiInput className="w-28 text-right" {...props} />;
 
 const Badge = ({ children }: Children) => (
-  <span className="text-[12px] py-[2px] px-2 rounded-[10px] bg-[rgba(158,158,158,0.3)]">{children}</span>
+  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-normal text-muted-foreground">{children}</span>
 );
 
 // A text or number input that sets its value on Enter or when left
@@ -98,7 +105,8 @@ const SysvarControl = ({ sysvar, onSet }: { sysvar: Sysvar; onSet: (value: strin
     }
     case 'enum':
       return (
-        <select
+        <NativeSelect
+          className="w-44"
           aria-label={sysvar.name}
           value={typeof sysvar.value === 'number' ? sysvar.value : ''}
           onChange={(event) => onSet(Number(event.target.value))}
@@ -108,7 +116,7 @@ const SysvarControl = ({ sysvar, onSet }: { sysvar: Sysvar; onSet: (value: strin
               {option}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       );
     case 'number':
       return (
@@ -125,7 +133,7 @@ const SysvarControl = ({ sysvar, onSet }: { sysvar: Sysvar; onSet: (value: strin
               onSet(value);
             }}
           />
-          {sysvar.unit}
+          {sysvar.unit && <span className="text-muted-foreground">{sysvar.unit}</span>}
         </>
       );
     default:
@@ -137,10 +145,10 @@ export const Sysvars = () => {
   const { showToast } = useToast();
   const { data: sysvars = [] } = useSysvars();
   const action = useLogicAction();
+  usePageTitle(m.SYSVARS());
 
   return (
     <Container>
-      <h1>{m.SYSVARS()}</h1>
       <List aria-label={m.SYSVARS()}>
         {sysvars
           .filter((sv) => sv.visible)
@@ -171,6 +179,7 @@ export const Programs = () => {
   const { data: programs = [] } = usePrograms();
   const action = useLogicAction();
   const canConfigure = userLevel === 'admin' && elevated;
+  usePageTitle(m.PROGRAMS());
 
   const run = (variables: Parameters<typeof action.mutate>[0], success?: string) =>
     action.mutate(variables, {
@@ -180,7 +189,6 @@ export const Programs = () => {
 
   return (
     <Container>
-      <h1>{m.PROGRAMS()}</h1>
       <List aria-label={m.PROGRAMS()}>
         {programs
           .filter((p) => p.visible)
@@ -191,13 +199,13 @@ export const Programs = () => {
               </Name>
               <Controls>
                 {canConfigure && (
-                  <label>
+                  <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
                     <input
                       type="checkbox"
                       checked={program.active}
                       aria-label={`${m.ACTIVE()} ${program.name}`}
                       onChange={(event) => run({ type: 'setProgramActive', id: program.id, active: event.target.checked })}
-                    />{' '}
+                    />
                     {m.ACTIVE()}
                   </label>
                 )}

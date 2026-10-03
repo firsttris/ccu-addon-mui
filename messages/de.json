@@ -186,5 +186,15 @@
   "BLIND_FULLY_OPEN": "Ganz offen",
   "BLIND_PERCENT_OPEN": "{percent} % offen",
   "BLIND_POSITION": "Position {name}",
-  "CONNECTION_OK": "Mit der CCU verbunden"
+  "CONNECTION_OK": "Mit der CCU verbunden",
+  "ADMIN_MODE": "Admin-Modus",
+  "STATUS": "Status",
+  "STATUS_OK": "OK",
+  "DEVICE_COUNT": "{count} Geräte",
+  "ONLY_PROBLEMS": "Nur mit Meldung",
+  "SETUP_DEVICES_HINT": "Angelernte Geräte, ihre Kanäle und Einstellungen.",
+  "NO_RESULTS": "Nichts gefunden.",
+  "LOGIC": "Logik",
+  "OVERVIEW": "Übersicht",
+  "EMPTY_LIST": "Keine Einträge."
 }

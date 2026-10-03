@@ -133,12 +133,13 @@ export const useInstallMode = (interfaceName: string, { poll }: { poll: boolean 
 };
 
 // Paired devices not yet accepted
-export const useInbox = ({ poll }: { poll: boolean }) => {
+export const useInbox = ({ poll = false, enabled = true }: { poll?: boolean; enabled?: boolean }) => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['inbox'],
     queryFn: async () => ((await request({ type: 'getInbox' })).devices ?? []) as unknown as InboxDevice[],
     refetchInterval: poll ? 3000 : false,
+    enabled,
     retry: false,
   });
 };
