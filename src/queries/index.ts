@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
-import { AlarmMessage, ServiceMessage } from '../types/protocol';
+import { AlarmMessage, ServiceMessage, ProgramDefinition } from '../types/protocol';
 import { applyEvent, groupChannelsByType, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
@@ -613,5 +613,31 @@ export const useChannelList = ({ enabled = true }: { enabled?: boolean } = {}) =
     queryKey: ['channels', { all: true }],
     queryFn: async () => (await request({ type: 'getChannels', all: true })).channels ?? [],
     enabled,
+  });
+};
+
+// A program with its rules, for the program editor
+export const useProgram = (id: number, { enabled = true }: { enabled?: boolean } = {}) => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['program', id],
+    queryFn: async () => (await request({ type: 'getProgram', id })).program,
+    enabled,
+    staleTime: 0,
+  });
+};
+
+// Saves a program (new if its id is 0) or deletes one
+export const useProgramChange = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (change: { type: 'saveProgram'; program: ProgramDefinition } | { type: 'deleteProgram'; id: number }) =>
+      request(change, { queue: false }),
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['programs'] }),
+        queryClient.invalidateQueries({ queryKey: ['program'] }),
+      ]),
   });
 };

@@ -588,3 +588,51 @@ test('legt fest, ob ein Schaltaktor als Lampe oder Schalter erscheint', async ({
   await choice.selectOption({ label: 'Automatisch (nach Name und Gewerk)' });
   await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
 });
+
+test('legt Programme im Programm-Editor an, ändert und löscht sie', async ({ page }) => {
+  await login(page);
+  await page.goto('/programs');
+  await page.getByRole('link', { name: 'Neues Programm' }).click();
+
+  await page.getByLabel('Name des Programms').fill('Gäste kommen');
+  const rule = page.getByRole('region', { name: 'Wenn …' });
+  await rule.getByLabel('Art').first().selectOption({ label: 'Systemvariable' });
+  await rule.getByLabel('Systemvariable').selectOption({ label: 'Anwesenheit' });
+  await rule.getByLabel('Wert').selectOption({ label: 'anwesend' });
+  const action = rule.getByLabel('Art').nth(1);
+  await action.selectOption({ label: 'Skript' });
+  await rule.getByLabel('Skript', { exact: true }).fill('WriteLine("Hallo");\nWriteLine(1);');
+  await rule.getByLabel('Ausführen').selectOption({ label: 'verzögert um' });
+  await rule.getByLabel('verzögert um', { exact: true }).fill('2');
+  await rule.getByLabel('verzögert um (Einheit)').selectOption({ label: 'Minuten' });
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+  await expect(page).toHaveURL(/\/program\/\d+$/);
+
+  // Stored in the (fake) CCU
+  await page.reload();
+  await expect(page.getByLabel('Name des Programms')).toHaveValue('Gäste kommen');
+  await expect(rule.getByLabel('Wert')).toHaveValue('1');
+  await expect(rule.getByLabel('Skript', { exact: true })).toHaveValue('WriteLine("Hallo");\nWriteLine(1);');
+  await expect(rule.getByLabel('verzögert um', { exact: true })).toHaveValue('2');
+
+  // The list has it, deleting removes it
+  await page.goto('/programs');
+  await page.getByRole('link', { name: 'Gäste kommen' }).click();
+  await page.getByRole('button', { name: 'Löschen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
+  await expect(page).toHaveURL(/\/programs$/);
+  await expect(page.getByRole('link', { name: 'Gäste kommen' })).toHaveCount(0);
+
+  // An existing program: the time of its time control
+  await page.getByRole('link', { name: 'Rollläden abends schließen' }).click();
+  await expect(rule.getByLabel('um', { exact: true })).toHaveValue('19:30');
+  await rule.getByLabel('um', { exact: true }).fill('20:15');
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+  await page.reload();
+  await expect(rule.getByLabel('um', { exact: true })).toHaveValue('20:15');
+  await expect(rule.getByLabel('Systemvariable')).toHaveValue('950');
+});

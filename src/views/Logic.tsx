@@ -8,6 +8,7 @@ import { EditableName } from '../components/EditableName';
 import { Button } from '../components/ui/button';
 import { NewSysvarDialog } from './NewSysvarDialog';
 import PlusIcon from '~icons/lucide/plus';
+import { Link } from '@tanstack/react-router';
 import { m } from '../paraglide/messages';
 import { Input as UiInput } from '../components/ui/input';
 import { NativeSelect } from '../components/ui/select';
@@ -236,13 +237,30 @@ export const Programs = () => {
 
   return (
     <Container>
+      {canConfigure && (
+        <div className="flex justify-end">
+          <Button variant="outline" asChild>
+            <Link to="/program/$programId" params={{ programId: 'new' }}>
+              <PlusIcon />
+              {m.NEW_PROGRAM()}
+            </Link>
+          </Button>
+        </div>
+      )}
       <List aria-label={m.PROGRAMS()}>
         {programs
           .filter((p) => p.visible)
           .map((program) => (
             <Item key={program.id}>
               <Name>
-                {program.name} {!program.active && <Badge>{m.INACTIVE()}</Badge>}
+                <Link
+                  to="/program/$programId"
+                  params={{ programId: String(program.id) }}
+                  className="underline-offset-4 hover:underline"
+                >
+                  {program.name}
+                </Link>{' '}
+                {!program.active && <Badge>{m.INACTIVE()}</Badge>}
               </Name>
               <Controls>
                 {canConfigure && (
