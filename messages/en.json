@@ -570,5 +570,6 @@
   "PRG_VALUE_FROM": "Value",
   "PRG_VALUE_FIXED": "fixed value",
   "PRG_VALUE_OF_SYSVAR": "value of the system variable",
-  "PRG_APPLY": "Apply"
+  "PRG_APPLY": "Apply",
+  "DEVICE": "Device"
 }

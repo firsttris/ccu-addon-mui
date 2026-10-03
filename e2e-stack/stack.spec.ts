@@ -642,3 +642,32 @@ test('legt Programme im Programm-Editor an, ändert und löscht sie', async ({ p
   await expect(rule).toContainText('wöchentlich am Mo, Di, Mi, Do, Fr, Sa, tagsüber');
   await expect(rule.getByLabel('Systemvariable')).toHaveValue('950');
 });
+
+test('listet alle Direktverknüpfungen in Einrichten und legt neue an', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup');
+  await page.getByRole('navigation', { name: 'Einrichten' }).getByRole('link', { name: 'Direktverknüpfungen' }).click();
+  await expect(page).toHaveURL(/\/setup\/links$/);
+  const list = page.getByRole('list', { name: 'Direktverknüpfungen' });
+  await expect(list.getByRole('listitem').first()).toBeVisible();
+
+  // A new one from the overview: the lower button to the dimmer
+  const add = page.getByRole('region', { name: 'Verknüpfung anlegen' });
+  await add.getByLabel('Gerät').selectOption({ label: 'Taster Esszimmer (000855699C4F38)' });
+  const form = add.getByRole('form', { name: 'Verknüpfung anlegen' });
+  await form.getByLabel('Kanal dieses Geräts').selectOption('000855699C4F38:2');
+  await form.getByLabel('Partner').selectOption('00151BE9A1C2D3:4');
+  await form.getByLabel('Name der Verknüpfung').fill('Übersicht-Test');
+  await form.getByRole('button', { name: 'Verknüpfen' }).click();
+  const item = list.getByRole('listitem').filter({ hasText: 'Übersicht-Test' });
+  await expect(item).toBeVisible();
+
+  // Search, parameters with the profiles, remove
+  await page.getByRole('searchbox', { name: 'Suchen' }).fill('Übersicht');
+  await expect(list.getByRole('listitem')).toHaveCount(1);
+  await item.getByRole('button', { name: 'Parameter' }).click();
+  await expect(item.getByRole('combobox', { name: 'Vorlage' })).toBeVisible();
+  await item.getByRole('button', { name: 'Löschen' }).click();
+  await page.getByRole('dialog', { name: 'Verknüpfung löschen' }).getByRole('button', { name: 'Löschen' }).click();
+  await expect(item).toHaveCount(0);
+});

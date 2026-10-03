@@ -250,6 +250,17 @@ export const useLinks = (interfaceName: string, address: string) => {
   });
 };
 
+// The direct links of all interfaces (setup overview); under 'links', so
+// adding or removing one reloads it
+export const useAllLinks = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['links', 'all'],
+    queryFn: async () => (await request({ type: 'getAllLinks' })).links ?? [],
+    retry: false,
+  });
+};
+
 // Parameters of a link on the receiver's side
 export const useLinkParamset = (interfaceName: string, receiver: string, sender: string) => {
   const { request } = useWebSocketActions();

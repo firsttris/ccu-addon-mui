@@ -214,6 +214,7 @@ type DeviceRPC interface {
 	DeleteDevice(iface, address string, flags int) error
 	Forget(iface, deviceAddress string)
 	GetLinks(iface, address string) ([]ccurpc.Link, error)
+	GetAllLinks(iface string) ([]ccurpc.Link, error)
 	AddLink(iface, sender, receiver, name, description string) error
 	RemoveLink(iface, sender, receiver string) error
 	GetLinkParamsetDescription(iface, address, partner string) (ccurpc.ParamsetDescription, error)
@@ -507,6 +508,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSessions(client, msgType, message)
 	case "getLinks", "addLink", "removeLink", "getLinkParamsetDescription", "getLinkParamset", "putLinkParamset":
 		s.handleLinks(client, msgType, message)
+	case "getAllLinks":
+		s.handleAllLinks(client, requestID)
 	case "setGroupMember":
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
@@ -2000,4 +2003,36 @@ func (s *Server) handleProgramEditor(client *Client, msgType string, message []b
 				return name, result, err
 			})
 	}
+}
+
+type interfaceLink struct {
+	InterfaceName string `json:"interfaceName"`
+	ccurpc.Link
+}
+
+type allLinksResponse struct {
+	Type      string          `json:"type"`
+	RequestID string          `json:"requestId,omitempty"`
+	Links     []interfaceLink `json:"links"`
+}
+
+// handleAllLinks lists the direct links of all interfaces, like the WebUI's
+// "Direkte Verknüpfungen". Interfaces without links (or not reachable)
+// are skipped, as the WebUI does. Setup, for administrators.
+func (s *Server) handleAllLinks(client *Client, requestID string) {
+	if client.level != auth.LevelAdmin {
+		s.sendRequestError(client, requestID, "only administrators may set up devices", "FORBIDDEN")
+		return
+	}
+	links := []interfaceLink{}
+	for _, iface := range []string{"BidCos-RF", "HmIP-RF", "BidCos-Wired"} {
+		found, err := s.rpc.GetAllLinks(iface)
+		if err != nil {
+			continue
+		}
+		for _, link := range found {
+			links = append(links, interfaceLink{InterfaceName: iface, Link: link})
+		}
+	}
+	s.sendJSON(client, allLinksResponse{Type: "getAllLinks_response", RequestID: requestID, Links: links})
 }

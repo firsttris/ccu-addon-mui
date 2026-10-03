@@ -2,6 +2,7 @@ import { ReactNode, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import CpuIcon from '~icons/lucide/cpu';
 import RadioIcon from '~icons/lucide/radio';
+import LinkIcon from '~icons/lucide/link';
 import MonitorSmartphoneIcon from '~icons/lucide/monitor-smartphone';
 import InfoIcon from '~icons/lucide/info';
 import HomeIcon from '~icons/lucide/house';
@@ -63,6 +64,12 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
               <Link to="/setup/groups" className={navLink}>
                 <HomeIcon />
                 {m.ROOMS_AND_TRADES()}
+              </Link>
+            )}
+            {isAdmin && elevated && (
+              <Link to="/setup/links" className={navLink}>
+                <LinkIcon />
+                {m.LINKS()}
               </Link>
             )}
             {isAdmin && elevated && (

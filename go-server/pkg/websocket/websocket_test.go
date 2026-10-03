@@ -522,6 +522,7 @@ func (f *fakeDeviceRPC) ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterf
 func (f *fakeDeviceRPC) InstallFirmware(iface, address string) error { return nil }
 
 func (f *fakeDeviceRPC) GetLinks(iface, address string) ([]ccurpc.Link, error) { return nil, nil }
+func (f *fakeDeviceRPC) GetAllLinks(iface string) ([]ccurpc.Link, error)       { return nil, nil }
 
 func (f *fakeDeviceRPC) AddLink(iface, sender, receiver, name, description string) error { return nil }
 
