@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useChannels, useConfigChange, useRooms, useTrades } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { DialogButton } from '../../components/ConfirmDialog';
+import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
@@ -45,7 +46,7 @@ interface NamesAndRoomsProps {
 // channel. Every change is saved right away.
 export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps) => {
   const { showToast } = useToast();
-  const { data: allChannels } = useChannels({ all: true });
+  const { data: allChannels, isPending: channelsLoading } = useChannels({ all: true });
   const { data: rooms = [] } = useRooms();
   const { data: trades = [] } = useTrades();
   const change = useConfigChange();
@@ -65,6 +66,7 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
         name={deviceName}
         onRename={(name) => run({ type: 'rename', address: deviceAddress, name }, m.RENAMED())}
       />
+      {channelsLoading && <PanelSkeleton lines={3} className="border-t pt-3" />}
       {channels.map((channel) => (
         <div key={channel.address} className="flex flex-col gap-2 border-t pt-3">
           <NameField

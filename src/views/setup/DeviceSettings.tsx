@@ -53,7 +53,7 @@ export const DeviceSettings = () => {
   const isAdmin = userLevel === 'admin';
   const canEdit = isAdmin && elevated;
   const [elevating, setElevating] = useState(false);
-  const { data: devices } = useDevices();
+  const { data: devices, isPending: devicesLoading } = useDevices();
   const names = useChannelNames();
   const putParamset = usePutParamset();
   const pairingAction = usePairingAction();
@@ -158,7 +158,9 @@ export const DeviceSettings = () => {
         .map((c, index) => ({ index, label: names.get(c.address) ?? c.address })),
     [device, names],
   );
-  const loading = descriptions.some((d) => d.isPending);
+  // The channels come with the device list; until it and every description
+  // and value are there, placeholders stand in for the settings
+  const loading = devicesLoading || descriptions.some((d) => d.isPending) || values.some((v) => v.isPending);
   const title = names.get(address) ?? address;
   usePageTitle(title);
 

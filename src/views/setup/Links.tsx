@@ -21,6 +21,7 @@ import {
 import { TimeInput } from '../../controls/links/TimeInput';
 import { getLocale } from '../../paraglide/runtime';
 import { useChannelNames } from './channelNames';
+import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 import { NativeSelect } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
@@ -390,7 +391,7 @@ export const AddLinkForm = ({ interfaceName, deviceAddress, channels }: LinksPro
 export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) => {
   const t = useTranslations();
   const { showToast } = useToast();
-  const { data: links = [] } = useLinks(interfaceName, deviceAddress);
+  const { data: links = [], isPending: linksLoading } = useLinks(interfaceName, deviceAddress);
   const { data: devices = [] } = useDevices();
   const names = useChannelNames();
   const action = useLinkAction();
@@ -401,7 +402,9 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
 
   return (
     <>
-      {links.length === 0 ? (
+      {linksLoading ? (
+        <PanelSkeleton lines={2} />
+      ) : links.length === 0 ? (
         <p>{m.NO_LINKS()}</p>
       ) : (
         <ul

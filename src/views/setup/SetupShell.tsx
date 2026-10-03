@@ -15,6 +15,7 @@ import { useInbox } from '../../queries';
 import { ElevateDialog } from '../../components/ElevateDialog';
 import { Button } from '../../components/ui/button';
 import { m } from '../../paraglide/messages';
+import { Skeleton } from '../../components/ui/skeleton';
 import { cn } from '../../lib/utils';
 
 export const Notice = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
@@ -44,6 +45,9 @@ const NavGroup = ({ title, children }: { title: string; children: ReactNode }) =
 export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode; adminOnly?: boolean }) => {
   const { userLevel, elevated, authRequired } = useWebSocketContext();
   const isAdmin = userLevel === 'admin';
+  // Until the server answered the login, the level is not known yet: no
+  // notice and placeholders for the admin pages instead of a guess
+  const levelKnown = userLevel !== '';
   const [elevating, setElevating] = useState(false);
   const { data: inbox = [] } = useInbox({ enabled: isAdmin && elevated });
 
@@ -96,6 +100,16 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
                 {m.SESSIONS()}
               </Link>
             )}
+            {!levelKnown && (
+              <div role="status" aria-label={m.LOADING()} className="flex gap-1 lg:flex-col lg:gap-0.5">
+                {['w-20', 'w-28', 'w-24', 'w-16', 'w-20'].map((width, i) => (
+                  <div key={i} className="flex h-9 shrink-0 items-center gap-2.5 px-3">
+                    <Skeleton className="size-4 rounded" />
+                    <Skeleton className={`h-3.5 ${width}`} />
+                  </div>
+                ))}
+              </div>
+            )}
             {isAdmin && (
               <Link to="/setup/system" className={navLink}>
                 <InfoIcon />
@@ -116,7 +130,7 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
         </nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col gap-5">
-        {!isAdmin && adminOnly && <Notice role="status">{m.ADMIN_ONLY()}</Notice>}
+        {levelKnown && !isAdmin && adminOnly && <Notice role="status">{m.ADMIN_ONLY()}</Notice>}
         {isAdmin && !elevated && (
           <Notice role="status">
             <span className="flex-1">{m.ELEVATE_HINT()}</span>
