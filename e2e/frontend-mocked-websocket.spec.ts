@@ -236,6 +236,11 @@ test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => 
   await expect(datapoints.getByText('STATE', { exact: true })).toBeVisible();
   await expect(datapoints.getByText('2', { exact: true })).toBeVisible();
   await expect(datapoints.getByText(/^(No|Nein)$/)).toBeVisible();
+
+  // Fallback for everything the app can't do yet
+  const webUILink = page.getByRole('link', { name: /Open in CCU WebUI|In alter WebUI öffnen/ });
+  await expect(webUILink).toHaveAttribute('href', '/');
+  await expect(webUILink).toHaveAttribute('target', '_blank');
 });
 
 test('listet unter „Alle Geräte“ auch Geräte ohne Raum', async ({ page }) => {

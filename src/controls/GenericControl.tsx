@@ -1,6 +1,7 @@
 import styled from '@emotion/styled';
 import { DatapointValue, GenericChannel } from '../types/types';
 import { defaultLang, useTranslations } from '../i18n/utils';
+import { WebUILink } from '../components/WebUILink';
 
 const Container = styled.div`
   display: flex;
@@ -40,6 +41,11 @@ const Value = styled.dd`
   color: ${(props) => props.theme.colors.text};
 `;
 
+const Footer = styled.div`
+  margin-top: 8px;
+  text-align: right;
+`;
+
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 2 });
 
 interface ControlProps {
@@ -77,6 +83,9 @@ export const GenericControl = ({ channel }: ControlProps) => {
           </div>
         ))}
       </Datapoints>
+      <Footer>
+        <WebUILink />
+      </Footer>
     </Container>
   );
 };

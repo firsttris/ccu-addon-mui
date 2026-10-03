@@ -77,6 +77,7 @@ export const ui = {
     NO: 'No',
     CANCEL: 'Cancel',
     ALL_DEVICES: 'All devices',
+    OPEN_IN_WEBUI: 'Open in CCU WebUI',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
@@ -146,6 +147,7 @@ export const ui = {
     NO: 'Nein',
     CANCEL: 'Abbrechen',
     ALL_DEVICES: 'Alle Geräte',
+    OPEN_IN_WEBUI: 'In alter WebUI öffnen',
   },
 } as const;
 

@@ -4,6 +4,7 @@ import styled from '@emotion/styled';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useTranslations } from '../i18n/utils';
 import { DeviceProblem } from '../types/types';
+import { WebUILink } from '../components/WebUILink';
 
 const Container = styled.div`
   max-width: 1280px;
@@ -114,6 +115,8 @@ const ProblemRow = ({ problem }: { problem: DeviceProblem }) => {
           ) : (
             t('NO_ROOM')
           )}
+          {' · '}
+          <WebUILink />
         </small>
       </ProblemName>
       {problem.unreach && <Badge severity="error">📡 {t('UNREACH')}</Badge>}
