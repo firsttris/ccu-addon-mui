@@ -1,45 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ThemeProvider as EmotionThemeProvider } from '@emotion/react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
+// Light or dark, switched in the header. The colors are CSS variables in
+// styles.css, selected by data-theme on <html>.
 export interface Theme {
   mode: 'light' | 'dark';
-  colors: {
-    background: string;
-    surface: string;
-    text: string;
-    textSecondary: string;
-    border: string;
-    primary: string;
-    hover: string;
-  };
 }
-
-const lightTheme: Theme = {
-  mode: 'light',
-  colors: {
-    background: '#ffffff',
-    surface: '#f9f9f9',
-    text: '#333333',
-    textSecondary: '#555555',
-    border: '#dddddd',
-    primary: '#ffffff',
-    hover: '#f0f0f0',
-  },
-};
-
-const darkTheme: Theme = {
-  mode: 'dark',
-  colors: {
-    background: '#181a1b',
-    surface: '#202224',
-    text: '#c8c3bc',
-    textSecondary: '#a8a3a4',
-    border: '#333333',
-    primary: '#202224',
-    hover: '#282a2c',
-  },
-};
 
 interface ThemeContextType {
   theme: Theme;
@@ -58,25 +24,15 @@ export const useTheme = () => {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDark, setIsDark] = useLocalStorage('theme-dark', false);
-
-  const theme = isDark ? darkTheme : lightTheme;
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-  };
+  const mode = isDark ? 'dark' : 'light';
 
   useEffect(() => {
-    document.body.style.backgroundColor = theme.colors.background;
-    document.body.style.color = theme.colors.text;
-    // For the Tailwind colors and the dark: variant (styles.css)
-    document.documentElement.dataset.theme = theme.mode;
-  }, [isDark, theme]);
+    document.documentElement.dataset.theme = mode;
+  }, [mode]);
 
   return (
-    <EmotionThemeProvider theme={theme}>
-      <ThemeContext.Provider value={{ theme, toggleTheme }}>
-        {children}
-      </ThemeContext.Provider>
-    </EmotionThemeProvider>
+    <ThemeContext.Provider value={{ theme: { mode }, toggleTheme: () => setIsDark(!isDark) }}>
+      {children}
+    </ThemeContext.Provider>
   );
 };

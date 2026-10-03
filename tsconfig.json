@@ -8,7 +8,6 @@
     "lib": ["es2020", "dom", "dom.iterable"],
     "skipLibCheck": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@emotion/react",
     "allowJs": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,

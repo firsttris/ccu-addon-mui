@@ -73,3 +73,13 @@
   --mui-primary: #202224;
   --mui-hover: #282a2c;
 }
+
+body {
+  user-select: none;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Roboto';
+  background-color: var(--mui-background);
+  color: var(--mui-text);
+}
