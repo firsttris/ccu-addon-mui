@@ -29,6 +29,9 @@ type Config struct {
 	// AuthKeyFile holds the key that signs login tokens. It must not be
 	// inside the addon directory, which lighttpd serves to the web.
 	AuthKeyFile string
+	// AuditLogFile records every change made through the add-on; empty
+	// disables it.
+	AuditLogFile string
 }
 
 func Load() *Config {
@@ -57,6 +60,7 @@ func Load() *Config {
 		AuthMode:           getEnv("AUTH_MODE", "ccu"),
 		WebUIURL:           getEnv("CCU_WEBUI_URL", "http://"+ccuHost),
 		AuthKeyFile:        getEnv("AUTH_KEY_FILE", defaultAuthKeyFile()),
+		AuditLogFile:       getEnv("AUDIT_LOG_FILE", defaultConfigFile("mui-audit.log")),
 	}
 }
 
@@ -64,11 +68,15 @@ func Load() *Config {
 // addon updates and included in CCU backups), or the working directory when
 // running locally.
 func defaultAuthKeyFile() string {
+	return defaultConfigFile("mui-auth.key")
+}
+
+func defaultConfigFile(name string) string {
 	const ccuConfigDir = "/usr/local/etc/config"
 	if info, err := os.Stat(ccuConfigDir); err == nil && info.IsDir() {
-		return ccuConfigDir + "/mui-auth.key"
+		return ccuConfigDir + "/" + name
 	}
-	return "mui-auth.key"
+	return name
 }
 
 func getEnv(key, defaultValue string) string {

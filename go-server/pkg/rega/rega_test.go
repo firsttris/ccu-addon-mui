@@ -48,7 +48,7 @@ func TestSanitizeRegaValue(t *testing.T) {
 func TestSetDatapointRejectsInvalidIdentifiers(t *testing.T) {
 	client := &Client{}
 
-	_, err := client.SetDatapoint("HmIP-RF", "abc\";DROP", "STATE", "1")
+	_, _, err := client.SetDatapoint("HmIP-RF", "abc\";DROP", "STATE", "1")
 	if err == nil {
 		t.Fatal("expected error for invalid identifier, got nil")
 	}
@@ -204,5 +204,30 @@ func TestExecuteReturnsStatusError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), fmt.Sprintf("status %d", http.StatusBadGateway)) {
 		t.Fatalf("expected status code in error, got %v", err)
+	}
+}
+
+func TestSetDatapointReturnsPreviousValue(t *testing.T) {
+	var gotScript string
+	output := "OK\tfalse"
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, output+"<xml><exec>/rega.exe</exec></xml>")
+	}))
+	defer ts.Close()
+	client := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+
+	result, previous, err := client.SetDatapoint("HmIP-RF", "A:1", "STATE", "true")
+	if err != nil || result != SetOK || previous != "false" {
+		t.Fatalf("SetDatapoint = %q, %q, %v", result, previous, err)
+	}
+	if !strings.Contains(gotScript, `"HmIP-RF.A:1.STATE"`) || !strings.Contains(gotScript, "State(true)") {
+		t.Fatalf("unexpected script: %s", gotScript)
+	}
+
+	output = "UNREACH"
+	if result, _, err := client.SetDatapoint("HmIP-RF", "A:1", "STATE", "true"); err != nil || result != SetUnreach {
+		t.Fatalf("SetDatapoint = %q, %v", result, err)
 	}
 }

@@ -93,6 +93,7 @@ DEBUG=false                   # Enable debug logging
 | `VIRTUAL_DEVICES_PORT` | 9292 | VirtualDevices (heating groups) XML-RPC port of the CCU |
 | `AUTH_MODE` | ccu | `ccu`: log in once per device with a CCU WebUI user; `none`: no login (everyone on the network can control all devices) |
 | `CCU_WEBUI_URL` | http://`CCU_HOST` | CCU WebUI whose JSON-RPC API (`/api/homematic.cgi`) verifies logins |
+| `AUDIT_LOG_FILE` | /usr/local/etc/config/mui-audit.log (CCU), ./mui-audit.log (local) | Every change made through the add-on (user, time, target, old and new value, result) as JSON lines; rotated at 512 KB, the previous file is kept as `.1`. Empty disables it |
 | `AUTH_KEY_FILE` | /usr/local/etc/config/mui-auth.key (CCU), ./mui-auth.key (local) | Key that signs the login tokens; created on first start. Deleting it logs out all devices |
 | `WS_BIND_HOST` | 127.0.0.1 | Address the WebSocket server listens on (lighttpd proxies to it; use `0.0.0.0` to expose it directly) |
 | `RPC_SERVER_PORT` | 9099 | XML-RPC callback port |
@@ -118,7 +119,7 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 | `{"type": "getTrades", "deviceId"}` | `{"deviceId", "trades": [{"id", "name"}]}` |
 | `{"type": "getChannels", "deviceId", "roomId" \| "tradeId" \| "all": true}` | `{"deviceId", "roomId" \| "tradeId" \| "all", "channels": [{"id", "address", "name", "type", "interfaceName", "datapoints", "statusAddress", "status": {"LOW_BAT", "UNREACH"}}]}` |
 | `{"type": "subscribe", "deviceId", "channels": ["<address>"]}` | `subscribe_response`; then `{"event": {"channel", "datapoint", "value"}}` for these channels |
-| `{"type": "setDatapoint", "requestId", "interfaceName", "address", "attribute", "value"}` | `{"type": "setDatapoint_response", "requestId", "success", "code"}`; `code` is `UNREACH` (not sent), `NOT_FOUND`, `INVALID_REQUEST` or `CCU_ERROR` |
+| `{"type": "setDatapoint", "requestId", "interfaceName", "address", "attribute", "value"}` | `{"type": "setDatapoint_response", "requestId", "success", "code"}`; `code` is `UNREACH` (not sent), `FORBIDDEN` (guest user), `NOT_FOUND`, `INVALID_REQUEST` or `CCU_ERROR` |
 | `{"type": "getDeviceProblems"}` | `{"type": "deviceProblems", "devices": [{"address", "name", "roomId", "roomName", "lowBat", "unreach"}]}` |
 | `{"type": "getParamsetDescription", "interfaceName", "address", "paramsetKey": "VALUES" \| "MASTER"}` | `{"type": "paramsetDescription", "address", "paramsetKey", "description": {"<PARAM>": {"type", "operations", "flags", "min", "max", "default", "unit", "valueList", "special"}}}` (cached per device type and firmware) |
 | `{"type": "getParamset", "interfaceName", "address", "paramsetKey"}` | `{"type": "paramset", "address", "paramsetKey", "values"}` |

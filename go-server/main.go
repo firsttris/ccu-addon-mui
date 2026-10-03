@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/auth"
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
@@ -71,6 +72,8 @@ func run(ctx context.Context, cfg *config.Config) error {
 	default:
 		return fmt.Errorf("invalid AUTH_MODE %q, expected \"ccu\" or \"none\"", cfg.AuthMode)
 	}
+
+	wsServer.SetAuditLog(audit.New(cfg.AuditLogFile))
 
 	deviceRPC, err := ccurpc.New(cfg)
 	if err != nil {

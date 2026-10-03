@@ -316,8 +316,9 @@ func (c *CCU) setDatapoint(values map[string]string) string {
 	if status := c.channelByAddress(ch.Interface, values["DEVICE_ADDRESS"]+":0"); status != nil && status.Datapoints["UNREACH"] == true {
 		return "UNREACH"
 	}
+	previous := formatValue(ch.Datapoints[values["ATTRIBUTE"]])
 	c.setValue(ch, values["ATTRIBUTE"], parseRegaValue(values["VALUE"]))
-	return "OK"
+	return "OK\t" + previous
 }
 
 // setValue changes a datapoint and sends the event; c.mu must be held.

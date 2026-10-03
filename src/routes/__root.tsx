@@ -25,7 +25,9 @@ const RootComponent = () => {
       ) : (
         <>
           <Header />
-          <Outlet />
+          <main>
+            <Outlet />
+          </main>
         </>
       )}
     </>

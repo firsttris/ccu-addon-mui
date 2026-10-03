@@ -217,6 +217,9 @@ export const Header: React.FC = () => {
     <HeaderContainer>
       <div style={{ position: 'relative' }}>
         <Menu
+          // Closed, it is only moved out of view: keep it out of reach of
+          // keyboard and screen readers
+          inert={!menuOpen}
           style={{
             transform: menuOpen ? 'translateX(0)' : 'translateX(-100%)',
           }}

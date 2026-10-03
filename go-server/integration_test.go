@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -52,7 +54,9 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		AuthMode:           authMode,
 		WebUIURL:           fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort),
 		AuthKeyFile:        filepath.Join(t.TempDir(), "key"),
+		AuditLogFile:       filepath.Join(t.TempDir(), "audit.log"),
 	}
+	auditLogs[ccu] = cfg.AuditLogFile
 
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
@@ -91,6 +95,9 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	return ccu, conn
 }
 
+// auditLogs remembers the audit log file of each started stack
+var auditLogs = map[*fakeccu.CCU]string{}
+
 type message map[string]interface{}
 
 func send(t *testing.T, conn *websocket.Conn, m message) {
@@ -114,6 +121,33 @@ func receive(t *testing.T, conn *websocket.Conn, match func(message) bool) messa
 		}
 	}
 }
+
+// receiveAll reads messages until each matcher matched one, in any order:
+// e.g. the CCU's event may arrive before the response to the command.
+func receiveAll(t *testing.T, conn *websocket.Conn, matchers ...func(message) bool) []message {
+	t.Helper()
+	found := make([]message, len(matchers))
+	missing := len(matchers)
+	_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
+	for missing > 0 {
+		var m message
+		if err := conn.ReadJSON(&m); err != nil {
+			t.Fatalf("%d messages missing: %v", missing, err)
+		}
+		for i, match := range matchers {
+			if found[i] == nil && match(m) {
+				found[i] = m
+				missing--
+				break
+			}
+		}
+	}
+	return found
+}
+
+func isEvent(m message) bool { return m["event"] != nil }
+
+func isSetDatapointResponse(m message) bool { return m["type"] == "setDatapoint_response" }
 
 func byRequestID(id string) func(message) bool {
 	return func(m message) bool { return m["requestId"] == id }
@@ -149,10 +183,11 @@ func TestStackLoginReadAndControl(t *testing.T) {
 	// Switching goes through ReGa; the CCU's event comes back over XML-RPC
 	send(t, conn, message{"type": "subscribe", "deviceId": "dev-1", "channels": []string{"LEQ0000001:1"}})
 	send(t, conn, message{"type": "setDatapoint", "requestId": "1", "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true})
-	if m := receive(t, conn, func(m message) bool { return m["type"] == "setDatapoint_response" }); m["success"] != true {
-		t.Fatalf("setDatapoint failed: %v", m)
+	messages := receiveAll(t, conn, isSetDatapointResponse, isEvent)
+	if messages[0]["success"] != true {
+		t.Fatalf("setDatapoint failed: %v", messages[0])
 	}
-	event := receive(t, conn, func(m message) bool { return m["event"] != nil })["event"].(map[string]interface{})
+	event := messages[1]["event"].(map[string]interface{})
 	if event["channel"] != "LEQ0000001:1" || event["datapoint"] != "STATE" || event["value"] != true {
 		t.Fatalf("unexpected event: %v", event)
 	}
@@ -213,5 +248,55 @@ func TestStackAllDevices(t *testing.T) {
 	}
 	if len(channels) != 15 {
 		t.Fatalf("expected all 15 channels, got %d", len(channels))
+	}
+}
+
+func loginAs(t *testing.T, conn *websocket.Conn, user, password string) message {
+	t.Helper()
+	send(t, conn, message{"type": "login", "username": user, "password": password})
+	return receive(t, conn, func(m message) bool { return m["type"] == "auth_response" })
+}
+
+func TestStackGuestMayNotControlAndChangesAreAudited(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+
+	if m := loginAs(t, conn, "Gast", "gast"); m["level"] != "guest" {
+		t.Fatalf("unexpected login: %v", m)
+	}
+	send(t, conn, message{"type": "setDatapoint", "requestId": "1", "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true})
+	if m := receive(t, conn, func(m message) bool { return m["type"] == "setDatapoint_response" }); m["success"] != false || m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+
+	if m := loginAs(t, conn, "Admin", "secret"); m["level"] != "admin" {
+		t.Fatalf("unexpected login: %v", m)
+	}
+	send(t, conn, message{"type": "setDatapoint", "requestId": "2", "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true})
+	if m := receive(t, conn, isSetDatapointResponse); m["success"] != true {
+		t.Fatalf("setDatapoint failed: %v", m)
+	}
+
+	data, err := os.ReadFile(auditLogs[ccu])
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	var entries []map[string]interface{}
+	for _, line := range lines {
+		var e map[string]interface{}
+		if err := json.Unmarshal([]byte(line), &e); err != nil {
+			t.Fatal(err)
+		}
+		entries = append(entries, e)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("expected 2 entries, got %v", entries)
+	}
+	if entries[0]["user"] != "Gast" || entries[0]["result"] != "FORBIDDEN" {
+		t.Errorf("unexpected first entry: %v", entries[0])
+	}
+	if e := entries[1]; e["user"] != "Admin" || e["result"] != "OK" || e["target"] != "BidCos-RF.LEQ0000001:1.STATE" ||
+		e["previous"] != "false" || e["value"] != true {
+		t.Errorf("unexpected second entry: %v", e)
 	}
 }

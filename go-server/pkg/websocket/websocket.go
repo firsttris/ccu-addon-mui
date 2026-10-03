@@ -15,6 +15,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/auth"
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
@@ -94,9 +95,24 @@ type Client struct {
 	mu       sync.Mutex
 	deviceID string
 
-	// authenticated is only accessed by the read pump, which handles all
-	// messages of this client.
+	// authenticated, user and level are only accessed by the read pump,
+	// which handles all messages of this client.
 	authenticated bool
+	user          string
+	level         string
+}
+
+// setSession marks the client as logged in as user with a CCU user level.
+func (c *Client) setSession(user, level string) {
+	c.authenticated = true
+	c.user = user
+	c.level = level
+}
+
+// canOperate: everyone but guests may switch devices. An unknown level (it
+// could not be read) is allowed, as before levels were checked.
+func canOperate(level string) bool {
+	return level != auth.LevelGuest
 }
 
 func newClient(conn *websocket.Conn) *Client {
@@ -133,6 +149,9 @@ type Server struct {
 	// rpc reads device and paramset descriptions over XML-RPC; nil if not
 	// configured.
 	rpc DeviceRPC
+
+	// audit records every change; nil disables it
+	audit *audit.Log
 }
 
 // DeviceRPC is the part of ccurpc.Client the server uses.
@@ -154,6 +173,11 @@ func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 // can read or control anything.
 func (s *Server) SetAuthenticator(a *auth.Authenticator) {
 	s.auth = a
+}
+
+// SetAuditLog records every change made through the server.
+func (s *Server) SetAuditLog(log *audit.Log) {
+	s.audit = log
 }
 
 // SetDeviceRPC enables requests that need XML-RPC (paramsets).
@@ -571,8 +595,8 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	_ = json.Unmarshal(message, &msg)
 
 	if s.auth == nil {
-		client.authenticated = true
 		// Without authentication everyone can do everything
+		client.setSession("", auth.LevelAdmin)
 		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin})
 		return
 	}
@@ -584,7 +608,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 		return
 	}
 
-	client.authenticated = true
+	client.setSession(session.User, session.Level)
 	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level, Token: token})
 }
 
@@ -601,7 +625,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 	}
 
 	if s.auth == nil {
-		client.authenticated = true
+		client.setSession("", auth.LevelAdmin)
 		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin})
 		return
 	}
@@ -621,7 +645,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 	}
 
 	logger.Info(fmt.Sprintf("🔓 User %q logged in", msg.Username))
-	client.authenticated = true
+	client.setSession(session.User, session.Level)
 	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level, Token: token})
 }
 
@@ -648,11 +672,29 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 	}
 
 	// Every outcome is answered with the requestId, so the client can undo
-	// its optimistic update and tell the user.
+	// its optimistic update and tell the user, and recorded.
+	entry := audit.Entry{
+		User:   client.user,
+		Action: "setDatapoint",
+		Target: msg.InterfaceName + "." + msg.Address + "." + msg.Attribute,
+		Value:  msg.Value,
+	}
+	record := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
 	fail := func(code, errorMsg string) {
+		record(code)
 		s.sendJSON(client, setDatapointResponse{
 			Type: "setDatapoint_response", RequestID: msg.RequestID, Code: code, Error: errorMsg,
 		})
+	}
+
+	if !canOperate(client.level) {
+		fail("FORBIDDEN", "guests may not control devices")
+		return
 	}
 
 	if msg.InterfaceName == "" || msg.Address == "" || msg.Attribute == "" {
@@ -666,7 +708,7 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		return
 	}
 
-	result, err := s.regaClient.SetDatapoint(msg.InterfaceName, msg.Address, msg.Attribute, valueStr)
+	result, previous, err := s.regaClient.SetDatapoint(msg.InterfaceName, msg.Address, msg.Attribute, valueStr)
 	if err != nil {
 		fail("CCU_ERROR", "setDatapoint failed: "+err.Error())
 		return
@@ -674,6 +716,8 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 
 	switch result {
 	case rega.SetOK:
+		entry.Previous = previous
+		record(rega.SetOK)
 		s.sendJSON(client, setDatapointResponse{Type: "setDatapoint_response", RequestID: msg.RequestID, Success: true})
 	case rega.SetUnreach:
 		fail("UNREACH", "device is not reachable")

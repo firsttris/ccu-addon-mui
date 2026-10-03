@@ -27,7 +27,7 @@ test('meldet sich mit einem CCU-Benutzer an und lehnt ein falsches Passwort ab',
 test('schaltet ein Licht und zeigt Änderungen vom Gerät live an', async ({ page }) => {
   await login(page);
   await page.getByRole('link', { name: 'Räume' }).click();
-  await page.getByText('Wohnzimmer').click();
+  await page.getByRole('main').getByText('Wohnzimmer', { exact: true }).click();
   await page.getByText('Schalter', { exact: true }).click();
 
   const light = page.getByText('Wohnzimmer Licht');
@@ -51,7 +51,7 @@ test('zeigt Geräteprobleme aus der CCU an und aktualisiert den Status live', as
   await expect(page.getByRole('button', { name: 'Geräte mit Problemen: 2' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Räume' }).click();
-  await page.getByText('Wohnzimmer').click();
+  await page.getByRole('main').getByText('Wohnzimmer', { exact: true }).click();
   await page.getByText('Schalter', { exact: true }).click();
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: 'Batterie schwach' })).toHaveCount(0);

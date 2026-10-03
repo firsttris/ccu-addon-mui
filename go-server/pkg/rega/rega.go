@@ -190,16 +190,17 @@ const (
 )
 
 // SetDatapoint sets a datapoint and returns SetOK, SetNotFound or
-// SetUnreach (the device is unreachable, so nothing was sent).
-func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (string, error) {
+// SetUnreach (the device is unreachable, so nothing was sent), and with
+// SetOK the value the datapoint had before.
+func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (result, previous string, err error) {
 	// Validate identifiers to prevent script injection
 	if !safeIdentifierRegex.MatchString(interfaceName) || !safeIdentifierRegex.MatchString(address) || !safeIdentifierRegex.MatchString(attribute) {
-		return "", fmt.Errorf("invalid identifier in interfaceName, address, or attribute")
+		return "", "", fmt.Errorf("invalid identifier in interfaceName, address, or attribute")
 	}
 
 	regaValue, err := sanitizeRegaValue(value)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// Battery and reachability are on the device's channel 0
@@ -212,14 +213,15 @@ func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (
 	script = strings.ReplaceAll(script, "{{VALUE}}", regaValue)
 	output, err := c.Execute(script)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	switch result := strings.TrimSpace(output); result {
+	result, previous, _ = strings.Cut(strings.TrimRight(output, "\r\n"), "\t")
+	switch result {
 	case SetOK, SetNotFound, SetUnreach:
-		return result, nil
+		return result, previous, nil
 	default:
-		return "", fmt.Errorf("unexpected response from ReGa: %q", result)
+		return "", "", fmt.Errorf("unexpected response from ReGa: %q", output)
 	}
 }
 
