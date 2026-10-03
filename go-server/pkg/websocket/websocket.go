@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/rega"
@@ -128,6 +129,16 @@ type Server struct {
 
 	// auth is nil when authentication is disabled (AUTH_MODE=none).
 	auth *auth.Authenticator
+
+	// rpc reads device and paramset descriptions over XML-RPC; nil if not
+	// configured.
+	rpc DeviceRPC
+}
+
+// DeviceRPC is the part of ccurpc.Client the server uses.
+type DeviceRPC interface {
+	GetParamsetDescription(iface, address, paramsetKey string) (ccurpc.ParamsetDescription, error)
+	GetParamset(iface, address, paramsetKey string) (map[string]interface{}, error)
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -143,6 +154,11 @@ func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 // can read or control anything.
 func (s *Server) SetAuthenticator(a *auth.Authenticator) {
 	s.auth = a
+}
+
+// SetDeviceRPC enables requests that need XML-RPC (paramsets).
+func (s *Server) SetDeviceRPC(rpc DeviceRPC) {
+	s.rpc = rpc
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -370,6 +386,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetDatapoint(client, message)
 	case "getDeviceProblems":
 		s.handleGetDeviceProblems(client, requestID)
+	case "getParamsetDescription", "getParamset":
+		s.handleParamsetRequest(client, msgType, message)
 	default:
 		s.sendRequestError(client, requestID, fmt.Sprintf("unknown message type: %s", msgType), "")
 	}
@@ -677,6 +695,66 @@ func (s *Server) handleGetDeviceProblems(client *Client, requestID string) {
 		return
 	}
 	s.sendJSON(client, deviceProblemsResponse{Type: "deviceProblems", Devices: devices, RequestID: requestID})
+}
+
+type paramsetRequest struct {
+	RequestID     string `json:"requestId"`
+	InterfaceName string `json:"interfaceName"`
+	Address       string `json:"address"`
+	ParamsetKey   string `json:"paramsetKey"`
+}
+
+type paramsetDescriptionResponse struct {
+	Type        string                     `json:"type"`
+	RequestID   string                     `json:"requestId,omitempty"`
+	Address     string                     `json:"address"`
+	ParamsetKey string                     `json:"paramsetKey"`
+	Description ccurpc.ParamsetDescription `json:"description"`
+}
+
+type paramsetResponse struct {
+	Type        string                 `json:"type"`
+	RequestID   string                 `json:"requestId,omitempty"`
+	Address     string                 `json:"address"`
+	ParamsetKey string                 `json:"paramsetKey"`
+	Values      map[string]interface{} `json:"values"`
+}
+
+// handleParamsetRequest answers getParamsetDescription and getParamset.
+// Both only read; addresses and keys are validated by ccurpc.
+func (s *Server) handleParamsetRequest(client *Client, msgType string, message []byte) {
+	var msg paramsetRequest
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message: "+err.Error(), "")
+		return
+	}
+	if s.rpc == nil {
+		s.sendRequestError(client, msg.RequestID, msgType+" is not available", "NOT_AVAILABLE")
+		return
+	}
+
+	if msgType == "getParamsetDescription" {
+		description, err := s.rpc.GetParamsetDescription(msg.InterfaceName, msg.Address, msg.ParamsetKey)
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "")
+			return
+		}
+		s.sendJSON(client, paramsetDescriptionResponse{
+			Type: "paramsetDescription", RequestID: msg.RequestID,
+			Address: msg.Address, ParamsetKey: msg.ParamsetKey, Description: description,
+		})
+		return
+	}
+
+	values, err := s.rpc.GetParamset(msg.InterfaceName, msg.Address, msg.ParamsetKey)
+	if err != nil {
+		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "")
+		return
+	}
+	s.sendJSON(client, paramsetResponse{
+		Type: "paramset", RequestID: msg.RequestID,
+		Address: msg.Address, ParamsetKey: msg.ParamsetKey, Values: values,
+	})
 }
 
 // formatValue converts a JSON value into the string form expected by

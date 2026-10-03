@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/types"
@@ -481,4 +482,64 @@ func indexOf(s, sub string) int {
 		}
 	}
 	return -1
+}
+
+type fakeDeviceRPC struct {
+	calls []string
+}
+
+func (f *fakeDeviceRPC) GetParamsetDescription(iface, address, key string) (ccurpc.ParamsetDescription, error) {
+	f.calls = append(f.calls, "description "+iface+" "+address+" "+key)
+	if address == "bad" {
+		return nil, ccurpc.ErrInvalidAddress
+	}
+	return ccurpc.ParamsetDescription{"STATE": {Type: "BOOL", Operations: 7}}, nil
+}
+
+func (f *fakeDeviceRPC) GetParamset(iface, address, key string) (map[string]interface{}, error) {
+	f.calls = append(f.calls, "values "+iface+" "+address+" "+key)
+	return map[string]interface{}{"STATE": true}, nil
+}
+
+func TestParamsetRequests(t *testing.T) {
+	s := NewServer(nil, nil)
+	client := &Client{send: make(chan []byte, 3)}
+
+	// Without XML-RPC client
+	s.handleMessage(client, []byte(`{"type":"getParamset","requestId":"q0","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"VALUES"}`))
+	assertErrorMessageContains(t, <-client.send, "not available")
+
+	rpc := &fakeDeviceRPC{}
+	s.SetDeviceRPC(rpc)
+
+	s.handleMessage(client, []byte(`{"type":"getParamsetDescription","requestId":"q1","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"VALUES"}`))
+	var description struct {
+		Type        string
+		RequestID   string `json:"requestId"`
+		Description map[string]struct {
+			Type       string `json:"type"`
+			Operations int    `json:"operations"`
+		} `json:"description"`
+	}
+	if err := json.Unmarshal(<-client.send, &description); err != nil || description.Type != "paramsetDescription" ||
+		description.RequestID != "q1" || description.Description["STATE"].Operations != 7 {
+		t.Fatalf("unexpected response: %+v, %v", description, err)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"getParamset","requestId":"q2","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"VALUES"}`))
+	var values struct {
+		Type      string
+		RequestID string                 `json:"requestId"`
+		Values    map[string]interface{} `json:"values"`
+	}
+	if err := json.Unmarshal(<-client.send, &values); err != nil || values.Type != "paramset" || values.Values["STATE"] != true {
+		t.Fatalf("unexpected response: %+v, %v", values, err)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"getParamsetDescription","requestId":"q3","interfaceName":"HmIP-RF","address":"bad","paramsetKey":"VALUES"}`))
+	assertErrorMessageContains(t, <-client.send, "invalid address")
+
+	if len(rpc.calls) != 3 || rpc.calls[0] != "description HmIP-RF A:1 VALUES" {
+		t.Fatalf("unexpected calls: %v", rpc.calls)
+	}
 }

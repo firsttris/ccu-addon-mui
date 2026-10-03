@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -27,6 +28,10 @@ func init() {
 }
 
 type EventHandler func(*types.CCUEvent)
+
+// DeviceChangeHandler is called when the CCU reports a device as changed
+// (e.g. new firmware) or deleted, with the interface name ("HmIP-RF").
+type DeviceChangeHandler func(interfaceName, address string)
 
 // maxRequestBodySize limits callbacks from the CCU. The largest regular
 // payload is newDevices after init, which stays well below this.
@@ -48,6 +53,7 @@ type Server struct {
 	cfg          *config.Config
 	httpServer   *http.Server
 	eventHandler EventHandler
+	deviceChange DeviceChangeHandler
 	clients      map[string]*xmlrpc.Client
 	clientsMu    sync.Mutex
 
@@ -121,6 +127,12 @@ func NewServer(cfg *config.Config, eventHandler EventHandler) *Server {
 		initialBackoff: defaultInitialBackoff,
 		maxBackoff:     defaultMaxBackoff,
 	}
+}
+
+// SetDeviceChangeHandler registers a handler for updateDevice and
+// deleteDevices calls of the CCU.
+func (s *Server) SetDeviceChangeHandler(handler DeviceChangeHandler) {
+	s.deviceChange = handler
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -385,6 +397,9 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 		response = s.handleSystemListMethods()
 	case "event":
 		response = s.handleEvent(&call)
+	case "updateDevice", "deleteDevices":
+		s.dispatchDeviceChange(call.MethodName, call.Params.Param)
+		response = s.serializeMethodResponse("")
 	case "listDevices":
 		response = s.handleListDevices(&call)
 	case "init":
@@ -451,6 +466,7 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 
 		var methodName string
 		var params []interface{}
+		var rawParams []param
 
 		for _, m := range callValue.Struct.Member {
 			if m.Name == "methodName" {
@@ -462,13 +478,17 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 			} else if m.Name == "params" && m.Value.Array != nil {
 				for _, p := range m.Value.Array.Data.Value {
 					params = append(params, s.extractValue(&p))
+					rawParams = append(rawParams, param{Value: p})
 				}
 			}
 		}
 
-		if methodName == "event" {
+		switch methodName {
+		case "event":
 			logger.Debugf("   Event %d", i+1)
 			s.dispatchEvent(params)
+		case "updateDevice", "deleteDevices":
+			s.dispatchDeviceChange(methodName, rawParams)
 		}
 	}
 
@@ -505,9 +525,40 @@ func (s *Server) dispatchEvent(params []interface{}) {
 	s.handleCCUEvent(interfaceID, address, datapoint, value)
 }
 
+// dispatchDeviceChange handles updateDevice(interfaceID, address, hint) and
+// deleteDevices(interfaceID, addresses).
+func (s *Server) dispatchDeviceChange(method string, params []param) {
+	if len(params) < 2 {
+		return
+	}
+	interfaceID, _ := s.extractValue(&params[0].Value).(string)
+	s.markSeen(interfaceID)
+	interfaceName := strings.TrimPrefix(interfaceID, "websocket-server-")
+
+	var addresses []string
+	if method == "updateDevice" {
+		if address, ok := s.extractValue(&params[1].Value).(string); ok {
+			addresses = append(addresses, address)
+		}
+	} else if params[1].Value.Array != nil {
+		for i := range params[1].Value.Array.Data.Value {
+			if address, ok := s.extractValue(&params[1].Value.Array.Data.Value[i]).(string); ok {
+				addresses = append(addresses, address)
+			}
+		}
+	}
+
+	for _, address := range addresses {
+		logger.Debugf("   🔄 %s: %s %s", method, interfaceName, address)
+		if s.deviceChange != nil {
+			s.deviceChange(interfaceName, address)
+		}
+	}
+}
+
 func (s *Server) handleSystemListMethods() string {
 	logger.Debug("📋 system.listMethods called by CCU")
-	methods := []string{"system.listMethods", "system.multicall", "listDevices", "init", "event"}
+	methods := []string{"system.listMethods", "system.multicall", "listDevices", "init", "event", "updateDevice", "deleteDevices"}
 	logger.Debugf("   Returning methods: %v", methods)
 	return s.serializeArrayResponse(methods)
 }

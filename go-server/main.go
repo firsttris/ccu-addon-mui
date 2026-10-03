@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/rega"
@@ -51,7 +53,19 @@ func main() {
 		logger.Error("❌ Invalid AUTH_MODE, expected \"ccu\" or \"none\":", cfg.AuthMode)
 		os.Exit(1)
 	}
+	deviceRPC, err := ccurpc.New(cfg)
+	if err != nil {
+		logger.Error("❌ Failed to create the XML-RPC client:", err)
+		os.Exit(1)
+	}
+	wsServer.SetDeviceRPC(deviceRPC)
+
 	rpcServer := xmlrpc.NewServer(cfg, wsServer.BroadcastToClients)
+	// Descriptions change with new firmware or re-pairing
+	rpcServer.SetDeviceChangeHandler(func(interfaceName, address string) {
+		deviceAddress, _, _ := strings.Cut(address, ":")
+		deviceRPC.Forget(interfaceName, deviceAddress)
+	})
 
 	go func() {
 		if err := wsServer.Start(ctx); err != nil {
