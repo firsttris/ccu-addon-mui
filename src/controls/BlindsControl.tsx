@@ -151,7 +151,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
         </div>
         <div className="flex min-w-0 flex-1 flex-col justify-between gap-3">
           <div className="min-w-0">
-            <div className="line-clamp-2 text-[15px] font-medium" title={name}>
+            <div className="line-clamp-2 min-h-[42px] text-[15px] leading-snug font-medium" title={name}>
               {name}
             </div>
             <div className="mt-0.5 text-[13px] text-muted-foreground">{status}</div>
