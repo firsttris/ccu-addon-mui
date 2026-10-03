@@ -331,3 +331,12 @@ test('legt Direktverknüpfungen an, ändert ihre Parameter und löscht sie', asy
   await expect(page.getByText('Verknüpfung gelöscht')).toBeVisible();
   await expect(list.getByRole('listitem')).toHaveCount(1);
 });
+
+test('zeigt Versionen und Duty Cycle der Funkmodule', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup');
+  const system = page.getByRole('region', { name: 'System' });
+  await expect(system).toContainText('Add-on-Version');
+  await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF' })).toHaveAttribute('aria-valuenow', '12');
+  await expect(system.getByRole('meter', { name: 'Duty Cycle HmIP-RF' })).toHaveAttribute('aria-valuenow', '3');
+});

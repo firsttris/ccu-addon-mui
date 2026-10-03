@@ -816,6 +816,11 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 			return defaults, ""
 		}
 		return nil, "Unknown paramset"
+	case "listBidcosInterfaces":
+		if data.RadioInterfaces == nil {
+			return nil, "Unknown method listBidcosInterfaces"
+		}
+		return data.RadioInterfaces, ""
 	case "getLinks":
 		address := stringParam(params, 0)
 		links := []interface{}{}

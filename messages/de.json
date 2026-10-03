@@ -134,5 +134,12 @@
   "DELETE_RESET": "Gerät auf Werkseinstellungen zurücksetzen",
   "DELETE_FORCE": "Auch löschen, wenn das Gerät nicht erreichbar ist",
   "DELETE": "Löschen",
-  "DELETED": "Gerät gelöscht"
+  "DELETED": "Gerät gelöscht",
+  "SYSTEM": "System",
+  "ADDON_VERSION": "Add-on-Version",
+  "FIRMWARE_VERSION": "CCU-Firmware",
+  "RADIO_MODULES": "Funkmodule",
+  "DUTY_CYCLE": "Duty Cycle",
+  "DISCONNECTED": "Nicht verbunden",
+  "DUTY_CYCLE_HINT": "Anteil der erlaubten Sendezeit in der letzten Stunde. Bei 100 % sendet die CCU nicht mehr."
 }

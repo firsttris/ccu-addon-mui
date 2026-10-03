@@ -29,7 +29,12 @@ const proxyTargets: Record<string, string> = {
   stack: 'ws://127.0.0.1:28088',
 };
 
+const appVersion = JSON.parse(fs.readFileSync('./package.json', 'utf8')).version;
+
 export default defineConfig(({ command, mode, isPreview }) => ({
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion),
+  },
   base: command === 'build' || isPreview ? '/addons/mui/' : '/',
 
   server: {

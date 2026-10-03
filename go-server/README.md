@@ -140,6 +140,7 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 | `{"type": "addLink", "interfaceName", "sender", "receiver", "name"}`, `{"type": "removeLink", "interfaceName", "sender", "receiver"}` | `{"type": "addLink_response" \| "removeLink_response", "success"}` (administrators with admin token; audited) |
 | `{"type": "getLinkParamsetDescription" \| "getLinkParamset", "interfaceName", "address", "partner"}` | `description` or `values` of a link on the side of `address` |
 | `{"type": "putLinkParamset", "interfaceName", "address", "partner", "values"}` | `{"type": "putLinkParamset_response", "success"}`; values are checked against the description |
+| `{"type": "getSystemInfo"}` | `{"type": "getSystemInfo_response", "addonVersion", "firmwareVersion", "radioInterfaces": [{"interfaceName", "address", "connected", "default", "dutyCycle"}]}` (administrators) |
 | `{"type": "logout"}` | `{"type": "logout_response", "success"}`: revokes the token of this device |
 | `{"type": "listSessions"}` | `{"type": "listSessions_response", "sessions": [{"id", "user", "device", "created", "lastUsed", "current"}]}` (administrators with admin token) |
 | `{"type": "revokeSession", "id"}` | `{"type": "revokeSession_response", "success"}`: logs a device out; its open connections are closed |

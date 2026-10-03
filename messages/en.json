@@ -134,5 +134,12 @@
   "DELETE_RESET": "Reset the device to factory settings",
   "DELETE_FORCE": "Delete even if the device is not reachable",
   "DELETE": "Delete",
-  "DELETED": "Device deleted"
+  "DELETED": "Device deleted",
+  "SYSTEM": "System",
+  "ADDON_VERSION": "Add-on version",
+  "FIRMWARE_VERSION": "CCU firmware",
+  "RADIO_MODULES": "Radio modules",
+  "DUTY_CYCLE": "Duty cycle",
+  "DISCONNECTED": "Not connected",
+  "DUTY_CYCLE_HINT": "Share of the allowed transmit time used in the last hour. At 100 % the CCU stops sending."
 }

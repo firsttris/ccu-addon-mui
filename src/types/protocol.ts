@@ -53,7 +53,8 @@ export type ServerMessage =
   | ListSessionsResponse
   | GetLinksResponse
   | GetLinkParamsetDescriptionResponse
-  | GetLinkParamsetResponse;
+  | GetLinkParamsetResponse
+  | GetSystemInfoResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -91,6 +92,7 @@ export interface Protocol {
   getLinks: GetLinksCall;
   getLinkParamsetDescription: GetLinkParamsetDescriptionCall;
   getLinkParamset: GetLinkParamsetCall;
+  getSystemInfo: GetSystemInfoCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1166,6 +1168,48 @@ export interface GetLinkParamsetResponse {
   requestId?: string;
   success: boolean;
   values?: Values;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetSystemInfoCall".
+ */
+export interface GetSystemInfoCall {
+  request: GetSystemInfoRequest;
+  response: GetSystemInfoResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetSystemInfoRequest".
+ */
+export interface GetSystemInfoRequest {
+  type: "getSystemInfo";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetSystemInfoResponse".
+ */
+export interface GetSystemInfoResponse {
+  type: "getSystemInfo_response";
+  requestId?: string;
+  success: boolean;
+  addonVersion?: string;
+  firmwareVersion?: string;
+  radioInterfaces: RadioInterface[];
+}
+/**
+ * A radio module with its duty cycle (percent of the allowed transmit time used)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RadioInterface".
+ */
+export interface RadioInterface {
+  interfaceName: string;
+  address: string;
+  description?: string;
+  connected: boolean;
+  default: boolean;
+  dutyCycle: number;
 }
 /**
  * Sent first on every connection

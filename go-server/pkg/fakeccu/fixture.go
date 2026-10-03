@@ -91,6 +91,9 @@ type InterfaceData struct {
 	Paramsets map[string]map[string]map[string]interface{} `json:"paramsets,omitempty"`
 	// Links as getLinks returns them (SENDER, RECEIVER, NAME, DESCRIPTION)
 	Links []map[string]interface{} `json:"links,omitempty"`
+	// RadioInterfaces as listBidcosInterfaces returns them; without, the
+	// interface doesn't support the call
+	RadioInterfaces []map[string]interface{} `json:"radioInterfaces,omitempty"`
 }
 
 // LoadFixture reads a fixture from a JSON file.

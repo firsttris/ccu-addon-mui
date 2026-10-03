@@ -460,7 +460,16 @@
             }
           }
         }
-      }
+      },
+      "radioInterfaces": [
+        {
+          "ADDRESS": "NEQ1234567",
+          "DESCRIPTION": "",
+          "CONNECTED": true,
+          "DEFAULT": true,
+          "DUTY_CYCLE": 12
+        }
+      ]
     },
     "HmIP-RF": {
       "devices": [
@@ -864,6 +873,15 @@
           "NAME": "Esstisch an",
           "DESCRIPTION": "",
           "FLAGS": 0
+        }
+      ],
+      "radioInterfaces": [
+        {
+          "ADDRESS": "3014F711A0001F98A9B4C2D1",
+          "DESCRIPTION": "",
+          "CONNECTED": true,
+          "DEFAULT": true,
+          "DUTY_CYCLE": 3
         }
       ]
     }

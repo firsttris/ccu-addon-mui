@@ -155,3 +155,39 @@ func (c *Client) DeleteDevice(iface, address string, flags int) error {
 	var reply interface{}
 	return c.call(iface, "deleteDevice", []interface{}{address, flags}, &reply)
 }
+
+// RadioInterface is a radio module of the CCU (built-in or LAN gateway).
+type RadioInterface struct {
+	Address     string `json:"address"`
+	Description string `json:"description,omitempty"`
+	Connected   bool   `json:"connected"`
+	Default     bool   `json:"default"`
+	// DutyCycle is the share of the allowed transmit time used in the last
+	// hour, in percent; at 100 % the module stops sending.
+	DutyCycle int `json:"dutyCycle"`
+}
+
+// ListBidcosInterfaces returns the radio modules of an interface.
+func (c *Client) ListBidcosInterfaces(iface string) ([]RadioInterface, error) {
+	var reply []interface{}
+	if err := c.call(iface, "listBidcosInterfaces", nil, &reply); err != nil {
+		return nil, err
+	}
+	modules := []RadioInterface{}
+	for _, raw := range reply {
+		m, ok := raw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		connected, _ := m["CONNECTED"].(bool)
+		isDefault, _ := m["DEFAULT"].(bool)
+		modules = append(modules, RadioInterface{
+			Address:     asString(m["ADDRESS"]),
+			Description: asString(m["DESCRIPTION"]),
+			Connected:   connected,
+			Default:     isDefault,
+			DutyCycle:   asInt(m["DUTY_CYCLE"]),
+		})
+	}
+	return modules, nil
+}

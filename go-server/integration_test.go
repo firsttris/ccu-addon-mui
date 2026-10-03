@@ -744,3 +744,24 @@ func TestProtocolSchemaIsStrict(t *testing.T) {
 		}
 	}
 }
+
+func TestStackSystemInfo(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "getSystemInfo", "requestId": "q1"})
+	info := receive(t, conn, byRequestID("q1"))
+	modules := info["radioInterfaces"].([]interface{})
+	if len(modules) != 2 {
+		t.Fatalf("expected the radio modules of BidCos-RF and HmIP-RF: %v", info)
+	}
+	first := modules[0].(map[string]interface{})
+	if first["interfaceName"] != "BidCos-RF" || first["dutyCycle"] != 12.0 || first["connected"] != true {
+		t.Fatalf("unexpected module: %v", first)
+	}
+
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "getSystemInfo", "requestId": "q2"})
+	if m := receive(t, conn, byRequestID("q2")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}

@@ -214,6 +214,7 @@ type DeviceRPC interface {
 	GetLinkParamsetDescription(iface, address, partner string) (ccurpc.ParamsetDescription, error)
 	GetLinkParamset(iface, address, partner string) (map[string]interface{}, error)
 	PutLinkParamset(iface, address, partner string, values map[string]interface{}) error
+	ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error)
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -477,6 +478,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleElevate(client, message)
 	case "rename":
 		s.handleRename(client, message)
+	case "getSystemInfo":
+		s.handleSystemInfo(client, requestID)
 	case "listSessions", "revokeSession", "logout":
 		s.handleSessions(client, msgType, message)
 	case "getLinks", "addLink", "removeLink", "getLinkParamsetDescription", "getLinkParamset", "putLinkParamset":

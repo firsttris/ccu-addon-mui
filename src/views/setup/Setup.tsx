@@ -14,6 +14,7 @@ import { useDevices } from '../../queries';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useChannelNames } from './channelNames';
 import { Pairing } from './Pairing';
+import { SystemInfo } from './SystemInfo';
 import { Sessions } from './Sessions';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { ElevateDialog } from '../../components/ElevateDialog';
@@ -155,6 +156,7 @@ export const Setup = () => {
         </Notice>
       )}
       {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}
+      {userLevel === 'admin' && <SystemInfo />}
       {userLevel === 'admin' && elevated && <Pairing />}
       {userLevel === 'admin' && elevated && authRequired && <Sessions />}
       <Search

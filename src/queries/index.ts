@@ -213,6 +213,17 @@ export const useLogicAction = () => {
   });
 };
 
+// Versions and radio modules (administrators); the duty cycle changes slowly
+export const useSystemInfo = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['systemInfo'],
+    queryFn: () => request({ type: 'getSystemInfo' }),
+    refetchInterval: 60000,
+    retry: false,
+  });
+};
+
 // Direct links of a device or channel
 export const useLinks = (interfaceName: string, address: string) => {
   const { request } = useWebSocketActions();

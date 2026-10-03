@@ -100,6 +100,9 @@
     },
     "getLinkParamset": {
       "$ref": "#/definitions/GetLinkParamsetCall"
+    },
+    "getSystemInfo": {
+      "$ref": "#/definitions/GetSystemInfoCall"
     }
   },
   "required": [
@@ -134,7 +137,8 @@
     "listSessions",
     "getLinks",
     "getLinkParamsetDescription",
-    "getLinkParamset"
+    "getLinkParamset",
+    "getSystemInfo"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2422,6 +2426,9 @@
         },
         {
           "$ref": "#/definitions/GetLinkParamsetResponse"
+        },
+        {
+          "$ref": "#/definitions/GetSystemInfoResponse"
         }
       ]
     },
@@ -2929,6 +2936,103 @@
         },
         "response": {
           "$ref": "#/definitions/GetLinkParamsetResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RadioInterface": {
+      "type": "object",
+      "properties": {
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "connected": {
+          "type": "boolean"
+        },
+        "default": {
+          "type": "boolean"
+        },
+        "dutyCycle": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "interfaceName",
+        "address",
+        "connected",
+        "default",
+        "dutyCycle"
+      ],
+      "additionalProperties": false,
+      "description": "A radio module with its duty cycle (percent of the allowed transmit time used)"
+    },
+    "GetSystemInfoRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getSystemInfo"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetSystemInfoResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getSystemInfo_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "addonVersion": {
+          "type": "string"
+        },
+        "firmwareVersion": {
+          "type": "string"
+        },
+        "radioInterfaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RadioInterface"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "radioInterfaces"
+      ],
+      "additionalProperties": false
+    },
+    "GetSystemInfoCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetSystemInfoRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetSystemInfoResponse"
         }
       },
       "required": [
