@@ -48,7 +48,7 @@ func TestSanitizeRegaValue(t *testing.T) {
 func TestSetDatapointRejectsInvalidIdentifiers(t *testing.T) {
 	client := &Client{}
 
-	_, err := client.SetDatapoint("HmIP-RF", "abc\";DROP", "STATE", "1")
+	_, _, err := client.SetDatapoint("HmIP-RF", "abc\";DROP", "STATE", "1")
 	if err == nil {
 		t.Fatal("expected error for invalid identifier, got nil")
 	}
@@ -88,6 +88,44 @@ func TestGetChannelsSubstitutesIDAndParsesOutput(t *testing.T) {
 	}
 	if len(channels) != 1 || channels[0].Name != "Licht" || channels[0].Datapoints["STATE"] != true {
 		t.Fatalf("unexpected channels: %+v", channels)
+	}
+}
+
+func TestGetUserLevelRejectsInvalidNames(t *testing.T) {
+	// No HTTP server: validation must fail before any request is made.
+	client := &Client{}
+
+	for _, name := range []string{"", `x"); system.Exec("reboot"); ("`, "a\\b", "a\nb"} {
+		if _, err := client.GetUserLevel(name); err == nil || !strings.Contains(err.Error(), "invalid") {
+			t.Fatalf("GetUserLevel(%q): expected validation error, got %v", name, err)
+		}
+	}
+}
+
+func TestGetUserLevel(t *testing.T) {
+	var gotScript string
+	output := "8"
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, output+"<xml><exec>/rega.exe</exec></xml>")
+	}))
+	defer ts.Close()
+
+	client := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+
+	level, err := client.GetUserLevel("Tristan Teufel")
+	if err != nil || level != 8 {
+		t.Fatalf("GetUserLevel = %d, %v", level, err)
+	}
+	if !strings.Contains(gotScript, `Get("Tristan Teufel")`) {
+		t.Fatalf("expected the name in the script, got %s", gotScript)
+	}
+
+	// No such user: ReGa writes nothing
+	output = ""
+	if _, err := client.GetUserLevel("Nobody"); err == nil {
+		t.Fatal("expected an error for an unknown user")
 	}
 }
 
@@ -166,5 +204,76 @@ func TestExecuteReturnsStatusError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), fmt.Sprintf("status %d", http.StatusBadGateway)) {
 		t.Fatalf("expected status code in error, got %v", err)
+	}
+}
+
+func TestSetDatapointReturnsPreviousValue(t *testing.T) {
+	var gotScript string
+	output := "OK\tfalse"
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, output+"<xml><exec>/rega.exe</exec></xml>")
+	}))
+	defer ts.Close()
+	client := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+
+	result, previous, err := client.SetDatapoint("HmIP-RF", "A:1", "STATE", "true")
+	if err != nil || result != SetOK || previous != "false" {
+		t.Fatalf("SetDatapoint = %q, %q, %v", result, previous, err)
+	}
+	if !strings.Contains(gotScript, `"HmIP-RF.A:1.STATE"`) || !strings.Contains(gotScript, "State(true)") {
+		t.Fatalf("unexpected script: %s", gotScript)
+	}
+
+	output = "UNREACH"
+	if result, _, err := client.SetDatapoint("HmIP-RF", "A:1", "STATE", "true"); err != nil || result != SetUnreach {
+		t.Fatalf("SetDatapoint = %q, %v", result, err)
+	}
+}
+
+func TestSetNameValidatesAndReturnsPreviousName(t *testing.T) {
+	client := &Client{}
+	for _, name := range []string{"", "  ", `a"b`, "a\\b", "a\nb", "a\tb", strings.Repeat("x", 101)} {
+		if _, _, err := client.SetName("A:1", name); err == nil {
+			t.Errorf("SetName(%q): expected an error", name)
+		}
+	}
+	if _, _, err := client.SetName(`A"; system.Exec("x`, "ok"); err == nil {
+		t.Error("expected an invalid address error")
+	}
+
+	var gotScript string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, "OK\tHmIP-BSM 0001:1<xml></xml>")
+	}))
+	defer ts.Close()
+	client = &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+	result, previous, err := client.SetName("0001:1", "Licht Küche")
+	if err != nil || result != SetOK || previous != "HmIP-BSM 0001:1" {
+		t.Fatalf("SetName = %q, %q, %v", result, previous, err)
+	}
+	if !strings.Contains(gotScript, `"0001:1"`) || !strings.Contains(gotScript, `Name("Licht Küche")`) {
+		t.Fatalf("unexpected script: %s", gotScript)
+	}
+}
+
+func TestSetGroupMemberBuildsScript(t *testing.T) {
+	var gotScript string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, "OK<xml></xml>")
+	}))
+	defer ts.Close()
+	client := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+
+	if result, err := client.SetGroupMember(1234, 5678, false); err != nil || result != SetOK {
+		t.Fatalf("SetGroupMember = %q, %v", result, err)
+	}
+	if !strings.Contains(gotScript, "dom.GetObject(1234)") || !strings.Contains(gotScript, "groupObject.Remove(5678)") {
+		t.Fatalf("unexpected script: %s", gotScript)
 	}
 }

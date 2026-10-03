@@ -1,116 +1,25 @@
 import { useState } from 'react';
 import { KeymaticChannel } from '../types/types';
-import { useTranslations } from '../i18n/utils';
-import styled from '@emotion/styled';
-import { Button } from '../components/Button';
-import { useWebSocketActions } from '../hooks/useWebsocket';
-import { MaterialSymbolsDoorOpenOutline } from '../components/icons/MaterialSymbolsDoorOpenOutline';
-import { MaterialSymbolsLockOutline } from '../components/icons/MaterialSymbolsLockOutline';
-import { MaterialSymbolsLockOpenOutline } from '../components/icons/MaterialSymbolsLockOpenOutline';
-
-const Card = styled.div`
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 200px;
-  background-color: ${props => props.theme.colors.surface};
-  transition: box-shadow 0.2s ease;
-  &:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-`;
-
-const Title = styled.h3`
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  font-weight: 500;
-  color: ${props => props.theme.colors.text};
-  text-align: center;
-`;
-
-const ButtonContainer = styled.div({
-  display: 'flex',
-  gap: '12px',
-  alignItems: 'center',
-});
-
-const ButtonWrapper = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: '4px',
-});
-
-const ButtonLabel = styled.span`
-  font-size: 12px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-align: center;
-`;
-
-const StatusText = styled.span`
-  margin-top: 12px;
-  font-size: 14px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-align: center;
-`;
-
-interface StyledTypographyProps {
-  uncertain: boolean;
-}
-
-const StyledTypography = styled('span', {
-  shouldForwardProp: (prop) => prop !== 'uncertain',
-})<StyledTypographyProps>`
-  display: ${props => props.uncertain ? 'block' : 'none'};
-  margin-top: 12px;
-  font-size: 14px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-align: center;
-`;
-
-const ConfirmBox = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  min-height: 72px;
-`;
-
-const ConfirmText = styled.span`
-  font-size: 15px;
-  font-weight: 600;
-  color: ${props => props.theme.colors.text};
-`;
-
-const ConfirmButtons = styled.div`
-  display: flex;
-  gap: 10px;
-`;
-
-const TextButton = styled('button', {
-  shouldForwardProp: (prop) => prop !== 'primary',
-})<{ primary?: boolean }>`
-  font-size: 15px;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid ${props => props.theme.colors.border};
-  color: ${props => (props.primary ? '#fff' : props.theme.colors.text)};
-  background: ${props => (props.primary ? '#c62828' : props.theme.colors.primary)};
-`;
+import { useSetDataPoint } from '../queries';
+import LockIcon from '~icons/lucide/lock';
+import LockOpenIcon from '~icons/lucide/lock-open';
+import DoorOpenIcon from '~icons/lucide/door-open';
+import { Tile } from '../components/Tile';
+import { Button } from '../components/ui/button';
+import { useEffects } from '../contexts/EffectsContext';
+import { m } from '../paraglide/messages';
+import { cn } from '../lib/utils';
 
 interface DoorControlProps {
   channel: KeymaticChannel;
 }
 
+const actionButton =
+  'press flex h-16 flex-col items-center justify-center gap-1 rounded-xl border bg-background/60 text-xs text-muted-foreground hover:bg-accent hover:text-foreground [&_svg]:size-5';
+
 export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
-  const t = useTranslations();
-  const { setDataPoint } = useWebSocketActions();
+  const setDataPoint = useSetDataPoint();
+  const effects = useEffects();
   const {
     datapoints: { STATE, STATE_UNCERTAIN },
     name,
@@ -123,69 +32,76 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   // kitchen tablet) can't open the front door. Locking needs no confirmation.
   const [confirming, setConfirming] = useState<'unlock' | 'open' | null>(null);
 
-  const unlockDoor = () => {
-    setDataPoint(channel.interfaceName, channel.address, 'STATE', true);
-  };
-
-  const lockDoor = () => {
-    setDataPoint(channel.interfaceName, channel.address, 'STATE', false);
-  };
-
-  const openDoor = () => {
-    setDataPoint(channel.interfaceName, channel.address, 'OPEN', true);
-  };
+  const set = (datapoint: 'STATE' | 'OPEN', value: boolean) =>
+    setDataPoint(channel.interfaceName, channel.address, datapoint, value);
 
   return (
-    <Card>
-      <Title>{name}</Title>
-      {confirming ? (
-        <ConfirmBox>
-          <ConfirmText>{confirming === 'open' ? t('CONFIRM_OPEN') : t('CONFIRM_UNLOCK')}</ConfirmText>
-          <ConfirmButtons>
-            <TextButton onClick={() => setConfirming(null)}>{t('CANCEL')}</TextButton>
-            <TextButton
-              primary
-              onClick={() => {
-                if (confirming === 'open') {
-                  openDoor();
-                } else {
-                  unlockDoor();
-                }
-                setConfirming(null);
-              }}
-            >
-              {t('YES')}
-            </TextButton>
-          </ConfirmButtons>
-        </ConfirmBox>
-      ) : (
-        <ButtonContainer>
-          <ButtonWrapper>
-            <Button onClick={lockDoor}>
-              <MaterialSymbolsLockOutline />
-            </Button>
-            <ButtonLabel>{t('LOCK')}</ButtonLabel>
-          </ButtonWrapper>
-          <ButtonWrapper>
-            <Button onClick={() => setConfirming('unlock')}>
-              <MaterialSymbolsLockOpenOutline />
-            </Button>
-            <ButtonLabel>{t('UNLOCK')}</ButtonLabel>
-          </ButtonWrapper>
-          <ButtonWrapper>
-            <Button onClick={() => setConfirming('open')}>
-              <MaterialSymbolsDoorOpenOutline />
-            </Button>
-            <ButtonLabel>{t('OPEN')}</ButtonLabel>
-          </ButtonWrapper>
-        </ButtonContainer>
-      )}
-      <StatusText>
-        {isUncertain ? '' : (isUnlocked ? t('UNLOCKED') : t('LOCKED'))}
-      </StatusText>
-      <StyledTypography uncertain={isUncertain}>
-        {t('DOOR_STATE_UNKNOWN')}
-      </StyledTypography>
-    </Card>
+    <Tile status={channel.status}>
+      <div className="flex flex-col gap-3 p-4">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              'flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5',
+              isUncertain
+                ? 'bg-muted text-muted-foreground'
+                : isUnlocked
+                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300'
+                  : 'bg-green-500/15 text-green-700 dark:text-green-300',
+            )}
+            style={
+              effects.on && !isUncertain
+                ? { boxShadow: `0 0 ${16 * effects.k}px ${isUnlocked ? 'rgba(251,191,36,0.3)' : 'rgba(34,197,94,0.25)'}` }
+                : undefined
+            }
+          >
+            {isUnlocked ? <LockOpenIcon /> : <LockIcon />}
+          </div>
+          <div className="flex min-w-0 flex-col">
+            <h3 className="truncate text-[15px] font-medium">{name}</h3>
+            <span className="text-[13px] text-muted-foreground">
+              {isUncertain ? m.DOOR_STATE_UNKNOWN() : isUnlocked ? m.UNLOCKED() : m.LOCKED()}
+            </span>
+          </div>
+        </div>
+        {confirming ? (
+          <div className="flex min-h-16 flex-col gap-2 rounded-xl bg-destructive/10 p-3">
+            <span className="text-sm font-medium">{confirming === 'open' ? m.CONFIRM_OPEN() : m.CONFIRM_UNLOCK()}</span>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={() => setConfirming(null)}>
+                {m.CANCEL()}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (confirming === 'open') {
+                    set('OPEN', true);
+                  } else {
+                    set('STATE', true);
+                  }
+                  setConfirming(null);
+                }}
+              >
+                {m.YES()}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            <button className={actionButton} onClick={() => set('STATE', false)}>
+              <LockIcon />
+              {m.LOCK()}
+            </button>
+            <button className={actionButton} onClick={() => setConfirming('unlock')}>
+              <LockOpenIcon />
+              {m.UNLOCK()}
+            </button>
+            <button className={actionButton} onClick={() => setConfirming('open')}>
+              <DoorOpenIcon />
+              {m.OPEN()}
+            </button>
+          </div>
+        )}
+      </div>
+    </Tile>
   );
 };

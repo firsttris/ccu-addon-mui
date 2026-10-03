@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -153,6 +154,144 @@ func (c *Client) GetChannels(objectID string) ([]Channel, error) {
 	return parseChannels(output), nil
 }
 
+// GetAllChannels returns the channels of all devices, also those in no room
+// or trade. Maintenance channels and the CCU's virtual keys are left out.
+func (c *Client) GetAllChannels() ([]Channel, error) {
+	output, err := c.Execute(strings.ReplaceAll(getChannelsScript, "{{OBJECT_ID}}", "ALL"))
+	if err != nil {
+		return nil, err
+	}
+	return parseChannels(output), nil
+}
+
+// GetUserLevel returns the level of a CCU user as stored in ReGa
+// (1 = guest, 2 = user, 8 = admin).
+func (c *Client) GetUserLevel(username string) (int, error) {
+	// The name ends up inside a string literal, see sanitizeRegaValue
+	if username == "" || strings.ContainsAny(username, "\"\\\r\n") {
+		return 0, fmt.Errorf("invalid username")
+	}
+	output, err := c.Execute(strings.ReplaceAll(getUserLevelScript, "{{USERNAME}}", username))
+	if err != nil {
+		return 0, err
+	}
+	level, err := strconv.Atoi(strings.TrimSpace(output))
+	if err != nil {
+		return 0, fmt.Errorf("no user level for %q", username)
+	}
+	return level, nil
+}
+
+// GetDeviceNames returns the names of all devices by address.
+func (c *Client) GetDeviceNames() (map[string]string, error) {
+	output, err := c.Execute(getDeviceNamesScript)
+	if err != nil {
+		return nil, err
+	}
+	isRecord := func(line string) bool { return strings.Contains(line, "\t") }
+	names := map[string]string{}
+	for _, fields := range splitRecords(output, isRecord) {
+		if len(fields) >= 2 {
+			names[fields[0]] = rejoin(fields, 1)
+		}
+	}
+	return names, nil
+}
+
+// InboxDevice is a paired device not yet accepted in the CCU.
+type InboxDevice struct {
+	Address       string `json:"address"`
+	Type          string `json:"type"`
+	InterfaceName string `json:"interfaceName"`
+	Name          string `json:"name"`
+}
+
+// GetInbox returns the devices in the inbox.
+func (c *Client) GetInbox() ([]InboxDevice, error) {
+	output, err := c.Execute(getInboxScript)
+	if err != nil {
+		return nil, err
+	}
+	isRecord := func(line string) bool { return strings.Count(line, "\t") >= 3 }
+	devices := []InboxDevice{}
+	for _, fields := range splitRecords(output, isRecord) {
+		if len(fields) >= 4 {
+			devices = append(devices, InboxDevice{Address: fields[0], Type: fields[1], InterfaceName: fields[2], Name: rejoin(fields, 3)})
+		}
+	}
+	return devices, nil
+}
+
+// AcceptDevice takes a device out of the inbox. Returns SetOK or SetNotFound.
+func (c *Client) AcceptDevice(address string) (string, error) {
+	if !safeIdentifierRegex.MatchString(address) {
+		return "", fmt.Errorf("invalid address")
+	}
+	output, err := c.Execute(strings.ReplaceAll(acceptDeviceScript, "{{ADDRESS}}", address))
+	if err != nil {
+		return "", err
+	}
+	switch result := strings.TrimSpace(output); result {
+	case SetOK, SetNotFound:
+		return result, nil
+	default:
+		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
+	}
+}
+
+// validateName guards a name substituted into a string literal: ReGa has no
+// escapes, so characters that could end the literal are rejected.
+func validateName(name string) error {
+	if strings.TrimSpace(name) == "" || len(name) > 100 || strings.ContainsAny(name, "\"\\\r\n\t") {
+		return fmt.Errorf("invalid name")
+	}
+	return nil
+}
+
+// SetName renames a device or channel and returns its previous name, or
+// SetNotFound.
+func (c *Client) SetName(address, name string) (result, previous string, err error) {
+	if !safeIdentifierRegex.MatchString(address) {
+		return "", "", fmt.Errorf("invalid address")
+	}
+	if err := validateName(name); err != nil {
+		return "", "", err
+	}
+	script := strings.ReplaceAll(setNameScript, "{{ADDRESS}}", address)
+	script = strings.ReplaceAll(script, "{{NAME}}", name)
+	output, err := c.Execute(script)
+	if err != nil {
+		return "", "", err
+	}
+	result, previous, _ = strings.Cut(strings.TrimRight(output, "\r\n"), "\t")
+	if result != SetOK && result != SetNotFound {
+		return "", "", fmt.Errorf("unexpected response from ReGa: %q", output)
+	}
+	return result, previous, nil
+}
+
+// SetGroupMember adds a channel to a room or trade (member) or removes it.
+// Returns SetOK or SetNotFound.
+func (c *Client) SetGroupMember(groupID, channelID int64, member bool) (string, error) {
+	action := "Remove"
+	if member {
+		action = "Add"
+	}
+	script := strings.ReplaceAll(setGroupMemberScript, "{{GROUP_ID}}", strconv.FormatInt(groupID, 10))
+	script = strings.ReplaceAll(script, "{{CHANNEL_ID}}", strconv.FormatInt(channelID, 10))
+	script = strings.ReplaceAll(script, "{{ACTION}}", action)
+	output, err := c.Execute(script)
+	if err != nil {
+		return "", err
+	}
+	switch result := strings.TrimSpace(output); result {
+	case SetOK, SetNotFound:
+		return result, nil
+	default:
+		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
+	}
+}
+
 // Results of SetDatapoint
 const (
 	SetOK       = "OK"
@@ -161,16 +300,17 @@ const (
 )
 
 // SetDatapoint sets a datapoint and returns SetOK, SetNotFound or
-// SetUnreach (the device is unreachable, so nothing was sent).
-func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (string, error) {
+// SetUnreach (the device is unreachable, so nothing was sent), and with
+// SetOK the value the datapoint had before.
+func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (result, previous string, err error) {
 	// Validate identifiers to prevent script injection
 	if !safeIdentifierRegex.MatchString(interfaceName) || !safeIdentifierRegex.MatchString(address) || !safeIdentifierRegex.MatchString(attribute) {
-		return "", fmt.Errorf("invalid identifier in interfaceName, address, or attribute")
+		return "", "", fmt.Errorf("invalid identifier in interfaceName, address, or attribute")
 	}
 
 	regaValue, err := sanitizeRegaValue(value)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// Battery and reachability are on the device's channel 0
@@ -183,14 +323,15 @@ func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (
 	script = strings.ReplaceAll(script, "{{VALUE}}", regaValue)
 	output, err := c.Execute(script)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	switch result := strings.TrimSpace(output); result {
+	result, previous, _ = strings.Cut(strings.TrimRight(output, "\r\n"), "\t")
+	switch result {
 	case SetOK, SetNotFound, SetUnreach:
-		return result, nil
+		return result, previous, nil
 	default:
-		return "", fmt.Errorf("unexpected response from ReGa: %q", result)
+		return "", "", fmt.Errorf("unexpected response from ReGa: %q", output)
 	}
 }
 

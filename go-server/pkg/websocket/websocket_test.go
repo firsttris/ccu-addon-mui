@@ -2,16 +2,19 @@ package websocket
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/types"
@@ -212,6 +215,71 @@ func TestGetChannelsReturnsValidJSONAndEchoesRoomID(t *testing.T) {
 	}
 }
 
+func TestGetChannelsAllRequestsAllDevices(t *testing.T) {
+	var gotScript string
+	regaServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, "C\t1\tA:1\tROTARY_HANDLE_TRANSCEIVER\tHmIP-RF\tFenster\r\nD\tSTATE\t16\t2\r\n")
+	}))
+	defer regaServer.Close()
+
+	host, port, _ := net.SplitHostPort(regaServer.Listener.Addr().String())
+	portNum, _ := strconv.Atoi(port)
+	s := NewServer(nil, rega.NewClient(&config.Config{CCUHost: host, RegaPort: portNum}))
+	client := &Client{send: make(chan []byte, 1)}
+
+	s.handleMessage(client, []byte(`{"type":"getChannels","deviceId":"dev-1","all":true}`))
+
+	var resp struct {
+		All      bool           `json:"all"`
+		RoomID   string         `json:"roomId"`
+		Channels []rega.Channel `json:"channels"`
+	}
+	if err := json.Unmarshal(<-client.send, &resp); err != nil {
+		t.Fatalf("response is not valid JSON: %v", err)
+	}
+	if !strings.Contains(gotScript, `"ALL"`) {
+		t.Fatalf("expected the script to read all channels, got %s", gotScript)
+	}
+	if !resp.All || resp.RoomID != "" || len(resp.Channels) != 1 || resp.Channels[0].Datapoints["STATE"] != 2.0 {
+		t.Fatalf("unexpected response: %+v", resp)
+	}
+}
+
+func TestRequestIDIsEchoedInResponsesAndErrors(t *testing.T) {
+	regaServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.WriteString(w, "1\tKüche\r\n")
+	}))
+	defer regaServer.Close()
+
+	host, port, _ := net.SplitHostPort(regaServer.Listener.Addr().String())
+	portNum, _ := strconv.Atoi(port)
+	s := NewServer(nil, rega.NewClient(&config.Config{CCUHost: host, RegaPort: portNum}))
+	client := &Client{send: make(chan []byte, 3)}
+
+	var resp struct {
+		RequestID string `json:"requestId"`
+		Type      string `json:"type"`
+		Rooms     []rega.NamedObject
+	}
+	s.handleMessage(client, []byte(`{"type":"getRooms","deviceId":"dev-1","requestId":"q1"}`))
+	if err := json.Unmarshal(<-client.send, &resp); err != nil || resp.RequestID != "q1" || len(resp.Rooms) != 1 {
+		t.Fatalf("unexpected response: %+v, %v", resp, err)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"getRooms","requestId":"q2"}`))
+	resp.RequestID = ""
+	if err := json.Unmarshal(<-client.send, &resp); err != nil || resp.RequestID != "q2" || resp.Type != "error" {
+		t.Fatalf("expected an error for q2, got %+v, %v", resp, err)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"nope","requestId":"q3"}`))
+	if err := json.Unmarshal(<-client.send, &resp); err != nil || resp.RequestID != "q3" || resp.Type != "error" {
+		t.Fatalf("expected an error for q3, got %+v, %v", resp, err)
+	}
+}
+
 func TestFormatValue(t *testing.T) {
 	tests := []struct {
 		input   interface{}
@@ -294,6 +362,7 @@ func TestAuthRequiredBeforeAnyRequest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	a.SetLevelFunc(func(string) (string, error) { return auth.LevelUser, nil })
 	s := NewServer(nil, nil)
 	s.SetAuthenticator(a)
 	client := &Client{send: make(chan []byte, 4)}
@@ -318,7 +387,7 @@ func TestAuthRequiredBeforeAnyRequest(t *testing.T) {
 
 	s.handleMessage(client, []byte(`{"type":"login","username":"Admin","password":"secret"}`))
 	login := readAuthResponse(t, client)
-	if !login.Success || login.Token == "" || login.User != "Admin" {
+	if !login.Success || login.Token == "" || login.User != "Admin" || login.Level != auth.LevelUser {
 		t.Fatalf("unexpected response: %+v", login)
 	}
 
@@ -331,7 +400,7 @@ func TestAuthRequiredBeforeAnyRequest(t *testing.T) {
 	// A new connection (e.g. after the app was closed) logs in with the stored token
 	other := &Client{send: make(chan []byte, 1)}
 	s.handleMessage(other, []byte(`{"type":"auth","token":"`+login.Token+`"}`))
-	if resp := readAuthResponse(t, other); !resp.Success || resp.Token == "" {
+	if resp := readAuthResponse(t, other); !resp.Success || resp.Token == "" || resp.Level != auth.LevelUser {
 		t.Fatalf("expected the stored token to be accepted and renewed: %+v", resp)
 	}
 	if !other.authenticated {
@@ -344,7 +413,7 @@ func TestAuthDisabledAcceptsEveryone(t *testing.T) {
 	client := &Client{send: make(chan []byte, 1)}
 
 	s.handleMessage(client, []byte(`{"type":"auth"}`))
-	if resp := readAuthResponse(t, client); !resp.Success || resp.AuthRequired {
+	if resp := readAuthResponse(t, client); !resp.Success || resp.AuthRequired || resp.Level != auth.LevelAdmin {
 		t.Fatalf("unexpected response: %+v", resp)
 	}
 }
@@ -414,4 +483,137 @@ func indexOf(s, sub string) int {
 		}
 	}
 	return -1
+}
+
+type fakeDeviceRPC struct {
+	calls []string
+}
+
+func (f *fakeDeviceRPC) GetParamsetDescription(iface, address, key string) (ccurpc.ParamsetDescription, error) {
+	f.calls = append(f.calls, "description "+iface+" "+address+" "+key)
+	if address == "bad" {
+		return nil, ccurpc.ErrInvalidAddress
+	}
+	return ccurpc.ParamsetDescription{"STATE": {Type: "BOOL", Operations: 7}}, nil
+}
+
+func (f *fakeDeviceRPC) GetParamset(iface, address, key string) (map[string]interface{}, error) {
+	f.calls = append(f.calls, "values "+iface+" "+address+" "+key)
+	return map[string]interface{}{"STATE": true}, nil
+}
+
+func (f *fakeDeviceRPC) ListDevices(iface string) ([]ccurpc.DeviceDescription, error) {
+	return nil, nil
+}
+
+func (f *fakeDeviceRPC) InterfaceNames() []string { return []string{"HmIP-RF"} }
+
+func (f *fakeDeviceRPC) SetInstallMode(iface string, on bool, seconds int) error { return nil }
+
+func (f *fakeDeviceRPC) GetInstallMode(iface string) (int, error) { return 0, nil }
+
+func (f *fakeDeviceRPC) DeleteDevice(iface, address string, flags int) error { return nil }
+
+func (f *fakeDeviceRPC) Forget(iface, deviceAddress string) {}
+
+func (f *fakeDeviceRPC) ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error) {
+	return nil, nil
+}
+
+func (f *fakeDeviceRPC) GetLinks(iface, address string) ([]ccurpc.Link, error) { return nil, nil }
+
+func (f *fakeDeviceRPC) AddLink(iface, sender, receiver, name, description string) error { return nil }
+
+func (f *fakeDeviceRPC) RemoveLink(iface, sender, receiver string) error { return nil }
+
+func (f *fakeDeviceRPC) GetLinkParamsetDescription(iface, address, partner string) (ccurpc.ParamsetDescription, error) {
+	return nil, nil
+}
+
+func (f *fakeDeviceRPC) GetLinkParamset(iface, address, partner string) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (f *fakeDeviceRPC) PutLinkParamset(iface, address, partner string, values map[string]interface{}) error {
+	return nil
+}
+
+func (f *fakeDeviceRPC) PutParamset(iface, address, key string, values map[string]interface{}) error {
+	f.calls = append(f.calls, fmt.Sprintf("put %s %s %s %v", iface, address, key, values))
+	return nil
+}
+
+func TestParamsetRequests(t *testing.T) {
+	s := NewServer(nil, nil)
+	client := &Client{send: make(chan []byte, 3)}
+
+	// Without XML-RPC client
+	s.handleMessage(client, []byte(`{"type":"getParamset","requestId":"q0","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"VALUES"}`))
+	assertErrorMessageContains(t, <-client.send, "not available")
+
+	rpc := &fakeDeviceRPC{}
+	s.SetDeviceRPC(rpc)
+
+	s.handleMessage(client, []byte(`{"type":"getParamsetDescription","requestId":"q1","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"VALUES"}`))
+	var description struct {
+		Type        string
+		RequestID   string `json:"requestId"`
+		Description map[string]struct {
+			Type       string `json:"type"`
+			Operations int    `json:"operations"`
+		} `json:"description"`
+	}
+	if err := json.Unmarshal(<-client.send, &description); err != nil || description.Type != "paramsetDescription" ||
+		description.RequestID != "q1" || description.Description["STATE"].Operations != 7 {
+		t.Fatalf("unexpected response: %+v, %v", description, err)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"getParamset","requestId":"q2","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"VALUES"}`))
+	var values struct {
+		Type      string
+		RequestID string                 `json:"requestId"`
+		Values    map[string]interface{} `json:"values"`
+	}
+	if err := json.Unmarshal(<-client.send, &values); err != nil || values.Type != "paramset" || values.Values["STATE"] != true {
+		t.Fatalf("unexpected response: %+v, %v", values, err)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"getParamsetDescription","requestId":"q3","interfaceName":"HmIP-RF","address":"bad","paramsetKey":"VALUES"}`))
+	assertErrorMessageContains(t, <-client.send, "invalid address")
+
+	if len(rpc.calls) != 3 || rpc.calls[0] != "description HmIP-RF A:1 VALUES" {
+		t.Fatalf("unexpected calls: %v", rpc.calls)
+	}
+}
+
+func TestPutParamsetOnlyForAdministrators(t *testing.T) {
+	s := NewServer(nil, nil)
+	rpc := &fakeDeviceRPC{}
+	s.SetDeviceRPC(rpc)
+	client := &Client{send: make(chan []byte, 6)}
+	put := `{"type":"putParamset","requestId":"q1","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"MASTER","values":{"STATE":false}}`
+
+	client.setSession("Gast", auth.LevelGuest)
+	s.handleMessage(client, []byte(put))
+	assertErrorMessageContains(t, <-client.send, "only administrators")
+
+	client.setSession("Benutzer", auth.LevelUser)
+	s.handleMessage(client, []byte(put))
+	assertErrorMessageContains(t, <-client.send, "only administrators")
+
+	client.setSession("Admin", auth.LevelAdmin)
+	s.handleMessage(client, []byte(put))
+	assertErrorMessageContains(t, <-client.send, "password again")
+
+	client.elevatedUntil = time.Now().Add(-time.Second) // expired
+	s.handleMessage(client, []byte(put))
+	assertErrorMessageContains(t, <-client.send, "password again")
+
+	client.elevatedUntil = time.Now().Add(time.Hour)
+	s.handleMessage(client, []byte(`{"type":"putParamset","requestId":"q2","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"VALUES","values":{"STATE":false}}`))
+	assertErrorMessageContains(t, <-client.send, "only the MASTER paramset")
+
+	if len(rpc.calls) != 0 {
+		t.Fatalf("nothing must reach the CCU: %v", rpc.calls)
+	}
 }

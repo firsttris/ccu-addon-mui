@@ -1,61 +1,46 @@
-import { useNavigate } from '@tanstack/react-router';
-import styled from '@emotion/styled';
-import { ListItem } from '../components/ChannelGroup';
-import { useWebSocketContext } from '../hooks/useWebsocket';
-import { useEffect } from 'react';
-import { TeenyiconsFloorplanSolid } from '../components/icons/TeenyiconsFloorplanSolid';
+import { Link } from '@tanstack/react-router';
+import HomeIcon from '~icons/lucide/house';
+import TagIcon from '~icons/lucide/tag';
+import ChevronRightIcon from '~icons/lucide/chevron-right';
+import { useRooms, useTrades } from '../queries';
+import { usePageTitle } from '../contexts/PageTitleContext';
+import { m } from '../paraglide/messages';
 
-const Container = styled.div`
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 16px;
-  padding-top: 60px;
-`;
-
-const List = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
-
-export const ListItemText = styled.p`
-  color: ${props => props.theme.colors.text};
-  max-width: 300px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-weight: 600;
-  margin: 10px 0;
-  font-size: 20px;
-  margin-left: 20px;
-`;
+const linkClass =
+  'tile-edge press flex h-16 items-center gap-3 rounded-2xl border bg-card px-4 text-[17px] font-medium hover:bg-accent [&>svg]:shrink-0';
 
 export const Rooms = () => {
-  const navigate = useNavigate();
-  const { getRooms, rooms } = useWebSocketContext();
-
-  useEffect(() => {
-    getRooms();
-  }, []);
-
+  const { data: rooms = [] } = useRooms();
+  usePageTitle(m.ROOMS());
   return (
-    <Container>
-      <List>
-        {rooms.map((room) => (
-          <ListItem
-            key={room.id}
-            onClick={() => {
-              navigate({
-                to: '/room/$roomId',
-                params: { roomId: String(room.id) },
-              });
-            }}
-          >
-            <TeenyiconsFloorplanSolid width={35} />
-            <ListItemText>{room.name}</ListItemText>
-          </ListItem>
-        ))}
-      </List>
-    </Container>
+    <ul className="mx-auto grid max-w-[1400px] gap-3 px-4 pt-2 pb-10 sm:px-6 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
+      {rooms.map((room) => (
+        <li key={room.id}>
+          <Link to="/room/$roomId" params={{ roomId: String(room.id) }} className={linkClass}>
+            <HomeIcon className="size-5 text-muted-foreground" />
+            <span className="flex-1 truncate">{room.name}</span>
+            <ChevronRightIcon className="size-4 text-muted-foreground" />
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+export const Trades = () => {
+  const { data: trades = [] } = useTrades();
+  usePageTitle(m.TRADES());
+  return (
+    <ul className="mx-auto grid max-w-[1400px] gap-3 px-4 pt-2 pb-10 sm:px-6 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
+      {trades.map((trade) => (
+        <li key={trade.id}>
+          <Link to="/trade/$tradeId" params={{ tradeId: String(trade.id) }} className={linkClass}>
+            <TagIcon className="size-5 text-muted-foreground" />
+            <span className="flex-1 truncate">{trade.name}</span>
+            <ChevronRightIcon className="size-4 text-muted-foreground" />
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 };

@@ -1,81 +1,10 @@
 import { useState } from 'react';
-import styled from '@emotion/styled';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { TranslationKey, useTranslations } from '../i18n/utils';
-
-const Container = styled.div`
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  box-sizing: border-box;
-`;
-
-const Form = styled.form`
-  width: 100%;
-  max-width: 340px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 24px;
-  border-radius: 12px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  background: ${(props) => props.theme.colors.surface};
-  color: ${(props) => props.theme.colors.text};
-`;
-
-const Title = styled.h1`
-  margin: 0;
-  font-size: 22px;
-  text-align: center;
-`;
-
-const Hint = styled.p`
-  margin: 0;
-  font-size: 14px;
-  color: ${(props) => props.theme.colors.textSecondary};
-  text-align: center;
-`;
-
-const Label = styled.label`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 14px;
-`;
-
-const Input = styled.input`
-  font-size: 17px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  background: ${(props) => props.theme.colors.background};
-  color: ${(props) => props.theme.colors.text};
-`;
-
-const SubmitButton = styled.button`
-  font-size: 17px;
-  font-weight: 600;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  background: #1976d2;
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-`;
-
-const ErrorText = styled.p`
-  margin: 0;
-  color: #c62828;
-  font-size: 14px;
-  text-align: center;
-`;
+import { m } from '../paraglide/messages';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
 
 const errorMessages: Record<string, TranslationKey> = {
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
@@ -100,28 +29,43 @@ export const Login = () => {
   }
 
   return (
-    <Container>
-      <Form
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 hidden dark:block"
+        style={{
+          background:
+            'radial-gradient(600px 400px at 80% 0%, rgba(251,146,60,0.10), transparent 70%), radial-gradient(600px 500px at 0% 100%, rgba(56,189,248,0.08), transparent 70%)',
+        }}
+      />
+      <form
+        className="tile-edge flex w-full max-w-sm flex-col gap-5 rounded-2xl border bg-card p-6 shadow-sm"
         onSubmit={(event) => {
           event.preventDefault();
           setSubmitting(true);
           login(username, password);
         }}
       >
-        <Title>CCU Addon MUI</Title>
-        <Hint>{t('LOGIN_HINT')}</Hint>
-        <Label>
-          {t('USERNAME')}
+        <div className="flex flex-col gap-1.5 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">CCU Addon MUI</h1>
+          <p className="text-sm text-muted-foreground">{m.LOGIN_HINT()}</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="username">{m.USERNAME()}</Label>
           <Input
+            id="username"
+            className="h-11 text-base"
             name="username"
             autoComplete="username"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
           />
-        </Label>
-        <Label>
-          {t('PASSWORD')}
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="password">{m.PASSWORD()}</Label>
           <Input
+            id="password"
+            className="h-11 text-base"
             name="password"
             type="password"
             autoComplete="current-password"
@@ -129,15 +73,17 @@ export const Login = () => {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
-        </Label>
+        </div>
         {loginError && (
-          <ErrorText role="alert">{t(errorMessages[loginError] ?? 'INVALID_CREDENTIALS')}</ErrorText>
+          <p role="alert" className="text-center text-sm text-destructive">
+            {t(errorMessages[loginError] ?? 'INVALID_CREDENTIALS')}
+          </p>
         )}
-        {!connected && <Hint>{t('CONNECTING')}</Hint>}
-        <SubmitButton type="submit" disabled={!connected || submitting || username === ''}>
-          {t('SIGN_IN')}
-        </SubmitButton>
-      </Form>
-    </Container>
+        {!connected && <p className="text-center text-sm text-muted-foreground">{m.CONNECTING()}</p>}
+        <Button type="submit" size="lg" disabled={!connected || submitting || username === ''}>
+          {m.SIGN_IN()}
+        </Button>
+      </form>
+    </div>
   );
 };

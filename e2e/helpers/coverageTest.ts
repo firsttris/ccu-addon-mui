@@ -2,6 +2,7 @@ import { test as base } from '@playwright/test';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import v8toIstanbul from 'v8-to-istanbul';
+import libCoverage from 'istanbul-lib-coverage';
 
 const COVERAGE_ENABLED = process.env.PW_COVERAGE === '1';
 const NYC_DIR = path.join(process.cwd(), '.nyc_output');
@@ -32,33 +33,6 @@ async function fileExists(filePath: string): Promise<boolean> {
   }
 }
 
-function mergeCoverage(target: Record<string, any>, source: Record<string, any>): Record<string, any> {
-  for (const [filePath, current] of Object.entries(source)) {
-    const existing = target[filePath];
-
-    if (!existing) {
-      target[filePath] = current;
-      continue;
-    }
-
-    for (const [key, count] of Object.entries(current.s ?? {})) {
-      existing.s[key] = (existing.s[key] ?? 0) + Number(count);
-    }
-
-    for (const [key, count] of Object.entries(current.f ?? {})) {
-      existing.f[key] = (existing.f[key] ?? 0) + Number(count);
-    }
-
-    for (const [key, branchCounts] of Object.entries(current.b ?? {})) {
-      const currentBranch = Array.isArray(branchCounts) ? branchCounts : [];
-      const existingBranch = Array.isArray(existing.b[key]) ? existing.b[key] : [];
-      existing.b[key] = currentBranch.map((value, index) => (existingBranch[index] ?? 0) + Number(value));
-    }
-  }
-
-  return target;
-}
-
 export const test = base.extend({
   page: async ({ page }, use, testInfo) => {
     if (COVERAGE_ENABLED) {
@@ -70,7 +44,9 @@ export const test = base.extend({
 
     if (COVERAGE_ENABLED) {
       const entries = await page.coverage.stopJSCoverage();
-      let istanbulCoverage: Record<string, any> = {};
+      // Merged by source location: a module loaded twice can come with
+      // different statement and branch maps
+      const coverageMap = libCoverage.createCoverageMap({});
 
       for (const entry of entries) {
         const sourcePath = toLocalSourcePath(entry.url);
@@ -88,12 +64,12 @@ export const test = base.extend({
           : v8toIstanbul(sourcePath);
         await converter.load();
         converter.applyCoverage(entry.functions);
-        istanbulCoverage = mergeCoverage(istanbulCoverage, converter.toIstanbul());
+        coverageMap.merge(converter.toIstanbul());
       }
 
       const fileName = `${Date.now()}-${testInfo.project.name}-${testInfo.workerIndex}-${testInfo.retry}-${testInfo.testId}.json`;
       const filePath = path.join(NYC_DIR, fileName.replace(/[<>:"/\\|?*]+/g, '_'));
-      await fs.writeFile(filePath, JSON.stringify(istanbulCoverage), 'utf-8');
+      await fs.writeFile(filePath, JSON.stringify(coverageMap.toJSON()), 'utf-8');
     }
   },
 });

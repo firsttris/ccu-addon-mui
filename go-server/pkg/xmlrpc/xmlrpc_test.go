@@ -347,3 +347,32 @@ func TestBasicAuthTransportDoesNotModifyRequest(t *testing.T) {
 		t.Fatal("expected original request to be left unmodified")
 	}
 }
+
+func TestDeviceChangesAreReported(t *testing.T) {
+	var changes []string
+	s := NewServer(&config.Config{}, func(*types.CCUEvent) {})
+	s.SetDeviceChangeHandler(func(iface, address string) { changes = append(changes, iface+" "+address) })
+
+	update := `<?xml version="1.0"?><methodCall><methodName>updateDevice</methodName><params>
+<param><value>websocket-server-HmIP-RF</value></param>
+<param><value>000A</value></param>
+<param><value><i4>0</i4></value></param>
+</params></methodCall>`
+	s.handleXMLRPC(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/", strings.NewReader(update)))
+
+	multicall := `<?xml version="1.0"?><methodCall><methodName>system.multicall</methodName><params><param><value><array><data>
+<value><struct>
+<member><name>methodName</name><value>deleteDevices</value></member>
+<member><name>params</name><value><array><data>
+  <value>websocket-server-BidCos-RF</value>
+  <value><array><data><value>LEQ1</value><value>LEQ1:1</value></data></array></value>
+</data></array></value></member>
+</struct></value>
+</data></array></value></param></params></methodCall>`
+	s.handleXMLRPC(httptest.NewRecorder(), httptest.NewRequest(http.MethodPost, "/", strings.NewReader(multicall)))
+
+	want := []string{"HmIP-RF 000A", "BidCos-RF LEQ1", "BidCos-RF LEQ1:1"}
+	if strings.Join(changes, ",") != strings.Join(want, ",") {
+		t.Fatalf("expected %v, got %v", want, changes)
+	}
+}

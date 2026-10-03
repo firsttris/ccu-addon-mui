@@ -15,7 +15,9 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/rega"
@@ -92,10 +94,56 @@ type Client struct {
 
 	mu       sync.Mutex
 	deviceID string
+	// sessionID is the logged-in device (auth.SessionInfo) the connection
+	// belongs to; read from other goroutines when a device is logged out
+	sessionID string
 
-	// authenticated is only accessed by the read pump, which handles all
-	// messages of this client.
+	// device describes the browser, from the User-Agent
+	device string
+
+	// authenticated, user and level are only accessed by the read pump,
+	// which handles all messages of this client.
 	authenticated bool
+	user          string
+	level         string
+	// elevatedUntil: until then the client may change settings (it proved
+	// the password recently: admin token). Zero means never; without
+	// authentication it is far in the future.
+	elevatedUntil time.Time
+}
+
+// elevated reports whether the client may change settings now.
+func (c *Client) elevated() bool {
+	return time.Now().Before(c.elevatedUntil)
+}
+
+// alwaysElevated is used when authentication is disabled.
+var alwaysElevated = time.Date(9999, 1, 1, 0, 0, 0, 0, time.UTC)
+
+// setSession marks the client as logged in as user with a CCU user level.
+func (c *Client) setSession(user, level string) {
+	c.authenticated = true
+	c.user = user
+	c.level = level
+	c.elevatedUntil = time.Time{}
+}
+
+// canOperate: everyone but guests may switch devices. An unknown level (it
+// could not be read) is allowed, as before levels were checked.
+func canOperate(level string) bool {
+	return level != auth.LevelGuest
+}
+
+// configureError says why a client may not change settings, or "" if it
+// may: administrators only, and only with a recent password (admin token).
+func configureError(c *Client) (code, message string) {
+	if c.level != auth.LevelAdmin {
+		return "FORBIDDEN", "only administrators may change device settings"
+	}
+	if !c.elevated() {
+		return "ELEVATION_REQUIRED", "enter the password again to change settings"
+	}
+	return "", ""
 }
 
 func newClient(conn *websocket.Conn) *Client {
@@ -104,6 +152,18 @@ func newClient(conn *websocket.Conn) *Client {
 		conn: conn,
 		send: make(chan []byte, 1024),
 	}
+}
+
+func (c *Client) setSessionID(id string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.sessionID = id
+}
+
+func (c *Client) SessionID() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.sessionID
 }
 
 func (c *Client) DeviceID() string {
@@ -128,6 +188,33 @@ type Server struct {
 
 	// auth is nil when authentication is disabled (AUTH_MODE=none).
 	auth *auth.Authenticator
+
+	// rpc reads device and paramset descriptions over XML-RPC; nil if not
+	// configured.
+	rpc DeviceRPC
+
+	// audit records every change; nil disables it
+	audit *audit.Log
+}
+
+// DeviceRPC is the part of ccurpc.Client the server uses.
+type DeviceRPC interface {
+	GetParamsetDescription(iface, address, paramsetKey string) (ccurpc.ParamsetDescription, error)
+	GetParamset(iface, address, paramsetKey string) (map[string]interface{}, error)
+	PutParamset(iface, address, paramsetKey string, values map[string]interface{}) error
+	ListDevices(iface string) ([]ccurpc.DeviceDescription, error)
+	InterfaceNames() []string
+	SetInstallMode(iface string, on bool, seconds int) error
+	GetInstallMode(iface string) (int, error)
+	DeleteDevice(iface, address string, flags int) error
+	Forget(iface, deviceAddress string)
+	GetLinks(iface, address string) ([]ccurpc.Link, error)
+	AddLink(iface, sender, receiver, name, description string) error
+	RemoveLink(iface, sender, receiver string) error
+	GetLinkParamsetDescription(iface, address, partner string) (ccurpc.ParamsetDescription, error)
+	GetLinkParamset(iface, address, partner string) (map[string]interface{}, error)
+	PutLinkParamset(iface, address, partner string, values map[string]interface{}) error
+	ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error)
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -143,6 +230,16 @@ func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 // can read or control anything.
 func (s *Server) SetAuthenticator(a *auth.Authenticator) {
 	s.auth = a
+}
+
+// SetAuditLog records every change made through the server.
+func (s *Server) SetAuditLog(log *audit.Log) {
+	s.audit = log
+}
+
+// SetDeviceRPC enables requests that need XML-RPC (paramsets).
+func (s *Server) SetDeviceRPC(rpc DeviceRPC) {
+	s.rpc = rpc
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -256,6 +353,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := newClient(conn)
+	client.device = deviceLabel(r.UserAgent())
 
 	s.addClient(client)
 
@@ -333,9 +431,13 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		return
 	}
 
+	// Every request may carry a requestId, which is echoed in its response
+	// (or error) so the client can match them up.
+	requestID, _ := baseMsg["requestId"].(string)
+
 	msgType, ok := baseMsg["type"].(string)
 	if !ok {
-		s.sendError(client, "missing or invalid 'type' field")
+		s.sendRequestError(client, requestID, "missing or invalid 'type' field", "")
 		return
 	}
 
@@ -349,7 +451,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 	}
 
 	if s.auth != nil && !client.authenticated {
-		s.sendErrorCode(client, "authentication required", "AUTH_REQUIRED")
+		s.sendRequestError(client, requestID, "authentication required", "AUTH_REQUIRED")
 		return
 	}
 
@@ -365,9 +467,31 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 	case "setDatapoint":
 		s.handleSetDatapoint(client, message)
 	case "getDeviceProblems":
-		s.handleGetDeviceProblems(client)
+		s.handleGetDeviceProblems(client, requestID)
+	case "getParamsetDescription", "getParamset":
+		s.handleParamsetRequest(client, msgType, message)
+	case "putParamset":
+		s.handlePutParamset(client, message)
+	case "listDevices":
+		s.handleListDevices(client, requestID)
+	case "elevate":
+		s.handleElevate(client, message)
+	case "rename":
+		s.handleRename(client, message)
+	case "getSystemInfo":
+		s.handleSystemInfo(client, requestID)
+	case "listSessions", "revokeSession", "logout":
+		s.handleSessions(client, msgType, message)
+	case "getLinks", "addLink", "removeLink", "getLinkParamsetDescription", "getLinkParamset", "putLinkParamset":
+		s.handleLinks(client, msgType, message)
+	case "setGroupMember":
+		s.handleSetGroupMember(client, message)
+	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
+		s.handlePairing(client, msgType, message)
+	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive":
+		s.handleLogic(client, msgType, message)
 	default:
-		s.sendError(client, fmt.Sprintf("unknown message type: %s", msgType))
+		s.sendRequestError(client, requestID, fmt.Sprintf("unknown message type: %s", msgType), "")
 	}
 }
 
@@ -407,9 +531,12 @@ func (s *Server) handleSubscribe(client *Client, message []byte) {
 
 // request is a getRooms, getTrades or getChannels message.
 type request struct {
-	DeviceID string `json:"deviceId"`
-	RoomID   string `json:"roomId"`
-	TradeID  string `json:"tradeId"`
+	RequestID string `json:"requestId"`
+	DeviceID  string `json:"deviceId"`
+	RoomID    string `json:"roomId"`
+	TradeID   string `json:"tradeId"`
+	// All requests the channels of all devices (getChannels only)
+	All bool `json:"all"`
 }
 
 // parseRequest parses a request and validates its deviceId, which is echoed
@@ -417,35 +544,39 @@ type request struct {
 func (s *Server) parseRequest(client *Client, message []byte) (request, bool) {
 	var msg request
 	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendError(client, "invalid message: "+err.Error())
+		s.sendRequestError(client, msg.RequestID, "invalid message: "+err.Error(), "")
 		return msg, false
 	}
 	if msg.DeviceID == "" {
-		s.sendError(client, "deviceId is required")
+		s.sendRequestError(client, msg.RequestID, "deviceId is required", "")
 		return msg, false
 	}
 	if !deviceIDRegex.MatchString(msg.DeviceID) {
-		s.sendError(client, "invalid deviceId")
+		s.sendRequestError(client, msg.RequestID, "invalid deviceId", "")
 		return msg, false
 	}
 	return msg, true
 }
 
 type roomsResponse struct {
-	DeviceID string             `json:"deviceId"`
-	Rooms    []rega.NamedObject `json:"rooms"`
+	RequestID string             `json:"requestId,omitempty"`
+	DeviceID  string             `json:"deviceId"`
+	Rooms     []rega.NamedObject `json:"rooms"`
 }
 
 type tradesResponse struct {
-	DeviceID string             `json:"deviceId"`
-	Trades   []rega.NamedObject `json:"trades"`
+	RequestID string             `json:"requestId,omitempty"`
+	DeviceID  string             `json:"deviceId"`
+	Trades    []rega.NamedObject `json:"trades"`
 }
 
 type channelsResponse struct {
-	DeviceID string         `json:"deviceId"`
-	RoomID   string         `json:"roomId,omitempty"`
-	TradeID  string         `json:"tradeId,omitempty"`
-	Channels []rega.Channel `json:"channels"`
+	RequestID string         `json:"requestId,omitempty"`
+	DeviceID  string         `json:"deviceId"`
+	RoomID    string         `json:"roomId,omitempty"`
+	TradeID   string         `json:"tradeId,omitempty"`
+	All       bool           `json:"all,omitempty"`
+	Channels  []rega.Channel `json:"channels"`
 }
 
 func (s *Server) handleGetRooms(client *Client, message []byte) {
@@ -456,11 +587,11 @@ func (s *Server) handleGetRooms(client *Client, message []byte) {
 
 	rooms, err := s.regaClient.GetRooms()
 	if err != nil {
-		s.sendError(client, "getRooms failed: "+err.Error())
+		s.sendRequestError(client, msg.RequestID, "getRooms failed: "+err.Error(), "")
 		return
 	}
 
-	s.sendJSON(client, roomsResponse{DeviceID: msg.DeviceID, Rooms: rooms})
+	s.sendJSON(client, roomsResponse{RequestID: msg.RequestID, DeviceID: msg.DeviceID, Rooms: rooms})
 }
 
 func (s *Server) handleGetTrades(client *Client, message []byte) {
@@ -471,16 +602,26 @@ func (s *Server) handleGetTrades(client *Client, message []byte) {
 
 	trades, err := s.regaClient.GetTrades()
 	if err != nil {
-		s.sendError(client, "getTrades failed: "+err.Error())
+		s.sendRequestError(client, msg.RequestID, "getTrades failed: "+err.Error(), "")
 		return
 	}
 
-	s.sendJSON(client, tradesResponse{DeviceID: msg.DeviceID, Trades: trades})
+	s.sendJSON(client, tradesResponse{RequestID: msg.RequestID, DeviceID: msg.DeviceID, Trades: trades})
 }
 
 func (s *Server) handleGetChannels(client *Client, message []byte) {
 	msg, ok := s.parseRequest(client, message)
 	if !ok {
+		return
+	}
+
+	if msg.All {
+		channels, err := s.regaClient.GetAllChannels()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getChannels failed: "+err.Error(), "")
+			return
+		}
+		s.sendJSON(client, channelsResponse{RequestID: msg.RequestID, DeviceID: msg.DeviceID, All: true, Channels: channels})
 		return
 	}
 
@@ -490,21 +631,22 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 		objectID = msg.TradeID
 	}
 	if objectID == "" {
-		s.sendError(client, "either roomId or tradeId is required")
+		s.sendRequestError(client, msg.RequestID, "roomId, tradeId or all is required", "")
 		return
 	}
 
 	channels, err := s.regaClient.GetChannels(objectID)
 	if err != nil {
-		s.sendError(client, "getChannels failed: "+err.Error())
+		s.sendRequestError(client, msg.RequestID, "getChannels failed: "+err.Error(), "")
 		return
 	}
 
 	s.sendJSON(client, channelsResponse{
-		DeviceID: msg.DeviceID,
-		RoomID:   msg.RoomID,
-		TradeID:  msg.TradeID,
-		Channels: channels,
+		RequestID: msg.RequestID,
+		DeviceID:  msg.DeviceID,
+		RoomID:    msg.RoomID,
+		TradeID:   msg.TradeID,
+		Channels:  channels,
 	})
 }
 
@@ -513,9 +655,16 @@ type authResponse struct {
 	Success      bool   `json:"success"`
 	AuthRequired bool   `json:"authRequired"`
 	User         string `json:"user,omitempty"`
-	Token        string `json:"token,omitempty"`
-	Error        string `json:"error,omitempty"`
-	Code         string `json:"code,omitempty"`
+	// Level is the CCU user level ("admin", "user", "guest"), empty if
+	// unknown.
+	Level string `json:"level,omitempty"`
+	// AdminToken (administrators, after entering the password) allows
+	// changing settings for a few hours; Elevated says whether it is valid.
+	AdminToken string `json:"adminToken,omitempty"`
+	Elevated   bool   `json:"elevated"`
+	Token      string `json:"token,omitempty"`
+	Error      string `json:"error,omitempty"`
+	Code       string `json:"code,omitempty"`
 }
 
 // handleAuth checks a stored token. Every client sends this first after
@@ -523,25 +672,37 @@ type authResponse struct {
 // has to log in again.
 func (s *Server) handleAuth(client *Client, message []byte) {
 	var msg struct {
-		Token string `json:"token"`
+		Token      string `json:"token"`
+		AdminToken string `json:"adminToken"`
 	}
 	_ = json.Unmarshal(message, &msg)
 
 	if s.auth == nil {
-		client.authenticated = true
-		s.sendJSON(client, authResponse{Type: "auth_response", Success: true})
+		// Without authentication everyone can do everything
+		client.setSession("", auth.LevelAdmin)
+		client.elevatedUntil = alwaysElevated
+		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin, Elevated: true})
 		return
 	}
 
-	user, token, err := s.auth.Refresh(msg.Token)
+	session, token, err := s.auth.Refresh(msg.Token, client.device)
 	if err != nil {
 		client.authenticated = false
 		s.sendJSON(client, authResponse{Type: "auth_response", AuthRequired: true, Code: "LOGIN_REQUIRED"})
 		return
 	}
 
-	client.authenticated = true
-	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: user, Token: token})
+	client.setSession(session.User, session.Level)
+	client.setSessionID(session.ID)
+	if msg.AdminToken != "" {
+		if expiry, ok := s.auth.VerifyAdmin(msg.AdminToken, session.User); ok {
+			client.elevatedUntil = expiry
+		}
+	}
+	s.sendJSON(client, authResponse{
+		Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level,
+		Token: token, Elevated: client.elevated(),
+	})
 }
 
 // handleLogin verifies CCU credentials and returns a token for the client
@@ -557,12 +718,13 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 	}
 
 	if s.auth == nil {
-		client.authenticated = true
-		s.sendJSON(client, authResponse{Type: "auth_response", Success: true})
+		client.setSession("", auth.LevelAdmin)
+		client.elevatedUntil = alwaysElevated
+		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin, Elevated: true})
 		return
 	}
 
-	token, err := s.auth.Login(msg.Username, msg.Password)
+	session, token, err := s.auth.Login(msg.Username, msg.Password, client.device)
 	if err != nil {
 		code := "CCU_UNREACHABLE"
 		switch err {
@@ -577,8 +739,60 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 	}
 
 	logger.Info(fmt.Sprintf("🔓 User %q logged in", msg.Username))
-	client.authenticated = true
-	s.sendJSON(client, authResponse{Type: "auth_response", Success: true, AuthRequired: true, User: msg.Username, Token: token})
+	client.setSession(session.User, session.Level)
+	client.setSessionID(session.ID)
+	// The password was just entered: administrators may set up right away
+	adminToken, err := s.auth.IssueAdminToken(session)
+	if err == nil {
+		client.elevatedUntil = s.auth.AdminTokenExpiry()
+	}
+	s.sendJSON(client, authResponse{
+		Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level,
+		Token: token, AdminToken: adminToken, Elevated: client.elevated(),
+	})
+}
+
+type elevateResponse struct {
+	Type       string `json:"type"`
+	RequestID  string `json:"requestId,omitempty"`
+	Success    bool   `json:"success"`
+	AdminToken string `json:"adminToken,omitempty"`
+}
+
+// handleElevate checks the password of the logged-in user again and
+// returns an admin token for changing settings.
+func (s *Server) handleElevate(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		Password  string `json:"password"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_MESSAGE")
+		return
+	}
+	if s.auth == nil {
+		client.elevatedUntil = alwaysElevated
+		s.sendJSON(client, elevateResponse{Type: "elevate_response", RequestID: msg.RequestID, Success: true})
+		return
+	}
+
+	adminToken, err := s.auth.Elevate(client.user, msg.Password, client.SessionID())
+	if err != nil {
+		code := "CCU_UNREACHABLE"
+		switch err {
+		case auth.ErrInvalidCredentials:
+			code = "INVALID_CREDENTIALS"
+		case auth.ErrTooManyAttempts:
+			code = "TOO_MANY_ATTEMPTS"
+		case auth.ErrNotAdmin:
+			code = "FORBIDDEN"
+		}
+		logger.Info(fmt.Sprintf("🔒 Elevation failed for user %q: %v", client.user, err))
+		s.sendRequestError(client, msg.RequestID, err.Error(), code)
+		return
+	}
+	client.elevatedUntil = s.auth.AdminTokenExpiry()
+	s.sendJSON(client, elevateResponse{Type: "elevate_response", RequestID: msg.RequestID, Success: true, AdminToken: adminToken})
 }
 
 type setDatapointResponse struct {
@@ -604,11 +818,29 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 	}
 
 	// Every outcome is answered with the requestId, so the client can undo
-	// its optimistic update and tell the user.
+	// its optimistic update and tell the user, and recorded.
+	entry := audit.Entry{
+		User:   client.user,
+		Action: "setDatapoint",
+		Target: msg.InterfaceName + "." + msg.Address + "." + msg.Attribute,
+		Value:  msg.Value,
+	}
+	record := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
 	fail := func(code, errorMsg string) {
+		record(code)
 		s.sendJSON(client, setDatapointResponse{
 			Type: "setDatapoint_response", RequestID: msg.RequestID, Code: code, Error: errorMsg,
 		})
+	}
+
+	if !canOperate(client.level) {
+		fail("FORBIDDEN", "guests may not control devices")
+		return
 	}
 
 	if msg.InterfaceName == "" || msg.Address == "" || msg.Attribute == "" {
@@ -622,7 +854,7 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		return
 	}
 
-	result, err := s.regaClient.SetDatapoint(msg.InterfaceName, msg.Address, msg.Attribute, valueStr)
+	result, previous, err := s.regaClient.SetDatapoint(msg.InterfaceName, msg.Address, msg.Attribute, valueStr)
 	if err != nil {
 		fail("CCU_ERROR", "setDatapoint failed: "+err.Error())
 		return
@@ -630,6 +862,8 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 
 	switch result {
 	case rega.SetOK:
+		entry.Previous = previous
+		record(rega.SetOK)
 		s.sendJSON(client, setDatapointResponse{Type: "setDatapoint_response", RequestID: msg.RequestID, Success: true})
 	case rega.SetUnreach:
 		fail("UNREACH", "device is not reachable")
@@ -639,17 +873,633 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 }
 
 type deviceProblemsResponse struct {
-	Type    string               `json:"type"`
-	Devices []rega.DeviceProblem `json:"devices"`
+	Type      string               `json:"type"`
+	Devices   []rega.DeviceProblem `json:"devices"`
+	RequestID string               `json:"requestId,omitempty"`
 }
 
-func (s *Server) handleGetDeviceProblems(client *Client) {
+func (s *Server) handleGetDeviceProblems(client *Client, requestID string) {
 	devices, err := s.regaClient.GetDeviceProblems()
 	if err != nil {
-		s.sendError(client, "getDeviceProblems failed: "+err.Error())
+		s.sendRequestError(client, requestID, "getDeviceProblems failed: "+err.Error(), "")
 		return
 	}
-	s.sendJSON(client, deviceProblemsResponse{Type: "deviceProblems", Devices: devices})
+	s.sendJSON(client, deviceProblemsResponse{Type: "deviceProblems", Devices: devices, RequestID: requestID})
+}
+
+type paramsetRequest struct {
+	RequestID     string `json:"requestId"`
+	InterfaceName string `json:"interfaceName"`
+	Address       string `json:"address"`
+	ParamsetKey   string `json:"paramsetKey"`
+}
+
+type paramsetDescriptionResponse struct {
+	Type        string                     `json:"type"`
+	RequestID   string                     `json:"requestId,omitempty"`
+	Address     string                     `json:"address"`
+	ParamsetKey string                     `json:"paramsetKey"`
+	Description ccurpc.ParamsetDescription `json:"description"`
+}
+
+type paramsetResponse struct {
+	Type        string                 `json:"type"`
+	RequestID   string                 `json:"requestId,omitempty"`
+	Address     string                 `json:"address"`
+	ParamsetKey string                 `json:"paramsetKey"`
+	Values      map[string]interface{} `json:"values"`
+}
+
+// handleParamsetRequest answers getParamsetDescription and getParamset.
+// Both only read; addresses and keys are validated by ccurpc.
+func (s *Server) handleParamsetRequest(client *Client, msgType string, message []byte) {
+	var msg paramsetRequest
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message: "+err.Error(), "")
+		return
+	}
+	if s.rpc == nil {
+		s.sendRequestError(client, msg.RequestID, msgType+" is not available", "NOT_AVAILABLE")
+		return
+	}
+
+	if msgType == "getParamsetDescription" {
+		description, err := s.rpc.GetParamsetDescription(msg.InterfaceName, msg.Address, msg.ParamsetKey)
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "")
+			return
+		}
+		s.sendJSON(client, paramsetDescriptionResponse{
+			Type: "paramsetDescription", RequestID: msg.RequestID,
+			Address: msg.Address, ParamsetKey: msg.ParamsetKey, Description: description,
+		})
+		return
+	}
+
+	values, err := s.rpc.GetParamset(msg.InterfaceName, msg.Address, msg.ParamsetKey)
+	if err != nil {
+		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "")
+		return
+	}
+	s.sendJSON(client, paramsetResponse{
+		Type: "paramset", RequestID: msg.RequestID,
+		Address: msg.Address, ParamsetKey: msg.ParamsetKey, Values: values,
+	})
+}
+
+// Device is a device (not a channel) as listed for the setup area.
+type Device struct {
+	InterfaceName string `json:"interfaceName"`
+	// Name from ReGa
+	Name string `json:"name,omitempty"`
+	ccurpc.DeviceDescription
+	// Channels with their link roles, for choosing link partners
+	Channels []ccurpc.DeviceDescription `json:"channels,omitempty"`
+}
+
+type listDevicesResponse struct {
+	Type      string   `json:"type"`
+	RequestID string   `json:"requestId,omitempty"`
+	Devices   []Device `json:"devices"`
+}
+
+// handleListDevices lists the devices of all interfaces. An interface that
+// doesn't answer (e.g. no VirtualDevices) is left out.
+func (s *Server) handleListDevices(client *Client, requestID string) {
+	if s.rpc == nil {
+		s.sendRequestError(client, requestID, "listDevices is not available", "NOT_AVAILABLE")
+		return
+	}
+	// Names live in ReGa; without them the list still works
+	var names map[string]string
+	if s.regaClient != nil {
+		var err error
+		if names, err = s.regaClient.GetDeviceNames(); err != nil {
+			logger.Debugf("getDeviceNames: %v", err)
+		}
+	}
+	devices := []Device{}
+	for _, iface := range s.rpc.InterfaceNames() {
+		list, err := s.rpc.ListDevices(iface)
+		if err != nil {
+			logger.Debugf("listDevices %s: %v", iface, err)
+			continue
+		}
+		channels := map[string][]ccurpc.DeviceDescription{}
+		for _, d := range list {
+			if d.Parent != "" {
+				channels[d.Parent] = append(channels[d.Parent], d)
+			}
+		}
+		for _, d := range list {
+			if d.Parent == "" {
+				devices = append(devices, Device{InterfaceName: iface, Name: names[d.Address], DeviceDescription: d, Channels: channels[d.Address]})
+			}
+		}
+	}
+	s.sendJSON(client, listDevicesResponse{Type: "devices", RequestID: requestID, Devices: devices})
+}
+
+type linksResponse struct {
+	Type        string                     `json:"type"`
+	RequestID   string                     `json:"requestId,omitempty"`
+	Success     bool                       `json:"success"`
+	Links       []ccurpc.Link              `json:"links,omitempty"`
+	Description ccurpc.ParamsetDescription `json:"description,omitempty"`
+	Values      map[string]interface{}     `json:"values,omitempty"`
+}
+
+// handleLinks: direct links and their parameters. Reading is for
+// administrators, changing needs the admin token too.
+func (s *Server) handleLinks(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID     string                 `json:"requestId"`
+		InterfaceName string                 `json:"interfaceName"`
+		Address       string                 `json:"address"`
+		Partner       string                 `json:"partner"`
+		Sender        string                 `json:"sender"`
+		Receiver      string                 `json:"receiver"`
+		Name          string                 `json:"name"`
+		Values        map[string]interface{} `json:"values"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if s.rpc == nil {
+		s.sendRequestError(client, msg.RequestID, msgType+" is not available", "NOT_AVAILABLE")
+		return
+	}
+	respond := func(r linksResponse, err error) {
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		r.Type, r.RequestID, r.Success = msgType+"_response", msg.RequestID, true
+		s.sendJSON(client, r)
+	}
+
+	switch msgType {
+	case "getLinks", "getLinkParamsetDescription", "getLinkParamset":
+		if client.level != auth.LevelAdmin {
+			s.sendRequestError(client, msg.RequestID, "only administrators may set up devices", "FORBIDDEN")
+			return
+		}
+	}
+
+	switch msgType {
+	case "getLinks":
+		links, err := s.rpc.GetLinks(msg.InterfaceName, msg.Address)
+		respond(linksResponse{Links: links}, err)
+	case "getLinkParamsetDescription":
+		description, err := s.rpc.GetLinkParamsetDescription(msg.InterfaceName, msg.Address, msg.Partner)
+		respond(linksResponse{Description: description}, err)
+	case "getLinkParamset":
+		values, err := s.rpc.GetLinkParamset(msg.InterfaceName, msg.Address, msg.Partner)
+		respond(linksResponse{Values: values}, err)
+	case "addLink":
+		entry := audit.Entry{Action: msgType, Target: msg.Sender + " > " + msg.Receiver, Value: msg.Name}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			return nil, rega.SetOK, s.rpc.AddLink(msg.InterfaceName, msg.Sender, msg.Receiver, msg.Name, "")
+		})
+	case "removeLink":
+		entry := audit.Entry{Action: msgType, Target: msg.Sender + " > " + msg.Receiver}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			return nil, rega.SetOK, s.rpc.RemoveLink(msg.InterfaceName, msg.Sender, msg.Receiver)
+		})
+	case "putLinkParamset":
+		entry := audit.Entry{Action: msgType, Target: msg.Address + " < " + msg.Partner}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			description, err := s.rpc.GetLinkParamsetDescription(msg.InterfaceName, msg.Address, msg.Partner)
+			if err != nil {
+				return nil, "", err
+			}
+			values, err := ccurpc.CoerceValues(description, msg.Values)
+			if err != nil {
+				return nil, "", fmt.Errorf("invalid value: %w", err)
+			}
+			entry.Value = values
+			var previous map[string]interface{}
+			if current, err := s.rpc.GetLinkParamset(msg.InterfaceName, msg.Address, msg.Partner); err == nil {
+				previous = map[string]interface{}{}
+				for name := range values {
+					previous[name] = current[name]
+				}
+			}
+			return previous, rega.SetOK, s.rpc.PutLinkParamset(msg.InterfaceName, msg.Address, msg.Partner, values)
+		})
+	}
+}
+
+type sessionInfo struct {
+	auth.SessionInfo
+	// Current: this connection's device
+	Current bool `json:"current"`
+}
+
+type sessionsResponse struct {
+	Type      string        `json:"type"`
+	RequestID string        `json:"requestId,omitempty"`
+	Success   bool          `json:"success"`
+	Sessions  []sessionInfo `json:"sessions,omitempty"`
+}
+
+// handleSessions: the list of logged-in devices (administrators), logging
+// one out, and logging out this device itself (everyone).
+func (s *Server) handleSessions(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		ID        string `json:"id"`
+	}
+	_ = json.Unmarshal(message, &msg)
+	if s.auth == nil {
+		s.sendRequestError(client, msg.RequestID, "authentication is disabled", "NOT_AVAILABLE")
+		return
+	}
+
+	switch msgType {
+	case "logout":
+		if id := client.SessionID(); id != "" {
+			s.auth.Revoke(id)
+		}
+		s.sendJSON(client, sessionsResponse{Type: "logout_response", RequestID: msg.RequestID, Success: true})
+	case "listSessions":
+		if code, errorMsg := configureError(client); code != "" {
+			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+			return
+		}
+		list := []sessionInfo{}
+		for _, info := range s.auth.Sessions() {
+			list = append(list, sessionInfo{SessionInfo: info, Current: info.ID == client.SessionID()})
+		}
+		s.sendJSON(client, sessionsResponse{Type: "listSessions_response", RequestID: msg.RequestID, Success: true, Sessions: list})
+	case "revokeSession":
+		s.configure(client, msg.RequestID, audit.Entry{Action: "revokeSession", Target: msg.ID}, func() (interface{}, string, error) {
+			if !s.auth.Revoke(msg.ID) {
+				return nil, rega.SetNotFound, nil
+			}
+			s.disconnectSession(msg.ID, client)
+			return nil, rega.SetOK, nil
+		})
+	}
+}
+
+// disconnectSession closes the connections of a logged-out device (except
+// the one asking): they reconnect and are asked to log in.
+func (s *Server) disconnectSession(id string, except *Client) {
+	s.clientsMu.RLock()
+	defer s.clientsMu.RUnlock()
+	for c := range s.clients {
+		if c != except && c.SessionID() == id && c.conn != nil {
+			_ = c.conn.Close()
+		}
+	}
+}
+
+type changeResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	Success   bool   `json:"success"`
+}
+
+// configure runs a change of the setup area for client: checks that it may
+// change settings, runs change and records the outcome. change returns the
+// previous value (for the audit log) and a ReGa result.
+func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous interface{}, result string, err error)) {
+	entry.User = client.user
+	finish := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
+	if code, errorMsg := configureError(client); code != "" {
+		finish(code)
+		s.sendRequestError(client, requestID, errorMsg, code)
+		return
+	}
+	previous, result, err := change()
+	if err != nil {
+		code := "CCU_ERROR"
+		if strings.HasPrefix(err.Error(), "invalid") {
+			code = "INVALID_VALUE"
+		}
+		finish(code)
+		s.sendRequestError(client, requestID, entry.Action+" failed: "+err.Error(), code)
+		return
+	}
+	if result != rega.SetOK {
+		finish(result)
+		s.sendRequestError(client, requestID, entry.Action+": "+result, result)
+		return
+	}
+	entry.Previous = previous
+	finish(rega.SetOK)
+	s.sendJSON(client, changeResponse{Type: entry.Action + "_response", RequestID: requestID, Success: true})
+}
+
+// handleRename renames a device or channel.
+func (s *Server) handleRename(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		Address   string `json:"address"`
+		Name      string `json:"name"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	s.configure(client, msg.RequestID, audit.Entry{Action: "rename", Target: msg.Address, Value: msg.Name},
+		func() (interface{}, string, error) {
+			result, previous, err := s.regaClient.SetName(msg.Address, msg.Name)
+			return previous, result, err
+		})
+}
+
+// handleSetGroupMember adds a channel to a room or trade, or removes it.
+func (s *Server) handleSetGroupMember(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		GroupID   int64  `json:"groupId"`
+		ChannelID int64  `json:"channelId"`
+		Member    bool   `json:"member"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	target := fmt.Sprintf("group %d channel %d", msg.GroupID, msg.ChannelID)
+	s.configure(client, msg.RequestID, audit.Entry{Action: "setGroupMember", Target: target, Value: msg.Member},
+		func() (interface{}, string, error) {
+			result, err := s.regaClient.SetGroupMember(msg.GroupID, msg.ChannelID, msg.Member)
+			return !msg.Member, result, err
+		})
+}
+
+type logicResponse struct {
+	Type      string         `json:"type"`
+	RequestID string         `json:"requestId,omitempty"`
+	Success   bool           `json:"success"`
+	Sysvars   []rega.Sysvar  `json:"sysvars,omitempty"`
+	Programs  []rega.Program `json:"programs,omitempty"`
+}
+
+// handleLogic: system variables and programs. Reading, setting a variable
+// and running a program is operating (not for guests); switching a
+// program on or off is setup.
+func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string      `json:"requestId"`
+		ID        int64       `json:"id"`
+		Value     interface{} `json:"value"`
+		Active    bool        `json:"active"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	respond := func(r logicResponse) {
+		r.Type, r.RequestID, r.Success = msgType+"_response", msg.RequestID, true
+		s.sendJSON(client, r)
+	}
+
+	switch msgType {
+	case "getSysvars":
+		sysvars, err := s.regaClient.GetSysvars()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getSysvars failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		respond(logicResponse{Sysvars: sysvars})
+		return
+	case "getPrograms":
+		programs, err := s.regaClient.GetPrograms()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getPrograms failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		respond(logicResponse{Programs: programs})
+		return
+	case "setProgramActive":
+		action := rega.ProgramOff
+		if msg.Active {
+			action = rega.ProgramOn
+		}
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: fmt.Sprintf("program %d", msg.ID), Value: msg.Active},
+			func() (interface{}, string, error) {
+				result, err := s.regaClient.ProgramAction(msg.ID, action)
+				return !msg.Active, result, err
+			})
+		return
+	}
+
+	// setSysvar, runProgram: operating
+	entry := audit.Entry{User: client.user, Action: msgType, Target: fmt.Sprintf("%d", msg.ID), Value: msg.Value}
+	finish := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
+	if !canOperate(client.level) {
+		finish("FORBIDDEN")
+		s.sendRequestError(client, msg.RequestID, "guests may not control devices", "FORBIDDEN")
+		return
+	}
+	var result string
+	var err error
+	if msgType == "runProgram" {
+		entry.Target = fmt.Sprintf("program %d", msg.ID)
+		entry.Value = nil
+		result, err = s.regaClient.ProgramAction(msg.ID, rega.ProgramRun)
+	} else {
+		entry.Target = fmt.Sprintf("sysvar %d", msg.ID)
+		var value, previous string
+		if value, err = formatValue(msg.Value); err == nil {
+			result, previous, err = s.regaClient.SetSysvar(msg.ID, value)
+			entry.Previous = previous
+		}
+	}
+	if err != nil {
+		finish("CCU_ERROR")
+		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	finish(result)
+	if result != rega.SetOK {
+		s.sendRequestError(client, msg.RequestID, msgType+": "+result, result)
+		return
+	}
+	respond(logicResponse{})
+}
+
+type pairingResponse struct {
+	Type      string             `json:"type"`
+	RequestID string             `json:"requestId,omitempty"`
+	Success   bool               `json:"success"`
+	Seconds   *int               `json:"seconds,omitempty"`
+	Devices   []rega.InboxDevice `json:"devices,omitempty"`
+}
+
+// handlePairing: pairing (install mode), the inbox of new devices and
+// deleting devices. All of it is setup, for administrators only.
+func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID     string `json:"requestId"`
+		InterfaceName string `json:"interfaceName"`
+		Address       string `json:"address"`
+		On            bool   `json:"on"`
+		Seconds       int    `json:"seconds"`
+		// deleteDevice: reset the device to factory settings
+		Reset bool `json:"reset"`
+		// deleteDevice: delete even if it can't be reached
+		Force bool `json:"force"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if s.rpc == nil {
+		s.sendRequestError(client, msg.RequestID, msgType+" is not available", "NOT_AVAILABLE")
+		return
+	}
+
+	// Reading is allowed for administrators even without admin token
+	switch msgType {
+	case "getInstallMode", "getInbox":
+		if client.level != auth.LevelAdmin {
+			s.sendRequestError(client, msg.RequestID, "only administrators may set up devices", "FORBIDDEN")
+			return
+		}
+		response := pairingResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}
+		if msgType == "getInstallMode" {
+			seconds, err := s.rpc.GetInstallMode(msg.InterfaceName)
+			if err != nil {
+				s.sendRequestError(client, msg.RequestID, "getInstallMode failed: "+err.Error(), "CCU_ERROR")
+				return
+			}
+			response.Seconds = &seconds
+		} else {
+			devices, err := s.regaClient.GetInbox()
+			if err != nil {
+				s.sendRequestError(client, msg.RequestID, "getInbox failed: "+err.Error(), "CCU_ERROR")
+				return
+			}
+			response.Devices = devices
+		}
+		s.sendJSON(client, response)
+		return
+	}
+
+	entry := audit.Entry{Action: msgType, Target: msg.InterfaceName + "." + msg.Address}
+	switch msgType {
+	case "setInstallMode":
+		entry.Target = msg.InterfaceName
+		entry.Value = map[string]interface{}{"on": msg.On, "seconds": msg.Seconds}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			return nil, rega.SetOK, s.rpc.SetInstallMode(msg.InterfaceName, msg.On, msg.Seconds)
+		})
+	case "acceptDevice":
+		entry.Target = msg.Address
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			result, err := s.regaClient.AcceptDevice(msg.Address)
+			return nil, result, err
+		})
+	case "deleteDevice":
+		flags := 0
+		if msg.Reset {
+			flags |= ccurpc.DeleteReset
+		}
+		if msg.Force {
+			flags |= ccurpc.DeleteForce
+		}
+		entry.Value = map[string]interface{}{"reset": msg.Reset, "force": msg.Force}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			if err := s.rpc.DeleteDevice(msg.InterfaceName, msg.Address, flags); err != nil {
+				return nil, "", err
+			}
+			s.rpc.Forget(msg.InterfaceName, msg.Address)
+			return nil, rega.SetOK, nil
+		})
+	}
+}
+
+type putParamsetResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	Success   bool   `json:"success"`
+}
+
+// handlePutParamset changes device settings (MASTER). Administrators only;
+// the values are checked against the description and recorded with their
+// previous values.
+func (s *Server) handlePutParamset(client *Client, message []byte) {
+	var msg struct {
+		paramsetRequest
+		Values map[string]interface{} `json:"values"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message: "+err.Error(), "INVALID_REQUEST")
+		return
+	}
+
+	entry := audit.Entry{
+		User:   client.user,
+		Action: "putParamset",
+		Target: msg.InterfaceName + "." + msg.Address + "." + msg.ParamsetKey,
+		Value:  msg.Values,
+	}
+	fail := func(code, errorMsg string) {
+		entry.Result = code
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+	}
+
+	if code, errorMsg := configureError(client); code != "" {
+		fail(code, errorMsg)
+		return
+	}
+	if s.rpc == nil {
+		fail("NOT_AVAILABLE", "putParamset is not available")
+		return
+	}
+	// Only settings: VALUES are written one by one with setDatapoint
+	if msg.ParamsetKey != ccurpc.ParamsetMaster {
+		fail("INVALID_REQUEST", "only the MASTER paramset can be written")
+		return
+	}
+
+	description, err := s.rpc.GetParamsetDescription(msg.InterfaceName, msg.Address, msg.ParamsetKey)
+	if err != nil {
+		fail("CCU_ERROR", "putParamset failed: "+err.Error())
+		return
+	}
+	values, err := ccurpc.CoerceValues(description, msg.Values)
+	if err != nil {
+		fail("INVALID_VALUE", err.Error())
+		return
+	}
+
+	if current, err := s.rpc.GetParamset(msg.InterfaceName, msg.Address, msg.ParamsetKey); err == nil {
+		previous := map[string]interface{}{}
+		for name := range values {
+			previous[name] = current[name]
+		}
+		entry.Previous = previous
+	}
+	entry.Value = values
+
+	if err := s.rpc.PutParamset(msg.InterfaceName, msg.Address, msg.ParamsetKey, values); err != nil {
+		fail("CCU_ERROR", "putParamset failed: "+err.Error())
+		return
+	}
+	entry.Result = "OK"
+	if err := s.audit.Record(entry); err != nil {
+		logger.Error("Failed to write the audit log:", err)
+	}
+	s.sendJSON(client, putParamsetResponse{Type: "putParamset_response", RequestID: msg.RequestID, Success: true})
 }
 
 // formatValue converts a JSON value into the string form expected by
@@ -693,10 +1543,15 @@ func (s *Server) sendError(client *Client, errorMsg string) {
 }
 
 func (s *Server) sendErrorCode(client *Client, errorMsg, code string) {
+	s.sendRequestError(client, "", errorMsg, code)
+}
+
+func (s *Server) sendRequestError(client *Client, requestID, errorMsg, code string) {
 	response := types.ErrorResponse{
-		Type:  "error",
-		Error: errorMsg,
-		Code:  code,
+		Type:      "error",
+		Error:     errorMsg,
+		Code:      code,
+		RequestID: requestID,
 	}
 	s.sendJSON(client, response)
 }

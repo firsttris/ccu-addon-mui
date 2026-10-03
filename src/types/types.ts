@@ -100,6 +100,9 @@ interface BaseChannel {
   interfaceName: string;
   statusAddress?: string;
   status?: ChannelStatus;
+  // Ids of the rooms and trades the channel belongs to
+  rooms?: number[];
+  trades?: number[];
 }
 
 export interface SwitchVirtualReceiverChannel extends BaseChannel {
@@ -132,13 +135,28 @@ export interface EnergyMeterChannel extends BaseChannel {
   datapoints: EnergyMeterDatapoint;
 }
 
-export type Channel =
+export type DatapointValue = string | number | boolean | null;
+
+// Any channel type without its own control (e.g. a window contact); shown
+// by GenericControl with its datapoints as plain values.
+export interface GenericChannel extends BaseChannel {
+  type: string;
+  datapoints: Record<string, DatapointValue>;
+}
+
+// Channel types with their own control
+export type KnownChannel =
   | SwitchVirtualReceiverChannel
   | BlindVirtualReceiverChannel
   | HeatingClimateControlTransceiverChannel
   | FloorClimateControlTransceiverChannel
   | KeymaticChannel
   | EnergyMeterChannel;
+
+export type Channel = KnownChannel | GenericChannel;
+
+// CCU user level from the login, "" if unknown. Not enforced yet.
+export type UserLevel = 'admin' | 'user' | 'guest' | '';
 
 export interface Room {
   name: string;
@@ -163,4 +181,97 @@ export interface DeviceProblem {
   roomName?: string;
   lowBat: boolean;
   unreach: boolean;
+}
+
+// Paramset descriptions from the CCU's XML-RPC interfaces (see the
+// HomeMatic XML-RPC documentation, ParameterDescription)
+export type ParameterType = 'FLOAT' | 'INTEGER' | 'BOOL' | 'ENUM' | 'STRING' | 'ACTION';
+
+export const Operation = { READ: 1, WRITE: 2, EVENT: 4 } as const;
+export const ParameterFlag = { VISIBLE: 0x01, INTERNAL: 0x02, SERVICE: 0x08 } as const;
+
+export interface ParameterDescription {
+  type: ParameterType;
+  operations: number;
+  flags: number;
+  default?: DatapointValue;
+  min?: DatapointValue;
+  max?: DatapointValue;
+  unit?: string;
+  tabOrder: number;
+  control?: string;
+  valueList?: string[];
+  special?: { id: string; value: DatapointValue }[];
+}
+
+export type ParamsetDescription = Record<string, ParameterDescription>;
+
+// A logged-in device
+export interface SessionInfo {
+  id: string;
+  user: string;
+  device: string;
+  created: string;
+  lastUsed: string;
+  current: boolean;
+}
+
+// A system variable of the CCU
+export interface Sysvar {
+  id: number;
+  name: string;
+  visible: boolean;
+  kind: 'bool' | 'alarm' | 'number' | 'enum' | 'string';
+  unit?: string;
+  min?: number;
+  max?: number;
+  value: DatapointValue;
+  falseName?: string;
+  trueName?: string;
+  valueList?: string[];
+}
+
+export interface Program {
+  id: number;
+  name: string;
+  active: boolean;
+  visible: boolean;
+}
+
+// A paired device waiting in the CCU's inbox
+export interface InboxDevice {
+  address: string;
+  type: string;
+  interfaceName: string;
+  name: string;
+}
+
+// A device (not a channel) as listed by the CCU's interfaces
+export interface DeviceChannel {
+  type: string;
+  address: string;
+  index: number;
+  paramsets: string[];
+  linkSourceRoles?: string[];
+  linkTargetRoles?: string[];
+}
+
+export interface Device {
+  interfaceName: string;
+  // Name from ReGa
+  name?: string;
+  type: string;
+  address: string;
+  children?: string[];
+  paramsets: string[];
+  version: number;
+  firmware?: string;
+  channels?: DeviceChannel[];
+}
+
+// A direct link: the sender channel controls the receiver channel
+export interface Link {
+  sender: string;
+  receiver: string;
+  name?: string;
 }

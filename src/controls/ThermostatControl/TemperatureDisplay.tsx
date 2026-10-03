@@ -1,142 +1,79 @@
-import styled from '@emotion/styled';
-import { keyframes, css } from '@emotion/react';
-import { MaterialSymbolsLightWindowOpen } from '../../components/icons/MaterialSymbolsLightWindowOpen';
-import { MaterialSymbolsLightWindowClosed } from '../../components/icons/MaterialSymbolsLightWindowClosed';
-import { useTranslations } from '../../i18n/utils';
+import { useEffect, useRef, useState } from 'react';
+import AppWindowIcon from '~icons/lucide/app-window';
+import { useEffects } from '../../contexts/EffectsContext';
+import { getLocale } from '../../paraglide/runtime';
+import { m } from '../../paraglide/messages';
+import { cn } from '../../lib/utils';
 
 interface TemperatureDisplayProps {
   localTarget: number;
   currentTemperature: number;
   humidity?: number;
   windowOpen: boolean;
+  color: string;
 }
 
-const CenterContent = styled.div`
-  position: absolute;
-  top: 45%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  pointer-events: none;
-  width: 180px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0px;
-`;
+const formatTemperature = (value: number) =>
+  new Intl.NumberFormat(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
 
-const MainTemperature = styled.div`
-  font-size: 72px;
-  font-weight: 400;
-  line-height: 1;
-  color: ${props => props.theme.colors.text};
-  letter-spacing: -3px;
-`;
-
-const TemperatureUnit = styled.span`
-  font-size: 24px;
-  font-weight: 300;
-  margin-left: 2px;
-  opacity: 0.5;
-  vertical-align: super;
-`;
-
-const Separator = styled.div`
-  width: 40px;
-  height: 1px;
-  background: ${props => props.theme.colors.border};
-  margin: 4px auto;
-`;
-
-const StatsRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
-  margin-top: 4px;
-`;
-
-const StatItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-`;
-
-const StatValue = styled.div`
-  font-size: 14px;
-  font-weight: 500;
-  color: ${props => props.theme.colors.text};
-`;
-
-const StatLabel = styled.div`
-  font-size: 10px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-`;
-
-const pulse = keyframes`
-  0% {
-    transform: scale(1);
-    opacity: 1;
-    filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.9;
-    filter: drop-shadow(0 0 4px rgba(33, 150, 243, 0.4));
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-    filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
-  }
-`;
-
-const WindowIconWrapper = styled.div<{ windowOpen: boolean }>`
-  animation: ${({ windowOpen }) => windowOpen ? css`${pulse} 2s infinite` : 'none'};
-  color: ${props => props.theme.colors.textSecondary};
-`;
+// Counts changes of a value, to restart an animation on each one
+const useChangeCount = (value: number) => {
+  const [count, setCount] = useState(0);
+  const previous = useRef(value);
+  useEffect(() => {
+    if (previous.current !== value) {
+      previous.current = value;
+      setCount((c) => c + 1);
+    }
+  }, [value]);
+  return count;
+};
 
 export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
   localTarget,
   currentTemperature,
   humidity,
   windowOpen,
+  color,
 }) => {
-  const t = useTranslations();
-
+  const effects = useEffects();
+  const changes = useChangeCount(localTarget);
   return (
-    <CenterContent>
-      <WindowIconWrapper windowOpen={windowOpen}>
-        {windowOpen ? (
-          <MaterialSymbolsLightWindowOpen fontSize={24} color="#2196F3" />
-        ) : (
-          <MaterialSymbolsLightWindowClosed fontSize={24} style={{ opacity: 0.3 }} />
+    <div className="pointer-events-none absolute inset-x-0 top-[17%] flex flex-col items-center">
+      <AppWindowIcon
+        role="img"
+        aria-label={windowOpen ? m.WINDOW_OPEN() : undefined}
+        aria-hidden={!windowOpen}
+        className={cn(
+          'size-5',
+          windowOpen ? 'text-blue-500 dark:text-blue-400' : 'text-muted-foreground opacity-30',
+          windowOpen && effects.on && 'fx-pulse',
         )}
-      </WindowIconWrapper>
-      <MainTemperature>
-        {localTarget.toFixed(1)}
-        <TemperatureUnit>°C</TemperatureUnit>
-      </MainTemperature>
-
-      <Separator />
-
-      <StatsRow>
-        <StatItem>
-          <StatValue>{currentTemperature.toFixed(1)}°C</StatValue>
-          <StatLabel>{t('CURRENT_TEMPERATURE')}</StatLabel>
-        </StatItem>
+      />
+      <div
+        key={effects.on ? changes % 2 : 0}
+        className={cn(
+          'mt-0.5 text-[46px] leading-none font-semibold tracking-[-0.04em] tabular-nums',
+          effects.on && changes > 0 && (changes % 2 ? 'fx-rise-a' : 'fx-rise-b'),
+        )}
+        style={effects.on ? { textShadow: `0 0 ${18 * effects.k}px ${color}59` } : undefined}
+      >
+        {formatTemperature(localTarget)}
+        <span className="ml-0.5 align-top text-lg font-medium text-muted-foreground">°C</span>
+      </div>
+      <div className="my-1.5 h-px w-8 bg-border" />
+      <div className="flex gap-4">
+        <div className="flex flex-col items-center">
+          <span className="text-sm font-medium tabular-nums">{formatTemperature(currentTemperature)}°</span>
+          <span className="text-[10px] tracking-[0.06em] text-muted-foreground uppercase">{m.ACTUAL()}</span>
+        </div>
         {humidity !== undefined && humidity > 0 && (
-          <StatItem>
-            <StatValue>{humidity}%</StatValue>
-            <StatLabel>{t('HUMIDITY')}</StatLabel>
-          </StatItem>
+          <div className="flex flex-col items-center">
+            <span className="text-sm font-medium tabular-nums">{humidity} %</span>
+            <span className="text-[10px] tracking-[0.06em] text-muted-foreground uppercase">{m.HUMIDITY()}</span>
+          </div>
         )}
-      </StatsRow>
-    </CenterContent>
+      </div>
+    </div>
   );
 };

@@ -1,34 +1,21 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router';
-import { css, Global } from '@emotion/react';
 import { Header } from '../components/Header';
+import { PageTitleProvider } from '../contexts/PageTitleContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { Login } from '../views/Login';
 
 const RootComponent = () => {
   const { authState } = useWebSocketContext();
 
-  return (
-    <>
-      <Global
-        styles={css`
-          body {
-            user-select: none;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Roboto';
-          }
-        `}
-      />
-      {authState === 'loginRequired' ? (
-        <Login />
-      ) : (
-        <>
-          <Header />
-          <Outlet />
-        </>
-      )}
-    </>
+  return authState === 'loginRequired' ? (
+    <Login />
+  ) : (
+    <PageTitleProvider>
+      <Header />
+      <main>
+        <Outlet />
+      </main>
+    </PageTitleProvider>
   );
 };
 

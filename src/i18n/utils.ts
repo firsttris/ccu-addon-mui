@@ -1,153 +1,20 @@
-export const languages = {
-  en: 'English',
-  de: 'German',
-};
+import { m } from '../paraglide/messages';
+import { getLocale } from '../paraglide/runtime';
 
-export const defaultLang = (() =>
-  typeof window !== 'undefined' && navigator.language.includes('de')
-    ? 'de'
-    : 'en')();
+// Texts live in messages/<locale>.json and are compiled by Paraglide JS
+// into typed functions: use m.KEY() for fixed texts. A missing translation
+// fails the build.
 
-export const ui = {
-  en: {
-    SWITCH_VIRTUAL_RECEIVER: 'Switch',
-    BLIND_VIRTUAL_RECEIVER: 'Blind',
-    HEATING_CLIMATECONTROL_TRANSCEIVER: 'Thermostat',
-    CLIMATECONTROL_FLOOR_TRANSCEIVER: 'Floor',
-    //RAIN_DETECTION_TRANSMITTER: 'Rain',
-    KEYMATIC: 'Keymatic',
-    errorOccuredWhileLogin: 'Error occured while login',
-    signInTitle: 'Sign in',
-    RAINING: 'Raining',
-    NOT_RAINING: 'Not Raining',
-    HEATING: 'Heating',
-    NOT_HEATING: 'Not Heating',
-    DOOR_STATE_UNKNOWN: 'Door state is uncertain',
-    SIGN_IN: 'Sign in',
-    rememberMe: 'Remember me',
-    LOCK: 'Lock',
-    UNLOCK: 'Unlock',
-    OPEN: 'Open',
-    LOCKED: 'Locked',
-    UNLOCKED: 'Unlocked',
-    CURRENT_TEMPERATURE: 'Current',
-    HUMIDITY: 'Humidity',
-    POWER_OFF: 'Power Off',
-    MANUAL: 'Manual',
-    AUTOMATIC: 'Automatic',
-    BOOST: 'Boost',
-    DECREASE_TEMPERATURE: 'Decrease Temperature',
-    INCREASE_TEMPERATURE: 'Increase Temperature',
-    BLIND_CLOSED: 'closed',
-    BLIND_OPEN: 'open',
-    LOW_BAT: 'Battery low',
-    UNREACH: 'Not reachable',
-    ENERGIE_METER_TRANSMITTER: 'Energy',
-    ELECTRICITY: 'Electricity',
-    GAS: 'Gas',
-    METER_READING: 'Meter reading',
-    CURRENT_POWER: 'Power',
-    GAS_FLOW: 'Flow',
-    CHANNEL: 'Channel',
-    NO_METER_DATA: 'No readings yet',
-    ROOMS: 'Rooms',
-    TRADES: 'Trades',
-    NAVIGATION: 'Navigation',
-    LOGOUT: 'Log out',
-    USERNAME: 'Username',
-    PASSWORD: 'Password',
-    LOGIN_HINT: 'Log in with a user of your CCU. This device stays logged in.',
-    INVALID_CREDENTIALS: 'Wrong username or password',
-    TOO_MANY_ATTEMPTS: 'Too many failed attempts, please wait a minute',
-    CCU_UNREACHABLE: 'The CCU cannot be reached',
-    CONNECTING: 'Connecting …',
-    CONNECTION_LOST: 'No connection to the CCU, reconnecting …',
-    CONNECTED: 'Connected',
-    NOT_CONNECTED: 'No connection, command not sent',
-    SET_UNREACH: 'Device not reachable, command not sent',
-    SET_FAILED: 'Command failed',
-    SET_TIMEOUT: 'No response from the CCU',
-    SERVER_ERROR: 'Error',
-    DEVICE_PROBLEMS: 'Devices with problems',
-    NO_DEVICE_PROBLEMS: 'All devices reachable, no low batteries',
-    NO_ROOM: 'No room',
-    CONFIRM_UNLOCK: 'Really unlock the door?',
-    CONFIRM_OPEN: 'Really open the door?',
-    YES: 'Yes',
-    CANCEL: 'Cancel',
-  },
-  de: {
-    SWITCH_VIRTUAL_RECEIVER: 'Schalter',
-    BLIND_VIRTUAL_RECEIVER: 'Rolladen',
-    HEATING_CLIMATECONTROL_TRANSCEIVER: 'Thermostat',
-    CLIMATECONTROL_FLOOR_TRANSCEIVER: 'Fußboden',
-    //RAIN_DETECTION_TRANSMITTER: 'Regen',
-    KEYMATIC: 'Keymatic',
-    errorOccuredWhileLogin: 'Fehler beim Login',
-    signInTitle: 'Anmelden',
-    RAINING: 'Regen',
-    NOT_RAINING: 'Kein Regen',
-    HEATING: 'Heizen',
-    NOT_HEATING: 'Nicht Heizen',
-    DOOR_STATE_UNKNOWN: 'Türzustand ist ungewiss',
-    SIGN_IN: 'Anmelden',
-    rememberMe: 'Erinnere dich an mich',
-    LOCK: 'Sperren',
-    UNLOCK: 'Entsperren',
-    OPEN: 'Öffnen',
-    LOCKED: 'Gesperrt',
-    UNLOCKED: 'Entsperrt',
-    CURRENT_TEMPERATURE: 'Aktuell',
-    HUMIDITY: 'Luftfeuchte',
-    POWER_OFF: 'Ausschalten',
-    MANUAL: 'Manuell',
-    AUTOMATIC: 'Automatisch',
-    BOOST: 'Boost',
-    DECREASE_TEMPERATURE: 'Temperatur verringern',
-    INCREASE_TEMPERATURE: 'Temperatur erhöhen',
-    BLIND_CLOSED: 'geschlossen',
-    BLIND_OPEN: 'geöffnet',
-    LOW_BAT: 'Batterie schwach',
-    UNREACH: 'Nicht erreichbar',
-    ENERGIE_METER_TRANSMITTER: 'Energie',
-    ELECTRICITY: 'Strom',
-    GAS: 'Gas',
-    METER_READING: 'Zählerstand',
-    CURRENT_POWER: 'Leistung',
-    GAS_FLOW: 'Durchfluss',
-    CHANNEL: 'Kanal',
-    NO_METER_DATA: 'Noch keine Messwerte',
-    ROOMS: 'Räume',
-    TRADES: 'Gewerke',
-    NAVIGATION: 'Navigation',
-    LOGOUT: 'Abmelden',
-    USERNAME: 'Benutzername',
-    PASSWORD: 'Passwort',
-    LOGIN_HINT: 'Melde dich mit einem Benutzer deiner CCU an. Dieses Gerät bleibt angemeldet.',
-    INVALID_CREDENTIALS: 'Benutzername oder Passwort falsch',
-    TOO_MANY_ATTEMPTS: 'Zu viele Fehlversuche, bitte eine Minute warten',
-    CCU_UNREACHABLE: 'Die CCU ist nicht erreichbar',
-    CONNECTING: 'Verbinde …',
-    CONNECTION_LOST: 'Keine Verbindung zur CCU, verbinde neu …',
-    CONNECTED: 'Verbunden',
-    NOT_CONNECTED: 'Keine Verbindung, Befehl nicht gesendet',
-    SET_UNREACH: 'Gerät nicht erreichbar, Befehl nicht gesendet',
-    SET_FAILED: 'Befehl fehlgeschlagen',
-    SET_TIMEOUT: 'Keine Antwort von der CCU',
-    SERVER_ERROR: 'Fehler',
-    DEVICE_PROBLEMS: 'Geräte mit Problemen',
-    NO_DEVICE_PROBLEMS: 'Alle Geräte erreichbar, keine schwachen Batterien',
-    NO_ROOM: 'Kein Raum',
-    CONFIRM_UNLOCK: 'Tür wirklich entsperren?',
-    CONFIRM_OPEN: 'Tür wirklich öffnen?',
-    YES: 'Ja',
-    CANCEL: 'Abbrechen',
-  },
-} as const;
+export type TranslationKey = keyof typeof m;
 
-export type TranslationKey = keyof (typeof ui)[typeof defaultLang];
+// The language in use, e.g. for number and date formats
+export const defaultLang = getLocale();
 
-const translate = (key: TranslationKey) => ui[defaultLang][key] || key;
+const messages = m as unknown as Record<string, (() => string) | undefined>;
+
+// Looks up a text by a key known only at runtime (channel types, parameter
+// names, error codes); returns the key itself if there is no text for it.
+const translate = (key: TranslationKey | string): string => messages[key]?.() ?? key;
 
 // Returns the same function on every call, so it can be used in hook
 // dependencies without causing re-renders.

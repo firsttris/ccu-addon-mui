@@ -1,7 +1,10 @@
-import React from 'react';
-import styled from '@emotion/styled';
+import React, { ReactNode } from 'react';
 import { EnergyMeterChannel } from '../types/types';
-import { defaultLang, useTranslations } from '../i18n/utils';
+import ZapIcon from '~icons/lucide/zap';
+import FlameIcon from '~icons/lucide/flame';
+import { defaultLang } from '../i18n/utils';
+import { Tile } from '../components/Tile';
+import { m } from '../paraglide/messages';
 
 // All channels of one HmIP-ESI: channel 1 has the current power or gas flow,
 // channels 2-4 the meter readings. Which values are set depends on the
@@ -10,47 +13,22 @@ interface EnergyMeterControlProps {
   channels: EnergyMeterChannel[];
 }
 
-const Container = styled.div`
-  width: 230px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  color: ${(props) => props.theme.colors.text};
-`;
+const Section = ({ children }: { children: ReactNode }) => <div className="flex flex-col gap-1">{children}</div>;
 
-const Name = styled.div`
-  font-size: 13px;
-  text-align: center;
-  color: ${(props) => props.theme.colors.textSecondary};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
+const Kind = ({ icon, tint, children }: { icon: ReactNode; tint: string; children: ReactNode }) => (
+  <div className="flex items-center gap-2 text-sm font-medium">
+    <span className={`flex size-7 items-center justify-center rounded-lg [&_svg]:size-4 ${tint}`}>{icon}</span>
+    {children}
+  </div>
+);
 
-const Section = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
+const MainValue = ({ children }: { children: ReactNode }) => (
+  <div className="text-3xl font-semibold tracking-tight tabular-nums">{children}</div>
+);
 
-const Kind = styled.div`
-  font-size: 15px;
-  font-weight: 600;
-`;
-
-const MainValue = styled.div`
-  font-size: 30px;
-  font-weight: 300;
-`;
-
-const Row = styled.div`
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 13px;
-  color: ${(props) => props.theme.colors.textSecondary};
-`;
+const Row = ({ children }: { children: ReactNode }) => (
+  <div className="flex justify-between gap-2 text-[13px] text-muted-foreground tabular-nums">{children}</div>
+);
 
 const locale = defaultLang === 'de' ? 'de-DE' : 'en-US';
 
@@ -59,13 +37,9 @@ const format = (value: number, maximumFractionDigits: number) =>
 
 const channelNumber = (address: string) => Number(address.split(':')[1] ?? 0);
 
-const isSet = (value: number | undefined): value is number =>
-  typeof value === 'number' && value > 0;
+const isSet = (value: number | undefined): value is number => typeof value === 'number' && value > 0;
 
-export const EnergyMeterControl = React.memo(function EnergyMeterControl({
-  channels,
-}: EnergyMeterControlProps) {
-  const t = useTranslations();
+export const EnergyMeterControl = React.memo(function EnergyMeterControl({ channels }: EnergyMeterControlProps) {
   const sorted = [...channels].sort((a, b) => channelNumber(a.address) - channelNumber(b.address));
 
   const power = sorted.find((c) => c.datapoints.POWER !== undefined)?.datapoints.POWER;
@@ -80,39 +54,45 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({
   const name = sorted[0]?.name ?? '';
 
   return (
-    <Container>
-      <Name title={name}>{name}</Name>
+    <Tile status={sorted[0]?.status}>
+      <div className="flex flex-col gap-3 p-4">
+        <div title={name} className="truncate text-[15px] font-medium">
+          {name}
+        </div>
 
-      {isElectricity && (
-        <Section>
-          <Kind>⚡ {t('ELECTRICITY')}</Kind>
-          <MainValue>{format(power ?? 0, 0)} W</MainValue>
-          {energyCounters.map((channel, index) => (
-            <Row key={channel.address}>
-              <span>
-                {t('METER_READING')}
-                {index > 0 && ` (${t('CHANNEL')} ${channelNumber(channel.address)})`}
-              </span>
-              <span>{format((channel.datapoints.ENERGY_COUNTER ?? 0) / 1000, 1)} kWh</span>
+        {isElectricity && (
+          <Section>
+            <Kind icon={<ZapIcon />} tint="bg-yellow-500/15 text-yellow-700 dark:text-yellow-300">
+              {m.ELECTRICITY()}
+            </Kind>
+            <MainValue>{format(power ?? 0, 0)} W</MainValue>
+            {energyCounters.map((channel, index) => (
+              <Row key={channel.address}>
+                <span>
+                  {m.METER_READING()}
+                  {index > 0 && ` (${m.CHANNEL()} ${channelNumber(channel.address)})`}
+                </span>
+                <span>{format((channel.datapoints.ENERGY_COUNTER ?? 0) / 1000, 1)} kWh</span>
+              </Row>
+            ))}
+          </Section>
+        )}
+
+        {isGas && (
+          <Section>
+            <Kind icon={<FlameIcon />} tint="bg-orange-500/15 text-orange-700 dark:text-orange-300">
+              {m.GAS()}
+            </Kind>
+            <MainValue>{format(gasCounters[0]?.datapoints.GAS_VOLUME ?? 0, 2)} m³</MainValue>
+            <Row>
+              <span>{m.GAS_FLOW()}</span>
+              <span>{format(gasFlow ?? 0, 2)} m³/h</span>
             </Row>
-          ))}
-        </Section>
-      )}
+          </Section>
+        )}
 
-      {isGas && (
-        <Section>
-          <Kind>🔥 {t('GAS')}</Kind>
-          <MainValue>
-            {format(gasCounters[0]?.datapoints.GAS_VOLUME ?? 0, 2)} m³
-          </MainValue>
-          <Row>
-            <span>{t('GAS_FLOW')}</span>
-            <span>{format(gasFlow ?? 0, 2)} m³/h</span>
-          </Row>
-        </Section>
-      )}
-
-      {!isElectricity && !isGas && <Row>{t('NO_METER_DATA')}</Row>}
-    </Container>
+        {!isElectricity && !isGas && <Row>{m.NO_METER_DATA()}</Row>}
+      </div>
+    </Tile>
   );
 });

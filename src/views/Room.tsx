@@ -1,58 +1,32 @@
-import { useParams } from '@tanstack/react-router';
-import { ChannelGroup } from '../components/ChannelGroup';
-import styled from '@emotion/styled';
-import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useEffect } from 'react';
+import { useParams } from '@tanstack/react-router';
+import { useChannels, useRooms } from '../queries';
+import { usePageTitle } from '../contexts/PageTitleContext';
+import { Dashboard, NavTabs } from './Dashboard';
+import { m } from '../paraglide/messages';
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding-top: 60px;
-
-  @media (max-width: 400px) {
-    padding-top: 80px;
-  }
-`;
-
-const OuterContainer = styled.div`
-  margin: 15px;
-
-  @media (max-width: 400px) {
-    margin: 5px;
-  }
-`;
-
-const List = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
+// The start page opens the room shown last
+export const LAST_ROOM_KEY = 'last-room';
 
 export const Room = () => {
   const { roomId } = useParams({ from: '/room/$roomId' });
-
-  const { getChannelsForRoomId, sortedChannelsByType } = useWebSocketContext();
+  const { data: rooms = [] } = useRooms();
+  const { channelsByType, isLoading } = useChannels({ roomId });
+  usePageTitle(rooms.find((room) => String(room.id) === roomId)?.name ?? m.ROOMS());
 
   useEffect(() => {
-    getChannelsForRoomId(Number(roomId));
-  }, [roomId, getChannelsForRoomId]);
+    try {
+      localStorage.setItem(LAST_ROOM_KEY, roomId);
+    } catch {
+      // Private mode: start with the first room
+    }
+  }, [roomId]);
 
   return (
-    <OuterContainer>
-      <Container>
-        <List>
-          {sortedChannelsByType.map(([channelType, channels]) => (
-            <ChannelGroup
-              key={channelType}
-              channelType={channelType}
-              channels={channels}
-            />
-          ))}
-        </List>
-      </Container>
-    </OuterContainer>
+    <Dashboard
+      tabs={<NavTabs label={m.ROOMS()} items={rooms} activeId={roomId} to="/room/$roomId" />}
+      channelsByType={channelsByType}
+      isLoading={isLoading}
+    />
   );
 };

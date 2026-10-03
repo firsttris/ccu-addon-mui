@@ -90,8 +90,11 @@ DEBUG=false                   # Enable debug logging
 | `REGA_PORT` | 8181 (8183 for `localhost`) | ReGa script port |
 | `RPC_PORT` | 2001 | BidCos-RF XML-RPC port of the CCU |
 | `HMIP_PORT` | 2010 | HmIP-RF XML-RPC port of the CCU |
+| `VIRTUAL_DEVICES_PORT` | 9292 | VirtualDevices (heating groups) XML-RPC port of the CCU |
 | `AUTH_MODE` | ccu | `ccu`: log in once per device with a CCU WebUI user; `none`: no login (everyone on the network can control all devices) |
 | `CCU_WEBUI_URL` | http://`CCU_HOST` | CCU WebUI whose JSON-RPC API (`/api/homematic.cgi`) verifies logins |
+| `AUDIT_LOG_FILE` | /usr/local/etc/config/mui-audit.log (CCU), ./mui-audit.log (local) | Every change made through the add-on (user, time, target, old and new value, result) as JSON lines; rotated at 512 KB, the previous file is kept as `.1`. Empty disables it |
+| `SESSIONS_FILE` | /usr/local/etc/config/mui-sessions.json (CCU), ./mui-sessions.json (local) | Logged-in devices; every token belongs to one, so a single device can be logged out |
 | `AUTH_KEY_FILE` | /usr/local/etc/config/mui-auth.key (CCU), ./mui-auth.key (local) | Key that signs the login tokens; created on first start. Deleting it logs out all devices |
 | `WS_BIND_HOST` | 127.0.0.1 | Address the WebSocket server listens on (lighttpd proxies to it; use `0.0.0.0` to expose it directly) |
 | `RPC_SERVER_PORT` | 9099 | XML-RPC callback port |
@@ -107,18 +110,45 @@ On the CCU, settings go into `/usr/local/etc/config/mui.conf` (e.g. `AUTH_MODE=n
 
 ## 🔌 WebSocket Protocol
 
-All messages are JSON objects with a `type`. With `AUTH_MODE=ccu`, a connection must log in (`login`) or present a stored token (`auth`) first; everything else is answered with `{"type": "error", "code": "AUTH_REQUIRED"}`.
+`protocol/schema.json` (JSON Schema) describes every request, response and event exactly. The app's TypeScript types are generated from it (`npm run generate:protocol`), and `integration_test.go` checks every message the server sends in the tests against it, so a change on either side that breaks the other fails CI.
+
+All messages are JSON objects with a `type`. Every request may carry a `requestId`, which is echoed in its response or error. With `AUTH_MODE=ccu`, a connection must log in (`login`) or present a stored token (`auth`) first; everything else is answered with `{"type": "error", "code": "AUTH_REQUIRED"}`.
 
 | Request | Response |
 |---------|----------|
-| `{"type": "auth", "token": "…"}` | `{"type": "auth_response", "success", "authRequired", "token"}`: the token is renewed, store the new one |
-| `{"type": "login", "username", "password"}` | `auth_response` with a token (valid for a year) or a `code`: `INVALID_CREDENTIALS`, `TOO_MANY_ATTEMPTS`, `CCU_UNREACHABLE` |
+| `{"type": "auth", "token": "…", "adminToken": "…"}` | `{"type": "auth_response", "success", "authRequired", "user", "level", "token", "elevated"}`: the token is renewed, store the new one. `level` is the CCU user level (`admin`, `user`, `guest`, empty if unknown) |
+| `{"type": "login", "username", "password"}` | `auth_response` with a token (valid for a year, for operating; administrators also get an `adminToken` for 8 hours) or a `code`: `INVALID_CREDENTIALS`, `TOO_MANY_ATTEMPTS`, `CCU_UNREACHABLE` |
 | `{"type": "getRooms", "deviceId"}` | `{"deviceId", "rooms": [{"id", "name"}]}` |
 | `{"type": "getTrades", "deviceId"}` | `{"deviceId", "trades": [{"id", "name"}]}` |
-| `{"type": "getChannels", "deviceId", "roomId" \| "tradeId"}` | `{"deviceId", "roomId" \| "tradeId", "channels": [{"id", "address", "name", "type", "interfaceName", "datapoints", "statusAddress", "status": {"LOW_BAT", "UNREACH"}}]}` |
+| `{"type": "getChannels", "deviceId", "roomId" \| "tradeId" \| "all": true}` | `{"deviceId", "roomId" \| "tradeId" \| "all", "channels": [{"id", "address", "name", "type", "interfaceName", "datapoints", "statusAddress", "status": {"LOW_BAT", "UNREACH"}, "rooms", "trades"}]}` |
 | `{"type": "subscribe", "deviceId", "channels": ["<address>"]}` | `subscribe_response`; then `{"event": {"channel", "datapoint", "value"}}` for these channels |
-| `{"type": "setDatapoint", "requestId", "interfaceName", "address", "attribute", "value"}` | `{"type": "setDatapoint_response", "requestId", "success", "code"}`; `code` is `UNREACH` (not sent), `NOT_FOUND`, `INVALID_REQUEST` or `CCU_ERROR` |
+| `{"type": "setDatapoint", "requestId", "interfaceName", "address", "attribute", "value"}` | `{"type": "setDatapoint_response", "requestId", "success", "code"}`; `code` is `UNREACH` (not sent), `FORBIDDEN` (guest user), `NOT_FOUND`, `INVALID_REQUEST` or `CCU_ERROR` |
 | `{"type": "getDeviceProblems"}` | `{"type": "deviceProblems", "devices": [{"address", "name", "roomId", "roomName", "lowBat", "unreach"}]}` |
+| `{"type": "getParamsetDescription", "interfaceName", "address", "paramsetKey": "VALUES" \| "MASTER"}` | `{"type": "paramsetDescription", "address", "paramsetKey", "description": {"<PARAM>": {"type", "operations", "flags", "min", "max", "default", "unit", "valueList", "special"}}}` (cached per device type and firmware) |
+| `{"type": "getParamset", "interfaceName", "address", "paramsetKey"}` | `{"type": "paramset", "address", "paramsetKey", "values"}` |
+| `{"type": "putParamset", "interfaceName", "address", "paramsetKey": "MASTER", "values"}` | `{"type": "putParamset_response", "success"}` or an error with `code` `FORBIDDEN` (not an administrator), `ELEVATION_REQUIRED` (password needed again), `INVALID_VALUE` (checked against the description), `CCU_ERROR`. Recorded in the audit log |
+| `{"type": "elevate", "password"}` | `{"type": "elevate_response", "success", "adminToken"}`: administrators get a token for changing settings, valid for 8 hours; pass it as `adminToken` in `auth` after a reconnect |
+| `{"type": "listDevices"}` | `{"type": "devices", "devices": [{"interfaceName", "address", "name", "type", "firmware", "children", "paramsets", "channels": [{"address", "type", "index", "linkSourceRoles", "linkTargetRoles"}]}]}` |
+| `{"type": "rename", "address", "name"}` | `{"type": "rename_response", "success"}`: renames a device or channel (administrators with admin token; audited) |
+| `{"type": "setGroupMember", "groupId", "channelId", "member"}` | `{"type": "setGroupMember_response", "success"}`: adds a channel to a room or trade, or removes it |
+| `{"type": "setInstallMode", "interfaceName", "on", "seconds"}` | `{"type": "setInstallMode_response", "success"}`: starts or stops pairing |
+| `{"type": "getInstallMode", "interfaceName"}` | `{"type": "getInstallMode_response", "seconds"}`: seconds left, 0 when off |
+| `{"type": "getInbox"}` | `{"type": "getInbox_response", "devices": [{"address", "type", "interfaceName", "name"}]}`: paired devices not yet accepted |
+| `{"type": "acceptDevice", "address"}` | `{"type": "acceptDevice_response", "success"}`: takes a device out of the inbox (sets `ReadyConfig`; to be verified on real hardware) |
+| `{"type": "deleteDevice", "interfaceName", "address", "reset", "force"}` | `{"type": "deleteDevice_response", "success"}` |
+| `{"type": "getLinks", "interfaceName", "address"}` | `{"type": "getLinks_response", "links": [{"sender", "receiver", "name"}]}`: direct links of a device or channel (administrators) |
+| `{"type": "addLink", "interfaceName", "sender", "receiver", "name"}`, `{"type": "removeLink", "interfaceName", "sender", "receiver"}` | `{"type": "addLink_response" \| "removeLink_response", "success"}` (administrators with admin token; audited) |
+| `{"type": "getLinkParamsetDescription" \| "getLinkParamset", "interfaceName", "address", "partner"}` | `description` or `values` of a link on the side of `address` |
+| `{"type": "putLinkParamset", "interfaceName", "address", "partner", "values"}` | `{"type": "putLinkParamset_response", "success"}`; values are checked against the description |
+| `{"type": "getSystemInfo"}` | `{"type": "getSystemInfo_response", "addonVersion", "firmwareVersion", "radioInterfaces": [{"interfaceName", "address", "connected", "default", "dutyCycle"}]}` (administrators) |
+| `{"type": "logout"}` | `{"type": "logout_response", "success"}`: revokes the token of this device |
+| `{"type": "listSessions"}` | `{"type": "listSessions_response", "sessions": [{"id", "user", "device", "created", "lastUsed", "current"}]}` (administrators with admin token) |
+| `{"type": "revokeSession", "id"}` | `{"type": "revokeSession_response", "success"}`: logs a device out; its open connections are closed |
+| `{"type": "getSysvars"}` | `{"type": "getSysvars_response", "sysvars": [{"id", "name", "visible", "kind", "unit", "min", "max", "value", "falseName", "trueName", "valueList"}]}`; `kind` is `bool`, `alarm`, `number`, `enum` or `string` |
+| `{"type": "setSysvar", "id", "value"}` | `{"type": "setSysvar_response", "success"}` (not for guests; audited) |
+| `{"type": "getPrograms"}` | `{"type": "getPrograms_response", "programs": [{"id", "name", "active", "visible"}]}` |
+| `{"type": "runProgram", "id"}` | `{"type": "runProgram_response", "success"}` (not for guests) |
+| `{"type": "setProgramActive", "id", "active"}` | `{"type": "setProgramActive_response", "success"}` (administrators with admin token) |
 
 ## 🧪 Testing
 
@@ -138,6 +168,22 @@ The script will:
 1. Load settings from `.env` file if present
 2. Build the local binary
 3. Start the server with test configuration
+
+### Fake CCU
+
+`pkg/fakeccu` plays the CCU from a JSON fixture: it answers the add-on's ReGa scripts, the XML-RPC interfaces and the WebUI login, takes writes in memory and sends events back like the real CCU. `integration_test.go` runs the whole server against it; you can also develop without hardware:
+
+```bash
+npm run dev:fake   # fake CCU + server + frontend, log in with Admin / secret
+```
+
+`fixtures/demo-ccu.json` is a small hand-written fixture. To create one from your own CCU (read only; names can be anonymized):
+
+```bash
+npm run export:ccu -- -o ../fixtures/my-ccu.json -anonymize
+```
+
+Like `npm run dev`, this reads `CCU_HOST`, `CCU_USER` and `CCU_PASS` from `go-server/.env`; the server doesn't need to run. Paths are relative to `go-server/`.
 
 ### Manual Testing
 

@@ -1,0 +1,93 @@
+import { expect, test } from '@playwright/test';
+import { installWebSocketMock } from './helpers/websocketMock';
+
+// Screenshot baselines, so changes to the look are seen and intended.
+// The tolerance is absolute: a ratio (e.g. 0.1 % of the pixels) lets a
+// whole new line of text through on a phone screenshot.
+// Font rendering differs between machines, so they only run on request in
+// a fixed environment:
+//   VISUAL=1 npx playwright test visual            compare
+//   VISUAL=1 npx playwright test visual -u         update the baselines
+test.skip(!process.env.VISUAL, 'visual regression tests run with VISUAL=1');
+
+const viewports = [
+  { name: 'phone', width: 390, height: 844 },
+  { name: 'tablet-portrait', width: 768, height: 1024 },
+  { name: 'tablet-landscape', width: 1024, height: 768 },
+];
+
+const views = [
+  { name: 'rooms', path: '/rooms', ready: 'Heizungsraum' },
+  { name: 'room-switch-generic', path: '/room/1', ready: 'Fenstergriff Wohnzimmer' },
+  { name: 'room-blinds', path: '/room/2', ready: 'Küche Fenster' },
+  { name: 'room-energy-door', path: '/room/3', ready: 'Haustür' },
+  { name: 'trades', path: '/trades', ready: 'Heizung' },
+  { name: 'trade-thermostat', path: '/trade/20', ready: 'Fußbodenheizung Bad' },
+  { name: 'all-devices', path: '/devices', ready: 'Rauchmelder Flur' },
+];
+
+test.use({ locale: 'de-DE', timezoneId: 'Europe/Berlin' });
+
+for (const dark of [false, true]) {
+  for (const viewport of viewports) {
+    test.describe(`${viewport.name} ${dark ? 'dark' : 'light'}`, () => {
+      test.use({ viewport: { width: viewport.width, height: viewport.height } });
+
+      test.beforeEach(async ({ page }) => {
+        await page.clock.install({ time: new Date('2026-01-15T10:00:00+01:00') });
+        await installWebSocketMock(page);
+        await page.addInitScript((dark) => localStorage.setItem('theme-dark', JSON.stringify(dark)), dark);
+      });
+
+      for (const view of views) {
+        test(view.name, async ({ page }) => {
+          await page.goto(view.path);
+          await expect(page.getByText(view.ready).first()).toBeVisible();
+          await page.evaluate(() => document.fonts.ready);
+          await expect(page).toHaveScreenshot(`${view.name}-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
+            fullPage: true,
+            animations: 'disabled',
+            maxDiffPixels: 10,
+          });
+        });
+      }
+
+      test('login', async ({ page, context }) => {
+        // A fresh page that has to log in
+        await context.clearCookies();
+        const loginPage = await context.newPage();
+        await installWebSocketMock(loginPage, { requireLogin: true });
+        await loginPage.addInitScript((dark) => localStorage.setItem('theme-dark', JSON.stringify(dark)), dark);
+        await loginPage.goto('/');
+        await expect(loginPage.getByLabel(/Passwort/)).toBeVisible();
+        await loginPage.evaluate(() => document.fonts.ready);
+        await expect(loginPage).toHaveScreenshot(`login-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
+          animations: 'disabled',
+          maxDiffPixels: 10,
+        });
+      });
+
+      test('notices', async ({ page }) => {
+        await page.goto('/room/1');
+        await page.getByRole('button', { name: /Geräte mit Problemen/ }).click();
+        await expect(page.getByRole('dialog').getByText('Fensterkontakt Bad')).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        await expect(page).toHaveScreenshot(`notices-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
+          animations: 'disabled',
+          maxDiffPixels: 10,
+        });
+      });
+
+      test('menu', async ({ page }) => {
+        await page.goto('/room/1');
+        await page.getByRole('button', { name: 'Menü' }).click();
+        await expect(page.getByRole('dialog').getByText('Heizungsraum')).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        await expect(page).toHaveScreenshot(`menu-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
+          animations: 'disabled',
+          maxDiffPixels: 10,
+        });
+      });
+    });
+  }
+}
