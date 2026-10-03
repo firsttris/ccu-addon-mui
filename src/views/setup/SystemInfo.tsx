@@ -3,6 +3,7 @@ import { Panel } from './Panel';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { Backup } from './Backup';
 import { Addons } from './Addons';
+import { Logging } from './Logging';
 import { SystemSettings } from './SystemSettings';
 import { useSystemInfo } from '../../queries';
 import { usePageTitle } from '../../contexts/PageTitleContext';
@@ -67,6 +68,7 @@ export const SystemInfo = () => (
     <Versions />
     <SystemSettings />
     <Addons />
+    <Logging />
     <Backup />
   </>
 );

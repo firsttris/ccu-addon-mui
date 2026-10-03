@@ -38,6 +38,10 @@ type Config struct {
 	PushSubject string
 	// AddonsDir holds the add-on scripts (the WebUI's Zusatzsoftware)
 	AddonsDir string
+	// SyslogConfig holds the logging settings, LogDir the log files
+	// (the WebUI's Zentralen-Wartung)
+	SyslogConfig string
+	LogDir       string
 	// AuditLogFile records every change made through the add-on; empty
 	// disables it.
 	AuditLogFile string
@@ -77,6 +81,8 @@ func Load() *Config {
 		PushFile:           getEnv("PUSH_FILE", defaultConfigFile("mui-push.json")),
 		PushSubject:        getEnv("PUSH_SUBJECT", "https://github.com/firsttris/ccu-addon-mui"),
 		AddonsDir:          getEnv("ADDONS_DIR", "/etc/config/rc.d"),
+		SyslogConfig:       getEnv("SYSLOG_CONFIG", "/etc/config/syslog"),
+		LogDir:             getEnv("LOG_DIR", "/var/log"),
 		BackupDir:          getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
 	}
 }

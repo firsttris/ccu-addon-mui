@@ -823,6 +823,32 @@ test('zeigt die Zusatzsoftware und startet ein Add-on neu', async ({ page }) => 
   await expect(page.getByText('CUx-Daemon wird neu gestartet')).toBeVisible();
 });
 
+test('stellt die Protokollierung ein und lädt die Protokolldateien herunter', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Protokollierung' });
+  await expect(panel.getByLabel('Logikschicht')).toHaveValue('2');
+  await panel.getByLabel('HomeMatic IP').selectOption({ label: 'Information' });
+  await panel.getByLabel('Syslog-Server').fill('192.168.0.10');
+  await panel.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Gespeichert')).toBeVisible();
+  await page.reload();
+  await expect(panel.getByLabel('HomeMatic IP')).toHaveValue('INFO');
+  await expect(panel.getByLabel('Syslog-Server')).toHaveValue('192.168.0.10');
+
+  const downloading = page.waitForEvent('download');
+  await panel.getByRole('button', { name: 'Protokolldateien herunterladen' }).click();
+  const file = await downloading;
+  expect(file.suggestedFilename()).toMatch(/\.log$/);
+  const text = await (await file.createReadStream()).toArray();
+  expect(Buffer.concat(text).toString()).toContain('fixture log line');
+
+  await panel.getByLabel('HomeMatic IP').selectOption({ label: 'Nur Fehler' });
+  await panel.getByLabel('Syslog-Server').fill('');
+  await panel.getByRole('button', { name: 'Speichern' }).click();
+  await expect(panel.getByLabel('Syslog-Server')).toHaveValue('');
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {

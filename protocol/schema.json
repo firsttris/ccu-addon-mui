@@ -250,6 +250,15 @@
     },
     "checkFirmwareUpdate": {
       "$ref": "#/definitions/CheckFirmwareUpdateCall"
+    },
+    "getLogging": {
+      "$ref": "#/definitions/GetLoggingCall"
+    },
+    "setLogging": {
+      "$ref": "#/definitions/SetLoggingCall"
+    },
+    "downloadLogs": {
+      "$ref": "#/definitions/DownloadLogsCall"
     }
   },
   "required": [
@@ -334,7 +343,10 @@
     "replaceDevice",
     "startComTest",
     "pollComTest",
-    "checkFirmwareUpdate"
+    "checkFirmwareUpdate",
+    "getLogging",
+    "setLogging",
+    "downloadLogs"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2813,6 +2825,15 @@
         },
         {
           "$ref": "#/definitions/CheckFirmwareUpdateResponse"
+        },
+        {
+          "$ref": "#/definitions/GetLoggingResponse"
+        },
+        {
+          "$ref": "#/definitions/SetLoggingResponse"
+        },
+        {
+          "$ref": "#/definitions/DownloadLogsResponse"
         }
       ]
     },
@@ -7057,6 +7078,198 @@
         },
         "response": {
           "$ref": "#/definitions/CheckFirmwareUpdateResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetLoggingRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLogging"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetLoggingResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLogging_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "rfd": {
+          "type": "integer"
+        },
+        "hmip": {
+          "type": "string"
+        },
+        "rega": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "host",
+        "rfd",
+        "hmip",
+        "rega"
+      ],
+      "additionalProperties": false
+    },
+    "GetLoggingCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetLoggingRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetLoggingResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetLoggingRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setLogging"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "rfd": {
+          "type": "integer"
+        },
+        "hmip": {
+          "type": "string"
+        },
+        "rega": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "host",
+        "rfd",
+        "hmip",
+        "rega"
+      ],
+      "additionalProperties": false
+    },
+    "SetLoggingResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setLogging_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetLoggingCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetLoggingRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetLoggingResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DownloadLogsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "downloadLogs"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "DownloadLogsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "downloadLogs_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "url": {
+          "type": "string"
+        },
+        "fileName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "url",
+        "fileName"
+      ],
+      "additionalProperties": false
+    },
+    "DownloadLogsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DownloadLogsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DownloadLogsResponse"
         }
       },
       "required": [

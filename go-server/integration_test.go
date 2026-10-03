@@ -66,7 +66,9 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		PushSubject:        "mailto:test@example.com",
 		AddonsDir:          addonsDir(t),
 	}
+	cfg.SyslogConfig, cfg.LogDir = logFiles(t)
 	auditLogs[ccu] = cfg.AuditLogFile
+	wsPorts[ccu] = cfg.WSPort
 
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
@@ -107,6 +109,22 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 
 // auditLogs remembers the audit log file of each started stack
 var auditLogs = map[*fakeccu.CCU]string{}
+
+// wsPorts remembers the WebSocket port of each started stack
+var wsPorts = map[*fakeccu.CCU]int{}
+
+// logFiles is a syslog config as the CCU writes it and a log directory with
+// two of the files the WebUI's log download puts together
+func logFiles(t *testing.T) (string, string) {
+	dir := t.TempDir()
+	config := filepath.Join(dir, "syslog")
+	_ = os.WriteFile(config, []byte("LOGLEVEL_RFD=2\nLOGLEVEL_HS485D=2\nLOGLEVEL_REGA=2\nLOGLEVEL_HMIP=ERROR\n"), 0o644)
+	logDir := filepath.Join(dir, "log")
+	_ = os.MkdirAll(logDir, 0o755)
+	_ = os.WriteFile(filepath.Join(logDir, "messages.0"), []byte("older line\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(logDir, "messages"), []byte("newest line\n"), 0o644)
+	return config, logDir
+}
 
 type message map[string]interface{}
 
@@ -1601,5 +1619,46 @@ func TestStackComTest(t *testing.T) {
 	send(t, conn, message{"type": "startComTest", "requestId": "t4", "address": "NOPE000000"})
 	if m := receive(t, conn, byRequestID("t4")); m["code"] != "NOT_FOUND" {
 		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}
+
+func TestStackLogging(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getLogging", "requestId": "l1"})
+	if m := receive(t, conn, byRequestID("l1")); m["rfd"] != 2.0 || m["rega"] != 2.0 || m["hmip"] != "ERROR" || m["host"] != "" {
+		t.Fatalf("unexpected logging settings: %v", m)
+	}
+	send(t, conn, message{"type": "setLogging", "requestId": "l3", "host": "10.0.0.5", "rfd": 1, "hmip": "INFO", "rega": 0})
+	if m := receive(t, conn, byRequestID("l3")); m["success"] != true {
+		t.Fatalf("setLogging failed: %v", m)
+	}
+	send(t, conn, message{"type": "getLogging", "requestId": "l4"})
+	if m := receive(t, conn, byRequestID("l4")); m["rfd"] != 1.0 || m["rega"] != 0.0 || m["hmip"] != "INFO" || m["host"] != "10.0.0.5" {
+		t.Fatalf("settings not saved: %v", m)
+	}
+	if ccu.CallCount("BidCos-RF logLevel") < 2 {
+		t.Fatal("the rfd log level was not set")
+	}
+	send(t, conn, message{"type": "setLogging", "requestId": "l5", "host": "a b", "rfd": 3, "hmip": "INFO", "rega": 0})
+	if m := receive(t, conn, byRequestID("l5")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+
+	send(t, conn, message{"type": "downloadLogs", "requestId": "d"})
+	download := receive(t, conn, byRequestID("d"))
+	url := fmt.Sprintf("http://127.0.0.1:%d%s", wsPorts[ccu], download["url"])
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if text := string(body); !strings.Contains(text, "***** messages.0 *****") || strings.Index(text, "older line") > strings.Index(text, "newest line") {
+		t.Fatalf("unexpected log download: %q", text)
+	}
+	if resp, err := http.Get(url); err != nil || resp.StatusCode != http.StatusNotFound {
+		t.Fatal("a download link must work only once")
 	}
 }

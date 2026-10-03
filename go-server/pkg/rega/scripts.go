@@ -126,6 +126,8 @@ func Scripts() map[string]string {
 		"get_read_only_channels":      getReadOnlyChannelsScript,
 		"get_history":                 getHistoryScript,
 		"clear_history":               clearHistoryScript,
+		"get_log_level":               getLogLevelScript,
+		"set_log_level":               setLogLevelScript,
 		"set_user_password":           setUserPasswordScript,
 		"get_device_programs":         getDeviceProgramsScript,
 		"get_virtual_keys":            getVirtualKeysScript,
@@ -187,6 +189,12 @@ var getHistoryScript string
 
 //go:embed scripts/clear_history.tcl
 var clearHistoryScript string
+
+//go:embed scripts/get_log_level.tcl
+var getLogLevelScript string
+
+//go:embed scripts/set_log_level.tcl
+var setLogLevelScript string
 
 //go:embed scripts/set_user_password.tcl
 var setUserPasswordScript string

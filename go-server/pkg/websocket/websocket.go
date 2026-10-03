@@ -24,6 +24,7 @@ import (
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
+	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/subscriptions"
@@ -188,6 +189,7 @@ type Server struct {
 	// Channels non-administrators may not operate
 	readOnly        readOnlyChannels
 	addons          *addons.Service
+	logs            *logs.Service
 	regaClient      *rega.Client
 	clients         map[*Client]bool
 	clientsMu       sync.RWMutex
@@ -232,6 +234,8 @@ type DeviceRPC interface {
 	PutLinkParamset(iface, address, partner string, values map[string]interface{}) error
 	ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error)
 	InstallFirmware(iface, address string) error
+	LogLevel(iface string) (int, error)
+	SetLogLevel(iface string, level int) error
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -286,6 +290,9 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("/", s.handleWebSocket)
 	if s.backup != nil {
 		mux.Handle(BackupPath, s.backup)
+	}
+	if s.logs != nil {
+		mux.Handle(LogsPath, s.logs)
 	}
 
 	s.httpServer = &http.Server{
@@ -528,6 +535,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetChannelOption(client, message)
 	case "getSystemInfo":
 		s.handleSystemInfo(client, requestID)
+	case "getLogging", "setLogging", "downloadLogs":
+		s.handleLogging(client, msgType, message)
 	case "checkFirmwareUpdate":
 		s.handleFirmwareUpdate(client, requestID)
 	case "changePassword":

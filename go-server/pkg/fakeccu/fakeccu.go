@@ -59,6 +59,10 @@ type CCU struct {
 	latitude, longitude string
 	// The system protocol is cleared (clear_history)
 	historyCleared bool
+	// Log levels of the logic layer (set_log_level) and the interfaces
+	// (logLevel)
+	regaLogLevel int
+	rpcLogLevels map[string]int
 }
 
 // CallCount returns how often an XML-RPC method was called, e.g.
@@ -112,6 +116,7 @@ func New(fixture *Fixture) *CCU {
 		InterfacePorts:   map[string]int{},
 		calls:            map[string]int{},
 		installModeUntil: map[string]time.Time{},
+		regaLogLevel:     2,
 	}
 }
 
@@ -416,6 +421,11 @@ func (c *CCU) runScript(body string) (string, error) {
 			return fmt.Sprintf("N\t%d\n%s\n", n, strings.Join(lines, "\n")), nil
 		case "clear_history":
 			c.historyCleared = true
+			return "OK", nil
+		case "get_log_level":
+			return strconv.Itoa(c.regaLogLevel), nil
+		case "set_log_level":
+			c.regaLogLevel, _ = strconv.Atoi(values["LEVEL"])
 			return "OK", nil
 		case "get_program":
 			return c.getProgram(atoi64(values["ID"])), nil
@@ -1492,6 +1502,22 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 			return defaults, ""
 		}
 		return nil, "Unknown paramset"
+	case "logLevel":
+		if c.rpcLogLevels == nil {
+			c.rpcLogLevels = map[string]int{}
+		}
+		if len(params) > 0 {
+			level, ok := params[0].(int)
+			if !ok {
+				return nil, "logLevel expects an integer"
+			}
+			c.rpcLogLevels[iface] = level
+			return level, ""
+		}
+		if level, ok := c.rpcLogLevels[iface]; ok {
+			return level, ""
+		}
+		return 2, ""
 	case "listBidcosInterfaces":
 		if data.RadioInterfaces == nil {
 			return nil, "Unknown method listBidcosInterfaces"
