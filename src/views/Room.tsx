@@ -27,6 +27,7 @@ export const Room = () => {
   return (
     <Dashboard
       tabs={<NavTabs label={m.ROOMS()} items={rooms} activeId={roomId} to="/room/$roomId" />}
+      layoutId={Number(roomId)}
       channelsByType={channelsByType}
       isLoading={isLoading}
     />

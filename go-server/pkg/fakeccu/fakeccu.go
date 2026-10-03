@@ -51,6 +51,8 @@ type CCU struct {
 	installModeUntil map[string]time.Time
 	// Time modules created by save_program, for their ids
 	timeModules int
+	// Tile layouts by room, trade or favorite list id (ReGa metadata)
+	layouts map[string]string
 }
 
 // CallCount returns how often an XML-RPC method was called, e.g.
@@ -355,6 +357,26 @@ func (c *CCU) runScript(body string) (string, error) {
 				}
 			}
 			return "NOT_FOUND", nil
+		case "get_layout", "set_layout":
+			id := values["ID"]
+			known := false
+			for _, g := range append(append([]Group{}, c.fixture.Rooms...), c.fixture.Trades...) {
+				known = known || strconv.FormatInt(g.ID, 10) == id
+			}
+			for _, f := range c.fixture.Favorites {
+				known = known || strconv.FormatInt(f.ID, 10) == id
+			}
+			if !known {
+				return "NOT_FOUND", nil
+			}
+			if c.layouts == nil {
+				c.layouts = map[string]string{}
+			}
+			if s.name == "set_layout" {
+				c.layouts[id] = values["LAYOUT"]
+				return "OK\tview", nil
+			}
+			return "OK\t" + c.layouts[id], nil
 		case "get_user_level":
 			for _, user := range c.fixture.Users {
 				if user.Name == values["USERNAME"] {

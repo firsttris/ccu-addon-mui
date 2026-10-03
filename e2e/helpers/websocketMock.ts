@@ -43,6 +43,10 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
     ];
     const programs = [{ id: 1201, name: 'Rollläden abends schließen', active: true, visible: true }];
 
+    // Tile layouts by room, trade or favorite list (kept across reloads)
+    const layouts: Record<string, string> = JSON.parse(sessionStorage.getItem('mock-layouts') ?? '{}');
+    window.addEventListener('beforeunload', () => sessionStorage.setItem('mock-layouts', JSON.stringify(layouts)));
+
     // Favorite lists of the logged-in user
     let nextFavoriteId = 1400;
     let favorites: { id: number; name: string; items: { id: number; type: string }[] }[] = [
@@ -576,6 +580,17 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         const sysvar = sysvars.find((sv) => sv.id === message.id);
         if (sysvar && message.type === 'setSysvar') sysvar.value = message.value as boolean;
         delayedBroadcast({ type: `${message.type}_response`, success: true, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'getLayout') {
+        delayedBroadcast({ type: 'getLayout_response', layout: layouts[String(message.id)] ?? '', requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'setLayout') {
+        layouts[String(message.id)] = message.layout as string;
+        delayedBroadcast({ type: 'setLayout_response', success: true, requestId: message.requestId });
         return;
       }
 

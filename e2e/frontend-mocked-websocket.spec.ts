@@ -454,6 +454,44 @@ test('öffnet als Startseite die zuletzt gezeigte Ansicht oder die Favoriten', a
   await expect(page).toHaveURL(/\/favorite\/1301$/);
 });
 
+test('ordnet die Kacheln eines Raums per Drag & Drop an', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  const tiles = page.locator('[data-tile-key]');
+  await expect(tiles.first()).toBeVisible();
+  const first = tiles.first();
+  const key = await first.getAttribute('data-tile-key');
+  const box = (await first.boundingBox())!;
+
+  // Drag the first tile to the right by a few columns
+  await page.mouse.move(box.x + 20, box.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 300, box.y + 30, { steps: 10 });
+  await page.mouse.move(box.x + 420, box.y + 30, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(async () => (await page.locator(`[data-tile-key="${key}"]`).boundingBox())!.x).toBeGreaterThan(box.x + 100);
+
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+  const stored = await page.evaluate(() =>
+    ((window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string; id?: number; layout?: string }> } }).__wsMock?.sentMessages() ?? [])
+      .filter((m) => m.type === 'setLayout'),
+  );
+  expect(stored).toHaveLength(1);
+  expect(stored[0].id).toBe(1);
+  expect(JSON.parse(stored[0].layout!).layouts.lg.some((t: { i: string; x: number }) => t.i === key && t.x > 0)).toBe(true);
+
+  // Arranged after a reload too
+  await page.reload();
+  await expect(page.locator(`[data-tile-key="${key}"]`)).toBeVisible();
+  expect((await page.locator(`[data-tile-key="${key}"]`).boundingBox())!.x).toBeGreaterThan(box.x + 100);
+
+  // Back to the sections
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  await page.getByRole('button', { name: /^(Automatisch anordnen|Arrange automatically)$/ }).click();
+  await expect(page.locator('[data-tile-key]')).toHaveCount(0);
+});
+
 test('zeigt Alarme und bestätigt sie', async ({ page }) => {
   await page.addInitScript(() => {
     // Before the app asks for them

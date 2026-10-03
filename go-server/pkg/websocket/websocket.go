@@ -510,6 +510,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleLinks(client, msgType, message)
 	case "getAllLinks":
 		s.handleAllLinks(client, requestID)
+	case "getLayout", "setLayout":
+		s.handleLayout(client, msgType, message)
 	case "setGroupMember":
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
@@ -2035,4 +2037,67 @@ func (s *Server) handleAllLinks(client *Client, requestID string) {
 		}
 	}
 	s.sendJSON(client, allLinksResponse{Type: "getAllLinks_response", RequestID: requestID, Links: links})
+}
+
+type layoutResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	// JSON, "" if none
+	Layout string `json:"layout"`
+}
+
+// handleLayout reads or stores the tile layout of a room, trade or favorite
+// list, the same for every device. Arranging tiles is operating: anyone but
+// a guest.
+func (s *Server) handleLayout(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		ID        int64  `json:"id"`
+		Layout    string `json:"layout"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if msgType == "getLayout" {
+		result, layout, err := s.regaClient.GetLayout(msg.ID)
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getLayout failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		if result != rega.SetOK {
+			s.sendRequestError(client, msg.RequestID, "getLayout: "+result, result)
+			return
+		}
+		s.sendJSON(client, layoutResponse{Type: "getLayout_response", RequestID: msg.RequestID, Layout: layout})
+		return
+	}
+	entry := audit.Entry{User: client.user, Action: msgType, Target: fmt.Sprintf("view %d", msg.ID)}
+	finish := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
+	if !canOperate(client.level) {
+		finish("FORBIDDEN")
+		s.sendRequestError(client, msg.RequestID, "guests may not arrange tiles", "FORBIDDEN")
+		return
+	}
+	result, _, err := s.regaClient.SetLayout(msg.ID, msg.Layout)
+	if err != nil {
+		code := "CCU_ERROR"
+		if strings.HasPrefix(err.Error(), "invalid") {
+			code = "INVALID_VALUE"
+		}
+		finish(code)
+		s.sendRequestError(client, msg.RequestID, "setLayout failed: "+err.Error(), code)
+		return
+	}
+	finish(result)
+	if result != rega.SetOK {
+		s.sendRequestError(client, msg.RequestID, "setLayout: "+result, result)
+		return
+	}
+	s.sendJSON(client, changeResponse{Type: "setLayout_response", RequestID: msg.RequestID, Success: true})
 }
