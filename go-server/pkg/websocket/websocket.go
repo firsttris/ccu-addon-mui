@@ -115,6 +115,11 @@ func canOperate(level string) bool {
 	return level != auth.LevelGuest
 }
 
+// canConfigure: only administrators may change device settings.
+func canConfigure(level string) bool {
+	return level == auth.LevelAdmin
+}
+
 func newClient(conn *websocket.Conn) *Client {
 	return &Client{
 		id:   strconv.FormatUint(clientIDCounter.Add(1), 10),
@@ -158,6 +163,9 @@ type Server struct {
 type DeviceRPC interface {
 	GetParamsetDescription(iface, address, paramsetKey string) (ccurpc.ParamsetDescription, error)
 	GetParamset(iface, address, paramsetKey string) (map[string]interface{}, error)
+	PutParamset(iface, address, paramsetKey string, values map[string]interface{}) error
+	ListDevices(iface string) ([]ccurpc.DeviceDescription, error)
+	InterfaceNames() []string
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -412,6 +420,10 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleGetDeviceProblems(client, requestID)
 	case "getParamsetDescription", "getParamset":
 		s.handleParamsetRequest(client, msgType, message)
+	case "putParamset":
+		s.handlePutParamset(client, message)
+	case "listDevices":
+		s.handleListDevices(client, requestID)
 	default:
 		s.sendRequestError(client, requestID, fmt.Sprintf("unknown message type: %s", msgType), "")
 	}
@@ -799,6 +811,119 @@ func (s *Server) handleParamsetRequest(client *Client, msgType string, message [
 		Type: "paramset", RequestID: msg.RequestID,
 		Address: msg.Address, ParamsetKey: msg.ParamsetKey, Values: values,
 	})
+}
+
+// Device is a device (not a channel) as listed for the setup area.
+type Device struct {
+	InterfaceName string `json:"interfaceName"`
+	ccurpc.DeviceDescription
+}
+
+type listDevicesResponse struct {
+	Type      string   `json:"type"`
+	RequestID string   `json:"requestId,omitempty"`
+	Devices   []Device `json:"devices"`
+}
+
+// handleListDevices lists the devices of all interfaces. An interface that
+// doesn't answer (e.g. no VirtualDevices) is left out.
+func (s *Server) handleListDevices(client *Client, requestID string) {
+	if s.rpc == nil {
+		s.sendRequestError(client, requestID, "listDevices is not available", "NOT_AVAILABLE")
+		return
+	}
+	devices := []Device{}
+	for _, iface := range s.rpc.InterfaceNames() {
+		list, err := s.rpc.ListDevices(iface)
+		if err != nil {
+			logger.Debugf("listDevices %s: %v", iface, err)
+			continue
+		}
+		for _, d := range list {
+			if d.Parent == "" {
+				devices = append(devices, Device{InterfaceName: iface, DeviceDescription: d})
+			}
+		}
+	}
+	s.sendJSON(client, listDevicesResponse{Type: "devices", RequestID: requestID, Devices: devices})
+}
+
+type putParamsetResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	Success   bool   `json:"success"`
+}
+
+// handlePutParamset changes device settings (MASTER). Administrators only;
+// the values are checked against the description and recorded with their
+// previous values.
+func (s *Server) handlePutParamset(client *Client, message []byte) {
+	var msg struct {
+		paramsetRequest
+		Values map[string]interface{} `json:"values"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message: "+err.Error(), "INVALID_REQUEST")
+		return
+	}
+
+	entry := audit.Entry{
+		User:   client.user,
+		Action: "putParamset",
+		Target: msg.InterfaceName + "." + msg.Address + "." + msg.ParamsetKey,
+		Value:  msg.Values,
+	}
+	fail := func(code, errorMsg string) {
+		entry.Result = code
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+	}
+
+	if !canConfigure(client.level) {
+		fail("FORBIDDEN", "only administrators may change device settings")
+		return
+	}
+	if s.rpc == nil {
+		fail("NOT_AVAILABLE", "putParamset is not available")
+		return
+	}
+	// Only settings: VALUES are written one by one with setDatapoint
+	if msg.ParamsetKey != ccurpc.ParamsetMaster {
+		fail("INVALID_REQUEST", "only the MASTER paramset can be written")
+		return
+	}
+
+	description, err := s.rpc.GetParamsetDescription(msg.InterfaceName, msg.Address, msg.ParamsetKey)
+	if err != nil {
+		fail("CCU_ERROR", "putParamset failed: "+err.Error())
+		return
+	}
+	values, err := ccurpc.CoerceValues(description, msg.Values)
+	if err != nil {
+		fail("INVALID_VALUE", err.Error())
+		return
+	}
+
+	if current, err := s.rpc.GetParamset(msg.InterfaceName, msg.Address, msg.ParamsetKey); err == nil {
+		previous := map[string]interface{}{}
+		for name := range values {
+			previous[name] = current[name]
+		}
+		entry.Previous = previous
+	}
+	entry.Value = values
+
+	if err := s.rpc.PutParamset(msg.InterfaceName, msg.Address, msg.ParamsetKey, values); err != nil {
+		fail("CCU_ERROR", "putParamset failed: "+err.Error())
+		return
+	}
+	entry.Result = "OK"
+	if err := s.audit.Record(entry); err != nil {
+		logger.Error("Failed to write the audit log:", err)
+	}
+	s.sendJSON(client, putParamsetResponse{Type: "putParamset_response", RequestID: msg.RequestID, Success: true})
 }
 
 // formatValue converts a JSON value into the string form expected by

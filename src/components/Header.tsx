@@ -193,6 +193,7 @@ export const Header: React.FC = () => {
     connectionStatus,
     authRequired,
     logout,
+    userLevel,
   } = useWebSocketContext();
   const { data: deviceProblems } = useDeviceProblems();
 
@@ -273,6 +274,16 @@ export const Header: React.FC = () => {
             >
               {t('ALL_DEVICES')}
             </SubMenuItem>
+            {userLevel === 'admin' && (
+              <SubMenuItem
+                onClick={() => {
+                  navigate({ to: '/setup' });
+                  setMenuOpen(false);
+                }}
+              >
+                {t('SETUP')}
+              </SubMenuItem>
+            )}
           </MenuSection>
           {authRequired && (
             <MenuSection>

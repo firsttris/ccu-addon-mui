@@ -101,11 +101,40 @@ export const shownParameters = (description: ParamsetDescription) =>
     )
     .sort(([a, pa], [b, pb]) => pa.tabOrder - pb.tabOrder || a.localeCompare(b));
 
+// A value as text, e.g. for the list of changes before saving
+export const formatParameterValue = (
+  parameter: ParameterDescription,
+  value: DatapointValue | undefined,
+  t: (key: TranslationKey) => string,
+): string => {
+  if (value === null || value === undefined || value === '') {
+    return '–';
+  }
+  const special = parameter.special?.find((s) => s.value === value);
+  if (special) {
+    return special.id;
+  }
+  switch (parameter.type) {
+    case 'BOOL':
+    case 'ACTION':
+      return value ? t('YES') : t('NO');
+    case 'ENUM':
+      return typeof value === 'number' ? parameter.valueList?.[value] ?? String(value) : String(value);
+    case 'FLOAT':
+    case 'INTEGER':
+      return typeof value === 'number'
+        ? `${numberFormat.format(toDisplay(parameter, value))} ${unitOf(parameter)}`.trim()
+        : String(value);
+  }
+  return String(value);
+};
+
 interface ParameterProps {
   name: string;
   parameter: ParameterDescription;
   value: DatapointValue | undefined;
   onSet: (name: string, value: string | number | boolean) => void;
+  readOnly?: boolean;
 }
 
 const NumberParameter = ({ name, parameter, value, onSet }: ParameterProps) => {
@@ -145,15 +174,18 @@ const NumberParameter = ({ name, parameter, value, onSet }: ParameterProps) => {
 };
 
 const ParameterValue = (props: ParameterProps) => {
-  const { name, parameter, value, onSet } = props;
+  const { name, parameter, value, onSet, readOnly } = props;
   const t = useTranslations();
-  const writable = (parameter.operations & Operation.WRITE) !== 0;
+  const writable = !readOnly && (parameter.operations & Operation.WRITE) !== 0;
 
   // A value with its own meaning, e.g. "not used"
   const special = parameter.special?.find((s) => s.value === value);
 
   switch (parameter.type) {
     case 'ACTION':
+      if (!writable) {
+        return <>–</>;
+      }
       return (
         <ActionButton type="button" onClick={() => onSet(name, true)}>
           {t('RUN')}
@@ -217,17 +249,24 @@ interface ParamsetViewProps {
   description: ParamsetDescription;
   values: Record<string, DatapointValue>;
   onSet: (name: string, value: string | number | boolean) => void;
+  // Show values only, e.g. settings for users who may not change them
+  readOnly?: boolean;
+  // Names of parameters with an unsaved change, highlighted
+  changed?: Set<string>;
 }
 
-export const ParamsetView = ({ label, description, values, onSet }: ParamsetViewProps) => {
+export const ParamsetView = ({ label, description, values, onSet, readOnly, changed }: ParamsetViewProps) => {
   const t = useTranslations();
   return (
     <List aria-label={label}>
       {shownParameters(description).map(([name, parameter]) => (
         <div key={name} style={{ display: 'contents' }}>
-          <Key title={name}>{t(name as TranslationKey)}</Key>
+          <Key title={name} style={changed?.has(name) ? { fontWeight: 700 } : undefined}>
+            {t(name as TranslationKey)}
+            {changed?.has(name) ? ' •' : ''}
+          </Key>
           <Value>
-            <ParameterValue name={name} parameter={parameter} value={values[name]} onSet={onSet} />
+            <ParameterValue name={name} parameter={parameter} value={values[name]} onSet={onSet} readOnly={readOnly} />
           </Value>
         </div>
       ))}

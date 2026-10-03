@@ -300,3 +300,53 @@ func TestStackGuestMayNotControlAndChangesAreAudited(t *testing.T) {
 		t.Errorf("unexpected second entry: %v", e)
 	}
 }
+
+func TestStackChangeDeviceSettings(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	put := func(id string, values map[string]interface{}) message {
+		send(t, conn, message{"type": "putParamset", "requestId": id, "interfaceName": "HmIP-RF",
+			"address": "0000DBE9A5C1F2:1", "paramsetKey": "MASTER", "values": values})
+		return receive(t, conn, byRequestID(id))
+	}
+
+	if m := put("q1", map[string]interface{}{"EVENT_DELAY_UNIT": 2}); m["success"] != true {
+		t.Fatalf("putParamset failed: %v", m)
+	}
+	send(t, conn, message{"type": "getParamset", "requestId": "q2", "interfaceName": "HmIP-RF", "address": "0000DBE9A5C1F2:1", "paramsetKey": "MASTER"})
+	values := receive(t, conn, byRequestID("q2"))["values"].(map[string]interface{})
+	if values["EVENT_DELAY_UNIT"] != 2.0 {
+		t.Fatalf("value not stored: %v", values)
+	}
+
+	// Outside the value list: refused before it reaches the CCU
+	if m := put("q3", map[string]interface{}{"EVENT_DELAY_UNIT": 7}); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+	if ccu.CallCount("HmIP-RF putParamset") != 1 {
+		t.Fatalf("expected one putParamset, got %d", ccu.CallCount("HmIP-RF putParamset"))
+	}
+
+	data, _ := os.ReadFile(auditLogs[ccu])
+	if !strings.Contains(string(data), `"previous":{"EVENT_DELAY_UNIT":0}`) || !strings.Contains(string(data), `"result":"INVALID_VALUE"`) {
+		t.Fatalf("unexpected audit log: %s", data)
+	}
+}
+
+func TestStackListDevices(t *testing.T) {
+	_, conn := startStack(t, "none")
+	send(t, conn, message{"type": "auth"})
+	receive(t, conn, func(m message) bool { return m["type"] == "auth_response" })
+
+	send(t, conn, message{"type": "listDevices", "requestId": "q1"})
+	devices := receive(t, conn, byRequestID("q1"))["devices"].([]interface{})
+	types := map[string]string{}
+	for _, raw := range devices {
+		d := raw.(map[string]interface{})
+		types[d["address"].(string)] = d["interfaceName"].(string) + " " + d["type"].(string)
+	}
+	if len(types) != 3 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" {
+		t.Fatalf("unexpected devices: %v", types)
+	}
+}

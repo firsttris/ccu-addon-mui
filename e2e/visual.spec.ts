@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { installWebSocketMock } from './helpers/websocketMock';
 
-// Screenshot baselines for refactorings that must not change the look
+// Screenshot baselines for refactorings that must not change the look.
+// The tolerance is absolute: a ratio (e.g. 0.1 % of the pixels) lets a
+// whole new line of text through on a phone screenshot.
 // (icon library, styling migration). Font rendering differs between
 // machines, so they only run on request in a fixed environment:
 //   VISUAL=1 npx playwright test visual            compare
@@ -66,7 +68,7 @@ for (const dark of [false, true]) {
           await expect(page).toHaveScreenshot(`${view.name}-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
             fullPage: true,
             animations: 'disabled',
-            maxDiffPixelRatio: 0.001,
+            maxDiffPixels: 10,
           });
         });
       }
@@ -78,7 +80,7 @@ for (const dark of [false, true]) {
         await page.evaluate(() => document.fonts.ready);
         await expect(page).toHaveScreenshot(`menu-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
           animations: 'disabled',
-          maxDiffPixelRatio: 0.001,
+          maxDiffPixels: 10,
         });
       });
     });

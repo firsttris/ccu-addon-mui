@@ -99,3 +99,52 @@ test('dimmt über den generischen Renderer aus der Paramset-Beschreibung', async
   await page.reload();
   await expect(page.getByLabel('Dimmer Esstisch', { exact: true }).getByRole('textbox', { name: 'LEVEL' })).toHaveValue('40');
 });
+
+test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ page }) => {
+  await login(page);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('button', { name: 'Einrichten' }).click();
+  await expect(page).toHaveURL(/\/setup$/);
+
+  // Device list from all interfaces, searchable
+  const table = page.getByRole('table');
+  await expect(table.getByText('HmIP-SRH')).toBeVisible();
+  await page.getByRole('searchbox', { name: 'Suchen' }).fill('Fenstergriff');
+  await expect(table.getByRole('row')).toHaveCount(2);
+  await table.getByRole('link', { name: 'Fenstergriff Wohnzimmer' }).click();
+
+  const settings = page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' });
+  const select = settings.getByRole('combobox', { name: 'EVENT_DELAY_UNIT' });
+  await expect(select).toHaveValue('0');
+  await select.selectOption({ label: '5S' });
+
+  await page.getByRole('button', { name: 'Speichern (1)' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Änderungen speichern?' });
+  await expect(dialog).toContainText('EVENT_DELAY_UNIT');
+  await expect(dialog).toContainText('100MS → 5S');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+
+  // Stored in the (fake) CCU
+  await page.reload();
+  await expect(
+    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'EVENT_DELAY_UNIT' }),
+  ).toHaveValue('2');
+});
+
+test('zeigt Gästen die Einstellungen nur an', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel(/Benutzername/).fill('Gast');
+  await page.getByLabel(/Passwort/).fill('gast');
+  await page.getByRole('button', { name: 'Anmelden' }).click();
+  await expect(page.getByRole('heading', { name: 'CCU Addon MUI' })).toBeVisible();
+
+  // No menu entry; the page itself only shows the values
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await expect(page.getByRole('button', { name: 'Einrichten' })).toHaveCount(0);
+  await page.goto('/device/HmIP-RF/0000DBE9A5C1F2');
+  await expect(page.getByText('Nur Administratoren können Einstellungen ändern.')).toBeVisible();
+  await expect(page.getByText('100MS')).toBeVisible();
+  await expect(page.getByRole('combobox')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Speichern/ })).toHaveCount(0);
+});

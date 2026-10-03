@@ -4,7 +4,7 @@ import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
 import { applyEvent, groupChannelsByType, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
-import { Channel, HmEvent, ParamsetDescription } from '../types/types';
+import { Channel, DatapointValue, Device, HmEvent, ParamsetDescription } from '../types/types';
 
 // Server data loaded through TanStack Query. The queryFn sends its request
 // over the WebSocket (request() in useWebsocket); after a reconnect all
@@ -57,6 +57,56 @@ export const useParamsetDescription = (
     staleTime: Infinity,
     // Not every interface has descriptions (e.g. CUxD); show the raw values
     retry: false,
+  });
+};
+
+// The current values of a paramset (MASTER: the device's settings)
+export const useParamset = (
+  interfaceName: string,
+  address: string,
+  paramsetKey: 'VALUES' | 'MASTER',
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['paramset', interfaceName, address, paramsetKey],
+    queryFn: async () =>
+      ((await request({ type: 'getParamset', interfaceName, address, paramsetKey })).values ?? {}) as Record<
+        string,
+        DatapointValue
+      >,
+    enabled,
+    retry: false,
+  });
+};
+
+// All devices of all interfaces, for the setup area
+export const useDevices = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['devices'],
+    queryFn: async () => ((await request({ type: 'listDevices' })).devices ?? []) as unknown as Device[],
+  });
+};
+
+// Saves changed settings (MASTER) of one device or channel
+export const usePutParamset = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      interfaceName,
+      address,
+      values,
+    }: {
+      interfaceName: string;
+      address: string;
+      values: Record<string, DatapointValue>;
+    }) => {
+      await request({ type: 'putParamset', interfaceName, address, paramsetKey: 'MASTER', values }, { queue: false });
+    },
+    onSettled: (_, __, { interfaceName, address }) =>
+      queryClient.invalidateQueries({ queryKey: ['paramset', interfaceName, address] }),
   });
 };
 

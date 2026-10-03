@@ -202,3 +202,14 @@ export interface ParameterDescription {
 }
 
 export type ParamsetDescription = Record<string, ParameterDescription>;
+
+// A device (not a channel) as listed by the CCU's interfaces
+export interface Device {
+  interfaceName: string;
+  type: string;
+  address: string;
+  children?: string[];
+  paramsets: string[];
+  version: number;
+  firmware?: string;
+}

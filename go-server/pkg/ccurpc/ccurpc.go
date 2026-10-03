@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -95,6 +96,16 @@ func New(cfg *config.Config) (*Client, error) {
 		callers[iface.Name] = client
 	}
 	return newClient(callers), nil
+}
+
+// InterfaceNames returns the names of the interfaces, sorted.
+func (c *Client) InterfaceNames() []string {
+	names := make([]string, 0, len(c.interfaces))
+	for name := range c.interfaces {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
 }
 
 func newClient(callers map[string]caller) *Client {

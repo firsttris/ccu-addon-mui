@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -501,6 +502,17 @@ func (f *fakeDeviceRPC) GetParamset(iface, address, key string) (map[string]inte
 	return map[string]interface{}{"STATE": true}, nil
 }
 
+func (f *fakeDeviceRPC) ListDevices(iface string) ([]ccurpc.DeviceDescription, error) {
+	return nil, nil
+}
+
+func (f *fakeDeviceRPC) InterfaceNames() []string { return []string{"HmIP-RF"} }
+
+func (f *fakeDeviceRPC) PutParamset(iface, address, key string, values map[string]interface{}) error {
+	f.calls = append(f.calls, fmt.Sprintf("put %s %s %s %v", iface, address, key, values))
+	return nil
+}
+
 func TestParamsetRequests(t *testing.T) {
 	s := NewServer(nil, nil)
 	client := &Client{send: make(chan []byte, 3)}
@@ -541,5 +553,29 @@ func TestParamsetRequests(t *testing.T) {
 
 	if len(rpc.calls) != 3 || rpc.calls[0] != "description HmIP-RF A:1 VALUES" {
 		t.Fatalf("unexpected calls: %v", rpc.calls)
+	}
+}
+
+func TestPutParamsetOnlyForAdministrators(t *testing.T) {
+	s := NewServer(nil, nil)
+	rpc := &fakeDeviceRPC{}
+	s.SetDeviceRPC(rpc)
+	client := &Client{send: make(chan []byte, 4)}
+	put := `{"type":"putParamset","requestId":"q1","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"MASTER","values":{"STATE":false}}`
+
+	client.setSession("Gast", auth.LevelGuest)
+	s.handleMessage(client, []byte(put))
+	assertErrorMessageContains(t, <-client.send, "only administrators")
+
+	client.setSession("Benutzer", auth.LevelUser)
+	s.handleMessage(client, []byte(put))
+	assertErrorMessageContains(t, <-client.send, "only administrators")
+
+	client.setSession("Admin", auth.LevelAdmin)
+	s.handleMessage(client, []byte(`{"type":"putParamset","requestId":"q2","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"VALUES","values":{"STATE":false}}`))
+	assertErrorMessageContains(t, <-client.send, "only the MASTER paramset")
+
+	if len(rpc.calls) != 0 {
+		t.Fatalf("nothing must reach the CCU: %v", rpc.calls)
 	}
 }
