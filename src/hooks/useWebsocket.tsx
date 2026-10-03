@@ -10,7 +10,6 @@ import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Channel,
-  ChannelType,
   DeviceProblem,
   HmEvent,
   Room,
@@ -22,6 +21,7 @@ import React, { createContext, useContext } from 'react';
 import { useUniqueDeviceID } from './useUniqueDeviceID';
 import { useToast } from '../contexts/ToastContext';
 import { useTranslations } from '../i18n/utils';
+import { applyEvent, groupChannelsByType, Value } from './channels';
 
 export interface Response {
   type?:
@@ -62,8 +62,6 @@ const isSameRequest = (a: ChannelRequest, b: ChannelRequest) =>
 // 'pending' until the server answered the auth message sent on connect
 export type AuthState = 'pending' | 'authenticated' | 'loginRequired';
 
-type Value = string | number | boolean;
-
 interface PendingRequest {
   resolve: (response: Response) => void;
   reject: (error: Error) => void;
@@ -77,23 +75,6 @@ interface PendingSet {
   sent: Value;
   timeout: ReturnType<typeof setTimeout>;
 }
-
-// Types with a control come first, in this order; all others follow
-// alphabetically and are shown by GenericControl.
-const typeOrder: Partial<Record<string, number>> = {
-  [ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER]: 1,
-  [ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER]: 2,
-  [ChannelType.SWITCH_VIRTUAL_RECEIVER]: 3,
-  [ChannelType.BLIND_VIRTUAL_RECEIVER]: 4,
-  [ChannelType.KEYMATIC]: 5,
-  [ChannelType.ENERGIE_METER_TRANSMITTER]: 6,
-};
-
-// Channels that only hold configuration, not a state worth showing
-const isHiddenChannel = (channel: Channel) =>
-  channel.type === 'MAINTENANCE' ||
-  channel.type.endsWith('_WEEK_PROFILE') ||
-  Object.keys(channel.datapoints).length === 0;
 
 const TOKEN_STORAGE_KEY = 'ccu-addon-mui_AuthToken';
 const SET_DATAPOINT_TIMEOUT_MS = 15000;
@@ -158,63 +139,11 @@ export const useWebsocket = () => {
   // so they never collide with the setDatapoint ones.
   const pendingRequestsRef = useRef(new Map<string, PendingRequest>());
 
-  const sortedChannelsByType = useMemo(() => {
-    const channelsPerType = channels.reduce((acc, channel) => {
-      if (isHiddenChannel(channel)) {
-        return acc;
-      }
-      const channels = acc.get(channel.type);
-      if (channels) {
-        channels.push(channel);
-      } else {
-        acc.set(channel.type, [channel]);
-      }
-      return acc;
-    }, new Map<string, Channel[]>());
-
-    return Array.from(channelsPerType).sort(
-      ([typeA], [typeB]) =>
-        (typeOrder[typeA] ?? 999) - (typeOrder[typeB] ?? 999) || typeA.localeCompare(typeB),
-    );
-  }, [channels]);
+  const sortedChannelsByType = useMemo(() => groupChannelsByType(channels), [channels]);
 
   const updateChannels = useCallback(
-    (event: HmEvent, onlyIfCurrent?: { value: Value }) => {
-      // BidCos devices call it LOWBAT, HmIP devices LOW_BAT
-      const statusType = event.datapoint === 'LOWBAT' ? 'LOW_BAT' : event.datapoint;
-      const isStatusEvent = statusType === 'LOW_BAT' || statusType === 'UNREACH';
-
-      setChannels((prevChannels) => {
-        let changed = false;
-        const nextChannels = prevChannels.map((channel) => {
-          if (channel.address === event.channel) {
-            const datapoints = channel.datapoints as Record<string, unknown>;
-            // A rollback must not overwrite a value an event brought in since
-            if (onlyIfCurrent && datapoints[event.datapoint] !== onlyIfCurrent.value) {
-              return channel;
-            }
-            changed = true;
-            return {
-              ...channel,
-              datapoints: {
-                ...channel.datapoints,
-                [event.datapoint]: event.value,
-              },
-            } as Channel;
-          }
-          // One device's status applies to all of its channels
-          if (isStatusEvent && channel.statusAddress === event.channel) {
-            changed = true;
-            return {
-              ...channel,
-              status: { ...channel.status, [statusType]: event.value === true },
-            };
-          }
-          return channel;
-        });
-        return changed ? nextChannels : prevChannels;
-      });
-    },
+    (event: HmEvent, onlyIfCurrent?: { value: Value }) =>
+      setChannels((prevChannels) => applyEvent(prevChannels, event, onlyIfCurrent)),
     [],
   );
 

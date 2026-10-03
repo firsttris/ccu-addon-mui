@@ -11,6 +11,10 @@
     "build": "vite build && tsc",
     "preview": "vite preview",
     "postbuild": "npm run remove:build && npm run copy:build && npm run tar:gz",
+    "test": "vitest run",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "typecheck": "tsc --noEmit -p .",
     "test:e2e": "playwright test",
     "test:visual": "VISUAL=1 playwright test visual",
     "test:visual:update": "VISUAL=1 playwright test visual -u",
@@ -53,16 +57,21 @@
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",
     "@tanstack/router-plugin": "^1.168.41",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^24.10.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "concurrently": "^10.0.5",
+    "jsdom": "^29.1.1",
     "nyc": "^18.0.0",
     "typescript": "^7.0.2",
     "unplugin-icons": "^24.0.0",
     "v8-to-istanbul": "^9.3.0",
     "vite": "^8.3.1",
-    "vite-plugin-pwa": "^1.3.0"
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^5.0.3"
   }
 }
