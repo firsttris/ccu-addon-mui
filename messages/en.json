@@ -274,5 +274,14 @@
   "PROFILE_SAVE_HINT": "Battery devices fetch the new schedule the next time they wake up.",
   "NEXT_CHANGE": "{time} → {temperature}",
   "TODAY": "Today",
-  "CHANGES_ONE": "1 change"
+  "CHANGES_ONE": "1 change",
+  "GROUP_OPERATION": "Operation & display",
+  "GROUP_HEATING": "Heating",
+  "GROUP_SWITCHING": "Switching & moving",
+  "GROUP_RADIO": "Radio & system",
+  "GROUP_OTHER": "Further settings",
+  "GROUP_SCHEDULE": "Switching times (week program)",
+  "GROUP_EXPERT": "Expert settings",
+  "EDIT_WEEK_PROFILE": "Edit week schedule",
+  "SETTINGS_COUNT": "{count} settings"
 }

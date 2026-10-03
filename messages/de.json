@@ -274,5 +274,14 @@
   "PROFILE_SAVE_HINT": "Batteriegeräte holen das neue Programm beim nächsten Aufwachen ab.",
   "NEXT_CHANGE": "{time} → {temperature}",
   "TODAY": "Heute",
-  "CHANGES_ONE": "1 Änderung"
+  "CHANGES_ONE": "1 Änderung",
+  "GROUP_OPERATION": "Bedienung & Anzeige",
+  "GROUP_HEATING": "Heizen",
+  "GROUP_SWITCHING": "Schalten & Fahren",
+  "GROUP_RADIO": "Funk & System",
+  "GROUP_OTHER": "Weitere Einstellungen",
+  "GROUP_SCHEDULE": "Schaltzeiten (Wochenprogramm)",
+  "GROUP_EXPERT": "Experten-Einstellungen",
+  "EDIT_WEEK_PROFILE": "Wochenprogramm bearbeiten",
+  "SETTINGS_COUNT": "{count} Einstellungen"
 }

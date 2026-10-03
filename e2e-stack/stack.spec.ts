@@ -113,13 +113,13 @@ test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ pag
   await table.getByRole('link', { name: 'Fenstergriff Wohnzimmer' }).click();
 
   const settings = page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' });
-  const select = settings.getByRole('combobox', { name: 'EVENT_DELAY_UNIT' });
+  const select = settings.getByRole('combobox', { name: 'Entprellzeit (Einheit)' });
   await expect(select).toHaveValue('0');
   await select.selectOption({ label: '5S' });
 
   await page.getByRole('button', { name: 'Speichern (1)' }).click();
   const dialog = page.getByRole('dialog', { name: 'Änderungen speichern?' });
-  await expect(dialog).toContainText('EVENT_DELAY_UNIT');
+  await expect(dialog).toContainText('Entprellzeit (Einheit)');
   await expect(dialog).toContainText('100MS → 5S');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
@@ -127,7 +127,7 @@ test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ pag
   // Stored in the (fake) CCU
   await page.reload();
   await expect(
-    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'EVENT_DELAY_UNIT' }),
+    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'Entprellzeit (Einheit)' }),
   ).toHaveValue('2');
 });
 
@@ -167,12 +167,12 @@ test('verlangt nach Ablauf des Admin-Tokens das Passwort erneut', async ({ page 
   await dialog.getByLabel('Passwort').fill('secret');
   await dialog.getByRole('button', { name: 'Bestätigen' }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(settings.getByRole('combobox', { name: 'EVENT_DELAY_UNIT' })).toBeVisible();
+  await expect(settings.getByRole('combobox', { name: 'Entprellzeit (Einheit)' })).toBeVisible();
 
   // Kept across a reload
   await page.reload();
   await expect(
-    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'EVENT_DELAY_UNIT' }),
+    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'Entprellzeit (Einheit)' }),
   ).toBeVisible();
 });
 

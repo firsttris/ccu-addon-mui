@@ -19,6 +19,9 @@ import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { useChannelNames } from './channelNames';
 import { NamesAndRooms } from './NamesAndRooms';
+import { GroupedSettings } from './GroupedSettings';
+import { WeekProfileSheet } from '../../controls/ThermostatControl/profile/WeekProfileSheet';
+import { parameterLabel } from '../../controls/generic/parameters';
 import { Links } from './Links';
 import { m } from '../../paraglide/messages';
 
@@ -44,6 +47,7 @@ export const DeviceSettings = () => {
   const pairingAction = usePairingAction();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
+  const [scheduleAddress, setScheduleAddress] = useState<string | null>(null);
   const [deleteOptions, setDeleteOptions] = useState({ reset: false, force: false });
 
   const device = devices?.find((d) => d.address === address && d.interfaceName === interfaceName);
@@ -179,7 +183,12 @@ export const DeviceSettings = () => {
         <div className="flex min-w-0 flex-col gap-5">
           {sections.map((s) => {
             const draft = drafts[s.address] ?? {};
-            const label = s.address === address ? m.DEVICE_SETTINGS() : (names.get(s.address) ?? s.address);
+            // Device-wide settings: on the device (BidCos) or its channel 0 (HmIP)
+            const label =
+              s.address === address ||
+              (s.address === `${address}:0` && [undefined, s.address].includes(names.get(s.address)))
+                ? m.DEVICE_SETTINGS()
+                : (names.get(s.address) ?? s.address);
             return (
               <Section key={s.address} aria-label={label}>
                 <h2 className="flex items-baseline justify-between gap-2">
@@ -188,13 +197,14 @@ export const DeviceSettings = () => {
                     <span className="shrink-0 font-mono text-xs font-normal text-muted-foreground">{s.address}</span>
                   )}
                 </h2>
-                <ParamsetView
+                <GroupedSettings
                   label={`${label} ${s.address}`}
                   description={s.description}
                   values={{ ...s.current, ...draft }}
                   changed={new Set(Object.keys(draft))}
                   readOnly={!canEdit}
                   onSet={(name, value) => setDraft(s.address, s.current, name, value)}
+                  onEditWeekProfile={() => setScheduleAddress(s.address)}
                 />
               </Section>
             );
@@ -267,6 +277,13 @@ export const DeviceSettings = () => {
       )}
 
       {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}
+      <WeekProfileSheet
+        open={scheduleAddress !== null}
+        onOpenChange={(open) => !open && setScheduleAddress(null)}
+        interfaceName={interfaceName}
+        address={scheduleAddress ?? address}
+        name={names.get(scheduleAddress ?? address) ?? title}
+      />
 
       {confirming && (
         <ConfirmDialog
@@ -279,7 +296,7 @@ export const DeviceSettings = () => {
           <ul className="flex list-disc flex-col gap-1 pl-5">
             {changes.map((c) => (
               <li key={`${c.address}.${c.name}`}>
-                <strong>{t(c.name as TranslationKey)}</strong> ({names.get(c.address) ?? c.address}):{' '}
+                <strong>{parameterLabel(c.name)}</strong> ({names.get(c.address) ?? c.address}):{' '}
                 {formatParameterValue(c.parameter, c.previous, t)} → {formatParameterValue(c.parameter, c.value, t)}
               </li>
             ))}
