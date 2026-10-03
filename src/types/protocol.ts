@@ -54,7 +54,13 @@ export type ServerMessage =
   | GetLinksResponse
   | GetLinkParamsetDescriptionResponse
   | GetLinkParamsetResponse
-  | GetSystemInfoResponse;
+  | GetSystemInfoResponse
+  | CreateGroupResponse
+  | RenameGroupResponse
+  | DeleteGroupResponse
+  | CreateSysvarResponse
+  | RenameSysvarResponse
+  | DeleteSysvarResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -93,6 +99,12 @@ export interface Protocol {
   getLinkParamsetDescription: GetLinkParamsetDescriptionCall;
   getLinkParamset: GetLinkParamsetCall;
   getSystemInfo: GetSystemInfoCall;
+  createGroup: CreateGroupCall;
+  renameGroup: RenameGroupCall;
+  deleteGroup: DeleteGroupCall;
+  createSysvar: CreateSysvarCall;
+  renameSysvar: RenameSysvarCall;
+  deleteSysvar: DeleteSysvarCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1210,6 +1222,176 @@ export interface RadioInterface {
   connected: boolean;
   default: boolean;
   dutyCycle: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateGroupCall".
+ */
+export interface CreateGroupCall {
+  request: CreateGroupRequest;
+  response: CreateGroupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateGroupRequest".
+ */
+export interface CreateGroupRequest {
+  type: "createGroup";
+  requestId?: string;
+  list: "rooms" | "trades";
+  name: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateGroupResponse".
+ */
+export interface CreateGroupResponse {
+  type: "createGroup_response";
+  requestId?: string;
+  success: boolean;
+  id?: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameGroupCall".
+ */
+export interface RenameGroupCall {
+  request: RenameGroupRequest;
+  response: RenameGroupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameGroupRequest".
+ */
+export interface RenameGroupRequest {
+  type: "renameGroup";
+  requestId?: string;
+  list: "rooms" | "trades";
+  id: number;
+  name: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameGroupResponse".
+ */
+export interface RenameGroupResponse {
+  type: "renameGroup_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteGroupCall".
+ */
+export interface DeleteGroupCall {
+  request: DeleteGroupRequest;
+  response: DeleteGroupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteGroupRequest".
+ */
+export interface DeleteGroupRequest {
+  type: "deleteGroup";
+  requestId?: string;
+  list: "rooms" | "trades";
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteGroupResponse".
+ */
+export interface DeleteGroupResponse {
+  type: "deleteGroup_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateSysvarCall".
+ */
+export interface CreateSysvarCall {
+  request: CreateSysvarRequest;
+  response: CreateSysvarResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateSysvarRequest".
+ */
+export interface CreateSysvarRequest {
+  type: "createSysvar";
+  requestId?: string;
+  name: string;
+  kind: "bool" | "alarm" | "number" | "enum" | "string";
+  unit?: string;
+  min?: number;
+  max?: number;
+  falseName?: string;
+  trueName?: string;
+  valueList?: string[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateSysvarResponse".
+ */
+export interface CreateSysvarResponse {
+  type: "createSysvar_response";
+  requestId?: string;
+  success: boolean;
+  id?: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameSysvarCall".
+ */
+export interface RenameSysvarCall {
+  request: RenameSysvarRequest;
+  response: RenameSysvarResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameSysvarRequest".
+ */
+export interface RenameSysvarRequest {
+  type: "renameSysvar";
+  requestId?: string;
+  id: number;
+  name: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameSysvarResponse".
+ */
+export interface RenameSysvarResponse {
+  type: "renameSysvar_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteSysvarCall".
+ */
+export interface DeleteSysvarCall {
+  request: DeleteSysvarRequest;
+  response: DeleteSysvarResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteSysvarRequest".
+ */
+export interface DeleteSysvarRequest {
+  type: "deleteSysvar";
+  requestId?: string;
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteSysvarResponse".
+ */
+export interface DeleteSysvarResponse {
+  type: "deleteSysvar_response";
+  requestId?: string;
+  success: boolean;
 }
 /**
  * Sent first on every connection

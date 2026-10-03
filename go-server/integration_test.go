@@ -765,3 +765,67 @@ func TestStackSystemInfo(t *testing.T) {
 		t.Fatalf("expected FORBIDDEN, got %v", m)
 	}
 }
+
+func TestStackCreateRenameDeleteRoomsAndSysvars(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "createGroup", "requestId": "q1", "list": "rooms", "name": "Garage"})
+	created := receive(t, conn, byRequestID("q1"))
+	id, ok := created["id"].(float64)
+	if created["success"] != true || !ok {
+		t.Fatalf("createGroup failed: %v", created)
+	}
+	send(t, conn, message{"type": "renameGroup", "requestId": "q2", "list": "rooms", "id": id, "name": "Carport"})
+	if m := receive(t, conn, byRequestID("q2")); m["success"] != true {
+		t.Fatalf("renameGroup failed: %v", m)
+	}
+	send(t, conn, message{"type": "getRooms", "requestId": "q3", "deviceId": "test"})
+	if rooms := fmt.Sprint(receive(t, conn, byRequestID("q3"))["rooms"]); !strings.Contains(rooms, "Carport") {
+		t.Fatalf("room not renamed: %v", rooms)
+	}
+	// A room id from the other list is not found
+	send(t, conn, message{"type": "deleteGroup", "requestId": "q4", "list": "trades", "id": id})
+	if m := receive(t, conn, byRequestID("q4")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+	send(t, conn, message{"type": "deleteGroup", "requestId": "q5", "list": "rooms", "id": id})
+	if m := receive(t, conn, byRequestID("q5")); m["success"] != true {
+		t.Fatalf("deleteGroup failed: %v", m)
+	}
+	send(t, conn, message{"type": "createGroup", "requestId": "q6", "list": "rooms", "name": `x"); system.Exec("y`})
+	if m := receive(t, conn, byRequestID("q6")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected the injection to be refused, got %v", m)
+	}
+
+	send(t, conn, message{"type": "createSysvar", "requestId": "q7", "name": "Gäste", "kind": "enum", "valueList": []string{"keine", "Familie", "Freunde"}})
+	created = receive(t, conn, byRequestID("q7"))
+	svID, ok := created["id"].(float64)
+	if created["success"] != true || !ok {
+		t.Fatalf("createSysvar failed: %v", created)
+	}
+	send(t, conn, message{"type": "getSysvars", "requestId": "q8"})
+	sysvars := fmt.Sprint(receive(t, conn, byRequestID("q8"))["sysvars"])
+	if !strings.Contains(sysvars, "Gäste") || !strings.Contains(sysvars, "Freunde") {
+		t.Fatalf("sysvar not created: %v", sysvars)
+	}
+	send(t, conn, message{"type": "renameSysvar", "requestId": "q9", "id": svID, "name": "Besuch"})
+	if m := receive(t, conn, byRequestID("q9")); m["success"] != true {
+		t.Fatalf("renameSysvar failed: %v", m)
+	}
+	send(t, conn, message{"type": "deleteSysvar", "requestId": "q10", "id": svID})
+	if m := receive(t, conn, byRequestID("q10")); m["success"] != true {
+		t.Fatalf("deleteSysvar failed: %v", m)
+	}
+	send(t, conn, message{"type": "createSysvar", "requestId": "q11", "name": "Leer", "kind": "enum"})
+	if m := receive(t, conn, byRequestID("q11")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected an enum without values to be refused, got %v", m)
+	}
+
+	// Guests may not
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "createGroup", "requestId": "q12", "list": "trades", "name": "Garten"})
+	if m := receive(t, conn, byRequestID("q12")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}

@@ -241,6 +241,53 @@ func (c *CCU) runScript(body string) (string, error) {
 			return c.getDeviceNames(), nil
 		case "set_group_member":
 			return c.setGroupMember(values["GROUP_ID"], values["CHANNEL_ID"], values["ACTION"] == "Add"), nil
+		case "create_group":
+			groups := c.groups(values["LIST_ID"])
+			if groups == nil {
+				return "NOT_FOUND", nil
+			}
+			id := c.nextID()
+			*groups = append(*groups, Group{ID: id, Name: values["NAME"], Channels: []int64{}})
+			return fmt.Sprintf("OK\t%d", id), nil
+		case "rename_group", "delete_group":
+			groups := c.groups(values["LIST_ID"])
+			if groups == nil {
+				return "NOT_FOUND", nil
+			}
+			for i, g := range *groups {
+				if strconv.FormatInt(g.ID, 10) == values["ID"] {
+					if s.name == "rename_group" {
+						(*groups)[i].Name = values["NAME"]
+					} else {
+						*groups = append((*groups)[:i], (*groups)[i+1:]...)
+					}
+					return "OK\t" + g.Name, nil
+				}
+			}
+			return "NOT_FOUND", nil
+		case "create_sysvar":
+			id := c.nextID()
+			valueType, _ := strconv.Atoi(values["VALUE_TYPE"])
+			subType, _ := strconv.Atoi(values["SUB_TYPE"])
+			c.fixture.Sysvars = append(c.fixture.Sysvars, Sysvar{
+				ID: id, Name: values["NAME"], Visible: true, ValueType: valueType, SubType: subType,
+				Unit: values["UNIT"], Min: values["MIN"], Max: values["MAX"],
+				FalseName: values["FALSE_NAME"], TrueName: values["TRUE_NAME"], ValueList: values["VALUE_LIST"],
+				Value: parseRegaValue(strings.Trim(values["INITIAL"], `"`)),
+			})
+			return fmt.Sprintf("OK\t%d", id), nil
+		case "rename_sysvar", "delete_sysvar":
+			for i, sv := range c.fixture.Sysvars {
+				if strconv.FormatInt(sv.ID, 10) == values["ID"] {
+					if s.name == "rename_sysvar" {
+						c.fixture.Sysvars[i].Name = values["NAME"]
+					} else {
+						c.fixture.Sysvars = append(c.fixture.Sysvars[:i], c.fixture.Sysvars[i+1:]...)
+					}
+					return "OK\t" + sv.Name, nil
+				}
+			}
+			return "NOT_FOUND", nil
 		case "get_user_level":
 			for _, user := range c.fixture.Users {
 				if user.Name == values["USERNAME"] {
@@ -251,6 +298,35 @@ func (c *CCU) runScript(body string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("unknown script")
+}
+
+// groups returns the rooms or trades for a ReGa list constant.
+func (c *CCU) groups(listID string) *[]Group {
+	switch listID {
+	case "ID_ROOMS":
+		return &c.fixture.Rooms
+	case "ID_FUNCTIONS":
+		return &c.fixture.Trades
+	}
+	return nil
+}
+
+// nextID returns an id no ReGa object of the fixture uses yet.
+func (c *CCU) nextID() int64 {
+	var highest int64 = 100000
+	for _, g := range append(append([]Group{}, c.fixture.Rooms...), c.fixture.Trades...) {
+		highest = max(highest, g.ID)
+	}
+	for _, ch := range c.fixture.Channels {
+		highest = max(highest, ch.ID)
+	}
+	for _, sv := range c.fixture.Sysvars {
+		highest = max(highest, sv.ID)
+	}
+	for _, p := range c.fixture.Programs {
+		highest = max(highest, p.ID)
+	}
+	return highest + 1
 }
 
 func writeGroups(groups []Group) string {

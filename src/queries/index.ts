@@ -459,3 +459,39 @@ export const useSetDataPoint = () => {
     [mutate],
   );
 };
+
+export type ObjectChange =
+  | { type: 'createGroup'; list: 'rooms' | 'trades'; name: string }
+  | { type: 'renameGroup'; list: 'rooms' | 'trades'; id: number; name: string }
+  | { type: 'deleteGroup'; list: 'rooms' | 'trades'; id: number }
+  | {
+      type: 'createSysvar';
+      name: string;
+      kind: Sysvar['kind'];
+      unit?: string;
+      min?: number;
+      max?: number;
+      falseName?: string;
+      trueName?: string;
+      valueList?: string[];
+    }
+  | { type: 'renameSysvar'; id: number; name: string }
+  | { type: 'deleteSysvar'; id: number };
+
+// Creates, renames or deletes rooms, trades and system variables (setup)
+export const useObjectChange = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (change: ObjectChange) => request(change, { queue: false }),
+    onSettled: (_, __, change) => {
+      if ('list' in change) {
+        queryClient.invalidateQueries({ queryKey: [change.list] });
+        // Channels list the ids of their rooms and trades
+        queryClient.invalidateQueries({ queryKey: ['channels'] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['sysvars'] });
+      }
+    },
+  });
+};

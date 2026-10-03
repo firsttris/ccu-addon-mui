@@ -339,3 +339,44 @@ test('zeigt Versionen und Duty Cycle der Funkmodule', async ({ page }) => {
   await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF' })).toHaveAttribute('aria-valuenow', '12');
   await expect(system.getByRole('meter', { name: 'Duty Cycle HmIP-RF' })).toHaveAttribute('aria-valuenow', '3');
 });
+
+test('legt Räume und Systemvariablen an, benennt sie um und löscht sie', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/groups');
+
+  const rooms = page.getByRole('region', { name: 'Räume' });
+  await rooms.getByRole('textbox', { name: 'Neuer Raum' }).fill('Garage');
+  await rooms.getByRole('button', { name: 'Hinzufügen' }).click();
+  await expect(rooms.getByRole('listitem').filter({ hasText: 'Garage' })).toBeVisible();
+
+  await rooms.getByRole('button', { name: 'Garage umbenennen' }).click();
+  await rooms.getByRole('textbox', { name: 'Garage umbenennen' }).fill('Carport');
+  await rooms.getByRole('textbox', { name: 'Garage umbenennen' }).press('Enter');
+  await expect(rooms.getByRole('listitem').filter({ hasText: 'Carport' })).toBeVisible();
+
+  // The new room is a tab on the dashboard
+  await page.goto('/room/1');
+  await expect(page.getByRole('navigation', { name: 'Räume' }).getByRole('link', { name: 'Carport' })).toBeVisible();
+
+  await page.goto('/setup/groups');
+  await page.getByRole('button', { name: 'Carport löschen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
+  await expect(page.getByText('Gelöscht')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Räume' }).getByText('Carport')).toHaveCount(0);
+
+  await page.goto('/sysvars');
+  await page.getByRole('button', { name: 'Neue Systemvariable' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Neue Systemvariable' });
+  await dialog.getByLabel('Name', { exact: true }).fill('Gäste');
+  await dialog.getByLabel('Art').selectOption({ label: 'Werteliste' });
+  await dialog.getByRole('textbox', { name: /Werte/ }).fill('keine\nFamilie\nFreunde');
+  await dialog.getByRole('button', { name: 'Anlegen' }).click();
+  const list = page.getByRole('list', { name: 'Systemvariablen' });
+  await list.getByRole('combobox', { name: 'Gäste' }).selectOption('Freunde');
+  await page.reload();
+  await expect(list.getByRole('combobox', { name: 'Gäste' })).toHaveValue('2');
+
+  await list.getByRole('button', { name: 'Gäste löschen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
+  await expect(list.getByRole('combobox', { name: 'Gäste' })).toHaveCount(0);
+});

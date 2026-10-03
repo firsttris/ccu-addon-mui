@@ -103,6 +103,24 @@
     },
     "getSystemInfo": {
       "$ref": "#/definitions/GetSystemInfoCall"
+    },
+    "createGroup": {
+      "$ref": "#/definitions/CreateGroupCall"
+    },
+    "renameGroup": {
+      "$ref": "#/definitions/RenameGroupCall"
+    },
+    "deleteGroup": {
+      "$ref": "#/definitions/DeleteGroupCall"
+    },
+    "createSysvar": {
+      "$ref": "#/definitions/CreateSysvarCall"
+    },
+    "renameSysvar": {
+      "$ref": "#/definitions/RenameSysvarCall"
+    },
+    "deleteSysvar": {
+      "$ref": "#/definitions/DeleteSysvarCall"
     }
   },
   "required": [
@@ -138,7 +156,13 @@
     "getLinks",
     "getLinkParamsetDescription",
     "getLinkParamset",
-    "getSystemInfo"
+    "getSystemInfo",
+    "createGroup",
+    "renameGroup",
+    "deleteGroup",
+    "createSysvar",
+    "renameSysvar",
+    "deleteSysvar"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2429,6 +2453,24 @@
         },
         {
           "$ref": "#/definitions/GetSystemInfoResponse"
+        },
+        {
+          "$ref": "#/definitions/CreateGroupResponse"
+        },
+        {
+          "$ref": "#/definitions/RenameGroupResponse"
+        },
+        {
+          "$ref": "#/definitions/DeleteGroupResponse"
+        },
+        {
+          "$ref": "#/definitions/CreateSysvarResponse"
+        },
+        {
+          "$ref": "#/definitions/RenameSysvarResponse"
+        },
+        {
+          "$ref": "#/definitions/DeleteSysvarResponse"
         }
       ]
     },
@@ -3033,6 +3075,408 @@
         },
         "response": {
           "$ref": "#/definitions/GetSystemInfoResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CreateGroupRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "createGroup"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "list": {
+          "enum": [
+            "rooms",
+            "trades"
+          ]
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "list",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "CreateGroupResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "createGroup_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "CreateGroupCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/CreateGroupRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/CreateGroupResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RenameGroupRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "renameGroup"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "list": {
+          "enum": [
+            "rooms",
+            "trades"
+          ]
+        },
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "list",
+        "id",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "RenameGroupResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "renameGroup_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "RenameGroupCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/RenameGroupRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/RenameGroupResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteGroupRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteGroup"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "list": {
+          "enum": [
+            "rooms",
+            "trades"
+          ]
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "list",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteGroupResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteGroup_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteGroupCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DeleteGroupRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DeleteGroupResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CreateSysvarRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "createSysvar"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "bool",
+            "alarm",
+            "number",
+            "enum",
+            "string"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "falseName": {
+          "type": "string"
+        },
+        "trueName": {
+          "type": "string"
+        },
+        "valueList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "name",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "CreateSysvarResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "createSysvar_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "CreateSysvarCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/CreateSysvarRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/CreateSysvarResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RenameSysvarRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "renameSysvar"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "RenameSysvarResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "renameSysvar_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "RenameSysvarCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/RenameSysvarRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/RenameSysvarResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteSysvarRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteSysvar"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteSysvarResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteSysvar_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteSysvarCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DeleteSysvarRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DeleteSysvarResponse"
         }
       },
       "required": [

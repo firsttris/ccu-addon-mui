@@ -488,6 +488,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
 		s.handlePairing(client, msgType, message)
+	case "createGroup", "renameGroup", "deleteGroup", "createSysvar", "renameSysvar", "deleteSysvar":
+		s.handleObjects(client, msgType, message)
 	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive":
 		s.handleLogic(client, msgType, message)
 	default:
@@ -1160,12 +1162,16 @@ type changeResponse struct {
 	Type      string `json:"type"`
 	RequestID string `json:"requestId,omitempty"`
 	Success   bool   `json:"success"`
+	// ID of a created object
+	ID int64 `json:"id,omitempty"`
 }
 
 // configure runs a change of the setup area for client: checks that it may
 // change settings, runs change and records the outcome. change returns the
 // previous value (for the audit log) and a ReGa result.
-func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous interface{}, result string, err error)) {
+// createdID, if given, is set by change to the id of a created object and
+// sent with the response.
+func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous interface{}, result string, err error), createdID ...*int64) {
 	entry.User = client.user
 	finish := func(result string) {
 		entry.Result = result
@@ -1195,7 +1201,75 @@ func (s *Server) configure(client *Client, requestID string, entry audit.Entry, 
 	}
 	entry.Previous = previous
 	finish(rega.SetOK)
-	s.sendJSON(client, changeResponse{Type: entry.Action + "_response", RequestID: requestID, Success: true})
+	response := changeResponse{Type: entry.Action + "_response", RequestID: requestID, Success: true}
+	if len(createdID) > 0 && createdID[0] != nil {
+		response.ID = *createdID[0]
+	}
+	s.sendJSON(client, response)
+}
+
+// handleObjects creates, renames and deletes rooms, trades and system
+// variables. All of it is setup.
+func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		List      string `json:"list"`
+		ID        int64  `json:"id"`
+		Name      string `json:"name"`
+		rega.NewSysvar
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	target := fmt.Sprintf("%s %d", msg.List, msg.ID)
+	if strings.HasSuffix(msgType, "Sysvar") {
+		target = fmt.Sprintf("sysvar %d", msg.ID)
+	}
+	var created int64
+	switch msgType {
+	case "createGroup":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: msg.List, Value: msg.Name},
+			func() (interface{}, string, error) {
+				result, id, err := s.regaClient.CreateGroup(msg.List, msg.Name)
+				created = id
+				return nil, result, err
+			}, &created)
+	case "renameGroup":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Name},
+			func() (interface{}, string, error) {
+				result, previous, err := s.regaClient.RenameGroup(msg.List, msg.ID, msg.Name)
+				return previous, result, err
+			})
+	case "deleteGroup":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target},
+			func() (interface{}, string, error) {
+				result, previous, err := s.regaClient.DeleteGroup(msg.List, msg.ID)
+				return previous, result, err
+			})
+	case "createSysvar":
+		// The outer Name takes the JSON field; the embedded one stays empty
+		sysvar := msg.NewSysvar
+		sysvar.Name = msg.Name
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: msg.Kind, Value: msg.Name},
+			func() (interface{}, string, error) {
+				result, id, err := s.regaClient.CreateSysvar(sysvar)
+				created = id
+				return nil, result, err
+			}, &created)
+	case "renameSysvar":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Name},
+			func() (interface{}, string, error) {
+				result, previous, err := s.regaClient.RenameSysvar(msg.ID, msg.Name)
+				return previous, result, err
+			})
+	case "deleteSysvar":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target},
+			func() (interface{}, string, error) {
+				result, previous, err := s.regaClient.DeleteSysvar(msg.ID)
+				return previous, result, err
+			})
+	}
 }
 
 // handleRename renames a device or channel.

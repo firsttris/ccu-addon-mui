@@ -49,6 +49,24 @@ var getProgramsScript string
 //go:embed scripts/program_action.tcl
 var programActionScript string
 
+//go:embed scripts/create_group.tcl
+var createGroupScript string
+
+//go:embed scripts/rename_group.tcl
+var renameGroupScript string
+
+//go:embed scripts/delete_group.tcl
+var deleteGroupScript string
+
+//go:embed scripts/create_sysvar.tcl
+var createSysvarScript string
+
+//go:embed scripts/rename_sysvar.tcl
+var renameSysvarScript string
+
+//go:embed scripts/delete_sysvar.tcl
+var deleteSysvarScript string
+
 // Scripts returns the script templates by name, for the fake CCU used in
 // tests, which recognises scripts by their template.
 func Scripts() map[string]string {
@@ -68,5 +86,11 @@ func Scripts() map[string]string {
 		"get_programs":        getProgramsScript,
 		"program_action":      programActionScript,
 		"set_group_member":    setGroupMemberScript,
+		"create_group":        createGroupScript,
+		"rename_group":        renameGroupScript,
+		"delete_group":        deleteGroupScript,
+		"create_sysvar":       createSysvarScript,
+		"rename_sysvar":       renameSysvarScript,
+		"delete_sysvar":       deleteSysvarScript,
 	}
 }
