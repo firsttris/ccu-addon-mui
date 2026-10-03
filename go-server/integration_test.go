@@ -400,7 +400,8 @@ func TestStackListDevices(t *testing.T) {
 		d := raw.(map[string]interface{})
 		types[d["address"].(string)] = d["interfaceName"].(string) + " " + d["type"].(string)
 	}
-	if len(types) != 5 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" {
+	if len(types) != 6 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" ||
+		types["LEQ0000004"] != "BidCos-RF HM-TC-IT-WM-W-EU" {
 		t.Fatalf("unexpected devices: %v", types)
 	}
 }
@@ -864,5 +865,36 @@ func TestStackServiceMessages(t *testing.T) {
 	send(t, conn, message{"type": "acknowledgeServiceMessage", "requestId": "q5", "id": 1})
 	if m := receive(t, conn, byRequestID("q5")); m["code"] != "NOT_FOUND" {
 		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}
+
+func TestStackFirmwareUpdate(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	device := func(requestID string) map[string]interface{} {
+		send(t, conn, message{"type": "listDevices", "requestId": requestID})
+		for _, raw := range receive(t, conn, byRequestID(requestID))["devices"].([]interface{}) {
+			if d := raw.(map[string]interface{}); d["address"] == "0008DA8A9F1234" {
+				return d
+			}
+		}
+		t.Fatal("window contact not listed")
+		return nil
+	}
+	if d := device("q1"); d["firmware"] != "1.0.12" || d["availableFirmware"] != "1.2.6" || d["firmwareUpdateState"] != "READY_FOR_UPDATE" {
+		t.Fatalf("unexpected firmware state: %v", d)
+	}
+	send(t, conn, message{"type": "installFirmware", "requestId": "q2", "interfaceName": "HmIP-RF", "address": "0008DA8A9F1234"})
+	if m := receive(t, conn, byRequestID("q2")); m["success"] != true {
+		t.Fatalf("installFirmware failed: %v", m)
+	}
+	if d := device("q3"); d["firmware"] != "1.2.6" || d["availableFirmware"] != nil || d["firmwareUpdateState"] != "UP_TO_DATE" {
+		t.Fatalf("firmware not updated: %v", d)
+	}
+	// Not ready: the CCU refuses
+	send(t, conn, message{"type": "installFirmware", "requestId": "q4", "interfaceName": "HmIP-RF", "address": "0008DA8A9F1234"})
+	if m := receive(t, conn, byRequestID("q4")); m["code"] != "CCU_ERROR" {
+		t.Fatalf("expected CCU_ERROR, got %v", m)
 	}
 }

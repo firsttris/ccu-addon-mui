@@ -215,6 +215,7 @@ type DeviceRPC interface {
 	GetLinkParamset(iface, address, partner string) (map[string]interface{}, error)
 	PutLinkParamset(iface, address, partner string, values map[string]interface{}) error
 	ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error)
+	InstallFirmware(iface, address string) error
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -488,6 +489,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
 		s.handlePairing(client, msgType, message)
+	case "installFirmware":
+		s.handleInstallFirmware(client, message)
 	case "getServiceMessages", "acknowledgeServiceMessage":
 		s.handleServiceMessages(client, msgType, message)
 	case "createGroup", "renameGroup", "deleteGroup", "createSysvar", "renameSysvar", "deleteSysvar":
@@ -1261,6 +1264,31 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 		return
 	}
 	s.sendJSON(client, changeResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true})
+}
+
+// handleInstallFirmware starts the update of a device whose new firmware
+// has been delivered. Setup, for administrators only.
+func (s *Server) handleInstallFirmware(client *Client, message []byte) {
+	var msg struct {
+		RequestID     string `json:"requestId"`
+		InterfaceName string `json:"interfaceName"`
+		Address       string `json:"address"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if s.rpc == nil {
+		s.sendRequestError(client, msg.RequestID, "installFirmware is not available", "NOT_AVAILABLE")
+		return
+	}
+	s.configure(client, msg.RequestID, audit.Entry{Action: "installFirmware", Target: msg.InterfaceName + " " + msg.Address},
+		func() (interface{}, string, error) {
+			if err := s.rpc.InstallFirmware(msg.InterfaceName, msg.Address); err != nil {
+				return nil, "", err
+			}
+			return nil, rega.SetOK, nil
+		})
 }
 
 // handleObjects creates, renames and deletes rooms, trades and system

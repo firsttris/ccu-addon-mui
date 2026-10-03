@@ -62,7 +62,8 @@ export type ServerMessage =
   | RenameSysvarResponse
   | DeleteSysvarResponse
   | GetServiceMessagesResponse
-  | AcknowledgeServiceMessageResponse;
+  | AcknowledgeServiceMessageResponse
+  | InstallFirmwareResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -109,6 +110,7 @@ export interface Protocol {
   deleteSysvar: DeleteSysvarCall;
   getServiceMessages: GetServiceMessagesCall;
   acknowledgeServiceMessage: AcknowledgeServiceMessageCall;
+  installFirmware: InstallFirmwareCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -507,6 +509,8 @@ export interface Device {
   interfaceName: string;
   name?: string;
   channels?: DeviceDescription[];
+  availableFirmware?: string;
+  firmwareUpdateState?: string;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -526,6 +530,8 @@ export interface DeviceDescription {
   direction?: number;
   linkSourceRoles?: string[];
   linkTargetRoles?: string[];
+  availableFirmware?: string;
+  firmwareUpdateState?: string;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1464,6 +1470,33 @@ export interface AcknowledgeServiceMessageRequest {
  */
 export interface AcknowledgeServiceMessageResponse {
   type: "acknowledgeServiceMessage_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallFirmwareCall".
+ */
+export interface InstallFirmwareCall {
+  request: InstallFirmwareRequest;
+  response: InstallFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallFirmwareRequest".
+ */
+export interface InstallFirmwareRequest {
+  type: "installFirmware";
+  requestId?: string;
+  interfaceName: string;
+  address: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallFirmwareResponse".
+ */
+export interface InstallFirmwareResponse {
+  type: "installFirmware_response";
   requestId?: string;
   success: boolean;
 }

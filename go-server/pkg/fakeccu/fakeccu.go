@@ -894,6 +894,21 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 			remaining = 0
 		}
 		return int(remaining.Seconds()), ""
+	case "installFirmware":
+		address := stringParam(params, 0)
+		for _, d := range data.Devices {
+			if d["ADDRESS"] != address {
+				continue
+			}
+			state, _ := d["FIRMWARE_UPDATE_STATE"].(string)
+			if !strings.HasSuffix(state, "READY_FOR_UPDATE") {
+				return nil, "Firmware update not ready"
+			}
+			d["FIRMWARE"] = d["AVAILABLE_FIRMWARE"]
+			d["FIRMWARE_UPDATE_STATE"] = strings.TrimSuffix(state, "READY_FOR_UPDATE") + "UP_TO_DATE"
+			return true, ""
+		}
+		return nil, "Unknown instance"
 	case "deleteDevice":
 		if !c.deleteDevice(iface, stringParam(params, 0)) {
 			return nil, "Unknown instance"

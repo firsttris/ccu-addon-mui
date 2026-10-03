@@ -127,6 +127,9 @@
     },
     "acknowledgeServiceMessage": {
       "$ref": "#/definitions/AcknowledgeServiceMessageCall"
+    },
+    "installFirmware": {
+      "$ref": "#/definitions/InstallFirmwareCall"
     }
   },
   "required": [
@@ -170,7 +173,8 @@
     "renameSysvar",
     "deleteSysvar",
     "getServiceMessages",
-    "acknowledgeServiceMessage"
+    "acknowledgeServiceMessage",
+    "installFirmware"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -436,6 +440,12 @@
           "items": {
             "type": "string"
           }
+        },
+        "availableFirmware": {
+          "type": "string"
+        },
+        "firmwareUpdateState": {
+          "type": "string"
         }
       },
       "required": [
@@ -513,6 +523,12 @@
           "items": {
             "$ref": "#/definitions/DeviceDescription"
           }
+        },
+        "availableFirmware": {
+          "type": "string"
+        },
+        "firmwareUpdateState": {
+          "type": "string"
         }
       },
       "required": [
@@ -2485,6 +2501,9 @@
         },
         {
           "$ref": "#/definitions/AcknowledgeServiceMessageResponse"
+        },
+        {
+          "$ref": "#/definitions/InstallFirmwareResponse"
         }
       ]
     },
@@ -3644,6 +3663,66 @@
         "id",
         "type",
         "name"
+      ],
+      "additionalProperties": false
+    },
+    "InstallFirmwareRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "installFirmware"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address"
+      ],
+      "additionalProperties": false
+    },
+    "InstallFirmwareResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "installFirmware_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "InstallFirmwareCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/InstallFirmwareRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/InstallFirmwareResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
       ],
       "additionalProperties": false
     }

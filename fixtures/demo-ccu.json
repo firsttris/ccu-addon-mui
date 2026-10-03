@@ -4597,8 +4597,11 @@
             "SERVICE"
           ],
           "VERSION": 4,
-          "FIRMWARE": "1.2.12",
-          "FLAGS": 1
+          "FIRMWARE": "1.0.12",
+          "FLAGS": 1,
+          "AVAILABLE_FIRMWARE": "1.2.6",
+          "FIRMWARE_UPDATE_STATE": "READY_FOR_UPDATE",
+          "UPDATABLE": true
         },
         {
           "ADDRESS": "0008DA8A9F1234:1",
