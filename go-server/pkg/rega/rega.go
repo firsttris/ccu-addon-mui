@@ -182,6 +182,75 @@ func (c *Client) GetUserLevel(username string) (int, error) {
 	return level, nil
 }
 
+// GetDeviceNames returns the names of all devices by address.
+func (c *Client) GetDeviceNames() (map[string]string, error) {
+	output, err := c.Execute(getDeviceNamesScript)
+	if err != nil {
+		return nil, err
+	}
+	isRecord := func(line string) bool { return strings.Contains(line, "\t") }
+	names := map[string]string{}
+	for _, fields := range splitRecords(output, isRecord) {
+		if len(fields) >= 2 {
+			names[fields[0]] = rejoin(fields, 1)
+		}
+	}
+	return names, nil
+}
+
+// validateName guards a name substituted into a string literal: ReGa has no
+// escapes, so characters that could end the literal are rejected.
+func validateName(name string) error {
+	if strings.TrimSpace(name) == "" || len(name) > 100 || strings.ContainsAny(name, "\"\\\r\n\t") {
+		return fmt.Errorf("invalid name")
+	}
+	return nil
+}
+
+// SetName renames a device or channel and returns its previous name, or
+// SetNotFound.
+func (c *Client) SetName(address, name string) (result, previous string, err error) {
+	if !safeIdentifierRegex.MatchString(address) {
+		return "", "", fmt.Errorf("invalid address")
+	}
+	if err := validateName(name); err != nil {
+		return "", "", err
+	}
+	script := strings.ReplaceAll(setNameScript, "{{ADDRESS}}", address)
+	script = strings.ReplaceAll(script, "{{NAME}}", name)
+	output, err := c.Execute(script)
+	if err != nil {
+		return "", "", err
+	}
+	result, previous, _ = strings.Cut(strings.TrimRight(output, "\r\n"), "\t")
+	if result != SetOK && result != SetNotFound {
+		return "", "", fmt.Errorf("unexpected response from ReGa: %q", output)
+	}
+	return result, previous, nil
+}
+
+// SetGroupMember adds a channel to a room or trade (member) or removes it.
+// Returns SetOK or SetNotFound.
+func (c *Client) SetGroupMember(groupID, channelID int64, member bool) (string, error) {
+	action := "Remove"
+	if member {
+		action = "Add"
+	}
+	script := strings.ReplaceAll(setGroupMemberScript, "{{GROUP_ID}}", strconv.FormatInt(groupID, 10))
+	script = strings.ReplaceAll(script, "{{CHANNEL_ID}}", strconv.FormatInt(channelID, 10))
+	script = strings.ReplaceAll(script, "{{ACTION}}", action)
+	output, err := c.Execute(script)
+	if err != nil {
+		return "", err
+	}
+	switch result := strings.TrimSpace(output); result {
+	case SetOK, SetNotFound:
+		return result, nil
+	default:
+		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
+	}
+}
+
 // Results of SetDatapoint
 const (
 	SetOK       = "OK"

@@ -408,3 +408,49 @@ func TestStackAdminTokenForSettings(t *testing.T) {
 		t.Fatalf("expected one putParamset, got %d", ccu.CallCount("HmIP-RF putParamset"))
 	}
 }
+
+func TestStackRenameAndAssignRooms(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "rename", "requestId": "q1", "address": "LEQ0000001:1", "name": "Deckenlicht"})
+	if m := receive(t, conn, byRequestID("q1")); m["success"] != true || m["type"] != "rename_response" {
+		t.Fatalf("rename failed: %v", m)
+	}
+	send(t, conn, message{"type": "rename", "requestId": "q2", "address": "LEQ0000001:1", "name": `Licht"; system.Exec("x`})
+	if m := receive(t, conn, byRequestID("q2")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+	send(t, conn, message{"type": "rename", "requestId": "q3", "address": "0000DBE9A5C1F2", "name": "Griff"})
+	receive(t, conn, byRequestID("q3"))
+
+	// Move the light from the living room (1) to the kitchen (2)
+	send(t, conn, message{"type": "setGroupMember", "requestId": "q4", "groupId": 2, "channelId": 101, "member": true})
+	receive(t, conn, byRequestID("q4"))
+	send(t, conn, message{"type": "setGroupMember", "requestId": "q5", "groupId": 1, "channelId": 101, "member": false})
+	receive(t, conn, byRequestID("q5"))
+
+	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "roomId": "2", "requestId": "q6"})
+	channels := receive(t, conn, byRequestID("q6"))["channels"].([]interface{})
+	var light map[string]interface{}
+	for _, raw := range channels {
+		if ch := raw.(map[string]interface{}); ch["address"] == "LEQ0000001:1" {
+			light = ch
+		}
+	}
+	if light == nil || light["name"] != "Deckenlicht" || fmt.Sprint(light["rooms"]) != "[2]" {
+		t.Fatalf("unexpected channel in the kitchen: %v", light)
+	}
+
+	send(t, conn, message{"type": "listDevices", "requestId": "q7"})
+	for _, raw := range receive(t, conn, byRequestID("q7"))["devices"].([]interface{}) {
+		if d := raw.(map[string]interface{}); d["address"] == "0000DBE9A5C1F2" && d["name"] != "Griff" {
+			t.Fatalf("device not renamed: %v", d)
+		}
+	}
+
+	data, _ := os.ReadFile(auditLogs[ccu])
+	if !strings.Contains(string(data), `"action":"rename","target":"LEQ0000001:1","previous":"Wohnzimmer Licht","value":"Deckenlicht"`) {
+		t.Fatalf("rename not audited: %s", data)
+	}
+}

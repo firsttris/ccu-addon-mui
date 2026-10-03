@@ -446,6 +446,10 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleListDevices(client, requestID)
 	case "elevate":
 		s.handleElevate(client, message)
+	case "rename":
+		s.handleRename(client, message)
+	case "setGroupMember":
+		s.handleSetGroupMember(client, message)
 	default:
 		s.sendRequestError(client, requestID, fmt.Sprintf("unknown message type: %s", msgType), "")
 	}
@@ -904,6 +908,8 @@ func (s *Server) handleParamsetRequest(client *Client, msgType string, message [
 // Device is a device (not a channel) as listed for the setup area.
 type Device struct {
 	InterfaceName string `json:"interfaceName"`
+	// Name from ReGa
+	Name string `json:"name,omitempty"`
 	ccurpc.DeviceDescription
 }
 
@@ -920,6 +926,14 @@ func (s *Server) handleListDevices(client *Client, requestID string) {
 		s.sendRequestError(client, requestID, "listDevices is not available", "NOT_AVAILABLE")
 		return
 	}
+	// Names live in ReGa; without them the list still works
+	var names map[string]string
+	if s.regaClient != nil {
+		var err error
+		if names, err = s.regaClient.GetDeviceNames(); err != nil {
+			logger.Debugf("getDeviceNames: %v", err)
+		}
+	}
 	devices := []Device{}
 	for _, iface := range s.rpc.InterfaceNames() {
 		list, err := s.rpc.ListDevices(iface)
@@ -929,11 +943,91 @@ func (s *Server) handleListDevices(client *Client, requestID string) {
 		}
 		for _, d := range list {
 			if d.Parent == "" {
-				devices = append(devices, Device{InterfaceName: iface, DeviceDescription: d})
+				devices = append(devices, Device{InterfaceName: iface, Name: names[d.Address], DeviceDescription: d})
 			}
 		}
 	}
 	s.sendJSON(client, listDevicesResponse{Type: "devices", RequestID: requestID, Devices: devices})
+}
+
+type changeResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	Success   bool   `json:"success"`
+}
+
+// configure runs a change of the setup area for client: checks that it may
+// change settings, runs change and records the outcome. change returns the
+// previous value (for the audit log) and a ReGa result.
+func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous interface{}, result string, err error)) {
+	entry.User = client.user
+	finish := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
+	if code, errorMsg := configureError(client); code != "" {
+		finish(code)
+		s.sendRequestError(client, requestID, errorMsg, code)
+		return
+	}
+	previous, result, err := change()
+	if err != nil {
+		code := "CCU_ERROR"
+		if strings.HasPrefix(err.Error(), "invalid") {
+			code = "INVALID_VALUE"
+		}
+		finish(code)
+		s.sendRequestError(client, requestID, entry.Action+" failed: "+err.Error(), code)
+		return
+	}
+	if result != rega.SetOK {
+		finish(result)
+		s.sendRequestError(client, requestID, entry.Action+": "+result, result)
+		return
+	}
+	entry.Previous = previous
+	finish(rega.SetOK)
+	s.sendJSON(client, changeResponse{Type: entry.Action + "_response", RequestID: requestID, Success: true})
+}
+
+// handleRename renames a device or channel.
+func (s *Server) handleRename(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		Address   string `json:"address"`
+		Name      string `json:"name"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	s.configure(client, msg.RequestID, audit.Entry{Action: "rename", Target: msg.Address, Value: msg.Name},
+		func() (interface{}, string, error) {
+			result, previous, err := s.regaClient.SetName(msg.Address, msg.Name)
+			return previous, result, err
+		})
+}
+
+// handleSetGroupMember adds a channel to a room or trade, or removes it.
+func (s *Server) handleSetGroupMember(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		GroupID   int64  `json:"groupId"`
+		ChannelID int64  `json:"channelId"`
+		Member    bool   `json:"member"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	target := fmt.Sprintf("group %d channel %d", msg.GroupID, msg.ChannelID)
+	s.configure(client, msg.RequestID, audit.Entry{Action: "setGroupMember", Target: target, Value: msg.Member},
+		func() (interface{}, string, error) {
+			result, err := s.regaClient.SetGroupMember(msg.GroupID, msg.ChannelID, msg.Member)
+			return !msg.Member, result, err
+		})
 }
 
 type putParamsetResponse struct {

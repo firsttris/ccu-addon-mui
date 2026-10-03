@@ -97,7 +97,7 @@ export const Setup = () => {
   const rows = useMemo<DeviceRow[]>(
     () =>
       devices.map((device) => ({
-        name: names.get(device.address) ?? device.address,
+        name: names.get(device.address) ?? device.name ?? device.address,
         type: device.type,
         address: device.address,
         interfaceName: device.interfaceName,

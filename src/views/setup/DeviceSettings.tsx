@@ -13,6 +13,7 @@ import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import { WebUILink } from '../../components/WebUILink';
 import { Notice, SetupContainer } from './Setup';
 import { useChannelNames } from './channelNames';
+import { NamesAndRooms } from './NamesAndRooms';
 
 const Section = styled.section`
   margin: 16px 0;
@@ -170,6 +171,13 @@ export const DeviceSettings = () => {
         </Notice>
       )}
       {configPending && <Notice role="status">{t('CONFIG_PENDING')}</Notice>}
+
+      {canEdit && (
+        <Section aria-label={t('NAMES_AND_ROOMS')}>
+          <h2>{t('NAMES_AND_ROOMS')}</h2>
+          <NamesAndRooms deviceAddress={address} deviceName={names.get(address) ?? address} />
+        </Section>
+      )}
 
       {sections.map((s) => {
         const draft = drafts[s.address] ?? {};

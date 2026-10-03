@@ -124,3 +124,16 @@ func TestParseChannelsIgnoresMalformedLines(t *testing.T) {
 		t.Fatalf("expected no channels, got %+v", got)
 	}
 }
+
+func TestParseChannelsReadsRoomsAndTrades(t *testing.T) {
+	channels := parseChannels("C\t1\tA:1\tSWITCH\tHmIP-RF\tLicht\nM\t1234,1235\t\nD\tSTATE\t2\ttrue\nC\t2\tA:2\tSWITCH\tHmIP-RF\tLicht 2\nM\t\t99\n")
+	if len(channels) != 2 {
+		t.Fatalf("unexpected channels: %+v", channels)
+	}
+	if len(channels[0].Rooms) != 2 || channels[0].Rooms[1] != 1235 || channels[0].Trades != nil || channels[0].Datapoints["STATE"] != true {
+		t.Errorf("unexpected first channel: %+v", channels[0])
+	}
+	if channels[1].Rooms != nil || len(channels[1].Trades) != 1 || channels[1].Trades[0] != 99 {
+		t.Errorf("unexpected second channel: %+v", channels[1])
+	}
+}

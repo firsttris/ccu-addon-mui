@@ -30,6 +30,22 @@ type Channel struct {
 	// reports Status (LOW_BAT, UNREACH) and sends the events for it.
 	StatusAddress string          `json:"statusAddress,omitempty"`
 	Status        map[string]bool `json:"status,omitempty"`
+
+	// Rooms and Trades are the ids of the rooms and trades the channel
+	// belongs to.
+	Rooms  []int64 `json:"rooms,omitempty"`
+	Trades []int64 `json:"trades,omitempty"`
+}
+
+// parseIDs parses a comma separated list of ids.
+func parseIDs(s string) []int64 {
+	var ids []int64
+	for _, field := range strings.Split(s, ",") {
+		if id, err := strconv.ParseInt(strings.TrimSpace(field), 10, 64); err == nil {
+			ids = append(ids, id)
+		}
+	}
+	return ids
 }
 
 // splitRecords splits the script output into lines of tab separated fields.
@@ -86,7 +102,7 @@ func parseNamedObjects(output string) []NamedObject {
 // parseChannels parses the output of get_channels.tcl.
 func parseChannels(output string) []Channel {
 	isRecord := func(line string) bool {
-		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t")
+		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t")
 	}
 
 	channels := []Channel{}
@@ -123,6 +139,13 @@ func parseChannels(output string) []Channel {
 			}
 			channel.StatusAddress = fields[1]
 			channel.Status[normalizeStatusType(fields[2])] = value
+		case "M":
+			if len(fields) < 3 || len(channels) == 0 {
+				continue
+			}
+			channel := &channels[len(channels)-1]
+			channel.Rooms = parseIDs(fields[1])
+			channel.Trades = parseIDs(fields[2])
 		case "D":
 			if len(fields) < 4 || len(channels) == 0 {
 				continue

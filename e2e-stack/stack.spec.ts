@@ -176,3 +176,29 @@ test('verlangt nach Ablauf des Admin-Tokens das Passwort erneut', async ({ page 
     page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'EVENT_DELAY_UNIT' }),
   ).toBeVisible();
 });
+
+test('benennt Kanäle um und ordnet sie Räumen zu', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/BidCos-RF/LEQ0000001');
+
+  const section = page.getByRole('region', { name: 'Namen, Räume und Gewerke' });
+  const name = section.getByLabel('Name LEQ0000001:1');
+  await expect(name).toHaveValue('Wohnzimmer Licht');
+  await name.fill('Deckenlicht');
+  await name.press('Enter');
+  await expect(page.getByText('Umbenannt')).toBeVisible();
+
+  // From the living room to the kitchen
+  const rooms = section.getByRole('group', { name: 'Räume LEQ0000001:1' });
+  await expect(rooms.getByLabel('Wohnzimmer')).toBeChecked();
+  // (click, not check(): the box follows the cache a moment later)
+  await rooms.getByLabel('Küche').click();
+  await expect(rooms.getByLabel('Küche')).toBeChecked();
+  await rooms.getByLabel('Wohnzimmer').click();
+  await expect(rooms.getByLabel('Wohnzimmer')).not.toBeChecked();
+
+  // The kitchen now shows the renamed light
+  await page.goto('/room/2');
+  await page.getByText('Schalter', { exact: true }).click();
+  await expect(page.getByText('Deckenlicht')).toBeVisible();
+});

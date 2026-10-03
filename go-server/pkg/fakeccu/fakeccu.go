@@ -189,6 +189,12 @@ func (c *CCU) runScript(body string) (string, error) {
 			return c.setDatapoint(values), nil
 		case "get_device_problems":
 			return c.getDeviceProblems(), nil
+		case "set_name":
+			return c.setName(values["ADDRESS"], values["NAME"]), nil
+		case "get_device_names":
+			return c.getDeviceNames(), nil
+		case "set_group_member":
+			return c.setGroupMember(values["GROUP_ID"], values["CHANNEL_ID"], values["ACTION"] == "Add"), nil
 		case "get_user_level":
 			for _, user := range c.fixture.Users {
 				if user.Name == values["USERNAME"] {
@@ -279,6 +285,7 @@ func (c *CCU) getChannels(objectID string) string {
 	var b strings.Builder
 	for _, ch := range channels {
 		fmt.Fprintf(&b, "C\t%d\t%s\t%s\t%s\t%s\n", ch.ID, ch.Address, ch.Type, ch.Interface, ch.Name)
+		fmt.Fprintf(&b, "M\t%s\t%s\n", memberOf(c.fixture.Rooms, ch.ID), memberOf(c.fixture.Trades, ch.ID))
 		if status := c.channelByAddress(ch.Interface, deviceAddress(ch.Address)+":0"); status != nil {
 			for _, dp := range []string{"LOW_BAT", "LOWBAT", "UNREACH"} {
 				if v, ok := status.Datapoints[dp]; ok {
@@ -291,6 +298,86 @@ func (c *CCU) getChannels(objectID string) string {
 		}
 	}
 	return b.String()
+}
+
+// memberOf returns the ids of the groups containing a channel, comma separated.
+func memberOf(groups []Group, channelID int64) string {
+	var ids []string
+	for _, g := range groups {
+		for _, id := range g.Channels {
+			if id == channelID {
+				ids = append(ids, strconv.FormatInt(g.ID, 10))
+			}
+		}
+	}
+	return strings.Join(ids, ",")
+}
+
+func (c *CCU) getDeviceNames() string {
+	var b strings.Builder
+	for _, data := range c.fixture.Interfaces {
+		for _, d := range data.Devices {
+			address, _ := d["ADDRESS"].(string)
+			if parent, _ := d["PARENT"].(string); parent != "" || address == "" {
+				continue
+			}
+			name := c.fixture.DeviceNames[address]
+			if name == "" {
+				name = fmt.Sprintf("%v %s", d["TYPE"], address)
+			}
+			fmt.Fprintf(&b, "%s\t%s\n", address, name)
+		}
+	}
+	return b.String()
+}
+
+func (c *CCU) setName(address, name string) string {
+	if !strings.Contains(address, ":") {
+		previous := c.fixture.DeviceNames[address]
+		if previous == "" && c.channelByAddress("", address+":0") == nil && c.channelByAddress("", address+":1") == nil {
+			return "NOT_FOUND"
+		}
+		if c.fixture.DeviceNames == nil {
+			c.fixture.DeviceNames = map[string]string{}
+		}
+		c.fixture.DeviceNames[address] = name
+		return "OK\t" + previous
+	}
+	ch := c.channelByAddress("", address)
+	if ch == nil {
+		return "NOT_FOUND"
+	}
+	previous := ch.Name
+	ch.Name = name
+	return "OK\t" + previous
+}
+
+func (c *CCU) setGroupMember(groupID, channelID string, member bool) string {
+	gid, _ := strconv.ParseInt(groupID, 10, 64)
+	cid, _ := strconv.ParseInt(channelID, 10, 64)
+	if c.channelByID(cid) == nil {
+		return "NOT_FOUND"
+	}
+	for _, groups := range []*[]Group{&c.fixture.Rooms, &c.fixture.Trades} {
+		for i := range *groups {
+			g := &(*groups)[i]
+			if g.ID != gid {
+				continue
+			}
+			kept := []int64{}
+			for _, id := range g.Channels {
+				if id != cid {
+					kept = append(kept, id)
+				}
+			}
+			if member {
+				kept = append(kept, cid)
+			}
+			g.Channels = kept
+			return "OK"
+		}
+	}
+	return "NOT_FOUND"
 }
 
 // parseRegaValue parses a value as the add-on writes it into a script:

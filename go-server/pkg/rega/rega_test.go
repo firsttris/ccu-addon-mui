@@ -231,3 +231,49 @@ func TestSetDatapointReturnsPreviousValue(t *testing.T) {
 		t.Fatalf("SetDatapoint = %q, %v", result, err)
 	}
 }
+
+func TestSetNameValidatesAndReturnsPreviousName(t *testing.T) {
+	client := &Client{}
+	for _, name := range []string{"", "  ", `a"b`, "a\\b", "a\nb", "a\tb", strings.Repeat("x", 101)} {
+		if _, _, err := client.SetName("A:1", name); err == nil {
+			t.Errorf("SetName(%q): expected an error", name)
+		}
+	}
+	if _, _, err := client.SetName(`A"; system.Exec("x`, "ok"); err == nil {
+		t.Error("expected an invalid address error")
+	}
+
+	var gotScript string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, "OK\tHmIP-BSM 0001:1<xml></xml>")
+	}))
+	defer ts.Close()
+	client = &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+	result, previous, err := client.SetName("0001:1", "Licht Küche")
+	if err != nil || result != SetOK || previous != "HmIP-BSM 0001:1" {
+		t.Fatalf("SetName = %q, %q, %v", result, previous, err)
+	}
+	if !strings.Contains(gotScript, `"0001:1"`) || !strings.Contains(gotScript, `Name("Licht Küche")`) {
+		t.Fatalf("unexpected script: %s", gotScript)
+	}
+}
+
+func TestSetGroupMemberBuildsScript(t *testing.T) {
+	var gotScript string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, "OK<xml></xml>")
+	}))
+	defer ts.Close()
+	client := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+
+	if result, err := client.SetGroupMember(1234, 5678, false); err != nil || result != SetOK {
+		t.Fatalf("SetGroupMember = %q, %v", result, err)
+	}
+	if !strings.Contains(gotScript, "dom.GetObject(1234)") || !strings.Contains(gotScript, "groupObject.Remove(5678)") {
+		t.Fatalf("unexpected script: %s", gotScript)
+	}
+}

@@ -110,6 +110,44 @@ export const usePutParamset = () => {
   });
 };
 
+export type ConfigChange =
+  | { type: 'rename'; address: string; name: string }
+  // list says where the group is, for the optimistic update
+  | { type: 'setGroupMember'; groupId: number; channelId: number; member: boolean; list: 'rooms' | 'trades' };
+
+// Renames a device or channel, or changes the rooms and trades of a
+// channel (setup area, administrators). Memberships show at once and are
+// reloaded afterwards in any case.
+export const useConfigChange = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (change: ConfigChange) => {
+      const message = change.type === 'setGroupMember' ? { ...change, list: undefined } : change;
+      await request(message, { queue: false });
+    },
+    onMutate: (change) => {
+      if (change.type !== 'setGroupMember') {
+        return;
+      }
+      queryClient.setQueriesData<Channel[]>({ queryKey: ['channels'] }, (channels) =>
+        channels?.map((channel) => {
+          if (channel.id !== change.channelId) {
+            return channel;
+          }
+          const ids = (channel[change.list] ?? []).filter((id) => id !== change.groupId);
+          return { ...channel, [change.list]: change.member ? [...ids, change.groupId] : ids };
+        }),
+      );
+    },
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['channels'] }),
+        queryClient.invalidateQueries({ queryKey: ['devices'] }),
+      ]),
+  });
+};
+
 export type ChannelsRequest = { roomId: string } | { tradeId: string } | { all: true };
 
 // The channels of a room, a trade or all devices, kept up to date by

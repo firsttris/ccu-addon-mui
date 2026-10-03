@@ -100,6 +100,10 @@ export const ui = {
     ELEVATE_HINT: 'To change settings, enter your password again (valid for 8 hours).',
     ELEVATE: 'Enter password',
     CONFIRM: 'Confirm',
+    NAMES_AND_ROOMS: 'Names, rooms and trades',
+    RENAME: 'Rename',
+    RENAMED: 'Renamed',
+    CHANGE_FAILED: 'Change failed',
   },
   de: {
     SWITCH_VIRTUAL_RECEIVER: 'Schalter',
@@ -192,6 +196,10 @@ export const ui = {
     ELEVATE_HINT: 'Zum Ändern der Einstellungen bitte das Passwort erneut eingeben (gilt 8 Stunden).',
     ELEVATE: 'Passwort eingeben',
     CONFIRM: 'Bestätigen',
+    NAMES_AND_ROOMS: 'Namen, Räume und Gewerke',
+    RENAME: 'Umbenennen',
+    RENAMED: 'Umbenannt',
+    CHANGE_FAILED: 'Änderung fehlgeschlagen',
   },
 } as const;
 

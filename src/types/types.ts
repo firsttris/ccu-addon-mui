@@ -100,6 +100,9 @@ interface BaseChannel {
   interfaceName: string;
   statusAddress?: string;
   status?: ChannelStatus;
+  // Ids of the rooms and trades the channel belongs to
+  rooms?: number[];
+  trades?: number[];
 }
 
 export interface SwitchVirtualReceiverChannel extends BaseChannel {
@@ -206,6 +209,8 @@ export type ParamsetDescription = Record<string, ParameterDescription>;
 // A device (not a channel) as listed by the CCU's interfaces
 export interface Device {
   interfaceName: string;
+  // Name from ReGa
+  name?: string;
   type: string;
   address: string;
   children?: string[];

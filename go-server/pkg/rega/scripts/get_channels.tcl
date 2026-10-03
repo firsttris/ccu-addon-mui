@@ -2,6 +2,7 @@
 !   C <id> <address> <type> <interfaceName> <name>
 !   S <statusChannelAddress> <type> <value>   battery/reachability of the device
 !   D <type> <valueType> <value>
+!   M <roomIds> <tradeIds>                   comma separated
 ! The JSON is built in Go, so names and values need no escaping here.
 ! OBJECT_ID is a room or trade id, or ALL for the channels of all devices.
 string objectId = "{{OBJECT_ID}}";
@@ -35,6 +36,20 @@ if (parentObject) {
 
         if (!skip) {
             WriteLine("C\t" # channelId # "\t" # channelObject.Address() # "\t" # channelObject.HssType() # "\t" # interfaceObject.Name() # "\t" # channelObject.Name());
+
+            ! Rooms and trades of the channel, for the setup area
+            string memberIds = "";
+            string groupId;
+            foreach (groupId, channelObject.ChnRoom()) {
+                if (memberIds != "") { memberIds = memberIds # ","; }
+                memberIds = memberIds # groupId;
+            }
+            string tradeIds = "";
+            foreach (groupId, channelObject.ChnFunction()) {
+                if (tradeIds != "") { tradeIds = tradeIds # ","; }
+                tradeIds = tradeIds # groupId;
+            }
+            WriteLine("M\t" # memberIds # "\t" # tradeIds);
 
             ! Battery and reachability are reported on the device's maintenance channel 0
             if (deviceObject) {
