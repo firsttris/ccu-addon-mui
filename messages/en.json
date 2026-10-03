@@ -631,5 +631,6 @@
   "CHANNEL_OPTIONS": "Options",
   "CHANNEL_VISIBLE": "visible",
   "CHANNEL_USABLE": "usable (not only admins)",
-  "CHANNEL_LOGGED": "logged"
+  "CHANNEL_LOGGED": "logged",
+  "LOADING": "Loading …"
 }

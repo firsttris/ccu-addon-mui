@@ -25,6 +25,7 @@ import { WeekProgramSheet, WeekProgramKind } from '../../controls/schedule/WeekP
 import { parameterLabel } from '../../controls/generic/parameters';
 import { Links } from './Links';
 import { Firmware } from './Firmware';
+import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 
 const Section = (props: HTMLAttributes<HTMLElement>) => <Panel {...props} />;
@@ -232,6 +233,7 @@ export const DeviceSettings = () => {
               </Section>
             );
           })}
+          {loading && <PanelSkeleton lines={6} className="rounded-xl border bg-card p-5" />}
           {!loading && sections.length === 0 && <p className="text-sm text-muted-foreground">{m.NO_SETTINGS()}</p>}
         </div>
         <div className="flex min-w-0 flex-col gap-5">

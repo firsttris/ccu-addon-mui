@@ -22,6 +22,7 @@ import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { m } from '../../paraglide/messages';
+import { TableSkeletonRows } from '../../components/ui/skeleton';
 import { cn } from '../../lib/utils';
 
 interface DeviceRow {
@@ -59,7 +60,7 @@ const StatusBadge = ({ row }: { row: DeviceRow }) =>
 // The setup area's start: all devices of the CCU, searchable and sortable.
 export const Setup = () => {
   usePageTitle(m.SETUP());
-  const { data: devices = [] } = useDevices();
+  const { data: devices = [], isPending: devicesLoading } = useDevices();
   const { data: problems = [] } = useDeviceProblems();
   const names = useChannelNames();
   const [filter, setFilter] = useState('');
@@ -211,6 +212,7 @@ export const Setup = () => {
             ))}
           </TableHeader>
           <TableBody>
+            {devicesLoading && <TableSkeletonRows columns={table.getVisibleLeafColumns().length} rows={8} />}
             {table.getRowModel().rows.map((row) => (
               <TableRow key={row.id} className="relative">
                 {row.getVisibleCells().map((cell) => (
@@ -218,7 +220,7 @@ export const Setup = () => {
                 ))}
               </TableRow>
             ))}
-            {table.getRowModel().rows.length === 0 && (
+            {!devicesLoading && table.getRowModel().rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={columns.length} className="py-8 text-center text-muted-foreground">
                   {m.NO_RESULTS()}
@@ -228,7 +230,7 @@ export const Setup = () => {
           </TableBody>
         </Table>
       </div>
-      <p className="text-sm text-muted-foreground">{m.DEVICE_COUNT({ count: table.getRowModel().rows.length })}</p>
+      <p className={cn('text-sm text-muted-foreground', devicesLoading && 'invisible')}>{m.DEVICE_COUNT({ count: table.getRowModel().rows.length })}</p>
     </>
   );
 };

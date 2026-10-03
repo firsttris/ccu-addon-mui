@@ -4,6 +4,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { defaultLang } from '../../i18n/utils';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { m } from '../../paraglide/messages';
+import { TableSkeletonRows } from '../../components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { usePageTitle } from '../../contexts/PageTitleContext';
@@ -14,10 +15,10 @@ const dateFormat = new Intl.DateTimeFormat(defaultLang, { dateStyle: 'medium', t
 export const Sessions = () => {
   usePageTitle(m.SETUP());
   const { showToast } = useToast();
-  const { data: sessions = [] } = useSessions({ enabled: true });
+  const { data: sessions = [], isPending: loading } = useSessions({ enabled: true });
   const revoke = useRevokeSession();
 
-  if (sessions.length === 0) {
+  if (!loading && sessions.length === 0) {
     return null;
   }
 
@@ -35,6 +36,7 @@ export const Sessions = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {loading && <TableSkeletonRows columns={4} rows={3} />}
             {sessions.map((session) => (
               <TableRow key={session.id}>
                 <TableCell className="font-medium">

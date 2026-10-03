@@ -11,6 +11,7 @@ import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { useToast } from '../../contexts/ToastContext';
 import { Panel } from './Panel';
+import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 
 const useSystemSettings = () => {
@@ -59,7 +60,7 @@ const Location = () => {
   const { elevated } = useWebSocketContext();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  const { data } = useSystemSettings();
+  const { data, isError } = useSystemSettings();
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [busy, setBusy] = useState(false);
@@ -71,8 +72,16 @@ const Location = () => {
     }
   }, [data]);
 
-  if (!data) {
+  if (isError) {
     return null;
+  }
+  if (!data) {
+    return (
+      <Panel aria-label={m.SYS_LOCATION()} aria-busy>
+        <h2>{m.SYS_LOCATION()}</h2>
+        <PanelSkeleton lines={3} />
+      </Panel>
+    );
   }
   const lat = parseCoordinate(latitude, 90);
   const lon = parseCoordinate(longitude, 180);

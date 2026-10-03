@@ -744,3 +744,32 @@ test('blendet Kanäle über die Option „sichtbar“ aus', async ({ page }) => 
   await page.goto('/room/2');
   await expect(page.getByText('Küche Rollo')).toBeVisible();
 });
+
+test('zeigt beim Laden Platzhalter statt einer leeren Tabelle', async ({ page }) => {
+  // Hold back the device list until the placeholders were checked
+  let hold = false;
+  let held: (() => void)[] = [];
+  await page.routeWebSocket(/.*/, (ws) => {
+    const server = ws.connectToServer();
+    ws.onMessage((msg) => {
+      if (hold && typeof msg === 'string' && msg.includes('"type":"listDevices"')) {
+        held.push(() => server.send(msg));
+        return;
+      }
+      server.send(msg);
+    });
+    server.onMessage((msg) => ws.send(msg));
+  });
+  await login(page);
+  hold = true;
+  await page.goto('/setup');
+  const table = page.getByRole('table', { name: 'Geräte' });
+  await expect(table.locator('[data-skeleton]').first()).toBeVisible();
+  await expect(page.getByText('Nichts gefunden.')).toHaveCount(0);
+
+  hold = false;
+  held.forEach((send) => send());
+  held = [];
+  await expect(table.locator('[data-skeleton]')).toHaveCount(0);
+  await expect(table.getByRole('row', { name: /LEQ0000001/ })).toBeVisible();
+});

@@ -7,6 +7,7 @@ import { usePageTitle } from '../../contexts/PageTitleContext';
 import { InterfaceLink } from '../../types/protocol';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import { Input } from '../../components/ui/input';
+import { ListSkeletonItems } from '../../components/ui/skeleton';
 import { NativeSelect } from '../../components/ui/select';
 import { useChannelNames } from './channelNames';
 import { AddLinkForm, LinkParameters, useLinkChannelInfo } from './Links';
@@ -57,6 +58,7 @@ export const AllLinks = () => {
         <p className="text-sm text-muted-foreground">{links.length === 0 ? m.NO_LINKS() : m.NO_RESULTS()}</p>
       ) : (
         <ul aria-label={m.LINKS()} className="tile-edge flex flex-col divide-y rounded-2xl border bg-card">
+          {isLoading && <ListSkeletonItems rows={4} />}
           {shown.map((link) => {
             const key = `${link.interfaceName}:${link.sender}>${link.receiver}`;
             return (
