@@ -8,6 +8,20 @@
 /* Dark mode follows the theme switch in the header, not the system */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* Light running over a progress bar (floor heating) */
+@theme {
+  --animate-shimmer: shimmer 2s infinite;
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(0%);
+    }
+  }
+}
+
 /* The app's colors (see ThemeContext), as utilities: bg-surface,
    text-text-secondary, border-border, ... */
 @theme inline {

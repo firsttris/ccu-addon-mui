@@ -1,124 +1,43 @@
-import styled from '@emotion/styled';
-import { keyframes } from '@emotion/react';
+import { CSSProperties } from 'react';
 import { FloorClimateControlTransceiverChannel } from '../types/types';
 import MdiPipeValve from '~icons/mdi/pipe-valve';
 import { ChannelName } from '../components/ChannelName';
 import { getPercentageColor, getPercentageGradient } from '../utils/colors';
 
-const shimmer = keyframes`
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(0%);
-  }
-`;
-
 interface FloorControlProps {
   channel: FloorClimateControlTransceiverChannel;
 }
 
-const Container = styled.div`
-  width: 250px;
-  padding: 16px;
-  border-radius: 12px;
-`;
-
-const Content = styled.div`
-`;
-
-const FlexBox = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-`;
-
-const IconWrapper = styled.div<{ value: number }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-
-  &:hover {
-    transform: scale(1.1) rotate(5deg);
-  }
-`;
-
-const ProgressBarContainer = styled.div`
-  width: 100%;
-  position: relative;
-`;
-
-const ProgressBar = styled.div<{ value: number }>`
-  height: 18px;
-  background: ${props => props.theme.colors.border};
-  border-radius: 10px;
-  overflow: hidden;
-  position: relative;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-
-  &::after {
-    content: '';
-    display: block;
-    width: ${({ value }) => value}%;
-    height: 100%;
-    background: ${({ value }) => getPercentageGradient(value)};
-    border-radius: 10px;
-    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                background 0.4s ease-in-out;
-    box-shadow: 0 2px 6px ${({ value }) => getPercentageColor(value)}40;
-    position: relative;
-    overflow: hidden;
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: ${({ value }) => value}%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
-    animation: ${shimmer} 2s infinite;
-    z-index: 1;
-    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-`;
-
-const Caption = styled.span<{ value: number }>`
-  font-size: 13px;
-  font-weight: 600;
-  color: ${({ value }) => getPercentageColor(value)};
-  min-width: 40px;
-  text-align: right;
-  transition: color 0.4s ease-in-out;
-  letter-spacing: 0.5px;
-`;
-
 export const FloorControl = (props: FloorControlProps) => {
   const value = Math.round(Number(props.channel.datapoints.LEVEL) * 100);
+  const color = getPercentageColor(value);
+  // For the bar's pseudo elements
+  const bar = {
+    '--value': `${value}%`,
+    '--gradient': getPercentageGradient(value),
+    '--glow': `${color}40`,
+  } as CSSProperties;
 
   return (
-    <Container>
+    <div className="w-[250px] p-4 rounded-xl">
       <ChannelName name={props.channel.name} maxWidth="250px" />
-      <Content>
-        <FlexBox>
-          <IconWrapper value={value}>
-            <MdiPipeValve color={getPercentageColor(value)} width={40} />
-          </IconWrapper>
-          <ProgressBarContainer>
-            <ProgressBar value={value} />
-          </ProgressBarContainer>
-          <Caption value={value}>{`${value}%`}</Caption>
-        </FlexBox>
-      </Content>
-    </Container>
+      <div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-center transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)] hover:scale-110 hover:rotate-[5deg]">
+            <MdiPipeValve color={color} width={40} />
+          </div>
+          <div className="w-full relative">
+            <div
+              style={bar}
+              className="h-[18px] bg-border rounded-[10px] overflow-hidden relative shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)] after:content-[''] after:block after:w-(--value) after:h-full after:[background:var(--gradient)] after:rounded-[10px] after:[transition:width_0.6s_cubic-bezier(0.4,0,0.2,1),background_0.4s_ease-in-out] after:shadow-[0_2px_6px_var(--glow)] after:relative after:overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-(--value) before:h-full before:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent)] before:animate-shimmer before:z-[1] before:transition-[width] before:duration-600 before:ease-[cubic-bezier(0.4,0,0.2,1)]"
+            />
+          </div>
+          <span
+            style={{ color }}
+            className="text-[13px] font-semibold min-w-10 text-right transition-[color] duration-400 ease-in-out tracking-[0.5px]"
+          >{`${value}%`}</span>
+        </div>
+      </div>
+    </div>
   );
 };
