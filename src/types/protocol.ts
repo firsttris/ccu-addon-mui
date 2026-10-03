@@ -103,7 +103,10 @@ export type ServerMessage =
   | ReplaceDeviceResponse
   | StartComTestResponse
   | PollComTestResponse
-  | CheckFirmwareUpdateResponse;
+  | CheckFirmwareUpdateResponse
+  | GetLoggingResponse
+  | SetLoggingResponse
+  | DownloadLogsResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -191,6 +194,9 @@ export interface Protocol {
   startComTest: StartComTestCall;
   pollComTest: PollComTestCall;
   checkFirmwareUpdate: CheckFirmwareUpdateCall;
+  getLogging: GetLoggingCall;
+  setLogging: SetLoggingCall;
+  downloadLogs: DownloadLogsCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3003,6 +3009,90 @@ export interface CheckFirmwareUpdateResponse {
   requestId?: string;
   current: string;
   latest: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetLoggingCall".
+ */
+export interface GetLoggingCall {
+  request: GetLoggingRequest;
+  response: GetLoggingResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetLoggingRequest".
+ */
+export interface GetLoggingRequest {
+  type: "getLogging";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetLoggingResponse".
+ */
+export interface GetLoggingResponse {
+  type: "getLogging_response";
+  requestId?: string;
+  host: string;
+  rfd: number;
+  hmip: string;
+  rega: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLoggingCall".
+ */
+export interface SetLoggingCall {
+  request: SetLoggingRequest;
+  response: SetLoggingResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLoggingRequest".
+ */
+export interface SetLoggingRequest {
+  type: "setLogging";
+  requestId?: string;
+  host: string;
+  rfd: number;
+  hmip: string;
+  rega: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLoggingResponse".
+ */
+export interface SetLoggingResponse {
+  type: "setLogging_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DownloadLogsCall".
+ */
+export interface DownloadLogsCall {
+  request: DownloadLogsRequest;
+  response: DownloadLogsResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DownloadLogsRequest".
+ */
+export interface DownloadLogsRequest {
+  type: "downloadLogs";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DownloadLogsResponse".
+ */
+export interface DownloadLogsResponse {
+  type: "downloadLogs_response";
+  requestId?: string;
+  success: boolean;
+  url: string;
+  fileName: string;
 }
 /**
  * Sent first on every connection

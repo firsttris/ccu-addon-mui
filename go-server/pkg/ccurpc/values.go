@@ -225,3 +225,17 @@ func (c *Client) ReplaceDevice(iface, oldAddress, newAddress string) error {
 	var reply interface{}
 	return c.call(iface, "replaceDevice", []interface{}{oldAddress, newAddress}, &reply)
 }
+
+// LogLevel is the log level of an interface process (rfd, hs485d), as
+// cp_maintenance.cgi reads it with logLevel
+func (c *Client) LogLevel(iface string) (int, error) {
+	var level int
+	err := c.call(iface, "logLevel", []interface{}{}, &level)
+	return level, err
+}
+
+// SetLogLevel sets the log level of an interface process (set_log_config)
+func (c *Client) SetLogLevel(iface string, level int) error {
+	var reply interface{}
+	return c.call(iface, "logLevel", []interface{}{level}, &reply)
+}

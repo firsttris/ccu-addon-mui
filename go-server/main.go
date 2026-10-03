@@ -16,6 +16,7 @@ import (
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
+	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/websocket"
@@ -90,6 +91,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 
 	// The add-ons; this one's rc.d script is "mui" (addon_installer/rc.d)
 	wsServer.SetAddons(addons.New(cfg.AddonsDir, "mui", cfg.WebUIURL))
+	wsServer.SetLogs(logs.New(cfg.SyslogConfig, cfg.LogDir))
 
 	// Push notifications about new alarms and service messages
 	if store, err := push.OpenStore(cfg.PushFile); err != nil {

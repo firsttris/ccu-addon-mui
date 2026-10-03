@@ -524,6 +524,8 @@ func (f *fakeDeviceRPC) ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterf
 	return nil, nil
 }
 func (f *fakeDeviceRPC) InstallFirmware(iface, address string) error { return nil }
+func (f *fakeDeviceRPC) LogLevel(iface string) (int, error)          { return 0, nil }
+func (f *fakeDeviceRPC) SetLogLevel(iface string, level int) error   { return nil }
 
 func (f *fakeDeviceRPC) GetLinks(iface, address string) ([]ccurpc.Link, error) { return nil, nil }
 func (f *fakeDeviceRPC) GetAllLinks(iface string) ([]ccurpc.Link, error)       { return nil, nil }

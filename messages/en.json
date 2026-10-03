@@ -721,5 +721,16 @@
   "DEVHIST_NONE": "No channel of this device is logged. The option “logged” is under names, rooms and functions.",
   "DEVHIST_EMPTY": "No entries in the system protocol yet.",
   "DEVHIST_HINT": "From the last {count} entries of the system protocol per channel.",
-  "FW_UPDATE_HINT": "The update is installed in the WebUI under Settings › Control panel › Central maintenance."
+  "FW_UPDATE_HINT": "The update is installed in the WebUI under Settings › Control panel › Central maintenance.",
+  "LOG_TITLE": "Logging",
+  "LOG_TRACE": "Everything incl. trace",
+  "LOG_ALL": "Log all",
+  "LOG_INFO": "Information",
+  "LOG_WARNINGS": "Only warnings",
+  "LOG_ERRORS": "Only errors",
+  "LOG_NONE": "No logging",
+  "LOG_LOGIC": "Logic tier",
+  "LOG_HOST": "Syslog server",
+  "LOG_DOWNLOAD": "Download log files",
+  "LOG_HINT": "As in the WebUI's central maintenance. Verbose levels fill the CCU's storage quickly – only turn them on for troubleshooting."
 }
