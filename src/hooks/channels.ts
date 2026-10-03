@@ -1,17 +1,7 @@
-import { Channel, ChannelType, HmEvent } from '../types/types';
+import { Channel, HmEvent } from '../types/types';
+import { controlOverrides } from '../controls/registry';
 
 export type Value = string | number | boolean;
-
-// Types with a control come first, in this order; all others follow
-// alphabetically and are shown by GenericControl.
-const typeOrder: Partial<Record<string, number>> = {
-  [ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER]: 1,
-  [ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER]: 2,
-  [ChannelType.SWITCH_VIRTUAL_RECEIVER]: 3,
-  [ChannelType.BLIND_VIRTUAL_RECEIVER]: 4,
-  [ChannelType.KEYMATIC]: 5,
-  [ChannelType.ENERGIE_METER_TRANSMITTER]: 6,
-};
 
 // Channels that only hold configuration, not a state worth showing
 export const isHiddenChannel = (channel: Channel) =>
@@ -21,6 +11,11 @@ export const isHiddenChannel = (channel: Channel) =>
 
 // Groups the visible channels by type, in the order they are shown
 export const groupChannelsByType = (channels: Channel[]): [string, Channel[]][] => {
+  // Types with a hand-made control come first, in the order of the
+  // registry; all others follow alphabetically and are shown by
+  // GenericControl. Read here, not at load time: the registry's controls
+  // import this module.
+  const typeOrder = new Map(Object.keys(controlOverrides).map((type, index) => [type, index]));
   const channelsPerType = new Map<string, Channel[]>();
   for (const channel of channels) {
     if (isHiddenChannel(channel)) {
@@ -30,7 +25,7 @@ export const groupChannelsByType = (channels: Channel[]): [string, Channel[]][] 
   }
   return Array.from(channelsPerType).sort(
     ([typeA], [typeB]) =>
-      (typeOrder[typeA] ?? 999) - (typeOrder[typeB] ?? 999) || typeA.localeCompare(typeB),
+      (typeOrder.get(typeA) ?? 999) - (typeOrder.get(typeB) ?? 999) || typeA.localeCompare(typeB),
   );
 };
 

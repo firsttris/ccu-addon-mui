@@ -1,6 +1,6 @@
 import { TranslationKey, useTranslations } from '../i18n/utils';
-import { Channel, ChannelStatus, ChannelType, EnergyMeterChannel } from '../types/types';
-import { EnergyMeterControl } from '../controls/EnergyMeterControl';
+import { Channel, ChannelStatus } from '../types/types';
+import { controlOverrides } from '../controls/registry';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import styled from '@emotion/styled';
 import { ControlComponent } from './ControlComponent';
@@ -149,6 +149,7 @@ export const ChannelGroup: React.FC<ChannelGroupProps> = ({
   channels,
 }) => {
   const t = useTranslations();
+  const override = controlOverrides[channelType];
 
   const [expanded, setExpanded] = useLocalStorage(channelType, false);
 
@@ -167,12 +168,12 @@ export const ChannelGroup: React.FC<ChannelGroupProps> = ({
       </ListItem>
       <Collapse in={expanded}>
         <ChannelContainer>
-          {channelType === ChannelType.ENERGIE_METER_TRANSMITTER
-            ? // One card per energy meter instead of one per channel
-              groupByDevice(channels as EnergyMeterChannel[]).map(([deviceAddress, deviceChannels]) => (
+          {override?.per === 'device'
+            ? // One card per device instead of one per channel
+              groupByDevice(channels).map(([deviceAddress, deviceChannels]) => (
                 <Card key={deviceAddress}>
                   <CardBody unreachable={deviceChannels[0].status?.UNREACH === true}>
-                    <EnergyMeterControl channels={deviceChannels} />
+                    <override.component channels={deviceChannels} />
                   </CardBody>
                   <ChannelStatusBar status={deviceChannels[0].status} />
                 </Card>
