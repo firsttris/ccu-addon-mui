@@ -262,3 +262,13 @@ test('listet unter „Alle Geräte“ auch Geräte ohne Raum', async ({ page }) 
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
   await expect(page.getByText('Flur Licht')).toBeVisible();
 });
+
+test('zeigt die Anzahl der Geräte mit Problemen im Header', async ({ page }) => {
+  await page.goto('/room/1');
+
+  const badge = page.getByRole('button', { name: /(Devices with problems|Geräte mit Problemen): 2/ });
+  await expect(badge).toBeVisible();
+  await badge.click();
+  await expect(page).toHaveURL(/127\.0\.0\.1:4200\/$/);
+  await expect(page.getByRole('list', { name: /Devices with problems|Geräte mit Problemen/ })).toBeVisible();
+});

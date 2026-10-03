@@ -11,6 +11,23 @@ import { useTranslations } from '../i18n/utils';
 // A short reconnect (e.g. at startup) should not flash a warning
 const CONNECTION_WARNING_DELAY_MS = 2000;
 
+// Battery and reachability problems are not pushed by the server
+const DEVICE_PROBLEMS_REFRESH_MS = 5 * 60 * 1000;
+
+const ProblemBadge = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #e65100;
+`;
+
 const ConnectionBanner = styled.div`
   position: absolute;
   top: 100%;
@@ -174,8 +191,25 @@ export const Header: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const t = useTranslations();
-  const { getRooms, rooms, getTrades, trades, connectionStatus, authRequired, logout } =
-    useWebSocketContext();
+  const {
+    getRooms,
+    rooms,
+    getTrades,
+    trades,
+    connectionStatus,
+    authRequired,
+    logout,
+    deviceProblems,
+    getDeviceProblems,
+  } = useWebSocketContext();
+
+  useEffect(() => {
+    getDeviceProblems();
+    const timer = setInterval(getDeviceProblems, DEVICE_PROBLEMS_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [getDeviceProblems]);
+
+  const problemCount = deviceProblems?.length ?? 0;
 
   const connected = connectionStatus === 'Open';
   const [showConnectionWarning, setShowConnectionWarning] = useState(false);
@@ -278,6 +312,15 @@ export const Header: React.FC = () => {
         </IconButton>
       </div>
       <RightGroup>
+        {problemCount > 0 && (
+          <ProblemBadge
+            onClick={() => navigate({ to: '/' })}
+            aria-label={`${t('DEVICE_PROBLEMS')}: ${problemCount}`}
+            title={t('DEVICE_PROBLEMS')}
+          >
+            ⚠️ {problemCount}
+          </ProblemBadge>
+        )}
         <ConnectionDot
           connected={connected}
           role="img"
