@@ -1,5 +1,4 @@
-import styled from '@emotion/styled';
-import { keyframes, css } from '@emotion/react';
+import { ReactNode } from 'react';
 import MaterialSymbolsLightWindowOpen from '~icons/material-symbols-light/window-open';
 import MaterialSymbolsLightWindowClosed from '~icons/mui/window-closed';
 import { m } from '../../paraglide/messages';
@@ -11,95 +10,17 @@ interface TemperatureDisplayProps {
   windowOpen: boolean;
 }
 
-const CenterContent = styled.div`
-  position: absolute;
-  top: 45%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  pointer-events: none;
-  width: 180px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0px;
-`;
+const StatItem = ({ children }: { children: ReactNode }) => (
+  <div className="flex flex-col items-center gap-[2px]">{children}</div>
+);
 
-const MainTemperature = styled.div`
-  font-size: 72px;
-  font-weight: 400;
-  line-height: 1;
-  color: ${props => props.theme.colors.text};
-  letter-spacing: -3px;
-`;
+const StatValue = ({ children }: { children: ReactNode }) => (
+  <div className="text-[14px] font-medium text-text">{children}</div>
+);
 
-const TemperatureUnit = styled.span`
-  font-size: 24px;
-  font-weight: 300;
-  margin-left: 2px;
-  opacity: 0.5;
-  vertical-align: super;
-`;
-
-const Separator = styled.div`
-  width: 40px;
-  height: 1px;
-  background: ${props => props.theme.colors.border};
-  margin: 4px auto;
-`;
-
-const StatsRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
-  margin-top: 4px;
-`;
-
-const StatItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-`;
-
-const StatValue = styled.div`
-  font-size: 14px;
-  font-weight: 500;
-  color: ${props => props.theme.colors.text};
-`;
-
-const StatLabel = styled.div`
-  font-size: 10px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-`;
-
-const pulse = keyframes`
-  0% {
-    transform: scale(1);
-    opacity: 1;
-    filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.9;
-    filter: drop-shadow(0 0 4px rgba(33, 150, 243, 0.4));
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-    filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
-  }
-`;
-
-const WindowIconWrapper = styled.div<{ windowOpen: boolean }>`
-  animation: ${({ windowOpen }) => windowOpen ? css`${pulse} 2s infinite` : 'none'};
-  color: ${props => props.theme.colors.textSecondary};
-`;
+const StatLabel = ({ children }: { children: ReactNode }) => (
+  <div className="text-[10px] text-text-secondary uppercase tracking-[0.5px]">{children}</div>
+);
 
 export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
   localTarget,
@@ -108,22 +29,22 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
   windowOpen,
 }) => {
   return (
-    <CenterContent>
-      <WindowIconWrapper windowOpen={windowOpen}>
+    <div className="absolute top-[45%] left-1/2 [transform:translate(-50%,-50%)] text-center pointer-events-none w-[180px] flex flex-col items-center justify-center gap-0">
+      <div className={`text-text-secondary ${windowOpen ? 'animate-window-pulse' : ''}`}>
         {windowOpen ? (
           <MaterialSymbolsLightWindowOpen fontSize={24} color="#2196F3" />
         ) : (
           <MaterialSymbolsLightWindowClosed fontSize={24} style={{ opacity: 0.3 }} />
         )}
-      </WindowIconWrapper>
-      <MainTemperature>
+      </div>
+      <div className="text-[72px] font-normal leading-none text-text tracking-[-3px]">
         {localTarget.toFixed(1)}
-        <TemperatureUnit>°C</TemperatureUnit>
-      </MainTemperature>
+        <span className="text-[24px] font-light ml-[2px] opacity-50 align-super">°C</span>
+      </div>
 
-      <Separator />
+      <div className="w-10 h-px bg-border my-1 mx-auto" />
 
-      <StatsRow>
+      <div className="flex items-center justify-center gap-5 w-full mt-1">
         <StatItem>
           <StatValue>{currentTemperature.toFixed(1)}°C</StatValue>
           <StatLabel>{m.CURRENT_TEMPERATURE()}</StatLabel>
@@ -134,7 +55,7 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
             <StatLabel>{m.HUMIDITY()}</StatLabel>
           </StatItem>
         )}
-      </StatsRow>
-    </CenterContent>
+      </div>
+    </div>
   );
 };

@@ -11,6 +11,26 @@
 /* Light running over a progress bar (floor heating) */
 @theme {
   --animate-shimmer: shimmer 2s infinite;
+  /* Open window on the thermostat */
+  --animate-window-pulse: window-pulse 2s infinite;
+
+  @keyframes window-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+      filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.9;
+      filter: drop-shadow(0 0 4px rgba(33, 150, 243, 0.4));
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+      filter: drop-shadow(0 0 0 rgba(33, 150, 243, 0));
+    }
+  }
 
   @keyframes shimmer {
     0% {

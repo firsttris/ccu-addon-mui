@@ -1,4 +1,4 @@
-import styled from '@emotion/styled';
+import { SVGProps } from 'react';
 import { RADIUS, CENTER_X, CENTER_Y, ROTATE_ANGLE } from './constants';
 import { createArcPath, polarToCartesian, getColor } from './utils';
 import { useTemperatureConversion } from './hooks/useTemperatureConversion';
@@ -11,88 +11,55 @@ interface ThermostatDialProps {
   onInteractionEnd: (temp: number) => void;
 }
 
-const ThermostatWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  user-select: none;
-`;
+const BackgroundArc = (props: SVGProps<SVGPathElement>) => (
+  <path className="fill-none stroke-border [stroke-width:24] [stroke-linecap:round] opacity-30" {...props} />
+);
 
-const SVGContainer = styled.svg`
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  touch-action: none;
+const CurrentTempArc = ({ stroke, ...props }: SVGProps<SVGPathElement> & { stroke: string }) => (
+  <path
+    stroke={stroke}
+    style={{ stroke }}
+    className="fill-none [stroke-width:10] [stroke-linecap:round] opacity-40 pointer-events-none [transition:stroke_0.5s_ease] drop-shadow-[0px_0px_2px_rgba(0,0,0,0.15)]"
+    {...props}
+  />
+);
 
-  &.dragging {
-    cursor: grabbing;
-  }
-`;
+const TargetTempArc = ({
+  stroke,
+  isActive,
+  opacity = 1,
+  ...props
+}: SVGProps<SVGPathElement> & { stroke: string; isActive?: boolean; opacity?: number }) => (
+  <path
+    stroke={stroke}
+    opacity={opacity}
+    style={{ stroke, opacity }}
+    className={`fill-none [stroke-linecap:round] [transition:stroke_0.5s_ease,stroke-width_0.2s_ease,opacity_0.2s_ease] pointer-events-auto drop-shadow-[0px_0px_3px_rgba(0,0,0,0.25)] ${
+      isActive ? '[stroke-width:28]' : '[stroke-width:24] hover:[stroke-width:28]'
+    }`}
+    {...props}
+  />
+);
 
-const BackgroundArc = styled.path`
-  fill: none;
-  stroke: ${props => props.theme.colors.border};
-  stroke-width: 24;
-  stroke-linecap: round;
-  opacity: 0.3;
-`;
+const CurrentTempHandle = ({ fill, ...props }: SVGProps<SVGCircleElement> & { fill: string }) => (
+  <circle
+    fill={fill}
+    style={{ fill }}
+    className="stroke-white [stroke-width:2.5] drop-shadow-[0px_0px_4px_rgba(0,0,0,0.3)] pointer-events-none opacity-75 [transition:fill_0.5s_ease]"
+    {...props}
+  />
+);
 
-const CurrentTempArc = styled.path<{ stroke: string }>`
-  fill: none;
-  stroke: ${(props) => props.stroke};
-  stroke-width: 10;
-  stroke-linecap: round;
-  opacity: 0.4;
-  pointer-events: none;
-  transition: stroke 0.5s ease;
-  filter: drop-shadow(0px 0px 2px rgba(0, 0, 0, 0.15));
-`;
-
-const TargetTempArc = styled.path<{ stroke: string; isActive?: boolean; opacity?: number }>`
-  fill: none;
-  stroke: ${(props) => props.stroke};
-  stroke-width: ${(props) => (props.isActive ? '28' : '24')};
-  stroke-linecap: round;
-  transition: stroke 0.5s ease, stroke-width 0.2s ease, opacity 0.2s ease;
-  pointer-events: all;
-  filter: drop-shadow(0px 0px 3px rgba(0, 0, 0, 0.25));
-  opacity: ${(props) => props.opacity ?? 1};
-
-  &:hover {
-    stroke-width: 28;
-  }
-`;
-
-const CurrentTempHandle = styled.circle<{ fill: string }>`
-  fill: ${(props) => props.fill};
-  stroke: white;
-  stroke-width: 2.5;
-  filter: drop-shadow(0px 0px 4px rgba(0, 0, 0, 0.3));
-  pointer-events: none;
-  opacity: 0.75;
-  transition: fill 0.5s ease;
-`;
-
-const TargetTempHandle = styled.circle<{ fill: string; isActive?: boolean }>`
-  fill: ${(props) => props.fill};
-  stroke: white;
-  stroke-width: 3.5;
-  filter: drop-shadow(0px 0px 5px rgba(0, 0, 0, 0.4));
-  cursor: grab;
-  transition: r 0.2s ease, stroke-width 0.2s ease, fill 0.5s ease;
-  r: ${(props) => (props.isActive ? '11' : '9')};
-  opacity: 0.95;
-
-  &:hover {
-    r: 11;
-    opacity: 1;
-  }
-
-  &:active {
-    cursor: grabbing;
-  }
-`;
+const TargetTempHandle = ({ fill, isActive, ...props }: SVGProps<SVGCircleElement> & { fill: string; isActive?: boolean }) => (
+  <circle
+    fill={fill}
+    style={{ fill }}
+    className={`stroke-white [stroke-width:3.5] drop-shadow-[0px_0px_5px_rgba(0,0,0,0.4)] cursor-grab active:cursor-grabbing [transition:r_0.2s_ease,stroke-width_0.2s_ease,fill_0.5s_ease] opacity-95 hover:opacity-100 ${
+      isActive ? '[r:11]' : '[r:9] hover:[r:11]'
+    }`}
+    {...props}
+  />
+);
 
 export const ThermostatDial: React.FC<ThermostatDialProps> = ({
   currentTemperature,
@@ -128,11 +95,11 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
   const targetColor = getColor(localTarget);
 
   return (
-    <ThermostatWrapper>
-      <SVGContainer
+    <div className="relative w-full h-full m-0 select-none">
+      <svg
         ref={svgRef}
         viewBox="0 0 260 260"
-        className={dragState ? 'dragging' : ''}
+        className={`w-full h-full overflow-visible touch-none ${dragState ? 'dragging cursor-grabbing' : ''}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -183,7 +150,7 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
             isActive={dragState}
           />
         </g>
-      </SVGContainer>
-    </ThermostatWrapper>
+      </svg>
+    </div>
   );
 };

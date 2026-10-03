@@ -1,4 +1,4 @@
-import styled from '@emotion/styled';
+import { ButtonHTMLAttributes } from 'react';
 import MdiPowerStandby from '~icons/mdi/power-standby';
 import MdiCalendarAuto from '~icons/mdi/thermostat-auto';
 import MdiHandManual from '~icons/mdi/thermostat-cog';
@@ -14,43 +14,14 @@ interface ThermostatIconButtonsProps {
   onToggleBoost: () => void;
 }
 
-const IconButtons = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-top: -48px;
-  margin-bottom: 12px;
-  justify-content: center;
-  z-index: 10;
-`;
-
-const IconButton = styled.button<{ active?: boolean }>`
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${props => props.active ? '#03A9F4' : props.theme.colors.textSecondary};
-  transition: color 0.3s ease, transform 0.2s ease;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-
-  &:hover {
-    color: ${props => props.active ? '#03A9F4' : props.theme.colors.text};
-    background: ${props => props.theme.colors.hover};
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  svg {
-    width: 24px;
-    height: 24px;
-  }
-`;
+const IconButton = ({ active, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) => (
+  <button
+    className={`bg-transparent border-none cursor-pointer p-2 flex items-center justify-center [transition:color_0.3s_ease,transform_0.2s_ease] rounded-full w-10 h-10 hover:bg-hover active:[transform:scale(0.95)] [&_svg]:w-6 [&_svg]:h-6 ${
+      active ? 'text-[#03A9F4] hover:text-[#03A9F4]' : 'text-text-secondary hover:text-text'
+    }`}
+    {...props}
+  />
+);
 
 export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
   manualMode,
@@ -61,7 +32,7 @@ export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
   onToggleBoost,
 }) => {
   return (
-    <IconButtons>
+    <div className="flex gap-2 -mt-12 mb-3 justify-center z-10">
       <IconButton onClick={onPowerOff} title={m.POWER_OFF()}>
         <MdiPowerStandby />
       </IconButton>
@@ -81,6 +52,6 @@ export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
           <MdiFlame />
         </IconButton>
       )}
-    </IconButtons>
+    </div>
   );
 };

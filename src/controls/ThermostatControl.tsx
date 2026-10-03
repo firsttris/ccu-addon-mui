@@ -1,4 +1,3 @@
-import styled from '@emotion/styled';
 import { HeatingClimateControlTransceiverChannel } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { ChannelName } from '../components/ChannelName';
@@ -13,37 +12,6 @@ import { useThermostatState } from './ThermostatControl/hooks/useThermostatState
 type ThermostatProps = {
   channel: HeatingClimateControlTransceiverChannel;
 };
-
-const Container = styled.div`
-  position: relative;
-  width: 250px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: ${props => props.theme.colors.surface};
-  border-radius: 16px;
-
-  @media (max-width: 400px) {
-    padding: 12px;
-  }
-`;
-
-const Header = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 4px;
-`;
-
-const ThermostatWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  max-width: 260px;
-  aspect-ratio: 1;
-  margin: 0;
-`;
 
 export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const datapoints = channel.datapoints;
@@ -86,16 +54,16 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   };
 
   return (
-    <Container>
-      <Header>
+    <div className="relative w-[250px] p-4 flex flex-col items-center bg-surface rounded-2xl max-[400px]:p-3">
+      <div className="w-full flex justify-center items-center mb-1">
         <ChannelName 
           name={channel.name} 
           maxWidth="220px"
           icon={isRadiatorThermostat ? <RadiatorThermostatIcon /> : <WallThermostatIcon />}
         />
-      </Header>
+      </div>
 
-      <ThermostatWrapper>
+      <div className="relative w-full max-w-[260px] aspect-square m-0">
         <ThermostatDial
           currentTemperature={currentTemperature}
           localTarget={localTarget}
@@ -109,7 +77,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
           humidity={humidity}
           windowOpen={windowOpen}
         />
-      </ThermostatWrapper>
+      </div>
 
       <ThermostatIconButtons
         manualMode={manualMode}
@@ -124,6 +92,6 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
         onDecrease={decreaseTemperature}
         onIncrease={increaseTemperature}
       />
-    </Container>
+    </div>
   );
 };
