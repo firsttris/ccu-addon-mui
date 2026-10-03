@@ -805,3 +805,28 @@ test('zeigt die Zusatzsoftware und startet ein Add-on neu', async ({ page }) => 
   await page.getByRole('dialog', { name: 'Neu starten' }).getByRole('button', { name: 'Neu starten' }).click();
   await expect(page.getByText('CUx-Daemon wird neu gestartet')).toBeVisible();
 });
+
+test('ändert das eigene Passwort', async ({ page }) => {
+  await login(page);
+  const change = async (current: string, next: string) => {
+    await page.getByRole('button', { name: 'Menü' }).click();
+    await page.getByRole('button', { name: 'Passwort ändern' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Passwort ändern' });
+    await dialog.getByLabel('Aktuelles Passwort').fill(current);
+    await dialog.getByLabel('Neues Passwort').fill(next);
+    await dialog.getByLabel('Passwort wiederholen').fill(next);
+    await dialog.getByRole('button', { name: 'Speichern' }).click();
+    return dialog;
+  };
+
+  const wrong = await change('falsch', 'neu123');
+  await expect(wrong.getByRole('alert')).toHaveText('Das aktuelle Passwort stimmt nicht');
+  await wrong.getByRole('button', { name: 'Abbrechen' }).click();
+
+  const right = await change('secret', 'neu123');
+  await expect(right).toHaveCount(0);
+  await expect(page.getByText('Passwort geändert')).toBeVisible();
+  // Back again, for the other tests
+  await change('neu123', 'secret');
+  await expect(page.getByRole('dialog', { name: 'Passwort ändern' })).toHaveCount(0);
+});

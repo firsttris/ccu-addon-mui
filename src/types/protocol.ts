@@ -95,7 +95,8 @@ export type ServerMessage =
   | ClearHistoryResponse
   | GetAddonsResponse
   | AddonActionResponse
-  | CheckAddonUpdateResponse;
+  | CheckAddonUpdateResponse
+  | ChangePasswordResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -175,6 +176,7 @@ export interface Protocol {
   getAddons: GetAddonsCall;
   addonAction: AddonActionCall;
   checkAddonUpdate: CheckAddonUpdateCall;
+  changePassword: ChangePasswordCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2712,6 +2714,36 @@ export interface CheckAddonUpdateResponse {
    * the newest version the add-on's update URL names
    */
   latest: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ChangePasswordCall".
+ */
+export interface ChangePasswordCall {
+  request: ChangePasswordRequest;
+  response: ChangePasswordResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ChangePasswordRequest".
+ */
+export interface ChangePasswordRequest {
+  type: "changePassword";
+  requestId?: string;
+  currentPassword: string;
+  /**
+   * the WebUI's allowed characters, not empty
+   */
+  newPassword: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ChangePasswordResponse".
+ */
+export interface ChangePasswordResponse {
+  type: "changePassword_response";
+  requestId?: string;
+  success: boolean;
 }
 /**
  * Sent first on every connection

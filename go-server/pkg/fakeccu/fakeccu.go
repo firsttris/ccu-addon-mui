@@ -434,6 +434,14 @@ func (c *CCU) runScript(body string) (string, error) {
 					u.ID, u.Name, u.FirstName, u.LastName, u.Level, u.Password != "", u.ShowLogin, u.Name != "Admin", u.Mail, u.Phone)
 			}
 			return b.String(), nil
+		case "set_user_password":
+			for i := range c.fixture.Users {
+				if c.fixture.Users[i].Name == values["USERNAME"] {
+					c.fixture.Users[i].Password = values["PASSWORD"]
+					return "OK\t" + values["USERNAME"], nil
+				}
+			}
+			return "NOT_FOUND", nil
 		case "save_user":
 			return c.saveUser(values), nil
 		case "delete_user":

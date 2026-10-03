@@ -12,6 +12,8 @@ import BracesIcon from '~icons/lucide/braces';
 import PlayIcon from '~icons/lucide/play';
 import SlidersIcon from '~icons/lucide/sliders-horizontal';
 import LogOutIcon from '~icons/lucide/log-out';
+import KeyIcon from '~icons/lucide/key-round';
+import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { useTheme } from '../contexts/ThemeContext';
 import { EffectsLevel, useEffects } from '../contexts/EffectsContext';
 import { usePageTitleValue } from '../contexts/PageTitleContext';
@@ -83,6 +85,7 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
   // Loaded when the menu is first opened, then kept in the query cache
   const { data: rooms = [] } = useRooms({ enabled: open });
   const { data: trades = [] } = useTrades({ enabled: open });
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const go = (navigateTo: () => void) => {
     navigateTo();
@@ -90,6 +93,7 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
   };
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-80 gap-0 overflow-y-auto">
         <SheetHeader className="pb-2">
@@ -182,6 +186,17 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
           {authRequired && (
             <>
               <Separator />
+              {(userLevel === 'admin' || userLevel === 'user') && (
+                <NavLink
+                  icon={<KeyIcon />}
+                  onClick={() => {
+                    onOpenChange(false);
+                    setChangingPassword(true);
+                  }}
+                >
+                  {m.PW_CHANGE()}
+                </NavLink>
+              )}
               <NavLink
                 icon={<LogOutIcon />}
                 onClick={() => {
@@ -196,6 +211,8 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
         </nav>
       </SheetContent>
     </Sheet>
+    {changingPassword && <ChangePasswordDialog onDone={() => setChangingPassword(false)} />}
+    </>
   );
 };
 

@@ -273,6 +273,23 @@ func (a *Authenticator) Elevate(username, password, sessionID string) (string, e
 	return a.IssueAdminToken(Session{User: username, Level: a.lookupLevel(username), ID: sessionID})
 }
 
+// CheckPassword checks a user's password with the CCU, for changing it.
+// Wrong passwords count towards the lockout like logins.
+func (a *Authenticator) CheckPassword(username, password string) error {
+	if err := a.checkLockout(); err != nil {
+		return err
+	}
+	ok, err := a.verifyWithCCU(username, password)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		a.recordFailure()
+		return ErrInvalidCredentials
+	}
+	return nil
+}
+
 type tokenClaims struct {
 	User      string `json:"u"`
 	Level     string `json:"l,omitempty"`

@@ -226,6 +226,9 @@
     },
     "checkAddonUpdate": {
       "$ref": "#/definitions/CheckAddonUpdateCall"
+    },
+    "changePassword": {
+      "$ref": "#/definitions/ChangePasswordCall"
     }
   },
   "required": [
@@ -302,7 +305,8 @@
     "clearHistory",
     "getAddons",
     "addonAction",
-    "checkAddonUpdate"
+    "checkAddonUpdate",
+    "changePassword"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2753,6 +2757,9 @@
         },
         {
           "$ref": "#/definitions/CheckAddonUpdateResponse"
+        },
+        {
+          "$ref": "#/definitions/ChangePasswordResponse"
         }
       ]
     },
@@ -6460,6 +6467,67 @@
           "description": "this add-on"
         }
       }
+    },
+    "ChangePasswordRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "changePassword"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "currentPassword": {
+          "type": "string"
+        },
+        "newPassword": {
+          "type": "string",
+          "description": "the WebUI's allowed characters, not empty"
+        }
+      },
+      "required": [
+        "type",
+        "currentPassword",
+        "newPassword"
+      ],
+      "additionalProperties": false
+    },
+    "ChangePasswordResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "changePassword_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "ChangePasswordCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ChangePasswordRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ChangePasswordResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
     }
   }
 }

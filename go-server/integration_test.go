@@ -1431,3 +1431,53 @@ func TestStackAddons(t *testing.T) {
 		t.Fatalf("add-on still listed: %v", list)
 	}
 }
+
+func TestStackChangePassword(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
+	receive(t, conn, byRequestID("e"))
+	send(t, conn, message{"type": "saveUser", "requestId": "u2", "id": 0, "fullName": "Kind", "level": "user", "password": "alt1"})
+	receive(t, conn, byRequestID("u2"))
+
+	child, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/", conn.RemoteAddr().String()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer child.Close()
+	loginAs(t, child, "Kind", "alt1")
+	send(t, child, message{"type": "changePassword", "requestId": "p1", "currentPassword": "falsch", "newPassword": "neu2"})
+	if m := receive(t, child, byRequestID("p1")); m["code"] != "INVALID_CREDENTIALS" {
+		t.Fatalf("expected INVALID_CREDENTIALS, got %v", m)
+	}
+	send(t, child, message{"type": "changePassword", "requestId": "p2", "currentPassword": "alt1", "newPassword": "x^y"})
+	if m := receive(t, child, byRequestID("p2")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+	send(t, child, message{"type": "changePassword", "requestId": "p3", "currentPassword": "alt1", "newPassword": "neu2"})
+	if m := receive(t, child, byRequestID("p3")); m["success"] != true {
+		t.Fatalf("changePassword failed: %v", m)
+	}
+
+	// The new password works, the old one no longer
+	again, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/", conn.RemoteAddr().String()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer again.Close()
+	if m := loginAs(t, again, "Kind", "alt1"); m["success"] == true {
+		t.Fatalf("old password still works: %v", m)
+	}
+	if m := loginAs(t, again, "Kind", "neu2"); m["success"] != true {
+		t.Fatalf("new password does not work: %v", m)
+	}
+
+	// Guests may not
+	guest, _, _ := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/", conn.RemoteAddr().String()), nil)
+	defer guest.Close()
+	loginAs(t, guest, "Gast", "gast")
+	send(t, guest, message{"type": "changePassword", "requestId": "p4", "currentPassword": "gast", "newPassword": "neu"})
+	if m := receive(t, guest, byRequestID("p4")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}
