@@ -178,6 +178,11 @@ func exportInterface(rpc *ccurpc.Client, iface string) (*fakeccu.InterfaceData, 
 				continue
 			}
 			if m, ok := description.(map[string]interface{}); ok {
+				// The CCU sends an empty paramset as empty struct, which
+				// decodes to nil; keep it as {} instead of null
+				if m == nil {
+					m = map[string]interface{}{}
+				}
 				if data.ParamsetDescriptions[address] == nil {
 					data.ParamsetDescriptions[address] = map[string]map[string]interface{}{}
 				}

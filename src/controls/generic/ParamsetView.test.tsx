@@ -7,9 +7,10 @@ import { renderWithTheme } from '../../test/render';
 import { DatapointValue, ParameterDescription, ParamsetDescription } from '../../types/types';
 
 // Raw XML-RPC description (as in the fixtures) → the JSON the server sends
-const fromRaw = (raw: Record<string, Record<string, unknown>>): ParamsetDescription =>
+const fromRaw = (raw: Record<string, Record<string, unknown>> | null): ParamsetDescription =>
   Object.fromEntries(
-    Object.entries(raw).map(([name, p]) => [
+    // Exports written before the fix contain empty paramsets as null
+    Object.entries(raw ?? {}).map(([name, p]) => [
       name,
       {
         type: p.TYPE,
@@ -32,7 +33,7 @@ const fromRaw = (raw: Record<string, Record<string, unknown>>): ParamsetDescript
 
 type Fixture = {
   channels: { address: string; datapoints: Record<string, DatapointValue> }[];
-  interfaces: Record<string, { paramsetDescriptions?: Record<string, Record<string, Record<string, Record<string, unknown>>>> }>;
+  interfaces: Record<string, { paramsetDescriptions?: Record<string, Record<string, Record<string, Record<string, unknown>> | null>> }>;
 };
 
 const fixturesDir = path.resolve(__dirname, '../../../fixtures');
@@ -44,9 +45,16 @@ const fixtures = fs
 // Gate of phase 1: every description from the fixtures renders without
 // errors, with one element per shown parameter.
 describe.each(fixtures)('descriptions in %s', (_, fixture) => {
+  // Channels of the same type share their description; test each once
+  const seen = new Set<string>();
   const cases = Object.entries(fixture.interfaces).flatMap(([iface, data]) =>
     Object.entries(data.paramsetDescriptions ?? {}).flatMap(([address, paramsets]) =>
-      Object.entries(paramsets).map(([key, raw]) => [`${iface} ${address} ${key}`, address, fromRaw(raw)] as const),
+      Object.entries(paramsets)
+        .filter(([, raw]) => {
+          const id = JSON.stringify(raw);
+          return !seen.has(id) && !!seen.add(id);
+        })
+        .map(([key, raw]) => [`${iface} ${address} ${key}`, address, fromRaw(raw)] as const),
     ),
   );
 

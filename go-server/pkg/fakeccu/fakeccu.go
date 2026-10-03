@@ -795,6 +795,10 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		if !ok {
 			return nil, "Unknown paramset"
 		}
+		if description == nil {
+			// Older exports wrote empty paramsets as null
+			description = map[string]interface{}{}
+		}
 		return description, ""
 	case "getParamset":
 		address, key := stringParam(params, 0), stringParam(params, 1)
