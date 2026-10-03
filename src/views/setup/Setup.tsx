@@ -14,6 +14,9 @@ import { useDevices } from '../../queries';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useTranslations } from '../../i18n/utils';
 import { useChannelNames } from './channelNames';
+import { Pairing } from './Pairing';
+import { DialogButton } from '../../components/ConfirmDialog';
+import { ElevateDialog } from '../../components/ElevateDialog';
 
 export const SetupContainer = styled.div`
   max-width: 1280px;
@@ -88,7 +91,8 @@ const column = createColumnHelper<DeviceRow>();
 // The setup area's start: all devices of the CCU, searchable and sortable.
 export const Setup = () => {
   const t = useTranslations();
-  const { userLevel } = useWebSocketContext();
+  const { userLevel, elevated } = useWebSocketContext();
+  const [elevating, setElevating] = useState(false);
   const { data: devices = [] } = useDevices();
   const names = useChannelNames();
   const [filter, setFilter] = useState('');
@@ -142,6 +146,16 @@ export const Setup = () => {
     <SetupContainer>
       <h1>{t('DEVICES')}</h1>
       {userLevel !== 'admin' && <Notice role="status">{t('ADMIN_ONLY')}</Notice>}
+      {userLevel === 'admin' && !elevated && (
+        <Notice role="status">
+          {t('ELEVATE_HINT')}{' '}
+          <DialogButton type="button" onClick={() => setElevating(true)}>
+            {t('ELEVATE')}
+          </DialogButton>
+        </Notice>
+      )}
+      {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}
+      {userLevel === 'admin' && elevated && <Pairing />}
       <Search
         type="search"
         aria-label={t('SEARCH')}

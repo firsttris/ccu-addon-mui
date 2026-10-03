@@ -1,8 +1,8 @@
 import styled from '@emotion/styled';
 import { useCallback, useMemo, useState } from 'react';
-import { Link, useParams } from '@tanstack/react-router';
+import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { useQueries } from '@tanstack/react-query';
-import { useDevices, useParamset, usePutParamset } from '../../queries';
+import { useDevices, usePairingAction, useParamset, usePutParamset } from '../../queries';
 import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { ElevateDialog } from '../../components/ElevateDialog';
 import { useToast } from '../../contexts/ToastContext';
@@ -64,6 +64,10 @@ export const DeviceSettings = () => {
   const { data: devices } = useDevices();
   const names = useChannelNames();
   const putParamset = usePutParamset();
+  const pairingAction = usePairingAction();
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
+  const [deleteOptions, setDeleteOptions] = useState({ reset: false, force: false });
 
   const device = devices?.find((d) => d.address === address && d.interfaceName === interfaceName);
   // Device-wide settings are on the device (BidCos) or its channel 0 (HmIP)
@@ -209,6 +213,48 @@ export const DeviceSettings = () => {
             {t('RESET')}
           </DialogButton>
         </Toolbar>
+      )}
+
+      {canEdit && device && (
+        <Toolbar>
+          <DialogButton type="button" onClick={() => setDeleting(true)} style={{ color: '#c62828' }}>
+            {t('DELETE_DEVICE')}
+          </DialogButton>
+        </Toolbar>
+      )}
+
+      {deleting && (
+        <ConfirmDialog
+          title={t('DELETE_DEVICE')}
+          confirmLabel={t('DELETE')}
+          busy={pairingAction.isPending}
+          onCancel={() => setDeleting(false)}
+          onConfirm={() =>
+            pairingAction.mutate(
+              { type: 'deleteDevice', interfaceName, address, ...deleteOptions },
+              {
+                onSuccess: () => {
+                  showToast(t('DELETED'), 'info');
+                  navigate({ to: '/setup' });
+                },
+                onError: (error) => showToast(`${t('CHANGE_FAILED')}: ${error.message}`),
+                onSettled: () => setDeleting(false),
+              },
+            )
+          }
+        >
+          <p>{t('DELETE_DEVICE_CONFIRM')}</p>
+          {(['reset', 'force'] as const).map((option) => (
+            <label key={option} style={{ display: 'block', margin: '6px 0' }}>
+              <input
+                type="checkbox"
+                checked={deleteOptions[option]}
+                onChange={(event) => setDeleteOptions((prev) => ({ ...prev, [option]: event.target.checked }))}
+              />{' '}
+              {t(option === 'reset' ? 'DELETE_RESET' : 'DELETE_FORCE')}
+            </label>
+          ))}
+        </ConfirmDialog>
       )}
 
       {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}

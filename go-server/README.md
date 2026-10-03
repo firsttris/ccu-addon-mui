@@ -128,6 +128,11 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 | `{"type": "listDevices"}` | `{"type": "devices", "devices": [{"interfaceName", "address", "name", "type", "firmware", "children", "paramsets"}]}` |
 | `{"type": "rename", "address", "name"}` | `{"type": "rename_response", "success"}`: renames a device or channel (administrators with admin token; audited) |
 | `{"type": "setGroupMember", "groupId", "channelId", "member"}` | `{"type": "setGroupMember_response", "success"}`: adds a channel to a room or trade, or removes it |
+| `{"type": "setInstallMode", "interfaceName", "on", "seconds"}` | `{"type": "setInstallMode_response", "success"}`: starts or stops pairing |
+| `{"type": "getInstallMode", "interfaceName"}` | `{"type": "getInstallMode_response", "seconds"}`: seconds left, 0 when off |
+| `{"type": "getInbox"}` | `{"type": "getInbox_response", "devices": [{"address", "type", "interfaceName", "name"}]}`: paired devices not yet accepted |
+| `{"type": "acceptDevice", "address"}` | `{"type": "acceptDevice_response", "success"}`: takes a device out of the inbox (sets `ReadyConfig`; to be verified on real hardware) |
+| `{"type": "deleteDevice", "interfaceName", "address", "reset", "force"}` | `{"type": "deleteDevice_response", "success"}` |
 
 ## 🧪 Testing
 

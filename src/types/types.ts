@@ -206,6 +206,14 @@ export interface ParameterDescription {
 
 export type ParamsetDescription = Record<string, ParameterDescription>;
 
+// A paired device waiting in the CCU's inbox
+export interface InboxDevice {
+  address: string;
+  type: string;
+  interfaceName: string;
+  name: string;
+}
+
 // A device (not a channel) as listed by the CCU's interfaces
 export interface Device {
   interfaceName: string;

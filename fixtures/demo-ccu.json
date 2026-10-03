@@ -321,6 +321,28 @@
         "SECTION": 0,
         "SECTION_STATUS": 0
       }
+    },
+    {
+      "id": 9000,
+      "address": "0008DA8A9F1234:0",
+      "type": "MAINTENANCE",
+      "interface": "HmIP-RF",
+      "name": "HmIP-SWDO 0008DA8A9F1234:0",
+      "datapoints": {
+        "UNREACH": false,
+        "LOW_BAT": false,
+        "CONFIG_PENDING": false
+      }
+    },
+    {
+      "id": 9001,
+      "address": "0008DA8A9F1234:1",
+      "type": "SHUTTER_CONTACT_TRANSCEIVER",
+      "interface": "HmIP-RF",
+      "name": "HmIP-SWDO 0008DA8A9F1234:1",
+      "datapoints": {
+        "STATE": 0
+      }
     }
   ],
   "deviceNames": {
@@ -464,6 +486,35 @@
             "LINK"
           ],
           "VERSION": 12,
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "0008DA8A9F1234",
+          "TYPE": "HmIP-SWDO",
+          "CHILDREN": [
+            "0008DA8A9F1234:0",
+            "0008DA8A9F1234:1"
+          ],
+          "PARAMSETS": [
+            "MASTER",
+            "SERVICE"
+          ],
+          "VERSION": 4,
+          "FIRMWARE": "1.2.12",
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "0008DA8A9F1234:1",
+          "TYPE": "SHUTTER_CONTACT_TRANSCEIVER",
+          "PARENT": "0008DA8A9F1234",
+          "PARENT_TYPE": "HmIP-SWDO",
+          "INDEX": 1,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 4,
           "FLAGS": 1
         }
       ],
@@ -658,5 +709,8 @@
         }
       }
     }
-  }
+  },
+  "inbox": [
+    "0008DA8A9F1234"
+  ]
 }

@@ -202,3 +202,31 @@ test('benennt Kanäle um und ordnet sie Räumen zu', async ({ page }) => {
   await page.getByText('Schalter', { exact: true }).click();
   await expect(page.getByText('Deckenlicht')).toBeVisible();
 });
+
+test('lernt an, übernimmt neue Geräte aus dem Posteingang und löscht Geräte', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup');
+
+  const pairing = page.getByRole('region', { name: 'Geräte anlernen' });
+  await pairing.getByRole('button', { name: 'Anlernen starten (60 s)' }).click();
+  await expect(pairing.getByRole('status')).toContainText(/Anlernen aktiv: (60|59|58) s/);
+  await pairing.getByRole('button', { name: 'Beenden' }).click();
+  await expect(pairing.getByRole('button', { name: 'Anlernen starten (60 s)' })).toBeVisible();
+
+  // The window contact paired before is waiting in the inbox
+  const inbox = pairing.getByRole('list', { name: 'Neue Geräte (Posteingang)' });
+  await expect(inbox).toContainText('HmIP-SWDO');
+  await inbox.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(page.getByText('Gerät übernommen')).toBeVisible();
+  await expect(pairing.getByText('Keine neuen Geräte')).toBeVisible();
+
+  // Delete it again
+  await page.getByRole('table').getByRole('link', { name: 'HmIP-SWDO 0008DA8A9F1234' }).click();
+  await page.getByRole('button', { name: 'Gerät löschen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Gerät löschen' });
+  await dialog.getByLabel('Gerät auf Werkseinstellungen zurücksetzen').check();
+  await dialog.getByRole('button', { name: 'Löschen' }).click();
+  await expect(page).toHaveURL(/\/setup$/);
+  await expect(page.getByText('Gerät gelöscht')).toBeVisible();
+  await expect(page.getByRole('table')).not.toContainText('0008DA8A9F1234');
+});

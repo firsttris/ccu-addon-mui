@@ -186,6 +186,10 @@ type DeviceRPC interface {
 	PutParamset(iface, address, paramsetKey string, values map[string]interface{}) error
 	ListDevices(iface string) ([]ccurpc.DeviceDescription, error)
 	InterfaceNames() []string
+	SetInstallMode(iface string, on bool, seconds int) error
+	GetInstallMode(iface string) (int, error)
+	DeleteDevice(iface, address string, flags int) error
+	Forget(iface, deviceAddress string)
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -450,6 +454,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleRename(client, message)
 	case "setGroupMember":
 		s.handleSetGroupMember(client, message)
+	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
+		s.handlePairing(client, msgType, message)
 	default:
 		s.sendRequestError(client, requestID, fmt.Sprintf("unknown message type: %s", msgType), "")
 	}
@@ -1028,6 +1034,97 @@ func (s *Server) handleSetGroupMember(client *Client, message []byte) {
 			result, err := s.regaClient.SetGroupMember(msg.GroupID, msg.ChannelID, msg.Member)
 			return !msg.Member, result, err
 		})
+}
+
+type pairingResponse struct {
+	Type      string             `json:"type"`
+	RequestID string             `json:"requestId,omitempty"`
+	Success   bool               `json:"success"`
+	Seconds   *int               `json:"seconds,omitempty"`
+	Devices   []rega.InboxDevice `json:"devices,omitempty"`
+}
+
+// handlePairing: pairing (install mode), the inbox of new devices and
+// deleting devices. All of it is setup, for administrators only.
+func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID     string `json:"requestId"`
+		InterfaceName string `json:"interfaceName"`
+		Address       string `json:"address"`
+		On            bool   `json:"on"`
+		Seconds       int    `json:"seconds"`
+		// deleteDevice: reset the device to factory settings
+		Reset bool `json:"reset"`
+		// deleteDevice: delete even if it can't be reached
+		Force bool `json:"force"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if s.rpc == nil {
+		s.sendRequestError(client, msg.RequestID, msgType+" is not available", "NOT_AVAILABLE")
+		return
+	}
+
+	// Reading is allowed for administrators even without admin token
+	switch msgType {
+	case "getInstallMode", "getInbox":
+		if client.level != auth.LevelAdmin {
+			s.sendRequestError(client, msg.RequestID, "only administrators may set up devices", "FORBIDDEN")
+			return
+		}
+		response := pairingResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}
+		if msgType == "getInstallMode" {
+			seconds, err := s.rpc.GetInstallMode(msg.InterfaceName)
+			if err != nil {
+				s.sendRequestError(client, msg.RequestID, "getInstallMode failed: "+err.Error(), "CCU_ERROR")
+				return
+			}
+			response.Seconds = &seconds
+		} else {
+			devices, err := s.regaClient.GetInbox()
+			if err != nil {
+				s.sendRequestError(client, msg.RequestID, "getInbox failed: "+err.Error(), "CCU_ERROR")
+				return
+			}
+			response.Devices = devices
+		}
+		s.sendJSON(client, response)
+		return
+	}
+
+	entry := audit.Entry{Action: msgType, Target: msg.InterfaceName + "." + msg.Address}
+	switch msgType {
+	case "setInstallMode":
+		entry.Target = msg.InterfaceName
+		entry.Value = map[string]interface{}{"on": msg.On, "seconds": msg.Seconds}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			return nil, rega.SetOK, s.rpc.SetInstallMode(msg.InterfaceName, msg.On, msg.Seconds)
+		})
+	case "acceptDevice":
+		entry.Target = msg.Address
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			result, err := s.regaClient.AcceptDevice(msg.Address)
+			return nil, result, err
+		})
+	case "deleteDevice":
+		flags := 0
+		if msg.Reset {
+			flags |= ccurpc.DeleteReset
+		}
+		if msg.Force {
+			flags |= ccurpc.DeleteForce
+		}
+		entry.Value = map[string]interface{}{"reset": msg.Reset, "force": msg.Force}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			if err := s.rpc.DeleteDevice(msg.InterfaceName, msg.Address, flags); err != nil {
+				return nil, "", err
+			}
+			s.rpc.Forget(msg.InterfaceName, msg.Address)
+			return nil, rega.SetOK, nil
+		})
+	}
 }
 
 type putParamsetResponse struct {

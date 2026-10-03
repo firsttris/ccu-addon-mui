@@ -4,7 +4,7 @@ import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
 import { applyEvent, groupChannelsByType, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
-import { Channel, DatapointValue, Device, HmEvent, ParamsetDescription } from '../types/types';
+import { Channel, DatapointValue, Device, HmEvent, InboxDevice, ParamsetDescription } from '../types/types';
 
 // Server data loaded through TanStack Query. The queryFn sends its request
 // over the WebSocket (request() in useWebsocket); after a reconnect all
@@ -107,6 +107,47 @@ export const usePutParamset = () => {
     },
     onSettled: (_, __, { interfaceName, address }) =>
       queryClient.invalidateQueries({ queryKey: ['paramset', interfaceName, address] }),
+  });
+};
+
+// Seconds pairing is still on for an interface (0: off), polled while on
+export const useInstallMode = (interfaceName: string, { poll }: { poll: boolean }) => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['installMode', interfaceName],
+    queryFn: async () => (await request({ type: 'getInstallMode', interfaceName })).seconds ?? 0,
+    refetchInterval: poll ? 1000 : false,
+    retry: false,
+  });
+};
+
+// Paired devices not yet accepted
+export const useInbox = ({ poll }: { poll: boolean }) => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['inbox'],
+    queryFn: async () => ((await request({ type: 'getInbox' })).devices ?? []) as unknown as InboxDevice[],
+    refetchInterval: poll ? 3000 : false,
+    retry: false,
+  });
+};
+
+export type PairingAction =
+  | { type: 'setInstallMode'; interfaceName: string; on: boolean; seconds: number }
+  | { type: 'acceptDevice'; address: string }
+  | { type: 'deleteDevice'; interfaceName: string; address: string; reset: boolean; force: boolean };
+
+export const usePairingAction = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (action: PairingAction) => {
+      await request(action, { queue: false });
+    },
+    onSettled: () =>
+      Promise.all(
+        ['installMode', 'inbox', 'devices', 'channels'].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
+      ),
   });
 };
 

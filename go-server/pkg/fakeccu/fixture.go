@@ -18,8 +18,10 @@ type Fixture struct {
 	// (":0") that report UNREACH and LOW_BAT.
 	Channels []Channel `json:"channels"`
 	// DeviceNames by device address, for the device problem list
-	DeviceNames map[string]string         `json:"deviceNames,omitempty"`
-	Interfaces  map[string]*InterfaceData `json:"interfaces,omitempty"`
+	DeviceNames map[string]string `json:"deviceNames,omitempty"`
+	// Inbox holds the addresses of paired devices not yet accepted
+	Inbox      []string                  `json:"inbox,omitempty"`
+	Interfaces map[string]*InterfaceData `json:"interfaces,omitempty"`
 }
 
 // Group is a room or trade with the ReGa ids of its channels.

@@ -31,6 +31,12 @@ var setGroupMemberScript string
 //go:embed scripts/get_device_names.tcl
 var getDeviceNamesScript string
 
+//go:embed scripts/get_inbox.tcl
+var getInboxScript string
+
+//go:embed scripts/accept_device.tcl
+var acceptDeviceScript string
+
 // Scripts returns the script templates by name, for the fake CCU used in
 // tests, which recognises scripts by their template.
 func Scripts() map[string]string {
@@ -43,6 +49,8 @@ func Scripts() map[string]string {
 		"get_user_level":      getUserLevelScript,
 		"set_name":            setNameScript,
 		"get_device_names":    getDeviceNamesScript,
+		"get_inbox":           getInboxScript,
+		"accept_device":       acceptDeviceScript,
 		"set_group_member":    setGroupMemberScript,
 	}
 }

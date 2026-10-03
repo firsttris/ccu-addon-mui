@@ -51,6 +51,8 @@ export interface Response {
   requestId?: string;
   // deviceProblems
   devices?: DeviceProblem[];
+  // getInstallMode
+  seconds?: number;
   // paramsetDescription, paramset
   description?: unknown;
   values?: Record<string, unknown>;

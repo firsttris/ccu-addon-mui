@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 )
 
 // CoerceValues checks values for putParamset against the paramset
@@ -120,4 +121,37 @@ func (c *Client) PutParamset(iface, address, paramsetKey string, values map[stri
 	}
 	var reply interface{}
 	return c.call(iface, "putParamset", []interface{}{address, paramsetKey, values}, &reply)
+}
+
+// SetInstallMode starts (or stops) pairing on an interface for seconds.
+func (c *Client) SetInstallMode(iface string, on bool, seconds int) error {
+	if seconds < 0 || seconds > 300 {
+		return fmt.Errorf("invalid duration")
+	}
+	var reply interface{}
+	return c.call(iface, "setInstallMode", []interface{}{on, seconds, 1}, &reply)
+}
+
+// GetInstallMode returns the seconds pairing is still on (0: off).
+func (c *Client) GetInstallMode(iface string) (int, error) {
+	var reply interface{}
+	if err := c.call(iface, "getInstallMode", nil, &reply); err != nil {
+		return 0, err
+	}
+	return asInt(reply), nil
+}
+
+// Flags of deleteDevice
+const (
+	DeleteReset = 0x01 // reset the device to factory settings
+	DeleteForce = 0x02 // delete even if the device can't be reached
+)
+
+// DeleteDevice removes a device from the CCU.
+func (c *Client) DeleteDevice(iface, address string, flags int) error {
+	if !addressRegex.MatchString(address) || strings.Contains(address, ":") {
+		return ErrInvalidAddress
+	}
+	var reply interface{}
+	return c.call(iface, "deleteDevice", []interface{}{address, flags}, &reply)
 }

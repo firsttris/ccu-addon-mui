@@ -198,6 +198,47 @@ func (c *Client) GetDeviceNames() (map[string]string, error) {
 	return names, nil
 }
 
+// InboxDevice is a paired device not yet accepted in the CCU.
+type InboxDevice struct {
+	Address       string `json:"address"`
+	Type          string `json:"type"`
+	InterfaceName string `json:"interfaceName"`
+	Name          string `json:"name"`
+}
+
+// GetInbox returns the devices in the inbox.
+func (c *Client) GetInbox() ([]InboxDevice, error) {
+	output, err := c.Execute(getInboxScript)
+	if err != nil {
+		return nil, err
+	}
+	isRecord := func(line string) bool { return strings.Count(line, "\t") >= 3 }
+	devices := []InboxDevice{}
+	for _, fields := range splitRecords(output, isRecord) {
+		if len(fields) >= 4 {
+			devices = append(devices, InboxDevice{Address: fields[0], Type: fields[1], InterfaceName: fields[2], Name: rejoin(fields, 3)})
+		}
+	}
+	return devices, nil
+}
+
+// AcceptDevice takes a device out of the inbox. Returns SetOK or SetNotFound.
+func (c *Client) AcceptDevice(address string) (string, error) {
+	if !safeIdentifierRegex.MatchString(address) {
+		return "", fmt.Errorf("invalid address")
+	}
+	output, err := c.Execute(strings.ReplaceAll(acceptDeviceScript, "{{ADDRESS}}", address))
+	if err != nil {
+		return "", err
+	}
+	switch result := strings.TrimSpace(output); result {
+	case SetOK, SetNotFound:
+		return result, nil
+	default:
+		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
+	}
+}
+
 // validateName guards a name substituted into a string literal: ReGa has no
 // escapes, so characters that could end the literal are rejected.
 func validateName(name string) error {

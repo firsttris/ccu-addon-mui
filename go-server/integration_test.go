@@ -246,8 +246,8 @@ func TestStackAllDevices(t *testing.T) {
 			t.Fatalf("maintenance channel listed: %s", ch.Address)
 		}
 	}
-	if len(channels) != 15 {
-		t.Fatalf("expected all 15 channels, got %d", len(channels))
+	if len(channels) != 16 {
+		t.Fatalf("expected all 16 channels, got %d", len(channels))
 	}
 }
 
@@ -346,7 +346,7 @@ func TestStackListDevices(t *testing.T) {
 		d := raw.(map[string]interface{})
 		types[d["address"].(string)] = d["interfaceName"].(string) + " " + d["type"].(string)
 	}
-	if len(types) != 3 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" {
+	if len(types) != 4 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" {
 		t.Fatalf("unexpected devices: %v", types)
 	}
 }
@@ -452,5 +452,54 @@ func TestStackRenameAndAssignRooms(t *testing.T) {
 	data, _ := os.ReadFile(auditLogs[ccu])
 	if !strings.Contains(string(data), `"action":"rename","target":"LEQ0000001:1","previous":"Wohnzimmer Licht","value":"Deckenlicht"`) {
 		t.Fatalf("rename not audited: %s", data)
+	}
+}
+
+func TestStackPairingInboxAndDelete(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "setInstallMode", "requestId": "q1", "interfaceName": "HmIP-RF", "on": true, "seconds": 60})
+	if m := receive(t, conn, byRequestID("q1")); m["success"] != true {
+		t.Fatalf("setInstallMode failed: %v", m)
+	}
+	send(t, conn, message{"type": "getInstallMode", "requestId": "q2", "interfaceName": "HmIP-RF"})
+	if seconds := receive(t, conn, byRequestID("q2"))["seconds"]; seconds == nil || seconds.(float64) < 50 {
+		t.Fatalf("install mode not on: %v", seconds)
+	}
+
+	send(t, conn, message{"type": "getInbox", "requestId": "q3"})
+	inbox := receive(t, conn, byRequestID("q3"))["devices"].([]interface{})
+	if len(inbox) != 1 || inbox[0].(map[string]interface{})["type"] != "HmIP-SWDO" {
+		t.Fatalf("unexpected inbox: %v", inbox)
+	}
+	send(t, conn, message{"type": "acceptDevice", "requestId": "q4", "address": "0008DA8A9F1234"})
+	if m := receive(t, conn, byRequestID("q4")); m["success"] != true {
+		t.Fatalf("acceptDevice failed: %v", m)
+	}
+	send(t, conn, message{"type": "getInbox", "requestId": "q5"})
+	if devices := receive(t, conn, byRequestID("q5"))["devices"]; devices != nil {
+		t.Fatalf("inbox not empty: %v", devices)
+	}
+
+	send(t, conn, message{"type": "deleteDevice", "requestId": "q6", "interfaceName": "HmIP-RF", "address": "0008DA8A9F1234", "reset": true})
+	if m := receive(t, conn, byRequestID("q6")); m["success"] != true {
+		t.Fatalf("deleteDevice failed: %v", m)
+	}
+	send(t, conn, message{"type": "listDevices", "requestId": "q7"})
+	for _, raw := range receive(t, conn, byRequestID("q7"))["devices"].([]interface{}) {
+		if raw.(map[string]interface{})["address"] == "0008DA8A9F1234" {
+			t.Fatal("device not deleted")
+		}
+	}
+	if ccu.CallCount("HmIP-RF deleteDevice") != 1 {
+		t.Fatal("deleteDevice not called")
+	}
+
+	// Guests may not pair
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "setInstallMode", "requestId": "q8", "interfaceName": "HmIP-RF", "on": true, "seconds": 60})
+	if m := receive(t, conn, byRequestID("q8")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
 	}
 }

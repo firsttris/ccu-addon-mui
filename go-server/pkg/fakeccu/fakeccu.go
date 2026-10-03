@@ -45,6 +45,9 @@ type CCU struct {
 
 	// calls counts XML-RPC calls by "interface method"
 	calls map[string]int
+
+	// installModeUntil by interface
+	installModeUntil map[string]time.Time
 }
 
 // CallCount returns how often an XML-RPC method was called, e.g.
@@ -90,13 +93,14 @@ func New(fixture *Fixture) *CCU {
 	}
 	original, _ := json.Marshal(fixture)
 	return &CCU{
-		fixture:        fixture,
-		original:       original,
-		callbacks:      map[string]map[string]string{},
-		events:         make(chan callbackEvent, 1024),
-		scripts:        compileScripts(),
-		InterfacePorts: map[string]int{},
-		calls:          map[string]int{},
+		fixture:          fixture,
+		original:         original,
+		callbacks:        map[string]map[string]string{},
+		events:           make(chan callbackEvent, 1024),
+		scripts:          compileScripts(),
+		InterfacePorts:   map[string]int{},
+		calls:            map[string]int{},
+		installModeUntil: map[string]time.Time{},
 	}
 }
 
@@ -191,6 +195,16 @@ func (c *CCU) runScript(body string) (string, error) {
 			return c.getDeviceProblems(), nil
 		case "set_name":
 			return c.setName(values["ADDRESS"], values["NAME"]), nil
+		case "get_inbox":
+			return c.getInbox(), nil
+		case "accept_device":
+			for i, address := range c.fixture.Inbox {
+				if address == values["ADDRESS"] {
+					c.fixture.Inbox = append(c.fixture.Inbox[:i], c.fixture.Inbox[i+1:]...)
+					return "OK", nil
+				}
+			}
+			return "NOT_FOUND", nil
 		case "get_device_names":
 			return c.getDeviceNames(), nil
 		case "set_group_member":
@@ -311,6 +325,86 @@ func memberOf(groups []Group, channelID int64) string {
 		}
 	}
 	return strings.Join(ids, ",")
+}
+
+// device returns the description of a device and its interface.
+func (c *CCU) device(address string) (map[string]interface{}, string) {
+	for iface, data := range c.fixture.Interfaces {
+		for _, d := range data.Devices {
+			if d["ADDRESS"] == address {
+				return d, iface
+			}
+		}
+	}
+	return nil, ""
+}
+
+func (c *CCU) getInbox() string {
+	var b strings.Builder
+	for _, address := range c.fixture.Inbox {
+		d, iface := c.device(address)
+		if d == nil {
+			continue
+		}
+		name := c.fixture.DeviceNames[address]
+		if name == "" {
+			name = fmt.Sprintf("%v %s", d["TYPE"], address)
+		}
+		fmt.Fprintf(&b, "%s\t%v\t%s\t%s\n", address, d["TYPE"], iface, name)
+	}
+	return b.String()
+}
+
+// deleteDevice removes a device with its channels everywhere; c.mu must be held.
+func (c *CCU) deleteDevice(iface, address string) bool {
+	data := c.fixture.Interfaces[iface]
+	found := false
+	kept := data.Devices[:0]
+	for _, d := range data.Devices {
+		if d["ADDRESS"] == address || d["PARENT"] == address {
+			found = true
+			continue
+		}
+		kept = append(kept, d)
+	}
+	data.Devices = kept
+	if !found {
+		return false
+	}
+	var removed []int64
+	channels := c.fixture.Channels[:0]
+	for _, ch := range c.fixture.Channels {
+		if ch.Interface == iface && deviceAddress(ch.Address) == address {
+			removed = append(removed, ch.ID)
+			continue
+		}
+		channels = append(channels, ch)
+	}
+	c.fixture.Channels = channels
+	for _, groups := range []*[]Group{&c.fixture.Rooms, &c.fixture.Trades} {
+		for i := range *groups {
+			g := &(*groups)[i]
+			members := []int64{}
+			for _, id := range g.Channels {
+				gone := false
+				for _, r := range removed {
+					gone = gone || id == r
+				}
+				if !gone {
+					members = append(members, id)
+				}
+			}
+			g.Channels = members
+		}
+	}
+	inbox := c.fixture.Inbox[:0]
+	for _, a := range c.fixture.Inbox {
+		if a != address {
+			inbox = append(inbox, a)
+		}
+	}
+	c.fixture.Inbox = inbox
+	return true
 }
 
 func (c *CCU) getDeviceNames() string {
@@ -577,7 +671,33 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 
 	switch method {
 	case "system.listMethods":
-		return []string{"init", "ping", "listDevices", "getDeviceDescription", "getParamsetDescription", "getParamset", "putParamset", "setValue"}, ""
+		return []string{"init", "ping", "listDevices", "getDeviceDescription", "getParamsetDescription", "getParamset",
+			"putParamset", "setValue", "setInstallMode", "getInstallMode", "deleteDevice"}, ""
+	case "setInstallMode":
+		on, _ := params[0].(bool)
+		seconds := 60
+		if len(params) > 1 {
+			if n, ok := params[1].(int); ok {
+				seconds = n
+			}
+		}
+		if on {
+			c.installModeUntil[iface] = time.Now().Add(time.Duration(seconds) * time.Second)
+		} else {
+			delete(c.installModeUntil, iface)
+		}
+		return "", ""
+	case "getInstallMode":
+		remaining := time.Until(c.installModeUntil[iface])
+		if remaining < 0 {
+			remaining = 0
+		}
+		return int(remaining.Seconds()), ""
+	case "deleteDevice":
+		if !c.deleteDevice(iface, stringParam(params, 0)) {
+			return nil, "Unknown instance"
+		}
+		return "", ""
 	case "init":
 		url, id := stringParam(params, 0), stringParam(params, 1)
 		if c.callbacks[iface] == nil {
