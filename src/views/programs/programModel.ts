@@ -163,3 +163,122 @@ export const programProblems = (p: ProgramDefinition) => {
   if (destinations.some((d) => d.valueType === 'ivtString' && d.value.includes('^'))) problems.push('script');
   return problems;
 };
+
+// --- Time modules in full (the WebUI's timemodule.htm)
+
+export const SUN = { NONE: 0, DAYTIME: 3, NIGHTTIME: 6 } as const;
+export const WORKDAY_BITS = 31;
+export const WEEKEND_BITS = 96;
+
+// What the time part of a module is
+export type TimeMode = 'point' | 'range' | 'allDay' | 'daytime' | 'nighttime';
+
+export const timeModeOf = (t: TimeModule): TimeMode => {
+  if (t.sunOffset === SUN.DAYTIME) return 'daytime';
+  if (t.sunOffset === SUN.NIGHTTIME) return 'nighttime';
+  if (t.duration > 0) return 'range';
+  if (!/\d{2}:\d{2}/.test(t.time)) return 'allDay';
+  return 'point';
+};
+
+// "YYYY-MM-DD" from what ReGa prints ("2026-01-15 00:00:00") or ""
+export const dateOf = (text: string) => (/^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : '');
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const formatDate = (iso: string, locale: string) => {
+  const [y, mo, d] = iso.split('-').map(Number);
+  return y ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(y, mo - 1, d)) : iso;
+};
+
+export interface TimeTexts {
+  weekday: (index: number, style: 'short' | 'long') => string;
+  month: (index: number) => string;
+  locale: string;
+  t: {
+    at: (clock: string) => string;
+    range: (from: string, to: string) => string;
+    allDay: string;
+    daytime: string;
+    nighttime: string;
+    once: (date: string) => string;
+    every: (interval: string) => string;
+    daily: string;
+    everyNDays: (n: number) => string;
+    workdays: string;
+    weekend: string;
+    weekly: (days: string) => string;
+    everyNWeeks: (n: number, days: string) => string;
+    monthlyDay: (day: number, n: number) => string;
+    monthlyNth: (nth: number, day: string, n: number) => string;
+    yearlyDay: (day: number, month: string) => string;
+    yearlyNth: (nth: number, day: string, month: string) => string;
+    hours: (n: number) => string;
+    minutes: (n: number) => string;
+    seconds: (n: number) => string;
+  };
+}
+
+// The weekday index (Monday 0) of a single-bit mask
+const bitIndex = (mask: number) => WEEKDAYS.findIndex((bit) => bit === mask);
+
+// A time module in words, e.g. "täglich, um 19:30" or "tagsüber, werktags"
+export const describeTimeModule = (tm: TimeModule, x: TimeTexts) => {
+  const mode = timeModeOf(tm);
+  const start = clockOf(tm.time);
+  const time =
+    mode === 'point'
+      ? x.t.at(start)
+      : mode === 'range'
+        ? x.t.range(start, clockOfSeconds(secondsOfClock(start) + tm.duration))
+        : mode === 'allDay'
+          ? x.t.allDay
+          : mode === 'daytime'
+            ? x.t.daytime
+            : x.t.nighttime;
+  const days = (mask: number) =>
+    WEEKDAYS.map((bit, i) => ((mask & bit) !== 0 ? x.weekday(i, 'short') : null))
+      .filter(Boolean)
+      .join(', ');
+  let pattern = '';
+  switch (tm.timerType) {
+    case TIMER.ONCE:
+      pattern = x.t.once(formatDate(dateOf(tm.repeatTime), x.locale));
+      break;
+    case TIMER.PERIODIC: {
+      const p = tm.period;
+      pattern = x.t.every(
+        p % 3600 === 0 ? x.t.hours(p / 3600) : p % 60 === 0 ? x.t.minutes(p / 60) : x.t.seconds(p),
+      );
+      break;
+    }
+    case TIMER.DAILY:
+      pattern =
+        tm.weekdays === WORKDAY_BITS
+          ? x.t.workdays
+          : tm.weekdays === WEEKEND_BITS
+            ? x.t.weekend
+            : tm.repetitionValue > 1
+              ? x.t.everyNDays(tm.repetitionValue)
+              : x.t.daily;
+      break;
+    case TIMER.WEEKLY:
+      pattern =
+        tm.repetitionValue > 1 ? x.t.everyNWeeks(tm.repetitionValue, days(tm.weekdays)) : x.t.weekly(days(tm.weekdays));
+      break;
+    case TIMER.MONTHLY:
+      pattern =
+        tm.weekdays > 0
+          ? x.t.monthlyNth(tm.period, x.weekday(bitIndex(tm.weekdays), 'long'), Math.max(1, tm.repetitionValue))
+          : x.t.monthlyDay(tm.period, Math.max(1, tm.repetitionValue));
+      break;
+    case TIMER.YEARLY:
+      pattern =
+        tm.weekdays > 0
+          ? x.t.yearlyNth(tm.period, x.weekday(bitIndex(tm.weekdays), 'long'), x.month(tm.repetitionValue - 1))
+          : x.t.yearlyDay(tm.period, x.month(tm.repetitionValue - 1));
+      break;
+  }
+  return [pattern, time].filter(Boolean).join(', ');
+};
+
+export { pad2 };
