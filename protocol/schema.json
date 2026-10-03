@@ -130,6 +130,9 @@
     },
     "installFirmware": {
       "$ref": "#/definitions/InstallFirmwareCall"
+    },
+    "createBackup": {
+      "$ref": "#/definitions/CreateBackupCall"
     }
   },
   "required": [
@@ -174,7 +177,8 @@
     "deleteSysvar",
     "getServiceMessages",
     "acknowledgeServiceMessage",
-    "installFirmware"
+    "installFirmware",
+    "createBackup"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2504,6 +2508,9 @@
         },
         {
           "$ref": "#/definitions/InstallFirmwareResponse"
+        },
+        {
+          "$ref": "#/definitions/CreateBackupResponse"
         }
       ]
     },
@@ -3718,6 +3725,75 @@
         },
         "response": {
           "$ref": "#/definitions/InstallFirmwareResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CreateBackupRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "createBackup"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "CreateBackupResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "createBackup_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "url": {
+          "type": "string",
+          "description": "Where to download the backup, once and within 5 minutes"
+        },
+        "fileName": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "url",
+        "fileName",
+        "size"
+      ],
+      "additionalProperties": false
+    },
+    "CreateBackupCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/CreateBackupRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/CreateBackupResponse"
         }
       },
       "required": [

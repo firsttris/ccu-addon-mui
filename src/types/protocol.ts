@@ -63,7 +63,8 @@ export type ServerMessage =
   | DeleteSysvarResponse
   | GetServiceMessagesResponse
   | AcknowledgeServiceMessageResponse
-  | InstallFirmwareResponse;
+  | InstallFirmwareResponse
+  | CreateBackupResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -111,6 +112,7 @@ export interface Protocol {
   getServiceMessages: GetServiceMessagesCall;
   acknowledgeServiceMessage: AcknowledgeServiceMessageCall;
   installFirmware: InstallFirmwareCall;
+  createBackup: CreateBackupCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1499,6 +1501,38 @@ export interface InstallFirmwareResponse {
   type: "installFirmware_response";
   requestId?: string;
   success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateBackupCall".
+ */
+export interface CreateBackupCall {
+  request: CreateBackupRequest;
+  response: CreateBackupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateBackupRequest".
+ */
+export interface CreateBackupRequest {
+  type: "createBackup";
+  requestId?: string;
+  password: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateBackupResponse".
+ */
+export interface CreateBackupResponse {
+  type: "createBackup_response";
+  requestId?: string;
+  success: boolean;
+  /**
+   * Where to download the backup, once and within 5 minutes
+   */
+  url: string;
+  fileName: string;
+  size: number;
 }
 /**
  * Sent first on every connection

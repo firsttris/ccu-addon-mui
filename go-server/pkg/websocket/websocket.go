@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,6 +18,7 @@ import (
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/backup"
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
@@ -192,6 +194,8 @@ type Server struct {
 	// rpc reads device and paramset descriptions over XML-RPC; nil if not
 	// configured.
 	rpc DeviceRPC
+	// Creates CCU backups; nil without a WebUI to create them
+	backup *backup.Service
 
 	// audit records every change; nil disables it
 	audit *audit.Log
@@ -238,6 +242,16 @@ func (s *Server) SetAuditLog(log *audit.Log) {
 	s.audit = log
 }
 
+// SetBackup enables creating backups; they are downloaded from
+// BackupPath/<id>.
+func (s *Server) SetBackup(service *backup.Service) {
+	s.backup = service
+}
+
+// BackupPath is where created backups are downloaded, next to the
+// WebSocket (the CCU's lighttpd forwards /ws/mui to the server).
+const BackupPath = "/ws/mui/backup/"
+
 // SetDeviceRPC enables requests that need XML-RPC (paramsets).
 func (s *Server) SetDeviceRPC(rpc DeviceRPC) {
 	s.rpc = rpc
@@ -246,6 +260,9 @@ func (s *Server) SetDeviceRPC(rpc DeviceRPC) {
 func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handleWebSocket)
+	if s.backup != nil {
+		mux.Handle(BackupPath, s.backup)
+	}
 
 	s.httpServer = &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", s.cfg.WSBindHost, s.cfg.WSPort),
@@ -389,6 +406,8 @@ func (s *Server) readPump(client *Client) {
 		// Update read deadline on every message
 		client.conn.SetReadDeadline(time.Now().Add(pongWait))
 		s.handleMessage(client, message)
+		// Pongs aren't read while a slow request (a backup) runs
+		client.conn.SetReadDeadline(time.Now().Add(pongWait))
 	}
 }
 
@@ -489,6 +508,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
 		s.handlePairing(client, msgType, message)
+	case "createBackup":
+		s.handleCreateBackup(client, message)
 	case "installFirmware":
 		s.handleInstallFirmware(client, message)
 	case "getServiceMessages", "acknowledgeServiceMessage":
@@ -1711,4 +1732,75 @@ func (s *Server) sendRequestError(client *Client, requestID, errorMsg, code stri
 		RequestID: requestID,
 	}
 	s.sendJSON(client, response)
+}
+
+type backupResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	Success   bool   `json:"success"`
+	URL       string `json:"url"`
+	FileName  string `json:"fileName"`
+	Size      int64  `json:"size"`
+}
+
+// handleCreateBackup lets the WebUI create a backup and returns where to
+// download it, once and within a few minutes. A backup holds every
+// setting and password of the CCU: it takes an elevated administrator and
+// the password once more, which the WebUI needs for its session anyway.
+func (s *Server) handleCreateBackup(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		Password  string `json:"password"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_MESSAGE")
+		return
+	}
+	if s.backup == nil {
+		s.sendRequestError(client, msg.RequestID, "createBackup is not available", "NOT_AVAILABLE")
+		return
+	}
+	entry := audit.Entry{User: client.user, Action: "createBackup", Target: "CCU"}
+	finish := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
+	if code, errorMsg := configureError(client); code != "" {
+		finish(code)
+		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		return
+	}
+
+	// Without authentication the WebUI's administrator
+	username := client.user
+	if s.auth == nil {
+		username = "Admin"
+	} else if err := s.auth.CheckLockout(); err != nil {
+		finish("TOO_MANY_ATTEMPTS")
+		s.sendRequestError(client, msg.RequestID, err.Error(), "TOO_MANY_ATTEMPTS")
+		return
+	}
+
+	created, err := s.backup.Create(username, msg.Password)
+	if err != nil {
+		code := "CCU_ERROR"
+		if errors.Is(err, backup.ErrInvalidCredentials) {
+			code = "INVALID_CREDENTIALS"
+			if s.auth != nil {
+				s.auth.RecordFailure()
+			}
+		}
+		logger.Info(fmt.Sprintf("💾 Backup failed for user %q: %v", username, err))
+		finish(code)
+		s.sendRequestError(client, msg.RequestID, "createBackup failed: "+err.Error(), code)
+		return
+	}
+	logger.Info(fmt.Sprintf("💾 Backup %s created (%d bytes)", created.FileName, created.Size))
+	finish(rega.SetOK)
+	s.sendJSON(client, backupResponse{
+		Type: "createBackup_response", RequestID: msg.RequestID, Success: true,
+		URL: BackupPath + created.ID, FileName: created.FileName, Size: created.Size,
+	})
 }

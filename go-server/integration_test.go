@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -60,6 +61,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		AuthKeyFile:        filepath.Join(t.TempDir(), "key"),
 		AuditLogFile:       filepath.Join(t.TempDir(), "audit.log"),
 		SessionsFile:       filepath.Join(t.TempDir(), "sessions.json"),
+		BackupDir:          filepath.Join(t.TempDir(), "backups"),
 	}
 	auditLogs[ccu] = cfg.AuditLogFile
 
@@ -896,5 +898,57 @@ func TestStackFirmwareUpdate(t *testing.T) {
 	send(t, conn, message{"type": "installFirmware", "requestId": "q4", "interfaceName": "HmIP-RF", "address": "0008DA8A9F1234"})
 	if m := receive(t, conn, byRequestID("q4")); m["code"] != "CCU_ERROR" {
 		t.Fatalf("expected CCU_ERROR, got %v", m)
+	}
+}
+
+func TestStackBackup(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	// The WebUI needs the password for its session
+	send(t, conn, message{"type": "createBackup", "requestId": "b1", "password": "wrong"})
+	if m := receive(t, conn, byRequestID("b1")); m["code"] != "INVALID_CREDENTIALS" {
+		t.Fatalf("expected INVALID_CREDENTIALS, got %v", m)
+	}
+
+	send(t, conn, message{"type": "createBackup", "requestId": "b2", "password": "secret"})
+	m := receive(t, conn, byRequestID("b2"))
+	if m["success"] != true || m["fileName"] != "ccu3-webui-2026-10-03.sbk" || m["size"] != float64(len(fakeccu.FakeBackup)) {
+		t.Fatalf("unexpected backup response: %v", m)
+	}
+
+	download := func() *http.Response {
+		resp, err := http.Get("http://" + conn.RemoteAddr().String() + m["url"].(string))
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { resp.Body.Close() })
+		return resp
+	}
+	resp := download()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK || string(body) != fakeccu.FakeBackup {
+		t.Fatalf("download failed: %d %q", resp.StatusCode, body)
+	}
+	if cd := resp.Header.Get("Content-Disposition"); cd != "attachment; filename=ccu3-webui-2026-10-03.sbk" {
+		t.Fatalf("unexpected Content-Disposition %q", cd)
+	}
+	// Only once
+	if resp := download(); resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("second download: status %d", resp.StatusCode)
+	}
+
+	data, _ := os.ReadFile(auditLogs[ccu])
+	if !strings.Contains(string(data), `"action":"createBackup"`) {
+		t.Fatalf("backup not in the audit log: %s", data)
+	}
+}
+
+func TestStackBackupNeedsAdmin(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "createBackup", "requestId": "b1", "password": "gast"})
+	if m := receive(t, conn, byRequestID("b1")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
 	}
 }

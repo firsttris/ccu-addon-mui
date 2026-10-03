@@ -1,12 +1,20 @@
 import { Panel } from './Panel';
+import { Backup } from './Backup';
 import { useSystemInfo } from '../../queries';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Badge } from '../../components/ui/badge';
 import { m } from '../../paraglide/messages';
 import { cn } from '../../lib/utils';
 
+export const SystemInfo = () => (
+  <>
+    <Versions />
+    <Backup />
+  </>
+);
+
 // Versions and the radio modules with their duty cycle
-export const SystemInfo = () => {
+const Versions = () => {
   usePageTitle(m.SETUP());
   const { data } = useSystemInfo();
   if (!data) {

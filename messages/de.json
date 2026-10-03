@@ -298,5 +298,16 @@
   "FIRMWARE_OTHER": "Firmware {version} verfügbar ({state}).",
   "FIRMWARE_NO_INFO": "Die CCU meldet für dieses Gerät keine Update-Informationen. Updates für BidCos-Geräte gehen über die alte WebUI.",
   "INSTALLED": "Installiert",
-  "AVAILABLE": "Verfügbar"
+  "AVAILABLE": "Verfügbar",
+  "BACKUP": "Backup",
+  "CREATE_BACKUP": "Backup erstellen",
+  "BACKUP_HINT": "Sichert alle Geräte, Räume, Programme, Systemvariablen und Passwörter der CCU in eine .sbk-Datei, wie das Backup der WebUI.",
+  "BACKUP_RESTORE_HINT": "Wiederherstellen geht über Einstellungen → Sicherheit in der alten WebUI.",
+  "BACKUP_PASSWORD_HINT": "Das Backup enthält alle Passwörter der CCU. Bitte gib dein Passwort noch einmal ein.",
+  "BACKUP_PASSWORD_HINT_ADMIN": "Passwort des CCU-Benutzers „Admin“ (leer lassen, wenn die WebUI keins hat).",
+  "BACKUP_RUNNING": "Wird erstellt …",
+  "BACKUP_WAIT": "Die CCU packt alle Daten zusammen. Das kann einige Minuten dauern.",
+  "BACKUP_CREATED": "Backup erstellt",
+  "BACKUP_FAILED": "Backup fehlgeschlagen",
+  "BACKUP_TIMEOUT": "Die CCU hat zu lange gebraucht. Bitte versuche es noch einmal oder erstelle das Backup in der WebUI."
 }

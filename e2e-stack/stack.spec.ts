@@ -434,3 +434,29 @@ test('installiert ein bereitliegendes Firmware-Update', async ({ page }) => {
   await expect(firmware.getByRole('button', { name: 'Update installieren' })).toHaveCount(0);
   await expect(firmware.getByRole('definition').first()).toHaveText('1.2.6');
 });
+
+test('erstellt ein Backup und lädt es herunter', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+
+  const panel = page.getByRole('region', { name: 'Backup' });
+  await panel.getByRole('button', { name: 'Backup erstellen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Backup erstellen' });
+
+  await dialog.getByLabel('Passwort').fill('falsch');
+  await dialog.getByRole('button', { name: 'Backup erstellen' }).click();
+  await expect(dialog.getByRole('alert')).toBeVisible();
+
+  await dialog.getByLabel('Passwort').fill('secret');
+  const downloadPromise = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Backup erstellen' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('ccu3-webui-2026-10-03.sbk');
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(chunk as Buffer);
+  expect(Buffer.concat(chunks).toString()).toContain('fake CCU backup');
+
+  await expect(dialog).toHaveCount(0);
+  await expect(panel.getByRole('status')).toContainText('ccu3-webui-2026-10-03.sbk');
+});

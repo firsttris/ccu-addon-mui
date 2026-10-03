@@ -94,6 +94,7 @@ DEBUG=false                   # Enable debug logging
 | `AUTH_MODE` | ccu | `ccu`: log in once per device with a CCU WebUI user; `none`: no login (everyone on the network can control all devices) |
 | `CCU_WEBUI_URL` | http://`CCU_HOST` | CCU WebUI whose JSON-RPC API (`/api/homematic.cgi`) verifies logins |
 | `AUDIT_LOG_FILE` | /usr/local/etc/config/mui-audit.log (CCU), ./mui-audit.log (local) | Every change made through the add-on (user, time, target, old and new value, result) as JSON lines; rotated at 512 KB, the previous file is kept as `.1`. Empty disables it |
+| `BACKUP_DIR` | $TMPDIR/mui-backups | Created backups until they are downloaded (on the CCU /tmp is in RAM) |
 | `SESSIONS_FILE` | /usr/local/etc/config/mui-sessions.json (CCU), ./mui-sessions.json (local) | Logged-in devices; every token belongs to one, so a single device can be logged out |
 | `AUTH_KEY_FILE` | /usr/local/etc/config/mui-auth.key (CCU), ./mui-auth.key (local) | Key that signs the login tokens; created on first start. Deleting it logs out all devices |
 | `WS_BIND_HOST` | 127.0.0.1 | Address the WebSocket server listens on (lighttpd proxies to it; use `0.0.0.0` to expose it directly) |
@@ -128,7 +129,7 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 | `{"type": "getParamset", "interfaceName", "address", "paramsetKey"}` | `{"type": "paramset", "address", "paramsetKey", "values"}` |
 | `{"type": "putParamset", "interfaceName", "address", "paramsetKey": "MASTER", "values"}` | `{"type": "putParamset_response", "success"}` or an error with `code` `FORBIDDEN` (not an administrator), `ELEVATION_REQUIRED` (password needed again), `INVALID_VALUE` (checked against the description), `CCU_ERROR`. Recorded in the audit log |
 | `{"type": "elevate", "password"}` | `{"type": "elevate_response", "success", "adminToken"}`: administrators get a token for changing settings, valid for 8 hours; pass it as `adminToken` in `auth` after a reconnect |
-| `{"type": "listDevices"}` | `{"type": "devices", "devices": [{"interfaceName", "address", "name", "type", "firmware", "children", "paramsets", "channels": [{"address", "type", "index", "linkSourceRoles", "linkTargetRoles"}]}]}` |
+| `{"type": "listDevices"}` | `{"type": "devices", "devices": [{"interfaceName", "address", "name", "type", "firmware", "availableFirmware", "firmwareUpdateState", "children", "paramsets", "channels": [{"address", "type", "index", "linkSourceRoles", "linkTargetRoles"}]}]}` |
 | `{"type": "rename", "address", "name"}` | `{"type": "rename_response", "success"}`: renames a device or channel (administrators with admin token; audited) |
 | `{"type": "setGroupMember", "groupId", "channelId", "member"}` | `{"type": "setGroupMember_response", "success"}`: adds a channel to a room or trade, or removes it |
 | `{"type": "setInstallMode", "interfaceName", "on", "seconds"}` | `{"type": "setInstallMode_response", "success"}`: starts or stops pairing |
@@ -149,6 +150,12 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 | `{"type": "getPrograms"}` | `{"type": "getPrograms_response", "programs": [{"id", "name", "active", "visible"}]}` |
 | `{"type": "runProgram", "id"}` | `{"type": "runProgram_response", "success"}` (not for guests) |
 | `{"type": "setProgramActive", "id", "active"}` | `{"type": "setProgramActive_response", "success"}` (administrators with admin token) |
+| `{"type": "createGroup", "list": "rooms" \| "trades", "name"}` | `{"type": "createGroup_response", "success", "id"}`; `renameGroup` (`list`, `id`, `name`) and `deleteGroup` (`list`, `id`) answer with `success` (administrators with admin token; audited) |
+| `{"type": "createSysvar", "name", "kind", "unit", "min", "max", "valueList", "falseName", "trueName"}` | `{"type": "createSysvar_response", "success", "id"}`; `renameSysvar` (`id`, `name`) and `deleteSysvar` (`id`) answer with `success` |
+| `{"type": "getServiceMessages"}` | `{"type": "getServiceMessages_response", "messages": [{"id", "type", "value", "timestamp", "address", "name", "roomId", "roomName"}]}`: all open service messages of the CCU |
+| `{"type": "acknowledgeServiceMessage", "id"}` | `{"type": "acknowledgeServiceMessage_response", "success"}` (not for guests; audited) |
+| `{"type": "installFirmware", "interfaceName", "address"}` | `{"type": "installFirmware_response", "success"}`: installs firmware the CCU has delivered to the device (`firmwareUpdateState` `READY_FOR_UPDATE`) |
+| `{"type": "createBackup", "password"}` | `{"type": "createBackup_response", "success", "url", "fileName", "size"}`: the WebUI creates a backup (.sbk) with a session for this password; `GET url` downloads it once within 5 minutes. Administrators with admin token; audited; wrong passwords count towards the login lockout |
 
 ## 🧪 Testing
 

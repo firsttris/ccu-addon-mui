@@ -297,6 +297,18 @@ func (a *Authenticator) sign(payload string) string {
 	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
 }
 
+// CheckLockout fails while too many wrong passwords lock out logins, for
+// other places that check a password (backups).
+func (a *Authenticator) CheckLockout() error {
+	return a.checkLockout()
+}
+
+// RecordFailure counts a wrong password entered elsewhere towards the
+// lockout.
+func (a *Authenticator) RecordFailure() {
+	a.recordFailure()
+}
+
 func (a *Authenticator) checkLockout() error {
 	a.mu.Lock()
 	defer a.mu.Unlock()

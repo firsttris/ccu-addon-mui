@@ -808,6 +808,10 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		c.handleControl(w, r)
 		return
 	}
+	if r.URL.Path == "/config/cp_security.cgi" {
+		c.handleBackup(w, r)
+		return
+	}
 	var req struct {
 		Method string            `json:"method"`
 		Params map[string]string `json:"params"`
@@ -823,7 +827,7 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		defer c.mu.Unlock()
 		for _, user := range c.fixture.Users {
 			if user.Name == req.Params["username"] && user.Password == req.Params["password"] {
-				_, _ = io.WriteString(w, `{"version":"1.1","result":"fake-session","error":null}`)
+				_, _ = io.WriteString(w, `{"version":"1.1","result":"fakeSession1","error":null}`)
 				return
 			}
 		}
@@ -833,6 +837,27 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 	default:
 		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"code":404,"message":"unknown method"}}`)
 	}
+}
+
+// FakeBackup is the content of every backup the fake CCU creates
+const FakeBackup = "fake CCU backup (usr_local.tar.gz, signature, key_index, firmware_version)"
+
+// handleBackup is the WebUI's "create backup" button: with a valid session
+// it sends a .sbk file, otherwise the login page.
+func (c *CCU) handleBackup(w http.ResponseWriter, r *http.Request) {
+	c.mu.Lock()
+	c.calls["WebUI create_backup"]++
+	c.mu.Unlock()
+	// Like the WebUI, which looks for the session in the raw query
+	if !strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") || r.URL.Query().Get("action") != "create_backup" {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = io.WriteString(w, "<html><body>Session expired</body></html>")
+		return
+	}
+	// Headers as in the WebUI's backup.tcl
+	w.Header().Set("Content-Type", "application/x-download")
+	w.Header().Set("Content-Disposition", "attachment;filename=ccu3-webui-2026-10-03.sbk")
+	_, _ = io.WriteString(w, FakeBackup)
 }
 
 // --- XML-RPC --------------------------------------------------------------

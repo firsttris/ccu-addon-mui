@@ -11,6 +11,7 @@ import (
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/backup"
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
@@ -77,6 +78,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 	}
 
 	wsServer.SetAuditLog(audit.New(cfg.AuditLogFile))
+	wsServer.SetBackup(backup.New(cfg.WebUIURL, cfg.BackupDir))
 
 	deviceRPC, err := ccurpc.New(cfg)
 	if err != nil {
