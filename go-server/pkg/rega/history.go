@@ -25,12 +25,15 @@ type HistoryEntry struct {
 const maxHistoryCount = 500
 
 // GetHistory reads count entries of the system protocol from start (0 is
-// the newest), with the total number of entries (get_history.tcl).
-func (c *Client) GetHistory(start, count int) (entries []HistoryEntry, total int, err error) {
-	if start < 0 || count < 1 || count > maxHistoryCount {
+// the newest), with the total number of entries (get_history.tcl); with
+// channel other than 0 only that channel's entries among them.
+func (c *Client) GetHistory(start, count int, channel int64) (entries []HistoryEntry, total int, err error) {
+	if start < 0 || count < 1 || count > maxHistoryCount || channel < 0 {
 		return nil, 0, fmt.Errorf("invalid range")
 	}
-	script := strings.NewReplacer("{{START}}", strconv.Itoa(start), "{{COUNT}}", strconv.Itoa(count)).Replace(getHistoryScript)
+	script := strings.NewReplacer(
+		"{{START}}", strconv.Itoa(start), "{{COUNT}}", strconv.Itoa(count), "{{CHANNEL}}", strconv.FormatInt(channel, 10),
+	).Replace(getHistoryScript)
 	output, err := c.Execute(script)
 	if err != nil {
 		return nil, 0, err

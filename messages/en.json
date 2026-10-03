@@ -715,5 +715,10 @@
   "PRG_SAVE_AS_NEW": "Save as new program",
   "PRG_COPY_NAME": "{name} (copy)",
   "PRG_COPIED": "Saved as a new program",
-  "CHANNEL_AES": "secured (AES)"
+  "CHANNEL_AES": "secured (AES)",
+  "DEVHIST": "History",
+  "DEVHIST_RANGE": "{min} – {max}",
+  "DEVHIST_NONE": "No channel of this device is logged. The option “logged” is under names, rooms and functions.",
+  "DEVHIST_EMPTY": "No entries in the system protocol yet.",
+  "DEVHIST_HINT": "From the last {count} entries of the system protocol per channel."
 }

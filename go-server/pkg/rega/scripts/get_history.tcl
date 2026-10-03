@@ -4,8 +4,10 @@
 ! kind is channel or sysvar; datapoint the HssType of a channel datapoint;
 ! text the value as the WebUI writes it for system variables
 ! (functions.fn::WriteDPText), empty for channel datapoints. Tabs and line
-! breaks in values become spaces.
+! breaks in values become spaces. With CHANNEL other than 0 only the
+! entries of that channel are written (total stays the whole protocol's).
 integer total;
+integer onlyChannel = {{CHANNEL}};
 string entry;
 string lines = "";
 foreach (entry, dom.GetHistoryData({{START}}, {{COUNT}}, &total)) {
@@ -16,7 +18,13 @@ foreach (entry, dom.GetHistoryData({{START}}, {{COUNT}}, &total)) {
     object historyDP = dom.GetObject(archiveId);
     if (historyDP) {
         object dp = dom.GetObject(historyDP.ArchiveDP());
+        boolean wanted = (onlyChannel == 0);
         if (dp) {
+            if (!wanted) {
+                wanted = (dp.Channel() == onlyChannel);
+            }
+        }
+        if (dp && wanted) {
             string kind = "channel";
             string name = dp.Name();
             string dpType = dp.HssType();
