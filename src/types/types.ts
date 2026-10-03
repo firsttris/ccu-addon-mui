@@ -206,6 +206,16 @@ export interface ParameterDescription {
 
 export type ParamsetDescription = Record<string, ParameterDescription>;
 
+// A logged-in device
+export interface SessionInfo {
+  id: string;
+  user: string;
+  device: string;
+  created: string;
+  lastUsed: string;
+  current: boolean;
+}
+
 // A system variable of the CCU
 export interface Sysvar {
   id: number;

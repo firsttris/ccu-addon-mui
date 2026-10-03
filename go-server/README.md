@@ -94,6 +94,7 @@ DEBUG=false                   # Enable debug logging
 | `AUTH_MODE` | ccu | `ccu`: log in once per device with a CCU WebUI user; `none`: no login (everyone on the network can control all devices) |
 | `CCU_WEBUI_URL` | http://`CCU_HOST` | CCU WebUI whose JSON-RPC API (`/api/homematic.cgi`) verifies logins |
 | `AUDIT_LOG_FILE` | /usr/local/etc/config/mui-audit.log (CCU), ./mui-audit.log (local) | Every change made through the add-on (user, time, target, old and new value, result) as JSON lines; rotated at 512 KB, the previous file is kept as `.1`. Empty disables it |
+| `SESSIONS_FILE` | /usr/local/etc/config/mui-sessions.json (CCU), ./mui-sessions.json (local) | Logged-in devices; every token belongs to one, so a single device can be logged out |
 | `AUTH_KEY_FILE` | /usr/local/etc/config/mui-auth.key (CCU), ./mui-auth.key (local) | Key that signs the login tokens; created on first start. Deleting it logs out all devices |
 | `WS_BIND_HOST` | 127.0.0.1 | Address the WebSocket server listens on (lighttpd proxies to it; use `0.0.0.0` to expose it directly) |
 | `RPC_SERVER_PORT` | 9099 | XML-RPC callback port |
@@ -133,6 +134,9 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 | `{"type": "getInbox"}` | `{"type": "getInbox_response", "devices": [{"address", "type", "interfaceName", "name"}]}`: paired devices not yet accepted |
 | `{"type": "acceptDevice", "address"}` | `{"type": "acceptDevice_response", "success"}`: takes a device out of the inbox (sets `ReadyConfig`; to be verified on real hardware) |
 | `{"type": "deleteDevice", "interfaceName", "address", "reset", "force"}` | `{"type": "deleteDevice_response", "success"}` |
+| `{"type": "logout"}` | `{"type": "logout_response", "success"}`: revokes the token of this device |
+| `{"type": "listSessions"}` | `{"type": "listSessions_response", "sessions": [{"id", "user", "device", "created", "lastUsed", "current"}]}` (administrators with admin token) |
+| `{"type": "revokeSession", "id"}` | `{"type": "revokeSession_response", "success"}`: logs a device out; its open connections are closed |
 | `{"type": "getSysvars"}` | `{"type": "getSysvars_response", "sysvars": [{"id", "name", "visible", "kind", "unit", "min", "max", "value", "falseName", "trueName", "valueList"}]}`; `kind` is `bool`, `alarm`, `number`, `enum` or `string` |
 | `{"type": "setSysvar", "id", "value"}` | `{"type": "setSysvar_response", "success"}` (not for guests; audited) |
 | `{"type": "getPrograms"}` | `{"type": "getPrograms_response", "programs": [{"id", "name", "active", "visible"}]}` |

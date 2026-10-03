@@ -1,4 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
+import os from 'node:os';
+import path from 'node:path';
 
 // Frontend and server together against the fake CCU (go-server/pkg/fakeccu)
 // with fixtures/demo-ccu.json. Ports differ from `npm run dev:fake`, so both
@@ -10,6 +12,9 @@ const fakeCCU = {
   hmip: 22010,
   virtual: 29292,
 };
+
+// The server's state files, new for every run
+const stateDir = path.join(os.tmpdir(), `mui-stack-${process.pid}`);
 
 export const FAKE_CCU_URL = `http://127.0.0.1:${fakeCCU.webui}`;
 
@@ -37,7 +42,7 @@ export default defineConfig({
       timeout: 120000,
     },
     {
-      command: 'cd go-server && go run .',
+      command: `mkdir -p ${stateDir} && cd go-server && go run .`,
       port: 28088,
       reuseExistingServer: false,
       timeout: 120000,
@@ -51,7 +56,9 @@ export default defineConfig({
         WS_PORT: '28088',
         RPC_SERVER_PORT: '29099',
         AUTH_MODE: 'ccu',
-        AUTH_KEY_FILE: '../.fake-ccu-stack-auth.key',
+        AUTH_KEY_FILE: path.join(stateDir, 'auth.key'),
+        SESSIONS_FILE: path.join(stateDir, 'sessions.json'),
+        AUDIT_LOG_FILE: path.join(stateDir, 'audit.log'),
       },
     },
     {

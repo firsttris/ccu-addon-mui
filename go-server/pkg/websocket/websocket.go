@@ -94,6 +94,12 @@ type Client struct {
 
 	mu       sync.Mutex
 	deviceID string
+	// sessionID is the logged-in device (auth.SessionInfo) the connection
+	// belongs to; read from other goroutines when a device is logged out
+	sessionID string
+
+	// device describes the browser, from the User-Agent
+	device string
 
 	// authenticated, user and level are only accessed by the read pump,
 	// which handles all messages of this client.
@@ -146,6 +152,18 @@ func newClient(conn *websocket.Conn) *Client {
 		conn: conn,
 		send: make(chan []byte, 1024),
 	}
+}
+
+func (c *Client) setSessionID(id string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.sessionID = id
+}
+
+func (c *Client) SessionID() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.sessionID
 }
 
 func (c *Client) DeviceID() string {
@@ -328,6 +346,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := newClient(conn)
+	client.device = deviceLabel(r.UserAgent())
 
 	s.addClient(client)
 
@@ -452,6 +471,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleElevate(client, message)
 	case "rename":
 		s.handleRename(client, message)
+	case "listSessions", "revokeSession", "logout":
+		s.handleSessions(client, msgType, message)
 	case "setGroupMember":
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
@@ -653,7 +674,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 		return
 	}
 
-	session, token, err := s.auth.Refresh(msg.Token)
+	session, token, err := s.auth.Refresh(msg.Token, client.device)
 	if err != nil {
 		client.authenticated = false
 		s.sendJSON(client, authResponse{Type: "auth_response", AuthRequired: true, Code: "LOGIN_REQUIRED"})
@@ -661,6 +682,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	}
 
 	client.setSession(session.User, session.Level)
+	client.setSessionID(session.ID)
 	if msg.AdminToken != "" {
 		if expiry, ok := s.auth.VerifyAdmin(msg.AdminToken, session.User); ok {
 			client.elevatedUntil = expiry
@@ -691,7 +713,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 		return
 	}
 
-	session, token, err := s.auth.Login(msg.Username, msg.Password)
+	session, token, err := s.auth.Login(msg.Username, msg.Password, client.device)
 	if err != nil {
 		code := "CCU_UNREACHABLE"
 		switch err {
@@ -707,6 +729,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 
 	logger.Info(fmt.Sprintf("🔓 User %q logged in", msg.Username))
 	client.setSession(session.User, session.Level)
+	client.setSessionID(session.ID)
 	// The password was just entered: administrators may set up right away
 	adminToken, err := s.auth.IssueAdminToken(session)
 	if err == nil {
@@ -742,7 +765,7 @@ func (s *Server) handleElevate(client *Client, message []byte) {
 		return
 	}
 
-	adminToken, err := s.auth.Elevate(client.user, msg.Password)
+	adminToken, err := s.auth.Elevate(client.user, msg.Password, client.SessionID())
 	if err != nil {
 		code := "CCU_UNREACHABLE"
 		switch err {
@@ -956,6 +979,71 @@ func (s *Server) handleListDevices(client *Client, requestID string) {
 		}
 	}
 	s.sendJSON(client, listDevicesResponse{Type: "devices", RequestID: requestID, Devices: devices})
+}
+
+type sessionInfo struct {
+	auth.SessionInfo
+	// Current: this connection's device
+	Current bool `json:"current"`
+}
+
+type sessionsResponse struct {
+	Type      string        `json:"type"`
+	RequestID string        `json:"requestId,omitempty"`
+	Success   bool          `json:"success"`
+	Sessions  []sessionInfo `json:"sessions,omitempty"`
+}
+
+// handleSessions: the list of logged-in devices (administrators), logging
+// one out, and logging out this device itself (everyone).
+func (s *Server) handleSessions(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		ID        string `json:"id"`
+	}
+	_ = json.Unmarshal(message, &msg)
+	if s.auth == nil {
+		s.sendRequestError(client, msg.RequestID, "authentication is disabled", "NOT_AVAILABLE")
+		return
+	}
+
+	switch msgType {
+	case "logout":
+		if id := client.SessionID(); id != "" {
+			s.auth.Revoke(id)
+		}
+		s.sendJSON(client, sessionsResponse{Type: "logout_response", RequestID: msg.RequestID, Success: true})
+	case "listSessions":
+		if code, errorMsg := configureError(client); code != "" {
+			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+			return
+		}
+		list := []sessionInfo{}
+		for _, info := range s.auth.Sessions() {
+			list = append(list, sessionInfo{SessionInfo: info, Current: info.ID == client.SessionID()})
+		}
+		s.sendJSON(client, sessionsResponse{Type: "listSessions_response", RequestID: msg.RequestID, Success: true, Sessions: list})
+	case "revokeSession":
+		s.configure(client, msg.RequestID, audit.Entry{Action: "revokeSession", Target: msg.ID}, func() (interface{}, string, error) {
+			if !s.auth.Revoke(msg.ID) {
+				return nil, rega.SetNotFound, nil
+			}
+			s.disconnectSession(msg.ID, client)
+			return nil, rega.SetOK, nil
+		})
+	}
+}
+
+// disconnectSession closes the connections of a logged-out device (except
+// the one asking): they reconnect and are asked to log in.
+func (s *Server) disconnectSession(id string, except *Client) {
+	s.clientsMu.RLock()
+	defer s.clientsMu.RUnlock()
+	for c := range s.clients {
+		if c != except && c.SessionID() == id && c.conn != nil {
+			_ = c.conn.Close()
+		}
+	}
 }
 
 type changeResponse struct {

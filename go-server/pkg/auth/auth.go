@@ -82,6 +82,8 @@ type Session struct {
 	// Scope is ScopeOperate (long-lived) or ScopeAdmin (short-lived)
 	Scope     string
 	ExpiresAt time.Time
+	// ID of the logged-in device (see EnableSessions); empty without
+	ID string
 }
 
 type Authenticator struct {
@@ -94,6 +96,7 @@ type Authenticator struct {
 	mu          sync.Mutex
 	failures    []time.Time
 	lockedUntil time.Time
+	store       *sessionStore
 }
 
 // New loads the signing key from keyFile, creating it on first start.
@@ -151,7 +154,9 @@ func (a *Authenticator) lookupLevel(username string) string {
 }
 
 // Login verifies the credentials against the CCU and returns a token.
-func (a *Authenticator) Login(username, password string) (Session, string, error) {
+// device describes the device logging in, for the list of logged-in
+// devices.
+func (a *Authenticator) Login(username, password, device string) (Session, string, error) {
 	if err := a.checkLockout(); err != nil {
 		return Session{}, "", err
 	}
@@ -169,19 +174,26 @@ func (a *Authenticator) Login(username, password string) (Session, string, error
 		return Session{}, "", ErrInvalidCredentials
 	}
 	session := Session{User: username, Level: a.lookupLevel(username)}
+	a.mu.Lock()
+	session.ID = a.startSession(username, device)
+	a.mu.Unlock()
 	return session, a.issueToken(session), nil
 }
 
 // Refresh verifies a token and returns a new one with a fresh lifetime, so
 // a device that is used regularly never has to log in again. Tokens issued
 // before levels were stored get the level looked up now.
-func (a *Authenticator) Refresh(token string) (Session, string, error) {
+func (a *Authenticator) Refresh(token, device string) (Session, string, error) {
 	session, err := a.Verify(token)
 	if err != nil {
 		return Session{}, "", err
 	}
 	// Admin tokens expire for good; only the token for operating is renewed
 	if session.Scope != ScopeOperate {
+		return Session{}, "", ErrInvalidToken
+	}
+	// Logged out from another device
+	if !a.checkSession(&session, device) {
 		return Session{}, "", ErrInvalidToken
 	}
 	if session.Level == LevelUnknown {
@@ -212,7 +224,7 @@ func (a *Authenticator) Verify(token string) (Session, error) {
 	if a.now().After(time.Unix(claims.ExpiresAt, 0)) {
 		return Session{}, ErrInvalidToken
 	}
-	return Session{User: claims.User, Level: claims.Level, Scope: claims.Scope, ExpiresAt: time.Unix(claims.ExpiresAt, 0)}, nil
+	return Session{User: claims.User, Level: claims.Level, Scope: claims.Scope, ExpiresAt: time.Unix(claims.ExpiresAt, 0), ID: claims.ID}, nil
 }
 
 // IssueAdminToken returns a short-lived token for setting up, for a session
@@ -232,6 +244,9 @@ func (a *Authenticator) VerifyAdmin(token, user string) (time.Time, bool) {
 	if err != nil || session.Scope != ScopeAdmin || session.User != user || session.Level != LevelAdmin {
 		return time.Time{}, false
 	}
+	if session.ID != "" && !a.checkSession(&session, "") {
+		return time.Time{}, false
+	}
 	return session.ExpiresAt, true
 }
 
@@ -242,18 +257,27 @@ func (a *Authenticator) AdminTokenExpiry() time.Time {
 
 // Elevate checks the password of a logged-in user again and returns an
 // admin token. Failed attempts count towards the lockout like logins.
-func (a *Authenticator) Elevate(username, password string) (string, error) {
-	session, _, err := a.Login(username, password)
+// sessionID is the device the admin token is for.
+func (a *Authenticator) Elevate(username, password, sessionID string) (string, error) {
+	if err := a.checkLockout(); err != nil {
+		return "", err
+	}
+	ok, err := a.verifyWithCCU(username, password)
 	if err != nil {
 		return "", err
 	}
-	return a.IssueAdminToken(session)
+	if !ok {
+		a.recordFailure()
+		return "", ErrInvalidCredentials
+	}
+	return a.IssueAdminToken(Session{User: username, Level: a.lookupLevel(username), ID: sessionID})
 }
 
 type tokenClaims struct {
 	User      string `json:"u"`
 	Level     string `json:"l,omitempty"`
 	Scope     string `json:"s,omitempty"`
+	ID        string `json:"id,omitempty"`
 	ExpiresAt int64  `json:"exp"`
 }
 
@@ -262,7 +286,7 @@ func (a *Authenticator) issueToken(session Session) string {
 	if session.Scope == ScopeAdmin {
 		lifetime = adminTokenLifetime
 	}
-	data, _ := json.Marshal(tokenClaims{User: session.User, Level: session.Level, Scope: session.Scope, ExpiresAt: a.now().Add(lifetime).Unix()})
+	data, _ := json.Marshal(tokenClaims{User: session.User, Level: session.Level, Scope: session.Scope, ID: session.ID, ExpiresAt: a.now().Add(lifetime).Unix()})
 	payload := base64.RawURLEncoding.EncodeToString(data)
 	return payload + "." + a.sign(payload)
 }

@@ -51,7 +51,7 @@ func TestLoginIssuesVerifiableTokenAndLogsOutOfCCU(t *testing.T) {
 	defer ccu.Close()
 	a := newTestAuthenticator(t, ccu.URL)
 
-	_, token, err := a.Login("Admin", "secret")
+	_, token, err := a.Login("Admin", "secret", "test")
 	if err != nil {
 		t.Fatalf("Login: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestLoginRejectsWrongPassword(t *testing.T) {
 	defer ccu.Close()
 	a := newTestAuthenticator(t, ccu.URL)
 
-	if _, _, err := a.Login("Admin", "wrong"); err != ErrInvalidCredentials {
+	if _, _, err := a.Login("Admin", "wrong", "test"); err != ErrInvalidCredentials {
 		t.Fatalf("expected ErrInvalidCredentials, got %v", err)
 	}
 }
@@ -84,15 +84,15 @@ func TestLoginLocksOutAfterRepeatedFailures(t *testing.T) {
 	a.now = func() time.Time { return now }
 
 	for i := 0; i < maxFailures; i++ {
-		_, _, _ = a.Login("Admin", "wrong")
+		_, _, _ = a.Login("Admin", "wrong", "test")
 	}
 	// Even the right password is refused during the lockout
-	if _, _, err := a.Login("Admin", "secret"); err != ErrTooManyAttempts {
+	if _, _, err := a.Login("Admin", "secret", "test"); err != ErrTooManyAttempts {
 		t.Fatalf("expected ErrTooManyAttempts, got %v", err)
 	}
 
 	now = now.Add(lockoutDuration + time.Second)
-	if _, _, err := a.Login("Admin", "secret"); err != nil {
+	if _, _, err := a.Login("Admin", "secret", "test"); err != nil {
 		t.Fatalf("expected login to work after the lockout, got %v", err)
 	}
 }
@@ -131,7 +131,7 @@ func TestRefreshExtendsLifetime(t *testing.T) {
 	token := a.issueToken(Session{User: "Admin"})
 
 	now = now.Add(tokenLifetime - time.Hour)
-	_, refreshed, err := a.Refresh(token)
+	_, refreshed, err := a.Refresh(token, "test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +178,7 @@ func TestLoginStoresUserLevelInToken(t *testing.T) {
 		return LevelAdmin, nil
 	})
 
-	session, token, err := a.Login("Admin", "secret")
+	session, token, err := a.Login("Admin", "secret", "test")
 	if err != nil || session.Level != LevelAdmin {
 		t.Fatalf("Login = %+v, %v", session, err)
 	}
@@ -195,7 +195,7 @@ func TestLoginSucceedsWhenLevelLookupFails(t *testing.T) {
 	a := newTestAuthenticator(t, ccu.URL)
 	a.SetLevelFunc(func(string) (string, error) { return "", errors.New("rega down") })
 
-	session, _, err := a.Login("Admin", "secret")
+	session, _, err := a.Login("Admin", "secret", "test")
 	if err != nil || session.Level != LevelUnknown {
 		t.Fatalf("Login = %+v, %v", session, err)
 	}
@@ -210,13 +210,13 @@ func TestRefreshKeepsLevelAndFillsInMissingOne(t *testing.T) {
 	})
 
 	// A token with a level keeps it without a new lookup
-	session, _, err := a.Refresh(a.issueToken(Session{User: "Admin", Level: LevelAdmin}))
+	session, _, err := a.Refresh(a.issueToken(Session{User: "Admin", Level: LevelAdmin}), "test")
 	if err != nil || session.Level != LevelAdmin || lookups != 0 {
 		t.Fatalf("Refresh = %+v, %v (%d lookups)", session, err, lookups)
 	}
 
 	// A token from before levels were stored gets one
-	session, refreshed, err := a.Refresh(a.issueToken(Session{User: "Gast"}))
+	session, refreshed, err := a.Refresh(a.issueToken(Session{User: "Gast"}), "test")
 	if err != nil || session.Level != LevelUser || lookups != 1 {
 		t.Fatalf("Refresh = %+v, %v (%d lookups)", session, err, lookups)
 	}
@@ -246,7 +246,7 @@ func TestAdminTokens(t *testing.T) {
 		t.Fatalf("expected ErrNotAdmin, got %v", err)
 	}
 
-	token, err := a.Elevate("Admin", "secret")
+	token, err := a.Elevate("Admin", "secret", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,7 +261,7 @@ func TestAdminTokens(t *testing.T) {
 	if _, ok := a.VerifyAdmin(a.issueToken(Session{User: "Admin", Level: LevelAdmin}), "Admin"); ok {
 		t.Fatal("operating token accepted as admin token")
 	}
-	if _, _, err := a.Refresh(token); err != ErrInvalidToken {
+	if _, _, err := a.Refresh(token, "test"); err != ErrInvalidToken {
 		t.Fatalf("admin token must not be renewed, got %v", err)
 	}
 
@@ -270,7 +270,7 @@ func TestAdminTokens(t *testing.T) {
 		t.Fatal("admin token must expire")
 	}
 
-	if _, err := a.Elevate("Admin", "wrong"); err != ErrInvalidCredentials {
+	if _, err := a.Elevate("Admin", "wrong", ""); err != ErrInvalidCredentials {
 		t.Fatalf("expected ErrInvalidCredentials, got %v", err)
 	}
 }

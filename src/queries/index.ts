@@ -12,6 +12,7 @@ import {
   InboxDevice,
   ParamsetDescription,
   Program,
+  SessionInfo,
   Sysvar,
 } from '../types/types';
 
@@ -208,6 +209,28 @@ export const useLogicAction = () => {
     },
     onSettled: (_, __, action) =>
       queryClient.invalidateQueries({ queryKey: [action.type === 'setSysvar' ? 'sysvars' : 'programs'] }),
+  });
+};
+
+// Logged-in devices (administrators with admin token)
+export const useSessions = ({ enabled }: { enabled: boolean }) => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['sessions'],
+    queryFn: async () => ((await request({ type: 'listSessions' })).sessions ?? []) as SessionInfo[],
+    enabled,
+    retry: false,
+  });
+};
+
+export const useRevokeSession = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await request({ type: 'revokeSession', id }, { queue: false });
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['sessions'] }),
   });
 };
 

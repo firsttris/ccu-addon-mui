@@ -15,6 +15,7 @@ import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useTranslations } from '../../i18n/utils';
 import { useChannelNames } from './channelNames';
 import { Pairing } from './Pairing';
+import { Sessions } from './Sessions';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { ElevateDialog } from '../../components/ElevateDialog';
 
@@ -91,7 +92,7 @@ const column = createColumnHelper<DeviceRow>();
 // The setup area's start: all devices of the CCU, searchable and sortable.
 export const Setup = () => {
   const t = useTranslations();
-  const { userLevel, elevated } = useWebSocketContext();
+  const { userLevel, elevated, authRequired } = useWebSocketContext();
   const [elevating, setElevating] = useState(false);
   const { data: devices = [] } = useDevices();
   const names = useChannelNames();
@@ -156,6 +157,7 @@ export const Setup = () => {
       )}
       {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}
       {userLevel === 'admin' && elevated && <Pairing />}
+      {userLevel === 'admin' && elevated && authRequired && <Sessions />}
       <Search
         type="search"
         aria-label={t('SEARCH')}
@@ -164,7 +166,7 @@ export const Setup = () => {
         onChange={(event) => setFilter(event.target.value)}
       />
       <TableWrapper>
-        <Table>
+        <Table aria-label={t('DEVICES')}>
           <thead>
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,6 +56,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		WebUIURL:           fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort),
 		AuthKeyFile:        filepath.Join(t.TempDir(), "key"),
 		AuditLogFile:       filepath.Join(t.TempDir(), "audit.log"),
+		SessionsFile:       filepath.Join(t.TempDir(), "sessions.json"),
 	}
 	auditLogs[ccu] = cfg.AuditLogFile
 
@@ -550,5 +552,69 @@ func TestStackSysvarsAndPrograms(t *testing.T) {
 	send(t, conn, message{"type": "runProgram", "requestId": "q8", "id": 1200})
 	if m := receive(t, conn, byRequestID("q8")); m["code"] != "FORBIDDEN" {
 		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}
+
+func TestStackLogOutDevices(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	url := fmt.Sprintf("ws://%s/", conn.RemoteAddr().String())
+
+	ipad := http.Header{"User-Agent": {"Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Safari/604.1"}}
+	tablet, _, err := websocket.DefaultDialer.Dial(url, ipad)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tablet.Close()
+	tabletToken := loginAs(t, tablet, "Admin", "secret")["token"].(string)
+
+	send(t, conn, message{"type": "listSessions", "requestId": "q1"})
+	sessions := receive(t, conn, byRequestID("q1"))["sessions"].([]interface{})
+	if len(sessions) != 2 {
+		t.Fatalf("expected 2 sessions, got %v", sessions)
+	}
+	var tabletID string
+	for _, raw := range sessions {
+		s := raw.(map[string]interface{})
+		if s["device"] == "iPad · Safari" {
+			tabletID = s["id"].(string)
+			if s["current"] != false {
+				t.Fatalf("the tablet is not the current device: %v", s)
+			}
+		}
+	}
+	if tabletID == "" {
+		t.Fatalf("tablet not listed: %v", sessions)
+	}
+
+	send(t, conn, message{"type": "revokeSession", "requestId": "q2", "id": tabletID})
+	if m := receive(t, conn, byRequestID("q2")); m["success"] != true {
+		t.Fatalf("revokeSession failed: %v", m)
+	}
+	// The tablet's connection is closed, and its token no longer works
+	_ = tablet.SetReadDeadline(time.Now().Add(2 * time.Second))
+	if _, _, err := tablet.ReadMessage(); err == nil {
+		t.Fatal("expected the tablet to be disconnected")
+	}
+	again, _, err := websocket.DefaultDialer.Dial(url, ipad)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer again.Close()
+	send(t, again, message{"type": "auth", "token": tabletToken})
+	if m := receive(t, again, func(m message) bool { return m["type"] == "auth_response" }); m["code"] != "LOGIN_REQUIRED" {
+		t.Fatalf("expected the revoked token to be refused, got %v", m)
+	}
+
+	// Logging out this device revokes its token too
+	send(t, conn, message{"type": "listSessions", "requestId": "q3"})
+	if n := len(receive(t, conn, byRequestID("q3"))["sessions"].([]interface{})); n != 1 {
+		t.Fatalf("expected 1 session left, got %d", n)
+	}
+	send(t, conn, message{"type": "logout", "requestId": "q4"})
+	receive(t, conn, byRequestID("q4"))
+	send(t, conn, message{"type": "listSessions", "requestId": "q5"})
+	if m := receive(t, conn, byRequestID("q5")); m["sessions"] != nil {
+		t.Fatalf("expected no sessions, got %v", m)
 	}
 }

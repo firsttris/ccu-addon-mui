@@ -29,6 +29,8 @@ type Config struct {
 	// AuthKeyFile holds the key that signs login tokens. It must not be
 	// inside the addon directory, which lighttpd serves to the web.
 	AuthKeyFile string
+	// SessionsFile keeps the list of logged-in devices
+	SessionsFile string
 	// AuditLogFile records every change made through the add-on; empty
 	// disables it.
 	AuditLogFile string
@@ -61,6 +63,7 @@ func Load() *Config {
 		WebUIURL:           getEnv("CCU_WEBUI_URL", "http://"+ccuHost),
 		AuthKeyFile:        getEnv("AUTH_KEY_FILE", defaultAuthKeyFile()),
 		AuditLogFile:       getEnv("AUDIT_LOG_FILE", defaultConfigFile("mui-audit.log")),
+		SessionsFile:       getEnv("SESSIONS_FILE", defaultConfigFile("mui-sessions.json")),
 	}
 }
 

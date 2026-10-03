@@ -107,7 +107,7 @@ test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ pag
   await expect(page).toHaveURL(/\/setup$/);
 
   // Device list from all interfaces, searchable
-  const table = page.getByRole('table');
+  const table = page.getByRole('table', { name: 'Geräte' });
   await expect(table.getByText('HmIP-SRH')).toBeVisible();
   await page.getByRole('searchbox', { name: 'Suchen' }).fill('Fenstergriff');
   await expect(table.getByRole('row')).toHaveCount(2);
@@ -221,14 +221,14 @@ test('lernt an, übernimmt neue Geräte aus dem Posteingang und löscht Geräte'
   await expect(pairing.getByText('Keine neuen Geräte')).toBeVisible();
 
   // Delete it again
-  await page.getByRole('table').getByRole('link', { name: 'HmIP-SWDO 0008DA8A9F1234' }).click();
+  await page.getByRole('table', { name: 'Geräte' }).getByRole('link', { name: 'HmIP-SWDO 0008DA8A9F1234' }).click();
   await page.getByRole('button', { name: 'Gerät löschen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Gerät löschen' });
   await dialog.getByLabel('Gerät auf Werkseinstellungen zurücksetzen').check();
   await dialog.getByRole('button', { name: 'Löschen' }).click();
   await expect(page).toHaveURL(/\/setup$/);
   await expect(page.getByText('Gerät gelöscht')).toBeVisible();
-  await expect(page.getByRole('table')).not.toContainText('0008DA8A9F1234');
+  await expect(page.getByRole('table', { name: 'Geräte' })).not.toContainText('0008DA8A9F1234');
 });
 
 test('setzt Systemvariablen', async ({ page }) => {
@@ -267,4 +267,26 @@ test('führt Programme aus und schaltet sie als Administrator aktiv', async ({ p
 
   await list.getByRole('checkbox', { name: 'Aktiv Urlaub' }).click();
   await expect(list.getByRole('listitem').filter({ hasText: 'Urlaub' })).not.toContainText('inaktiv');
+});
+
+test('meldet ein anderes Gerät ab', async ({ page, browser }) => {
+  // A second device, e.g. the wall tablet
+  const tabletContext = await browser.newContext({ locale: 'de-DE', serviceWorkers: 'block' });
+  const tablet = await tabletContext.newPage();
+  await login(tablet);
+
+  await login(page);
+  await page.goto('/setup');
+  const sessions = page.getByRole('region', { name: 'Angemeldete Geräte' });
+  await expect(sessions).toContainText('dieses Gerät');
+  const rows = await sessions.getByRole('row').count();
+
+  // Most recently used first: this device, then the tablet
+  await sessions.getByRole('button', { name: /^Abmelden / }).first().click();
+  await expect(page.getByText('Gerät abgemeldet')).toBeVisible();
+  await expect(sessions.getByRole('row')).toHaveCount(rows - 1);
+
+  // The tablet is disconnected and has to log in again
+  await expect(tablet.getByRole('button', { name: 'Anmelden' })).toBeVisible({ timeout: 15000 });
+  await tabletContext.close();
 });

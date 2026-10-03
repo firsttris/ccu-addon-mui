@@ -57,6 +57,9 @@ func run(ctx context.Context, cfg *config.Config) error {
 			// without authentication would expose all devices.
 			return fmt.Errorf("failed to initialise authentication: %w", err)
 		}
+		if err := authenticator.EnableSessions(cfg.SessionsFile); err != nil {
+			return fmt.Errorf("failed to load the logged-in devices: %w", err)
+		}
 		authenticator.SetLevelFunc(func(username string) (string, error) {
 			level, err := regaClient.GetUserLevel(username)
 			if err != nil {

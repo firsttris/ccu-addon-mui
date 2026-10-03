@@ -54,6 +54,7 @@ export interface Response {
   // getInstallMode
   seconds?: number;
   sysvars?: unknown[];
+  sessions?: unknown[];
   programs?: unknown[];
   // paramsetDescription, paramset
   description?: unknown;
@@ -354,7 +355,9 @@ export const useWebsocket = () => {
     [request],
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // Revoke the token on the server, so a copy of it is useless too
+    await request({ type: 'logout' }, { queue: false, timeoutMs: 3000 }).catch(() => {});
     writeToken(null);
     writeToken(null, ADMIN_TOKEN_STORAGE_KEY);
     setElevated(false);
@@ -362,7 +365,7 @@ export const useWebsocket = () => {
     setAuthState('loginRequired');
     // The server still treats this connection as logged in; reconnect
     getWebSocket()?.close();
-  }, [getWebSocket]);
+  }, [getWebSocket, request]);
 
   const connectionStatus = {
     [ReadyState.CONNECTING]: 'Connecting',

@@ -27,3 +27,4 @@ mui-auth.key
 
 # Audit log of changes (local runs)
 mui-audit.log*
+mui-sessions.json
