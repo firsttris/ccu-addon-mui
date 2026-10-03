@@ -13,9 +13,10 @@ import { ColorLightControl } from './ColorLightControl';
 import { ButtonsControl } from './ButtonsControl';
 import { MotionDetectorControl, SmokeDetectorControl, WaterDetectorControl } from './DetectorControls';
 import { GarageDoorControl } from './GarageDoorControl';
+import { AccessControl, AccessPointControl } from './AccessControls';
 
 // Sections of the dashboard, in the order they are shown
-export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'windows' | 'doors' | 'security' | 'sensors' | 'buttons' | 'energy';
+export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'windows' | 'doors' | 'security' | 'sensors' | 'buttons' | 'energy' | 'system';
 
 // Hand-made controls for common channel types. They refine the generic
 // renderer (GenericControl), which every other type falls back to.
@@ -79,4 +80,6 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   [ChannelType.KEY_TRANSCEIVER]: deviceControl('buttons', ButtonsControl),
   KEY: deviceControl('buttons', ButtonsControl),
   VIRTUAL_KEY: deviceControl('buttons', ButtonsControl),
+  ACCESS_TRANSCEIVER: deviceControl('security', AccessControl),
+  ACCESSPOINT_GENERIC_RECEIVER: deviceControl('system', AccessPointControl),
 };

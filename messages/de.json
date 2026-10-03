@@ -368,5 +368,16 @@
   "GARAGE_CLOSE_ACTION": "Zu",
   "GARAGE_VENTILATE": "Lüften",
   "MOTION_NOW": "Bewegung",
-  "PRESENCE_NOW": "Anwesend"
+  "PRESENCE_NOW": "Anwesend",
+  "SECTION_SYSTEM": "System",
+  "ACCESS": "Zutritt",
+  "ACCESS_ALLOWED": "Berechtigt",
+  "ACCESS_BLOCKED": "Gesperrt",
+  "ACCESS_GRANTED": "Zutritt gewährt",
+  "ACCESS_DENIED": "Zutritt verweigert",
+  "USERS": "Benutzer",
+  "USER_N": "Benutzer {n}",
+  "USERS_ALLOWED": "{count} von {total} Benutzern berechtigt",
+  "ACCESS_POINT": "Access Point",
+  "BUS_LINE": "Bus {n}"
 }

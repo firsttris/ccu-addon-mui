@@ -347,6 +347,28 @@ test('bedient Melder und Garagentor', async ({ page }) => {
   await expect(water.getByRole('status')).toHaveText(/Wasser erkannt|Water detected/);
 });
 
+test('zeigt Zutritte und sperrt Benutzer', async ({ page }) => {
+  await page.goto('/devices');
+  const access = page.getByRole('group', { name: /^(Zutritt|Access)$/ });
+  await expect(access.getByRole('status')).toHaveText(/3 von 4|3 of 4/);
+
+  // Someone used the reader: the event names the user
+  await page.evaluate(() => {
+    (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
+      channel: '002BE0C98ECD57:1',
+      datapoint: 'ACCESS_AUTHORIZATION',
+      value: 1,
+    });
+  });
+  await expect(access.getByRole('status')).toHaveText(/(Zutritt gewährt|Access granted) · (Benutzer|User) 1/);
+
+  await access.getByRole('switch', { name: /(Berechtigt|Authorised): (Benutzer|User) 1/ }).click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'STATE', value: false });
+
+  // Bus voltages of the wired access point
+  await expect(page.getByRole('group', { name: 'HmIPW-DRAP' })).toContainText(/24[.,]4 V/);
+});
+
 test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
   await page.goto('/room/1');
 

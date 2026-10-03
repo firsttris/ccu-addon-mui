@@ -192,6 +192,7 @@ const sectionTitles: Record<SectionId, () => string> = {
   sensors: m.SECTION_SENSORS,
   buttons: m.SECTION_BUTTONS,
   energy: m.SECTION_ENERGY,
+  system: m.SECTION_SYSTEM,
 };
 
 const sectionGrids: Record<SectionId | 'generic', string> = {
@@ -205,6 +206,7 @@ const sectionGrids: Record<SectionId | 'generic', string> = {
   sensors: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
   buttons: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
   energy: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
+  system: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
   generic: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
 };
 

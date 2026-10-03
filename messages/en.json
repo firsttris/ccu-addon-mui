@@ -368,5 +368,16 @@
   "GARAGE_CLOSE_ACTION": "Close",
   "GARAGE_VENTILATE": "Ventilate",
   "MOTION_NOW": "Motion",
-  "PRESENCE_NOW": "Someone there"
+  "PRESENCE_NOW": "Someone there",
+  "SECTION_SYSTEM": "System",
+  "ACCESS": "Access",
+  "ACCESS_ALLOWED": "Authorised",
+  "ACCESS_BLOCKED": "Blocked",
+  "ACCESS_GRANTED": "Access granted",
+  "ACCESS_DENIED": "Access denied",
+  "USERS": "Users",
+  "USER_N": "User {n}",
+  "USERS_ALLOWED": "{count} of {total} users authorised",
+  "ACCESS_POINT": "Access point",
+  "BUS_LINE": "Bus {n}"
 }
