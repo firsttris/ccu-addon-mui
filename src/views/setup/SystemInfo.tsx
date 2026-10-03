@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Panel } from './Panel';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { Backup } from './Backup';
@@ -8,6 +9,58 @@ import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Badge } from '../../components/ui/badge';
 import { m } from '../../paraglide/messages';
 import { cn } from '../../lib/utils';
+import { DialogButton } from '../../components/ConfirmDialog';
+import { useWebSocketActions } from '../../hooks/useWebsocket';
+
+// Whether version a is newer than b, comparing the numbers of 3.89.11.20260919
+export const isNewerVersion = (a: string, b: string) => {
+  const pa = a.split(/[.-]/).map((x) => parseInt(x, 10) || 0);
+  const pb = b.split(/[.-]/).map((x) => parseInt(x, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d > 0;
+  }
+  return false;
+};
+
+// Asks the update server for the newest firmware, as the WebUI's start page
+// does (webui.js, homematic.com.init)
+const FirmwareUpdate = ({ current }: { current: string }) => {
+  const { request } = useWebSocketActions();
+  const [latest, setLatest] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const check = async () => {
+    setBusy(true);
+    try {
+      setLatest((await request({ type: 'checkFirmwareUpdate' }, { timeoutMs: 30000 })).latest);
+    } catch {
+      setLatest('?');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (latest === null) {
+    return (
+      <DialogButton type="button" className="h-7" disabled={busy} onClick={check}>
+        {m.ADDONS_CHECK()}
+      </DialogButton>
+    );
+  }
+  if (latest === '?') {
+    return <span className="text-xs text-muted-foreground">{m.ADDONS_CHECK_FAILED()}</span>;
+  }
+  if (!isNewerVersion(latest, current)) {
+    return <span className="text-xs text-muted-foreground">{m.ADDONS_CURRENT()}</span>;
+  }
+  return (
+    <span className="flex flex-col items-start gap-1">
+      <Badge variant="secondary">{m.ADDONS_NEWER({ version: latest })}</Badge>
+      <span className="text-xs text-muted-foreground">{m.FW_UPDATE_HINT()}</span>
+    </span>
+  );
+};
 
 export const SystemInfo = () => (
   <>
@@ -40,7 +93,10 @@ const Versions = () => {
         <dt className="text-muted-foreground">{m.ADDON_VERSION()}</dt>
         <dd>{data.addonVersion || import.meta.env.VITE_APP_VERSION || '–'}</dd>
         <dt className="text-muted-foreground">{m.FIRMWARE_VERSION()}</dt>
-        <dd>{data.firmwareVersion || '–'}</dd>
+        <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {data.firmwareVersion || '–'}
+          {data.firmwareVersion && <FirmwareUpdate current={data.firmwareVersion} />}
+        </dd>
       </dl>
       {data.radioInterfaces.length > 0 && (
         <>

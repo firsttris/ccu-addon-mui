@@ -247,6 +247,9 @@
     },
     "pollComTest": {
       "$ref": "#/definitions/PollComTestCall"
+    },
+    "checkFirmwareUpdate": {
+      "$ref": "#/definitions/CheckFirmwareUpdateCall"
     }
   },
   "required": [
@@ -330,7 +333,8 @@
     "listReplaceableDevices",
     "replaceDevice",
     "startComTest",
-    "pollComTest"
+    "pollComTest",
+    "checkFirmwareUpdate"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2806,6 +2810,9 @@
         },
         {
           "$ref": "#/definitions/PollComTestResponse"
+        },
+        {
+          "$ref": "#/definitions/CheckFirmwareUpdateResponse"
         }
       ]
     },
@@ -6994,6 +7001,62 @@
         },
         "response": {
           "$ref": "#/definitions/PollComTestResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CheckFirmwareUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "checkFirmwareUpdate"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "CheckFirmwareUpdateResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "checkFirmwareUpdate_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "current": {
+          "type": "string"
+        },
+        "latest": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "current",
+        "latest"
+      ],
+      "additionalProperties": false
+    },
+    "CheckFirmwareUpdateCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/CheckFirmwareUpdateRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/CheckFirmwareUpdateResponse"
         }
       },
       "required": [
