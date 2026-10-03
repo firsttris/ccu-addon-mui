@@ -379,6 +379,24 @@ func (c *CCU) runScript(body string) (string, error) {
 				return "OK\tview", nil
 			}
 			return "OK\t" + c.layouts[id], nil
+		case "get_users":
+			var b strings.Builder
+			for _, u := range c.users() {
+				fmt.Fprintf(&b, "U\t%d\t%s\t%s\t%s\t%d\t%t\t%t\t%t\t%s\t%s\n",
+					u.ID, u.Name, u.FirstName, u.LastName, u.Level, u.Password != "", u.ShowLogin, u.Name != "Admin", u.Mail, u.Phone)
+			}
+			return b.String(), nil
+		case "save_user":
+			return c.saveUser(values), nil
+		case "delete_user":
+			users := c.users()
+			for i, u := range users {
+				if strconv.FormatInt(u.ID, 10) == values["ID"] && u.Name != "Admin" {
+					c.fixture.Users = append(users[:i], users[i+1:]...)
+					return "OK\t" + u.Name, nil
+				}
+			}
+			return "NOT_FOUND", nil
 		case "get_system_settings":
 			lat, lon := c.latitude, c.longitude
 			if lat == "" {
@@ -487,6 +505,51 @@ func (c *CCU) groups(listID string) *[]Group {
 	return nil
 }
 
+// users returns the fixture's users, with ids
+func (c *CCU) users() []User {
+	for i := range c.fixture.Users {
+		if c.fixture.Users[i].ID == 0 {
+			c.fixture.Users[i].ID = 1001 + int64(i)
+		}
+	}
+	return c.fixture.Users
+}
+
+// saveUser creates or changes a user as save_user.tcl
+func (c *CCU) saveUser(values map[string]string) string {
+	users := c.users()
+	id := values["ID"]
+	for _, u := range users {
+		if u.Name == values["NAME"] && strconv.FormatInt(u.ID, 10) != id {
+			return "EXISTS"
+		}
+	}
+	index := -1
+	if id == "0" {
+		users = append(users, User{ID: c.nextID(), Password: values["PASSWORD"]})
+		index = len(users) - 1
+	} else {
+		for i, u := range users {
+			if strconv.FormatInt(u.ID, 10) == id {
+				index = i
+			}
+		}
+		if index < 0 {
+			return "NOT_FOUND"
+		}
+		if values["SET_PASSWORD"] == "true" {
+			users[index].Password = values["PASSWORD"]
+		}
+	}
+	u := &users[index]
+	u.Name, u.FirstName, u.LastName = values["NAME"], values["FIRST_NAME"], values["LAST_NAME"]
+	u.Level, _ = strconv.Atoi(values["LEVEL"])
+	u.ShowLogin = values["SHOW_LOGIN"] == "true"
+	u.Mail, u.Phone = values["MAIL"], values["PHONE"]
+	c.fixture.Users = users
+	return fmt.Sprintf("OK\t%d", u.ID)
+}
+
 // nextID returns an id no ReGa object of the fixture uses yet.
 func (c *CCU) nextID() int64 {
 	var highest int64 = 100000
@@ -504,6 +567,9 @@ func (c *CCU) nextID() int64 {
 	}
 	for _, f := range c.fixture.Favorites {
 		highest = max(highest, f.ID)
+	}
+	for _, u := range c.fixture.Users {
+		highest = max(highest, u.ID)
 	}
 	return highest + 1
 }
