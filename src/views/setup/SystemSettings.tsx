@@ -44,6 +44,19 @@ export const parseCoordinate = (text: string, limit: number) => {
 // down the CCU, as its "CCU-Wartung" (cp_maintenance.cgi).
 export const SystemSettings = () => {
   const { userLevel } = useWebSocketContext();
+  if (userLevel === '') {
+    // Not logged in yet: the cards come once the level is known
+    return (
+      <>
+        {[m.SYS_LOCATION(), m.SYS_MAINTENANCE()].map((title) => (
+          <Panel key={title} aria-label={title} aria-busy>
+            <h2>{title}</h2>
+            <PanelSkeleton lines={2} />
+          </Panel>
+        ))}
+      </>
+    );
+  }
   if (userLevel !== 'admin') {
     return null;
   }

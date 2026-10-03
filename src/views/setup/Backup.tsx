@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/button';
 import { useToast } from '../../contexts/ToastContext';
 import { defaultLang } from '../../i18n/utils';
 import { Panel } from './Panel';
+import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 
 // Creating a backup packs all of /usr/local on the CCU: that takes a while
@@ -56,6 +57,14 @@ export const Backup = () => {
   const [error, setError] = useState<string | null>(null);
   const [last, setLast] = useState<{ fileName: string; size: number } | null>(null);
 
+  if (userLevel === '') {
+    return (
+      <Panel aria-label={m.BACKUP()} aria-busy>
+        <h2>{m.BACKUP()}</h2>
+        <PanelSkeleton lines={2} />
+      </Panel>
+    );
+  }
   if (userLevel !== 'admin') {
     return null;
   }
