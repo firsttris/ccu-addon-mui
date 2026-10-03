@@ -1158,7 +1158,8 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		links := []interface{}{}
 		for _, link := range data.Links {
 			for _, end := range []interface{}{link["SENDER"], link["RECEIVER"]} {
-				if end == address || deviceAddress(fmt.Sprint(end)) == address {
+				// An empty address asks for all links
+				if address == "" || end == address || deviceAddress(fmt.Sprint(end)) == address {
 					links = append(links, link)
 					break
 				}

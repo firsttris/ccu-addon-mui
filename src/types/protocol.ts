@@ -76,7 +76,8 @@ export type ServerMessage =
   | SetChannelTileResponse
   | GetProgramResponse
   | SaveProgramResponse
-  | DeleteProgramResponse;
+  | DeleteProgramResponse
+  | GetAllLinksResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -137,6 +138,7 @@ export interface Protocol {
   getProgram: GetProgramCall;
   saveProgram: SaveProgramCall;
   deleteProgram: DeleteProgramCall;
+  getAllLinks: GetAllLinksCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2015,6 +2017,44 @@ export interface DeleteProgramResponse {
   type: "deleteProgram_response";
   requestId?: string;
   success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetAllLinksCall".
+ */
+export interface GetAllLinksCall {
+  request: GetAllLinksRequest;
+  response: GetAllLinksResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetAllLinksRequest".
+ */
+export interface GetAllLinksRequest {
+  type: "getAllLinks";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetAllLinksResponse".
+ */
+export interface GetAllLinksResponse {
+  type: "getAllLinks_response";
+  requestId?: string;
+  links: InterfaceLink[];
+}
+/**
+ * A direct link and the interface it belongs to
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InterfaceLink".
+ */
+export interface InterfaceLink {
+  interfaceName: string;
+  sender: string;
+  receiver: string;
+  name?: string;
+  description?: string;
 }
 /**
  * Sent first on every connection

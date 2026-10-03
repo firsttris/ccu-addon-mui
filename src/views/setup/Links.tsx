@@ -103,7 +103,7 @@ const changedFrom = (current: Record<string, DatapointValue>, next: Record<strin
 // The parameters of one link on the receiver's side: a profile of the
 // WebUI with its few settings, or every parameter (expert). Changes are
 // collected, confirmed and saved together.
-const LinkParameters = ({ interfaceName, link, receiverType, senderType, senderDeviceType }: {
+export const LinkParameters = ({ interfaceName, link, receiverType, senderType, senderDeviceType }: {
   interfaceName: string;
   link: Link;
   receiverType?: string;
@@ -267,17 +267,25 @@ interface LinksProps {
   channels: DeviceChannel[];
 }
 
-// Direct links of a device: list, parameters, add and remove
-export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) => {
-  const t = useTranslations();
+// Channel and device type by channel address, to find the link profiles
+export const useLinkChannelInfo = () => {
+  const { data: devices = [] } = useDevices();
+  return useMemo(
+    () =>
+      new Map(
+        devices.flatMap((d) => (d.channels ?? []).map((channel) => [channel.address, { channel, deviceType: d.type }] as const)),
+      ),
+    [devices],
+  );
+};
+
+// Linking a channel of a device with a fitting channel of another one
+export const AddLinkForm = ({ interfaceName, deviceAddress, channels }: LinksProps) => {
   const { showToast } = useToast();
-  const { data: links = [] } = useLinks(interfaceName, deviceAddress);
   const { data: devices = [] } = useDevices();
   const names = useChannelNames();
   const action = useLinkAction();
-  const [open, setOpen] = useState<string | null>(null);
-  const [removing, setRemoving] = useState<Link | null>(null);
-
+  const label = (address: string) => `${names.get(address) ?? address} (${address})`;
   const linkable = channels.filter((c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length);
   const [own, setOwn] = useState('');
   const [partner, setPartner] = useState('');
@@ -297,16 +305,6 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
       );
   }, [devices, interfaceName, deviceAddress, ownChannel]);
 
-  const label = (address: string) => `${names.get(address) ?? address} (${address})`;
-
-  // Channel and device type by channel address, to find the link profiles
-  const channelInfo = useMemo(
-    () =>
-      new Map(
-        devices.flatMap((d) => (d.channels ?? []).map((channel) => [channel.address, { channel, deviceType: d.type }] as const)),
-      ),
-    [devices],
-  );
 
   const add = () => {
     const partnerChannel = partners.find((c) => c.address === partner);
@@ -334,44 +332,6 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
 
   return (
     <>
-      {links.length === 0 ? (
-        <p>{m.NO_LINKS()}</p>
-      ) : (
-        <ul
-          aria-label={m.LINKS()}
-          className="flex flex-col divide-y rounded-lg border [&>li]:flex [&>li]:flex-col [&>li]:gap-3 [&>li]:p-3"
-        >
-          {links.map((link) => {
-            const key = `${link.sender}>${link.receiver}`;
-            return (
-              <li key={key}>
-                <Row>
-                  <span className="min-w-[200px] flex-1 text-sm">
-                    {label(link.sender)} → {label(link.receiver)}
-                    {link.name ? ` · ${link.name}` : ''}
-                  </span>
-                  <DialogButton type="button" onClick={() => setOpen(open === key ? null : key)} aria-expanded={open === key}>
-                    {m.LINK_PARAMETERS()}
-                  </DialogButton>
-                  <DialogButton type="button" onClick={() => setRemoving(link)}>
-                    {m.REMOVE()}
-                  </DialogButton>
-                </Row>
-                {open === key && (
-                  <LinkParameters
-                    interfaceName={interfaceName}
-                    link={link}
-                    receiverType={channelInfo.get(link.receiver)?.channel.type}
-                    senderType={channelInfo.get(link.sender)?.channel.type}
-                    senderDeviceType={channelInfo.get(link.sender)?.deviceType}
-                  />
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
       {linkable.length > 0 && (
         <form
           className="mt-2 grid max-w-[460px] gap-3 [&_label]:grid [&_label]:gap-1.5 [&_label]:text-sm [&_label]:text-muted-foreground"
@@ -421,6 +381,65 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
           </Row>
         </form>
       )}
+
+    </>
+  );
+};
+
+// Direct links of a device: list, parameters, add and remove
+export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) => {
+  const t = useTranslations();
+  const { showToast } = useToast();
+  const { data: links = [] } = useLinks(interfaceName, deviceAddress);
+  const { data: devices = [] } = useDevices();
+  const names = useChannelNames();
+  const action = useLinkAction();
+  const [open, setOpen] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<Link | null>(null);
+  const label = (address: string) => `${names.get(address) ?? address} (${address})`;
+  const channelInfo = useLinkChannelInfo();
+
+  return (
+    <>
+      {links.length === 0 ? (
+        <p>{m.NO_LINKS()}</p>
+      ) : (
+        <ul
+          aria-label={m.LINKS()}
+          className="flex flex-col divide-y rounded-lg border [&>li]:flex [&>li]:flex-col [&>li]:gap-3 [&>li]:p-3"
+        >
+          {links.map((link) => {
+            const key = `${link.sender}>${link.receiver}`;
+            return (
+              <li key={key}>
+                <Row>
+                  <span className="min-w-[200px] flex-1 text-sm">
+                    {label(link.sender)} → {label(link.receiver)}
+                    {link.name ? ` · ${link.name}` : ''}
+                  </span>
+                  <DialogButton type="button" onClick={() => setOpen(open === key ? null : key)} aria-expanded={open === key}>
+                    {m.LINK_PARAMETERS()}
+                  </DialogButton>
+                  <DialogButton type="button" onClick={() => setRemoving(link)}>
+                    {m.REMOVE()}
+                  </DialogButton>
+                </Row>
+                {open === key && (
+                  <LinkParameters
+                    interfaceName={interfaceName}
+                    link={link}
+                    receiverType={channelInfo.get(link.receiver)?.channel.type}
+                    senderType={channelInfo.get(link.sender)?.channel.type}
+                    senderDeviceType={channelInfo.get(link.sender)?.deviceType}
+                  />
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <AddLinkForm interfaceName={interfaceName} deviceAddress={deviceAddress} channels={channels} />
 
       {removing && (
         <ConfirmDialog

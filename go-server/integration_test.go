@@ -1139,3 +1139,22 @@ func TestStackProgramEditor(t *testing.T) {
 		t.Fatalf("expected NOT_FOUND, got %v", m)
 	}
 }
+
+func TestStackAllLinks(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "getAllLinks", "requestId": "l1"})
+	links := receive(t, conn, byRequestID("l1"))["links"].([]interface{})
+	if len(links) != 1 {
+		t.Fatalf("expected the fixture's link, got %v", links)
+	}
+	link := links[0].(map[string]interface{})
+	if link["interfaceName"] != "HmIP-RF" || link["sender"] != "000855699C4F38:1" || link["name"] != "Esstisch an" {
+		t.Fatalf("unexpected link: %v", link)
+	}
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "getAllLinks", "requestId": "l2"})
+	if m := receive(t, conn, byRequestID("l2")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}

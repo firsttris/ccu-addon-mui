@@ -169,6 +169,9 @@
     },
     "deleteProgram": {
       "$ref": "#/definitions/DeleteProgramCall"
+    },
+    "getAllLinks": {
+      "$ref": "#/definitions/GetAllLinksCall"
     }
   },
   "required": [
@@ -226,7 +229,8 @@
     "setChannelTile",
     "getProgram",
     "saveProgram",
-    "deleteProgram"
+    "deleteProgram",
+    "getAllLinks"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2608,6 +2612,9 @@
         },
         {
           "$ref": "#/definitions/DeleteProgramResponse"
+        },
+        {
+          "$ref": "#/definitions/GetAllLinksResponse"
         }
       ]
     },
@@ -4917,6 +4924,88 @@
         "delay": {
           "type": "integer",
           "description": "seconds, 0 for at once"
+        }
+      }
+    },
+    "GetAllLinksRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getAllLinks"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetAllLinksResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getAllLinks_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InterfaceLink"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "links"
+      ],
+      "additionalProperties": false
+    },
+    "GetAllLinksCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetAllLinksRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetAllLinksResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "InterfaceLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interfaceName",
+        "sender",
+        "receiver"
+      ],
+      "description": "A direct link and the interface it belongs to",
+      "properties": {
+        "interfaceName": {
+          "type": "string"
+        },
+        "sender": {
+          "type": "string"
+        },
+        "receiver": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
         }
       }
     }

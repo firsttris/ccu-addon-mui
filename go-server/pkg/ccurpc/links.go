@@ -102,3 +102,19 @@ func (c *Client) PutLinkParamset(iface, address, partner string, values map[stri
 	var reply interface{}
 	return c.call(iface, "putParamset", []interface{}{address, partner, values}, &reply)
 }
+
+// GetAllLinks returns every link of an interface, as the WebUI's list of
+// direct links asks for them (ic_common.tcl: getLinks "" with flags).
+func (c *Client) GetAllLinks(iface string) ([]Link, error) {
+	var reply []interface{}
+	if err := c.call(iface, "getLinks", []interface{}{"", 0}, &reply); err != nil {
+		return nil, err
+	}
+	links := []Link{}
+	for _, raw := range reply {
+		if m, ok := raw.(map[string]interface{}); ok {
+			links = append(links, Link{Sender: asString(m["SENDER"]), Receiver: asString(m["RECEIVER"]), Name: asString(m["NAME"]), Description: asString(m["DESCRIPTION"])})
+		}
+	}
+	return links, nil
+}

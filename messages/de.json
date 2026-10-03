@@ -570,5 +570,6 @@
   "PRG_VALUE_FROM": "Wert",
   "PRG_VALUE_FIXED": "fester Wert",
   "PRG_VALUE_OF_SYSVAR": "Wert der Systemvariablen",
-  "PRG_APPLY": "Übernehmen"
+  "PRG_APPLY": "Übernehmen",
+  "DEVICE": "Gerät"
 }
