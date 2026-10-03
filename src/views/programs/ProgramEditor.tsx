@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import PlusIcon from '~icons/lucide/plus';
+import CopyIcon from '~icons/lucide/copy';
 import TrashIcon from '~icons/lucide/trash-2';
 import { useProgram, useProgramChange } from '../../queries';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
@@ -190,6 +191,21 @@ export const ProgramEditor = () => {
       },
     );
 
+  // "Als neues Programm speichern", as the WebUI's program editor
+  // (isePrograms.CopyToNewProgram): the draft becomes a new program
+  const saveAsNew = () =>
+    change.mutate(
+      { type: 'saveProgram', program: { ...draft, id: 0, name: m.PRG_COPY_NAME({ name: draft.name }).slice(0, 100) } },
+      {
+        onSuccess: (response) => {
+          showToast(m.PRG_COPIED(), 'info');
+          const savedId = 'id' in response ? response.id : undefined;
+          if (savedId) navigate({ to: '/program/$programId', params: { programId: String(savedId) } });
+        },
+        onError: (error) => showToast(`${m.SAVE_FAILED()}: ${error.message}`),
+      },
+    );
+
   return (
     <fieldset disabled={!canEdit} className="flex min-w-0 flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
@@ -263,6 +279,12 @@ export const ProgramEditor = () => {
           <Button type="button" variant="outline" asChild>
             <Link to="/programs">{m.CANCEL()}</Link>
           </Button>
+          {!isNew && (
+            <Button type="button" variant="outline" disabled={problems.length > 0 || change.isPending} onClick={saveAsNew}>
+              <CopyIcon />
+              {m.PRG_SAVE_AS_NEW()}
+            </Button>
+          )}
           <Button type="button" disabled={problems.length > 0 || change.isPending} onClick={() => setConfirm('save')}>
             {m.SAVE()}
           </Button>

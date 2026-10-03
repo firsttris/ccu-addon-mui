@@ -711,5 +711,8 @@
   "COMTEST_OK": "The device answered at {time}.",
   "COMTEST_NONE": "No answer within a minute.",
   "COMTEST_FAILED": "Test failed: {message}",
-  "COMTEST_HINT": "The CCU asks the device to answer. Battery devices only answer when they wake up; briefly press a button on the device for that."
+  "COMTEST_HINT": "The CCU asks the device to answer. Battery devices only answer when they wake up; briefly press a button on the device for that.",
+  "PRG_SAVE_AS_NEW": "Save as new program",
+  "PRG_COPY_NAME": "{name} (copy)",
+  "PRG_COPIED": "Saved as a new program"
 }
