@@ -221,6 +221,14 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         datapoints: { ERROR: 0, INHIBIT: false, OPEN: false, RELOCK_DELAY: 0, STATE: false, STATE_UNCERTAIN: false },
       },
       {
+        id: 509,
+        name: 'Zirkulationspumpe',
+        address: '00195F29B04142:4',
+        interfaceName: 'HmIP-RF',
+        type: 'SWITCH_VIRTUAL_RECEIVER',
+        datapoints: { PROCESS: 0, SECTION: 0, SECTION_STATUS: 0, STATE: true },
+      },
+      {
         id: 507,
         name: 'Garagentor',
         address: '0019DA49A6B7C8:1',
