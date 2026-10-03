@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -60,6 +61,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		AuthKeyFile:        filepath.Join(t.TempDir(), "key"),
 		AuditLogFile:       filepath.Join(t.TempDir(), "audit.log"),
 		SessionsFile:       filepath.Join(t.TempDir(), "sessions.json"),
+		BackupDir:          filepath.Join(t.TempDir(), "backups"),
 	}
 	auditLogs[ccu] = cfg.AuditLogFile
 
@@ -400,7 +402,8 @@ func TestStackListDevices(t *testing.T) {
 		d := raw.(map[string]interface{})
 		types[d["address"].(string)] = d["interfaceName"].(string) + " " + d["type"].(string)
 	}
-	if len(types) != 5 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" {
+	if len(types) != 6 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" ||
+		types["LEQ0000004"] != "BidCos-RF HM-TC-IT-WM-W-EU" {
 		t.Fatalf("unexpected devices: %v", types)
 	}
 }
@@ -762,6 +765,190 @@ func TestStackSystemInfo(t *testing.T) {
 	loginAs(t, conn, "Gast", "gast")
 	send(t, conn, message{"type": "getSystemInfo", "requestId": "q2"})
 	if m := receive(t, conn, byRequestID("q2")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}
+
+func TestStackCreateRenameDeleteRoomsAndSysvars(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "createGroup", "requestId": "q1", "list": "rooms", "name": "Garage"})
+	created := receive(t, conn, byRequestID("q1"))
+	id, ok := created["id"].(float64)
+	if created["success"] != true || !ok {
+		t.Fatalf("createGroup failed: %v", created)
+	}
+	send(t, conn, message{"type": "renameGroup", "requestId": "q2", "list": "rooms", "id": id, "name": "Carport"})
+	if m := receive(t, conn, byRequestID("q2")); m["success"] != true {
+		t.Fatalf("renameGroup failed: %v", m)
+	}
+	send(t, conn, message{"type": "getRooms", "requestId": "q3", "deviceId": "test"})
+	if rooms := fmt.Sprint(receive(t, conn, byRequestID("q3"))["rooms"]); !strings.Contains(rooms, "Carport") {
+		t.Fatalf("room not renamed: %v", rooms)
+	}
+	// A room id from the other list is not found
+	send(t, conn, message{"type": "deleteGroup", "requestId": "q4", "list": "trades", "id": id})
+	if m := receive(t, conn, byRequestID("q4")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+	send(t, conn, message{"type": "deleteGroup", "requestId": "q5", "list": "rooms", "id": id})
+	if m := receive(t, conn, byRequestID("q5")); m["success"] != true {
+		t.Fatalf("deleteGroup failed: %v", m)
+	}
+	send(t, conn, message{"type": "createGroup", "requestId": "q6", "list": "rooms", "name": `x"); system.Exec("y`})
+	if m := receive(t, conn, byRequestID("q6")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected the injection to be refused, got %v", m)
+	}
+
+	send(t, conn, message{"type": "createSysvar", "requestId": "q7", "name": "Gäste", "kind": "enum", "valueList": []string{"keine", "Familie", "Freunde"}})
+	created = receive(t, conn, byRequestID("q7"))
+	svID, ok := created["id"].(float64)
+	if created["success"] != true || !ok {
+		t.Fatalf("createSysvar failed: %v", created)
+	}
+	send(t, conn, message{"type": "getSysvars", "requestId": "q8"})
+	sysvars := fmt.Sprint(receive(t, conn, byRequestID("q8"))["sysvars"])
+	if !strings.Contains(sysvars, "Gäste") || !strings.Contains(sysvars, "Freunde") {
+		t.Fatalf("sysvar not created: %v", sysvars)
+	}
+	send(t, conn, message{"type": "renameSysvar", "requestId": "q9", "id": svID, "name": "Besuch"})
+	if m := receive(t, conn, byRequestID("q9")); m["success"] != true {
+		t.Fatalf("renameSysvar failed: %v", m)
+	}
+	send(t, conn, message{"type": "deleteSysvar", "requestId": "q10", "id": svID})
+	if m := receive(t, conn, byRequestID("q10")); m["success"] != true {
+		t.Fatalf("deleteSysvar failed: %v", m)
+	}
+	send(t, conn, message{"type": "createSysvar", "requestId": "q11", "name": "Leer", "kind": "enum"})
+	if m := receive(t, conn, byRequestID("q11")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected an enum without values to be refused, got %v", m)
+	}
+
+	// Guests may not
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "createGroup", "requestId": "q12", "list": "trades", "name": "Garten"})
+	if m := receive(t, conn, byRequestID("q12")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}
+
+func TestStackServiceMessages(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getServiceMessages", "requestId": "q1"})
+	messages := receive(t, conn, byRequestID("q1"))["messages"].([]interface{})
+	types := map[string]float64{}
+	for _, raw := range messages {
+		m := raw.(map[string]interface{})
+		types[m["type"].(string)] = m["id"].(float64)
+	}
+	if len(messages) != 3 || types["UNREACH"] == 0 || types["LOW_BAT"] == 0 || types["STICKY_UNREACH"] == 0 {
+		t.Fatalf("unexpected service messages: %v", messages)
+	}
+
+	// Guests may look, not acknowledge
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "acknowledgeServiceMessage", "requestId": "q2", "id": types["STICKY_UNREACH"]})
+	if m := receive(t, conn, byRequestID("q2")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "acknowledgeServiceMessage", "requestId": "q3", "id": types["STICKY_UNREACH"]})
+	if m := receive(t, conn, byRequestID("q3")); m["success"] != true {
+		t.Fatalf("acknowledge failed: %v", m)
+	}
+	send(t, conn, message{"type": "getServiceMessages", "requestId": "q4"})
+	if messages := receive(t, conn, byRequestID("q4"))["messages"].([]interface{}); len(messages) != 2 {
+		t.Fatalf("sticky message not acknowledged: %v", messages)
+	}
+	send(t, conn, message{"type": "acknowledgeServiceMessage", "requestId": "q5", "id": 1})
+	if m := receive(t, conn, byRequestID("q5")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}
+
+func TestStackFirmwareUpdate(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	device := func(requestID string) map[string]interface{} {
+		send(t, conn, message{"type": "listDevices", "requestId": requestID})
+		for _, raw := range receive(t, conn, byRequestID(requestID))["devices"].([]interface{}) {
+			if d := raw.(map[string]interface{}); d["address"] == "0008DA8A9F1234" {
+				return d
+			}
+		}
+		t.Fatal("window contact not listed")
+		return nil
+	}
+	if d := device("q1"); d["firmware"] != "1.0.12" || d["availableFirmware"] != "1.2.6" || d["firmwareUpdateState"] != "READY_FOR_UPDATE" {
+		t.Fatalf("unexpected firmware state: %v", d)
+	}
+	send(t, conn, message{"type": "installFirmware", "requestId": "q2", "interfaceName": "HmIP-RF", "address": "0008DA8A9F1234"})
+	if m := receive(t, conn, byRequestID("q2")); m["success"] != true {
+		t.Fatalf("installFirmware failed: %v", m)
+	}
+	if d := device("q3"); d["firmware"] != "1.2.6" || d["availableFirmware"] != nil || d["firmwareUpdateState"] != "UP_TO_DATE" {
+		t.Fatalf("firmware not updated: %v", d)
+	}
+	// Not ready: the CCU refuses
+	send(t, conn, message{"type": "installFirmware", "requestId": "q4", "interfaceName": "HmIP-RF", "address": "0008DA8A9F1234"})
+	if m := receive(t, conn, byRequestID("q4")); m["code"] != "CCU_ERROR" {
+		t.Fatalf("expected CCU_ERROR, got %v", m)
+	}
+}
+
+func TestStackBackup(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	// The WebUI needs the password for its session
+	send(t, conn, message{"type": "createBackup", "requestId": "b1", "password": "wrong"})
+	if m := receive(t, conn, byRequestID("b1")); m["code"] != "INVALID_CREDENTIALS" {
+		t.Fatalf("expected INVALID_CREDENTIALS, got %v", m)
+	}
+
+	send(t, conn, message{"type": "createBackup", "requestId": "b2", "password": "secret"})
+	m := receive(t, conn, byRequestID("b2"))
+	if m["success"] != true || m["fileName"] != "ccu3-webui-2026-10-03.sbk" || m["size"] != float64(len(fakeccu.FakeBackup)) {
+		t.Fatalf("unexpected backup response: %v", m)
+	}
+
+	download := func() *http.Response {
+		resp, err := http.Get("http://" + conn.RemoteAddr().String() + m["url"].(string))
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { resp.Body.Close() })
+		return resp
+	}
+	resp := download()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK || string(body) != fakeccu.FakeBackup {
+		t.Fatalf("download failed: %d %q", resp.StatusCode, body)
+	}
+	if cd := resp.Header.Get("Content-Disposition"); cd != "attachment; filename=ccu3-webui-2026-10-03.sbk" {
+		t.Fatalf("unexpected Content-Disposition %q", cd)
+	}
+	// Only once
+	if resp := download(); resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("second download: status %d", resp.StatusCode)
+	}
+
+	data, _ := os.ReadFile(auditLogs[ccu])
+	if !strings.Contains(string(data), `"action":"createBackup"`) {
+		t.Fatalf("backup not in the audit log: %s", data)
+	}
+}
+
+func TestStackBackupNeedsAdmin(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "createBackup", "requestId": "b1", "password": "gast"})
+	if m := receive(t, conn, byRequestID("b1")); m["code"] != "FORBIDDEN" {
 		t.Fatalf("expected FORBIDDEN, got %v", m)
 	}
 }

@@ -221,6 +221,49 @@ html body[data-scroll-locked] {
   }
 }
 
+@keyframes fx-wave {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+@utility fx-wave {
+  animation: fx-wave 1.8s ease-out infinite;
+}
+@keyframes fx-alarm {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(239 68 68 / 0);
+  }
+  50% {
+    box-shadow: 0 0 28px 2px rgb(239 68 68 / 0.45);
+  }
+}
+@utility fx-alarm {
+  animation: fx-alarm 1.4s ease-in-out infinite;
+}
+
+@keyframes fx-breeze {
+  0% {
+    transform: translateX(-36px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(72px);
+    opacity: 0;
+  }
+}
+@utility fx-breeze {
+  animation: fx-breeze 2.4s ease-in-out infinite;
+}
+
 @utility fx-breathe {
   animation: fx-breathe 3.6s ease-in-out infinite;
 }

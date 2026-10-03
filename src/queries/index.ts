@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
+import { ServiceMessage } from '../types/protocol';
 import { applyEvent, groupChannelsByType, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
@@ -23,6 +24,8 @@ import {
 
 // Battery and reachability problems are not pushed by the server
 const DEVICE_PROBLEMS_REFRESH_MS = 5 * 60 * 1000;
+// Also reloaded when a device reports a change of its status
+const SERVICE_MESSAGES_REFRESH_MS = 60 * 1000;
 const SET_DATAPOINT_TIMEOUT_MS = 15000;
 
 export const useRooms = ({ enabled = true }: { enabled?: boolean } = {}) => {
@@ -160,6 +163,18 @@ export const usePairingAction = () => {
       Promise.all(
         ['installMode', 'inbox', 'devices', 'channels'].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
       ),
+  });
+};
+
+// Installs the firmware the CCU has delivered to a device
+export const useInstallFirmware = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ interfaceName, address }: { interfaceName: string; address: string }) => {
+      await request({ type: 'installFirmware', interfaceName, address }, { queue: false });
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['devices'] }),
   });
 };
 
@@ -458,4 +473,66 @@ export const useSetDataPoint = () => {
       mutate({ interfaceName, address, attribute, value }),
     [mutate],
   );
+};
+
+export type ObjectChange =
+  | { type: 'createGroup'; list: 'rooms' | 'trades'; name: string }
+  | { type: 'renameGroup'; list: 'rooms' | 'trades'; id: number; name: string }
+  | { type: 'deleteGroup'; list: 'rooms' | 'trades'; id: number }
+  | {
+      type: 'createSysvar';
+      name: string;
+      kind: Sysvar['kind'];
+      unit?: string;
+      min?: number;
+      max?: number;
+      falseName?: string;
+      trueName?: string;
+      valueList?: string[];
+    }
+  | { type: 'renameSysvar'; id: number; name: string }
+  | { type: 'deleteSysvar'; id: number };
+
+// Creates, renames or deletes rooms, trades and system variables (setup)
+export const useObjectChange = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (change: ObjectChange) => request(change, { queue: false }),
+    onSettled: (_, __, change) => {
+      if ('list' in change) {
+        queryClient.invalidateQueries({ queryKey: [change.list] });
+        // Channels list the ids of their rooms and trades
+        queryClient.invalidateQueries({ queryKey: ['channels'] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['sysvars'] });
+      }
+    },
+  });
+};
+
+// The CCU's service messages (unreachable, battery, sticky messages, error
+// codes, settings waiting for the device, ...)
+export const useServiceMessages = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['serviceMessages'],
+    queryFn: async () => ((await request({ type: 'getServiceMessages' })).messages ?? []) as ServiceMessage[],
+    refetchInterval: SERVICE_MESSAGES_REFRESH_MS,
+  });
+};
+
+// Acknowledges a service message; it disappears at once
+export const useAcknowledgeServiceMessage = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => request({ type: 'acknowledgeServiceMessage', id }, { queue: false }),
+    onMutate: (id) =>
+      queryClient.setQueryData<ServiceMessage[]>(['serviceMessages'], (messages) => messages?.filter((m) => m.id !== id)),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['serviceMessages'] });
+      queryClient.invalidateQueries({ queryKey: ['deviceProblems'] });
+    },
+  });
 };

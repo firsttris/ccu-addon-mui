@@ -1,9 +1,13 @@
 import { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode, useEffect, useState } from 'react';
-import { useLogicAction, usePrograms, useSysvars } from '../queries';
+import { useLogicAction, useObjectChange, usePrograms, useSysvars } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
 import { Sysvar } from '../types/types';
-import { DialogButton } from '../components/ConfirmDialog';
+import { ConfirmDialog, DialogButton } from '../components/ConfirmDialog';
+import { EditableName } from '../components/EditableName';
+import { Button } from '../components/ui/button';
+import { NewSysvarDialog } from './NewSysvarDialog';
+import PlusIcon from '~icons/lucide/plus';
 import { m } from '../paraglide/messages';
 import { Input as UiInput } from '../components/ui/input';
 import { NativeSelect } from '../components/ui/select';
@@ -143,18 +147,48 @@ const SysvarControl = ({ sysvar, onSet }: { sysvar: Sysvar; onSet: (value: strin
 
 export const Sysvars = () => {
   const { showToast } = useToast();
+  const { userLevel, elevated } = useWebSocketContext();
+  const canConfigure = userLevel === 'admin' && elevated;
   const { data: sysvars = [] } = useSysvars();
   const action = useLogicAction();
+  const change = useObjectChange();
+  const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState<Sysvar | null>(null);
   usePageTitle(m.SYSVARS());
+
+  const runChange = (variables: Parameters<typeof change.mutate>[0], success: string, onSuccess?: () => void) =>
+    change.mutate(variables, {
+      onSuccess: () => {
+        showToast(success, 'info');
+        onSuccess?.();
+      },
+      onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+    });
 
   return (
     <Container>
+      {canConfigure && (
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={() => setCreating(true)}>
+            <PlusIcon />
+            {m.NEW_SYSVAR()}
+          </Button>
+        </div>
+      )}
       <List aria-label={m.SYSVARS()}>
         {sysvars
           .filter((sv) => sv.visible)
           .map((sysvar) => (
             <Item key={sysvar.id}>
-              <Name>{sysvar.name}</Name>
+              {canConfigure ? (
+                <EditableName
+                  name={sysvar.name}
+                  onRename={(name) => runChange({ type: 'renameSysvar', id: sysvar.id, name }, m.RENAMED())}
+                  onDelete={() => setDeleting(sysvar)}
+                />
+              ) : (
+                <Name>{sysvar.name}</Name>
+              )}
               <Controls>
                 <SysvarControl
                   sysvar={sysvar}
@@ -169,6 +203,19 @@ export const Sysvars = () => {
             </Item>
           ))}
       </List>
+      {creating && <NewSysvarDialog onClose={() => setCreating(false)} />}
+      {deleting && (
+        <ConfirmDialog
+          title={m.DELETE_NAMED({ name: deleting.name })}
+          confirmLabel={m.DELETE()}
+          destructive
+          busy={change.isPending}
+          onCancel={() => setDeleting(null)}
+          onConfirm={() => runChange({ type: 'deleteSysvar', id: deleting.id }, m.DELETED_OBJECT(), () => setDeleting(null))}
+        >
+          <p>{m.DELETE_SYSVAR_CONFIRM({ name: deleting.name })}</p>
+        </ConfirmDialog>
+      )}
     </Container>
   );
 };

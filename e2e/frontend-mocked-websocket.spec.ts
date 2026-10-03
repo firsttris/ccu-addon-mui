@@ -107,7 +107,7 @@ test('zeigt schwache Batterie und nicht erreichbare Geräte an', async ({ page }
   await page.goto('/room/1');
 
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
-  await expect(page.getByRole('status')).toHaveCount(0);
+  await expect(page.getByRole('status').filter({ hasText: /Battery low|Batterie schwach|Not reachable|Nicht erreichbar/ })).toHaveCount(0);
 
   // The maintenance channel must be subscribed to receive status events
   await expect.poll(async () => {
@@ -176,13 +176,19 @@ test('meldet einen fehlgeschlagenen Befehl und nimmt die Änderung zurück', asy
 
 test('zeigt Geräte mit Problemen in den Meldungen', async ({ page }) => {
   await page.goto('/room/2');
-  await page.getByRole('button', { name: /(Devices with problems|Geräte mit Problemen): 2/ }).click();
+  await page.getByRole('button', { name: /(Notices|Meldungen): 2/ }).click();
 
-  const list = page.getByRole('list', { name: /Devices with problems|Geräte mit Problemen/ });
+  const list = page.getByRole('list', { name: /^(Notices|Meldungen)$/ });
   await expect(list.getByText('Wandthermostat Flur')).toBeVisible();
   await expect(list.getByText('Fensterkontakt Bad')).toBeVisible();
   await expect(list.getByText(/Not reachable|Nicht erreichbar/)).toHaveCount(1);
   await expect(list.getByText(/Battery low|Batterie schwach/)).toHaveCount(1);
+
+  // Acknowledged messages disappear, the count follows
+  await list.getByRole('button', { name: /(Acknowledge|Bestätigen): Fensterkontakt Bad/ }).click();
+  await expect(list.getByText('Fensterkontakt Bad')).toHaveCount(0);
+  // (behind the open sheet, hidden from the accessibility tree)
+  await expect(page.getByRole('button', { name: /(Notices|Meldungen): 1/, includeHidden: true })).toBeAttached();
 
   await list.getByRole('link', { name: 'Wohnzimmer' }).click();
   await expect(page).toHaveURL(/\/room\/1$/);
@@ -202,35 +208,48 @@ test('zeigt Energiezähler zusammengefasst und keine Rohdaten', async ({ page })
   await expect(page.getByText('WEEK_PROGRAM_CHANNEL_LOCKS')).toHaveCount(0);
 });
 
-test('fragt vor dem Öffnen der Tür nach', async ({ page }) => {
+test('öffnet die Tür nur mit bewussten Gesten', async ({ page }) => {
   await page.goto('/room/3');
-  await expect(page.getByText('Haustür')).toBeVisible();
+  const door = page.getByRole('group', { name: 'Haustür' });
+  await expect(door.getByRole('status')).toHaveText(/Gesperrt|Locked/);
 
-  const openButton = () => page.getByRole('button', { name: /^(Open|Öffnen)$/ });
-
-  await openButton().click();
-  await expect(page.getByText(/Really open the door\?|Tür wirklich öffnen\?/)).toBeVisible();
+  // A tap on "unlock" does nothing, it has to be held
+  const unlock = door.getByRole('button', { name: /^(Unlock|Entsperren)$/ });
+  await unlock.click();
   expect(await sentSetDatapoints(page)).toHaveLength(0);
+  await unlock.hover();
+  await page.mouse.down();
+  await expect.poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value])).toEqual([['STATE', true]]);
+  await page.mouse.up();
 
-  await page.getByRole('button', { name: /^(Cancel|Abbrechen)$/ }).click();
-  expect(await sentSetDatapoints(page)).toHaveLength(0);
-
-  await openButton().click();
-  await page.getByRole('button', { name: /^(Yes|Ja)$/ }).click();
+  // Opening: the knob has to reach the end of its track
+  const slider = door.getByRole('slider', { name: /Slide to open|Zum Öffnen schieben/ });
+  await slider.press('ArrowRight');
+  expect((await sentSetDatapoints(page)).map((m) => m.attribute)).toEqual(['STATE']);
+  await slider.press('End');
   await expect
     .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
-    .toEqual([['OPEN', true]]);
+    .toEqual([
+      ['STATE', true],
+      ['OPEN', true],
+    ]);
+  await expect(door.getByRole('status')).toHaveText(/Tür wird geöffnet|Opening the door/);
+
+  // HmIP door lock drive: locking is a tap, it sets the target level
+  const cellar = page.getByRole('group', { name: 'Kellertür' });
+  await expect(cellar.getByRole('status')).toHaveText(/Entsperrt|Unlocked/);
+  await cellar.getByRole('button', { name: /^(Lock|Sperren)$/ }).click();
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).at(-1))
+    .toMatchObject({ attribute: 'LOCK_TARGET_LEVEL', value: 0 });
 });
 
-test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
+test('zeigt Fenster offen, gekippt und geschlossen', async ({ page }) => {
   await page.goto('/room/1');
-
-  // Rendered from the paramset description: the enum value by name
-  const datapoints = page.getByLabel('Fenstergriff Wohnzimmer');
-  await expect(datapoints).toBeVisible();
-  await expect(datapoints.getByText('STATE', { exact: true })).toBeVisible();
-  await expect(datapoints.getByText('OPEN', { exact: true })).toBeVisible();
-  await expect(datapoints.getByText(/^(No|Nein)$/)).toBeVisible();
+  const handle = page.getByRole('group', { name: 'Fenstergriff Wohnzimmer' });
+  await expect(handle.getByRole('status')).toHaveText(/^(Offen|Open)$/);
+  await expect(page.getByRole('group', { name: 'Terrassentür' }).getByRole('status')).toHaveText(/^(Geschlossen|Closed)$/);
+  await expect(page.getByText(/Fenster offen|Windows open/).locator('..')).toContainText('Fenstergriff Wohnzimmer');
 
   await page.evaluate(() => {
     (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
@@ -239,7 +258,156 @@ test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => 
       value: 1,
     });
   });
-  await expect(datapoints.getByText('TILTED', { exact: true })).toBeVisible();
+  await expect(handle.getByRole('status')).toHaveText(/^(Gekippt|Tilted)$/);
+
+  await page.goto('/room/2');
+  await expect(page.getByRole('group', { name: 'Fenstergriff Küche' }).getByRole('status')).toHaveText(/^(Gekippt|Tilted)$/);
+});
+
+test('dimmt, färbt Licht und drückt Taster', async ({ page }) => {
+  await page.goto('/room/1');
+
+  // Dimmer: 60 %, one step down with the keyboard
+  const dimmer = page.getByRole('slider', { name: /(Helligkeit|Brightness) Esstisch/ });
+  await expect(dimmer).toHaveAttribute('aria-valuenow', '60');
+  await dimmer.press('ArrowLeft');
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
+    .toEqual([['LEVEL', 0.55]]);
+
+  // Color light: a quick color sets hue and saturation
+  await page.getByRole('button', { name: /(Farbe|Color) 120°/ }).click();
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).slice(1).map((m) => [m.attribute, m.value]))
+    .toEqual([
+      ['HUE', 120],
+      ['SATURATION', 1],
+    ]);
+
+  // Push button: a tap is a short press, holding a long one
+  const top = page.getByRole('button', { name: /^oben:/ });
+  await top.click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)?.attribute).toBe('PRESS_SHORT');
+  await top.hover();
+  await page.mouse.down();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)?.attribute).toBe('PRESS_LONG');
+  await page.mouse.up();
+  // Releasing after a long press sends nothing more
+  await page.waitForTimeout(200);
+  expect((await sentSetDatapoints(page)).filter((m) => m.attribute?.startsWith('PRESS'))).toHaveLength(2);
+});
+
+test('bedient Melder und Garagentor', async ({ page }) => {
+  await page.goto('/devices');
+
+  // Smoke detector: calm, the test has to be held and sends SMOKE_TEST
+  const smoke = page.getByRole('group', { name: 'Rauchmelder Flur' });
+  await expect(smoke.getByRole('status')).toHaveText(/Alles ruhig|All quiet/);
+  const test = smoke.getByRole('button', { name: /Rauchtest|Smoke test/ });
+  await test.click();
+  expect(await sentSetDatapoints(page)).toHaveLength(0);
+  await test.hover();
+  await page.mouse.down();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'SMOKE_DETECTOR_COMMAND', value: 3 });
+  await page.mouse.up();
+
+  // Smoke reported: the tile turns to alarm
+  await page.evaluate(() => {
+    (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
+      channel: '000A1B2C3D4E5F:1',
+      datapoint: 'SMOKE_DETECTOR_ALARM_STATUS',
+      value: 1,
+    });
+  });
+  await expect(smoke.getByRole('status')).toHaveText(/Rauch erkannt|Smoke detected/);
+
+  // Motion detector: detection can be switched off
+  const motion = page.getByRole('group', { name: 'Bewegungsmelder Eingang' });
+  await expect(motion.getByRole('status')).toHaveText(/^(Bewegung|Motion)$/);
+  await motion.getByRole('switch').click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'MOTION_DETECTION_ACTIVE', value: false });
+
+  // Garage door: closing is a tap (command 3, as in the WebUI)
+  const garage = page.getByRole('group', { name: 'Garagentor' });
+  await expect(garage.getByRole('status')).toHaveText(/Geschlossen|Closed/);
+  await garage.getByRole('button', { name: /^(Lüften|Ventilate)$/ }).click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'DOOR_COMMAND', value: 4 });
+  await expect(garage.getByRole('status')).toHaveText(/Öffnet|Opening/);
+
+  // Water detector
+  const water = page.getByRole('group', { name: 'Wassermelder Heizung' });
+  await expect(water.getByRole('status')).toHaveText(/Trocken|Dry/);
+  await page.evaluate(() => {
+    (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
+      channel: '00319BE9A8B9C1:1',
+      datapoint: 'WATERLEVEL_DETECTED',
+      value: true,
+    });
+  });
+  await expect(water.getByRole('status')).toHaveText(/Wasser erkannt|Water detected/);
+});
+
+test('zeigt Zutritte und sperrt Benutzer', async ({ page }) => {
+  await page.goto('/devices');
+  const access = page.getByRole('group', { name: /^(Zutritt|Access)$/ });
+  await expect(access.getByRole('status')).toHaveText(/3 von 4|3 of 4/);
+
+  // Someone used the reader: the event names the user
+  await page.evaluate(() => {
+    (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
+      channel: '002BE0C98ECD57:1',
+      datapoint: 'ACCESS_AUTHORIZATION',
+      value: 1,
+    });
+  });
+  await expect(access.getByRole('status')).toHaveText(/(Zutritt gewährt|Access granted) · (Benutzer|User) 1/);
+
+  await access.getByRole('switch', { name: /(Berechtigt|Authorised): (Benutzer|User) 1/ }).click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'STATE', value: false });
+
+  // Bus voltages of the wired access point
+  await expect(page.getByRole('group', { name: 'HmIPW-DRAP' })).toContainText(/24[.,]4 V/);
+});
+
+test('bedient BidCos-Thermostat, Lamellen und zeigt die Sirene', async ({ page }) => {
+  await page.goto('/devices');
+
+  // HM-CC-RT-DN: set point SET_TEMPERATURE, manual mode via MANU_MODE
+  const radiator = page.getByRole('group', { name: 'Heizkörper Gästezimmer' });
+  await expect(radiator).toContainText(/(Ventil|Valve) 34 %/);
+  await radiator.getByRole('button', { name: /(Temperatur erhöhen|Increase temperature)/i }).click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'SET_TEMPERATURE', value: 21.5 });
+  await radiator.getByRole('button', { name: /^(Automatisch|Automatic)$/ }).click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)?.attribute).toBe('MANU_MODE');
+
+  // Venetian blind: slats behind their chip
+  await page.getByText(/(Lamellen|Slats) · 50 %/).click();
+  const slats = page.getByRole('slider', { name: /(Lamellen|Slats) Raffstore Büro/ });
+  await slats.press('ArrowRight');
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'LEVEL_2', value: 0.55 });
+  // Roller shutters (LEVEL_2 empty) have no slats
+  await expect(page.getByText(/(Lamellen|Slats) ·/)).toHaveCount(1);
+
+  await expect(page.getByRole('group', { name: 'Sirene Flur' }).getByRole('status')).toHaveText(/Ruhig|Quiet/);
+});
+
+test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
+  await page.goto('/room/1');
+
+  // Rendered from the paramset description
+  const datapoints = page.getByLabel('Neigungssensor Garage');
+  await expect(datapoints).toBeVisible();
+  await expect(datapoints.getByText('MOTION', { exact: true })).toBeVisible();
+  await expect(datapoints.getByRole('switch', { name: 'MOTION_DETECTION_ACTIVE' })).toBeChecked();
+
+  await page.evaluate(() => {
+    (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
+      channel: '0000DBE9A5C1F3:1',
+      datapoint: 'MOTION',
+      value: true,
+    });
+  });
+  await expect(datapoints.getByText(/^(Yes|Ja)$/)).toBeVisible();
 
   // Fallback for everything the app can't do yet
   const webUILink = page.getByRole('link', { name: /Open in CCU WebUI|In alter WebUI öffnen/ });
@@ -274,8 +442,8 @@ test('listet unter „Alle Geräte“ auch Geräte ohne Raum', async ({ page }) 
 test('zeigt die Anzahl der Geräte mit Problemen im Header', async ({ page }) => {
   await page.goto('/room/1');
 
-  const badge = page.getByRole('button', { name: /(Devices with problems|Geräte mit Problemen): 2/ });
+  const badge = page.getByRole('button', { name: /(Notices|Meldungen): 2/ });
   await expect(badge).toBeVisible();
   await badge.click();
-  await expect(page.getByRole('dialog').getByRole('list', { name: /Devices with problems|Geräte mit Problemen/ })).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('list', { name: /^(Notices|Meldungen)$/ })).toBeVisible();
 });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import MenuIcon from '~icons/lucide/menu';
 import TriangleAlertIcon from '~icons/lucide/triangle-alert';
 import HomeIcon from '~icons/lucide/house';
@@ -9,13 +9,12 @@ import BracesIcon from '~icons/lucide/braces';
 import PlayIcon from '~icons/lucide/play';
 import SlidersIcon from '~icons/lucide/sliders-horizontal';
 import LogOutIcon from '~icons/lucide/log-out';
-import RadioIcon from '~icons/lucide/radio-tower';
-import BatteryLowIcon from '~icons/lucide/battery-low';
 import { useTheme } from '../contexts/ThemeContext';
 import { EffectsLevel, useEffects } from '../contexts/EffectsContext';
 import { usePageTitleValue } from '../contexts/PageTitleContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
-import { useDeviceProblems, useRooms, useTrades } from '../queries';
+import { useRooms, useServiceMessages, useTrades } from '../queries';
+import { ServiceMessagesSheet } from './ServiceMessages';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
@@ -24,7 +23,6 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
-import { WebUILink } from './WebUILink';
 
 // A short reconnect (e.g. at startup) should not flash a warning
 const CONNECTION_WARNING_DELAY_MS = 2000;
@@ -190,71 +188,14 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
   );
 };
 
-const ProblemsSheet = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
-  const { data: problems = [] } = useDeviceProblems();
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[min(420px,90vw)] gap-0 sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>{m.DEVICE_PROBLEMS()}</SheetTitle>
-          <SheetDescription>
-            <WebUILink />
-          </SheetDescription>
-        </SheetHeader>
-        {problems.length === 0 ? (
-          <p className="px-4 text-sm text-muted-foreground">{m.NO_DEVICE_PROBLEMS()}</p>
-        ) : (
-          <ul aria-label={m.DEVICE_PROBLEMS()} className="flex flex-col gap-2 overflow-y-auto px-4 pb-4">
-            {problems.map((problem) => (
-              <li key={problem.address} className="flex flex-col gap-2 rounded-xl border bg-card p-3">
-                <div className="flex flex-col">
-                  <span className="font-medium">{problem.name}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {problem.roomId ? (
-                      <Link
-                        to="/room/$roomId"
-                        params={{ roomId: String(problem.roomId) }}
-                        onClick={() => onOpenChange(false)}
-                        className="underline-offset-4 hover:underline"
-                      >
-                        {problem.roomName}
-                      </Link>
-                    ) : (
-                      m.NO_ROOM()
-                    )}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {problem.unreach && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-700 dark:text-red-300">
-                      <RadioIcon className="size-3" />
-                      {m.UNREACH()}
-                    </span>
-                  )}
-                  {problem.lowBat && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300">
-                      <BatteryLowIcon className="size-3" />
-                      {m.LOW_BAT()}
-                    </span>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </SheetContent>
-    </Sheet>
-  );
-};
-
 export const Header: React.FC = () => {
   const title = usePageTitleValue();
   const effects = useEffects();
   const [menuOpen, setMenuOpen] = useState(false);
   const [problemsOpen, setProblemsOpen] = useState(false);
   const { connectionStatus } = useWebSocketContext();
-  const { data: deviceProblems } = useDeviceProblems();
-  const problemCount = deviceProblems?.length ?? 0;
+  const { data: serviceMessages } = useServiceMessages();
+  const problemCount = serviceMessages?.length ?? 0;
 
   const connected = connectionStatus === 'Open';
   const [showConnectionWarning, setShowConnectionWarning] = useState(false);
@@ -280,7 +221,7 @@ export const Header: React.FC = () => {
         {problemCount > 0 && (
           <button
             onClick={() => setProblemsOpen(true)}
-            aria-label={`${m.DEVICE_PROBLEMS()}: ${problemCount}`}
+            aria-label={`${m.NOTICES()}: ${problemCount}`}
             className="press flex h-11 items-center gap-2.5 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 text-[15px] font-medium text-amber-700 sm:px-4 dark:text-amber-300"
             style={
               effects.on ? { boxShadow: `0 0 ${20 * effects.k}px -4px rgba(251,191,36,${Math.min(1, 0.4 * effects.k)})` } : undefined
@@ -311,7 +252,7 @@ export const Header: React.FC = () => {
         </div>
       )}
       <NavMenu open={menuOpen} onOpenChange={setMenuOpen} />
-      <ProblemsSheet open={problemsOpen} onOpenChange={setProblemsOpen} />
+      <ServiceMessagesSheet open={problemsOpen} onOpenChange={setProblemsOpen} />
     </header>
   );
 };

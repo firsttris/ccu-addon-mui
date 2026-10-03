@@ -14,10 +14,17 @@ type DeviceDescription struct {
 	Index      int      `json:"index"`
 	Version    int      `json:"version"`
 	Firmware   string   `json:"firmware,omitempty"`
-	Flags      int      `json:"flags"`
-	Direction  int      `json:"direction,omitempty"`
-	LinkSource []string `json:"linkSourceRoles,omitempty"`
-	LinkTarget []string `json:"linkTargetRoles,omitempty"`
+	// Firmware the CCU has for the device, if newer is known ("0.0.0"
+	// means none)
+	AvailableFirmware string `json:"availableFirmware,omitempty"`
+	// HmIP: UP_TO_DATE, NEW_FIRMWARE_AVAILABLE, DELIVER_FIRMWARE_IMAGE,
+	// READY_FOR_UPDATE, DO_UPDATE_PENDING, PERFORMING_UPDATE (LIVE_* for
+	// mains powered devices)
+	FirmwareUpdateState string   `json:"firmwareUpdateState,omitempty"`
+	Flags               int      `json:"flags"`
+	Direction           int      `json:"direction,omitempty"`
+	LinkSource          []string `json:"linkSourceRoles,omitempty"`
+	LinkTarget          []string `json:"linkTargetRoles,omitempty"`
 }
 
 // Parameter operations (bit mask)
@@ -102,20 +109,31 @@ func roles(v interface{}) []string {
 
 func parseDeviceDescription(m map[string]interface{}) DeviceDescription {
 	return DeviceDescription{
-		Type:       asString(m["TYPE"]),
-		Address:    asString(m["ADDRESS"]),
-		Parent:     asString(m["PARENT"]),
-		ParentType: asString(m["PARENT_TYPE"]),
-		Children:   asStrings(m["CHILDREN"]),
-		Paramsets:  asStrings(m["PARAMSETS"]),
-		Index:      asInt(m["INDEX"]),
-		Version:    asInt(m["VERSION"]),
-		Firmware:   asString(m["FIRMWARE"]),
-		Flags:      asInt(m["FLAGS"]),
-		Direction:  asInt(m["DIRECTION"]),
-		LinkSource: roles(m["LINK_SOURCE_ROLES"]),
-		LinkTarget: roles(m["LINK_TARGET_ROLES"]),
+		Type:                asString(m["TYPE"]),
+		Address:             asString(m["ADDRESS"]),
+		Parent:              asString(m["PARENT"]),
+		ParentType:          asString(m["PARENT_TYPE"]),
+		Children:            asStrings(m["CHILDREN"]),
+		Paramsets:           asStrings(m["PARAMSETS"]),
+		Index:               asInt(m["INDEX"]),
+		Version:             asInt(m["VERSION"]),
+		Firmware:            asString(m["FIRMWARE"]),
+		AvailableFirmware:   availableFirmware(m),
+		FirmwareUpdateState: asString(m["FIRMWARE_UPDATE_STATE"]),
+		Flags:               asInt(m["FLAGS"]),
+		Direction:           asInt(m["DIRECTION"]),
+		LinkSource:          roles(m["LINK_SOURCE_ROLES"]),
+		LinkTarget:          roles(m["LINK_TARGET_ROLES"]),
 	}
+}
+
+// availableFirmware is the newer firmware the CCU knows for a device, or ""
+func availableFirmware(m map[string]interface{}) string {
+	available := asString(m["AVAILABLE_FIRMWARE"])
+	if available == "0.0.0" || available == asString(m["FIRMWARE"]) {
+		return ""
+	}
+	return available
 }
 
 func parseParamsetDescription(m map[string]interface{}) ParamsetDescription {

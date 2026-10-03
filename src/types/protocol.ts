@@ -54,7 +54,17 @@ export type ServerMessage =
   | GetLinksResponse
   | GetLinkParamsetDescriptionResponse
   | GetLinkParamsetResponse
-  | GetSystemInfoResponse;
+  | GetSystemInfoResponse
+  | CreateGroupResponse
+  | RenameGroupResponse
+  | DeleteGroupResponse
+  | CreateSysvarResponse
+  | RenameSysvarResponse
+  | DeleteSysvarResponse
+  | GetServiceMessagesResponse
+  | AcknowledgeServiceMessageResponse
+  | InstallFirmwareResponse
+  | CreateBackupResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -93,6 +103,16 @@ export interface Protocol {
   getLinkParamsetDescription: GetLinkParamsetDescriptionCall;
   getLinkParamset: GetLinkParamsetCall;
   getSystemInfo: GetSystemInfoCall;
+  createGroup: CreateGroupCall;
+  renameGroup: RenameGroupCall;
+  deleteGroup: DeleteGroupCall;
+  createSysvar: CreateSysvarCall;
+  renameSysvar: RenameSysvarCall;
+  deleteSysvar: DeleteSysvarCall;
+  getServiceMessages: GetServiceMessagesCall;
+  acknowledgeServiceMessage: AcknowledgeServiceMessageCall;
+  installFirmware: InstallFirmwareCall;
+  createBackup: CreateBackupCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -491,6 +511,8 @@ export interface Device {
   interfaceName: string;
   name?: string;
   channels?: DeviceDescription[];
+  availableFirmware?: string;
+  firmwareUpdateState?: string;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -510,6 +532,8 @@ export interface DeviceDescription {
   direction?: number;
   linkSourceRoles?: string[];
   linkTargetRoles?: string[];
+  availableFirmware?: string;
+  firmwareUpdateState?: string;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1210,6 +1234,305 @@ export interface RadioInterface {
   connected: boolean;
   default: boolean;
   dutyCycle: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateGroupCall".
+ */
+export interface CreateGroupCall {
+  request: CreateGroupRequest;
+  response: CreateGroupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateGroupRequest".
+ */
+export interface CreateGroupRequest {
+  type: "createGroup";
+  requestId?: string;
+  list: "rooms" | "trades";
+  name: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateGroupResponse".
+ */
+export interface CreateGroupResponse {
+  type: "createGroup_response";
+  requestId?: string;
+  success: boolean;
+  id?: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameGroupCall".
+ */
+export interface RenameGroupCall {
+  request: RenameGroupRequest;
+  response: RenameGroupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameGroupRequest".
+ */
+export interface RenameGroupRequest {
+  type: "renameGroup";
+  requestId?: string;
+  list: "rooms" | "trades";
+  id: number;
+  name: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameGroupResponse".
+ */
+export interface RenameGroupResponse {
+  type: "renameGroup_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteGroupCall".
+ */
+export interface DeleteGroupCall {
+  request: DeleteGroupRequest;
+  response: DeleteGroupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteGroupRequest".
+ */
+export interface DeleteGroupRequest {
+  type: "deleteGroup";
+  requestId?: string;
+  list: "rooms" | "trades";
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteGroupResponse".
+ */
+export interface DeleteGroupResponse {
+  type: "deleteGroup_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateSysvarCall".
+ */
+export interface CreateSysvarCall {
+  request: CreateSysvarRequest;
+  response: CreateSysvarResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateSysvarRequest".
+ */
+export interface CreateSysvarRequest {
+  type: "createSysvar";
+  requestId?: string;
+  name: string;
+  kind: "bool" | "alarm" | "number" | "enum" | "string";
+  unit?: string;
+  min?: number;
+  max?: number;
+  falseName?: string;
+  trueName?: string;
+  valueList?: string[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateSysvarResponse".
+ */
+export interface CreateSysvarResponse {
+  type: "createSysvar_response";
+  requestId?: string;
+  success: boolean;
+  id?: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameSysvarCall".
+ */
+export interface RenameSysvarCall {
+  request: RenameSysvarRequest;
+  response: RenameSysvarResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameSysvarRequest".
+ */
+export interface RenameSysvarRequest {
+  type: "renameSysvar";
+  requestId?: string;
+  id: number;
+  name: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameSysvarResponse".
+ */
+export interface RenameSysvarResponse {
+  type: "renameSysvar_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteSysvarCall".
+ */
+export interface DeleteSysvarCall {
+  request: DeleteSysvarRequest;
+  response: DeleteSysvarResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteSysvarRequest".
+ */
+export interface DeleteSysvarRequest {
+  type: "deleteSysvar";
+  requestId?: string;
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteSysvarResponse".
+ */
+export interface DeleteSysvarResponse {
+  type: "deleteSysvar_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetServiceMessagesCall".
+ */
+export interface GetServiceMessagesCall {
+  request: GetServiceMessagesRequest;
+  response: GetServiceMessagesResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetServiceMessagesRequest".
+ */
+export interface GetServiceMessagesRequest {
+  type: "getServiceMessages";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetServiceMessagesResponse".
+ */
+export interface GetServiceMessagesResponse {
+  type: "getServiceMessages_response";
+  requestId?: string;
+  messages: ServiceMessage[];
+}
+/**
+ * An active service message of the CCU
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ServiceMessage".
+ */
+export interface ServiceMessage {
+  id: number;
+  /**
+   * The datapoint that raised it, e.g. STICKY_UNREACH
+   */
+  type: string;
+  value?: string;
+  timestamp?: string;
+  address?: string;
+  name: string;
+  roomId?: number;
+  roomName?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AcknowledgeServiceMessageCall".
+ */
+export interface AcknowledgeServiceMessageCall {
+  request: AcknowledgeServiceMessageRequest;
+  response: AcknowledgeServiceMessageResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AcknowledgeServiceMessageRequest".
+ */
+export interface AcknowledgeServiceMessageRequest {
+  type: "acknowledgeServiceMessage";
+  requestId?: string;
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AcknowledgeServiceMessageResponse".
+ */
+export interface AcknowledgeServiceMessageResponse {
+  type: "acknowledgeServiceMessage_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallFirmwareCall".
+ */
+export interface InstallFirmwareCall {
+  request: InstallFirmwareRequest;
+  response: InstallFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallFirmwareRequest".
+ */
+export interface InstallFirmwareRequest {
+  type: "installFirmware";
+  requestId?: string;
+  interfaceName: string;
+  address: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallFirmwareResponse".
+ */
+export interface InstallFirmwareResponse {
+  type: "installFirmware_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateBackupCall".
+ */
+export interface CreateBackupCall {
+  request: CreateBackupRequest;
+  response: CreateBackupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateBackupRequest".
+ */
+export interface CreateBackupRequest {
+  type: "createBackup";
+  requestId?: string;
+  password: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateBackupResponse".
+ */
+export interface CreateBackupResponse {
+  type: "createBackup_response";
+  requestId?: string;
+  success: boolean;
+  /**
+   * Where to download the backup, once and within 5 minutes
+   */
+  url: string;
+  fileName: string;
+  size: number;
 }
 /**
  * Sent first on every connection

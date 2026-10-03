@@ -137,6 +137,23 @@ func validate(address, paramsetKey string) error {
 	return nil
 }
 
+// InstallFirmware starts the update of a HomeMatic IP device whose new
+// firmware has been delivered (FIRMWARE_UPDATE_STATE READY_FOR_UPDATE).
+func (c *Client) InstallFirmware(iface, address string) error {
+	if !addressRegex.MatchString(address) {
+		return ErrInvalidAddress
+	}
+	var reply interface{}
+	if err := c.call(iface, "installFirmware", []interface{}{address}, &reply); err != nil {
+		return err
+	}
+	if ok, isBool := reply.(bool); isBool && !ok {
+		return fmt.Errorf("the CCU did not start the update")
+	}
+	c.Forget(iface, address)
+	return nil
+}
+
 // CallRaw calls a method and returns the decoded reply as is, e.g. for
 // exporting fixtures.
 func (c *Client) CallRaw(iface, method string, args ...interface{}) (interface{}, error) {

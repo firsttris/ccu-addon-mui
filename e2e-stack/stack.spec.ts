@@ -47,8 +47,8 @@ test('schaltet ein Licht und zeigt Änderungen vom Gerät live an', async ({ pag
 test('zeigt Geräteprobleme aus der CCU an und aktualisiert den Status live', async ({ page }) => {
   await login(page);
 
-  await page.getByRole('button', { name: 'Geräte mit Problemen: 2' }).click();
-  const problems = page.getByRole('list', { name: 'Geräte mit Problemen' });
+  await page.getByRole('button', { name: 'Meldungen: 3' }).click();
+  const problems = page.getByRole('list', { name: 'Meldungen', exact: true });
   await expect(problems.getByText('Wandthermostat Flur')).toBeVisible();
   await expect(problems.getByText('Fensterkontakt Bad')).toBeVisible();
   await page.keyboard.press('Escape');
@@ -61,42 +61,45 @@ test('zeigt Geräteprobleme aus der CCU an und aktualisiert den Status live', as
   await expect(page.getByRole('status').filter({ hasText: 'Batterie schwach' })).toBeVisible();
 });
 
-test('zeigt unbekannte Kanaltypen und Geräte ohne Raum unter „Alle Geräte“', async ({ page }) => {
+test('zeigt Geräte ohne Raum unter „Alle Geräte“', async ({ page }) => {
   await login(page);
   await page.getByRole('button', { name: 'Menü' }).click();
   await page.getByRole('button', { name: 'Alle Geräte' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Rauchmelder' })).toBeVisible();
-  await expect(page.getByText('Rauchmelder Flur')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sicherheit' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Rauchmelder Flur' }).getByRole('status')).toHaveText('Alles ruhig');
 
-  // Rendered from the paramset description the server reads over XML-RPC
-  const handle = page.getByLabel('Fenstergriff Wohnzimmer');
-  await expect(handle.getByText('OPEN', { exact: true })).toBeVisible();
+  // The window handle as a picture with its state
+  const handle = page.getByRole('group', { name: 'Fenstergriff Wohnzimmer' });
+  await expect(handle.getByRole('status')).toHaveText('Offen');
 
   // Window tilted: the value arrives as event
   await deviceReports('HmIP-RF', '0000DBE9A5C1F2:1', 'STATE', 1);
-  await expect(handle.getByText('TILTED', { exact: true })).toBeVisible();
+  await expect(handle.getByRole('status')).toHaveText('Gekippt');
 });
 
-test('dimmt über den generischen Renderer aus der Paramset-Beschreibung', async ({ page }) => {
+test('dimmt über die Dimmer-Kachel', async ({ page }) => {
   await login(page);
   await page.goto('/devices');
 
-  // LEVEL is 0..1 with unit "100%": shown and entered in percent
-  const dimmer = page.getByLabel('Dimmer Esstisch', { exact: true });
-  const level = dimmer.getByRole('textbox', { name: 'LEVEL' });
-  await expect(level).toHaveValue('0');
-  // Enums by name: ACTIVITY_STATE and PROCESS are both STABLE
-  await expect(dimmer.getByText('STABLE', { exact: true })).toHaveCount(2);
-  // Write-only parameters like RAMP_TIME are not shown
-  await expect(dimmer.getByText('RAMP_TIME')).toHaveCount(0);
+  // LEVEL is 0..1: shown and set in percent
+  const brightness = page.getByRole('slider', { name: 'Helligkeit Dimmer Esstisch' });
+  await expect(brightness).toHaveAttribute('aria-valuenow', '0');
+  await expect(page.getByRole('button', { name: 'Dimmer Esstisch: Aus' })).toBeVisible();
 
-  await level.fill('40');
-  await level.press('Enter');
+  // Eight steps of 5 %, sent once after the last key
+  for (let i = 0; i < 8; i++) await brightness.press('ArrowRight');
+  await expect(page.getByRole('button', { name: 'Dimmer Esstisch: An · 40 %' })).toBeVisible();
 
-  // Survives a reload: the value went through ReGa to the (fake) CCU
+  // Survives a reload: the value went through XML-RPC to the (fake) CCU
   await page.reload();
-  await expect(page.getByLabel('Dimmer Esstisch', { exact: true }).getByRole('textbox', { name: 'LEVEL' })).toHaveValue('40');
+  await expect(page.getByRole('slider', { name: 'Helligkeit Dimmer Esstisch' })).toHaveAttribute('aria-valuenow', '40');
+
+  // A tap switches off, the next one on again at 40 %
+  await page.getByRole('button', { name: 'Dimmer Esstisch: An · 40 %' }).click();
+  await expect(page.getByRole('button', { name: 'Dimmer Esstisch: Aus' })).toBeVisible();
+  await page.getByRole('button', { name: 'Dimmer Esstisch: Aus' }).click();
+  await expect(page.getByRole('button', { name: 'Dimmer Esstisch: An · 40 %' })).toBeVisible();
 });
 
 test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ page }) => {
@@ -113,13 +116,13 @@ test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ pag
   await table.getByRole('link', { name: 'Fenstergriff Wohnzimmer' }).click();
 
   const settings = page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' });
-  const select = settings.getByRole('combobox', { name: 'EVENT_DELAY_UNIT' });
+  const select = settings.getByRole('combobox', { name: 'Entprellzeit (Einheit)' });
   await expect(select).toHaveValue('0');
   await select.selectOption({ label: '5S' });
 
   await page.getByRole('button', { name: 'Speichern (1)' }).click();
   const dialog = page.getByRole('dialog', { name: 'Änderungen speichern?' });
-  await expect(dialog).toContainText('EVENT_DELAY_UNIT');
+  await expect(dialog).toContainText('Entprellzeit (Einheit)');
   await expect(dialog).toContainText('100MS → 5S');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
@@ -127,7 +130,7 @@ test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ pag
   // Stored in the (fake) CCU
   await page.reload();
   await expect(
-    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'EVENT_DELAY_UNIT' }),
+    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'Entprellzeit (Einheit)' }),
   ).toHaveValue('2');
 });
 
@@ -167,12 +170,12 @@ test('verlangt nach Ablauf des Admin-Tokens das Passwort erneut', async ({ page 
   await dialog.getByLabel('Passwort').fill('secret');
   await dialog.getByRole('button', { name: 'Bestätigen' }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(settings.getByRole('combobox', { name: 'EVENT_DELAY_UNIT' })).toBeVisible();
+  await expect(settings.getByRole('combobox', { name: 'Entprellzeit (Einheit)' })).toBeVisible();
 
   // Kept across a reload
   await page.reload();
   await expect(
-    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'EVENT_DELAY_UNIT' }),
+    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'Entprellzeit (Einheit)' }),
   ).toBeVisible();
 });
 
@@ -338,4 +341,125 @@ test('zeigt Versionen und Duty Cycle der Funkmodule', async ({ page }) => {
   await expect(system).toContainText('Add-on-Version');
   await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF' })).toHaveAttribute('aria-valuenow', '12');
   await expect(system.getByRole('meter', { name: 'Duty Cycle HmIP-RF' })).toHaveAttribute('aria-valuenow', '3');
+});
+
+test('legt Räume und Systemvariablen an, benennt sie um und löscht sie', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/groups');
+
+  const rooms = page.getByRole('region', { name: 'Räume' });
+  await rooms.getByRole('textbox', { name: 'Neuer Raum' }).fill('Garage');
+  await rooms.getByRole('button', { name: 'Hinzufügen' }).click();
+  await expect(rooms.getByRole('listitem').filter({ hasText: 'Garage' })).toBeVisible();
+
+  await rooms.getByRole('button', { name: 'Garage umbenennen' }).click();
+  await rooms.getByRole('textbox', { name: 'Garage umbenennen' }).fill('Carport');
+  await rooms.getByRole('textbox', { name: 'Garage umbenennen' }).press('Enter');
+  await expect(rooms.getByRole('listitem').filter({ hasText: 'Carport' })).toBeVisible();
+
+  // The new room is a tab on the dashboard
+  await page.goto('/room/1');
+  await expect(page.getByRole('navigation', { name: 'Räume' }).getByRole('link', { name: 'Carport' })).toBeVisible();
+
+  await page.goto('/setup/groups');
+  await page.getByRole('button', { name: 'Carport löschen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
+  await expect(page.getByText('Gelöscht')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Räume' }).getByText('Carport')).toHaveCount(0);
+
+  await page.goto('/sysvars');
+  await page.getByRole('button', { name: 'Neue Systemvariable' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Neue Systemvariable' });
+  await dialog.getByLabel('Name', { exact: true }).fill('Gäste');
+  await dialog.getByLabel('Art').selectOption({ label: 'Werteliste' });
+  await dialog.getByRole('textbox', { name: /Werte/ }).fill('keine\nFamilie\nFreunde');
+  await dialog.getByRole('button', { name: 'Anlegen' }).click();
+  const list = page.getByRole('list', { name: 'Systemvariablen' });
+  await list.getByRole('combobox', { name: 'Gäste' }).selectOption('Freunde');
+  await page.reload();
+  await expect(list.getByRole('combobox', { name: 'Gäste' })).toHaveValue('2');
+
+  await list.getByRole('button', { name: 'Gäste löschen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
+  await expect(list.getByRole('combobox', { name: 'Gäste' })).toHaveCount(0);
+});
+
+test('bearbeitet das Wochenprogramm eines Thermostats', async ({ page }) => {
+  await login(page);
+  await page.goto('/trade/20');
+  await page.getByRole('button', { name: 'Wochenprogramm' }).click();
+
+  const sheet = page.getByRole('dialog', { name: 'Wochenprogramm' });
+  await expect(sheet.getByRole('tab', { name: /Profil 1/ })).toHaveAttribute('aria-selected', 'true');
+  await sheet.getByRole('button', { name: 'Montag' }).click();
+
+  // Monday: 6:00–8:00 at 21 °C; one step warmer, then to all weekdays
+  const monday = sheet.getByRole('region', { name: 'Montag' });
+  await expect(monday.getByRole('listitem')).toHaveCount(5);
+  await monday.getByRole('button', { name: 'Wärmer 06:00' }).click();
+  await expect(monday.getByRole('listitem').nth(1)).toContainText('21,5 °C');
+  await monday.getByRole('combobox', { name: 'Ende von 06:00' }).selectOption('08:30');
+  await sheet.getByRole('button', { name: 'Auf Werktage kopieren' }).click();
+  await expect(sheet.getByText('10 Änderungen')).toBeVisible();
+
+  await sheet.getByRole('button', { name: 'Speichern' }).click();
+  await page.getByRole('dialog', { name: 'Änderungen speichern?' }).getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+
+  // Stored in the (fake) CCU
+  await page.reload();
+  await page.getByRole('button', { name: 'Wochenprogramm' }).click();
+  await page.getByRole('dialog', { name: 'Wochenprogramm' }).getByRole('button', { name: 'Freitag' }).click();
+  const friday = page.getByRole('dialog', { name: 'Wochenprogramm' }).getByRole('region', { name: 'Freitag' });
+  await expect(friday.getByRole('listitem').nth(1)).toContainText('06:00bis');
+  await expect(friday.getByRole('listitem').nth(1)).toContainText('21,5 °C');
+  await expect(friday.getByRole('combobox', { name: 'Ende von 06:00' })).toHaveValue('510');
+});
+
+test('installiert ein bereitliegendes Firmware-Update', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup');
+
+  // Only the window contact has newer firmware
+  await page.getByRole('button', { name: /Nur mit Update \(1\)/ }).click();
+  const table = page.getByRole('table', { name: 'Geräte' });
+  await expect(table.getByRole('row')).toHaveCount(2);
+  await expect(table.getByRole('row').nth(1)).toContainText('1.0.121.2.6');
+  await table.getByRole('link').first().click();
+
+  const firmware = page.getByRole('region', { name: 'Firmware' });
+  await expect(firmware.getByRole('status')).toHaveText(/Firmware 1\.2\.6 liegt auf dem Gerät bereit/);
+  await firmware.getByRole('button', { name: 'Update installieren' }).click();
+  await page.getByRole('dialog', { name: 'Firmware-Update' }).getByRole('button', { name: 'Update installieren' }).click();
+  await expect(page.getByText('Update gestartet')).toBeVisible();
+
+  await expect(firmware.getByRole('status')).toHaveText('Die Firmware ist aktuell.');
+  await expect(firmware.getByRole('button', { name: 'Update installieren' })).toHaveCount(0);
+  await expect(firmware.getByRole('definition').first()).toHaveText('1.2.6');
+});
+
+test('erstellt ein Backup und lädt es herunter', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+
+  const panel = page.getByRole('region', { name: 'Backup' });
+  await panel.getByRole('button', { name: 'Backup erstellen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Backup erstellen' });
+
+  await dialog.getByLabel('Passwort').fill('falsch');
+  await dialog.getByRole('button', { name: 'Backup erstellen' }).click();
+  await expect(dialog.getByRole('alert')).toBeVisible();
+
+  await dialog.getByLabel('Passwort').fill('secret');
+  const downloadPromise = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Backup erstellen' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('ccu3-webui-2026-10-03.sbk');
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(chunk as Buffer);
+  expect(Buffer.concat(chunks).toString()).toContain('fake CCU backup');
+
+  await expect(dialog).toHaveCount(0);
+  await expect(panel.getByRole('status')).toContainText('ccu3-webui-2026-10-03.sbk');
 });

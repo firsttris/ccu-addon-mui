@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -34,6 +35,9 @@ type Config struct {
 	// AuditLogFile records every change made through the add-on; empty
 	// disables it.
 	AuditLogFile string
+	// BackupDir keeps created backups until they are downloaded; on the
+	// CCU /tmp is in RAM, not on the flash memory being backed up.
+	BackupDir string
 }
 
 func Load() *Config {
@@ -64,6 +68,7 @@ func Load() *Config {
 		AuthKeyFile:        getEnv("AUTH_KEY_FILE", defaultAuthKeyFile()),
 		AuditLogFile:       getEnv("AUDIT_LOG_FILE", defaultConfigFile("mui-audit.log")),
 		SessionsFile:       getEnv("SESSIONS_FILE", defaultConfigFile("mui-sessions.json")),
+		BackupDir:          getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
 	}
 }
 

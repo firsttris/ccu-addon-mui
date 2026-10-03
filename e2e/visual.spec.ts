@@ -23,7 +23,8 @@ const views = [
   { name: 'room-energy-door', path: '/room/3', ready: 'Haustür' },
   { name: 'trades', path: '/trades', ready: 'Heizung' },
   { name: 'trade-thermostat', path: '/trade/20', ready: 'Fußbodenheizung Bad' },
-  { name: 'all-devices', path: '/devices', ready: 'Rauchmelder Flur' },
+  // Tiles that read the device's value lists grow once those arrived
+  { name: 'all-devices', path: '/devices', ready: 'Rauchmelder Flur', loaded: ['Rauchtest', 'Berechtigt: Benutzer 1'] },
 ];
 
 test.use({ locale: 'de-DE', timezoneId: 'Europe/Berlin' });
@@ -43,6 +44,9 @@ for (const dark of [false, true]) {
         test(view.name, async ({ page }) => {
           await page.goto(view.path);
           await expect(page.getByText(view.ready).first()).toBeVisible();
+          for (const name of (view as { loaded?: string[] }).loaded ?? []) {
+            await expect(page.getByLabel(name, { exact: true }).first()).toBeVisible();
+          }
           await page.evaluate(() => document.fonts.ready);
           await expect(page).toHaveScreenshot(`${view.name}-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
             fullPage: true,
@@ -69,7 +73,7 @@ for (const dark of [false, true]) {
 
       test('notices', async ({ page }) => {
         await page.goto('/room/1');
-        await page.getByRole('button', { name: /Geräte mit Problemen/ }).click();
+        await page.getByRole('button', { name: /^Meldungen: / }).click();
         await expect(page.getByRole('dialog').getByText('Fensterkontakt Bad')).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
         await expect(page).toHaveScreenshot(`notices-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {

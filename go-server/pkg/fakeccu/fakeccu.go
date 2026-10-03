@@ -241,6 +241,66 @@ func (c *CCU) runScript(body string) (string, error) {
 			return c.getDeviceNames(), nil
 		case "set_group_member":
 			return c.setGroupMember(values["GROUP_ID"], values["CHANNEL_ID"], values["ACTION"] == "Add"), nil
+		case "create_group":
+			groups := c.groups(values["LIST_ID"])
+			if groups == nil {
+				return "NOT_FOUND", nil
+			}
+			id := c.nextID()
+			*groups = append(*groups, Group{ID: id, Name: values["NAME"], Channels: []int64{}})
+			return fmt.Sprintf("OK\t%d", id), nil
+		case "rename_group", "delete_group":
+			groups := c.groups(values["LIST_ID"])
+			if groups == nil {
+				return "NOT_FOUND", nil
+			}
+			for i, g := range *groups {
+				if strconv.FormatInt(g.ID, 10) == values["ID"] {
+					if s.name == "rename_group" {
+						(*groups)[i].Name = values["NAME"]
+					} else {
+						*groups = append((*groups)[:i], (*groups)[i+1:]...)
+					}
+					return "OK\t" + g.Name, nil
+				}
+			}
+			return "NOT_FOUND", nil
+		case "create_sysvar":
+			id := c.nextID()
+			valueType, _ := strconv.Atoi(values["VALUE_TYPE"])
+			subType, _ := strconv.Atoi(values["SUB_TYPE"])
+			c.fixture.Sysvars = append(c.fixture.Sysvars, Sysvar{
+				ID: id, Name: values["NAME"], Visible: true, ValueType: valueType, SubType: subType,
+				Unit: values["UNIT"], Min: values["MIN"], Max: values["MAX"],
+				FalseName: values["FALSE_NAME"], TrueName: values["TRUE_NAME"], ValueList: values["VALUE_LIST"],
+				Value: parseRegaValue(strings.Trim(values["INITIAL"], `"`)),
+			})
+			return fmt.Sprintf("OK\t%d", id), nil
+		case "rename_sysvar", "delete_sysvar":
+			for i, sv := range c.fixture.Sysvars {
+				if strconv.FormatInt(sv.ID, 10) == values["ID"] {
+					if s.name == "rename_sysvar" {
+						c.fixture.Sysvars[i].Name = values["NAME"]
+					} else {
+						c.fixture.Sysvars = append(c.fixture.Sysvars[:i], c.fixture.Sysvars[i+1:]...)
+					}
+					return "OK\t" + sv.Name, nil
+				}
+			}
+			return "NOT_FOUND", nil
+		case "get_service_messages":
+			return c.getServiceMessages(), nil
+		case "acknowledge_service_message":
+			for _, m := range c.serviceMessages() {
+				if strconv.FormatInt(m.id, 10) == values["ID"] {
+					// Acknowledging ends a sticky message
+					if strings.HasPrefix(m.datapoint, "STICKY_") {
+						m.channel.Datapoints[m.datapoint] = false
+					}
+					return "OK\t" + m.datapoint, nil
+				}
+			}
+			return "NOT_FOUND", nil
 		case "get_user_level":
 			for _, user := range c.fixture.Users {
 				if user.Name == values["USERNAME"] {
@@ -251,6 +311,35 @@ func (c *CCU) runScript(body string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("unknown script")
+}
+
+// groups returns the rooms or trades for a ReGa list constant.
+func (c *CCU) groups(listID string) *[]Group {
+	switch listID {
+	case "ID_ROOMS":
+		return &c.fixture.Rooms
+	case "ID_FUNCTIONS":
+		return &c.fixture.Trades
+	}
+	return nil
+}
+
+// nextID returns an id no ReGa object of the fixture uses yet.
+func (c *CCU) nextID() int64 {
+	var highest int64 = 100000
+	for _, g := range append(append([]Group{}, c.fixture.Rooms...), c.fixture.Trades...) {
+		highest = max(highest, g.ID)
+	}
+	for _, ch := range c.fixture.Channels {
+		highest = max(highest, ch.ID)
+	}
+	for _, sv := range c.fixture.Sysvars {
+		highest = max(highest, sv.ID)
+	}
+	for _, p := range c.fixture.Programs {
+		highest = max(highest, p.ID)
+	}
+	return highest + 1
 }
 
 func writeGroups(groups []Group) string {
@@ -611,6 +700,61 @@ func (c *CCU) getDeviceProblems() string {
 	return b.String()
 }
 
+// serviceDatapoints raise a service message while true (or, for the error
+// codes, not 0), in the order ReGa would number their alarms.
+var serviceDatapoints = []string{
+	"UNREACH", "STICKY_UNREACH", "LOW_BAT", "LOWBAT", "CONFIG_PENDING", "UPDATE_PENDING",
+	"SABOTAGE", "STICKY_SABOTAGE", "ERROR_CODE", "DUTY_CYCLE", "DEVICE_IN_BOOTLOADER",
+}
+
+type serviceMessage struct {
+	id        int64
+	channel   *Channel
+	datapoint string
+}
+
+func (c *CCU) serviceMessages() []serviceMessage {
+	var messages []serviceMessage
+	for i := range c.fixture.Channels {
+		ch := &c.fixture.Channels[i]
+		if !strings.HasSuffix(ch.Address, ":0") || ch.Interface == "VirtualDevices" {
+			continue
+		}
+		for j, datapoint := range serviceDatapoints {
+			value, ok := ch.Datapoints[datapoint]
+			if !ok || value == false || value == nil || value == 0.0 || value == 0 {
+				continue
+			}
+			messages = append(messages, serviceMessage{id: ch.ID*100 + int64(j), channel: ch, datapoint: datapoint})
+		}
+	}
+	return messages
+}
+
+func (c *CCU) getServiceMessages() string {
+	var b strings.Builder
+	for _, m := range c.serviceMessages() {
+		device := deviceAddress(m.channel.Address)
+		roomID, roomName := "", ""
+		if first := c.channelByAddress(m.channel.Interface, device+":1"); first != nil {
+			for _, room := range c.fixture.Rooms {
+				for _, id := range room.Channels {
+					if id == first.ID && roomID == "" {
+						roomID, roomName = strconv.FormatInt(room.ID, 10), room.Name
+					}
+				}
+			}
+		}
+		name := c.fixture.DeviceNames[device]
+		if name == "" {
+			name = device
+		}
+		fmt.Fprintf(&b, "S\t%d\t%s\t%s\t2026-01-15 09:00:00\t%s\t%s\t%s\t%s\n",
+			m.id, m.datapoint, formatValue(m.channel.Datapoints[m.datapoint]), device, roomID, roomName, name)
+	}
+	return b.String()
+}
+
 // Reset restores the fixture as it was loaded; the callbacks stay.
 func (c *CCU) Reset() {
 	c.mu.Lock()
@@ -664,6 +808,10 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		c.handleControl(w, r)
 		return
 	}
+	if r.URL.Path == "/config/cp_security.cgi" {
+		c.handleBackup(w, r)
+		return
+	}
 	var req struct {
 		Method string            `json:"method"`
 		Params map[string]string `json:"params"`
@@ -679,7 +827,7 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		defer c.mu.Unlock()
 		for _, user := range c.fixture.Users {
 			if user.Name == req.Params["username"] && user.Password == req.Params["password"] {
-				_, _ = io.WriteString(w, `{"version":"1.1","result":"fake-session","error":null}`)
+				_, _ = io.WriteString(w, `{"version":"1.1","result":"fakeSession1","error":null}`)
 				return
 			}
 		}
@@ -689,6 +837,27 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 	default:
 		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"code":404,"message":"unknown method"}}`)
 	}
+}
+
+// FakeBackup is the content of every backup the fake CCU creates
+const FakeBackup = "fake CCU backup (usr_local.tar.gz, signature, key_index, firmware_version)"
+
+// handleBackup is the WebUI's "create backup" button: with a valid session
+// it sends a .sbk file, otherwise the login page.
+func (c *CCU) handleBackup(w http.ResponseWriter, r *http.Request) {
+	c.mu.Lock()
+	c.calls["WebUI create_backup"]++
+	c.mu.Unlock()
+	// Like the WebUI, which looks for the session in the raw query
+	if !strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") || r.URL.Query().Get("action") != "create_backup" {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = io.WriteString(w, "<html><body>Session expired</body></html>")
+		return
+	}
+	// Headers as in the WebUI's backup.tcl
+	w.Header().Set("Content-Type", "application/x-download")
+	w.Header().Set("Content-Disposition", "attachment;filename=ccu3-webui-2026-10-03.sbk")
+	_, _ = io.WriteString(w, FakeBackup)
 }
 
 // --- XML-RPC --------------------------------------------------------------
@@ -750,6 +919,21 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 			remaining = 0
 		}
 		return int(remaining.Seconds()), ""
+	case "installFirmware":
+		address := stringParam(params, 0)
+		for _, d := range data.Devices {
+			if d["ADDRESS"] != address {
+				continue
+			}
+			state, _ := d["FIRMWARE_UPDATE_STATE"].(string)
+			if !strings.HasSuffix(state, "READY_FOR_UPDATE") {
+				return nil, "Firmware update not ready"
+			}
+			d["FIRMWARE"] = d["AVAILABLE_FIRMWARE"]
+			d["FIRMWARE_UPDATE_STATE"] = strings.TrimSuffix(state, "READY_FOR_UPDATE") + "UP_TO_DATE"
+			return true, ""
+		}
+		return nil, "Unknown instance"
 	case "deleteDevice":
 		if !c.deleteDevice(iface, stringParam(params, 0)) {
 			return nil, "Unknown instance"

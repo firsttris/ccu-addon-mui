@@ -3,6 +3,7 @@ package websocket
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,6 +18,7 @@ import (
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/backup"
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
@@ -192,6 +194,8 @@ type Server struct {
 	// rpc reads device and paramset descriptions over XML-RPC; nil if not
 	// configured.
 	rpc DeviceRPC
+	// Creates CCU backups; nil without a WebUI to create them
+	backup *backup.Service
 
 	// audit records every change; nil disables it
 	audit *audit.Log
@@ -215,6 +219,7 @@ type DeviceRPC interface {
 	GetLinkParamset(iface, address, partner string) (map[string]interface{}, error)
 	PutLinkParamset(iface, address, partner string, values map[string]interface{}) error
 	ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error)
+	InstallFirmware(iface, address string) error
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -237,6 +242,16 @@ func (s *Server) SetAuditLog(log *audit.Log) {
 	s.audit = log
 }
 
+// SetBackup enables creating backups; they are downloaded from
+// BackupPath/<id>.
+func (s *Server) SetBackup(service *backup.Service) {
+	s.backup = service
+}
+
+// BackupPath is where created backups are downloaded, next to the
+// WebSocket (the CCU's lighttpd forwards /ws/mui to the server).
+const BackupPath = "/ws/mui/backup/"
+
 // SetDeviceRPC enables requests that need XML-RPC (paramsets).
 func (s *Server) SetDeviceRPC(rpc DeviceRPC) {
 	s.rpc = rpc
@@ -245,6 +260,9 @@ func (s *Server) SetDeviceRPC(rpc DeviceRPC) {
 func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handleWebSocket)
+	if s.backup != nil {
+		mux.Handle(BackupPath, s.backup)
+	}
 
 	s.httpServer = &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", s.cfg.WSBindHost, s.cfg.WSPort),
@@ -388,6 +406,8 @@ func (s *Server) readPump(client *Client) {
 		// Update read deadline on every message
 		client.conn.SetReadDeadline(time.Now().Add(pongWait))
 		s.handleMessage(client, message)
+		// Pongs aren't read while a slow request (a backup) runs
+		client.conn.SetReadDeadline(time.Now().Add(pongWait))
 	}
 }
 
@@ -488,6 +508,14 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
 		s.handlePairing(client, msgType, message)
+	case "createBackup":
+		s.handleCreateBackup(client, message)
+	case "installFirmware":
+		s.handleInstallFirmware(client, message)
+	case "getServiceMessages", "acknowledgeServiceMessage":
+		s.handleServiceMessages(client, msgType, message)
+	case "createGroup", "renameGroup", "deleteGroup", "createSysvar", "renameSysvar", "deleteSysvar":
+		s.handleObjects(client, msgType, message)
 	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive":
 		s.handleLogic(client, msgType, message)
 	default:
@@ -1160,12 +1188,16 @@ type changeResponse struct {
 	Type      string `json:"type"`
 	RequestID string `json:"requestId,omitempty"`
 	Success   bool   `json:"success"`
+	// ID of a created object
+	ID int64 `json:"id,omitempty"`
 }
 
 // configure runs a change of the setup area for client: checks that it may
 // change settings, runs change and records the outcome. change returns the
 // previous value (for the audit log) and a ReGa result.
-func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous interface{}, result string, err error)) {
+// createdID, if given, is set by change to the id of a created object and
+// sent with the response.
+func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous interface{}, result string, err error), createdID ...*int64) {
 	entry.User = client.user
 	finish := func(result string) {
 		entry.Result = result
@@ -1195,7 +1227,153 @@ func (s *Server) configure(client *Client, requestID string, entry audit.Entry, 
 	}
 	entry.Previous = previous
 	finish(rega.SetOK)
-	s.sendJSON(client, changeResponse{Type: entry.Action + "_response", RequestID: requestID, Success: true})
+	response := changeResponse{Type: entry.Action + "_response", RequestID: requestID, Success: true}
+	if len(createdID) > 0 && createdID[0] != nil {
+		response.ID = *createdID[0]
+	}
+	s.sendJSON(client, response)
+}
+
+type serviceMessagesResponse struct {
+	Type      string                `json:"type"`
+	RequestID string                `json:"requestId,omitempty"`
+	Messages  []rega.ServiceMessage `json:"messages"`
+}
+
+// handleServiceMessages lists the CCU's service messages and acknowledges
+// them. Acknowledging is operating, like in the WebUI: not for guests.
+func (s *Server) handleServiceMessages(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		ID        int64  `json:"id"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if msgType == "getServiceMessages" {
+		messages, err := s.regaClient.GetServiceMessages()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getServiceMessages failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		s.sendJSON(client, serviceMessagesResponse{Type: "getServiceMessages_response", RequestID: msg.RequestID, Messages: messages})
+		return
+	}
+	entry := audit.Entry{User: client.user, Action: msgType, Target: fmt.Sprintf("service message %d", msg.ID)}
+	finish := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
+	if !canOperate(client.level) {
+		finish("FORBIDDEN")
+		s.sendRequestError(client, msg.RequestID, "guests may not acknowledge service messages", "FORBIDDEN")
+		return
+	}
+	result, messageType, err := s.regaClient.AcknowledgeServiceMessage(msg.ID)
+	if err != nil {
+		finish("CCU_ERROR")
+		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	entry.Previous = messageType
+	finish(result)
+	if result != rega.SetOK {
+		s.sendRequestError(client, msg.RequestID, msgType+": "+result, result)
+		return
+	}
+	s.sendJSON(client, changeResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true})
+}
+
+// handleInstallFirmware starts the update of a device whose new firmware
+// has been delivered. Setup, for administrators only.
+func (s *Server) handleInstallFirmware(client *Client, message []byte) {
+	var msg struct {
+		RequestID     string `json:"requestId"`
+		InterfaceName string `json:"interfaceName"`
+		Address       string `json:"address"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if s.rpc == nil {
+		s.sendRequestError(client, msg.RequestID, "installFirmware is not available", "NOT_AVAILABLE")
+		return
+	}
+	s.configure(client, msg.RequestID, audit.Entry{Action: "installFirmware", Target: msg.InterfaceName + " " + msg.Address},
+		func() (interface{}, string, error) {
+			if err := s.rpc.InstallFirmware(msg.InterfaceName, msg.Address); err != nil {
+				return nil, "", err
+			}
+			return nil, rega.SetOK, nil
+		})
+}
+
+// handleObjects creates, renames and deletes rooms, trades and system
+// variables. All of it is setup.
+func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		List      string `json:"list"`
+		ID        int64  `json:"id"`
+		Name      string `json:"name"`
+		rega.NewSysvar
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	target := fmt.Sprintf("%s %d", msg.List, msg.ID)
+	if strings.HasSuffix(msgType, "Sysvar") {
+		target = fmt.Sprintf("sysvar %d", msg.ID)
+	}
+	var created int64
+	switch msgType {
+	case "createGroup":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: msg.List, Value: msg.Name},
+			func() (interface{}, string, error) {
+				result, id, err := s.regaClient.CreateGroup(msg.List, msg.Name)
+				created = id
+				return nil, result, err
+			}, &created)
+	case "renameGroup":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Name},
+			func() (interface{}, string, error) {
+				result, previous, err := s.regaClient.RenameGroup(msg.List, msg.ID, msg.Name)
+				return previous, result, err
+			})
+	case "deleteGroup":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target},
+			func() (interface{}, string, error) {
+				result, previous, err := s.regaClient.DeleteGroup(msg.List, msg.ID)
+				return previous, result, err
+			})
+	case "createSysvar":
+		// The outer Name takes the JSON field; the embedded one stays empty
+		sysvar := msg.NewSysvar
+		sysvar.Name = msg.Name
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: msg.Kind, Value: msg.Name},
+			func() (interface{}, string, error) {
+				result, id, err := s.regaClient.CreateSysvar(sysvar)
+				created = id
+				return nil, result, err
+			}, &created)
+	case "renameSysvar":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Name},
+			func() (interface{}, string, error) {
+				result, previous, err := s.regaClient.RenameSysvar(msg.ID, msg.Name)
+				return previous, result, err
+			})
+	case "deleteSysvar":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target},
+			func() (interface{}, string, error) {
+				result, previous, err := s.regaClient.DeleteSysvar(msg.ID)
+				return previous, result, err
+			})
+	}
 }
 
 // handleRename renames a device or channel.
@@ -1554,4 +1732,75 @@ func (s *Server) sendRequestError(client *Client, requestID, errorMsg, code stri
 		RequestID: requestID,
 	}
 	s.sendJSON(client, response)
+}
+
+type backupResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	Success   bool   `json:"success"`
+	URL       string `json:"url"`
+	FileName  string `json:"fileName"`
+	Size      int64  `json:"size"`
+}
+
+// handleCreateBackup lets the WebUI create a backup and returns where to
+// download it, once and within a few minutes. A backup holds every
+// setting and password of the CCU: it takes an elevated administrator and
+// the password once more, which the WebUI needs for its session anyway.
+func (s *Server) handleCreateBackup(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		Password  string `json:"password"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_MESSAGE")
+		return
+	}
+	if s.backup == nil {
+		s.sendRequestError(client, msg.RequestID, "createBackup is not available", "NOT_AVAILABLE")
+		return
+	}
+	entry := audit.Entry{User: client.user, Action: "createBackup", Target: "CCU"}
+	finish := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
+	if code, errorMsg := configureError(client); code != "" {
+		finish(code)
+		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		return
+	}
+
+	// Without authentication the WebUI's administrator
+	username := client.user
+	if s.auth == nil {
+		username = "Admin"
+	} else if err := s.auth.CheckLockout(); err != nil {
+		finish("TOO_MANY_ATTEMPTS")
+		s.sendRequestError(client, msg.RequestID, err.Error(), "TOO_MANY_ATTEMPTS")
+		return
+	}
+
+	created, err := s.backup.Create(username, msg.Password)
+	if err != nil {
+		code := "CCU_ERROR"
+		if errors.Is(err, backup.ErrInvalidCredentials) {
+			code = "INVALID_CREDENTIALS"
+			if s.auth != nil {
+				s.auth.RecordFailure()
+			}
+		}
+		logger.Info(fmt.Sprintf("💾 Backup failed for user %q: %v", username, err))
+		finish(code)
+		s.sendRequestError(client, msg.RequestID, "createBackup failed: "+err.Error(), code)
+		return
+	}
+	logger.Info(fmt.Sprintf("💾 Backup %s created (%d bytes)", created.FileName, created.Size))
+	finish(rega.SetOK)
+	s.sendJSON(client, backupResponse{
+		Type: "createBackup_response", RequestID: msg.RequestID, Success: true,
+		URL: BackupPath + created.ID, FileName: created.FileName, Size: created.Size,
+	})
 }

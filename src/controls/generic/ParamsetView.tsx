@@ -12,6 +12,7 @@ import { Switch } from '../../components/ui/switch';
 import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
 import { Button } from '../../components/ui/button';
+import { parameterLabel } from './parameters';
 
 // Renders a channel's parameters from its paramset description: the element
 // follows the parameter's type, writable parameters get inputs.
@@ -69,13 +70,15 @@ export const formatParameterValue = (
 
 interface ParameterProps {
   name: string;
+  // Accessible name of the input
+  label: string;
   parameter: ParameterDescription;
   value: DatapointValue | undefined;
   onSet: (name: string, value: string | number | boolean) => void;
   readOnly?: boolean;
 }
 
-const NumberParameter = ({ name, parameter, value, onSet }: ParameterProps) => {
+const NumberParameter = ({ name, label, parameter, value, onSet }: ParameterProps) => {
   const shown = typeof value === 'number' ? toDisplay(parameter, value) : undefined;
   const [draft, setDraft] = useState(shown?.toString() ?? '');
   useEffect(() => setDraft(shown?.toString() ?? ''), [shown]);
@@ -96,7 +99,7 @@ const NumberParameter = ({ name, parameter, value, onSet }: ParameterProps) => {
     <>
       <Input
         className="h-8 w-24 text-right tabular-nums md:text-[13px]"
-        aria-label={name}
+        aria-label={label}
         inputMode="decimal"
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
@@ -113,7 +116,7 @@ const NumberParameter = ({ name, parameter, value, onSet }: ParameterProps) => {
 };
 
 const ParameterValue = (props: ParameterProps) => {
-  const { name, parameter, value, onSet, readOnly } = props;
+  const { name, label, parameter, value, onSet, readOnly } = props;
   const t = useTranslations();
   const writable = !readOnly && (parameter.operations & Operation.WRITE) !== 0;
 
@@ -133,7 +136,7 @@ const ParameterValue = (props: ParameterProps) => {
     case 'BOOL':
       if (writable) {
         return (
-          <Switch aria-label={name} checked={value === true} onCheckedChange={() => onSet(name, value !== true)} />
+          <Switch aria-label={label} checked={value === true} onCheckedChange={() => onSet(name, value !== true)} />
         );
       }
       return <>{value === null || value === undefined ? '–' : value ? m.YES() : m.NO()}</>;
@@ -142,8 +145,8 @@ const ParameterValue = (props: ParameterProps) => {
       if (writable) {
         return (
           <NativeSelect
-            className="h-8 max-w-[160px] md:text-[13px]"
-            aria-label={name}
+            className="h-8 max-w-[180px] md:text-[13px]"
+            aria-label={label}
             value={typeof value === 'number' ? value : ''}
             onChange={(event) => onSet(name, Number(event.target.value))}
           >
@@ -186,10 +189,13 @@ interface ParamsetViewProps {
   readOnly?: boolean;
   // Names of parameters with an unsaved change, highlighted
   changed?: Set<string>;
+  // Readable names (device settings) instead of the technical ones
+  readable?: boolean;
 }
 
-export const ParamsetView = ({ label, description, values, onSet, readOnly, changed }: ParamsetViewProps) => {
+export const ParamsetView = ({ label, description, values, onSet, readOnly, changed, readable }: ParamsetViewProps) => {
   const t = useTranslations();
+  const nameOf = (name: string) => (readable ? parameterLabel(name) : t(name as TranslationKey));
   return (
     <dl aria-label={label} className="m-0 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 text-[13px]">
       {shownParameters(description).map(([name, parameter]) => (
@@ -198,11 +204,18 @@ export const ParamsetView = ({ label, description, values, onSet, readOnly, chan
             className={`flex min-w-0 items-center gap-1.5 text-muted-foreground ${changed?.has(name) ? 'font-semibold text-foreground' : ''}`}
             title={name}
           >
-            <span className="truncate">{t(name as TranslationKey)}</span>
+            <span className={readable ? 'min-w-0' : 'truncate'}>{nameOf(name)}</span>
             {changed?.has(name) && <span aria-label="•" className="size-1.5 shrink-0 rounded-full bg-blue-600" />}
           </dt>
           <dd className="m-0 flex items-center justify-end text-right tabular-nums">
-            <ParameterValue name={name} parameter={parameter} value={values[name]} onSet={onSet} readOnly={readOnly} />
+            <ParameterValue
+              name={name}
+              label={readable ? nameOf(name) : name}
+              parameter={parameter}
+              value={values[name]}
+              onSet={onSet}
+              readOnly={readOnly}
+            />
           </dd>
         </div>
       ))}

@@ -1,14 +1,22 @@
 import { ComponentType } from 'react';
-import { Channel, ChannelType, KnownChannel } from '../types/types';
+import { Channel, ChannelType } from '../types/types';
 import { FloorControl } from './FloorControl';
 import { SwitchControl } from './SwitchControl';
 import { BlindsControl } from './BlindsControl';
 import { ThermostatControl } from './ThermostatControl';
-import { DoorControl } from './DoorControl';
+import { DoorControl, DoorLockControl } from './DoorControl';
 import { EnergyMeterControl } from './EnergyMeterControl';
+import { WindowControl } from './WindowControl';
+import { ClimateSensorControl } from './ClimateSensorControl';
+import { DimmerControl } from './DimmerControl';
+import { ColorLightControl } from './ColorLightControl';
+import { ButtonsControl } from './ButtonsControl';
+import { MotionDetectorControl, SirenControl, SmokeDetectorControl, WaterDetectorControl } from './DetectorControls';
+import { GarageDoorControl } from './GarageDoorControl';
+import { AccessControl, AccessPointControl } from './AccessControls';
 
 // Sections of the dashboard, in the order they are shown
-export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'doors' | 'energy';
+export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'windows' | 'doors' | 'security' | 'sensors' | 'buttons' | 'energy' | 'system';
 
 // Hand-made controls for common channel types. They refine the generic
 // renderer (GenericControl), which every other type falls back to.
@@ -20,7 +28,7 @@ export type ControlOverride = (
   | { per: 'device'; component: ComponentType<{ channels: Channel[] }> }
 ) & { section: SectionId };
 
-const channelControl = <T extends KnownChannel>(
+const channelControl = <T extends Channel>(
   section: SectionId,
   component: ComponentType<{ channel: T }>,
 ): ControlOverride => ({
@@ -29,7 +37,7 @@ const channelControl = <T extends KnownChannel>(
   component: component as ComponentType<{ channel: Channel }>,
 });
 
-const deviceControl = <T extends KnownChannel>(
+const deviceControl = <T extends Channel>(
   section: SectionId,
   component: ComponentType<{ channels: T[] }>,
 ): ControlOverride => ({
@@ -40,9 +48,45 @@ const deviceControl = <T extends KnownChannel>(
 
 export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   [ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER]: channelControl('climate', ThermostatControl),
+  // BidCos radiator and wall thermostats (HM-CC-RT-DN, HM-TC-IT-WM)
+  CLIMATECONTROL_RT_TRANSCEIVER: channelControl('climate', ThermostatControl),
+  THERMALCONTROL_TRANSMIT: channelControl('climate', ThermostatControl),
   [ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER]: channelControl('floor', FloorControl),
   [ChannelType.SWITCH_VIRTUAL_RECEIVER]: channelControl('lights', SwitchControl),
   [ChannelType.BLIND_VIRTUAL_RECEIVER]: channelControl('blinds', BlindsControl),
+  // HmIP shutter actuators and the BidCos actuators work the same way
+  SHUTTER_VIRTUAL_RECEIVER: channelControl('blinds', BlindsControl),
+  BLIND: channelControl('blinds', BlindsControl),
+  JALOUSIE: channelControl('blinds', BlindsControl),
+  SWITCH: channelControl('lights', SwitchControl),
+  DIMMER_VIRTUAL_RECEIVER: channelControl('lights', DimmerControl),
+  DIMMER: channelControl('lights', DimmerControl),
+  UNIVERSAL_LIGHT_RECEIVER: channelControl('lights', ColorLightControl),
   [ChannelType.KEYMATIC]: channelControl('doors', DoorControl),
+  DOOR_LOCK_STATE_TRANSMITTER: channelControl('doors', DoorLockControl),
+  DOOR_LOCK_TRANSCEIVER: channelControl('doors', DoorLockControl),
+  DOOR_RECEIVER: channelControl('doors', GarageDoorControl),
+  SMOKE_DETECTOR: channelControl('security', SmokeDetectorControl),
+  MOTION_DETECTOR: channelControl('security', MotionDetectorControl),
+  MOTION_DETECTOR_TRANSCEIVER: channelControl('security', MotionDetectorControl),
+  PRESENCE_DETECTOR_TRANSCEIVER: channelControl('security', MotionDetectorControl),
+  WATER_DETECTION_TRANSMITTER: channelControl('security', WaterDetectorControl),
+  WATERDETECTIONSENSOR: channelControl('security', WaterDetectorControl),
+  ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER: channelControl('security', SirenControl),
   [ChannelType.ENERGIE_METER_TRANSMITTER]: deviceControl('energy', EnergyMeterControl),
+  // BidCos metering plugs (HM-ES-PMSw1): POWER and ENERGY_COUNTER as well
+  POWERMETER: deviceControl('energy', EnergyMeterControl),
+  SHUTTER_CONTACT: channelControl('windows', WindowControl),
+  SHUTTER_CONTACT_TRANSCEIVER: channelControl('windows', WindowControl),
+  ROTARY_HANDLE_SENSOR: channelControl('windows', WindowControl),
+  ROTARY_HANDLE_TRANSCEIVER: channelControl('windows', WindowControl),
+  CLIMATE_TRANSCEIVER: channelControl('sensors', ClimateSensorControl),
+  WEATHER_TRANSMIT: channelControl('sensors', ClimateSensorControl),
+  WEATHER: channelControl('sensors', ClimateSensorControl),
+  HEATING_ROOM_TH_TRANSCEIVER: channelControl('sensors', ClimateSensorControl),
+  [ChannelType.KEY_TRANSCEIVER]: deviceControl('buttons', ButtonsControl),
+  KEY: deviceControl('buttons', ButtonsControl),
+  VIRTUAL_KEY: deviceControl('buttons', ButtonsControl),
+  ACCESS_TRANSCEIVER: deviceControl('security', AccessControl),
+  ACCESSPOINT_GENERIC_RECEIVER: deviceControl('system', AccessPointControl),
 };

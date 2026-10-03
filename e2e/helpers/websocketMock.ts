@@ -34,6 +34,11 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       { address: '003660C9930AB6', name: 'Fensterkontakt Bad', lowBat: true, unreach: false },
     ];
 
+    let serviceMessages = [
+      { id: 501, type: 'UNREACH', timestamp: '2026-01-15 09:12:00', address: '000A9D89A7AF25', name: 'Wandthermostat Flur', roomId: 1, roomName: 'Wohnzimmer' },
+      { id: 502, type: 'LOW_BAT', timestamp: '2026-01-15 08:40:00', address: '003660C9930AB6', name: 'Fensterkontakt Bad' },
+    ];
+
     const trades = [
       { id: 10, name: 'Licht' },
       { id: 20, name: 'Heizung' },
@@ -56,7 +61,6 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
             STATE: false,
           },
         },
-        // No own control: shown by GenericControl with its values
         {
           id: 102,
           name: 'Fenstergriff Wohnzimmer',
@@ -64,6 +68,55 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
           interfaceName: 'HmIP-RF',
           type: 'ROTARY_HANDLE_TRANSCEIVER',
           datapoints: { ERROR_CODE: 0, STATE: 2, SABOTAGE: false },
+        },
+        {
+          id: 103,
+          name: 'Terrassentür',
+          address: 'BidCos-RF.LEQ0000006:1',
+          interfaceName: 'BidCos-RF',
+          type: 'SHUTTER_CONTACT',
+          datapoints: { ERROR: 0, LOWBAT: false, STATE: false },
+        },
+        {
+          id: 105,
+          name: 'Esstisch',
+          address: '0001D3C99C1A2B:4',
+          interfaceName: 'HmIP-RF',
+          type: 'DIMMER_VIRTUAL_RECEIVER',
+          datapoints: { ACTIVITY_STATE: 3, LEVEL: 0.6, LEVEL_STATUS: 0, PROCESS: 0, SECTION: 0, SECTION_STATUS: 0 },
+        },
+        {
+          id: 106,
+          name: 'LED-Streifen',
+          address: '0001E0A99B2C3D:2',
+          interfaceName: 'HmIP-RF',
+          type: 'UNIVERSAL_LIGHT_RECEIVER',
+          datapoints: { LEVEL: 0.8, HUE: 275, SATURATION: 1, COLOR_TEMPERATURE: 3000, ACTIVITY_STATE: 3 },
+        },
+        {
+          id: 107,
+          name: 'Wandtaster Wohnzimmer oben',
+          address: '0001D8A9A1B2C3:1',
+          interfaceName: 'HmIP-RF',
+          type: 'KEY_TRANSCEIVER',
+          datapoints: { PRESS_LONG: null, PRESS_LONG_RELEASE: null, PRESS_LONG_START: null, PRESS_SHORT: null },
+        },
+        {
+          id: 108,
+          name: 'Wandtaster Wohnzimmer unten',
+          address: '0001D8A9A1B2C3:2',
+          interfaceName: 'HmIP-RF',
+          type: 'KEY_TRANSCEIVER',
+          datapoints: { PRESS_LONG: null, PRESS_LONG_RELEASE: null, PRESS_LONG_START: null, PRESS_SHORT: null },
+        },
+        // No own control: shown by GenericControl with its values
+        {
+          id: 104,
+          name: 'Neigungssensor Garage',
+          address: '0000DBE9A5C1F3:1',
+          interfaceName: 'HmIP-RF',
+          type: 'ACCELERATION_TRANSCEIVER',
+          datapoints: { MOTION: false, MOTION_DETECTION_ACTIVE: true },
         },
       ],
       '2': [
@@ -104,6 +157,22 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
             SECTION_STATUS: '0',
             STOP: 'false',
           },
+        },
+        {
+          id: 203,
+          name: 'Fenstergriff Küche',
+          address: 'BidCos-RF.LEQ0000007:1',
+          interfaceName: 'BidCos-RF',
+          type: 'ROTARY_HANDLE_SENSOR',
+          datapoints: { ERROR: 0, LOWBAT: false, STATE: 1 },
+        },
+        {
+          id: 204,
+          name: 'Küche Klima',
+          address: '000E1BE9A4C5D6:1',
+          interfaceName: 'HmIP-RF',
+          type: 'CLIMATE_TRANSCEIVER',
+          datapoints: { ACTUAL_TEMPERATURE: 21.4, HUMIDITY: 58 },
         },
       ],
     };
@@ -150,6 +219,30 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         interfaceName: 'BidCos-RF',
         type: 'KEYMATIC',
         datapoints: { ERROR: 0, INHIBIT: false, OPEN: false, RELOCK_DELAY: 0, STATE: false, STATE_UNCERTAIN: false },
+      },
+      {
+        id: 507,
+        name: 'Garagentor',
+        address: '0019DA49A6B7C8:1',
+        interfaceName: 'HmIP-RF',
+        type: 'DOOR_RECEIVER',
+        datapoints: { DOOR_STATE: 0, PROCESS: 0, SECTION: 0, SECTION_STATUS: 0 },
+      },
+      {
+        id: 508,
+        name: 'Wassermelder Heizung',
+        address: '00319BE9A8B9C1:1',
+        interfaceName: 'HmIP-RF',
+        type: 'WATER_DETECTION_TRANSMITTER',
+        datapoints: { ALARMSTATE: false, MOISTURE_DETECTED: false, WATERLEVEL_DETECTED: false },
+      },
+      {
+        id: 506,
+        name: 'Kellertür',
+        address: '002A1BE9A3C4D5:1',
+        interfaceName: 'HmIP-RF',
+        type: 'DOOR_LOCK_STATE_TRANSMITTER',
+        datapoints: { ACTIVITY_STATE: 3, LOCK_STATE: 2, LOCK_TARGET_LEVEL: 1, PROCESS: 0, SECTION: 0, SECTION_STATUS: 0, WP_OPTIONS: 0 },
       },
     ];
 
@@ -218,6 +311,110 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         type: 'SMOKE_DETECTOR',
         datapoints: { SMOKE_DETECTOR_ALARM_STATUS: 0, SMOKE_DETECTOR_TEST_RESULT: null },
       },
+      {
+        id: 611,
+        name: 'HmIP-FWI 002BE0C98ECD57:1',
+        address: '002BE0C98ECD57:1',
+        interfaceName: 'HmIP-RF',
+        type: 'ACCESS_TRANSCEIVER',
+        datapoints: { ACCESS_AUTHORIZATION: null, STATE: true },
+      },
+      {
+        id: 612,
+        name: 'HmIP-FWI 002BE0C98ECD57:2',
+        address: '002BE0C98ECD57:2',
+        interfaceName: 'HmIP-RF',
+        type: 'ACCESS_TRANSCEIVER',
+        datapoints: { ACCESS_AUTHORIZATION: null, STATE: true },
+      },
+      {
+        id: 613,
+        name: 'HmIP-FWI 002BE0C98ECD57:3',
+        address: '002BE0C98ECD57:3',
+        interfaceName: 'HmIP-RF',
+        type: 'ACCESS_TRANSCEIVER',
+        datapoints: { ACCESS_AUTHORIZATION: null, STATE: true },
+      },
+      {
+        id: 614,
+        name: 'HmIP-FWI 002BE0C98ECD57:4',
+        address: '002BE0C98ECD57:4',
+        interfaceName: 'HmIP-RF',
+        type: 'ACCESS_TRANSCEIVER',
+        datapoints: { ACCESS_AUTHORIZATION: null, STATE: false },
+      },
+      {
+        id: 621,
+        name: 'HmIPW-DRAP 00179A4989A48D:1',
+        address: '00179A4989A48D:1',
+        interfaceName: 'HmIP-RF',
+        type: 'ACCESSPOINT_GENERIC_RECEIVER',
+        datapoints: { CURRENT: 0, CURRENT_STATUS: 0, VOLTAGE: 24.4, VOLTAGE_STATUS: 0 },
+      },
+      {
+        id: 622,
+        name: 'HmIPW-DRAP 00179A4989A48D:2',
+        address: '00179A4989A48D:2',
+        interfaceName: 'HmIP-RF',
+        type: 'ACCESSPOINT_GENERIC_RECEIVER',
+        datapoints: { CURRENT: 140, CURRENT_STATUS: 0, VOLTAGE: 24.3, VOLTAGE_STATUS: 0 },
+      },
+      {
+        id: 630,
+        name: 'Heizkörper Gästezimmer',
+        address: 'LEQ0000010:4',
+        interfaceName: 'BidCos-RF',
+        type: 'CLIMATECONTROL_RT_TRANSCEIVER',
+        datapoints: { ACTUAL_TEMPERATURE: 19.5, BATTERY_STATE: 2.9, BOOST_STATE: 0, CONTROL_MODE: 0, SET_TEMPERATURE: 21, VALVE_STATE: 34 },
+      },
+      {
+        id: 631,
+        name: 'Raffstore Büro',
+        address: '0045D8A9A2B3C4:4',
+        interfaceName: 'HmIP-RF',
+        type: 'BLIND_VIRTUAL_RECEIVER',
+        datapoints: { ACTIVITY_STATE: 3, LEVEL: 0.7, LEVEL_2: 0.5, LEVEL_STATUS: 0, LEVEL_2_STATUS: 0, PROCESS: 0, SECTION: 0, SECTION_STATUS: 0 },
+      },
+      {
+        id: 632,
+        name: 'Sirene Flur',
+        address: '0039E0A9A4B5C6:3',
+        interfaceName: 'HmIP-RF',
+        type: 'ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER',
+        datapoints: { ACOUSTIC_ALARM_ACTIVE: false, OPTICAL_ALARM_ACTIVE: false, ACOUSTIC_ALARM_SELECTION: 0, OPTICAL_ALARM_SELECTION: 0 },
+      },
+      {
+        id: 604,
+        name: 'Bewegungsmelder Eingang',
+        address: '000BBD89A1C2D3:1',
+        interfaceName: 'HmIP-RF',
+        type: 'MOTION_DETECTOR_TRANSCEIVER',
+        datapoints: { ILLUMINATION: 118.5, MOTION: true, MOTION_DETECTION_ACTIVE: true },
+      },
+      {
+        id: 603,
+        name: 'Schalter Flur Beleuchtung',
+        address: '00091D89A9B8C7:8',
+        interfaceName: 'HmIP-RF',
+        type: 'DIMMER_VIRTUAL_RECEIVER',
+        datapoints: { COLOR: 1, LEVEL: 0.4, ACTIVITY_STATE: 3 },
+      },
+      {
+        id: 602,
+        name: 'Wetterstation Garten',
+        address: '00099D89A1B2C3:1',
+        interfaceName: 'HmIP-RF',
+        type: 'WEATHER_TRANSMIT',
+        datapoints: {
+          ACTUAL_TEMPERATURE: 6.3,
+          HUMIDITY: 81,
+          ILLUMINATION: 4250,
+          RAINING: true,
+          RAIN_COUNTER: 3.2,
+          SUNSHINEDURATION: 42,
+          WIND_SPEED: 23.4,
+        },
+      },
     ];
 
     const allChannels = () => {
@@ -238,6 +435,19 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         STATE: { type: 'ENUM', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 2, valueList: ['CLOSED', 'TILTED', 'OPEN'] },
         SABOTAGE: { type: 'BOOL', operations: 5, flags: 9, tabOrder: 1 },
         ERROR_CODE: { type: 'INTEGER', operations: 5, flags: 1, tabOrder: 2, min: 0, max: 255 },
+      },
+      '000A1B2C3D4E5F:1': {
+        SMOKE_DETECTOR_ALARM_STATUS: { type: 'ENUM', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 3, valueList: ['IDLE_OFF', 'PRIMARY_ALARM', 'INTRUSION_ALARM', 'SECONDARY_ALARM'] },
+        SMOKE_DETECTOR_COMMAND: { type: 'ENUM', operations: 2, flags: 1, tabOrder: 1, min: 0, max: 5, valueList: ['RESERVED_ALARM_OFF', 'INTRUSION_ALARM_OFF', 'INTRUSION_ALARM', 'SMOKE_TEST', 'COMMUNICATION_TEST', 'COMMUNICATION_TEST_REPEATED'] },
+        SMOKE_DETECTOR_TEST_RESULT: { type: 'ENUM', operations: 5, flags: 1, tabOrder: 2, min: 0, max: 4, valueList: ['NONE', 'SMOKE_TEST_OK', 'SMOKE_TEST_FAILED', 'COMMUNICATION_TEST_SENT', 'COMMUNICATION_TEST_OK'] },
+      },
+      '002BE0C98ECD57:1': {
+        STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
+        ACCESS_AUTHORIZATION: { type: 'ENUM', operations: 4, flags: 1, tabOrder: 1, min: 0, max: 1, valueList: ['DISABLE', 'ENABLE'] },
+      },
+      '0000DBE9A5C1F3:1': {
+        MOTION: { type: 'BOOL', operations: 5, flags: 1, tabOrder: 0 },
+        MOTION_DETECTION_ACTIVE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 1 },
       },
     };
 
@@ -294,6 +504,17 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
       if (!state.authenticated) {
         delayedBroadcast({ type: 'error', error: 'authentication required', code: 'AUTH_REQUIRED', requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'getServiceMessages') {
+        delayedBroadcast({ type: 'getServiceMessages_response', messages: serviceMessages, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'acknowledgeServiceMessage') {
+        serviceMessages = serviceMessages.filter((m) => m.id !== message.id);
+        delayedBroadcast({ type: 'acknowledgeServiceMessage_response', success: true, requestId: message.requestId });
         return;
       }
 

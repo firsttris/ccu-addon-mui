@@ -29,7 +29,7 @@ describe('isHiddenChannel', () => {
 describe('groupChannelsByType', () => {
   it('puts types with a control first, then the others alphabetically', () => {
     const groups = groupChannelsByType([
-      channel('SMOKE_DETECTOR', 'A:1'),
+      channel('RAIN_DETECTION_TRANSMITTER', 'A:1'),
       channel('SWITCH_VIRTUAL_RECEIVER', 'B:1'),
       channel('ACCELERATION_TRANSCEIVER', 'C:1'),
       channel('HEATING_CLIMATECONTROL_TRANSCEIVER', 'D:1'),
@@ -40,7 +40,22 @@ describe('groupChannelsByType', () => {
       ['HEATING_CLIMATECONTROL_TRANSCEIVER', ['D:1']],
       ['SWITCH_VIRTUAL_RECEIVER', ['B:1', 'E:1']],
       ['ACCELERATION_TRANSCEIVER', ['C:1']],
-      ['SMOKE_DETECTOR', ['A:1']],
+      ['RAIN_DETECTION_TRANSMITTER', ['A:1']],
+    ]);
+  });
+});
+
+describe('groupChannelsByType with HmIP actuators', () => {
+  it('leaves out the state channel when the switchable channel is shown', () => {
+    const groups = groupChannelsByType([
+      channel('SWITCH_TRANSMITTER', 'A:1'),
+      channel('SWITCH_VIRTUAL_RECEIVER', 'A:2'),
+      // Another device: its state channel alone is kept
+      channel('SWITCH_TRANSMITTER', 'B:1'),
+    ]);
+    expect(groups.map(([type, channels]) => [type, channels.map((c) => c.address)])).toEqual([
+      ['SWITCH_VIRTUAL_RECEIVER', ['A:2']],
+      ['SWITCH_TRANSMITTER', ['B:1']],
     ]);
   });
 });

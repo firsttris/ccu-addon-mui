@@ -4,6 +4,7 @@ import CpuIcon from '~icons/lucide/cpu';
 import RadioIcon from '~icons/lucide/radio';
 import MonitorSmartphoneIcon from '~icons/lucide/monitor-smartphone';
 import InfoIcon from '~icons/lucide/info';
+import HomeIcon from '~icons/lucide/house';
 import BracesIcon from '~icons/lucide/braces';
 import PlayIcon from '~icons/lucide/play';
 import ShieldIcon from '~icons/lucide/shield-check';
@@ -54,6 +55,12 @@ export const SetupShell = ({ children }: { children: ReactNode }) => {
               <CpuIcon />
               {m.DEVICES()}
             </Link>
+            {isAdmin && elevated && (
+              <Link to="/setup/groups" className={navLink}>
+                <HomeIcon />
+                {m.ROOMS_AND_TRADES()}
+              </Link>
+            )}
             {isAdmin && elevated && (
               <Link to="/setup/pairing" className={navLink}>
                 <RadioIcon />
