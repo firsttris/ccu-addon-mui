@@ -333,9 +333,13 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		return
 	}
 
+	// Every request may carry a requestId, which is echoed in its response
+	// (or error) so the client can match them up.
+	requestID, _ := baseMsg["requestId"].(string)
+
 	msgType, ok := baseMsg["type"].(string)
 	if !ok {
-		s.sendError(client, "missing or invalid 'type' field")
+		s.sendRequestError(client, requestID, "missing or invalid 'type' field", "")
 		return
 	}
 
@@ -349,7 +353,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 	}
 
 	if s.auth != nil && !client.authenticated {
-		s.sendErrorCode(client, "authentication required", "AUTH_REQUIRED")
+		s.sendRequestError(client, requestID, "authentication required", "AUTH_REQUIRED")
 		return
 	}
 
@@ -365,9 +369,9 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 	case "setDatapoint":
 		s.handleSetDatapoint(client, message)
 	case "getDeviceProblems":
-		s.handleGetDeviceProblems(client)
+		s.handleGetDeviceProblems(client, requestID)
 	default:
-		s.sendError(client, fmt.Sprintf("unknown message type: %s", msgType))
+		s.sendRequestError(client, requestID, fmt.Sprintf("unknown message type: %s", msgType), "")
 	}
 }
 
@@ -407,9 +411,10 @@ func (s *Server) handleSubscribe(client *Client, message []byte) {
 
 // request is a getRooms, getTrades or getChannels message.
 type request struct {
-	DeviceID string `json:"deviceId"`
-	RoomID   string `json:"roomId"`
-	TradeID  string `json:"tradeId"`
+	RequestID string `json:"requestId"`
+	DeviceID  string `json:"deviceId"`
+	RoomID    string `json:"roomId"`
+	TradeID   string `json:"tradeId"`
 	// All requests the channels of all devices (getChannels only)
 	All bool `json:"all"`
 }
@@ -419,36 +424,39 @@ type request struct {
 func (s *Server) parseRequest(client *Client, message []byte) (request, bool) {
 	var msg request
 	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendError(client, "invalid message: "+err.Error())
+		s.sendRequestError(client, msg.RequestID, "invalid message: "+err.Error(), "")
 		return msg, false
 	}
 	if msg.DeviceID == "" {
-		s.sendError(client, "deviceId is required")
+		s.sendRequestError(client, msg.RequestID, "deviceId is required", "")
 		return msg, false
 	}
 	if !deviceIDRegex.MatchString(msg.DeviceID) {
-		s.sendError(client, "invalid deviceId")
+		s.sendRequestError(client, msg.RequestID, "invalid deviceId", "")
 		return msg, false
 	}
 	return msg, true
 }
 
 type roomsResponse struct {
-	DeviceID string             `json:"deviceId"`
-	Rooms    []rega.NamedObject `json:"rooms"`
+	RequestID string             `json:"requestId,omitempty"`
+	DeviceID  string             `json:"deviceId"`
+	Rooms     []rega.NamedObject `json:"rooms"`
 }
 
 type tradesResponse struct {
-	DeviceID string             `json:"deviceId"`
-	Trades   []rega.NamedObject `json:"trades"`
+	RequestID string             `json:"requestId,omitempty"`
+	DeviceID  string             `json:"deviceId"`
+	Trades    []rega.NamedObject `json:"trades"`
 }
 
 type channelsResponse struct {
-	DeviceID string         `json:"deviceId"`
-	RoomID   string         `json:"roomId,omitempty"`
-	TradeID  string         `json:"tradeId,omitempty"`
-	All      bool           `json:"all,omitempty"`
-	Channels []rega.Channel `json:"channels"`
+	RequestID string         `json:"requestId,omitempty"`
+	DeviceID  string         `json:"deviceId"`
+	RoomID    string         `json:"roomId,omitempty"`
+	TradeID   string         `json:"tradeId,omitempty"`
+	All       bool           `json:"all,omitempty"`
+	Channels  []rega.Channel `json:"channels"`
 }
 
 func (s *Server) handleGetRooms(client *Client, message []byte) {
@@ -459,11 +467,11 @@ func (s *Server) handleGetRooms(client *Client, message []byte) {
 
 	rooms, err := s.regaClient.GetRooms()
 	if err != nil {
-		s.sendError(client, "getRooms failed: "+err.Error())
+		s.sendRequestError(client, msg.RequestID, "getRooms failed: "+err.Error(), "")
 		return
 	}
 
-	s.sendJSON(client, roomsResponse{DeviceID: msg.DeviceID, Rooms: rooms})
+	s.sendJSON(client, roomsResponse{RequestID: msg.RequestID, DeviceID: msg.DeviceID, Rooms: rooms})
 }
 
 func (s *Server) handleGetTrades(client *Client, message []byte) {
@@ -474,11 +482,11 @@ func (s *Server) handleGetTrades(client *Client, message []byte) {
 
 	trades, err := s.regaClient.GetTrades()
 	if err != nil {
-		s.sendError(client, "getTrades failed: "+err.Error())
+		s.sendRequestError(client, msg.RequestID, "getTrades failed: "+err.Error(), "")
 		return
 	}
 
-	s.sendJSON(client, tradesResponse{DeviceID: msg.DeviceID, Trades: trades})
+	s.sendJSON(client, tradesResponse{RequestID: msg.RequestID, DeviceID: msg.DeviceID, Trades: trades})
 }
 
 func (s *Server) handleGetChannels(client *Client, message []byte) {
@@ -490,10 +498,10 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 	if msg.All {
 		channels, err := s.regaClient.GetAllChannels()
 		if err != nil {
-			s.sendError(client, "getChannels failed: "+err.Error())
+			s.sendRequestError(client, msg.RequestID, "getChannels failed: "+err.Error(), "")
 			return
 		}
-		s.sendJSON(client, channelsResponse{DeviceID: msg.DeviceID, All: true, Channels: channels})
+		s.sendJSON(client, channelsResponse{RequestID: msg.RequestID, DeviceID: msg.DeviceID, All: true, Channels: channels})
 		return
 	}
 
@@ -503,21 +511,22 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 		objectID = msg.TradeID
 	}
 	if objectID == "" {
-		s.sendError(client, "roomId, tradeId or all is required")
+		s.sendRequestError(client, msg.RequestID, "roomId, tradeId or all is required", "")
 		return
 	}
 
 	channels, err := s.regaClient.GetChannels(objectID)
 	if err != nil {
-		s.sendError(client, "getChannels failed: "+err.Error())
+		s.sendRequestError(client, msg.RequestID, "getChannels failed: "+err.Error(), "")
 		return
 	}
 
 	s.sendJSON(client, channelsResponse{
-		DeviceID: msg.DeviceID,
-		RoomID:   msg.RoomID,
-		TradeID:  msg.TradeID,
-		Channels: channels,
+		RequestID: msg.RequestID,
+		DeviceID:  msg.DeviceID,
+		RoomID:    msg.RoomID,
+		TradeID:   msg.TradeID,
+		Channels:  channels,
 	})
 }
 
@@ -656,17 +665,18 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 }
 
 type deviceProblemsResponse struct {
-	Type    string               `json:"type"`
-	Devices []rega.DeviceProblem `json:"devices"`
+	Type      string               `json:"type"`
+	Devices   []rega.DeviceProblem `json:"devices"`
+	RequestID string               `json:"requestId,omitempty"`
 }
 
-func (s *Server) handleGetDeviceProblems(client *Client) {
+func (s *Server) handleGetDeviceProblems(client *Client, requestID string) {
 	devices, err := s.regaClient.GetDeviceProblems()
 	if err != nil {
-		s.sendError(client, "getDeviceProblems failed: "+err.Error())
+		s.sendRequestError(client, requestID, "getDeviceProblems failed: "+err.Error(), "")
 		return
 	}
-	s.sendJSON(client, deviceProblemsResponse{Type: "deviceProblems", Devices: devices})
+	s.sendJSON(client, deviceProblemsResponse{Type: "deviceProblems", Devices: devices, RequestID: requestID})
 }
 
 // formatValue converts a JSON value into the string form expected by
@@ -710,10 +720,15 @@ func (s *Server) sendError(client *Client, errorMsg string) {
 }
 
 func (s *Server) sendErrorCode(client *Client, errorMsg, code string) {
+	s.sendRequestError(client, "", errorMsg, code)
+}
+
+func (s *Server) sendRequestError(client *Client, requestID, errorMsg, code string) {
 	response := types.ErrorResponse{
-		Type:  "error",
-		Error: errorMsg,
-		Code:  code,
+		Type:      "error",
+		Error:     errorMsg,
+		Code:      code,
+		RequestID: requestID,
 	}
 	s.sendJSON(client, response)
 }

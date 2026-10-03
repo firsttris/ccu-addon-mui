@@ -1,8 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import styled from '@emotion/styled';
 import { ListItem } from '../components/ChannelGroup';
-import { useWebSocketContext } from '../hooks/useWebsocket';
-import { useEffect } from 'react';
+import { useRooms } from '../queries';
 import { TeenyiconsFloorplanSolid } from '../components/icons/TeenyiconsFloorplanSolid';
 
 const Container = styled.div`
@@ -32,11 +31,7 @@ export const ListItemText = styled.p`
 
 export const Rooms = () => {
   const navigate = useNavigate();
-  const { getRooms, rooms } = useWebSocketContext();
-
-  useEffect(() => {
-    getRooms();
-  }, []);
+  const { data: rooms = [] } = useRooms();
 
   return (
     <Container>

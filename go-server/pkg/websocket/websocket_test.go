@@ -245,6 +245,39 @@ func TestGetChannelsAllRequestsAllDevices(t *testing.T) {
 	}
 }
 
+func TestRequestIDIsEchoedInResponsesAndErrors(t *testing.T) {
+	regaServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.WriteString(w, "1\tKüche\r\n")
+	}))
+	defer regaServer.Close()
+
+	host, port, _ := net.SplitHostPort(regaServer.Listener.Addr().String())
+	portNum, _ := strconv.Atoi(port)
+	s := NewServer(nil, rega.NewClient(&config.Config{CCUHost: host, RegaPort: portNum}))
+	client := &Client{send: make(chan []byte, 3)}
+
+	var resp struct {
+		RequestID string `json:"requestId"`
+		Type      string `json:"type"`
+		Rooms     []rega.NamedObject
+	}
+	s.handleMessage(client, []byte(`{"type":"getRooms","deviceId":"dev-1","requestId":"q1"}`))
+	if err := json.Unmarshal(<-client.send, &resp); err != nil || resp.RequestID != "q1" || len(resp.Rooms) != 1 {
+		t.Fatalf("unexpected response: %+v, %v", resp, err)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"getRooms","requestId":"q2"}`))
+	resp.RequestID = ""
+	if err := json.Unmarshal(<-client.send, &resp); err != nil || resp.RequestID != "q2" || resp.Type != "error" {
+		t.Fatalf("expected an error for q2, got %+v, %v", resp, err)
+	}
+
+	s.handleMessage(client, []byte(`{"type":"nope","requestId":"q3"}`))
+	if err := json.Unmarshal(<-client.send, &resp); err != nil || resp.RequestID != "q3" || resp.Type != "error" {
+		t.Fatalf("expected an error for q3, got %+v, %v", resp, err)
+	}
+}
+
 func TestFormatValue(t *testing.T) {
 	tests := []struct {
 		input   interface{}

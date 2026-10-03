@@ -1,6 +1,7 @@
 // import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WebSocketProvider } from './hooks/useWebsocket';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -47,6 +48,18 @@ if ('wakeLock' in navigator) {
   console.info('Wake Lock nicht verfügbar (nur über HTTPS).');
 }
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Rooms and trades rarely change; events and reconnects refresh the rest
+      staleTime: 5 * 60 * 1000,
+      // A wall tablet regains focus all the time
+      refetchOnWindowFocus: false,
+      retry: 2,
+    },
+  },
+});
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,
 );
@@ -54,9 +67,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <ThemeProvider>
     <ToastProvider>
-      <WebSocketProvider>
-        <RouterProvider router={router} />
-      </WebSocketProvider>
+      <QueryClientProvider client={queryClient}>
+        <WebSocketProvider>
+          <RouterProvider router={router} />
+        </WebSocketProvider>
+      </QueryClientProvider>
     </ToastProvider>
   </ThemeProvider>,
 );

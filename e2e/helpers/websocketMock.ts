@@ -276,7 +276,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       }
 
       if (!state.authenticated) {
-        delayedBroadcast({ type: 'error', error: 'authentication required', code: 'AUTH_REQUIRED' });
+        delayedBroadcast({ type: 'error', error: 'authentication required', code: 'AUTH_REQUIRED', requestId: message.requestId });
         return;
       }
 
@@ -289,6 +289,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         delayedBroadcast({
           rooms,
           deviceId: message.deviceId,
+          requestId: message.requestId,
         });
         return;
       }
@@ -297,6 +298,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         delayedBroadcast({
           trades,
           deviceId: message.deviceId,
+          requestId: message.requestId,
         });
         return;
       }

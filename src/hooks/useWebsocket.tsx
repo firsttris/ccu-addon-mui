@@ -7,6 +7,7 @@ import {
   useRef,
 } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Channel,
   ChannelType,
@@ -22,7 +23,7 @@ import { useUniqueDeviceID } from './useUniqueDeviceID';
 import { useToast } from '../contexts/ToastContext';
 import { useTranslations } from '../i18n/utils';
 
-interface Response {
+export interface Response {
   type?:
     | 'subscribe_response'
     | 'error'
@@ -63,6 +64,12 @@ export type AuthState = 'pending' | 'authenticated' | 'loginRequired';
 
 type Value = string | number | boolean;
 
+interface PendingRequest {
+  resolve: (response: Response) => void;
+  reject: (error: Error) => void;
+  timeout: ReturnType<typeof setTimeout>;
+}
+
 interface PendingSet {
   address: string;
   attribute: string;
@@ -90,6 +97,8 @@ const isHiddenChannel = (channel: Channel) =>
 
 const TOKEN_STORAGE_KEY = 'ccu-addon-mui_AuthToken';
 const SET_DATAPOINT_TIMEOUT_MS = 15000;
+// Includes the time a request waits in the queue until logged in
+const REQUEST_TIMEOUT_MS = 20000;
 
 const readToken = () => {
   try {
@@ -118,8 +127,6 @@ const wsUrl =
     : `ws://${window.location.host}/ws/mui`;
 
 export const useWebsocket = () => {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [trades, setTrades] = useState<Trade[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [deviceProblems, setDeviceProblems] = useState<DeviceProblem[] | null>(null);
   const [authState, setAuthState] = useState<AuthState>('pending');
@@ -129,6 +136,7 @@ export const useWebsocket = () => {
 
   const deviceId = useUniqueDeviceID();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const t = useTranslations();
 
   // The room or trade currently shown. It is (re)sent whenever the
@@ -139,12 +147,16 @@ export const useWebsocket = () => {
   // type, so e.g. several getRooms calls are only sent once.
   const queuedRef = useRef(new Map<string, string>());
   const readyRef = useRef(false);
+  const wasAuthenticatedRef = useRef(false);
 
   const channelsRef = useRef(channels);
   channelsRef.current = channels;
 
   const pendingSetsRef = useRef(new Map<string, PendingSet>());
   const nextRequestIdRef = useRef(0);
+  // Requests answered by a promise (see request); their ids start with "q",
+  // so they never collide with the setDatapoint ones.
+  const pendingRequestsRef = useRef(new Map<string, PendingRequest>());
 
   const sortedChannelsByType = useMemo(() => {
     const channelsPerType = channels.reduce((acc, channel) => {
@@ -236,6 +248,24 @@ export const useWebsocket = () => {
 
       const response = JSON.parse(message.data) as Response;
 
+      const pendingRequest = response.requestId
+        ? pendingRequestsRef.current.get(response.requestId)
+        : undefined;
+      if (pendingRequest && response.requestId) {
+        clearTimeout(pendingRequest.timeout);
+        pendingRequestsRef.current.delete(response.requestId);
+        if (response.type === 'error') {
+          pendingRequest.reject(new Error(response.error ?? 'request failed'));
+          // A rejected request may also mean the login has expired
+          if (response.code !== 'AUTH_REQUIRED') {
+            return;
+          }
+        } else {
+          pendingRequest.resolve(response);
+          return;
+        }
+      }
+
       if (response.event) {
         updateChannels(response.event);
         return;
@@ -278,14 +308,6 @@ export const useWebsocket = () => {
           return;
       }
 
-      if (response.rooms) {
-        setRooms(response.rooms);
-        return;
-      }
-      if (response.trades) {
-        setTrades(response.trades);
-        return;
-      }
       if (response.channels) {
         // Ignore a late response for a room, trade or "all devices" that
         // is no longer shown
@@ -327,17 +349,37 @@ export const useWebsocket = () => {
     }
   }, [deviceId, sendMessage]);
 
-  // Sends right away when ready, otherwise once logged in
+  // Sends right away when ready, otherwise once logged in. Queued messages
+  // with the same key replace each other.
   const send = useCallback(
-    (message: { type: string } & Record<string, unknown>) => {
+    (message: { type: string } & Record<string, unknown>, queueKey: string = message.type) => {
       const json = JSON.stringify(message);
       if (readyRef.current) {
         sendMessage(json, false);
       } else {
-        queuedRef.current.set(message.type, json);
+        queuedRef.current.set(queueKey, json);
       }
     },
     [sendMessage],
+  );
+
+  // Sends a request and resolves with its response, matched by requestId.
+  // This is the transport for TanStack Query (see queries.ts).
+  const request = useCallback(
+    (message: { type: string } & Record<string, unknown>) =>
+      new Promise<Response>((resolve, reject) => {
+        const requestId = `q${nextRequestIdRef.current++}`;
+        pendingRequestsRef.current.set(requestId, {
+          resolve,
+          reject,
+          timeout: setTimeout(() => {
+            pendingRequestsRef.current.delete(requestId);
+            reject(new Error(`${message.type} timed out`));
+          }, REQUEST_TIMEOUT_MS),
+        });
+        send({ ...message, deviceId, requestId }, requestId);
+      }),
+    [deviceId, send],
   );
 
   const handleAuthResponse = (response: Response) => {
@@ -363,6 +405,12 @@ export const useWebsocket = () => {
     setUserLevel(response.level ?? '');
     setAuthState('authenticated');
     readyRef.current = true;
+    // Data may have changed while disconnected. Not on the first login:
+    // the queries' first requests are still queued and sent below.
+    if (wasAuthenticatedRef.current) {
+      queryClient.invalidateQueries();
+    }
+    wasAuthenticatedRef.current = true;
 
     for (const json of queuedRef.current.values()) {
       sendMessage(json, false);
@@ -422,14 +470,6 @@ export const useWebsocket = () => {
     // The server still treats this connection as logged in; reconnect
     getWebSocket()?.close();
   }, [getWebSocket]);
-
-  const getRooms = useCallback(() => {
-    send({ type: 'getRooms', deviceId });
-  }, [deviceId, send]);
-
-  const getTrades = useCallback(() => {
-    send({ type: 'getTrades', deviceId });
-  }, [deviceId, send]);
 
   const getDeviceProblems = useCallback(() => {
     send({ type: 'getDeviceProblems' });
@@ -511,8 +551,7 @@ export const useWebsocket = () => {
       getChannelsForRoomId,
       getChannelsForTrade,
       getAllChannels,
-      getRooms,
-      getTrades,
+      request,
       getDeviceProblems,
       login,
       logout,
@@ -522,8 +561,7 @@ export const useWebsocket = () => {
       getChannelsForRoomId,
       getChannelsForTrade,
       getAllChannels,
-      getRooms,
-      getTrades,
+      request,
       getDeviceProblems,
       login,
       logout,
@@ -535,8 +573,6 @@ export const useWebsocket = () => {
       ...actions,
       channels,
       sortedChannelsByType,
-      rooms,
-      trades,
       deviceProblems,
       connectionStatus,
       authState,
@@ -548,8 +584,6 @@ export const useWebsocket = () => {
       actions,
       channels,
       sortedChannelsByType,
-      rooms,
-      trades,
       deviceProblems,
       connectionStatus,
       authState,

@@ -1,8 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import styled from '@emotion/styled';
 import { ListItem } from '../components/ChannelGroup';
-import { useWebSocketContext } from '../hooks/useWebsocket';
-import { useEffect } from 'react';
+import { useTrades } from '../queries';
 
 const Container = styled.div`
   max-width: 1280px;
@@ -31,11 +30,7 @@ export const ListItemText = styled.p`
 
 export const Trades = () => {
   const navigate = useNavigate();
-  const { getTrades, trades } = useWebSocketContext();
-
-  useEffect(() => {
-    getTrades();
-  }, []);
+  const { data: trades = [] } = useTrades();
 
   return (
     <Container>

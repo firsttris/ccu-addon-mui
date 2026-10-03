@@ -7,6 +7,7 @@ import { MdiPipeValve } from '../components/icons/MdiPipeValve';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useTranslations } from '../i18n/utils';
+import { useRooms, useTrades } from '../queries';
 
 // A short reconnect (e.g. at startup) should not flash a warning
 const CONNECTION_WARNING_DELAY_MS = 2000;
@@ -192,10 +193,6 @@ export const Header: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const t = useTranslations();
   const {
-    getRooms,
-    rooms,
-    getTrades,
-    trades,
     connectionStatus,
     authRequired,
     logout,
@@ -222,19 +219,9 @@ export const Header: React.FC = () => {
     return () => clearTimeout(timer);
   }, [connected]);
 
-  // Only on opening: re-running when the first response arrives would
-  // request the other list a second time.
-  useEffect(() => {
-    if (!menuOpen) {
-      return;
-    }
-    if (!rooms.length) {
-      getRooms();
-    }
-    if (!trades.length) {
-      getTrades();
-    }
-  }, [menuOpen, getRooms, getTrades]);
+  // Loaded when the menu is first opened, then kept in the query cache
+  const { data: rooms = [] } = useRooms({ enabled: menuOpen });
+  const { data: trades = [] } = useTrades({ enabled: menuOpen });
 
   return (
     <HeaderContainer>
