@@ -7,6 +7,7 @@ import { DatapointValue, DeviceChannel, Link } from '../../types/types';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import { formatParameterValue, ParamsetView, shownParameters } from '../../controls/generic/ParamsetView';
 import { useChannelNames } from './channelNames';
+import { m } from '../../paraglide/messages';
 
 const LinkList = styled.ul`
   list-style: none;
@@ -69,10 +70,10 @@ const LinkParameters = ({ interfaceName, link }: { interfaceName: string; link: 
 
   return (
     <>
-      <Hint>{t('LINK_PROFILES_HINT')}</Hint>
+      <Hint>{m.LINK_PROFILES_HINT()}</Hint>
       {shownParameters(description.data).length > 0 && (
         <ParamsetView
-          label={`${t('LINK_PARAMETERS')} ${link.sender} ${link.receiver}`}
+          label={`${m.LINK_PARAMETERS()} ${link.sender} ${link.receiver}`}
           description={description.data}
           values={{ ...current, ...draft }}
           changed={new Set(Object.keys(draft))}
@@ -87,13 +88,13 @@ const LinkParameters = ({ interfaceName, link }: { interfaceName: string; link: 
       )}
       <Row style={{ marginTop: 8 }}>
         <DialogButton type="button" primary disabled={changes.length === 0} onClick={() => setConfirming(true)}>
-          {t('SAVE')} {changes.length > 0 ? `(${changes.length})` : ''}
+          {m.SAVE()} {changes.length > 0 ? `(${changes.length})` : ''}
         </DialogButton>
       </Row>
       {confirming && (
         <ConfirmDialog
-          title={t('SAVE_CHANGES')}
-          confirmLabel={t('SAVE')}
+          title={m.SAVE_CHANGES()}
+          confirmLabel={m.SAVE()}
           busy={action.isPending}
           onCancel={() => setConfirming(false)}
           onConfirm={() =>
@@ -102,9 +103,9 @@ const LinkParameters = ({ interfaceName, link }: { interfaceName: string; link: 
               {
                 onSuccess: () => {
                   setDraft({});
-                  showToast(t('SAVED'), 'info');
+                  showToast(m.SAVED(), 'info');
                 },
-                onError: (error) => showToast(`${t('SAVE_FAILED')}: ${error.message}`),
+                onError: (error) => showToast(`${m.SAVE_FAILED()}: ${error.message}`),
                 onSettled: () => setConfirming(false),
               },
             )
@@ -178,11 +179,11 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
       },
       {
         onSuccess: () => {
-          showToast(t('LINK_ADDED'), 'info');
+          showToast(m.LINK_ADDED(), 'info');
           setPartner('');
           setLinkName('');
         },
-        onError: (error) => showToast(`${t('CHANGE_FAILED')}: ${error.message}`),
+        onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
       },
     );
   };
@@ -190,9 +191,9 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
   return (
     <>
       {links.length === 0 ? (
-        <p>{t('NO_LINKS')}</p>
+        <p>{m.NO_LINKS()}</p>
       ) : (
-        <LinkList aria-label={t('LINKS')}>
+        <LinkList aria-label={m.LINKS()}>
           {links.map((link) => {
             const key = `${link.sender}>${link.receiver}`;
             return (
@@ -203,10 +204,10 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
                     {link.name ? ` · ${link.name}` : ''}
                   </span>
                   <DialogButton type="button" onClick={() => setOpen(open === key ? null : key)} aria-expanded={open === key}>
-                    {t('LINK_PARAMETERS')}
+                    {m.LINK_PARAMETERS()}
                   </DialogButton>
                   <DialogButton type="button" onClick={() => setRemoving(link)}>
-                    {t('REMOVE')}
+                    {m.REMOVE()}
                   </DialogButton>
                 </Row>
                 {open === key && <LinkParameters interfaceName={interfaceName} link={link} />}
@@ -218,15 +219,15 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
 
       {linkable.length > 0 && (
         <Form
-          aria-label={t('ADD_LINK')}
+          aria-label={m.ADD_LINK()}
           onSubmit={(event) => {
             event.preventDefault();
             add();
           }}
         >
-          <strong>{t('ADD_LINK')}</strong>
+          <strong>{m.ADD_LINK()}</strong>
           <label>
-            {t('LINK_OWN_CHANNEL')}
+            {m.LINK_OWN_CHANNEL()}
             <select
               value={own}
               onChange={(e) => {
@@ -243,7 +244,7 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
             </select>
           </label>
           <label>
-            {t('LINK_PARTNER')}
+            {m.LINK_PARTNER()}
             <select value={partner} disabled={!ownChannel} onChange={(e) => setPartner(e.target.value)}>
               <option value="" />
               {partners.map((c) => (
@@ -254,12 +255,12 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
             </select>
           </label>
           <label>
-            {t('LINK_NAME')}
+            {m.LINK_NAME()}
             <input value={linkName} onChange={(e) => setLinkName(e.target.value)} />
           </label>
           <Row>
             <DialogButton type="submit" primary disabled={!own || !partner || action.isPending}>
-              {t('LINK')}
+              {m.LINK()}
             </DialogButton>
           </Row>
         </Form>
@@ -267,22 +268,22 @@ export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) =>
 
       {removing && (
         <ConfirmDialog
-          title={t('REMOVE_LINK')}
-          confirmLabel={t('REMOVE')}
+          title={m.REMOVE_LINK()}
+          confirmLabel={m.REMOVE()}
           busy={action.isPending}
           onCancel={() => setRemoving(null)}
           onConfirm={() =>
             action.mutate(
               { type: 'removeLink', interfaceName, sender: removing.sender, receiver: removing.receiver },
               {
-                onSuccess: () => showToast(t('LINK_REMOVED'), 'info'),
-                onError: (error) => showToast(`${t('CHANGE_FAILED')}: ${error.message}`),
+                onSuccess: () => showToast(m.LINK_REMOVED(), 'info'),
+                onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
                 onSettled: () => setRemoving(null),
               },
             )
           }
         >
-          <p>{t('REMOVE_LINK_CONFIRM')}</p>
+          <p>{m.REMOVE_LINK_CONFIRM()}</p>
           <p>
             {label(removing.sender)} → {label(removing.receiver)}
           </p>

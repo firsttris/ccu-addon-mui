@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import { ReactNode, useEffect, useRef } from 'react';
-import { useTranslations } from '../i18n/utils';
+import { m } from '../paraglide/messages';
 
 const Backdrop = styled.div`
   position: fixed;
@@ -63,7 +63,6 @@ interface ConfirmDialogProps {
 
 // A modal question; Escape or a click outside cancels.
 export const ConfirmDialog = ({ title, children, confirmLabel, busy, onConfirm, onCancel }: ConfirmDialogProps) => {
-  const t = useTranslations();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -84,7 +83,7 @@ export const ConfirmDialog = ({ title, children, confirmLabel, busy, onConfirm, 
         {children}
         <Actions>
           <DialogButton ref={cancelRef} type="button" onClick={onCancel}>
-            {t('CANCEL')}
+            {m.CANCEL()}
           </DialogButton>
           <DialogButton type="button" primary disabled={busy} onClick={onConfirm}>
             {confirmLabel}

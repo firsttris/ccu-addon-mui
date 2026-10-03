@@ -5,6 +5,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import styled from '@emotion/styled';
 import { ControlComponent } from './ControlComponent';
 import UiwDown from '~icons/uiw/down';
+import { m } from '../paraglide/messages';
 
 interface ExpandMoreProps {
   expanded: boolean;
@@ -61,12 +62,12 @@ const ChannelStatusBar = ({ status }: { status?: ChannelStatus }) => {
     <>
       {status?.UNREACH && (
         <StatusBar role="status" severity="error">
-          📡 {t('UNREACH')}
+          📡 {m.UNREACH()}
         </StatusBar>
       )}
       {status?.LOW_BAT && (
         <StatusBar role="status" severity="warning">
-          🪫 {t('LOW_BAT')}
+          🪫 {m.LOW_BAT()}
         </StatusBar>
       )}
     </>

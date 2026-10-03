@@ -2,8 +2,9 @@ import styled from '@emotion/styled';
 import { DatapointValue, GenericChannel, ParamsetDescription } from '../types/types';
 import { useParamsetDescription, useSetDataPoint } from '../queries';
 import { ParamsetView, shownParameters } from './generic/ParamsetView';
-import { defaultLang, useTranslations } from '../i18n/utils';
+import { defaultLang } from '../i18n/utils';
 import { WebUILink } from '../components/WebUILink';
+import { m } from '../paraglide/messages';
 
 const Container = styled.div`
   display: flex;
@@ -62,14 +63,12 @@ interface ViewProps {
 // without one (still loading, or an interface without descriptions) the
 // datapoints are shown read-only.
 export const GenericControlView = ({ channel, description, onSet = () => {} }: ViewProps) => {
-  const t = useTranslations();
-
   const format = (value: DatapointValue) => {
     if (value === null || value === '') {
       return '–';
     }
     if (typeof value === 'boolean') {
-      return value ? t('YES') : t('NO');
+      return value ? m.YES() : m.NO();
     }
     if (typeof value === 'number') {
       return numberFormat.format(value);

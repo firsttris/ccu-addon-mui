@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { KeymaticChannel } from '../types/types';
-import { useTranslations } from '../i18n/utils';
 import styled from '@emotion/styled';
 import { Button } from '../components/Button';
 import { useSetDataPoint } from '../queries';
 import MaterialSymbolsDoorOpenOutline from '~icons/material-symbols/door-open-outline';
 import MaterialSymbolsLockOutline from '~icons/material-symbols/lock-outline';
 import MaterialSymbolsLockOpenOutline from '~icons/material-symbols/lock-open-outline';
+import { m } from '../paraglide/messages';
 
 const Card = styled.div`
   border: 1px solid ${props => props.theme.colors.border};
@@ -109,7 +109,6 @@ interface DoorControlProps {
 }
 
 export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
-  const t = useTranslations();
   const setDataPoint = useSetDataPoint();
   const {
     datapoints: { STATE, STATE_UNCERTAIN },
@@ -140,9 +139,9 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
       <Title>{name}</Title>
       {confirming ? (
         <ConfirmBox>
-          <ConfirmText>{confirming === 'open' ? t('CONFIRM_OPEN') : t('CONFIRM_UNLOCK')}</ConfirmText>
+          <ConfirmText>{confirming === 'open' ? m.CONFIRM_OPEN() : m.CONFIRM_UNLOCK()}</ConfirmText>
           <ConfirmButtons>
-            <TextButton onClick={() => setConfirming(null)}>{t('CANCEL')}</TextButton>
+            <TextButton onClick={() => setConfirming(null)}>{m.CANCEL()}</TextButton>
             <TextButton
               primary
               onClick={() => {
@@ -154,7 +153,7 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
                 setConfirming(null);
               }}
             >
-              {t('YES')}
+              {m.YES()}
             </TextButton>
           </ConfirmButtons>
         </ConfirmBox>
@@ -164,27 +163,27 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
             <Button onClick={lockDoor}>
               <MaterialSymbolsLockOutline />
             </Button>
-            <ButtonLabel>{t('LOCK')}</ButtonLabel>
+            <ButtonLabel>{m.LOCK()}</ButtonLabel>
           </ButtonWrapper>
           <ButtonWrapper>
             <Button onClick={() => setConfirming('unlock')}>
               <MaterialSymbolsLockOpenOutline />
             </Button>
-            <ButtonLabel>{t('UNLOCK')}</ButtonLabel>
+            <ButtonLabel>{m.UNLOCK()}</ButtonLabel>
           </ButtonWrapper>
           <ButtonWrapper>
             <Button onClick={() => setConfirming('open')}>
               <MaterialSymbolsDoorOpenOutline />
             </Button>
-            <ButtonLabel>{t('OPEN')}</ButtonLabel>
+            <ButtonLabel>{m.OPEN()}</ButtonLabel>
           </ButtonWrapper>
         </ButtonContainer>
       )}
       <StatusText>
-        {isUncertain ? '' : (isUnlocked ? t('UNLOCKED') : t('LOCKED'))}
+        {isUncertain ? '' : (isUnlocked ? m.UNLOCKED() : m.LOCKED())}
       </StatusText>
       <StyledTypography uncertain={isUncertain}>
-        {t('DOOR_STATE_UNKNOWN')}
+        {m.DOOR_STATE_UNKNOWN()}
       </StyledTypography>
     </Card>
   );

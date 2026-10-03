@@ -1,8 +1,9 @@
 import styled from '@emotion/styled';
 import { useRevokeSession, useSessions } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
-import { defaultLang, useTranslations } from '../../i18n/utils';
+import { defaultLang } from '../../i18n/utils';
 import { DialogButton } from '../../components/ConfirmDialog';
+import { m } from '../../paraglide/messages';
 
 const Panel = styled.section`
   margin: 16px 0;
@@ -36,7 +37,6 @@ const dateFormat = new Intl.DateTimeFormat(defaultLang, { dateStyle: 'medium', t
 
 // Devices logged in to the add-on; a lost tablet can be logged out here
 export const Sessions = () => {
-  const t = useTranslations();
   const { showToast } = useToast();
   const { data: sessions = [] } = useSessions({ enabled: true });
   const revoke = useRevokeSession();
@@ -46,14 +46,14 @@ export const Sessions = () => {
   }
 
   return (
-    <Panel aria-label={t('SESSIONS')}>
-      <h2>{t('SESSIONS')}</h2>
+    <Panel aria-label={m.SESSIONS()}>
+      <h2>{m.SESSIONS()}</h2>
       <table>
         <thead>
           <tr>
-            <th>{t('SESSION_DEVICE')}</th>
-            <th>{t('SESSION_USER')}</th>
-            <th>{t('SESSION_LAST_USED')}</th>
+            <th>{m.SESSION_DEVICE()}</th>
+            <th>{m.SESSION_USER()}</th>
+            <th>{m.SESSION_LAST_USED()}</th>
             <th />
           </tr>
         </thead>
@@ -62,7 +62,7 @@ export const Sessions = () => {
             <tr key={session.id}>
               <td>
                 {session.device}
-                {session.current ? ` (${t('THIS_DEVICE')})` : ''}
+                {session.current ? ` (${m.THIS_DEVICE()})` : ''}
               </td>
               <td>{session.user}</td>
               <td>{dateFormat.format(new Date(session.lastUsed))}</td>
@@ -70,15 +70,15 @@ export const Sessions = () => {
                 {!session.current && (
                   <DialogButton
                     type="button"
-                    aria-label={`${t('LOG_OUT_DEVICE')} ${session.device}`}
+                    aria-label={`${m.LOG_OUT_DEVICE()} ${session.device}`}
                     onClick={() =>
                       revoke.mutate(session.id, {
-                        onSuccess: () => showToast(t('DEVICE_LOGGED_OUT'), 'info'),
-                        onError: (error) => showToast(`${t('CHANGE_FAILED')}: ${error.message}`),
+                        onSuccess: () => showToast(m.DEVICE_LOGGED_OUT(), 'info'),
+                        onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
                       })
                     }
                   >
-                    {t('LOG_OUT_DEVICE')}
+                    {m.LOG_OUT_DEVICE()}
                   </DialogButton>
                 )}
               </td>

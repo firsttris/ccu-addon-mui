@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useInbox, useInstallMode, usePairingAction } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
-import { useTranslations } from '../../i18n/utils';
 import { DialogButton } from '../../components/ConfirmDialog';
+import { m } from '../../paraglide/messages';
 
 const Panel = styled.section`
   margin: 16px 0;
@@ -57,7 +57,6 @@ const PAIRING_SECONDS = 60;
 
 // Pairing new devices and accepting them from the inbox
 export const Pairing = () => {
-  const t = useTranslations();
   const { showToast } = useToast();
   const [interfaceName, setInterfaceName] = useState(INTERFACES[0]);
   const [started, setStarted] = useState(false);
@@ -69,15 +68,15 @@ export const Pairing = () => {
   const run = (variables: Parameters<typeof action.mutate>[0], success?: string) =>
     action.mutate(variables, {
       onSuccess: () => success && showToast(success, 'info'),
-      onError: (error) => showToast(`${t('CHANGE_FAILED')}: ${error.message}`),
+      onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
     });
 
   return (
-    <Panel aria-label={t('PAIRING')}>
-      <h2>{t('PAIRING')}</h2>
-      <p>{t('PAIRING_HINT')}</p>
+    <Panel aria-label={m.PAIRING()}>
+      <h2>{m.PAIRING()}</h2>
+      <p>{m.PAIRING_HINT()}</p>
       <Row>
-        <Select aria-label={t('INTERFACE')} value={interfaceName} onChange={(e) => setInterfaceName(e.target.value)}>
+        <Select aria-label={m.INTERFACE()} value={interfaceName} onChange={(e) => setInterfaceName(e.target.value)}>
           {INTERFACES.map((name) => (
             <option key={name}>{name}</option>
           ))}
@@ -85,13 +84,13 @@ export const Pairing = () => {
         {active ? (
           <>
             <span role="status">
-              {t('PAIRING_ACTIVE')}: {seconds} s
+              {m.PAIRING_ACTIVE()}: {seconds} s
             </span>
             <DialogButton
               type="button"
               onClick={() => run({ type: 'setInstallMode', interfaceName, on: false, seconds: 0 })}
             >
-              {t('STOP_PAIRING')}
+              {m.STOP_PAIRING()}
             </DialogButton>
           </>
         ) : (
@@ -103,16 +102,16 @@ export const Pairing = () => {
               run({ type: 'setInstallMode', interfaceName, on: true, seconds: PAIRING_SECONDS });
             }}
           >
-            {t('START_PAIRING')}
+            {m.START_PAIRING()}
           </DialogButton>
         )}
       </Row>
 
-      <h2>{t('INBOX')}</h2>
+      <h2>{m.INBOX()}</h2>
       {inbox.length === 0 ? (
-        <p>{t('INBOX_EMPTY')}</p>
+        <p>{m.INBOX_EMPTY()}</p>
       ) : (
-        <Inbox aria-label={t('INBOX')}>
+        <Inbox aria-label={m.INBOX()}>
           {inbox.map((device) => (
             <li key={device.address}>
               <span>
@@ -121,8 +120,8 @@ export const Pairing = () => {
                 </Link>{' '}
                 ({device.type})
               </span>
-              <DialogButton type="button" onClick={() => run({ type: 'acceptDevice', address: device.address }, t('ACCEPTED'))}>
-                {t('ACCEPT')}
+              <DialogButton type="button" onClick={() => run({ type: 'acceptDevice', address: device.address }, m.ACCEPTED())}>
+                {m.ACCEPT()}
               </DialogButton>
             </li>
           ))}

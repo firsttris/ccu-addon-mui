@@ -1,9 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import styled from '@emotion/styled';
 import { useDeviceProblems } from '../queries';
-import { useTranslations } from '../i18n/utils';
 import { DeviceProblem } from '../types/types';
 import { WebUILink } from '../components/WebUILink';
+import { m } from '../paraglide/messages';
 
 const Container = styled.div`
   max-width: 1280px;
@@ -100,7 +100,6 @@ const AllGood = styled.p`
 `;
 
 const ProblemRow = ({ problem }: { problem: DeviceProblem }) => {
-  const t = useTranslations();
   return (
     <ProblemItem>
       <ProblemName>
@@ -112,20 +111,19 @@ const ProblemRow = ({ problem }: { problem: DeviceProblem }) => {
               {problem.roomName}
             </Link>
           ) : (
-            t('NO_ROOM')
+            m.NO_ROOM()
           )}
           {' · '}
           <WebUILink />
         </small>
       </ProblemName>
-      {problem.unreach && <Badge severity="error">📡 {t('UNREACH')}</Badge>}
-      {problem.lowBat && <Badge severity="warning">🪫 {t('LOW_BAT')}</Badge>}
+      {problem.unreach && <Badge severity="error">📡 {m.UNREACH()}</Badge>}
+      {problem.lowBat && <Badge severity="warning">🪫 {m.LOW_BAT()}</Badge>}
     </ProblemItem>
   );
 };
 
 export const Home = () => {
-  const t = useTranslations();
   const { data: deviceProblems } = useDeviceProblems();
 
   return (
@@ -135,40 +133,40 @@ export const Home = () => {
         <span role="img" aria-hidden>
           🏠
         </span>
-        <MenuText>{t('ROOMS')}</MenuText>
+        <MenuText>{m.ROOMS()}</MenuText>
       </MenuItem>
       <MenuItem to="/trades">
         <span role="img" aria-hidden>
           🔧
         </span>
-        <MenuText>{t('TRADES')}</MenuText>
+        <MenuText>{m.TRADES()}</MenuText>
       </MenuItem>
       <MenuItem to="/devices">
         <span role="img" aria-hidden>
           📋
         </span>
-        <MenuText>{t('ALL_DEVICES')}</MenuText>
+        <MenuText>{m.ALL_DEVICES()}</MenuText>
       </MenuItem>
       <MenuItem to="/sysvars">
         <span role="img" aria-hidden>
           🔢
         </span>
-        <MenuText>{t('SYSVARS')}</MenuText>
+        <MenuText>{m.SYSVARS()}</MenuText>
       </MenuItem>
       <MenuItem to="/programs">
         <span role="img" aria-hidden>
           ▶️
         </span>
-        <MenuText>{t('PROGRAMS')}</MenuText>
+        <MenuText>{m.PROGRAMS()}</MenuText>
       </MenuItem>
 
       {deviceProblems !== undefined && (
         <>
-          <SectionTitle>{t('DEVICE_PROBLEMS')}</SectionTitle>
+          <SectionTitle>{m.DEVICE_PROBLEMS()}</SectionTitle>
           {deviceProblems.length === 0 ? (
-            <AllGood>✅ {t('NO_DEVICE_PROBLEMS')}</AllGood>
+            <AllGood>✅ {m.NO_DEVICE_PROBLEMS()}</AllGood>
           ) : (
-            <ProblemList aria-label={t('DEVICE_PROBLEMS')}>
+            <ProblemList aria-label={m.DEVICE_PROBLEMS()}>
               {deviceProblems.map((problem) => (
                 <ProblemRow key={problem.address} problem={problem} />
               ))}

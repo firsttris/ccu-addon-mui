@@ -1,7 +1,8 @@
 import React from 'react';
 import styled from '@emotion/styled';
 import { EnergyMeterChannel } from '../types/types';
-import { defaultLang, useTranslations } from '../i18n/utils';
+import { defaultLang } from '../i18n/utils';
+import { m } from '../paraglide/messages';
 
 // All channels of one HmIP-ESI: channel 1 has the current power or gas flow,
 // channels 2-4 the meter readings. Which values are set depends on the
@@ -65,7 +66,6 @@ const isSet = (value: number | undefined): value is number =>
 export const EnergyMeterControl = React.memo(function EnergyMeterControl({
   channels,
 }: EnergyMeterControlProps) {
-  const t = useTranslations();
   const sorted = [...channels].sort((a, b) => channelNumber(a.address) - channelNumber(b.address));
 
   const power = sorted.find((c) => c.datapoints.POWER !== undefined)?.datapoints.POWER;
@@ -85,13 +85,13 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({
 
       {isElectricity && (
         <Section>
-          <Kind>⚡ {t('ELECTRICITY')}</Kind>
+          <Kind>⚡ {m.ELECTRICITY()}</Kind>
           <MainValue>{format(power ?? 0, 0)} W</MainValue>
           {energyCounters.map((channel, index) => (
             <Row key={channel.address}>
               <span>
-                {t('METER_READING')}
-                {index > 0 && ` (${t('CHANNEL')} ${channelNumber(channel.address)})`}
+                {m.METER_READING()}
+                {index > 0 && ` (${m.CHANNEL()} ${channelNumber(channel.address)})`}
               </span>
               <span>{format((channel.datapoints.ENERGY_COUNTER ?? 0) / 1000, 1)} kWh</span>
             </Row>
@@ -101,18 +101,18 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({
 
       {isGas && (
         <Section>
-          <Kind>🔥 {t('GAS')}</Kind>
+          <Kind>🔥 {m.GAS()}</Kind>
           <MainValue>
             {format(gasCounters[0]?.datapoints.GAS_VOLUME ?? 0, 2)} m³
           </MainValue>
           <Row>
-            <span>{t('GAS_FLOW')}</span>
+            <span>{m.GAS_FLOW()}</span>
             <span>{format(gasFlow ?? 0, 2)} m³/h</span>
           </Row>
         </Section>
       )}
 
-      {!isElectricity && !isGas && <Row>{t('NO_METER_DATA')}</Row>}
+      {!isElectricity && !isGas && <Row>{m.NO_METER_DATA()}</Row>}
     </Container>
   );
 });

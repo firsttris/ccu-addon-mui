@@ -13,8 +13,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Channel, DeviceProblem, HmEvent, Room, Trade, UserLevel } from './../types/types';
 import { useUniqueDeviceID } from './useUniqueDeviceID';
 import { useToast } from '../contexts/ToastContext';
-import { useTranslations } from '../i18n/utils';
 import { applyEvent } from './channels';
+import { m } from '../paraglide/messages';
 
 // The transport: WebSocket connection, login, and requests answered by
 // promises. All server data is loaded and cached with TanStack Query on top
@@ -135,7 +135,6 @@ export const useWebsocket = () => {
   const deviceId = useUniqueDeviceID();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  const t = useTranslations();
 
   // Requests made before the connection is open and authenticated
   const queuedRef = useRef(new Map<string, string>());
@@ -200,7 +199,7 @@ export const useWebsocket = () => {
             return;
           }
           console.error('WebSocket server error:', response.error);
-          showToast(`${t('SERVER_ERROR')}: ${response.error}`);
+          showToast(`${m.SERVER_ERROR()}: ${response.error}`);
           return;
       }
     } catch (error) {

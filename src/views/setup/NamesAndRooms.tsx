@@ -2,8 +2,8 @@ import styled from '@emotion/styled';
 import { useEffect, useState } from 'react';
 import { useChannels, useConfigChange, useRooms, useTrades } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
-import { useTranslations } from '../../i18n/utils';
 import { DialogButton } from '../../components/ConfirmDialog';
+import { m } from '../../paraglide/messages';
 
 const Row = styled.div`
   display: flex;
@@ -48,7 +48,6 @@ const ChannelBlock = styled.div`
 `;
 
 const NameField = ({ label, name, onRename }: { label: string; name: string; onRename: (name: string) => void }) => {
-  const t = useTranslations();
   const [draft, setDraft] = useState(name);
   useEffect(() => setDraft(name), [name]);
   const changed = draft.trim() !== '' && draft !== name;
@@ -64,7 +63,7 @@ const NameField = ({ label, name, onRename }: { label: string; name: string; onR
       <Row>
         <NameInput aria-label={label} value={draft} onChange={(event) => setDraft(event.target.value)} />
         <DialogButton type="submit" disabled={!changed}>
-          {t('RENAME')}
+          {m.RENAME()}
         </DialogButton>
       </Row>
     </form>
@@ -79,7 +78,6 @@ interface NamesAndRoomsProps {
 // Renaming the device and its channels, and the rooms and trades of each
 // channel. Every change is saved right away.
 export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps) => {
-  const t = useTranslations();
   const { showToast } = useToast();
   const { data: allChannels } = useChannels({ all: true });
   const { data: rooms = [] } = useRooms();
@@ -91,26 +89,26 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
   const run = (variables: Parameters<typeof change.mutate>[0], success?: string) =>
     change.mutate(variables, {
       onSuccess: () => success && showToast(success, 'info'),
-      onError: (error) => showToast(`${t('CHANGE_FAILED')}: ${error.message}`),
+      onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
     });
 
   return (
     <>
       <NameField
-        label={`${t('NAME')} ${deviceAddress}`}
+        label={`${m.NAME()} ${deviceAddress}`}
         name={deviceName}
-        onRename={(name) => run({ type: 'rename', address: deviceAddress, name }, t('RENAMED'))}
+        onRename={(name) => run({ type: 'rename', address: deviceAddress, name }, m.RENAMED())}
       />
       {channels.map((channel) => (
         <ChannelBlock key={channel.address}>
           <NameField
-            label={`${t('NAME')} ${channel.address}`}
+            label={`${m.NAME()} ${channel.address}`}
             name={channel.name}
-            onRename={(name) => run({ type: 'rename', address: channel.address, name }, t('RENAMED'))}
+            onRename={(name) => run({ type: 'rename', address: channel.address, name }, m.RENAMED())}
           />
           {[
-            { legend: t('ROOMS'), groups: rooms, member: channel.rooms ?? [], list: 'rooms' as const },
-            { legend: t('TRADES'), groups: trades, member: channel.trades ?? [], list: 'trades' as const },
+            { legend: m.ROOMS(), groups: rooms, member: channel.rooms ?? [], list: 'rooms' as const },
+            { legend: m.TRADES(), groups: trades, member: channel.trades ?? [], list: 'trades' as const },
           ].map(({ legend, groups, member, list }) => (
             <Groups key={legend} aria-label={`${legend} ${channel.address}`}>
               <legend>{legend}</legend>

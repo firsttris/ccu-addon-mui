@@ -6,8 +6,8 @@ import TeenyiconsFloorplanSolid from '~icons/teenyicons/floorplan-solid';
 import MdiPipeValve from '~icons/mdi/pipe-valve';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
-import { useTranslations } from '../i18n/utils';
 import { useDeviceProblems, useRooms, useTrades } from '../queries';
+import { m } from '../paraglide/messages';
 
 // A short reconnect (e.g. at startup) should not flash a warning
 const CONNECTION_WARNING_DELAY_MS = 2000;
@@ -188,7 +188,6 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
-  const t = useTranslations();
   const {
     connectionStatus,
     authRequired,
@@ -226,11 +225,11 @@ export const Header: React.FC = () => {
           }}
         >
           <MenuHeader>
-            {t('NAVIGATION')}
+            {m.NAVIGATION()}
             <CloseButton onClick={() => setMenuOpen(false)}>×</CloseButton>
           </MenuHeader>
           <MenuSection>
-            <MenuSectionTitle>{t('ROOMS')}</MenuSectionTitle>
+            <MenuSectionTitle>{m.ROOMS()}</MenuSectionTitle>
             {rooms.map((room) => (
               <SubMenuItem
                 key={room.id}
@@ -248,7 +247,7 @@ export const Header: React.FC = () => {
             ))}
           </MenuSection>
           <MenuSection>
-            <MenuSectionTitle>{t('TRADES')}</MenuSectionTitle>
+            <MenuSectionTitle>{m.TRADES()}</MenuSectionTitle>
             {trades.map((trade) => (
               <SubMenuItem
                 key={trade.id}
@@ -272,7 +271,7 @@ export const Header: React.FC = () => {
                 setMenuOpen(false);
               }}
             >
-              {t('ALL_DEVICES')}
+              {m.ALL_DEVICES()}
             </SubMenuItem>
             <SubMenuItem
               onClick={() => {
@@ -280,7 +279,7 @@ export const Header: React.FC = () => {
                 setMenuOpen(false);
               }}
             >
-              {t('SYSVARS')}
+              {m.SYSVARS()}
             </SubMenuItem>
             <SubMenuItem
               onClick={() => {
@@ -288,7 +287,7 @@ export const Header: React.FC = () => {
                 setMenuOpen(false);
               }}
             >
-              {t('PROGRAMS')}
+              {m.PROGRAMS()}
             </SubMenuItem>
             {userLevel === 'admin' && (
               <SubMenuItem
@@ -297,7 +296,7 @@ export const Header: React.FC = () => {
                   setMenuOpen(false);
                 }}
               >
-                {t('SETUP')}
+                {m.SETUP()}
               </SubMenuItem>
             )}
           </MenuSection>
@@ -309,7 +308,7 @@ export const Header: React.FC = () => {
                   logout();
                 }}
               >
-                {t('LOGOUT')}
+                {m.LOGOUT()}
               </SubMenuItem>
             </MenuSection>
           )}
@@ -322,8 +321,8 @@ export const Header: React.FC = () => {
         {problemCount > 0 && (
           <ProblemBadge
             onClick={() => navigate({ to: '/' })}
-            aria-label={`${t('DEVICE_PROBLEMS')}: ${problemCount}`}
-            title={t('DEVICE_PROBLEMS')}
+            aria-label={`${m.DEVICE_PROBLEMS()}: ${problemCount}`}
+            title={m.DEVICE_PROBLEMS()}
           >
             ⚠️ {problemCount}
           </ProblemBadge>
@@ -331,15 +330,15 @@ export const Header: React.FC = () => {
         <ConnectionDot
           connected={connected}
           role="img"
-          aria-label={connected ? t('CONNECTED') : t('CONNECTING')}
-          title={connected ? t('CONNECTED') : t('CONNECTING')}
+          aria-label={connected ? m.CONNECTED() : m.CONNECTING()}
+          title={connected ? m.CONNECTED() : m.CONNECTING()}
         />
         <IconButton onClick={toggleTheme} aria-label="Toggle Theme">
           {theme.mode === 'light' ? '🌙' : '☀️'}
         </IconButton>
       </RightGroup>
       {showConnectionWarning && (
-        <ConnectionBanner role="status">{t('CONNECTION_LOST')}</ConnectionBanner>
+        <ConnectionBanner role="status">{m.CONNECTION_LOST()}</ConnectionBanner>
       )}
     </HeaderContainer>
   );

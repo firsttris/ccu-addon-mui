@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import fs from 'fs';
 import Icons from 'unplugin-icons/vite';
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { FileSystemIconLoader } from 'unplugin-icons/loaders';
 
 // Default sizes of icons that had a fixed size as hand-written components;
@@ -54,6 +55,14 @@ export default defineConfig(({ command, mode, isPreview }) => ({
       autoCodeSplitting: true,
     }),
     react(),
+    // Texts from messages/<locale>.json, compiled to typed functions (m.KEY())
+    paraglideVitePlugin({
+      project: './project.inlang',
+      outdir: './src/paraglide',
+      // The browser's language, else English
+      strategy: ['preferredLanguage', 'baseLocale'],
+      emitTsDeclarations: true,
+    }),
     // Icons are compiled into the bundle (no requests at runtime, works
     // offline on the CCU). "mui" holds our own SVGs from src/assets/icons.
     Icons({

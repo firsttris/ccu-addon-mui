@@ -58,6 +58,8 @@
     "@iconify-json/mdi": "^1.2.3",
     "@iconify-json/teenyicons": "^1.2.2",
     "@iconify-json/uiw": "^1.2.4",
+    "@inlang/paraglide-js": "^2.25.4",
+    "@inlang/plugin-message-format": "^4.4.4",
     "@playwright/test": "^1.63.0",
     "@svgr/core": "^8.1.0",
     "@svgr/plugin-jsx": "^8.1.0",

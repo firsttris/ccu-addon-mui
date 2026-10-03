@@ -6,14 +6,13 @@ import UiwUp from '~icons/uiw/up';
 import MaterialSymbolsStop from '~icons/material-symbols/stop';
 import { ChannelName } from '../components/ChannelName';
 import { ControlButton } from '../components/ControlButton';
-import { useTranslations } from '../i18n/utils';
+import { m } from '../paraglide/messages';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;
 }
 
 export const BlindsControl = ({ channel }: ControlProps) => {
-  const t = useTranslations();
   const setDataPoint = useSetDataPoint();
   const { datapoints, name, address, interfaceName } = channel;
   // Rounded: e.g. 0.29 * 100 is 28.999999999999996 in floating point
@@ -32,8 +31,8 @@ export const BlindsControl = ({ channel }: ControlProps) => {
         >
           <div style={{ fontSize: '13px', marginBottom: '5px' }}>
             {blindValue === 0
-              ? t('BLIND_CLOSED')
-              : `${blindValue} % ${t('BLIND_OPEN')}`}
+              ? m.BLIND_CLOSED()
+              : `${blindValue} % ${m.BLIND_OPEN()}`}
           </div>
           <Shutters
             percent={blindValue}

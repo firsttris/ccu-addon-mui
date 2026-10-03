@@ -8,6 +8,7 @@ import {
   ParamsetDescription,
 } from '../../types/types';
 import { defaultLang, TranslationKey, useTranslations } from '../../i18n/utils';
+import { m } from '../../paraglide/messages';
 
 // Renders a channel's parameters from its paramset description: the element
 // follows the parameter's type, writable parameters get inputs.
@@ -117,7 +118,7 @@ export const formatParameterValue = (
   switch (parameter.type) {
     case 'BOOL':
     case 'ACTION':
-      return value ? t('YES') : t('NO');
+      return value ? m.YES() : m.NO();
     case 'ENUM':
       return typeof value === 'number' ? parameter.valueList?.[value] ?? String(value) : String(value);
     case 'FLOAT':
@@ -188,7 +189,7 @@ const ParameterValue = (props: ParameterProps) => {
       }
       return (
         <ActionButton type="button" onClick={() => onSet(name, true)}>
-          {t('RUN')}
+          {m.RUN()}
         </ActionButton>
       );
     case 'BOOL':
@@ -204,7 +205,7 @@ const ParameterValue = (props: ParameterProps) => {
           />
         );
       }
-      return <>{value === null || value === undefined ? '–' : value ? t('YES') : t('NO')}</>;
+      return <>{value === null || value === undefined ? '–' : value ? m.YES() : m.NO()}</>;
     case 'ENUM': {
       const options = parameter.valueList ?? [];
       if (writable) {

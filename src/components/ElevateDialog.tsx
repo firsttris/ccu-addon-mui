@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
 import { TranslationKey, useTranslations } from '../i18n/utils';
+import { m } from '../paraglide/messages';
 
 const Input = styled.input`
   font: inherit;
@@ -50,7 +51,7 @@ export const ElevateDialog = ({ onDone, onCancel }: { onDone: () => void; onCanc
   };
 
   return (
-    <ConfirmDialog title={t('ELEVATE')} confirmLabel={t('CONFIRM')} busy={busy || password === ''} onConfirm={submit} onCancel={onCancel}>
+    <ConfirmDialog title={m.ELEVATE()} confirmLabel={m.CONFIRM()} busy={busy || password === ''} onConfirm={submit} onCancel={onCancel}>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -60,10 +61,10 @@ export const ElevateDialog = ({ onDone, onCancel }: { onDone: () => void; onCanc
         }}
       >
         <label>
-          {t('ELEVATE_HINT')}
+          {m.ELEVATE_HINT()}
           <Input
             type="password"
-            aria-label={t('PASSWORD')}
+            aria-label={m.PASSWORD()}
             autoComplete="current-password"
             autoFocus
             value={password}

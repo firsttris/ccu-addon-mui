@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { useLogicAction, usePrograms, useSysvars } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
-import { useTranslations } from '../i18n/utils';
 import { Sysvar } from '../types/types';
 import { DialogButton } from '../components/ConfirmDialog';
+import { m } from '../paraglide/messages';
 
 const Container = styled.div`
   max-width: 800px;
@@ -166,15 +166,14 @@ const SysvarControl = ({ sysvar, onSet }: { sysvar: Sysvar; onSet: (value: strin
 };
 
 export const Sysvars = () => {
-  const t = useTranslations();
   const { showToast } = useToast();
   const { data: sysvars = [] } = useSysvars();
   const action = useLogicAction();
 
   return (
     <Container>
-      <h1>{t('SYSVARS')}</h1>
-      <List aria-label={t('SYSVARS')}>
+      <h1>{m.SYSVARS()}</h1>
+      <List aria-label={m.SYSVARS()}>
         {sysvars
           .filter((sv) => sv.visible)
           .map((sysvar) => (
@@ -186,7 +185,7 @@ export const Sysvars = () => {
                   onSet={(value) =>
                     action.mutate(
                       { type: 'setSysvar', id: sysvar.id, value },
-                      { onError: (error) => showToast(`${t('SET_FAILED')}: ${error.message}`) },
+                      { onError: (error) => showToast(`${m.SET_FAILED()}: ${error.message}`) },
                     )
                   }
                 />
@@ -199,7 +198,6 @@ export const Sysvars = () => {
 };
 
 export const Programs = () => {
-  const t = useTranslations();
   const { showToast } = useToast();
   const { userLevel, elevated } = useWebSocketContext();
   const { data: programs = [] } = usePrograms();
@@ -209,19 +207,19 @@ export const Programs = () => {
   const run = (variables: Parameters<typeof action.mutate>[0], success?: string) =>
     action.mutate(variables, {
       onSuccess: () => success && showToast(success, 'info'),
-      onError: (error) => showToast(`${t('SET_FAILED')}: ${error.message}`),
+      onError: (error) => showToast(`${m.SET_FAILED()}: ${error.message}`),
     });
 
   return (
     <Container>
-      <h1>{t('PROGRAMS')}</h1>
-      <List aria-label={t('PROGRAMS')}>
+      <h1>{m.PROGRAMS()}</h1>
+      <List aria-label={m.PROGRAMS()}>
         {programs
           .filter((p) => p.visible)
           .map((program) => (
             <Item key={program.id}>
               <Name>
-                {program.name} {!program.active && <Badge>{t('INACTIVE')}</Badge>}
+                {program.name} {!program.active && <Badge>{m.INACTIVE()}</Badge>}
               </Name>
               <Controls>
                 {canConfigure && (
@@ -229,18 +227,18 @@ export const Programs = () => {
                     <input
                       type="checkbox"
                       checked={program.active}
-                      aria-label={`${t('ACTIVE')} ${program.name}`}
+                      aria-label={`${m.ACTIVE()} ${program.name}`}
                       onChange={(event) => run({ type: 'setProgramActive', id: program.id, active: event.target.checked })}
                     />{' '}
-                    {t('ACTIVE')}
+                    {m.ACTIVE()}
                   </label>
                 )}
                 <DialogButton
                   type="button"
-                  aria-label={`${t('RUN')} ${program.name}`}
-                  onClick={() => run({ type: 'runProgram', id: program.id }, t('PROGRAM_RUN'))}
+                  aria-label={`${m.RUN()} ${program.name}`}
+                  onClick={() => run({ type: 'runProgram', id: program.id }, m.PROGRAM_RUN())}
                 >
-                  {t('RUN')}
+                  {m.RUN()}
                 </DialogButton>
               </Controls>
             </Item>

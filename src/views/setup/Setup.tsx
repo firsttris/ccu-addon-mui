@@ -12,12 +12,12 @@ import {
 } from '@tanstack/react-table';
 import { useDevices } from '../../queries';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
-import { useTranslations } from '../../i18n/utils';
 import { useChannelNames } from './channelNames';
 import { Pairing } from './Pairing';
 import { Sessions } from './Sessions';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { ElevateDialog } from '../../components/ElevateDialog';
+import { m } from '../../paraglide/messages';
 
 export const SetupContainer = styled.div`
   max-width: 1280px;
@@ -91,7 +91,6 @@ const column = createColumnHelper<DeviceRow>();
 
 // The setup area's start: all devices of the CCU, searchable and sortable.
 export const Setup = () => {
-  const t = useTranslations();
   const { userLevel, elevated, authRequired } = useWebSocketContext();
   const [elevating, setElevating] = useState(false);
   const { data: devices = [] } = useDevices();
@@ -114,7 +113,7 @@ export const Setup = () => {
   const columns = useMemo(
     () => [
       column.accessor('name', {
-        header: t('NAME'),
+        header: m.NAME(),
         cell: (info) => (
           <Link
             to="/device/$interfaceName/$address"
@@ -124,12 +123,12 @@ export const Setup = () => {
           </Link>
         ),
       }),
-      column.accessor('type', { header: t('DEVICE_TYPE') }),
-      column.accessor('address', { header: t('ADDRESS') }),
-      column.accessor('interfaceName', { header: t('INTERFACE') }),
-      column.accessor('firmware', { header: t('FIRMWARE') }),
+      column.accessor('type', { header: m.DEVICE_TYPE() }),
+      column.accessor('address', { header: m.ADDRESS() }),
+      column.accessor('interfaceName', { header: m.INTERFACE() }),
+      column.accessor('firmware', { header: m.FIRMWARE() }),
     ],
-    [t],
+    [],
   );
 
   const table = useReactTable({
@@ -145,13 +144,13 @@ export const Setup = () => {
 
   return (
     <SetupContainer>
-      <h1>{t('DEVICES')}</h1>
-      {userLevel !== 'admin' && <Notice role="status">{t('ADMIN_ONLY')}</Notice>}
+      <h1>{m.DEVICES()}</h1>
+      {userLevel !== 'admin' && <Notice role="status">{m.ADMIN_ONLY()}</Notice>}
       {userLevel === 'admin' && !elevated && (
         <Notice role="status">
-          {t('ELEVATE_HINT')}{' '}
+          {m.ELEVATE_HINT()}{' '}
           <DialogButton type="button" onClick={() => setElevating(true)}>
-            {t('ELEVATE')}
+            {m.ELEVATE()}
           </DialogButton>
         </Notice>
       )}
@@ -160,13 +159,13 @@ export const Setup = () => {
       {userLevel === 'admin' && elevated && authRequired && <Sessions />}
       <Search
         type="search"
-        aria-label={t('SEARCH')}
-        placeholder={t('SEARCH')}
+        aria-label={m.SEARCH()}
+        placeholder={m.SEARCH()}
         value={filter}
         onChange={(event) => setFilter(event.target.value)}
       />
       <TableWrapper>
-        <Table aria-label={t('DEVICES')}>
+        <Table aria-label={m.DEVICES()}>
           <thead>
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>

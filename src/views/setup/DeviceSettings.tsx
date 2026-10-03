@@ -15,6 +15,7 @@ import { Notice, SetupContainer } from './Setup';
 import { useChannelNames } from './channelNames';
 import { NamesAndRooms } from './NamesAndRooms';
 import { Links } from './Links';
+import { m } from '../../paraglide/messages';
 
 const Section = styled.section`
   margin: 16px 0;
@@ -141,13 +142,13 @@ export const DeviceSettings = () => {
         }
       }
       setDrafts({});
-      showToast(t('SAVED'), 'info');
+      showToast(m.SAVED(), 'info');
     } catch (error) {
       if (error instanceof RequestError && error.code === 'ELEVATION_REQUIRED') {
         // The 8 hours are over: ask for the password, keep the changes
         setElevating(true);
       } else {
-        showToast(`${t('SAVE_FAILED')}: ${error instanceof Error ? error.message : error}`);
+        showToast(`${m.SAVE_FAILED()}: ${error instanceof Error ? error.message : error}`);
       }
     } finally {
       setConfirming(false);
@@ -159,34 +160,34 @@ export const DeviceSettings = () => {
   return (
     <SetupContainer>
       <p>
-        <Link to="/setup">← {t('DEVICES')}</Link>
+        <Link to="/setup">← {m.DEVICES()}</Link>
       </p>
       <h1>{names.get(address) ?? address}</h1>
       <p>
         {device?.type} · {address} · {interfaceName}
-        {device?.firmware ? ` · ${t('FIRMWARE')} ${device.firmware}` : ''} · <WebUILink />
+        {device?.firmware ? ` · ${m.FIRMWARE()} ${device.firmware}` : ''} · <WebUILink />
       </p>
-      {!isAdmin && <Notice role="status">{t('ADMIN_ONLY')}</Notice>}
+      {!isAdmin && <Notice role="status">{m.ADMIN_ONLY()}</Notice>}
       {isAdmin && !elevated && (
         <Notice role="status">
-          {t('ELEVATE_HINT')}{' '}
+          {m.ELEVATE_HINT()}{' '}
           <DialogButton type="button" onClick={() => setElevating(true)}>
-            {t('ELEVATE')}
+            {m.ELEVATE()}
           </DialogButton>
         </Notice>
       )}
-      {configPending && <Notice role="status">{t('CONFIG_PENDING')}</Notice>}
+      {configPending && <Notice role="status">{m.CONFIG_PENDING()}</Notice>}
 
       {canEdit && (
-        <Section aria-label={t('NAMES_AND_ROOMS')}>
-          <h2>{t('NAMES_AND_ROOMS')}</h2>
+        <Section aria-label={m.NAMES_AND_ROOMS()}>
+          <h2>{m.NAMES_AND_ROOMS()}</h2>
           <NamesAndRooms deviceAddress={address} deviceName={names.get(address) ?? address} />
         </Section>
       )}
 
       {sections.map((s) => {
         const draft = drafts[s.address] ?? {};
-        const label = s.address === address ? t('DEVICE_SETTINGS') : (names.get(s.address) ?? s.address);
+        const label = s.address === address ? m.DEVICE_SETTINGS() : (names.get(s.address) ?? s.address);
         return (
           <Section key={s.address} aria-label={label}>
             <h2>
@@ -203,22 +204,22 @@ export const DeviceSettings = () => {
           </Section>
         );
       })}
-      {!loading && sections.length === 0 && <p>{t('NO_SETTINGS')}</p>}
+      {!loading && sections.length === 0 && <p>{m.NO_SETTINGS()}</p>}
 
       {canEdit && sections.length > 0 && (
         <Toolbar>
           <DialogButton type="button" primary disabled={changes.length === 0} onClick={() => setConfirming(true)}>
-            {t('SAVE')} {changes.length > 0 ? `(${changes.length})` : ''}
+            {m.SAVE()} {changes.length > 0 ? `(${changes.length})` : ''}
           </DialogButton>
           <DialogButton type="button" disabled={changes.length === 0} onClick={() => setDrafts({})}>
-            {t('RESET')}
+            {m.RESET()}
           </DialogButton>
         </Toolbar>
       )}
 
       {canEdit && device && (device.channels ?? []).some((c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length) && (
-        <Section aria-label={t('LINKS')}>
-          <h2>{t('LINKS')}</h2>
+        <Section aria-label={m.LINKS()}>
+          <h2>{m.LINKS()}</h2>
           <Links interfaceName={interfaceName} deviceAddress={address} channels={device.channels ?? []} />
         </Section>
       )}
@@ -226,15 +227,15 @@ export const DeviceSettings = () => {
       {canEdit && device && (
         <Toolbar>
           <DialogButton type="button" onClick={() => setDeleting(true)} style={{ color: '#c62828' }}>
-            {t('DELETE_DEVICE')}
+            {m.DELETE_DEVICE()}
           </DialogButton>
         </Toolbar>
       )}
 
       {deleting && (
         <ConfirmDialog
-          title={t('DELETE_DEVICE')}
-          confirmLabel={t('DELETE')}
+          title={m.DELETE_DEVICE()}
+          confirmLabel={m.DELETE()}
           busy={pairingAction.isPending}
           onCancel={() => setDeleting(false)}
           onConfirm={() =>
@@ -242,16 +243,16 @@ export const DeviceSettings = () => {
               { type: 'deleteDevice', interfaceName, address, ...deleteOptions },
               {
                 onSuccess: () => {
-                  showToast(t('DELETED'), 'info');
+                  showToast(m.DELETED(), 'info');
                   navigate({ to: '/setup' });
                 },
-                onError: (error) => showToast(`${t('CHANGE_FAILED')}: ${error.message}`),
+                onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
                 onSettled: () => setDeleting(false),
               },
             )
           }
         >
-          <p>{t('DELETE_DEVICE_CONFIRM')}</p>
+          <p>{m.DELETE_DEVICE_CONFIRM()}</p>
           {(['reset', 'force'] as const).map((option) => (
             <label key={option} style={{ display: 'block', margin: '6px 0' }}>
               <input
@@ -269,8 +270,8 @@ export const DeviceSettings = () => {
 
       {confirming && (
         <ConfirmDialog
-          title={t('SAVE_CHANGES')}
-          confirmLabel={t('SAVE')}
+          title={m.SAVE_CHANGES()}
+          confirmLabel={m.SAVE()}
           busy={putParamset.isPending}
           onConfirm={save}
           onCancel={() => setConfirming(false)}

@@ -3,7 +3,7 @@ import MdiPowerStandby from '~icons/mdi/power-standby';
 import MdiCalendarAuto from '~icons/mdi/thermostat-auto';
 import MdiHandManual from '~icons/mdi/thermostat-cog';
 import MdiFlame from '~icons/mdi/fire';
-import { useTranslations } from '../../i18n/utils';
+import { m } from '../../paraglide/messages';
 
 interface ThermostatIconButtonsProps {
   manualMode: boolean;
@@ -60,17 +60,15 @@ export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
   onToggleMode,
   onToggleBoost,
 }) => {
-  const t = useTranslations();
-
   return (
     <IconButtons>
-      <IconButton onClick={onPowerOff} title={t('POWER_OFF')}>
+      <IconButton onClick={onPowerOff} title={m.POWER_OFF()}>
         <MdiPowerStandby />
       </IconButton>
       <IconButton
         active={manualMode}
         onClick={onToggleMode}
-        title={manualMode ? t('MANUAL') : t('AUTOMATIC')}
+        title={manualMode ? m.MANUAL() : m.AUTOMATIC()}
       >
         {manualMode ? <MdiHandManual /> : <MdiCalendarAuto />}
       </IconButton>
@@ -78,7 +76,7 @@ export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
         <IconButton
           active={boostMode}
           onClick={onToggleBoost}
-          title={t('BOOST')}
+          title={m.BOOST()}
         >
           <MdiFlame />
         </IconButton>

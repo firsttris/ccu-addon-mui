@@ -2,6 +2,7 @@ import { useState } from 'react';
 import styled from '@emotion/styled';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { TranslationKey, useTranslations } from '../i18n/utils';
+import { m } from '../paraglide/messages';
 
 const Container = styled.div`
   min-height: 100vh;
@@ -109,9 +110,9 @@ export const Login = () => {
         }}
       >
         <Title>CCU Addon MUI</Title>
-        <Hint>{t('LOGIN_HINT')}</Hint>
+        <Hint>{m.LOGIN_HINT()}</Hint>
         <Label>
-          {t('USERNAME')}
+          {m.USERNAME()}
           <Input
             name="username"
             autoComplete="username"
@@ -120,7 +121,7 @@ export const Login = () => {
           />
         </Label>
         <Label>
-          {t('PASSWORD')}
+          {m.PASSWORD()}
           <Input
             name="password"
             type="password"
@@ -133,9 +134,9 @@ export const Login = () => {
         {loginError && (
           <ErrorText role="alert">{t(errorMessages[loginError] ?? 'INVALID_CREDENTIALS')}</ErrorText>
         )}
-        {!connected && <Hint>{t('CONNECTING')}</Hint>}
+        {!connected && <Hint>{m.CONNECTING()}</Hint>}
         <SubmitButton type="submit" disabled={!connected || submitting || username === ''}>
-          {t('SIGN_IN')}
+          {m.SIGN_IN()}
         </SubmitButton>
       </Form>
     </Container>
