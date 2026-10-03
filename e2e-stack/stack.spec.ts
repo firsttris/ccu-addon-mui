@@ -627,12 +627,18 @@ test('legt Programme im Programm-Editor an, ändert und löscht sie', async ({ p
 
   // An existing program: the time of its time control
   await page.getByRole('link', { name: 'Rollläden abends schließen' }).click();
-  await expect(rule.getByLabel('um', { exact: true })).toHaveValue('19:30');
-  await rule.getByLabel('um', { exact: true }).fill('20:15');
+  await expect(rule).toContainText('täglich, um 19:30');
+  await rule.getByRole('button', { name: 'Zeitsteuerung bearbeiten' }).click();
+  const timeDialog = page.getByRole('dialog', { name: 'Zeitsteuerung' });
+  await timeDialog.getByLabel('tagsüber (Sonnenaufgang bis -untergang)').check();
+  await timeDialog.getByLabel('Wiederholung', { exact: true }).selectOption({ label: 'wöchentlich' });
+  await timeDialog.getByRole('button', { name: 'Sa' }).click();
+  await timeDialog.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(rule).toContainText('wöchentlich am Mo, Di, Mi, Do, Fr, Sa, tagsüber');
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
   await page.reload();
-  await expect(rule.getByLabel('um', { exact: true })).toHaveValue('20:15');
+  await expect(rule).toContainText('wöchentlich am Mo, Di, Mi, Do, Fr, Sa, tagsüber');
   await expect(rule.getByLabel('Systemvariable')).toHaveValue('950');
 });

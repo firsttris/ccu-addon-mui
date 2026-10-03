@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import XIcon from '~icons/lucide/x';
+import { TimeModuleDialog, useTimeTexts } from './TimeModuleDialog';
 import { ProgramCondition, ProgramDestination, TimeModule } from '../../types/protocol';
 import { useSysvars } from '../../queries';
 import { Button } from '../../components/ui/button';
 import { NativeSelect } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
-import { getLocale } from '../../paraglide/runtime';
 import { m } from '../../paraglide/messages';
 import { cn } from '../../lib/utils';
 import {
@@ -19,23 +20,17 @@ import {
   ValueSelect,
 } from './ProgramInputs';
 import {
-  clockOf,
-  clockOfSeconds,
   COMPARE,
   conditionKind,
   ConditionKind,
+  describeTimeModule,
   destinationKind,
   DestinationKind,
-  isSimpleTimeModule,
   newCondition,
   newDestination,
-  secondsOfClock,
   sysvarValueType,
-  TIMER,
-  timeOfClock,
   TRIGGER,
   valueTypeOf,
-  WEEKDAYS,
 } from './programModel';
 
 const selectClass = 'h-9 min-w-0 max-w-full md:text-[13px]';
@@ -109,76 +104,27 @@ const NumberCondition = ({
   );
 };
 
-// --- Time ("Zeitsteuerung")
+// --- Time ("Zeitsteuerung"): a summary, edited in a dialog
 
-const weekdayName = (index: number) =>
-  // 2024-01-01 was a Monday
-  new Intl.DateTimeFormat(getLocale(), { weekday: 'short' }).format(new Date(2024, 0, 1 + index));
-
-const TimeEditor = ({ time, onChange }: { time: TimeModule; onChange: (t: TimeModule) => void }) => {
-  if (!isSimpleTimeModule(time)) {
-    return <span className="self-center text-sm text-muted-foreground">{m.TIME_COMPLEX()}</span>;
-  }
-  const set = (patch: Partial<TimeModule>) => onChange({ ...time, ...patch, changed: true });
-  const start = clockOf(time.time);
-  const isRange = time.duration > 0;
+const TimeSummary = ({ time, onChange }: { time: TimeModule; onChange: (t: TimeModule) => void }) => {
+  const [editing, setEditing] = useState(false);
+  const texts = useTimeTexts();
   return (
     <>
-      <Field label={m.PRG_KIND_TIME()}>
-        <NativeSelect
-          className={selectClass}
-          aria-label={m.PRG_KIND_TIME()}
-          value={time.timerType}
-          onChange={(e) => {
-            const timerType = Number(e.target.value);
-            set({ timerType, weekdays: timerType === TIMER.WEEKLY ? time.weekdays || 31 : 0 });
+      <span className="self-center text-sm">{describeTimeModule(time, texts)}</span>
+      <Button type="button" variant="outline" size="sm" className="self-end" onClick={() => setEditing(true)}>
+        {m.PRG_TM_EDIT_BUTTON()}
+      </Button>
+      {editing && (
+        <TimeModuleDialog
+          time={time}
+          onCancel={() => setEditing(false)}
+          onSave={(t) => {
+            setEditing(false);
+            onChange(t);
           }}
-        >
-          <option value={TIMER.DAILY}>{m.TIME_DAILY()}</option>
-          <option value={TIMER.WEEKLY}>{m.TIME_WEEKLY()}</option>
-        </NativeSelect>
-      </Field>
-      {time.timerType === TIMER.WEEKLY && (
-        <div role="group" aria-label={m.TIME_WEEKLY()} className="flex gap-1 self-end">
-          {WEEKDAYS.map((bit, i) => (
-            <button
-              key={bit}
-              type="button"
-              aria-pressed={(time.weekdays & bit) !== 0}
-              onClick={() => set({ weekdays: time.weekdays ^ bit })}
-              className={cn(
-                'h-9 w-10 rounded-lg border text-xs font-medium',
-                (time.weekdays & bit) !== 0 ? 'border-primary bg-primary text-primary-foreground' : 'text-muted-foreground',
-              )}
-            >
-              {weekdayName(i)}
-            </button>
-          ))}
-        </div>
+        />
       )}
-      <Field label={m.TIME_AT()}>
-        <Input
-          type="time"
-          className="h-9 w-28 md:text-[13px]"
-          aria-label={m.TIME_AT()}
-          value={start}
-          onChange={(e) => e.target.value && set({ time: timeOfClock(e.target.value) })}
-        />
-      </Field>
-      <Field label={m.TIME_UNTIL()}>
-        <Input
-          type="time"
-          className="h-9 w-28 md:text-[13px]"
-          aria-label={m.TIME_UNTIL()}
-          value={isRange ? clockOfSeconds(secondsOfClock(start) + time.duration) : ''}
-          onChange={(e) => {
-            if (!e.target.value) return set({ duration: 0 });
-            // Length of the range, past midnight if the end is earlier
-            const length = (secondsOfClock(e.target.value) - secondsOfClock(start) + 86400) % 86400;
-            set({ duration: length });
-          }}
-        />
-      </Field>
     </>
   );
 };
@@ -310,7 +256,7 @@ export const ConditionRow = ({
         </Field>
       )}
       {kind === 'time' && condition.time && (
-        <TimeEditor time={condition.time} onChange={(time) => onChange({ ...condition, time })} />
+        <TimeSummary time={condition.time} onChange={(time) => onChange({ ...condition, time })} />
       )}
       {kind === 'other' && <span className="self-center text-sm text-muted-foreground">{m.PRG_KIND_OTHER()}</span>}
       {kind !== 'other' && parameter?.type !== 'ACTION' && (
@@ -399,7 +345,16 @@ export const DestinationRow = ({
         : undefined;
   const isText = (kind === 'device' && parameter?.type === 'STRING') || (kind === 'sysvar' && sysvar?.kind === 'string');
   const unknownDatapoint = kind === 'device' && !!destination.datapoint && !parameter;
-  const isNumber = ((kind === 'device' && (parameter || unknownDatapoint)) || (kind === 'sysvar' && sysvar)) && !options && !isText;
+  // "mit Wert aus": the value of a system variable instead of a fixed one
+  const fromSysvar = destination.valueType === 'ivtSystemId';
+  const isNumber =
+    !fromSysvar && ((kind === 'device' && (parameter || unknownDatapoint)) || (kind === 'sysvar' && sysvar)) && !options && !isText;
+  const fixedValue = (): Pick<ProgramDestination, 'valueType' | 'value'> => {
+    if (kind === 'sysvar') return { valueType: sysvarValueType(sysvar), value: sysvarOptions(sysvar)?.[0]?.value ?? '0' };
+    const discrete = parameter?.type === 'ACTION' ? [{ value: '1' }] : discreteOptions(parameter);
+    return { valueType: valueTypeOf(parameter), value: discrete?.[0]?.value ?? '0' };
+  };
+  const canTakeValue = (kind === 'device' && !!destination.datapoint) || (kind === 'sysvar' && !!sysvar);
 
   return (
     <Row className={kind === 'script' ? 'items-start' : undefined}>
@@ -453,7 +408,25 @@ export const DestinationRow = ({
           }}
         />
       )}
-      {options && (
+      {canTakeValue && (
+        <Field label={m.PRG_VALUE_FROM()}>
+          <NativeSelect
+            className={selectClass}
+            aria-label={m.PRG_VALUE_FROM()}
+            value={fromSysvar ? 'sysvar' : 'fixed'}
+            onChange={(e) =>
+              onChange({ ...destination, ...(e.target.value === 'sysvar' ? { valueType: 'ivtSystemId', value: '0' } : fixedValue()) })
+            }
+          >
+            <option value="fixed">{m.PRG_VALUE_FIXED()}</option>
+            <option value="sysvar">{m.PRG_VALUE_OF_SYSVAR()}</option>
+          </NativeSelect>
+        </Field>
+      )}
+      {fromSysvar && (
+        <SysvarSelect value={Number(destination.value)} onChange={(sv) => onChange({ ...destination, value: String(sv.id) })} />
+      )}
+      {options && !fromSysvar && (
         <Field label={m.PRG_VALUE()}>
           <ValueSelect label={m.PRG_VALUE()} value={destination.value} options={options} onChange={(value) => onChange({ ...destination, value })} />
         </Field>
@@ -468,7 +441,7 @@ export const DestinationRow = ({
           />
         </Field>
       )}
-      {isText && (
+      {isText && !fromSysvar && (
         <Field label={m.PRG_VALUE()}>
           <Input
             className="h-9 w-40 md:text-[13px]"
