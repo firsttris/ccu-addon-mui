@@ -97,7 +97,8 @@ export type ServerMessage =
   | AddonActionResponse
   | CheckAddonUpdateResponse
   | ChangePasswordResponse
-  | GetDeviceProgramsResponse;
+  | GetDeviceProgramsResponse
+  | GetVirtualKeysResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -179,6 +180,7 @@ export interface Protocol {
   checkAddonUpdate: CheckAddonUpdateCall;
   changePassword: ChangePasswordCall;
   getDevicePrograms: GetDeviceProgramsCall;
+  getVirtualKeys: GetVirtualKeysCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2786,6 +2788,47 @@ export interface ProgramUsage {
   id: number;
   name: string;
   channels: string[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetVirtualKeysCall".
+ */
+export interface GetVirtualKeysCall {
+  request: GetVirtualKeysRequest;
+  response: GetVirtualKeysResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetVirtualKeysRequest".
+ */
+export interface GetVirtualKeysRequest {
+  type: "getVirtualKeys";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetVirtualKeysResponse".
+ */
+export interface GetVirtualKeysResponse {
+  type: "getVirtualKeys_response";
+  requestId?: string;
+  keys: VirtualKey[];
+}
+/**
+ * A virtual key of the CCU (HM-RCV-50, HmIP-RCV-50)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "VirtualKey".
+ */
+export interface VirtualKey {
+  id: number;
+  address: string;
+  interfaceName: string;
+  name: string;
+  /**
+   * how many programs use the key
+   */
+  programs: number;
 }
 /**
  * Sent first on every connection

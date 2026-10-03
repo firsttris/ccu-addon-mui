@@ -434,6 +434,15 @@ func (c *CCU) runScript(body string) (string, error) {
 					u.ID, u.Name, u.FirstName, u.LastName, u.Level, u.Password != "", u.ShowLogin, u.Name != "Admin", u.Mail, u.Phone)
 			}
 			return b.String(), nil
+		case "get_virtual_keys":
+			var b strings.Builder
+			for _, ch := range c.fixture.Channels {
+				if isVirtualKey(ch.Address) {
+					programs := strings.Count(c.deviceProgramUsages(strings.Split(ch.Address, ":")[0]), "\t"+ch.Address+"\n")
+					fmt.Fprintf(&b, "K\t%d\t%s\t%s\t%d\t%s\n", ch.ID, ch.Address, ch.Interface, programs, ch.Name)
+				}
+			}
+			return b.String(), nil
 		case "get_device_programs":
 			return c.deviceProgramUsages(values["ADDRESS"]), nil
 		case "set_user_password":
@@ -598,6 +607,12 @@ func (c *CCU) deviceProgramUsages(address string) string {
 	return b.String()
 }
 
+// isVirtualKey: a channel of the CCU's own HM-RCV-50 (BidCoS-RF) or
+// HmIP-RCV-50 (HmIP-RCV-1) device
+func isVirtualKey(address string) bool {
+	return strings.HasPrefix(address, "BidCoS-RF:") || strings.HasPrefix(address, "HmIP-RCV-1:")
+}
+
 // users returns the fixture's users, with ids
 func (c *CCU) users() []User {
 	for i := range c.fixture.Users {
@@ -724,7 +739,8 @@ func (c *CCU) getChannels(objectID string) string {
 	var channels []*Channel
 	if objectID == "ALL" {
 		for i := range c.fixture.Channels {
-			if !strings.HasSuffix(c.fixture.Channels[i].Address, ":0") {
+			// Like get_channels.tcl, without the CCU's own virtual keys
+			if !strings.HasSuffix(c.fixture.Channels[i].Address, ":0") && !isVirtualKey(c.fixture.Channels[i].Address) {
 				channels = append(channels, &c.fixture.Channels[i])
 			}
 		}

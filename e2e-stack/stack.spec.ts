@@ -842,3 +842,20 @@ test('zeigt auf der Geräteseite die Programme, die das Gerät verwenden', async
   await page.goto('/device/BidCos-RF/LEQ0000003');
   await expect(page.getByRole('region', { name: 'Programme' })).toContainText('Kein Programm verwendet dieses Gerät.');
 });
+
+test('drückt die virtuellen Taster der CCU', async ({ page }) => {
+  await login(page);
+  await page.getByRole('button', { name: 'Menü' }).click();
+  await page.getByRole('button', { name: 'Einrichten' }).click();
+  await page.getByRole('link', { name: 'Virtuelle Taster' }).click();
+  const list = page.getByRole('list', { name: 'Virtuelle Taster' });
+  await expect(list).toContainText('Alles aus');
+  await expect(list).toContainText('Gute Nacht');
+  await expect(list).not.toContainText('HM-RCV-50 BidCoS-RF:2');
+
+  await page.getByLabel(/Alle 3 Taster zeigen/).click();
+  await expect(list).toContainText('HM-RCV-50 BidCoS-RF:2');
+
+  await list.getByRole('button', { name: 'Kurz Alles aus' }).click();
+  await expect(page.getByText('Alles aus gedrückt')).toBeVisible();
+});

@@ -532,6 +532,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleUsers(client, msgType, message)
 	case "getAddons", "addonAction", "checkAddonUpdate":
 		s.handleAddons(client, msgType, message)
+	case "getVirtualKeys":
+		s.handleVirtualKeys(client, requestID)
 	case "getDevicePrograms":
 		s.handleDevicePrograms(client, message)
 	case "getHistory", "clearHistory":

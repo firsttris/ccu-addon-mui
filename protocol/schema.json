@@ -232,6 +232,9 @@
     },
     "getDevicePrograms": {
       "$ref": "#/definitions/GetDeviceProgramsCall"
+    },
+    "getVirtualKeys": {
+      "$ref": "#/definitions/GetVirtualKeysCall"
     }
   },
   "required": [
@@ -310,7 +313,8 @@
     "addonAction",
     "checkAddonUpdate",
     "changePassword",
-    "getDevicePrograms"
+    "getDevicePrograms",
+    "getVirtualKeys"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2767,6 +2771,9 @@
         },
         {
           "$ref": "#/definitions/GetDeviceProgramsResponse"
+        },
+        {
+          "$ref": "#/definitions/GetVirtualKeysResponse"
         }
       ]
     },
@@ -6617,6 +6624,91 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "GetVirtualKeysRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getVirtualKeys"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetVirtualKeysResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getVirtualKeys_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VirtualKey"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "keys"
+      ],
+      "additionalProperties": false
+    },
+    "GetVirtualKeysCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetVirtualKeysRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetVirtualKeysResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "VirtualKey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "address",
+        "interfaceName",
+        "name",
+        "programs"
+      ],
+      "description": "A virtual key of the CCU (HM-RCV-50, HmIP-RCV-50)",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "address": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "programs": {
+          "type": "integer",
+          "description": "how many programs use the key"
         }
       }
     }
