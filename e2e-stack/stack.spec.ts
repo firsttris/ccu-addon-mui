@@ -859,3 +859,11 @@ test('drückt die virtuellen Taster der CCU', async ({ page }) => {
   await list.getByRole('button', { name: 'Kurz Alles aus' }).click();
   await expect(page.getByText('Alles aus gedrückt')).toBeVisible();
 });
+
+test('führt den Funktionstest eines Geräts aus', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/BidCos-RF/LEQ0000001');
+  const section = page.getByRole('region', { name: 'Funktionstest' });
+  await section.getByRole('button', { name: 'Funktionstest starten' }).click();
+  await expect(section.getByRole('status')).toContainText('Das Gerät hat um', { timeout: 10000 });
+});

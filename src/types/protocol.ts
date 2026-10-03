@@ -100,7 +100,9 @@ export type ServerMessage =
   | GetDeviceProgramsResponse
   | GetVirtualKeysResponse
   | ListReplaceableDevicesResponse
-  | ReplaceDeviceResponse;
+  | ReplaceDeviceResponse
+  | StartComTestResponse
+  | PollComTestResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -185,6 +187,8 @@ export interface Protocol {
   getVirtualKeys: GetVirtualKeysCall;
   listReplaceableDevices: ListReplaceableDevicesCall;
   replaceDevice: ReplaceDeviceCall;
+  startComTest: StartComTestCall;
+  pollComTest: PollComTestCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2897,6 +2901,72 @@ export interface ReplaceDeviceResponse {
   type: "replaceDevice_response";
   requestId?: string;
   success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "StartComTestCall".
+ */
+export interface StartComTestCall {
+  request: StartComTestRequest;
+  response: StartComTestResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "StartComTestRequest".
+ */
+export interface StartComTestRequest {
+  type: "startComTest";
+  requestId?: string;
+  /**
+   * the device address
+   */
+  address: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "StartComTestResponse".
+ */
+export interface StartComTestResponse {
+  type: "startComTest_response";
+  requestId?: string;
+  /**
+   * the start time, which identifies the test
+   */
+  started: string;
+  answered?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PollComTestCall".
+ */
+export interface PollComTestCall {
+  request: PollComTestRequest;
+  response: PollComTestResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PollComTestRequest".
+ */
+export interface PollComTestRequest {
+  type: "pollComTest";
+  requestId?: string;
+  address: string;
+  /**
+   * YYYY-MM-DD HH:MM:SS from startComTest
+   */
+  started: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PollComTestResponse".
+ */
+export interface PollComTestResponse {
+  type: "pollComTest_response";
+  requestId?: string;
+  /**
+   * when the device answered, empty while it hasn't
+   */
+  answered: string;
 }
 /**
  * Sent first on every connection

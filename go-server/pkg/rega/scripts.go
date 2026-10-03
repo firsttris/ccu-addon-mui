@@ -129,6 +129,8 @@ func Scripts() map[string]string {
 		"set_user_password":           setUserPasswordScript,
 		"get_device_programs":         getDeviceProgramsScript,
 		"get_virtual_keys":            getVirtualKeysScript,
+		"start_com_test":              startComTestScript,
+		"poll_com_test":               pollComTestScript,
 	}
 }
 
@@ -194,3 +196,9 @@ var getDeviceProgramsScript string
 
 //go:embed scripts/get_virtual_keys.tcl
 var getVirtualKeysScript string
+
+//go:embed scripts/start_com_test.tcl
+var startComTestScript string
+
+//go:embed scripts/poll_com_test.tcl
+var pollComTestScript string

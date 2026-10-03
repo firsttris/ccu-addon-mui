@@ -434,6 +434,29 @@ func (c *CCU) runScript(body string) (string, error) {
 					u.ID, u.Name, u.FirstName, u.LastName, u.Level, u.Password != "", u.ShowLogin, u.Name != "Admin", u.Mail, u.Phone)
 			}
 			return b.String(), nil
+		case "start_com_test", "poll_com_test":
+			// Reachable devices answer at once, unreachable ones never
+			address := values["ADDRESS"]
+			var maintenance *Channel
+			known := false
+			for i := range c.fixture.Channels {
+				if deviceAddress(c.fixture.Channels[i].Address) == address {
+					known = true
+					if strings.HasSuffix(c.fixture.Channels[i].Address, ":0") {
+						maintenance = &c.fixture.Channels[i]
+					}
+				}
+			}
+			if !known {
+				return "NOT_FOUND", nil
+			}
+			if s.name == "start_com_test" {
+				return "OK\t" + time.Now().Format("2006-01-02 15:04:05"), nil
+			}
+			if maintenance != nil && maintenance.Datapoints["UNREACH"] == true {
+				return "OK\t", nil
+			}
+			return "OK\t" + values["SINCE"], nil
 		case "get_virtual_keys":
 			var b strings.Builder
 			for _, ch := range c.fixture.Channels {

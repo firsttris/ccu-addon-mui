@@ -1559,3 +1559,25 @@ func TestStackReplaceDevice(t *testing.T) {
 		}
 	}
 }
+
+func TestStackComTest(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "startComTest", "requestId": "t1", "address": "LEQ0000001"})
+	started := receive(t, conn, byRequestID("t1"))["started"].(string)
+	if len(started) != 19 {
+		t.Fatalf("unexpected start time %q", started)
+	}
+	send(t, conn, message{"type": "pollComTest", "requestId": "t2", "address": "LEQ0000001", "started": started})
+	if m := receive(t, conn, byRequestID("t2")); m["answered"] != started {
+		t.Fatalf("reachable device did not answer: %v", m)
+	}
+	send(t, conn, message{"type": "pollComTest", "requestId": "t3", "address": "LEQ0000001", "started": "now; x"})
+	if m := receive(t, conn, byRequestID("t3")); m["code"] != "INVALID_REQUEST" {
+		t.Fatalf("expected INVALID_REQUEST, got %v", m)
+	}
+	send(t, conn, message{"type": "startComTest", "requestId": "t4", "address": "NOPE000000"})
+	if m := receive(t, conn, byRequestID("t4")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}
