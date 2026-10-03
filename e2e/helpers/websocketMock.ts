@@ -34,6 +34,9 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       { address: '003660C9930AB6', name: 'Fensterkontakt Bad', lowBat: true, unreach: false },
     ];
 
+    // Alarm messages: none unless a test sets them (__wsMock.setAlarms)
+    let alarms: AnyPayload[] = [];
+
     let serviceMessages = [
       { id: 501, type: 'UNREACH', timestamp: '2026-01-15 09:12:00', address: '000A9D89A7AF25', name: 'Wandthermostat Flur', roomId: 1, roomName: 'Wohnzimmer' },
       { id: 502, type: 'LOW_BAT', timestamp: '2026-01-15 08:40:00', address: '003660C9930AB6', name: 'Fensterkontakt Bad' },
@@ -526,6 +529,17 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         return;
       }
 
+      if (message.type === 'getAlarmMessages') {
+        delayedBroadcast({ type: 'getAlarmMessages_response', alarms, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'acknowledgeAlarmMessage') {
+        alarms = alarms.filter((a) => a.id !== message.id);
+        delayedBroadcast({ type: 'acknowledgeAlarmMessage_response', success: true, requestId: message.requestId });
+        return;
+      }
+
       if (message.type === 'getDeviceProblems') {
         delayedBroadcast({ type: 'deviceProblems', devices: deviceProblems, requestId: message.requestId });
         return;
@@ -692,6 +706,9 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       subscriptions: () => state.subscriptions,
       failNextSet: (code: string) => {
         state.failNextSet = code;
+      },
+      setAlarms: (next: AnyPayload[]) => {
+        alarms = next;
       },
     };
   }, { requireLogin: options.requireLogin === true, validToken: VALID_TOKEN });

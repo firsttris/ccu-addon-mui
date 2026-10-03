@@ -213,6 +213,12 @@ func (c *CCU) runScript(body string) (string, error) {
 				if sv := &c.fixture.Sysvars[i]; sv.ID == id {
 					previous := formatValue(sv.Value)
 					sv.Value = parseRegaValue(values["VALUE"])
+					// Setting an alarm variable triggers the alarm again
+					if sv.SubType == 6 && sv.Value == true {
+						sv.AlarmCounter++
+						sv.AlarmTime = "2026-01-15 10:00:00"
+						sv.receipted = false
+					}
 					return "OK\t" + previous, nil
 				}
 			}
@@ -298,6 +304,28 @@ func (c *CCU) runScript(body string) (string, error) {
 						m.channel.Datapoints[m.datapoint] = false
 					}
 					return "OK\t" + m.datapoint, nil
+				}
+			}
+			return "NOT_FOUND", nil
+		case "get_alarm_messages":
+			var b strings.Builder
+			for _, sv := range c.fixture.Sysvars {
+				if sv.SubType != 6 || sv.AlarmCounter == 0 || sv.receipted {
+					continue
+				}
+				message := sv.FalseName
+				if sv.Value == true {
+					message = sv.TrueName
+				}
+				fmt.Fprintf(&b, "A\t%d\t%t\t%d\t%s\t%s\t\t\t%s\t%s\n",
+					sv.ID, sv.Value == true, sv.AlarmCounter, sv.AlarmTime, sv.AlarmTime, message, sv.Name)
+			}
+			return b.String(), nil
+		case "acknowledge_alarm_message":
+			for i := range c.fixture.Sysvars {
+				if sv := &c.fixture.Sysvars[i]; strconv.FormatInt(sv.ID, 10) == values["ID"] && sv.SubType == 6 {
+					sv.receipted = true
+					return "OK\t" + sv.Name, nil
 				}
 			}
 			return "NOT_FOUND", nil

@@ -567,7 +567,7 @@ func TestStackSysvarsAndPrograms(t *testing.T) {
 
 	send(t, conn, message{"type": "getSysvars", "requestId": "q1"})
 	sysvars := receive(t, conn, byRequestID("q1"))["sysvars"].([]interface{})
-	if len(sysvars) != 6 {
+	if len(sysvars) != 7 {
 		t.Fatalf("unexpected sysvars: %v", sysvars)
 	}
 	mode := sysvars[2].(map[string]interface{})
@@ -950,5 +950,38 @@ func TestStackBackupNeedsAdmin(t *testing.T) {
 	send(t, conn, message{"type": "createBackup", "requestId": "b1", "password": "gast"})
 	if m := receive(t, conn, byRequestID("b1")); m["code"] != "FORBIDDEN" {
 		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}
+
+func TestStackAlarmMessages(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	alarms := func(requestID string) []interface{} {
+		send(t, conn, message{"type": "getAlarmMessages", "requestId": requestID})
+		return receive(t, conn, byRequestID(requestID))["alarms"].([]interface{})
+	}
+	list := alarms("a1")
+	if len(list) != 1 {
+		t.Fatalf("expected the water alarm, got %v", list)
+	}
+	alarm := list[0].(map[string]interface{})
+	if alarm["name"] != "Wasseralarm" || alarm["active"] != true || alarm["message"] != "Wasser erkannt" || alarm["counter"] != 1.0 {
+		t.Fatalf("unexpected alarm: %v", alarm)
+	}
+
+	send(t, conn, message{"type": "acknowledgeAlarmMessage", "requestId": "a2", "id": alarm["id"]})
+	if m := receive(t, conn, byRequestID("a2")); m["success"] != true {
+		t.Fatalf("acknowledge failed: %v", m)
+	}
+	if list := alarms("a3"); len(list) != 0 {
+		t.Fatalf("alarm still listed: %v", list)
+	}
+
+	// Triggered again: back in the list, counted twice
+	send(t, conn, message{"type": "setSysvar", "requestId": "a4", "id": alarm["id"], "value": true})
+	receive(t, conn, byRequestID("a4"))
+	if list := alarms("a5"); len(list) != 1 || list[0].(map[string]interface{})["counter"] != 2.0 {
+		t.Fatalf("expected the alarm again, got %v", list)
 	}
 }

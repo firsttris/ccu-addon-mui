@@ -42,6 +42,11 @@ type Sysvar struct {
 	TrueName  string      `json:"trueName,omitempty"`
 	ValueList string      `json:"valueList,omitempty"`
 	Value     interface{} `json:"value"`
+	// Alarm variables: how often and when last triggered; an alarm with a
+	// counter is an alarm message until acknowledged
+	AlarmCounter int    `json:"alarmCounter,omitempty"`
+	AlarmTime    string `json:"alarmTime,omitempty"`
+	receipted    bool
 }
 
 type Program struct {

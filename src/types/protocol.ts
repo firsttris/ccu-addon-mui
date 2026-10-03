@@ -64,7 +64,9 @@ export type ServerMessage =
   | GetServiceMessagesResponse
   | AcknowledgeServiceMessageResponse
   | InstallFirmwareResponse
-  | CreateBackupResponse;
+  | CreateBackupResponse
+  | GetAlarmMessagesResponse
+  | AcknowledgeAlarmMessageResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -113,6 +115,8 @@ export interface Protocol {
   acknowledgeServiceMessage: AcknowledgeServiceMessageCall;
   installFirmware: InstallFirmwareCall;
   createBackup: CreateBackupCall;
+  getAlarmMessages: GetAlarmMessagesCall;
+  acknowledgeAlarmMessage: AcknowledgeAlarmMessageCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1533,6 +1537,78 @@ export interface CreateBackupResponse {
   url: string;
   fileName: string;
   size: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetAlarmMessagesCall".
+ */
+export interface GetAlarmMessagesCall {
+  request: GetAlarmMessagesRequest;
+  response: GetAlarmMessagesResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetAlarmMessagesRequest".
+ */
+export interface GetAlarmMessagesRequest {
+  type: "getAlarmMessages";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetAlarmMessagesResponse".
+ */
+export interface GetAlarmMessagesResponse {
+  type: "getAlarmMessages_response";
+  requestId?: string;
+  alarms: AlarmMessage[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AlarmMessage".
+ */
+export interface AlarmMessage {
+  id: number;
+  name: string;
+  /**
+   * Whether the alarm variable is still set
+   */
+  active: boolean;
+  counter: number;
+  firstTime?: string;
+  lastTime?: string;
+  /**
+   * The channel that triggered it
+   */
+  channel?: string;
+  roomName?: string;
+  message?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AcknowledgeAlarmMessageCall".
+ */
+export interface AcknowledgeAlarmMessageCall {
+  request: AcknowledgeAlarmMessageRequest;
+  response: AcknowledgeAlarmMessageResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AcknowledgeAlarmMessageRequest".
+ */
+export interface AcknowledgeAlarmMessageRequest {
+  type: "acknowledgeAlarmMessage";
+  requestId?: string;
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AcknowledgeAlarmMessageResponse".
+ */
+export interface AcknowledgeAlarmMessageResponse {
+  type: "acknowledgeAlarmMessage_response";
+  requestId?: string;
+  success: boolean;
 }
 /**
  * Sent first on every connection

@@ -512,7 +512,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleCreateBackup(client, message)
 	case "installFirmware":
 		s.handleInstallFirmware(client, message)
-	case "getServiceMessages", "acknowledgeServiceMessage":
+	case "getServiceMessages", "acknowledgeServiceMessage", "getAlarmMessages", "acknowledgeAlarmMessage":
 		s.handleServiceMessages(client, msgType, message)
 	case "createGroup", "renameGroup", "deleteGroup", "createSysvar", "renameSysvar", "deleteSysvar":
 		s.handleObjects(client, msgType, message)
@@ -1234,6 +1234,12 @@ func (s *Server) configure(client *Client, requestID string, entry audit.Entry, 
 	s.sendJSON(client, response)
 }
 
+type alarmMessagesResponse struct {
+	Type      string              `json:"type"`
+	RequestID string              `json:"requestId,omitempty"`
+	Alarms    []rega.AlarmMessage `json:"alarms"`
+}
+
 type serviceMessagesResponse struct {
 	Type      string                `json:"type"`
 	RequestID string                `json:"requestId,omitempty"`
@@ -1251,7 +1257,8 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
 		return
 	}
-	if msgType == "getServiceMessages" {
+	switch msgType {
+	case "getServiceMessages":
 		messages, err := s.regaClient.GetServiceMessages()
 		if err != nil {
 			s.sendRequestError(client, msg.RequestID, "getServiceMessages failed: "+err.Error(), "CCU_ERROR")
@@ -1259,8 +1266,21 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 		}
 		s.sendJSON(client, serviceMessagesResponse{Type: "getServiceMessages_response", RequestID: msg.RequestID, Messages: messages})
 		return
+	case "getAlarmMessages":
+		alarms, err := s.regaClient.GetAlarmMessages()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getAlarmMessages failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		s.sendJSON(client, alarmMessagesResponse{Type: "getAlarmMessages_response", RequestID: msg.RequestID, Alarms: alarms})
+		return
 	}
-	entry := audit.Entry{User: client.user, Action: msgType, Target: fmt.Sprintf("service message %d", msg.ID)}
+	alarm := msgType == "acknowledgeAlarmMessage"
+	target := fmt.Sprintf("service message %d", msg.ID)
+	if alarm {
+		target = fmt.Sprintf("alarm %d", msg.ID)
+	}
+	entry := audit.Entry{User: client.user, Action: msgType, Target: target}
 	finish := func(result string) {
 		entry.Result = result
 		if err := s.audit.Record(entry); err != nil {
@@ -1269,10 +1289,14 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 	}
 	if !canOperate(client.level) {
 		finish("FORBIDDEN")
-		s.sendRequestError(client, msg.RequestID, "guests may not acknowledge service messages", "FORBIDDEN")
+		s.sendRequestError(client, msg.RequestID, "guests may not acknowledge messages", "FORBIDDEN")
 		return
 	}
-	result, messageType, err := s.regaClient.AcknowledgeServiceMessage(msg.ID)
+	acknowledge := s.regaClient.AcknowledgeServiceMessage
+	if alarm {
+		acknowledge = s.regaClient.AcknowledgeAlarmMessage
+	}
+	result, messageType, err := acknowledge(msg.ID)
 	if err != nil {
 		finish("CCU_ERROR")
 		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "CCU_ERROR")

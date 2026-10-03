@@ -73,6 +73,12 @@ var getServiceMessagesScript string
 //go:embed scripts/acknowledge_service_message.tcl
 var acknowledgeServiceMessageScript string
 
+//go:embed scripts/get_alarm_messages.tcl
+var getAlarmMessagesScript string
+
+//go:embed scripts/acknowledge_alarm_message.tcl
+var acknowledgeAlarmMessageScript string
+
 // Scripts returns the script templates by name, for the fake CCU used in
 // tests, which recognises scripts by their template.
 func Scripts() map[string]string {
@@ -100,5 +106,7 @@ func Scripts() map[string]string {
 		"delete_sysvar":               deleteSysvarScript,
 		"get_service_messages":        getServiceMessagesScript,
 		"acknowledge_service_message": acknowledgeServiceMessageScript,
+		"get_alarm_messages":          getAlarmMessagesScript,
+		"acknowledge_alarm_message":   acknowledgeAlarmMessageScript,
 	}
 }
