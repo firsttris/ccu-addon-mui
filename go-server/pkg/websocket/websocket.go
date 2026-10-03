@@ -526,6 +526,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetChannelOption(client, message)
 	case "getSystemInfo":
 		s.handleSystemInfo(client, requestID)
+	case "changePassword":
+		s.handleChangePassword(client, message)
 	case "getUsers", "saveUser", "deleteUser":
 		s.handleUsers(client, msgType, message)
 	case "getAddons", "addonAction", "checkAddonUpdate":

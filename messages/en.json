@@ -680,5 +680,12 @@
   "ADDONS_HINT": "Installing and updating is done under Settings → Control panel → Additional software in the old WebUI.",
   "ADDONS_RESTART_CONFIRM": "{name} restarts and is briefly unavailable.",
   "ADDONS_RESTART_SELF": "This app restarts. The connection drops briefly and then comes back by itself.",
-  "ADDONS_UNINSTALL_CONFIRM": "{name} is removed from the CCU. Its settings may be lost."
+  "ADDONS_UNINSTALL_CONFIRM": "{name} is removed from the CCU. Its settings may be lost.",
+  "PW_CHANGE": "Change password",
+  "PW_CURRENT": "Current password",
+  "PW_NEW": "New password",
+  "PW_REQUIRED": "Please enter a new password",
+  "PW_WRONG_CURRENT": "The current password is wrong",
+  "PW_CHANGED": "Password changed",
+  "PW_HINT": "Allowed are letters without umlauts, digits and . = ! $ ( ) : ; # * - . Other devices of this user are logged out."
 }

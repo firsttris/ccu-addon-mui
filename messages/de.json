@@ -680,5 +680,12 @@
   "ADDONS_HINT": "Installieren und Aktualisieren geht über Einstellungen → Systemsteuerung → Zusatzsoftware in der alten WebUI.",
   "ADDONS_RESTART_CONFIRM": "{name} wird neu gestartet und ist dabei kurz nicht verfügbar.",
   "ADDONS_RESTART_SELF": "Diese App wird neu gestartet. Die Verbindung bricht kurz ab und baut sich dann von selbst wieder auf.",
-  "ADDONS_UNINSTALL_CONFIRM": "{name} wird von der CCU entfernt. Seine Einstellungen können dabei verloren gehen."
+  "ADDONS_UNINSTALL_CONFIRM": "{name} wird von der CCU entfernt. Seine Einstellungen können dabei verloren gehen.",
+  "PW_CHANGE": "Passwort ändern",
+  "PW_CURRENT": "Aktuelles Passwort",
+  "PW_NEW": "Neues Passwort",
+  "PW_REQUIRED": "Bitte ein neues Passwort eingeben",
+  "PW_WRONG_CURRENT": "Das aktuelle Passwort stimmt nicht",
+  "PW_CHANGED": "Passwort geändert",
+  "PW_HINT": "Erlaubt sind Buchstaben ohne Umlaute, Ziffern und . = ! $ ( ) : ; # * - . Andere Geräte mit diesem Benutzer werden abgemeldet."
 }

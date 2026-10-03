@@ -151,3 +151,20 @@ func (c *Client) DeleteUser(id int64) (result, name string, err error) {
 	}
 	return resultWithValue(output)
 }
+
+// SetUserPassword sets a user's password (set_user_password.tcl); not
+// empty, with the WebUI's allowed characters. SetOK or SetNotFound.
+func (c *Client) SetUserPassword(name, password string) (string, error) {
+	if name == "" || validateUserText(name, 100) != nil || strings.ContainsAny(name, " ") {
+		return "", fmt.Errorf("invalid name")
+	}
+	if password == "" || len(password) > 100 || !passwordRegex.MatchString(password) {
+		return "", fmt.Errorf("invalid password")
+	}
+	output, err := c.Execute(strings.NewReplacer("{{USERNAME}}", name, "{{PASSWORD}}", password).Replace(setUserPasswordScript))
+	if err != nil {
+		return "", err
+	}
+	result, _, err := resultWithValue(output)
+	return result, err
+}
