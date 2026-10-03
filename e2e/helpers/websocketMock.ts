@@ -221,6 +221,22 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         datapoints: { ERROR: 0, INHIBIT: false, OPEN: false, RELOCK_DELAY: 0, STATE: false, STATE_UNCERTAIN: false },
       },
       {
+        id: 507,
+        name: 'Garagentor',
+        address: '0019DA49A6B7C8:1',
+        interfaceName: 'HmIP-RF',
+        type: 'DOOR_RECEIVER',
+        datapoints: { DOOR_STATE: 0, PROCESS: 0, SECTION: 0, SECTION_STATUS: 0 },
+      },
+      {
+        id: 508,
+        name: 'Wassermelder Heizung',
+        address: '00319BE9A8B9C1:1',
+        interfaceName: 'HmIP-RF',
+        type: 'WATER_DETECTION_TRANSMITTER',
+        datapoints: { ALARMSTATE: false, MOISTURE_DETECTED: false, WATERLEVEL_DETECTED: false },
+      },
+      {
         id: 506,
         name: 'Kellertür',
         address: '002A1BE9A3C4D5:1',
@@ -296,6 +312,14 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         datapoints: { SMOKE_DETECTOR_ALARM_STATUS: 0, SMOKE_DETECTOR_TEST_RESULT: null },
       },
       {
+        id: 604,
+        name: 'Bewegungsmelder Eingang',
+        address: '000BBD89A1C2D3:1',
+        interfaceName: 'HmIP-RF',
+        type: 'MOTION_DETECTOR_TRANSCEIVER',
+        datapoints: { ILLUMINATION: 118.5, MOTION: true, MOTION_DETECTION_ACTIVE: true },
+      },
+      {
         id: 603,
         name: 'Schalter Flur Beleuchtung',
         address: '00091D89A9B8C7:8',
@@ -339,6 +363,11 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         STATE: { type: 'ENUM', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 2, valueList: ['CLOSED', 'TILTED', 'OPEN'] },
         SABOTAGE: { type: 'BOOL', operations: 5, flags: 9, tabOrder: 1 },
         ERROR_CODE: { type: 'INTEGER', operations: 5, flags: 1, tabOrder: 2, min: 0, max: 255 },
+      },
+      '000A1B2C3D4E5F:1': {
+        SMOKE_DETECTOR_ALARM_STATUS: { type: 'ENUM', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 3, valueList: ['IDLE_OFF', 'PRIMARY_ALARM', 'INTRUSION_ALARM', 'SECONDARY_ALARM'] },
+        SMOKE_DETECTOR_COMMAND: { type: 'ENUM', operations: 2, flags: 1, tabOrder: 1, min: 0, max: 5, valueList: ['RESERVED_ALARM_OFF', 'INTRUSION_ALARM_OFF', 'INTRUSION_ALARM', 'SMOKE_TEST', 'COMMUNICATION_TEST', 'COMMUNICATION_TEST_REPEATED'] },
+        SMOKE_DETECTOR_TEST_RESULT: { type: 'ENUM', operations: 5, flags: 1, tabOrder: 2, min: 0, max: 4, valueList: ['NONE', 'SMOKE_TEST_OK', 'SMOKE_TEST_FAILED', 'COMMUNICATION_TEST_SENT', 'COMMUNICATION_TEST_OK'] },
       },
       '0000DBE9A5C1F3:1': {
         MOTION: { type: 'BOOL', operations: 5, flags: 1, tabOrder: 0 },

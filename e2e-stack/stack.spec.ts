@@ -61,13 +61,13 @@ test('zeigt Geräteprobleme aus der CCU an und aktualisiert den Status live', as
   await expect(page.getByRole('status').filter({ hasText: 'Batterie schwach' })).toBeVisible();
 });
 
-test('zeigt unbekannte Kanaltypen und Geräte ohne Raum unter „Alle Geräte“', async ({ page }) => {
+test('zeigt Geräte ohne Raum unter „Alle Geräte“', async ({ page }) => {
   await login(page);
   await page.getByRole('button', { name: 'Menü' }).click();
   await page.getByRole('button', { name: 'Alle Geräte' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Rauchmelder' })).toBeVisible();
-  await expect(page.getByText('Rauchmelder Flur')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sicherheit' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Rauchmelder Flur' }).getByRole('status')).toHaveText('Alles ruhig');
 
   // The window handle as a picture with its state
   const handle = page.getByRole('group', { name: 'Fenstergriff Wohnzimmer' });

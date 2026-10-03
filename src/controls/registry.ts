@@ -11,9 +11,11 @@ import { ClimateSensorControl } from './ClimateSensorControl';
 import { DimmerControl } from './DimmerControl';
 import { ColorLightControl } from './ColorLightControl';
 import { ButtonsControl } from './ButtonsControl';
+import { MotionDetectorControl, SmokeDetectorControl, WaterDetectorControl } from './DetectorControls';
+import { GarageDoorControl } from './GarageDoorControl';
 
 // Sections of the dashboard, in the order they are shown
-export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'windows' | 'doors' | 'sensors' | 'buttons' | 'energy';
+export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'windows' | 'doors' | 'security' | 'sensors' | 'buttons' | 'energy';
 
 // Hand-made controls for common channel types. They refine the generic
 // renderer (GenericControl), which every other type falls back to.
@@ -58,6 +60,13 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   [ChannelType.KEYMATIC]: channelControl('doors', DoorControl),
   DOOR_LOCK_STATE_TRANSMITTER: channelControl('doors', DoorLockControl),
   DOOR_LOCK_TRANSCEIVER: channelControl('doors', DoorLockControl),
+  DOOR_RECEIVER: channelControl('doors', GarageDoorControl),
+  SMOKE_DETECTOR: channelControl('security', SmokeDetectorControl),
+  MOTION_DETECTOR: channelControl('security', MotionDetectorControl),
+  MOTION_DETECTOR_TRANSCEIVER: channelControl('security', MotionDetectorControl),
+  PRESENCE_DETECTOR_TRANSCEIVER: channelControl('security', MotionDetectorControl),
+  WATER_DETECTION_TRANSMITTER: channelControl('security', WaterDetectorControl),
+  WATERDETECTIONSENSOR: channelControl('security', WaterDetectorControl),
   [ChannelType.ENERGIE_METER_TRANSMITTER]: deviceControl('energy', EnergyMeterControl),
   SHUTTER_CONTACT: channelControl('windows', WindowControl),
   SHUTTER_CONTACT_TRANSCEIVER: channelControl('windows', WindowControl),

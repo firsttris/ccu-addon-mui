@@ -297,6 +297,56 @@ test('dimmt, färbt Licht und drückt Taster', async ({ page }) => {
   expect((await sentSetDatapoints(page)).filter((m) => m.attribute?.startsWith('PRESS'))).toHaveLength(2);
 });
 
+test('bedient Melder und Garagentor', async ({ page }) => {
+  await page.goto('/devices');
+
+  // Smoke detector: calm, the test has to be held and sends SMOKE_TEST
+  const smoke = page.getByRole('group', { name: 'Rauchmelder Flur' });
+  await expect(smoke.getByRole('status')).toHaveText(/Alles ruhig|All quiet/);
+  const test = smoke.getByRole('button', { name: /Rauchtest|Smoke test/ });
+  await test.click();
+  expect(await sentSetDatapoints(page)).toHaveLength(0);
+  await test.hover();
+  await page.mouse.down();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'SMOKE_DETECTOR_COMMAND', value: 3 });
+  await page.mouse.up();
+
+  // Smoke reported: the tile turns to alarm
+  await page.evaluate(() => {
+    (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
+      channel: '000A1B2C3D4E5F:1',
+      datapoint: 'SMOKE_DETECTOR_ALARM_STATUS',
+      value: 1,
+    });
+  });
+  await expect(smoke.getByRole('status')).toHaveText(/Rauch erkannt|Smoke detected/);
+
+  // Motion detector: detection can be switched off
+  const motion = page.getByRole('group', { name: 'Bewegungsmelder Eingang' });
+  await expect(motion.getByRole('status')).toHaveText(/^(Bewegung|Motion)$/);
+  await motion.getByRole('switch').click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'MOTION_DETECTION_ACTIVE', value: false });
+
+  // Garage door: closing is a tap (command 3, as in the WebUI)
+  const garage = page.getByRole('group', { name: 'Garagentor' });
+  await expect(garage.getByRole('status')).toHaveText(/Geschlossen|Closed/);
+  await garage.getByRole('button', { name: /^(Lüften|Ventilate)$/ }).click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'DOOR_COMMAND', value: 4 });
+  await expect(garage.getByRole('status')).toHaveText(/Öffnet|Opening/);
+
+  // Water detector
+  const water = page.getByRole('group', { name: 'Wassermelder Heizung' });
+  await expect(water.getByRole('status')).toHaveText(/Trocken|Dry/);
+  await page.evaluate(() => {
+    (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
+      channel: '00319BE9A8B9C1:1',
+      datapoint: 'WATERLEVEL_DETECTED',
+      value: true,
+    });
+  });
+  await expect(water.getByRole('status')).toHaveText(/Wasser erkannt|Water detected/);
+});
+
 test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
   await page.goto('/room/1');
 
