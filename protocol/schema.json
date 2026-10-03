@@ -199,6 +199,15 @@
     },
     "powerAction": {
       "$ref": "#/definitions/PowerActionCall"
+    },
+    "getUsers": {
+      "$ref": "#/definitions/GetUsersCall"
+    },
+    "saveUser": {
+      "$ref": "#/definitions/SaveUserCall"
+    },
+    "deleteUser": {
+      "$ref": "#/definitions/DeleteUserCall"
     }
   },
   "required": [
@@ -266,7 +275,10 @@
     "testPush",
     "getSystemSettings",
     "setLocation",
-    "powerAction"
+    "powerAction",
+    "getUsers",
+    "saveUser",
+    "deleteUser"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2678,6 +2690,15 @@
         },
         {
           "$ref": "#/definitions/PowerActionResponse"
+        },
+        {
+          "$ref": "#/definitions/GetUsersResponse"
+        },
+        {
+          "$ref": "#/definitions/SaveUserResponse"
+        },
+        {
+          "$ref": "#/definitions/DeleteUserResponse"
         }
       ]
     },
@@ -5669,6 +5690,259 @@
         "response"
       ],
       "additionalProperties": false
+    },
+    "GetUsersRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getUsers"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetUsersResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getUsers_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CcuUser"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "users"
+      ],
+      "additionalProperties": false
+    },
+    "GetUsersCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetUsersRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetUsersResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SaveUserRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "saveUser"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer",
+          "description": "0 creates a user"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "login name without spaces; first name up to the first space, as in the WebUI"
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "admin",
+            "user",
+            "guest"
+          ]
+        },
+        "showLogin": {
+          "type": "boolean"
+        },
+        "mail": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string",
+          "description": "only to set it; the WebUI's allowed characters"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "fullName",
+        "level"
+      ],
+      "additionalProperties": false
+    },
+    "SaveUserResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "saveUser_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SaveUserCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SaveUserRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SaveUserResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteUserRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteUser"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteUserResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteUser_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteUserCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DeleteUserRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DeleteUserResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CcuUser": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "firstName",
+        "lastName",
+        "level",
+        "hasPassword",
+        "showLogin",
+        "deletable",
+        "mail",
+        "phone"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "admin",
+            "user",
+            "guest",
+            ""
+          ]
+        },
+        "hasPassword": {
+          "type": "boolean"
+        },
+        "showLogin": {
+          "type": "boolean",
+          "description": "shown on the WebUI's login page"
+        },
+        "deletable": {
+          "type": "boolean"
+        },
+        "mail": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        }
+      }
     }
   }
 }

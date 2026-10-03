@@ -84,10 +84,17 @@ type Favorite struct {
 }
 
 type User struct {
+	// ReGa id; 1001 onwards in fixture order when not given
+	ID       int64  `json:"id,omitempty"`
 	Name     string `json:"name"`
 	Password string `json:"password"`
 	// Level as ReGa stores it: 1 = guest, 2 = user, 8 = admin
-	Level int `json:"level"`
+	Level     int    `json:"level"`
+	FirstName string `json:"firstName,omitempty"`
+	LastName  string `json:"lastName,omitempty"`
+	ShowLogin bool   `json:"showLogin,omitempty"`
+	Mail      string `json:"mail,omitempty"`
+	Phone     string `json:"phone,omitempty"`
 }
 
 type Channel struct {

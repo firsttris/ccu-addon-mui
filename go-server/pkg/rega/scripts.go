@@ -119,6 +119,9 @@ func Scripts() map[string]string {
 		"get_system_settings":         getSystemSettingsScript,
 		"set_location":                setLocationScript,
 		"save_system":                 saveSystemScript,
+		"get_users":                   getUsersScript,
+		"save_user":                   saveUserScript,
+		"delete_user":                 deleteUserScript,
 	}
 }
 
@@ -154,3 +157,12 @@ var setLocationScript string
 
 //go:embed scripts/save_system.tcl
 var saveSystemScript string
+
+//go:embed scripts/get_users.tcl
+var getUsersScript string
+
+//go:embed scripts/save_user.tcl
+var saveUserScript string
+
+//go:embed scripts/delete_user.tcl
+var deleteUserScript string

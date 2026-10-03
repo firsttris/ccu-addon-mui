@@ -86,7 +86,10 @@ export type ServerMessage =
   | TestPushResponse
   | GetSystemSettingsResponse
   | SetLocationResponse
-  | PowerActionResponse;
+  | PowerActionResponse
+  | GetUsersResponse
+  | SaveUserResponse
+  | DeleteUserResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -157,6 +160,9 @@ export interface Protocol {
   getSystemSettings: GetSystemSettingsCall;
   setLocation: SetLocationCall;
   powerAction: PowerActionCall;
+  getUsers: GetUsersCall;
+  saveUser: SaveUserCall;
+  deleteUser: DeleteUserCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2356,6 +2362,118 @@ export interface PowerActionRequest {
  */
 export interface PowerActionResponse {
   type: "powerAction_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetUsersCall".
+ */
+export interface GetUsersCall {
+  request: GetUsersRequest;
+  response: GetUsersResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetUsersRequest".
+ */
+export interface GetUsersRequest {
+  type: "getUsers";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetUsersResponse".
+ */
+export interface GetUsersResponse {
+  type: "getUsers_response";
+  requestId?: string;
+  users: CcuUser[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CcuUser".
+ */
+export interface CcuUser {
+  id: number;
+  name: string;
+  firstName: string;
+  lastName: string;
+  level: "admin" | "user" | "guest" | "";
+  hasPassword: boolean;
+  /**
+   * shown on the WebUI's login page
+   */
+  showLogin: boolean;
+  deletable: boolean;
+  mail: string;
+  phone: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveUserCall".
+ */
+export interface SaveUserCall {
+  request: SaveUserRequest;
+  response: SaveUserResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveUserRequest".
+ */
+export interface SaveUserRequest {
+  type: "saveUser";
+  requestId?: string;
+  /**
+   * 0 creates a user
+   */
+  id: number;
+  /**
+   * login name without spaces; first name up to the first space, as in the WebUI
+   */
+  fullName: string;
+  level: "admin" | "user" | "guest";
+  showLogin?: boolean;
+  mail?: string;
+  phone?: string;
+  /**
+   * only to set it; the WebUI's allowed characters
+   */
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveUserResponse".
+ */
+export interface SaveUserResponse {
+  type: "saveUser_response";
+  requestId?: string;
+  success: boolean;
+  id?: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteUserCall".
+ */
+export interface DeleteUserCall {
+  request: DeleteUserRequest;
+  response: DeleteUserResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteUserRequest".
+ */
+export interface DeleteUserRequest {
+  type: "deleteUser";
+  requestId?: string;
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteUserResponse".
+ */
+export interface DeleteUserResponse {
+  type: "deleteUser_response";
   requestId?: string;
   success: boolean;
 }

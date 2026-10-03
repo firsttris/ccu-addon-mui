@@ -515,6 +515,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetChannelTile(client, message)
 	case "getSystemInfo":
 		s.handleSystemInfo(client, requestID)
+	case "getUsers", "saveUser", "deleteUser":
+		s.handleUsers(client, msgType, message)
 	case "getSystemSettings", "setLocation", "powerAction":
 		s.handleSystemSettings(client, msgType, message)
 	case "listSessions", "revokeSession", "logout":

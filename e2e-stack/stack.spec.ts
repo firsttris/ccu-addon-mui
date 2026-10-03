@@ -690,3 +690,37 @@ test('stellt den Standort der CCU ein', async ({ page }) => {
   // The fake CCU is no CCU: no restart from here
   await expect(page.getByRole('region', { name: 'Neustart' })).toContainText('nur, wenn das Add-on auf der CCU selbst läuft');
 });
+
+test('legt CCU-Benutzer an, ändert ihre Rechte und löscht sie', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/users');
+  const panel = page.getByRole('region', { name: 'Benutzer' });
+  await expect(panel.getByRole('row', { name: /Admin/ })).toBeVisible();
+
+  await panel.getByRole('button', { name: 'Neuer Benutzer' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Neuer Benutzer' });
+  await dialog.getByLabel('Name').fill('Anna Muster');
+  await expect(dialog).toContainText('Anmeldename: AnnaMuster');
+  await dialog.getByLabel('Berechtigung').selectOption({ label: 'Gast' });
+  await dialog.getByLabel('Passwort', { exact: true }).fill('geheim1');
+  await dialog.getByLabel('Passwort wiederholen').fill('anders');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog.getByRole('alert')).toHaveText('Die Passwörter stimmen nicht überein');
+  await dialog.getByLabel('Passwort wiederholen').fill('geheim1');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  const row = panel.getByRole('row', { name: /Anna Muster/ });
+  await expect(row).toContainText('Gast');
+  await expect(row).toContainText('gesetzt');
+
+  await row.getByRole('button', { name: 'Bearbeiten AnnaMuster' }).click();
+  const edit = page.getByRole('dialog', { name: 'Benutzer bearbeiten' });
+  await edit.getByLabel('Berechtigung').selectOption({ label: 'Benutzer' });
+  await edit.getByRole('button', { name: 'Speichern' }).click();
+  await expect(row).toContainText('Benutzer');
+
+  await row.getByRole('button', { name: 'Löschen AnnaMuster' }).click();
+  await page.getByRole('dialog', { name: 'Benutzer löschen' }).getByRole('button', { name: 'Löschen' }).click();
+  await expect(row).toHaveCount(0);
+});

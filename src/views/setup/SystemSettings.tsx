@@ -1,26 +1,23 @@
-import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import MapPinIcon from "~icons/lucide/map-pin";
-import LocateIcon from "~icons/lucide/locate-fixed";
-import RotateCwIcon from "~icons/lucide/rotate-cw";
-import PowerIcon from "~icons/lucide/power";
-import {
-  useWebSocketActions,
-  useWebSocketContext,
-} from "../../hooks/useWebsocket";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
-import { WebUILink } from "../../components/WebUILink";
-import { Input } from "../../components/ui/input";
-import { Button } from "../../components/ui/button";
-import { useToast } from "../../contexts/ToastContext";
-import { Panel } from "./Panel";
-import { m } from "../../paraglide/messages";
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import MapPinIcon from '~icons/lucide/map-pin';
+import LocateIcon from '~icons/lucide/locate-fixed';
+import RotateCwIcon from '~icons/lucide/rotate-cw';
+import PowerIcon from '~icons/lucide/power';
+import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { WebUILink } from '../../components/WebUILink';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { useToast } from '../../contexts/ToastContext';
+import { Panel } from './Panel';
+import { m } from '../../paraglide/messages';
 
 const useSystemSettings = () => {
   const { request } = useWebSocketActions();
   return useQuery({
-    queryKey: ["systemSettings"],
-    queryFn: () => request({ type: "getSystemSettings" }),
+    queryKey: ['systemSettings'],
+    queryFn: () => request({ type: 'getSystemSettings' }),
     refetchInterval: 60000,
     retry: false,
   });
@@ -28,21 +25,17 @@ const useSystemSettings = () => {
 
 // "UTC+1", "UTC−3:30" from minutes east of UTC
 export const formatOffset = (minutes: number) => {
-  const sign = minutes < 0 ? "−" : "+";
+  const sign = minutes < 0 ? '−' : '+';
   const abs = Math.abs(minutes);
   const hours = Math.floor(abs / 60);
   const rest = abs % 60;
-  return `UTC${sign}${hours}${rest ? `:${String(rest).padStart(2, "0")}` : ""}`;
+  return `UTC${sign}${hours}${rest ? `:${String(rest).padStart(2, '0')}` : ''}`;
 };
 
 // A coordinate as typed: a comma counts as decimal point
 export const parseCoordinate = (text: string, limit: number) => {
-  const value = Number(text.trim().replace(",", "."));
-  return text.trim() !== "" &&
-    Number.isFinite(value) &&
-    Math.abs(value) <= limit
-    ? value
-    : null;
+  const value = Number(text.trim().replace(',', '.'));
+  return text.trim() !== '' && Number.isFinite(value) && Math.abs(value) <= limit ? value : null;
 };
 
 // Location (for sunrise and sunset in programs) and clock, as the WebUI's
@@ -50,7 +43,7 @@ export const parseCoordinate = (text: string, limit: number) => {
 // down the CCU, as its "CCU-Wartung" (cp_maintenance.cgi).
 export const SystemSettings = () => {
   const { userLevel } = useWebSocketContext();
-  if (userLevel !== "admin") {
+  if (userLevel !== 'admin') {
     return null;
   }
   return (
@@ -67,8 +60,8 @@ const Location = () => {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const { data } = useSystemSettings();
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -83,21 +76,15 @@ const Location = () => {
   }
   const lat = parseCoordinate(latitude, 90);
   const lon = parseCoordinate(longitude, 180);
-  const changed =
-    lat !== null &&
-    lon !== null &&
-    (lat !== data.latitude || lon !== data.longitude);
+  const changed = lat !== null && lon !== null && (lat !== data.latitude || lon !== data.longitude);
 
   const save = async () => {
     if (lat === null || lon === null) return;
     setBusy(true);
     try {
-      await request(
-        { type: "setLocation", latitude: lat, longitude: lon },
-        { queue: false },
-      );
-      await queryClient.invalidateQueries({ queryKey: ["systemSettings"] });
-      showToast(m.SAVED(), "info");
+      await request({ type: 'setLocation', latitude: lat, longitude: lon }, { queue: false });
+      await queryClient.invalidateQueries({ queryKey: ['systemSettings'] });
+      showToast(m.SAVED(), 'info');
     } catch (error) {
       showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
     } finally {
@@ -121,7 +108,7 @@ const Location = () => {
         <dt className="text-muted-foreground">{m.SYS_CCU_TIME()}</dt>
         <dd className="tabular-nums">
           {data.time} ({formatOffset(data.timeZoneOffset)}
-          {data.timeZone ? `, ${data.timeZone}` : ""})
+          {data.timeZone ? `, ${data.timeZone}` : ''})
         </dd>
         {data.city && (
           <>
@@ -164,13 +151,8 @@ const Location = () => {
             />
           </label>
         ))}
-        {"geolocation" in navigator && (
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!elevated}
-            onClick={locate}
-          >
+        {'geolocation' in navigator && (
+          <Button type="button" variant="outline" disabled={!elevated} onClick={locate}>
             <LocateIcon />
             {m.SYS_LOCATE()}
           </Button>
@@ -190,21 +172,18 @@ const Power = () => {
   const { elevated } = useWebSocketContext();
   const { showToast } = useToast();
   const { data } = useSystemSettings();
-  const [asking, setAsking] = useState<"reboot" | "shutdown" | null>(null);
+  const [asking, setAsking] = useState<'reboot' | 'shutdown' | null>(null);
   const [busy, setBusy] = useState(false);
 
   if (!data) {
     return null;
   }
 
-  const run = async (action: "reboot" | "shutdown") => {
+  const run = async (action: 'reboot' | 'shutdown') => {
     setBusy(true);
     try {
-      await request({ type: "powerAction", action }, { queue: false });
-      showToast(
-        action === "reboot" ? m.SYS_REBOOTING() : m.SYS_SHUTTING_DOWN(),
-        "info",
-      );
+      await request({ type: 'powerAction', action }, { queue: false });
+      showToast(action === 'reboot' ? m.SYS_REBOOTING() : m.SYS_SHUTTING_DOWN(), 'info');
       setAsking(null);
     } catch (error) {
       showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
@@ -218,21 +197,11 @@ const Power = () => {
       <h2>{m.SYS_MAINTENANCE()}</h2>
       {data.canPower ? (
         <div className="flex flex-wrap gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!elevated}
-            onClick={() => setAsking("reboot")}
-          >
+          <Button type="button" variant="outline" disabled={!elevated} onClick={() => setAsking('reboot')}>
             <RotateCwIcon />
             {m.SYS_REBOOT()}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!elevated}
-            onClick={() => setAsking("shutdown")}
-          >
+          <Button type="button" variant="outline" disabled={!elevated} onClick={() => setAsking('shutdown')}>
             <PowerIcon />
             {m.SYS_SHUTDOWN()}
           </Button>
@@ -244,16 +213,14 @@ const Power = () => {
       )}
       {asking && (
         <ConfirmDialog
-          title={asking === "reboot" ? m.SYS_REBOOT() : m.SYS_SHUTDOWN()}
-          confirmLabel={asking === "reboot" ? m.SYS_REBOOT() : m.SYS_SHUTDOWN()}
+          title={asking === 'reboot' ? m.SYS_REBOOT() : m.SYS_SHUTDOWN()}
+          confirmLabel={asking === 'reboot' ? m.SYS_REBOOT() : m.SYS_SHUTDOWN()}
           destructive
           busy={busy}
           onConfirm={() => run(asking)}
           onCancel={() => setAsking(null)}
         >
-          {asking === "reboot"
-            ? m.SYS_REBOOT_CONFIRM()
-            : m.SYS_SHUTDOWN_CONFIRM()}
+          {asking === 'reboot' ? m.SYS_REBOOT_CONFIRM() : m.SYS_SHUTDOWN_CONFIRM()}
         </ConfirmDialog>
       )}
     </Panel>

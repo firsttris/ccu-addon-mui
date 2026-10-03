@@ -4,6 +4,7 @@ import CpuIcon from '~icons/lucide/cpu';
 import RadioIcon from '~icons/lucide/radio';
 import LinkIcon from '~icons/lucide/link';
 import MonitorSmartphoneIcon from '~icons/lucide/monitor-smartphone';
+import UsersIcon from '~icons/lucide/users';
 import InfoIcon from '~icons/lucide/info';
 import HomeIcon from '~icons/lucide/house';
 import BracesIcon from '~icons/lucide/braces';
@@ -81,6 +82,12 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
                     {inbox.length}
                   </span>
                 )}
+              </Link>
+            )}
+            {isAdmin && elevated && (
+              <Link to="/setup/users" className={navLink}>
+                <UsersIcon />
+                {m.USERS()}
               </Link>
             )}
             {isAdmin && elevated && authRequired && (

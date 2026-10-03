@@ -1244,3 +1244,68 @@ func TestStackSystemSettings(t *testing.T) {
 		t.Fatalf("expected NOT_SUPPORTED, got %v", m)
 	}
 }
+
+func TestStackUsers(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
+	receive(t, conn, byRequestID("e"))
+
+	list := func(id string) []interface{} {
+		send(t, conn, message{"type": "getUsers", "requestId": id})
+		return receive(t, conn, byRequestID(id))["users"].([]interface{})
+	}
+	before := len(list("u0"))
+
+	send(t, conn, message{"type": "saveUser", "requestId": "u1", "id": 0, "fullName": "Anna Muster", "level": "user", "password": "geheim!1", "showLogin": true})
+	created := receive(t, conn, byRequestID("u1"))
+	if created["success"] != true || created["id"] == nil {
+		t.Fatalf("saveUser failed: %v", created)
+	}
+	users := list("u2")
+	anna := users[len(users)-1].(map[string]interface{})
+	if len(users) != before+1 || anna["name"] != "AnnaMuster" || anna["firstName"] != "Anna" || anna["lastName"] != "Muster" || anna["level"] != "user" || anna["hasPassword"] != true {
+		t.Fatalf("user not created as sent: %v", anna)
+	}
+	// The new user can log in with the password
+	other, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/", conn.RemoteAddr().String()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer other.Close()
+	loginAs(t, other, "AnnaMuster", "geheim!1")
+
+	// Same name again
+	send(t, conn, message{"type": "saveUser", "requestId": "u3", "id": 0, "fullName": "AnnaMuster", "level": "guest"})
+	if m := receive(t, conn, byRequestID("u3")); m["code"] != "EXISTS" {
+		t.Fatalf("expected EXISTS, got %v", m)
+	}
+	// Unsafe password
+	send(t, conn, message{"type": "saveUser", "requestId": "u4", "id": created["id"], "fullName": "Anna Muster", "level": "user", "password": "x^y"})
+	if m := receive(t, conn, byRequestID("u4")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+	// The own account keeps its rights
+	var adminID interface{}
+	for _, u := range users {
+		if u.(map[string]interface{})["name"] == "Admin" {
+			adminID = u.(map[string]interface{})["id"]
+		}
+	}
+	send(t, conn, message{"type": "saveUser", "requestId": "u5", "id": adminID, "fullName": "Admin", "level": "guest"})
+	if m := receive(t, conn, byRequestID("u5")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+	send(t, conn, message{"type": "deleteUser", "requestId": "u6", "id": adminID})
+	if m := receive(t, conn, byRequestID("u6")); m["success"] == true {
+		t.Fatalf("deleted the own account: %v", m)
+	}
+
+	send(t, conn, message{"type": "deleteUser", "requestId": "u7", "id": created["id"]})
+	if m := receive(t, conn, byRequestID("u7")); m["success"] != true {
+		t.Fatalf("deleteUser failed: %v", m)
+	}
+	if len(list("u8")) != before {
+		t.Fatal("user not deleted")
+	}
+}
