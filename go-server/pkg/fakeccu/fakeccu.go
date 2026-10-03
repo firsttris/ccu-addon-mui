@@ -857,6 +857,70 @@ func (c *CCU) getInbox() string {
 }
 
 // deleteDevice removes a device with its channels everywhere; c.mu must be held.
+// AddInboxDevice puts a new, not yet set up device with one channel into the
+// inbox (for tests).
+func (c *CCU) AddInboxDevice(iface, address, deviceType string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	data := c.fixture.Interfaces[iface]
+	if data == nil {
+		data = &InterfaceData{}
+		c.fixture.Interfaces[iface] = data
+	}
+	data.Devices = append(data.Devices,
+		map[string]interface{}{"ADDRESS": address, "TYPE": deviceType, "PARENT": "", "CHILDREN": []interface{}{address + ":1"}, "PARAMSETS": []interface{}{"MASTER"}, "VERSION": 1},
+		map[string]interface{}{"ADDRESS": address + ":1", "TYPE": "SWITCH", "PARENT": address, "PARENT_TYPE": deviceType, "INDEX": 1, "PARAMSETS": []interface{}{"MASTER", "VALUES"}, "VERSION": 1},
+	)
+	c.fixture.Inbox = append(c.fixture.Inbox, address)
+}
+
+// replaceDevice moves the old device's place (channels, rooms, programs)
+// to the new device, as replaceDevice does: the new device's own entries
+// go, the old ones take its address.
+func (c *CCU) replaceDevice(iface, oldAddress, newAddress string) bool {
+	data := c.fixture.Interfaces[iface]
+	oldFound, newFound := false, false
+	for _, d := range data.Devices {
+		oldFound = oldFound || d["ADDRESS"] == oldAddress
+		newFound = newFound || d["ADDRESS"] == newAddress
+	}
+	if !oldFound || !newFound {
+		return false
+	}
+	kept := data.Devices[:0]
+	for _, d := range data.Devices {
+		if d["ADDRESS"] == newAddress || d["PARENT"] == newAddress {
+			continue
+		}
+		swap := func(v interface{}) interface{} {
+			if a, ok := v.(string); ok && (a == oldAddress || strings.HasPrefix(a, oldAddress+":")) {
+				return newAddress + strings.TrimPrefix(a, oldAddress)
+			}
+			return v
+		}
+		d["ADDRESS"], d["PARENT"] = swap(d["ADDRESS"]), swap(d["PARENT"])
+		if children, ok := d["CHILDREN"].([]interface{}); ok {
+			for i := range children {
+				children[i] = swap(children[i])
+			}
+		}
+		kept = append(kept, d)
+	}
+	data.Devices = kept
+	for i := range c.fixture.Channels {
+		ch := &c.fixture.Channels[i]
+		if ch.Interface == iface && deviceAddress(ch.Address) == oldAddress {
+			ch.Address = newAddress + strings.TrimPrefix(ch.Address, oldAddress)
+		}
+	}
+	if name, ok := c.fixture.DeviceNames[oldAddress]; ok {
+		c.fixture.DeviceNames[newAddress] = name
+		delete(c.fixture.DeviceNames, oldAddress)
+	}
+	c.fixture.Inbox = slices.DeleteFunc(c.fixture.Inbox, func(a string) bool { return a == newAddress })
+	return true
+}
+
 func (c *CCU) deleteDevice(iface, address string) bool {
 	data := c.fixture.Interfaces[iface]
 	found := false
@@ -1289,6 +1353,30 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 			return true, ""
 		}
 		return nil, "Unknown instance"
+	case "listReplaceableDevices":
+		// Devices of the new device's type that are set up (not in the inbox)
+		newAddress := stringParam(params, 0)
+		var newType interface{}
+		for _, d := range data.Devices {
+			if d["ADDRESS"] == newAddress {
+				newType = d["TYPE"]
+			}
+		}
+		if newType == nil {
+			return nil, "Unknown instance"
+		}
+		list := []interface{}{}
+		for _, d := range data.Devices {
+			if parent, _ := d["PARENT"].(string); parent == "" && d["TYPE"] == newType && d["ADDRESS"] != newAddress && !slices.Contains(c.fixture.Inbox, fmt.Sprint(d["ADDRESS"])) {
+				list = append(list, d)
+			}
+		}
+		return list, ""
+	case "replaceDevice":
+		if !c.replaceDevice(iface, stringParam(params, 0), stringParam(params, 1)) {
+			return nil, "Unknown instance"
+		}
+		return "", ""
 	case "deleteDevice":
 		if !c.deleteDevice(iface, stringParam(params, 0)) {
 			return nil, "Unknown instance"

@@ -98,7 +98,9 @@ export type ServerMessage =
   | CheckAddonUpdateResponse
   | ChangePasswordResponse
   | GetDeviceProgramsResponse
-  | GetVirtualKeysResponse;
+  | GetVirtualKeysResponse
+  | ListReplaceableDevicesResponse
+  | ReplaceDeviceResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -181,6 +183,8 @@ export interface Protocol {
   changePassword: ChangePasswordCall;
   getDevicePrograms: GetDeviceProgramsCall;
   getVirtualKeys: GetVirtualKeysCall;
+  listReplaceableDevices: ListReplaceableDevicesCall;
+  replaceDevice: ReplaceDeviceCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2829,6 +2833,70 @@ export interface VirtualKey {
    * how many programs use the key
    */
   programs: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ListReplaceableDevicesCall".
+ */
+export interface ListReplaceableDevicesCall {
+  request: ListReplaceableDevicesRequest;
+  response: ListReplaceableDevicesResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ListReplaceableDevicesRequest".
+ */
+export interface ListReplaceableDevicesRequest {
+  type: "listReplaceableDevices";
+  requestId?: string;
+  interfaceName: string;
+  /**
+   * the new device (from the inbox)
+   */
+  address: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ListReplaceableDevicesResponse".
+ */
+export interface ListReplaceableDevicesResponse {
+  type: "listReplaceableDevices_response";
+  requestId?: string;
+  devices: DeviceDescription[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ReplaceDeviceCall".
+ */
+export interface ReplaceDeviceCall {
+  request: ReplaceDeviceRequest;
+  response: ReplaceDeviceResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ReplaceDeviceRequest".
+ */
+export interface ReplaceDeviceRequest {
+  type: "replaceDevice";
+  requestId?: string;
+  interfaceName: string;
+  /**
+   * the new device
+   */
+  address: string;
+  /**
+   * the device it replaces
+   */
+  oldAddress: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ReplaceDeviceResponse".
+ */
+export interface ReplaceDeviceResponse {
+  type: "replaceDevice_response";
+  requestId?: string;
+  success: boolean;
 }
 /**
  * Sent first on every connection

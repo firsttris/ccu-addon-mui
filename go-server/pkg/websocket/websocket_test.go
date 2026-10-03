@@ -513,6 +513,10 @@ func (f *fakeDeviceRPC) SetInstallMode(iface string, on bool, seconds int) error
 func (f *fakeDeviceRPC) GetInstallMode(iface string) (int, error) { return 0, nil }
 
 func (f *fakeDeviceRPC) DeleteDevice(iface, address string, flags int) error { return nil }
+func (f *fakeDeviceRPC) ListReplaceableDevices(iface, newAddress string) ([]ccurpc.DeviceDescription, error) {
+	return nil, nil
+}
+func (f *fakeDeviceRPC) ReplaceDevice(iface, oldAddress, newAddress string) error { return nil }
 
 func (f *fakeDeviceRPC) Forget(iface, deviceAddress string) {}
 

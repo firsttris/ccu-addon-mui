@@ -235,6 +235,12 @@
     },
     "getVirtualKeys": {
       "$ref": "#/definitions/GetVirtualKeysCall"
+    },
+    "listReplaceableDevices": {
+      "$ref": "#/definitions/ListReplaceableDevicesCall"
+    },
+    "replaceDevice": {
+      "$ref": "#/definitions/ReplaceDeviceCall"
     }
   },
   "required": [
@@ -314,7 +320,9 @@
     "checkAddonUpdate",
     "changePassword",
     "getDevicePrograms",
-    "getVirtualKeys"
+    "getVirtualKeys",
+    "listReplaceableDevices",
+    "replaceDevice"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2774,6 +2782,12 @@
         },
         {
           "$ref": "#/definitions/GetVirtualKeysResponse"
+        },
+        {
+          "$ref": "#/definitions/ListReplaceableDevicesResponse"
+        },
+        {
+          "$ref": "#/definitions/ReplaceDeviceResponse"
         }
       ]
     },
@@ -6711,6 +6725,136 @@
           "description": "how many programs use the key"
         }
       }
+    },
+    "ListReplaceableDevicesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "listReplaceableDevices"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string",
+          "description": "the new device (from the inbox)"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address"
+      ],
+      "additionalProperties": false
+    },
+    "ListReplaceableDevicesResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "listReplaceableDevices_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeviceDescription"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "devices"
+      ],
+      "additionalProperties": false
+    },
+    "ListReplaceableDevicesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ListReplaceableDevicesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ListReplaceableDevicesResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "ReplaceDeviceRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "replaceDevice"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string",
+          "description": "the new device"
+        },
+        "oldAddress": {
+          "type": "string",
+          "description": "the device it replaces"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address",
+        "oldAddress"
+      ],
+      "additionalProperties": false
+    },
+    "ReplaceDeviceResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "replaceDevice_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "ReplaceDeviceCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ReplaceDeviceRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ReplaceDeviceResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
     }
   }
 }

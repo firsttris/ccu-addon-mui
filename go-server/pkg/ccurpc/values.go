@@ -191,3 +191,37 @@ func (c *Client) ListBidcosInterfaces(iface string) ([]RadioInterface, error) {
 	}
 	return modules, nil
 }
+
+// ListReplaceableDevices returns the devices a new device can replace
+// (devices only, no channels), as the WebUI's ic_seldevice.cgi asks the
+// interface with listReplaceableDevices. HmIP can't replace devices.
+func (c *Client) ListReplaceableDevices(iface, newAddress string) ([]DeviceDescription, error) {
+	if !addressRegex.MatchString(newAddress) || strings.Contains(newAddress, ":") {
+		return nil, ErrInvalidAddress
+	}
+	var reply []interface{}
+	if err := c.call(iface, "listReplaceableDevices", []interface{}{newAddress}, &reply); err != nil {
+		return nil, err
+	}
+	devices := []DeviceDescription{}
+	for _, raw := range reply {
+		if m, ok := raw.(map[string]interface{}); ok {
+			if d := parseDeviceDescription(m); d.Parent == "" {
+				devices = append(devices, d)
+			}
+		}
+	}
+	return devices, nil
+}
+
+// ReplaceDevice moves the configuration, links and programs of the old
+// device to the new one (Interface.changeDevice: replaceDevice).
+func (c *Client) ReplaceDevice(iface, oldAddress, newAddress string) error {
+	for _, a := range []string{oldAddress, newAddress} {
+		if !addressRegex.MatchString(a) || strings.Contains(a, ":") {
+			return ErrInvalidAddress
+		}
+	}
+	var reply interface{}
+	return c.call(iface, "replaceDevice", []interface{}{oldAddress, newAddress}, &reply)
+}
