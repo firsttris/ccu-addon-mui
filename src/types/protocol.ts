@@ -90,7 +90,9 @@ export type ServerMessage =
   | GetUsersResponse
   | SaveUserResponse
   | DeleteUserResponse
-  | SetChannelOptionResponse;
+  | SetChannelOptionResponse
+  | GetHistoryResponse
+  | ClearHistoryResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -165,6 +167,8 @@ export interface Protocol {
   saveUser: SaveUserCall;
   deleteUser: DeleteUserCall;
   setChannelOption: SetChannelOptionCall;
+  getHistory: GetHistoryCall;
+  clearHistory: ClearHistoryCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2516,6 +2520,86 @@ export interface SetChannelOptionRequest {
  */
 export interface SetChannelOptionResponse {
   type: "setChannelOption_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetHistoryCall".
+ */
+export interface GetHistoryCall {
+  request: GetHistoryRequest;
+  response: GetHistoryResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetHistoryRequest".
+ */
+export interface GetHistoryRequest {
+  type: "getHistory";
+  requestId?: string;
+  /**
+   * 0 is the newest entry
+   */
+  start?: number;
+  count?: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetHistoryResponse".
+ */
+export interface GetHistoryResponse {
+  type: "getHistory_response";
+  requestId?: string;
+  entries: HistoryEntry[];
+  total: number;
+}
+/**
+ * One entry of the system protocol (dom.GetHistoryData)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "HistoryEntry".
+ */
+export interface HistoryEntry {
+  /**
+   * entries of one event share a group
+   */
+  group: number;
+  /**
+   * YYYY-MM-DD HH:MM:SS
+   */
+  time: string;
+  kind: "channel" | "sysvar";
+  name: string;
+  datapoint?: string;
+  value: string;
+  /**
+   * the value as the WebUI writes it (system variables)
+   */
+  text?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ClearHistoryCall".
+ */
+export interface ClearHistoryCall {
+  request: ClearHistoryRequest;
+  response: ClearHistoryResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ClearHistoryRequest".
+ */
+export interface ClearHistoryRequest {
+  type: "clearHistory";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ClearHistoryResponse".
+ */
+export interface ClearHistoryResponse {
+  type: "clearHistory_response";
   requestId?: string;
   success: boolean;
 }

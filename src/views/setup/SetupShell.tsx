@@ -9,6 +9,7 @@ import InfoIcon from '~icons/lucide/info';
 import HomeIcon from '~icons/lucide/house';
 import BracesIcon from '~icons/lucide/braces';
 import PlayIcon from '~icons/lucide/play';
+import HistoryIcon from '~icons/lucide/history';
 import ShieldIcon from '~icons/lucide/shield-check';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useInbox } from '../../queries';
@@ -125,6 +126,10 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
             <Link to="/programs" className={navLink}>
               <PlayIcon />
               {m.PROGRAMS()}
+            </Link>
+            <Link to="/history" className={navLink}>
+              <HistoryIcon />
+              {m.HIST_TITLE()}
             </Link>
           </NavGroup>
         </nav>

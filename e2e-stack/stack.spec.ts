@@ -773,3 +773,22 @@ test('zeigt beim Laden Platzhalter statt einer leeren Tabelle', async ({ page })
   await expect(table.locator('[data-skeleton]')).toHaveCount(0);
   await expect(table.getByRole('row', { name: /LEQ0000001/ })).toBeVisible();
 });
+
+test('zeigt das Systemprotokoll der protokollierten Kanäle', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/BidCos-RF/LEQ0000003');
+  const options = page.getByRole('group', { name: 'Optionen LEQ0000003:1' });
+  await options.getByLabel('protokolliert').click();
+  await expect(options.getByLabel('protokolliert')).toBeChecked();
+
+  await page.getByRole('link', { name: 'Systemprotokoll' }).click();
+  const table = page.getByRole('table', { name: 'Systemprotokoll' });
+  const row = table.getByRole('row', { name: /Flur Licht/ });
+  await expect(row).toContainText('Zustand');
+  await page.getByLabel('Suchen').fill('Flur');
+  await expect(row).toBeVisible();
+
+  await page.goto('/device/BidCos-RF/LEQ0000003');
+  await options.getByLabel('protokolliert').click();
+  await expect(options.getByLabel('protokolliert')).not.toBeChecked();
+});

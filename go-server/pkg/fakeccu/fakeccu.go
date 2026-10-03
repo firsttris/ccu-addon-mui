@@ -55,6 +55,8 @@ type CCU struct {
 	layouts map[string]string
 	// The location set with set_location (system.Latitude/Longitude)
 	latitude, longitude string
+	// The system protocol is cleared (clear_history)
+	historyCleared bool
 }
 
 // CallCount returns how often an XML-RPC method was called, e.g.
@@ -371,6 +373,28 @@ func (c *CCU) runScript(body string) (string, error) {
 				}
 			}
 			return b.String(), nil
+		case "get_history":
+			// Two entries per logged channel: its current STATE or LEVEL
+			if c.historyCleared {
+				return "N\t0\n", nil
+			}
+			var b strings.Builder
+			n := 0
+			for _, ch := range c.fixture.Channels {
+				if !ch.Logged {
+					continue
+				}
+				for dp, value := range ch.Datapoints {
+					if dp == "STATE" || dp == "LEVEL" {
+						n++
+						fmt.Fprintf(&b, "H\t%d\t2026-10-03 21:%02d:00\tchannel\t%s\t%s\t%v\t\n", n, 59-n%60, ch.Name, dp, value)
+					}
+				}
+			}
+			return fmt.Sprintf("N\t%d\n%s", n, b.String()), nil
+		case "clear_history":
+			c.historyCleared = true
+			return "OK", nil
 		case "get_program":
 			return c.getProgram(atoi64(values["ID"])), nil
 		case "save_program":
