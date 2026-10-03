@@ -6140,6 +6140,10 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 500
+        },
+        "channel": {
+          "type": "integer",
+          "description": "only the entries of this channel (0: all)"
         }
       },
       "required": [

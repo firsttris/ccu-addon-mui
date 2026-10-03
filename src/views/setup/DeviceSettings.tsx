@@ -26,6 +26,7 @@ import { parameterLabel } from '../../controls/generic/parameters';
 import { Links } from './Links';
 import { DevicePrograms } from './DevicePrograms';
 import { ComTest } from './ComTest';
+import { DeviceHistory } from './DeviceHistory';
 import { Firmware } from './Firmware';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
@@ -257,6 +258,12 @@ export const DeviceSettings = () => {
             <Section aria-label={m.COMTEST()}>
               <h2>{m.COMTEST()}</h2>
               <ComTest address={address} />
+            </Section>
+          )}
+          {device && (
+            <Section aria-label={m.DEVHIST()}>
+              <h2>{m.DEVHIST()}</h2>
+              <DeviceHistory address={address} />
             </Section>
           )}
           <Section aria-label={m.PROGRAMS()}>

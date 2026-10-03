@@ -2567,6 +2567,10 @@ export interface GetHistoryRequest {
    */
   start?: number;
   count?: number;
+  /**
+   * only the entries of this channel (0: all)
+   */
+  channel?: number;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

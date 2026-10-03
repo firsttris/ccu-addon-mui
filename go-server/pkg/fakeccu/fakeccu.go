@@ -11,10 +11,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"regexp"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -376,24 +378,42 @@ func (c *CCU) runScript(body string) (string, error) {
 			}
 			return b.String(), nil
 		case "get_history":
-			// Two entries per logged channel: its current STATE or LEVEL
+			// Per logged channel its STATE once and 24 hourly values of its
+			// numbers (LEVEL, temperature, humidity), newest first
 			if c.historyCleared {
 				return "N\t0\n", nil
 			}
-			var b strings.Builder
+			only, _ := strconv.ParseInt(values["CHANNEL"], 10, 64)
+			var lines []string
+			now := time.Date(2026, 10, 3, 21, 0, 0, 0, time.UTC)
 			n := 0
 			for _, ch := range c.fixture.Channels {
 				if !ch.Logged {
 					continue
 				}
-				for dp, value := range ch.Datapoints {
-					if dp == "STATE" || dp == "LEVEL" {
+				for _, dp := range []string{"STATE", "LEVEL", "ACTUAL_TEMPERATURE", "HUMIDITY"} {
+					value, ok := ch.Datapoints[dp]
+					if !ok {
+						continue
+					}
+					steps := 24
+					if dp == "STATE" {
+						steps = 1
+					}
+					for i := 0; i < steps; i++ {
 						n++
-						fmt.Fprintf(&b, "H\t%d\t2026-10-03 21:%02d:00\tchannel\t%s\t%s\t%v\t\n", n, 59-n%60, ch.Name, dp, value)
+						v := value
+						if f, isNumber := value.(float64); isNumber && steps > 1 {
+							v = math.Round((f+math.Sin(float64(i)/3)*2)*10) / 10
+						}
+						if only == 0 || only == ch.ID {
+							lines = append(lines, fmt.Sprintf("H\t%d\t%s\tchannel\t%s\t%s\t%v\t", n, now.Add(-time.Duration(i)*time.Hour).Format("2006-01-02 15:04:05"), ch.Name, dp, v))
+						}
 					}
 				}
 			}
-			return fmt.Sprintf("N\t%d\n%s", n, b.String()), nil
+			sort.SliceStable(lines, func(i, j int) bool { return strings.Split(lines[i], "\t")[2] > strings.Split(lines[j], "\t")[2] })
+			return fmt.Sprintf("N\t%d\n%s\n", n, strings.Join(lines, "\n")), nil
 		case "clear_history":
 			c.historyCleared = true
 			return "OK", nil

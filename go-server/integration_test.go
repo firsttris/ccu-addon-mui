@@ -1386,6 +1386,18 @@ func TestStackHistory(t *testing.T) {
 	if e := entries[0].(map[string]interface{}); e["name"] != "Wohnzimmer Licht" || e["datapoint"] != "STATE" || e["kind"] != "channel" {
 		t.Fatalf("unexpected entry: %v", e)
 	}
+	send(t, conn, message{"type": "setChannelOption", "requestId": "o2", "id": 401, "option": "logged", "value": true})
+	receive(t, conn, byRequestID("o2"))
+	send(t, conn, message{"type": "getHistory", "requestId": "hc", "start": 0, "count": 500, "channel": 401})
+	byChannel := receive(t, conn, byRequestID("hc"))["entries"].([]interface{})
+	if len(byChannel) != 48 {
+		t.Fatalf("expected 24 temperature and 24 humidity entries, got %d", len(byChannel))
+	}
+	for _, e := range byChannel {
+		if e.(map[string]interface{})["name"] != "Wohnzimmer Thermostat" {
+			t.Fatalf("entry of another channel: %v", e)
+		}
+	}
 	send(t, conn, message{"type": "getHistory", "requestId": "h2", "start": 0, "count": 501})
 	if m := receive(t, conn, byRequestID("h2")); m["code"] != "INVALID_REQUEST" {
 		t.Fatalf("expected INVALID_REQUEST, got %v", m)

@@ -715,5 +715,10 @@
   "PRG_SAVE_AS_NEW": "Als neues Programm speichern",
   "PRG_COPY_NAME": "{name} (Kopie)",
   "PRG_COPIED": "Als neues Programm gespeichert",
-  "CHANNEL_AES": "gesichert (AES)"
+  "CHANNEL_AES": "gesichert (AES)",
+  "DEVHIST": "Verlauf",
+  "DEVHIST_RANGE": "{min} – {max}",
+  "DEVHIST_NONE": "Kein Kanal dieses Geräts wird protokolliert. Die Option „protokolliert“ steht unter Namen, Räume und Gewerke.",
+  "DEVHIST_EMPTY": "Noch keine Einträge im Systemprotokoll.",
+  "DEVHIST_HINT": "Aus den letzten {count} Einträgen des Systemprotokolls je Kanal."
 }

@@ -24,6 +24,8 @@ func (s *Server) handleHistory(client *Client, msgType string, message []byte) {
 		RequestID string `json:"requestId"`
 		Start     int    `json:"start"`
 		Count     int    `json:"count"`
+		// Only the entries of this channel
+		Channel int64 `json:"channel"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -40,7 +42,7 @@ func (s *Server) handleHistory(client *Client, msgType string, message []byte) {
 	if msg.Count == 0 {
 		msg.Count = 100
 	}
-	entries, total, err := s.regaClient.GetHistory(msg.Start, msg.Count)
+	entries, total, err := s.regaClient.GetHistory(msg.Start, msg.Count, msg.Channel)
 	if err != nil {
 		code := "CCU_ERROR"
 		if err.Error() == "invalid range" {

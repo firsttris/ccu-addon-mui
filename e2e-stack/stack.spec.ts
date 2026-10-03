@@ -793,6 +793,23 @@ test('zeigt das Systemprotokoll der protokollierten Kanäle', async ({ page }) =
   await expect(options.getByLabel('protokolliert')).not.toBeChecked();
 });
 
+test('zeigt den Verlauf protokollierter Werte auf der Geräteseite', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/BidCos-RF/LEQ0000004');
+  const history = page.getByRole('region', { name: 'Verlauf' });
+  await expect(history).toContainText('Kein Kanal dieses Geräts wird protokolliert');
+  const options = page.getByRole('group', { name: 'Optionen LEQ0000004:1' });
+  await options.getByLabel('protokolliert').click();
+  await expect(options.getByLabel('protokolliert')).toBeChecked();
+
+  await page.reload();
+  await expect(history.getByRole('img', { name: 'Temperatur' })).toBeVisible();
+  await expect(history.getByRole('img', { name: 'Luftfeuchte' })).toBeVisible();
+
+  await options.getByLabel('protokolliert').click();
+  await expect(options.getByLabel('protokolliert')).not.toBeChecked();
+});
+
 test('zeigt die Zusatzsoftware und startet ein Add-on neu', async ({ page }) => {
   await login(page);
   await page.goto('/setup/system');
