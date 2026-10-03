@@ -32,11 +32,11 @@ export const NavTabs = ({ label, items, activeId, to }: NavTabsProps) => {
       setMarker(active ? { left: active.offsetLeft, width: active.offsetWidth } : null);
       // Only the tab row scrolls sideways, never the page
       const row = listRef.current?.parentElement;
+      // (from the tab's position alone, so it ends up the same however
+      // often this runs)
       if (active && row) {
-        const left = active.offsetLeft;
-        const right = left + active.offsetWidth;
-        if (left < row.scrollLeft) row.scrollLeft = left - 8;
-        else if (right > row.scrollLeft + row.clientWidth) row.scrollLeft = right - row.clientWidth + 8;
+        const right = active.offsetLeft + active.offsetWidth;
+        row.scrollLeft = right > row.clientWidth ? right - row.clientWidth + 8 : 0;
       }
     };
     update();

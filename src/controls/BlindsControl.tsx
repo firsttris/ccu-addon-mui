@@ -100,7 +100,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           onKeyDown={onKeyDown}
-          className="relative h-[168px] w-32 shrink-0 cursor-ns-resize touch-none overflow-hidden rounded-[10px] border-[3px] border-zinc-400 bg-[linear-gradient(180deg,#bfe3fb_0%,#9fd2f5_55%,#86c3ee_100%)] transition-shadow duration-500 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:border-zinc-700 dark:bg-[linear-gradient(180deg,#2a4a6b_0%,#1a3350_55%,#142a40_100%)]"
+          className="relative min-h-[168px] w-32 shrink-0 self-stretch cursor-ns-resize touch-none overflow-hidden rounded-[10px] border-[3px] border-zinc-400 bg-[linear-gradient(180deg,#bfe3fb_0%,#9fd2f5_55%,#86c3ee_100%)] transition-shadow duration-500 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:border-zinc-700 dark:bg-[linear-gradient(180deg,#2a4a6b_0%,#1a3350_55%,#142a40_100%)]"
           style={
             effects.on && shown > 0
               ? { boxShadow: `0 0 ${28 * effects.k}px -4px rgba(125,211,252,${a(0.35 * open)})` }

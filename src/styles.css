@@ -85,6 +85,16 @@
   color-scheme: dark;
 }
 
+/* The scrollbar keeps its space: dialogs and sheets lock scrolling, and the
+   page must not jump sideways when the scrollbar disappears. Radix would
+   otherwise make up for it with a margin on top. */
+html {
+  scrollbar-gutter: stable;
+}
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
