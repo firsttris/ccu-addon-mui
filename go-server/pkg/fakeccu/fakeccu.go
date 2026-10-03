@@ -49,6 +49,8 @@ type CCU struct {
 
 	// installModeUntil by interface
 	installModeUntil map[string]time.Time
+	// Time modules created by save_program, for their ids
+	timeModules int
 }
 
 // CallCount returns how often an XML-RPC method was called, e.g.
@@ -339,6 +341,18 @@ func (c *CCU) runScript(body string) (string, error) {
 			if ch := c.channelByID(id); ch != nil {
 				ch.Tile = values["TILE"]
 				return "OK\t" + ch.Name, nil
+			}
+			return "NOT_FOUND", nil
+		case "get_program":
+			return c.getProgram(atoi64(values["ID"])), nil
+		case "save_program":
+			return c.saveProgram(values["DATA"]), nil
+		case "delete_program":
+			for i, p := range c.fixture.Programs {
+				if strconv.FormatInt(p.ID, 10) == values["ID"] {
+					c.fixture.Programs = append(c.fixture.Programs[:i], c.fixture.Programs[i+1:]...)
+					return "OK\t" + p.Name, nil
+				}
 			}
 			return "NOT_FOUND", nil
 		case "get_user_level":

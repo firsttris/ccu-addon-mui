@@ -6539,7 +6539,65 @@
       "id": 1201,
       "name": "Rollläden abends schließen",
       "active": true,
-      "visible": true
+      "visible": true,
+      "description": "Schließt die Rollläden am Abend, wenn niemand zu Hause ist.",
+      "rules": [
+        {
+          "groupOperator": "or",
+          "groups": [
+            [
+              {
+                "leftType": "ivtCurrentDate",
+                "leftValue": 65535,
+                "channel": 0,
+                "compare": 1,
+                "trigger": 13,
+                "value1Type": "ivtObjectId",
+                "value1": "1500",
+                "value2Type": "ivtEmpty",
+                "value2": "0",
+                "time": {
+                  "id": 1500,
+                  "timerType": 9,
+                  "time": "2007-01-01 19:30:00",
+                  "duration": 0,
+                  "sunOffset": 0,
+                  "period": 0,
+                  "weekdays": 0,
+                  "repetitionValue": 1,
+                  "begin": "2026-01-01",
+                  "end": "0",
+                  "repetitionCount": 0,
+                  "repeatTime": ""
+                }
+              },
+              {
+                "leftType": "ivtSystemId",
+                "leftValue": 950,
+                "channel": 0,
+                "compare": 1,
+                "trigger": 15,
+                "value1Type": "ivtBinary",
+                "value1": "0",
+                "value2Type": "ivtEmpty",
+                "value2": "0"
+              }
+            ]
+          ],
+          "breakOnRestart": false,
+          "destinations": [
+            {
+              "param": "ivtObjectId",
+              "channel": 201,
+              "datapointId": 20101,
+              "datapoint": "LEVEL",
+              "valueType": "ivtFloat",
+              "value": "0.000000",
+              "delay": 0
+            }
+          ]
+        }
+      ]
     },
     {
       "id": 1202,

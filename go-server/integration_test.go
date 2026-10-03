@@ -1075,3 +1075,67 @@ func TestStackChannelTile(t *testing.T) {
 		t.Fatalf("expected INVALID_VALUE, got %v", m)
 	}
 }
+
+func TestStackProgramEditor(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
+	receive(t, conn, byRequestID("e"))
+
+	read := func(requestID string, id interface{}) map[string]interface{} {
+		send(t, conn, message{"type": "getProgram", "requestId": requestID, "id": id})
+		m := receive(t, conn, byRequestID(requestID))
+		program, _ := m["program"].(map[string]interface{})
+		return program
+	}
+	program := read("p1", 1201)
+	if program["name"] != "Rollläden abends schließen" || len(program["rules"].([]interface{})) != 1 {
+		t.Fatalf("unexpected program: %v", program)
+	}
+
+	// A new one: WENN window open, DANN a script after 30 s, SONST the light off
+	created := message{
+		"id": 0, "name": "Fenster offen", "description": "Test", "active": true,
+		"rules": []message{{
+			"groupOperator": "or", "breakOnRestart": true,
+			"groups": [][]message{{{
+				"leftType": "ivtObjectId", "leftValue": 0, "channel": 102, "datapoint": "STATE", "compare": 1, "trigger": 4,
+				"value1Type": "ivtInteger", "value1": "1", "value2Type": "ivtEmpty", "value2": "0",
+			}}},
+			"destinations": []message{{
+				"param": "ivtString", "channel": 0, "datapointId": 0, "valueType": "ivtString", "value": "WriteLine(\"zu\");", "delay": 30,
+			}},
+		}},
+		"else": message{"breakOnRestart": false, "destinations": []message{{
+			"param": "ivtObjectId", "channel": 101, "datapointId": 0, "datapoint": "STATE", "valueType": "ivtBinary", "value": "false", "delay": 0,
+		}}},
+	}
+	send(t, conn, message{"type": "saveProgram", "requestId": "p2", "program": created})
+	saved := receive(t, conn, byRequestID("p2"))
+	if saved["success"] != true || saved["id"] == nil {
+		t.Fatalf("saveProgram failed: %v", saved)
+	}
+	back := read("p3", saved["id"])
+	rule := back["rules"].([]interface{})[0].(map[string]interface{})
+	dest := rule["destinations"].([]interface{})[0].(map[string]interface{})
+	cond := rule["groups"].([]interface{})[0].([]interface{})[0].(map[string]interface{})
+	if back["name"] != "Fenster offen" || dest["delay"] != 30.0 || dest["value"] != "WriteLine(\"zu\");" || cond["datapoint"] != "STATE" || back["else"] == nil {
+		t.Fatalf("program not stored as sent: %v", back)
+	}
+
+	// Refused: a script that could end its string
+	created["rules"].([]message)[0]["destinations"].([]message)[0]["value"] = "x^; system.Exec(^rm"
+	send(t, conn, message{"type": "saveProgram", "requestId": "p4", "program": created})
+	if m := receive(t, conn, byRequestID("p4")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+
+	send(t, conn, message{"type": "deleteProgram", "requestId": "p5", "id": saved["id"]})
+	if m := receive(t, conn, byRequestID("p5")); m["success"] != true {
+		t.Fatalf("deleteProgram failed: %v", m)
+	}
+	send(t, conn, message{"type": "getProgram", "requestId": "p6", "id": saved["id"]})
+	if m := receive(t, conn, byRequestID("p6")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}

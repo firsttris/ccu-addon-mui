@@ -160,6 +160,15 @@
     },
     "setChannelTile": {
       "$ref": "#/definitions/SetChannelTileCall"
+    },
+    "getProgram": {
+      "$ref": "#/definitions/GetProgramCall"
+    },
+    "saveProgram": {
+      "$ref": "#/definitions/SaveProgramCall"
+    },
+    "deleteProgram": {
+      "$ref": "#/definitions/DeleteProgramCall"
     }
   },
   "required": [
@@ -214,7 +223,10 @@
     "deleteFavorite",
     "addFavoriteItem",
     "removeFavoriteItem",
-    "setChannelTile"
+    "setChannelTile",
+    "getProgram",
+    "saveProgram",
+    "deleteProgram"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2587,6 +2599,15 @@
         },
         {
           "$ref": "#/definitions/SetChannelTileResponse"
+        },
+        {
+          "$ref": "#/definitions/GetProgramResponse"
+        },
+        {
+          "$ref": "#/definitions/SaveProgramResponse"
+        },
+        {
+          "$ref": "#/definitions/DeleteProgramResponse"
         }
       ]
     },
@@ -4489,6 +4510,415 @@
         "response"
       ],
       "additionalProperties": false
+    },
+    "GetProgramRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getProgram"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "GetProgramResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getProgram_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "program": {
+          "$ref": "#/definitions/ProgramDefinition"
+        }
+      },
+      "required": [
+        "type",
+        "program"
+      ],
+      "additionalProperties": false
+    },
+    "GetProgramCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetProgramRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetProgramResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SaveProgramRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "saveProgram"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "program": {
+          "$ref": "#/definitions/ProgramDefinition"
+        }
+      },
+      "required": [
+        "type",
+        "program"
+      ],
+      "additionalProperties": false
+    },
+    "SaveProgramResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "saveProgram_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SaveProgramCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SaveProgramRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SaveProgramResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteProgramRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteProgram"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteProgramResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteProgram_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteProgramCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DeleteProgramRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DeleteProgramResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "ProgramDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "description",
+        "active",
+        "rules"
+      ],
+      "description": "A program with its WENN / SONST WENN rules and the SONST branch",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "0 for a new program"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProgramRule"
+          }
+        },
+        "else": {
+          "$ref": "#/definitions/ProgramBranch"
+        }
+      }
+    },
+    "ProgramBranch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "breakOnRestart",
+        "destinations"
+      ],
+      "properties": {
+        "breakOnRestart": {
+          "type": "boolean"
+        },
+        "destinations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProgramDestination"
+          }
+        }
+      }
+    },
+    "ProgramRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groupOperator",
+        "groups",
+        "breakOnRestart",
+        "destinations"
+      ],
+      "properties": {
+        "groupOperator": {
+          "enum": [
+            "or",
+            "and"
+          ]
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/ProgramCondition"
+            }
+          }
+        },
+        "breakOnRestart": {
+          "type": "boolean"
+        },
+        "destinations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProgramDestination"
+          }
+        }
+      }
+    },
+    "ProgramCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leftType",
+        "leftValue",
+        "channel",
+        "compare",
+        "trigger",
+        "value1Type",
+        "value1",
+        "value2Type",
+        "value2"
+      ],
+      "properties": {
+        "leftType": {
+          "type": "string",
+          "description": "ivtObjectId, ivtSystemId, ivtCurrentDate, ivtEmpty or N:<number>"
+        },
+        "leftValue": {
+          "type": "integer"
+        },
+        "channel": {
+          "type": "integer"
+        },
+        "datapoint": {
+          "type": "string"
+        },
+        "compare": {
+          "type": "integer"
+        },
+        "trigger": {
+          "type": "integer"
+        },
+        "value1Type": {
+          "type": "string"
+        },
+        "value1": {
+          "type": "string"
+        },
+        "value2Type": {
+          "type": "string"
+        },
+        "value2": {
+          "type": "string"
+        },
+        "time": {
+          "$ref": "#/definitions/TimeModule"
+        }
+      }
+    },
+    "TimeModule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "timerType",
+        "time",
+        "duration",
+        "sunOffset",
+        "period",
+        "weekdays",
+        "repetitionValue",
+        "begin",
+        "end",
+        "repetitionCount",
+        "repeatTime"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "timerType": {
+          "type": "integer"
+        },
+        "time": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "sunOffset": {
+          "type": "integer"
+        },
+        "period": {
+          "type": "integer"
+        },
+        "weekdays": {
+          "type": "integer"
+        },
+        "repetitionValue": {
+          "type": "integer"
+        },
+        "begin": {
+          "type": "string"
+        },
+        "end": {
+          "type": "string"
+        },
+        "repetitionCount": {
+          "type": "integer"
+        },
+        "repeatTime": {
+          "type": "string"
+        }
+      }
+    },
+    "ProgramDestination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "param",
+        "channel",
+        "datapointId",
+        "valueType",
+        "value",
+        "delay"
+      ],
+      "properties": {
+        "param": {
+          "type": "string",
+          "description": "ivtObjectId, ivtSystemId, ivtString (script), ivtEmpty or N:<number>"
+        },
+        "channel": {
+          "type": "integer"
+        },
+        "datapointId": {
+          "type": "integer"
+        },
+        "datapoint": {
+          "type": "string"
+        },
+        "valueType": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "delay": {
+          "type": "integer",
+          "description": "seconds, 0 for at once"
+        }
+      }
     }
   }
 }

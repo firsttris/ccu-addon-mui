@@ -521,6 +521,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleObjects(client, msgType, message)
 	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive":
 		s.handleLogic(client, msgType, message)
+	case "getProgram", "saveProgram", "deleteProgram":
+		s.handleProgramEditor(client, msgType, message)
 	case "getFavorites", "createFavorite", "renameFavorite", "deleteFavorite", "addFavoriteItem", "removeFavoriteItem":
 		s.handleFavorites(client, msgType, message)
 	default:
@@ -1950,4 +1952,52 @@ func (s *Server) handleSetChannelTile(client *Client, message []byte) {
 			result, _, err := s.regaClient.SetChannelTile(msg.ID, msg.Tile)
 			return nil, result, err
 		})
+}
+
+type programResponse struct {
+	Type      string                  `json:"type"`
+	RequestID string                  `json:"requestId,omitempty"`
+	Program   *rega.ProgramDefinition `json:"program"`
+}
+
+// handleProgramEditor reads a program with its rules, saves one (new or
+// changed) or deletes one. Changing is setup: administrators only.
+func (s *Server) handleProgramEditor(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string                 `json:"requestId"`
+		ID        int64                  `json:"id"`
+		Program   rega.ProgramDefinition `json:"program"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	switch msgType {
+	case "getProgram":
+		program, err := s.regaClient.GetProgram(msg.ID)
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getProgram failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		if program == nil {
+			s.sendRequestError(client, msg.RequestID, "getProgram: "+rega.SetNotFound, rega.SetNotFound)
+			return
+		}
+		s.sendJSON(client, programResponse{Type: "getProgram_response", RequestID: msg.RequestID, Program: program})
+	case "saveProgram":
+		var created int64
+		target := fmt.Sprintf("program %d", msg.Program.ID)
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Program.Name},
+			func() (interface{}, string, error) {
+				result, id, err := s.regaClient.SaveProgram(msg.Program)
+				created = id
+				return nil, result, err
+			}, &created)
+	case "deleteProgram":
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: fmt.Sprintf("program %d", msg.ID)},
+			func() (interface{}, string, error) {
+				result, name, err := s.regaClient.DeleteProgram(msg.ID)
+				return name, result, err
+			})
+	}
 }
