@@ -293,6 +293,32 @@ test('meldet ein anderes Gerät ab', async ({ page, browser }) => {
   await tabletContext.close();
 });
 
+test('stellt eine Direktverknüpfung über eine Vorlage der WebUI ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/HmIP-RF/000855699C4F38');
+  const list = page.getByRole('region', { name: 'Direktverknüpfungen' }).getByRole('list', { name: 'Direktverknüpfungen' });
+  const item = list.getByRole('listitem').filter({ hasText: 'Esstisch an' });
+  await item.getByRole('button', { name: 'Parameter' }).click();
+
+  // A new link has the dimmer's default: on/off and brighter/darker
+  const profile = item.getByRole('combobox', { name: 'Vorlage' });
+  await expect(profile).toHaveValue('3');
+  await profile.selectOption({ label: 'Treppenhauslicht' });
+  await expect(item).toContainText('Das Licht wird durch kurzen oder langen Tastendruck');
+  await item.getByRole('combobox', { name: 'Einschaltdauer', exact: true }).selectOption({ label: '5 min' });
+  await item.getByRole('button', { name: /^Speichern \(\d+\)$/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'Änderungen speichern?' });
+  await expect(dialog).toContainText('Vorlage: Dimmer - ein/aus & heller/dunkler → Treppenhauslicht');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+
+  // Stored in the device: recognised again after a reload
+  await page.reload();
+  await item.getByRole('button', { name: 'Parameter' }).click();
+  await expect(profile).toHaveValue('4');
+  await expect(item.getByRole('combobox', { name: 'Einschaltdauer', exact: true })).toHaveValue('300');
+});
+
 test('legt Direktverknüpfungen an, ändert ihre Parameter und löscht sie', async ({ page }) => {
   await login(page);
   await page.goto('/device/HmIP-RF/000855699C4F38');
@@ -316,7 +342,7 @@ test('legt Direktverknüpfungen an, ändert ihre Parameter und löscht sie', asy
   // Parameters of the new link on the dimmer's side
   const item = list.getByRole('listitem').filter({ hasText: 'Esstisch dimmen' });
   await item.getByRole('button', { name: 'Parameter' }).click();
-  const level = item.getByRole('textbox', { name: 'SHORT_ON_LEVEL' });
+  const level = item.getByRole('textbox', { name: 'Pegel im Zustand "ein"', exact: true });
   await expect(level).toHaveValue('100');
   await level.fill('40');
   await level.press('Enter');

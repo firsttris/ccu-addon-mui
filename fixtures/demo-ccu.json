@@ -5017,6 +5017,818 @@
             }
           },
           "LINK": {
+            "LONG_COND_VALUE_HI": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 150,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 0,
+              "DEFAULT": 150
+            },
+            "LONG_COND_VALUE_LO": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 50,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 1,
+              "DEFAULT": 50
+            },
+            "LONG_CT_OFF": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 2,
+              "DEFAULT": 0
+            },
+            "LONG_CT_OFFDELAY": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 3,
+              "DEFAULT": 0
+            },
+            "LONG_CT_ON": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 4,
+              "DEFAULT": 0
+            },
+            "LONG_CT_ONDELAY": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 5,
+              "DEFAULT": 0
+            },
+            "LONG_CT_RAMPOFF": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 6,
+              "DEFAULT": 0
+            },
+            "LONG_CT_RAMPON": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 7,
+              "DEFAULT": 0
+            },
+            "LONG_DIM_MAX_LEVEL": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.01,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 8,
+              "DEFAULT": 1
+            },
+            "LONG_DIM_MIN_LEVEL": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.01,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 9,
+              "DEFAULT": 0
+            },
+            "LONG_DIM_STEP": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 10,
+              "DEFAULT": 0.05
+            },
+            "LONG_JT_OFF": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 6,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 11,
+              "DEFAULT": 1
+            },
+            "LONG_JT_OFFDELAY": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 5,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 12,
+              "DEFAULT": 5
+            },
+            "LONG_JT_ON": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 4,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 13,
+              "DEFAULT": 4
+            },
+            "LONG_JT_ONDELAY": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 6,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 14,
+              "DEFAULT": 2
+            },
+            "LONG_JT_RAMPOFF": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 6,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 15,
+              "DEFAULT": 6
+            },
+            "LONG_JT_RAMPON": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 4,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 16,
+              "DEFAULT": 3
+            },
+            "LONG_MULTIEXECUTE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 17,
+              "DEFAULT": 1
+            },
+            "LONG_OFFDELAY_BLINK": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 18,
+              "DEFAULT": 1
+            },
+            "LONG_OFFDELAY_BLINK_PERIOD_OFFDELAYLEVEL": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 4,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 19,
+              "DEFAULT": 4
+            },
+            "LONG_OFFDELAY_BLINK_PERIOD_OLDLEVEL": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 4,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 20,
+              "DEFAULT": 4
+            },
+            "LONG_OFFDELAY_STEP": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 21,
+              "DEFAULT": 0.05
+            },
+            "LONG_OFFDELAY_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 22,
+              "DEFAULT": 0
+            },
+            "LONG_OFFDELAY_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 23,
+              "DEFAULT": 0
+            },
+            "LONG_OFF_LEVEL": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.01,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 24,
+              "DEFAULT": 0
+            },
+            "LONG_OFF_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 25,
+              "DEFAULT": 7
+            },
+            "LONG_OFF_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 26,
+              "DEFAULT": 31
+            },
+            "LONG_OFF_TIME_MODE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 27,
+              "DEFAULT": 0
+            },
+            "LONG_ONDELAY_MODE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 28,
+              "DEFAULT": 0
+            },
+            "LONG_ONDELAY_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 29,
+              "DEFAULT": 0
+            },
+            "LONG_ONDELAY_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 30,
+              "DEFAULT": 0
+            },
+            "LONG_ON_LEVEL": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.01,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 31,
+              "DEFAULT": 1
+            },
+            "LONG_ON_MIN_LEVEL": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.01,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 32,
+              "DEFAULT": 0
+            },
+            "LONG_ON_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 33,
+              "DEFAULT": 7
+            },
+            "LONG_ON_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 34,
+              "DEFAULT": 31
+            },
+            "LONG_ON_TIME_MODE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 35,
+              "DEFAULT": 0
+            },
+            "LONG_OPTICAL_SIGNAL_BEHAVIOUR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 12,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 36,
+              "DEFAULT": 1
+            },
+            "LONG_OPTICAL_SIGNAL_COLOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 37,
+              "DEFAULT": 7
+            },
+            "LONG_OUTPUT_BEHAVIOUR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 38,
+              "DEFAULT": 7
+            },
+            "LONG_PROFILE_ACTION_TYPE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 5,
+              "MIN": 0,
+              "MAX": 5,
+              "VALUE_LIST": [
+                "NOP",
+                "JUMP_TO_TARGET",
+                "TOGGLE_TO_COUNTER",
+                "TOGGLE_INVERSE_TO_COUNTER",
+                "UPDIM",
+                "DOWNDIM"
+              ],
+              "TAB_ORDER": 39
+            },
+            "LONG_PROFILE_REPETITIONS": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 255,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 40,
+              "DEFAULT": 0
+            },
+            "LONG_RAMPOFF_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 41,
+              "DEFAULT": 0
+            },
+            "LONG_RAMPOFF_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 42,
+              "DEFAULT": 5
+            },
+            "LONG_RAMPON_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 43,
+              "DEFAULT": 0
+            },
+            "LONG_RAMPON_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 44,
+              "DEFAULT": 5
+            },
+            "LONG_RAMP_START_STEP": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 45,
+              "DEFAULT": 0.05
+            },
+            "SHORT_COND_VALUE_HI": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 150,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 46,
+              "DEFAULT": 150
+            },
+            "SHORT_COND_VALUE_LO": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 50,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 47,
+              "DEFAULT": 50
+            },
+            "SHORT_CT_OFF": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 48,
+              "DEFAULT": 0
+            },
+            "SHORT_CT_OFFDELAY": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 49,
+              "DEFAULT": 0
+            },
+            "SHORT_CT_ON": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 50,
+              "DEFAULT": 0
+            },
+            "SHORT_CT_ONDELAY": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 51,
+              "DEFAULT": 0
+            },
+            "SHORT_CT_RAMPOFF": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 52,
+              "DEFAULT": 0
+            },
+            "SHORT_CT_RAMPON": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 53,
+              "DEFAULT": 0
+            },
+            "SHORT_DIM_MAX_LEVEL": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.01,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 54,
+              "DEFAULT": 1
+            },
+            "SHORT_DIM_MIN_LEVEL": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.01,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 55,
+              "DEFAULT": 0
+            },
+            "SHORT_DIM_STEP": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 56,
+              "DEFAULT": 0.05
+            },
+            "SHORT_JT_OFF": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 6,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 57,
+              "DEFAULT": 1
+            },
+            "SHORT_JT_OFFDELAY": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 5,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 58,
+              "DEFAULT": 5
+            },
+            "SHORT_JT_ON": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 4,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 59,
+              "DEFAULT": 4
+            },
+            "SHORT_JT_ONDELAY": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 6,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 60,
+              "DEFAULT": 2
+            },
+            "SHORT_JT_RAMPOFF": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 6,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 61,
+              "DEFAULT": 6
+            },
+            "SHORT_JT_RAMPON": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 4,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 62,
+              "DEFAULT": 3
+            },
+            "SHORT_MULTIEXECUTE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 63,
+              "DEFAULT": 0
+            },
+            "SHORT_OFFDELAY_BLINK": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 64,
+              "DEFAULT": 1
+            },
+            "SHORT_OFFDELAY_BLINK_PERIOD_OFFDELAYLEVEL": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 4,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 65,
+              "DEFAULT": 4
+            },
+            "SHORT_OFFDELAY_BLINK_PERIOD_OLDLEVEL": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 4,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 66,
+              "DEFAULT": 4
+            },
+            "SHORT_OFFDELAY_STEP": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 67,
+              "DEFAULT": 0.05
+            },
+            "SHORT_OFFDELAY_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 68,
+              "DEFAULT": 0
+            },
+            "SHORT_OFFDELAY_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 69,
+              "DEFAULT": 0
+            },
+            "SHORT_OFF_LEVEL": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.01,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 70,
+              "DEFAULT": 0
+            },
+            "SHORT_OFF_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 71,
+              "DEFAULT": 7
+            },
+            "SHORT_OFF_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 72,
+              "DEFAULT": 31
+            },
+            "SHORT_OFF_TIME_MODE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 73,
+              "DEFAULT": 0
+            },
+            "SHORT_ONDELAY_MODE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 74,
+              "DEFAULT": 0
+            },
+            "SHORT_ONDELAY_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 75,
+              "DEFAULT": 0
+            },
+            "SHORT_ONDELAY_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 76,
+              "DEFAULT": 0
+            },
+            "SHORT_ON_LEVEL": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 1,
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "UNIT": "100%",
+              "TAB_ORDER": 77,
+              "SPECIAL": [
+                {
+                  "ID": "OLD_LEVEL",
+                  "VALUE": 1.005
+                }
+              ]
+            },
+            "SHORT_ON_MIN_LEVEL": {
+              "TYPE": "FLOAT",
+              "MIN": 0.0,
+              "MAX": 1.01,
+              "UNIT": "100%",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 78,
+              "DEFAULT": 0.1
+            },
+            "SHORT_ON_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 79,
+              "DEFAULT": 7
+            },
+            "SHORT_ON_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 80,
+              "DEFAULT": 31
+            },
+            "SHORT_ON_TIME_MODE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 1,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 81,
+              "DEFAULT": 0
+            },
+            "SHORT_OPTICAL_SIGNAL_BEHAVIOUR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 12,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 82,
+              "DEFAULT": 1
+            },
+            "SHORT_OPTICAL_SIGNAL_COLOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 83,
+              "DEFAULT": 7
+            },
+            "SHORT_OPTICAL_SIGNAL_OFF_BEHAVIOUR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 12,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 84,
+              "DEFAULT": 1
+            },
+            "SHORT_OPTICAL_SIGNAL_OFF_COLOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 85,
+              "DEFAULT": 7
+            },
+            "SHORT_OUTPUT_BEHAVIOUR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 86,
+              "DEFAULT": 7
+            },
             "SHORT_PROFILE_ACTION_TYPE": {
               "TYPE": "ENUM",
               "OPERATIONS": 3,
@@ -5032,56 +5844,62 @@
                 "UPDIM",
                 "DOWNDIM"
               ],
-              "TAB_ORDER": 0
+              "TAB_ORDER": 87
             },
-            "SHORT_ON_LEVEL": {
-              "TYPE": "FLOAT",
+            "SHORT_PROFILE_REPETITIONS": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 255,
               "OPERATIONS": 3,
               "FLAGS": 1,
-              "DEFAULT": 1.0,
+              "TAB_ORDER": 88,
+              "DEFAULT": 0
+            },
+            "SHORT_RAMPOFF_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 89,
+              "DEFAULT": 0
+            },
+            "SHORT_RAMPOFF_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 90,
+              "DEFAULT": 5
+            },
+            "SHORT_RAMPON_TIME_BASE": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 7,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 91,
+              "DEFAULT": 0
+            },
+            "SHORT_RAMPON_TIME_FACTOR": {
+              "TYPE": "INTEGER",
+              "MIN": 0,
+              "MAX": 31,
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "TAB_ORDER": 92,
+              "DEFAULT": 5
+            },
+            "SHORT_RAMP_START_STEP": {
+              "TYPE": "FLOAT",
               "MIN": 0.0,
               "MAX": 1.0,
               "UNIT": "100%",
-              "TAB_ORDER": 1,
-              "SPECIAL": [
-                {
-                  "ID": "OLD_LEVEL",
-                  "VALUE": 1.005
-                }
-              ]
-            },
-            "SHORT_ON_TIME": {
-              "TYPE": "FLOAT",
               "OPERATIONS": 3,
               "FLAGS": 1,
-              "DEFAULT": 111600.0,
-              "MIN": 0.0,
-              "MAX": 111600.0,
-              "UNIT": "s",
-              "TAB_ORDER": 2,
-              "SPECIAL": [
-                {
-                  "ID": "NOT_USED",
-                  "VALUE": 111600.0
-                }
-              ]
-            },
-            "LONG_PROFILE_ACTION_TYPE": {
-              "TYPE": "ENUM",
-              "OPERATIONS": 3,
-              "FLAGS": 1,
-              "DEFAULT": 4,
-              "MIN": 0,
-              "MAX": 5,
-              "VALUE_LIST": [
-                "NOP",
-                "JUMP_TO_TARGET",
-                "TOGGLE_TO_COUNTER",
-                "TOGGLE_INVERSE_TO_COUNTER",
-                "UPDIM",
-                "DOWNDIM"
-              ],
-              "TAB_ORDER": 3
+              "TAB_ORDER": 93,
+              "DEFAULT": 0.05
             }
           }
         },

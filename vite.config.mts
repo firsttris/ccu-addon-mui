@@ -89,6 +89,11 @@ export default defineConfig(({ command, mode, isPreview }) => ({
     }),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        // The direct link profiles (1.5 MB) are loaded when needed, in the
+        // setup area only, not installed on every device
+        globIgnores: ['**/linkProfiles-*.js'],
+      },
       manifest: {
         name: 'ccu-addon-mui',
         short_name: 'ccu-addon-mui',
