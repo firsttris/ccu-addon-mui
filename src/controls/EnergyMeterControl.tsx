@@ -1,5 +1,4 @@
-import React from 'react';
-import styled from '@emotion/styled';
+import React, { ReactNode } from 'react';
 import { EnergyMeterChannel } from '../types/types';
 import { defaultLang } from '../i18n/utils';
 import { m } from '../paraglide/messages';
@@ -11,47 +10,17 @@ interface EnergyMeterControlProps {
   channels: EnergyMeterChannel[];
 }
 
-const Container = styled.div`
-  width: 230px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  color: ${(props) => props.theme.colors.text};
-`;
+const Section = ({ children }: { children: ReactNode }) => <div className="flex flex-col gap-1">{children}</div>;
 
-const Name = styled.div`
-  font-size: 13px;
-  text-align: center;
-  color: ${(props) => props.theme.colors.textSecondary};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
+const Kind = ({ children }: { children: ReactNode }) => <div className="text-[15px] font-semibold">{children}</div>;
 
-const Section = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-`;
+const MainValue = ({ children }: { children: ReactNode }) => (
+  <div className="text-[30px] font-light">{children}</div>
+);
 
-const Kind = styled.div`
-  font-size: 15px;
-  font-weight: 600;
-`;
-
-const MainValue = styled.div`
-  font-size: 30px;
-  font-weight: 300;
-`;
-
-const Row = styled.div`
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 13px;
-  color: ${(props) => props.theme.colors.textSecondary};
-`;
+const Row = ({ children }: { children: ReactNode }) => (
+  <div className="flex justify-between gap-2 text-[13px] text-text-secondary">{children}</div>
+);
 
 const locale = defaultLang === 'de' ? 'de-DE' : 'en-US';
 
@@ -80,8 +49,13 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({
   const name = sorted[0]?.name ?? '';
 
   return (
-    <Container>
-      <Name title={name}>{name}</Name>
+    <div className="w-[230px] py-[14px] px-4 flex flex-col gap-[10px] text-text">
+      <div
+        title={name}
+        className="text-[13px] text-center text-text-secondary whitespace-nowrap overflow-hidden text-ellipsis"
+      >
+        {name}
+      </div>
 
       {isElectricity && (
         <Section>
@@ -113,6 +87,6 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({
       )}
 
       {!isElectricity && !isGas && <Row>{m.NO_METER_DATA()}</Row>}
-    </Container>
+    </div>
   );
 });
