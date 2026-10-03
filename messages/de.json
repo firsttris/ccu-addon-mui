@@ -627,5 +627,9 @@
   "USERS_PASSWORD_MISMATCH": "Die Passwörter stimmen nicht überein",
   "USERS_DELETE_TITLE": "Benutzer löschen",
   "USERS_DELETE_CONFIRM": "{name} und seine Favoriten werden gelöscht.",
-  "USERS_DELETED": "Benutzer gelöscht"
+  "USERS_DELETED": "Benutzer gelöscht",
+  "CHANNEL_OPTIONS": "Optionen",
+  "CHANNEL_VISIBLE": "sichtbar",
+  "CHANNEL_USABLE": "bedienbar (nicht nur Admins)",
+  "CHANNEL_LOGGED": "protokolliert"
 }

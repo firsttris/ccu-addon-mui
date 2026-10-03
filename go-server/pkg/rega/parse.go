@@ -39,6 +39,12 @@ type Channel struct {
 	// Tile is the tile chosen for the channel in the add-on ("light" or
 	// "switch"), stored as ReGa metadata; empty lets the app decide.
 	Tile string `json:"tile,omitempty"`
+
+	// The WebUI's channel options: Hidden (not visible), ReadOnly (not
+	// usable by non-administrators), Logged (in the system protocol)
+	Hidden   bool `json:"hidden,omitempty"`
+	ReadOnly bool `json:"readOnly,omitempty"`
+	Logged   bool `json:"logged,omitempty"`
 }
 
 // parseIDs parses a comma separated list of ids.
@@ -106,7 +112,7 @@ func parseNamedObjects(output string) []NamedObject {
 // parseChannels parses the output of get_channels.tcl.
 func parseChannels(output string) []Channel {
 	isRecord := func(line string) bool {
-		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t") || strings.HasPrefix(line, "T\t")
+		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t") || strings.HasPrefix(line, "T\t") || strings.HasPrefix(line, "F\t")
 	}
 
 	channels := []Channel{}
@@ -157,6 +163,14 @@ func parseChannels(output string) []Channel {
 			if fields[1] == TileLight || fields[1] == TileSwitch {
 				channels[len(channels)-1].Tile = fields[1]
 			}
+		case "F":
+			if len(fields) < 4 || len(channels) == 0 {
+				continue
+			}
+			channel := &channels[len(channels)-1]
+			channel.Hidden = fields[1] == "false"
+			channel.ReadOnly = fields[2] == "false"
+			channel.Logged = fields[3] == "true"
 		case "D":
 			if len(fields) < 4 || len(channels) == 0 {
 				continue

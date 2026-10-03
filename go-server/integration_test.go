@@ -1309,3 +1309,51 @@ func TestStackUsers(t *testing.T) {
 		t.Fatal("user not deleted")
 	}
 }
+
+func TestStackChannelOptions(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
+	receive(t, conn, byRequestID("e"))
+
+	// A user (not admin) who may operate in general
+	send(t, conn, message{"type": "saveUser", "requestId": "u", "id": 0, "fullName": "Kind", "level": "user", "password": "kind"})
+	receive(t, conn, byRequestID("u"))
+	child, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/", conn.RemoteAddr().String()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer child.Close()
+	loginAs(t, child, "Kind", "kind")
+	set := func(c *websocket.Conn, id string) message {
+		send(t, c, message{"type": "setDatapoint", "requestId": id, "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true})
+		return receive(t, c, byRequestID(id))
+	}
+	if m := set(child, "s1"); m["success"] != true {
+		t.Fatalf("user could not operate: %v", m)
+	}
+
+	send(t, conn, message{"type": "setChannelOption", "requestId": "o1", "id": 101, "option": "usable", "value": false})
+	if m := receive(t, conn, byRequestID("o1")); m["success"] != true {
+		t.Fatalf("setChannelOption failed: %v", m)
+	}
+	if m := set(child, "s2"); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN for a read-only channel, got %v", m)
+	}
+	if m := set(conn, "s3"); m["success"] != true {
+		t.Fatalf("admin could not operate: %v", m)
+	}
+
+	send(t, conn, message{"type": "setChannelOption", "requestId": "o2", "id": 101, "option": "visible", "value": false})
+	receive(t, conn, byRequestID("o2"))
+	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "requestId": "c", "all": true})
+	for _, ch := range receive(t, conn, byRequestID("c"))["channels"].([]interface{}) {
+		if c := ch.(map[string]interface{}); c["id"] == 101.0 && (c["hidden"] != true || c["readOnly"] != true) {
+			t.Fatalf("options not listed: %v", c)
+		}
+	}
+	send(t, conn, message{"type": "setChannelOption", "requestId": "o3", "id": 101, "option": "sticky", "value": true})
+	if m := receive(t, conn, byRequestID("o3")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+}

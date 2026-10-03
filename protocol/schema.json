@@ -208,6 +208,9 @@
     },
     "deleteUser": {
       "$ref": "#/definitions/DeleteUserCall"
+    },
+    "setChannelOption": {
+      "$ref": "#/definitions/SetChannelOptionCall"
     }
   },
   "required": [
@@ -278,7 +281,8 @@
     "powerAction",
     "getUsers",
     "saveUser",
-    "deleteUser"
+    "deleteUser",
+    "setChannelOption"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -369,6 +373,18 @@
             "switch"
           ],
           "description": "Tile chosen in the add-on (ReGa metadata)"
+        },
+        "hidden": {
+          "type": "boolean",
+          "description": "not visible (the WebUI's channel option)"
+        },
+        "readOnly": {
+          "type": "boolean",
+          "description": "only administrators may operate it"
+        },
+        "logged": {
+          "type": "boolean",
+          "description": "logged in the system protocol"
         }
       },
       "required": [
@@ -2699,6 +2715,9 @@
         },
         {
           "$ref": "#/definitions/DeleteUserResponse"
+        },
+        {
+          "$ref": "#/definitions/SetChannelOptionResponse"
         }
       ]
     },
@@ -5943,6 +5962,75 @@
           "type": "string"
         }
       }
+    },
+    "SetChannelOptionRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setChannelOption"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "option": {
+          "type": "string",
+          "enum": [
+            "visible",
+            "usable",
+            "logged"
+          ]
+        },
+        "value": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "option",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "SetChannelOptionResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setChannelOption_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetChannelOptionCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetChannelOptionRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetChannelOptionResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
     }
   }
 }

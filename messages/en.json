@@ -627,5 +627,9 @@
   "USERS_PASSWORD_MISMATCH": "The passwords do not match",
   "USERS_DELETE_TITLE": "Delete user",
   "USERS_DELETE_CONFIRM": "{name} and their favorites will be deleted.",
-  "USERS_DELETED": "User deleted"
+  "USERS_DELETED": "User deleted",
+  "CHANNEL_OPTIONS": "Options",
+  "CHANNEL_VISIBLE": "visible",
+  "CHANNEL_USABLE": "usable (not only admins)",
+  "CHANNEL_LOGGED": "logged"
 }

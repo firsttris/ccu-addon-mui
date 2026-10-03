@@ -89,7 +89,8 @@ export type ServerMessage =
   | PowerActionResponse
   | GetUsersResponse
   | SaveUserResponse
-  | DeleteUserResponse;
+  | DeleteUserResponse
+  | SetChannelOptionResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -163,6 +164,7 @@ export interface Protocol {
   getUsers: GetUsersCall;
   saveUser: SaveUserCall;
   deleteUser: DeleteUserCall;
+  setChannelOption: SetChannelOptionCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -285,6 +287,18 @@ export interface Channel {
    * Tile chosen in the add-on (ReGa metadata)
    */
   tile?: "light" | "switch";
+  /**
+   * not visible (the WebUI's channel option)
+   */
+  hidden?: boolean;
+  /**
+   * only administrators may operate it
+   */
+  readOnly?: boolean;
+  /**
+   * logged in the system protocol
+   */
+  logged?: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2474,6 +2488,34 @@ export interface DeleteUserRequest {
  */
 export interface DeleteUserResponse {
   type: "deleteUser_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetChannelOptionCall".
+ */
+export interface SetChannelOptionCall {
+  request: SetChannelOptionRequest;
+  response: SetChannelOptionResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetChannelOptionRequest".
+ */
+export interface SetChannelOptionRequest {
+  type: "setChannelOption";
+  requestId?: string;
+  id: number;
+  option: "visible" | "usable" | "logged";
+  value: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetChannelOptionResponse".
+ */
+export interface SetChannelOptionResponse {
+  type: "setChannelOption_response";
   requestId?: string;
   success: boolean;
 }
