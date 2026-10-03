@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
-import styled from '@emotion/styled';
 
 type ToastKind = 'error' | 'info';
 
@@ -14,30 +13,6 @@ interface ToastContextType {
 }
 
 const TOAST_DURATION_MS = 5000;
-
-const ToastContainer = styled.div`
-  position: fixed;
-  left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%);
-  z-index: 2000;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: min(420px, calc(100vw - 32px));
-`;
-
-const ToastItem = styled('div', {
-  shouldForwardProp: (prop) => prop !== 'kind',
-})<{ kind: ToastKind }>`
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 15px;
-  color: #fff;
-  background: ${({ kind }) => (kind === 'error' ? '#c62828' : '#424242')};
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
-`;
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
@@ -67,13 +42,20 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <ToastContainer>
+      <div className="fixed left-1/2 bottom-4 -translate-x-1/2 z-[2000] flex flex-col gap-2 w-[min(420px,calc(100vw_-_32px))]">
         {toasts.map((toast) => (
-          <ToastItem key={toast.id} kind={toast.kind} role="alert" onClick={() => dismiss(toast.id)}>
+          <div
+            key={toast.id}
+            role="alert"
+            onClick={() => dismiss(toast.id)}
+            className={`py-3 px-4 rounded-lg text-[15px] text-white shadow-[0_4px_12px_rgba(0,0,0,0.3)] cursor-pointer ${
+              toast.kind === 'error' ? 'bg-[#c62828]' : 'bg-[#424242]'
+            }`}
+          >
             {toast.message}
-          </ToastItem>
+          </div>
         ))}
-      </ToastContainer>
+      </div>
     </ToastContext.Provider>
   );
 };

@@ -73,6 +73,21 @@ for (const dark of [false, true]) {
         });
       }
 
+      test('login', async ({ page, context }) => {
+        // A fresh page that has to log in
+        await context.clearCookies();
+        const loginPage = await context.newPage();
+        await installWebSocketMock(loginPage, { requireLogin: true });
+        await loginPage.addInitScript((dark) => localStorage.setItem('theme-dark', JSON.stringify(dark)), dark);
+        await loginPage.goto('/');
+        await expect(loginPage.getByLabel(/Passwort/)).toBeVisible();
+        await loginPage.evaluate(() => document.fonts.ready);
+        await expect(loginPage).toHaveScreenshot(`login-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
+          animations: 'disabled',
+          maxDiffPixels: 10,
+        });
+      });
+
       test('menu', async ({ page }) => {
         await page.goto('/');
         await page.getByRole('button', { name: 'Menu' }).click();
