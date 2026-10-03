@@ -197,6 +197,14 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
             VALVE_STATE: 10,
           },
         },
+        {
+          id: 402,
+          name: 'Fußbodenheizung Bad',
+          address: '00201D8994A2B1:1',
+          interfaceName: 'HmIP-RF',
+          type: 'CLIMATECONTROL_FLOOR_TRANSCEIVER',
+          datapoints: { LEVEL: 0.62, VALVE_STATE: 4 },
+        },
       ],
     };
 

@@ -35,7 +35,7 @@ const views = [
   { name: 'room-blinds', path: '/room/2', ready: 'Küche Fenster' },
   { name: 'room-energy-door', path: '/room/3', ready: 'Haustür' },
   { name: 'trades', path: '/trades', ready: 'Heizung' },
-  { name: 'trade-thermostat', path: '/trade/20', ready: 'Wohnzimmer Thermostat' },
+  { name: 'trade-thermostat', path: '/trade/20', ready: 'Fußbodenheizung Bad' },
   { name: 'all-devices', path: '/devices', ready: 'Rauchmelder Flur' },
 ];
 
