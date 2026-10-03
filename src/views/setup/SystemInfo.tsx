@@ -1,4 +1,5 @@
 import { Panel } from './Panel';
+import { PanelSkeleton } from '../../components/ui/skeleton';
 import { Backup } from './Backup';
 import { SystemSettings } from './SystemSettings';
 import { useSystemInfo } from '../../queries';
@@ -18,9 +19,17 @@ export const SystemInfo = () => (
 // Versions and the radio modules with their duty cycle
 const Versions = () => {
   usePageTitle(m.SETUP());
-  const { data } = useSystemInfo();
-  if (!data) {
+  const { data, isError } = useSystemInfo();
+  if (isError) {
     return null;
+  }
+  if (!data) {
+    return (
+      <Panel aria-label={m.SYSTEM()} aria-busy>
+        <h2>{m.SYSTEM()}</h2>
+        <PanelSkeleton lines={4} />
+      </Panel>
+    );
   }
   return (
     <Panel aria-label={m.SYSTEM()}>

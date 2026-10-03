@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { TableSkeletonRows } from '../../components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { useToast } from '../../contexts/ToastContext';
 import { usePageTitle } from '../../contexts/PageTitleContext';
@@ -47,7 +48,7 @@ export const Users = () => {
   const { request } = useWebSocketActions();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  const { data: users = [] } = useUsers();
+  const { data: users = [], isPending: loading } = useUsers();
   const [editing, setEditing] = useState<CcuUser | 'new' | null>(null);
   const [deleting, setDeleting] = useState<CcuUser | null>(null);
 
@@ -82,6 +83,7 @@ export const Users = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {loading && <TableSkeletonRows columns={4} rows={3} />}
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">

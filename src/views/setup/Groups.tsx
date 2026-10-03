@@ -7,6 +7,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { EditableName } from '../../components/EditableName';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { ListSkeletonItems } from '../../components/ui/skeleton';
 import { Panel } from './Panel';
 import { m } from '../../paraglide/messages';
 
@@ -14,8 +15,8 @@ type List = 'rooms' | 'trades';
 
 const GroupList = ({ list, title, placeholder }: { list: List; title: string; placeholder: string }) => {
   const { showToast } = useToast();
-  const { data: rooms = [] } = useRooms();
-  const { data: trades = [] } = useTrades();
+  const { data: rooms = [], isPending: roomsLoading } = useRooms();
+  const { data: trades = [], isPending: tradesLoading } = useTrades();
   const groups = list === 'rooms' ? rooms : trades;
   const change = useObjectChange();
   const [name, setName] = useState('');
@@ -34,6 +35,7 @@ const GroupList = ({ list, title, placeholder }: { list: List; title: string; pl
     <Panel aria-label={title}>
       <h2>{title}</h2>
       <ul aria-label={title} className="flex flex-col divide-y rounded-lg border">
+        {(list === 'rooms' ? roomsLoading : tradesLoading) && <ListSkeletonItems rows={3} />}
         {groups.map((group) => (
           <li key={group.id} className="flex items-center px-3 py-1.5">
             <EditableName

@@ -9,6 +9,7 @@ import { Button } from '../components/ui/button';
 import { NewSysvarDialog } from './NewSysvarDialog';
 import PlusIcon from '~icons/lucide/plus';
 import { Link } from '@tanstack/react-router';
+import { ListSkeletonItems } from '../components/ui/skeleton';
 import { m } from '../paraglide/messages';
 import { Input as UiInput } from '../components/ui/input';
 import { NativeSelect } from '../components/ui/select';
@@ -21,9 +22,9 @@ const Container = ({ children }: Children) => (
   <div className="flex max-w-3xl flex-col gap-4">{children}</div>
 );
 
-export const List = ({ children, ...props }: HTMLAttributes<HTMLUListElement>) => (
-  <ul className="tile-edge flex flex-col divide-y overflow-hidden rounded-2xl border bg-card" {...props}>
-    {children}
+export const List = ({ children, loading, ...props }: HTMLAttributes<HTMLUListElement> & { loading?: boolean }) => (
+  <ul className="tile-edge flex flex-col divide-y overflow-hidden rounded-2xl border bg-card" aria-busy={loading} {...props}>
+    {loading ? <ListSkeletonItems /> : children}
     <li className="hidden px-4 py-8 text-center text-sm text-muted-foreground only:block">{m.EMPTY_LIST()}</li>
   </ul>
 );
@@ -150,7 +151,7 @@ export const Sysvars = () => {
   const { showToast } = useToast();
   const { userLevel, elevated } = useWebSocketContext();
   const canConfigure = userLevel === 'admin' && elevated;
-  const { data: sysvars = [] } = useSysvars();
+  const { data: sysvars = [], isPending: loading } = useSysvars();
   const action = useLogicAction();
   const change = useObjectChange();
   const [creating, setCreating] = useState(false);
@@ -176,7 +177,7 @@ export const Sysvars = () => {
           </Button>
         </div>
       )}
-      <List aria-label={m.SYSVARS()}>
+      <List aria-label={m.SYSVARS()} loading={loading}>
         {sysvars
           .filter((sv) => sv.visible)
           .map((sysvar) => (
@@ -224,7 +225,7 @@ export const Sysvars = () => {
 export const Programs = () => {
   const { showToast } = useToast();
   const { userLevel, elevated } = useWebSocketContext();
-  const { data: programs = [] } = usePrograms();
+  const { data: programs = [], isPending: loading } = usePrograms();
   const action = useLogicAction();
   const canConfigure = userLevel === 'admin' && elevated;
   usePageTitle(m.PROGRAMS());
@@ -247,7 +248,7 @@ export const Programs = () => {
           </Button>
         </div>
       )}
-      <List aria-label={m.PROGRAMS()}>
+      <List aria-label={m.PROGRAMS()} loading={loading}>
         {programs
           .filter((p) => p.visible)
           .map((program) => (

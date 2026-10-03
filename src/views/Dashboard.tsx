@@ -12,6 +12,7 @@ import { useEffects } from '../contexts/EffectsContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
+import { TileSkeletonGrid } from '../components/ui/skeleton';
 import { cn } from '../lib/utils';
 import LayoutGridIcon from '~icons/lucide/layout-grid';
 import { useLayout, useSetLayout } from '../queries';
@@ -410,6 +411,7 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, em
       ) : (
         groupIntoSections(channelsByType).map((group) => <Section key={group.key} group={group} />)
       )}
+      {isLoading && channelsByType.length === 0 && <TileSkeletonGrid />}
       {extra}
       {!isLoading && channelsByType.length === 0 && !extra && (
         <p className="py-12 text-center text-muted-foreground">{empty ?? m.NO_CHANNELS()}</p>
