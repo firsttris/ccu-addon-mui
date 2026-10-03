@@ -5696,6 +5696,18 @@
       "falseName": "nein",
       "trueName": "ja",
       "value": false
+    },
+    {
+      "id": 958,
+      "name": "Wasseralarm",
+      "visible": true,
+      "valueType": 2,
+      "subType": 6,
+      "falseName": "trocken",
+      "trueName": "Wasser erkannt",
+      "value": true,
+      "alarmCounter": 1,
+      "alarmTime": "2026-01-15 09:12:00"
     }
   ],
   "programs": [

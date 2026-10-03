@@ -408,5 +408,13 @@
   "SCHEDULE_HINT": "runs in the device, even without the CCU",
   "WP_EMPTY": "No switching times yet.",
   "ADD_SWITCHING_POINT": "Add switching time",
-  "WP_SAVE_CONFIRM": "Save the schedule of \"{name}\" in the device? Battery devices take it over on their next contact."
+  "WP_SAVE_CONFIRM": "Save the schedule of \"{name}\" in the device? Battery devices take it over on their next contact.",
+  "ALARMS": "Alarms",
+  "NO_ALARMS": "No alarms.",
+  "ALARM_ONE": "1 alarm",
+  "ALARMS_MANY": "{count} alarms",
+  "ALARMS_MORE": "+{count} more",
+  "ALARM_TIMES": "triggered {count}×",
+  "ALARM_ACTIVE": "Triggered",
+  "ALARM_OVER": "Over, not yet acknowledged"
 }

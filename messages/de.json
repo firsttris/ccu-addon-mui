@@ -408,5 +408,13 @@
   "SCHEDULE_HINT": "läuft im Gerät, auch ohne CCU",
   "WP_EMPTY": "Noch keine Schaltzeiten.",
   "ADD_SWITCHING_POINT": "Schaltzeit hinzufügen",
-  "WP_SAVE_CONFIRM": "Den Zeitplan von „{name}“ im Gerät speichern? Batteriegeräte übernehmen ihn beim nächsten Kontakt."
+  "WP_SAVE_CONFIRM": "Den Zeitplan von „{name}“ im Gerät speichern? Batteriegeräte übernehmen ihn beim nächsten Kontakt.",
+  "ALARMS": "Alarme",
+  "NO_ALARMS": "Keine Alarme.",
+  "ALARM_ONE": "1 Alarm",
+  "ALARMS_MANY": "{count} Alarme",
+  "ALARMS_MORE": "+{count} weitere",
+  "ALARM_TIMES": "{count}× ausgelöst",
+  "ALARM_ACTIVE": "Ausgelöst",
+  "ALARM_OVER": "Vorbei, noch nicht bestätigt"
 }

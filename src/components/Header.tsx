@@ -15,6 +15,7 @@ import { usePageTitleValue } from '../contexts/PageTitleContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useRooms, useServiceMessages, useTrades } from '../queries';
 import { ServiceMessagesSheet } from './ServiceMessages';
+import { AlarmButton, AlarmsSheet } from './Alarms';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
@@ -193,6 +194,7 @@ export const Header: React.FC = () => {
   const effects = useEffects();
   const [menuOpen, setMenuOpen] = useState(false);
   const [problemsOpen, setProblemsOpen] = useState(false);
+  const [alarmsOpen, setAlarmsOpen] = useState(false);
   const { connectionStatus } = useWebSocketContext();
   const { data: serviceMessages } = useServiceMessages();
   const problemCount = serviceMessages?.length ?? 0;
@@ -218,6 +220,7 @@ export const Header: React.FC = () => {
           <span className="truncate text-xl leading-tight font-semibold tracking-tight sm:text-2xl">{title}</span>
           <Clock />
         </div>
+        <AlarmButton onClick={() => setAlarmsOpen(true)} />
         {problemCount > 0 && (
           <button
             onClick={() => setProblemsOpen(true)}
@@ -253,6 +256,7 @@ export const Header: React.FC = () => {
       )}
       <NavMenu open={menuOpen} onOpenChange={setMenuOpen} />
       <ServiceMessagesSheet open={problemsOpen} onOpenChange={setProblemsOpen} />
+      <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
     </header>
   );
 };

@@ -17,7 +17,7 @@ import { cn } from '../lib/utils';
 type Children = { children: ReactNode };
 
 const Container = ({ children }: Children) => (
-  <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 pt-2 pb-10 sm:px-6">{children}</div>
+  <div className="flex max-w-3xl flex-col gap-4">{children}</div>
 );
 
 const List = ({ children, ...props }: HTMLAttributes<HTMLUListElement>) => (

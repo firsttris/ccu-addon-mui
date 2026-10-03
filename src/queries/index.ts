@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
-import { ServiceMessage } from '../types/protocol';
+import { AlarmMessage, ServiceMessage } from '../types/protocol';
 import { applyEvent, groupChannelsByType, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
@@ -519,6 +519,34 @@ export const useServiceMessages = () => {
     queryKey: ['serviceMessages'],
     queryFn: async () => ((await request({ type: 'getServiceMessages' })).messages ?? []) as ServiceMessage[],
     refetchInterval: SERVICE_MESSAGES_REFRESH_MS,
+  });
+};
+
+// Triggered alarm variables not yet acknowledged. ReGa sends no events
+// for system variables, so they are read again every few seconds.
+const ALARMS_REFRESH_MS = 15000;
+
+export const useAlarmMessages = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['alarmMessages'],
+    queryFn: async () => ((await request({ type: 'getAlarmMessages' })).alarms ?? []) as AlarmMessage[],
+    refetchInterval: ALARMS_REFRESH_MS,
+  });
+};
+
+// Acknowledges an alarm; it disappears at once
+export const useAcknowledgeAlarmMessage = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => request({ type: 'acknowledgeAlarmMessage', id }, { queue: false }),
+    onMutate: (id) =>
+      queryClient.setQueryData<AlarmMessage[]>(['alarmMessages'], (alarms) => alarms?.filter((a) => a.id !== id)),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['alarmMessages'] });
+      queryClient.invalidateQueries({ queryKey: ['sysvars'] });
+    },
   });
 };
 

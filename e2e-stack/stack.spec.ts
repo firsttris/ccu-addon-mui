@@ -239,7 +239,7 @@ test('setzt Systemvariablen', async ({ page }) => {
 
   const list = page.getByRole('list', { name: 'Systemvariablen' });
   // Internal variables are hidden
-  await expect(list.getByRole('listitem')).toHaveCount(5);
+  await expect(list.getByRole('listitem')).toHaveCount(6);
 
   const presence = list.getByRole('switch', { name: 'Anwesenheit' });
   await expect(presence).toHaveText('anwesend');
@@ -505,4 +505,18 @@ test('bearbeitet das Wochenprogramm eines Schaltaktors', async ({ page }) => {
   await expect(stored).toHaveCount(3);
   await expect(stored.filter({ hasText: 'Sonnenaufgang +30 min' })).toContainText('Wochenende');
   await expect(stored.filter({ hasText: '21:30' })).toContainText('Aus');
+});
+
+test('zeigt einen Alarm und bestätigt ihn in der CCU', async ({ page }) => {
+  await login(page);
+  await page.goto('/room/1');
+  const banner = page.getByRole('alert', { name: 'Alarme' });
+  await expect(banner).toContainText('Wasseralarm: Wasser erkannt');
+  await banner.getByRole('button', { name: 'Bestätigen' }).click();
+  await expect(banner).toHaveCount(0);
+
+  // Acknowledged in the (fake) CCU: gone after a reload too
+  await page.reload();
+  await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
+  await expect(page.getByRole('alert', { name: 'Alarme' })).toHaveCount(0);
 });

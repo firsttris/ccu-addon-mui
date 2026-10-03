@@ -391,6 +391,38 @@ test('bedient BidCos-Thermostat, Lamellen und zeigt die Sirene', async ({ page }
   await expect(page.getByRole('group', { name: 'Sirene Flur' }).getByRole('status')).toHaveText(/Ruhig|Quiet/);
 });
 
+test('zeigt Alarme und bestätigt sie', async ({ page }) => {
+  await page.addInitScript(() => {
+    // Before the app asks for them
+    const set = () =>
+      (window as Window & { __wsMock?: { setAlarms: (a: unknown[]) => void } }).__wsMock?.setAlarms([
+        { id: 958, name: 'Wasseralarm', active: true, counter: 1, firstTime: '2026-01-15 09:12:00', lastTime: '2026-01-15 09:12:00', channel: 'Wassermelder Keller', roomName: 'Keller', message: 'Wasser erkannt' },
+        { id: 954, name: 'Alarmzone 1', active: false, counter: 2, firstTime: '2026-01-14 22:00:00', lastTime: '2026-01-14 22:05:00', message: 'nicht ausgelöst' },
+      ]);
+    window.addEventListener('DOMContentLoaded', set);
+  });
+  await page.goto('/room/1');
+
+  // The newest alarm above the dashboard, the count in the header
+  const banner = page.getByRole('alert', { name: /^(Alarme|Alarms)$/ });
+  await expect(banner).toContainText('Wasseralarm: Wasser erkannt');
+  await expect(banner).toContainText('Wassermelder Keller');
+  await expect(page.getByRole('button', { name: /(Alarme|Alarms): 2/ })).toBeVisible();
+
+  await banner.getByRole('button', { name: /^(Bestätigen|Acknowledge)$/ }).click();
+  await expect.poll(() => page.evaluate(() =>
+    ((window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string; id?: number }> } }).__wsMock?.sentMessages() ?? [])
+      .filter((m) => m.type === 'acknowledgeAlarmMessage').map((m) => m.id))).toEqual([958]);
+
+  // The other one is over but not acknowledged yet
+  await expect(banner).toContainText('Alarmzone 1');
+  await page.getByRole('button', { name: /(Alarme|Alarms): 1/ }).click();
+  const list = page.getByRole('list', { name: /^(Alarme|Alarms)$/ });
+  await expect(list).toContainText(/Vorbei|Over/);
+  await list.getByRole('button', { name: /(Bestätigen|Acknowledge): Alarmzone 1/ }).click();
+  await expect(page.getByRole('alert', { name: /^(Alarme|Alarms)$/ })).toHaveCount(0);
+});
+
 test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
   await page.goto('/room/1');
 

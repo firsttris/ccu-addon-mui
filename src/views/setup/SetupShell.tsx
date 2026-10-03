@@ -36,8 +36,10 @@ const NavGroup = ({ title, children }: { title: string; children: ReactNode }) =
 );
 
 // The setup area: a side menu on wide screens (a row of links on narrow
-// ones), the elevation state, and the page.
-export const SetupShell = ({ children }: { children: ReactNode }) => {
+// ones), the elevation state, and the page. The logic pages (system
+// variables, programs) live in it too, but are open to everyone who may
+// operate, so they don't show the admin-only notice.
+export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode; adminOnly?: boolean }) => {
   const { userLevel, elevated, authRequired } = useWebSocketContext();
   const isAdmin = userLevel === 'admin';
   const [elevating, setElevating] = useState(false);
@@ -45,7 +47,9 @@ export const SetupShell = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="mx-auto flex max-w-[1400px] flex-col gap-6 px-4 pt-2 pb-10 sm:px-6 lg:flex-row">
-      <aside className="lg:sticky lg:top-24 lg:w-56 lg:shrink-0 lg:self-start">
+      {/* Sticks exactly where it sits unscrolled (header 73px + pt-2), so it
+          doesn't move down on long pages only and jump when switching pages */}
+      <aside className="lg:sticky lg:top-[81px] lg:w-56 lg:shrink-0 lg:self-start">
         <nav
           aria-label={m.SETUP()}
           className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-1 [scrollbar-width:none] lg:flex-col lg:gap-5"
@@ -98,7 +102,7 @@ export const SetupShell = ({ children }: { children: ReactNode }) => {
         </nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col gap-5">
-        {!isAdmin && <Notice role="status">{m.ADMIN_ONLY()}</Notice>}
+        {!isAdmin && adminOnly && <Notice role="status">{m.ADMIN_ONLY()}</Notice>}
         {isAdmin && !elevated && (
           <Notice role="status">
             <span className="flex-1">{m.ELEVATE_HINT()}</span>

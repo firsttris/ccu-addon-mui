@@ -133,6 +133,12 @@
     },
     "createBackup": {
       "$ref": "#/definitions/CreateBackupCall"
+    },
+    "getAlarmMessages": {
+      "$ref": "#/definitions/GetAlarmMessagesCall"
+    },
+    "acknowledgeAlarmMessage": {
+      "$ref": "#/definitions/AcknowledgeAlarmMessageCall"
     }
   },
   "required": [
@@ -178,7 +184,9 @@
     "getServiceMessages",
     "acknowledgeServiceMessage",
     "installFirmware",
-    "createBackup"
+    "createBackup",
+    "getAlarmMessages",
+    "acknowledgeAlarmMessage"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2511,6 +2519,12 @@
         },
         {
           "$ref": "#/definitions/CreateBackupResponse"
+        },
+        {
+          "$ref": "#/definitions/GetAlarmMessagesResponse"
+        },
+        {
+          "$ref": "#/definitions/AcknowledgeAlarmMessageResponse"
         }
       ]
     },
@@ -3801,6 +3815,158 @@
         "response"
       ],
       "additionalProperties": false
+    },
+    "GetAlarmMessagesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getAlarmMessages"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetAlarmMessagesResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getAlarmMessages_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "alarms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AlarmMessage"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "alarms"
+      ],
+      "additionalProperties": false
+    },
+    "GetAlarmMessagesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetAlarmMessagesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetAlarmMessagesResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "AcknowledgeAlarmMessageRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "acknowledgeAlarmMessage"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "AcknowledgeAlarmMessageResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "acknowledgeAlarmMessage_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "AcknowledgeAlarmMessageCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/AcknowledgeAlarmMessageRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/AcknowledgeAlarmMessageResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "AlarmMessage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "active",
+        "counter"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether the alarm variable is still set"
+        },
+        "counter": {
+          "type": "integer"
+        },
+        "firstTime": {
+          "type": "string"
+        },
+        "lastTime": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "string",
+          "description": "The channel that triggered it"
+        },
+        "roomName": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
     }
   }
 }

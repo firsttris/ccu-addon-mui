@@ -6,6 +6,7 @@ import AppWindowIcon from '~icons/lucide/app-window';
 import { Channel } from '../types/types';
 import { controlOverrides, SectionId } from '../controls/registry';
 import { ControlComponent } from '../components/ControlComponent';
+import { AlarmBanner, AlarmsSheet } from '../components/Alarms';
 import { windowState } from '../controls/WindowControl';
 import { useEffects } from '../contexts/EffectsContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
@@ -286,6 +287,7 @@ export const Dashboard = ({ tabs, channelsByType, isLoading }: DashboardProps) =
   const effects = useEffects();
   const channels = useMemo(() => channelsByType.flatMap(([, list]) => list), [channelsByType]);
   const lightsOn = channels.filter(isLightOn).length;
+  const [alarmsOpen, setAlarmsOpen] = useState(false);
   const a = (alpha: number) => Math.min(1, alpha * effects.k).toFixed(3);
 
   return (
@@ -305,6 +307,8 @@ export const Dashboard = ({ tabs, channelsByType, isLoading }: DashboardProps) =
         />
       )}
       {tabs}
+      <AlarmBanner onShowAll={() => setAlarmsOpen(true)} />
+      <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
       <Overview channels={channels} />
       {groupIntoSections(channelsByType).map((group) => (
         <Section key={group.key} group={group} />
