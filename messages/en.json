@@ -576,5 +576,15 @@
   "LAYOUT_DONE": "Done",
   "LAYOUT_RESET": "Arrange automatically",
   "LAYOUT_HINT": "Drag tiles; change the width at the right edge. Applies on all devices.",
-  "LAYOUT_SAVED": "Arrangement saved"
+  "LAYOUT_SAVED": "Arrangement saved",
+  "PUSH_TITLE": "Notifications",
+  "PUSH_ALARMS": "Alarms",
+  "PUSH_SERVICE": "Service messages",
+  "PUSH_TEST": "Send test",
+  "PUSH_TEST_SENT": "Test notification sent",
+  "PUSH_HINT": "On this device, also when the app is closed.",
+  "PUSH_INSECURE": "Notifications need a secure connection: open the app via https://.",
+  "PUSH_UNSUPPORTED": "This browser can't receive notifications. On an iPhone, add the app to the home screen.",
+  "PUSH_DENIED": "Notifications are blocked in the browser.",
+  "PUSH_FAILED": "Setting up notifications failed"
 }

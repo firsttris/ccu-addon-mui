@@ -79,7 +79,11 @@ export type ServerMessage =
   | DeleteProgramResponse
   | GetAllLinksResponse
   | GetLayoutResponse
-  | SetLayoutResponse;
+  | SetLayoutResponse
+  | GetPushResponse
+  | SubscribePushResponse
+  | UnsubscribePushResponse
+  | TestPushResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -143,6 +147,10 @@ export interface Protocol {
   getAllLinks: GetAllLinksCall;
   getLayout: GetLayoutCall;
   setLayout: SetLayoutCall;
+  getPush: GetPushCall;
+  subscribePush: SubscribePushCall;
+  unsubscribePush: UnsubscribePushCall;
+  testPush: TestPushCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2119,6 +2127,136 @@ export interface SetLayoutRequest {
  */
 export interface SetLayoutResponse {
   type: "setLayout_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetPushCall".
+ */
+export interface GetPushCall {
+  request: GetPushRequest;
+  response: GetPushResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetPushRequest".
+ */
+export interface GetPushRequest {
+  type: "getPush";
+  requestId?: string;
+  /**
+   * the device's push endpoint, if subscribed
+   */
+  endpoint?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetPushResponse".
+ */
+export interface GetPushResponse {
+  type: "getPush_response";
+  requestId?: string;
+  publicKey: string;
+  subscribed: boolean;
+  alarms: boolean;
+  service: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SubscribePushCall".
+ */
+export interface SubscribePushCall {
+  request: SubscribePushRequest;
+  response: SubscribePushResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SubscribePushRequest".
+ */
+export interface SubscribePushRequest {
+  type: "subscribePush";
+  requestId?: string;
+  subscription: PushSubscription;
+  alarms?: boolean;
+  service?: boolean;
+  language?: string;
+  device?: string;
+}
+/**
+ * What PushManager.subscribe returns (toJSON)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PushSubscription".
+ */
+export interface PushSubscription {
+  endpoint: string;
+  expirationTime?: unknown;
+  keys: {
+    p256dh: string;
+    auth: string;
+    [k: string]: unknown;
+  };
+  [k: string]: unknown;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SubscribePushResponse".
+ */
+export interface SubscribePushResponse {
+  type: "subscribePush_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "UnsubscribePushCall".
+ */
+export interface UnsubscribePushCall {
+  request: UnsubscribePushRequest;
+  response: UnsubscribePushResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "UnsubscribePushRequest".
+ */
+export interface UnsubscribePushRequest {
+  type: "unsubscribePush";
+  requestId?: string;
+  endpoint: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "UnsubscribePushResponse".
+ */
+export interface UnsubscribePushResponse {
+  type: "unsubscribePush_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "TestPushCall".
+ */
+export interface TestPushCall {
+  request: TestPushRequest;
+  response: TestPushResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "TestPushRequest".
+ */
+export interface TestPushRequest {
+  type: "testPush";
+  requestId?: string;
+  endpoint: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "TestPushResponse".
+ */
+export interface TestPushResponse {
+  type: "testPush_response";
   requestId?: string;
   success: boolean;
 }

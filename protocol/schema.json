@@ -178,6 +178,18 @@
     },
     "setLayout": {
       "$ref": "#/definitions/SetLayoutCall"
+    },
+    "getPush": {
+      "$ref": "#/definitions/GetPushCall"
+    },
+    "subscribePush": {
+      "$ref": "#/definitions/SubscribePushCall"
+    },
+    "unsubscribePush": {
+      "$ref": "#/definitions/UnsubscribePushCall"
+    },
+    "testPush": {
+      "$ref": "#/definitions/TestPushCall"
     }
   },
   "required": [
@@ -238,7 +250,11 @@
     "deleteProgram",
     "getAllLinks",
     "getLayout",
-    "setLayout"
+    "setLayout",
+    "getPush",
+    "subscribePush",
+    "unsubscribePush",
+    "testPush"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2629,6 +2645,18 @@
         },
         {
           "$ref": "#/definitions/SetLayoutResponse"
+        },
+        {
+          "$ref": "#/definitions/GetPushResponse"
+        },
+        {
+          "$ref": "#/definitions/SubscribePushResponse"
+        },
+        {
+          "$ref": "#/definitions/UnsubscribePushResponse"
+        },
+        {
+          "$ref": "#/definitions/TestPushResponse"
         }
       ]
     },
@@ -5141,6 +5169,284 @@
         "response"
       ],
       "additionalProperties": false
+    },
+    "GetPushRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getPush"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "the device's push endpoint, if subscribed"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetPushResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getPush_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "subscribed": {
+          "type": "boolean"
+        },
+        "alarms": {
+          "type": "boolean"
+        },
+        "service": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "publicKey",
+        "subscribed",
+        "alarms",
+        "service"
+      ],
+      "additionalProperties": false
+    },
+    "GetPushCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetPushRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetPushResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SubscribePushRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "subscribePush"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "subscription": {
+          "$ref": "#/definitions/PushSubscription"
+        },
+        "alarms": {
+          "type": "boolean"
+        },
+        "service": {
+          "type": "boolean"
+        },
+        "language": {
+          "type": "string"
+        },
+        "device": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "subscription"
+      ],
+      "additionalProperties": false
+    },
+    "SubscribePushResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "subscribePush_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SubscribePushCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SubscribePushRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SubscribePushResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "UnsubscribePushRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "unsubscribePush"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "endpoint"
+      ],
+      "additionalProperties": false
+    },
+    "UnsubscribePushResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "unsubscribePush_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "UnsubscribePushCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/UnsubscribePushRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/UnsubscribePushResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "TestPushRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "testPush"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "endpoint"
+      ],
+      "additionalProperties": false
+    },
+    "TestPushResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "testPush_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "TestPushCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/TestPushRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/TestPushResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "PushSubscription": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "endpoint",
+        "keys"
+      ],
+      "description": "What PushManager.subscribe returns (toJSON)",
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "expirationTime": {},
+        "keys": {
+          "type": "object",
+          "required": [
+            "p256dh",
+            "auth"
+          ],
+          "properties": {
+            "p256dh": {
+              "type": "string"
+            },
+            "auth": {
+              "type": "string"
+            }
+          }
+        }
+      }
     }
   }
 }
