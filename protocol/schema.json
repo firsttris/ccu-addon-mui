@@ -1,0 +1,2941 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/firsttris/ccu-addon-mui/protocol/schema.json",
+  "title": "Protocol",
+  "description": "The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.",
+  "type": "object",
+  "properties": {
+    "getRooms": {
+      "$ref": "#/definitions/GetRoomsCall"
+    },
+    "getTrades": {
+      "$ref": "#/definitions/GetTradesCall"
+    },
+    "getChannels": {
+      "$ref": "#/definitions/GetChannelsCall"
+    },
+    "subscribe": {
+      "$ref": "#/definitions/SubscribeCall"
+    },
+    "setDatapoint": {
+      "$ref": "#/definitions/SetDatapointCall"
+    },
+    "getDeviceProblems": {
+      "$ref": "#/definitions/GetDeviceProblemsCall"
+    },
+    "getParamsetDescription": {
+      "$ref": "#/definitions/GetParamsetDescriptionCall"
+    },
+    "getParamset": {
+      "$ref": "#/definitions/GetParamsetCall"
+    },
+    "putParamset": {
+      "$ref": "#/definitions/PutParamsetCall"
+    },
+    "listDevices": {
+      "$ref": "#/definitions/ListDevicesCall"
+    },
+    "elevate": {
+      "$ref": "#/definitions/ElevateCall"
+    },
+    "rename": {
+      "$ref": "#/definitions/RenameCall"
+    },
+    "setGroupMember": {
+      "$ref": "#/definitions/SetGroupMemberCall"
+    },
+    "setInstallMode": {
+      "$ref": "#/definitions/SetInstallModeCall"
+    },
+    "acceptDevice": {
+      "$ref": "#/definitions/AcceptDeviceCall"
+    },
+    "deleteDevice": {
+      "$ref": "#/definitions/DeleteDeviceCall"
+    },
+    "setSysvar": {
+      "$ref": "#/definitions/SetSysvarCall"
+    },
+    "runProgram": {
+      "$ref": "#/definitions/RunProgramCall"
+    },
+    "setProgramActive": {
+      "$ref": "#/definitions/SetProgramActiveCall"
+    },
+    "revokeSession": {
+      "$ref": "#/definitions/RevokeSessionCall"
+    },
+    "logout": {
+      "$ref": "#/definitions/LogoutCall"
+    },
+    "addLink": {
+      "$ref": "#/definitions/AddLinkCall"
+    },
+    "removeLink": {
+      "$ref": "#/definitions/RemoveLinkCall"
+    },
+    "putLinkParamset": {
+      "$ref": "#/definitions/PutLinkParamsetCall"
+    },
+    "getInstallMode": {
+      "$ref": "#/definitions/GetInstallModeCall"
+    },
+    "getInbox": {
+      "$ref": "#/definitions/GetInboxCall"
+    },
+    "getSysvars": {
+      "$ref": "#/definitions/GetSysvarsCall"
+    },
+    "getPrograms": {
+      "$ref": "#/definitions/GetProgramsCall"
+    },
+    "listSessions": {
+      "$ref": "#/definitions/ListSessionsCall"
+    },
+    "getLinks": {
+      "$ref": "#/definitions/GetLinksCall"
+    },
+    "getLinkParamsetDescription": {
+      "$ref": "#/definitions/GetLinkParamsetDescriptionCall"
+    },
+    "getLinkParamset": {
+      "$ref": "#/definitions/GetLinkParamsetCall"
+    }
+  },
+  "required": [
+    "getRooms",
+    "getTrades",
+    "getChannels",
+    "subscribe",
+    "setDatapoint",
+    "getDeviceProblems",
+    "getParamsetDescription",
+    "getParamset",
+    "putParamset",
+    "listDevices",
+    "elevate",
+    "rename",
+    "setGroupMember",
+    "setInstallMode",
+    "acceptDevice",
+    "deleteDevice",
+    "setSysvar",
+    "runProgram",
+    "setProgramActive",
+    "revokeSession",
+    "logout",
+    "addLink",
+    "removeLink",
+    "putLinkParamset",
+    "getInstallMode",
+    "getInbox",
+    "getSysvars",
+    "getPrograms",
+    "listSessions",
+    "getLinks",
+    "getLinkParamsetDescription",
+    "getLinkParamset"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "Value": {
+      "description": "A datapoint or parameter value",
+      "type": [
+        "string",
+        "number",
+        "boolean",
+        "null"
+      ]
+    },
+    "NamedObject": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "additionalProperties": false,
+      "description": "A room or trade"
+    },
+    "ChannelStatus": {
+      "type": "object",
+      "properties": {
+        "LOW_BAT": {
+          "type": "boolean"
+        },
+        "UNREACH": {
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "Channel": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "address": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "datapoints": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        "statusAddress": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/ChannelStatus"
+        },
+        "rooms": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "trades": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "address",
+        "name",
+        "type",
+        "interfaceName",
+        "datapoints"
+      ],
+      "additionalProperties": false,
+      "description": "A channel as ReGa knows it, with its current values"
+    },
+    "DeviceProblem": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "roomId": {
+          "type": "integer"
+        },
+        "roomName": {
+          "type": "string"
+        },
+        "lowBat": {
+          "type": "boolean"
+        },
+        "unreach": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "address",
+        "name",
+        "lowBat",
+        "unreach"
+      ],
+      "additionalProperties": false
+    },
+    "SpecialValue": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/Value"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "ParameterDescription": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "FLOAT",
+            "INTEGER",
+            "BOOL",
+            "ENUM",
+            "STRING",
+            "ACTION"
+          ]
+        },
+        "operations": {
+          "type": "integer"
+        },
+        "flags": {
+          "type": "integer"
+        },
+        "default": {
+          "$ref": "#/definitions/Value"
+        },
+        "min": {
+          "$ref": "#/definitions/Value"
+        },
+        "max": {
+          "$ref": "#/definitions/Value"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "tabOrder": {
+          "type": "integer"
+        },
+        "control": {
+          "type": "string"
+        },
+        "valueList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "special": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SpecialValue"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "operations",
+        "flags",
+        "tabOrder"
+      ],
+      "additionalProperties": false
+    },
+    "ParamsetDescription": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ParameterDescription"
+      }
+    },
+    "Values": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Value"
+      }
+    },
+    "DeviceDescription": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "parentType": {
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "paramsets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "index": {
+          "type": "integer"
+        },
+        "version": {
+          "type": "integer"
+        },
+        "firmware": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "integer"
+        },
+        "direction": {
+          "type": "integer"
+        },
+        "linkSourceRoles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "linkTargetRoles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "address",
+        "paramsets",
+        "index",
+        "version",
+        "flags"
+      ],
+      "additionalProperties": false
+    },
+    "Device": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "parentType": {
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "paramsets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "index": {
+          "type": "integer"
+        },
+        "version": {
+          "type": "integer"
+        },
+        "firmware": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "integer"
+        },
+        "direction": {
+          "type": "integer"
+        },
+        "linkSourceRoles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "linkTargetRoles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeviceDescription"
+          }
+        }
+      },
+      "required": [
+        "interfaceName",
+        "type",
+        "address",
+        "paramsets",
+        "index",
+        "version",
+        "flags"
+      ],
+      "additionalProperties": false
+    },
+    "InboxDevice": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "address",
+        "type",
+        "interfaceName",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "Sysvar": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "bool",
+            "alarm",
+            "number",
+            "enum",
+            "string"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "value": {
+          "$ref": "#/definitions/Value"
+        },
+        "falseName": {
+          "type": "string"
+        },
+        "trueName": {
+          "type": "string"
+        },
+        "valueList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "visible",
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "Program": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "visible": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "active",
+        "visible"
+      ],
+      "additionalProperties": false
+    },
+    "SessionInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "user": {
+          "type": "string"
+        },
+        "device": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string"
+        },
+        "lastUsed": {
+          "type": "string"
+        },
+        "current": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "user",
+        "device",
+        "created",
+        "lastUsed",
+        "current"
+      ],
+      "additionalProperties": false
+    },
+    "Link": {
+      "type": "object",
+      "properties": {
+        "sender": {
+          "type": "string"
+        },
+        "receiver": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sender",
+        "receiver"
+      ],
+      "additionalProperties": false
+    },
+    "UserLevel": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user",
+        "guest",
+        ""
+      ]
+    },
+    "GetRoomsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getRooms"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "deviceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "deviceId"
+      ],
+      "additionalProperties": false
+    },
+    "GetRoomsResponse": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string"
+        },
+        "deviceId": {
+          "type": "string"
+        },
+        "rooms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NamedObject"
+          }
+        }
+      },
+      "required": [
+        "deviceId",
+        "rooms"
+      ],
+      "additionalProperties": false
+    },
+    "GetTradesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getTrades"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "deviceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "deviceId"
+      ],
+      "additionalProperties": false
+    },
+    "GetTradesResponse": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string"
+        },
+        "deviceId": {
+          "type": "string"
+        },
+        "trades": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NamedObject"
+          }
+        }
+      },
+      "required": [
+        "deviceId",
+        "trades"
+      ],
+      "additionalProperties": false
+    },
+    "GetChannelsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getChannels"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "deviceId": {
+          "type": "string"
+        },
+        "roomId": {
+          "type": "string"
+        },
+        "tradeId": {
+          "type": "string"
+        },
+        "all": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "deviceId"
+      ],
+      "additionalProperties": false,
+      "description": "Channels of a room, a trade or (all) of all devices"
+    },
+    "GetChannelsResponse": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string"
+        },
+        "deviceId": {
+          "type": "string"
+        },
+        "roomId": {
+          "type": "string"
+        },
+        "tradeId": {
+          "type": "string"
+        },
+        "all": {
+          "type": "boolean"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Channel"
+          }
+        }
+      },
+      "required": [
+        "deviceId",
+        "channels"
+      ],
+      "additionalProperties": false
+    },
+    "SubscribeRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "subscribe"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "deviceId": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "deviceId",
+        "channels"
+      ],
+      "additionalProperties": false,
+      "description": "Events for these channels (replacing the previous list)"
+    },
+    "SubscribeResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "subscribe_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "deviceId": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "deviceId",
+        "channels"
+      ],
+      "additionalProperties": false
+    },
+    "SetDatapointRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setDatapoint"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "attribute": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/Value"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address",
+        "attribute",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "SetDatapointResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setDatapoint_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceProblemsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDeviceProblems"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceProblemsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deviceProblems"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeviceProblem"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "devices"
+      ],
+      "additionalProperties": false
+    },
+    "GetParamsetDescriptionRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getParamsetDescription"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "paramsetKey": {
+          "type": "string",
+          "enum": [
+            "VALUES",
+            "MASTER"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address",
+        "paramsetKey"
+      ],
+      "additionalProperties": false
+    },
+    "GetParamsetDescriptionResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "paramsetDescription"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "paramsetKey": {
+          "type": "string"
+        },
+        "description": {
+          "$ref": "#/definitions/ParamsetDescription"
+        }
+      },
+      "required": [
+        "type",
+        "address",
+        "paramsetKey",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "GetParamsetRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getParamset"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "paramsetKey": {
+          "type": "string",
+          "enum": [
+            "VALUES",
+            "MASTER"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address",
+        "paramsetKey"
+      ],
+      "additionalProperties": false
+    },
+    "GetParamsetResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "paramset"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "paramsetKey": {
+          "type": "string"
+        },
+        "values": {
+          "$ref": "#/definitions/Values"
+        }
+      },
+      "required": [
+        "type",
+        "address",
+        "paramsetKey",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "PutParamsetRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "putParamset"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "paramsetKey": {
+          "type": "string",
+          "enum": [
+            "VALUES",
+            "MASTER"
+          ]
+        },
+        "values": {
+          "$ref": "#/definitions/Values"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address",
+        "paramsetKey",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "PutParamsetResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "putParamset_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "ListDevicesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "listDevices"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ListDevicesResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "devices"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Device"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "devices"
+      ],
+      "additionalProperties": false
+    },
+    "ElevateRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "elevate"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "ElevateResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "elevate_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "adminToken": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "RenameRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "rename"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "address",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "RenameResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "rename_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetGroupMemberRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setGroupMember"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "groupId": {
+          "type": "integer"
+        },
+        "channelId": {
+          "type": "integer"
+        },
+        "member": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "channelId",
+        "member"
+      ],
+      "additionalProperties": false
+    },
+    "SetGroupMemberResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setGroupMember_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetInstallModeRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setInstallMode"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "on": {
+          "type": "boolean"
+        },
+        "seconds": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "on",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "SetInstallModeResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setInstallMode_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "AcceptDeviceRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "acceptDevice"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "address"
+      ],
+      "additionalProperties": false
+    },
+    "AcceptDeviceResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "acceptDevice_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteDeviceRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteDevice"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "reset": {
+          "type": "boolean"
+        },
+        "force": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteDeviceResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteDevice_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetSysvarRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setSysvar"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "value": {
+          "$ref": "#/definitions/Value"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "SetSysvarResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setSysvar_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "RunProgramRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "runProgram"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "RunProgramResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "runProgram_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetProgramActiveRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setProgramActive"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "active": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "active"
+      ],
+      "additionalProperties": false
+    },
+    "SetProgramActiveResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setProgramActive_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "RevokeSessionRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "revokeSession"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "RevokeSessionResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "revokeSession_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "LogoutRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "logout"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "LogoutResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "logout_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "AddLinkRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "addLink"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "sender": {
+          "type": "string"
+        },
+        "receiver": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "sender",
+        "receiver"
+      ],
+      "additionalProperties": false
+    },
+    "AddLinkResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "addLink_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "RemoveLinkRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "removeLink"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "sender": {
+          "type": "string"
+        },
+        "receiver": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "sender",
+        "receiver"
+      ],
+      "additionalProperties": false
+    },
+    "RemoveLinkResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "removeLink_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "PutLinkParamsetRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "putLinkParamset"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "partner": {
+          "type": "string"
+        },
+        "values": {
+          "$ref": "#/definitions/Values"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address",
+        "partner",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "PutLinkParamsetResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "putLinkParamset_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "GetInstallModeRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getInstallMode"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName"
+      ],
+      "additionalProperties": false
+    },
+    "GetInstallModeResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getInstallMode_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "seconds": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "GetInboxRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getInbox"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetInboxResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getInbox_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InboxDevice"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "GetSysvarsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getSysvars"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetSysvarsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getSysvars_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "sysvars": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Sysvar"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "GetProgramsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getPrograms"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetProgramsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getPrograms_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "programs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Program"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "ListSessionsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "listSessions"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ListSessionsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "listSessions_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "sessions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SessionInfo"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "GetLinksRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLinks"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address"
+      ],
+      "additionalProperties": false
+    },
+    "GetLinksResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLinks_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Link"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "GetLinkParamsetDescriptionRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLinkParamsetDescription"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "partner": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address",
+        "partner"
+      ],
+      "additionalProperties": false
+    },
+    "GetLinkParamsetDescriptionResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLinkParamsetDescription_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "description": {
+          "$ref": "#/definitions/ParamsetDescription"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "GetLinkParamsetRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLinkParamset"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "partner": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address",
+        "partner"
+      ],
+      "additionalProperties": false
+    },
+    "GetLinkParamsetResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLinkParamset_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "values": {
+          "$ref": "#/definitions/Values"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "AuthRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "auth"
+        },
+        "token": {
+          "type": "string"
+        },
+        "adminToken": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "description": "Sent first on every connection"
+    },
+    "LoginRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "login"
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "username",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "AuthResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "auth_response"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "authRequired": {
+          "type": "boolean"
+        },
+        "user": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/definitions/UserLevel"
+        },
+        "adminToken": {
+          "type": "string"
+        },
+        "elevated": {
+          "type": "boolean"
+        },
+        "token": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "authRequired",
+        "elevated"
+      ],
+      "additionalProperties": false,
+      "description": "Answer to auth and login"
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "error"
+        },
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "error"
+      ],
+      "additionalProperties": false,
+      "description": "A failed request; requestId if the request had one"
+    },
+    "Event": {
+      "type": "object",
+      "properties": {
+        "interface": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "string"
+        },
+        "datapoint": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/definitions/Value"
+        },
+        "timestamp": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "interface",
+        "channel",
+        "datapoint",
+        "value",
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "EventMessage": {
+      "type": "object",
+      "properties": {
+        "event": {
+          "$ref": "#/definitions/Event"
+        }
+      },
+      "required": [
+        "event"
+      ],
+      "additionalProperties": false,
+      "description": "A value reported by the CCU for a subscribed channel"
+    },
+    "ServerMessage": {
+      "description": "Every message the server sends",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/AuthResponse"
+        },
+        {
+          "$ref": "#/definitions/ErrorResponse"
+        },
+        {
+          "$ref": "#/definitions/EventMessage"
+        },
+        {
+          "$ref": "#/definitions/GetRoomsResponse"
+        },
+        {
+          "$ref": "#/definitions/GetTradesResponse"
+        },
+        {
+          "$ref": "#/definitions/GetChannelsResponse"
+        },
+        {
+          "$ref": "#/definitions/SubscribeResponse"
+        },
+        {
+          "$ref": "#/definitions/SetDatapointResponse"
+        },
+        {
+          "$ref": "#/definitions/GetDeviceProblemsResponse"
+        },
+        {
+          "$ref": "#/definitions/GetParamsetDescriptionResponse"
+        },
+        {
+          "$ref": "#/definitions/GetParamsetResponse"
+        },
+        {
+          "$ref": "#/definitions/PutParamsetResponse"
+        },
+        {
+          "$ref": "#/definitions/ListDevicesResponse"
+        },
+        {
+          "$ref": "#/definitions/ElevateResponse"
+        },
+        {
+          "$ref": "#/definitions/RenameResponse"
+        },
+        {
+          "$ref": "#/definitions/SetGroupMemberResponse"
+        },
+        {
+          "$ref": "#/definitions/SetInstallModeResponse"
+        },
+        {
+          "$ref": "#/definitions/AcceptDeviceResponse"
+        },
+        {
+          "$ref": "#/definitions/DeleteDeviceResponse"
+        },
+        {
+          "$ref": "#/definitions/SetSysvarResponse"
+        },
+        {
+          "$ref": "#/definitions/RunProgramResponse"
+        },
+        {
+          "$ref": "#/definitions/SetProgramActiveResponse"
+        },
+        {
+          "$ref": "#/definitions/RevokeSessionResponse"
+        },
+        {
+          "$ref": "#/definitions/LogoutResponse"
+        },
+        {
+          "$ref": "#/definitions/AddLinkResponse"
+        },
+        {
+          "$ref": "#/definitions/RemoveLinkResponse"
+        },
+        {
+          "$ref": "#/definitions/PutLinkParamsetResponse"
+        },
+        {
+          "$ref": "#/definitions/GetInstallModeResponse"
+        },
+        {
+          "$ref": "#/definitions/GetInboxResponse"
+        },
+        {
+          "$ref": "#/definitions/GetSysvarsResponse"
+        },
+        {
+          "$ref": "#/definitions/GetProgramsResponse"
+        },
+        {
+          "$ref": "#/definitions/ListSessionsResponse"
+        },
+        {
+          "$ref": "#/definitions/GetLinksResponse"
+        },
+        {
+          "$ref": "#/definitions/GetLinkParamsetDescriptionResponse"
+        },
+        {
+          "$ref": "#/definitions/GetLinkParamsetResponse"
+        }
+      ]
+    },
+    "GetRoomsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetRoomsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetRoomsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetTradesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetTradesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetTradesResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetChannelsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetChannelsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetChannelsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SubscribeCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SubscribeRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SubscribeResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetDatapointCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetDatapointRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetDatapointResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceProblemsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetDeviceProblemsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetDeviceProblemsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetParamsetDescriptionCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetParamsetDescriptionRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetParamsetDescriptionResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetParamsetCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetParamsetRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetParamsetResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "PutParamsetCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/PutParamsetRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/PutParamsetResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "ListDevicesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ListDevicesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ListDevicesResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "ElevateCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ElevateRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ElevateResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RenameCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/RenameRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/RenameResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetGroupMemberCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetGroupMemberRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetGroupMemberResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetInstallModeCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetInstallModeRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetInstallModeResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "AcceptDeviceCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/AcceptDeviceRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/AcceptDeviceResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteDeviceCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DeleteDeviceRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DeleteDeviceResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetSysvarCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetSysvarRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetSysvarResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RunProgramCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/RunProgramRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/RunProgramResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetProgramActiveCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetProgramActiveRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetProgramActiveResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RevokeSessionCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/RevokeSessionRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/RevokeSessionResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "LogoutCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/LogoutRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/LogoutResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "AddLinkCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/AddLinkRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/AddLinkResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RemoveLinkCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/RemoveLinkRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/RemoveLinkResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "PutLinkParamsetCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/PutLinkParamsetRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/PutLinkParamsetResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetInstallModeCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetInstallModeRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetInstallModeResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetInboxCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetInboxRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetInboxResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetSysvarsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetSysvarsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetSysvarsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetProgramsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetProgramsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetProgramsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "ListSessionsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ListSessionsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ListSessionsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetLinksCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetLinksRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetLinksResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetLinkParamsetDescriptionCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetLinkParamsetDescriptionRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetLinkParamsetDescriptionResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetLinkParamsetCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetLinkParamsetRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetLinkParamsetResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

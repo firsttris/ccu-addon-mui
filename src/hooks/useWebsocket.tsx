@@ -14,13 +14,22 @@ import { Channel, DeviceProblem, HmEvent, Room, Trade, UserLevel } from './../ty
 import { useUniqueDeviceID } from './useUniqueDeviceID';
 import { useToast } from '../contexts/ToastContext';
 import { applyEvent } from './channels';
+import type { Protocol } from '../types/protocol';
 import { m } from '../paraglide/messages';
 
 // The transport: WebSocket connection, login, and requests answered by
 // promises. All server data is loaded and cached with TanStack Query on top
 // of request() (see queries/); events go straight into that cache.
 
-export interface Response {
+// Every request type with its request and response, generated from
+// protocol/schema.json (npm run generate:protocol)
+export type RequestType = keyof Protocol;
+export type ResponseOf<T extends RequestType> = Protocol[T]['response'];
+// A request as passed to request(): requestId and deviceId are added there
+export type RequestMessage = { [T in RequestType]: Omit<Protocol[T]['request'], 'requestId' | 'deviceId'> }[RequestType];
+
+// Any message from the server, loosely typed for dispatching
+interface Response {
   type?:
     | 'subscribe_response'
     | 'error'
@@ -80,14 +89,13 @@ export interface RequestOptions {
   timeoutMs?: number;
 }
 
-type Message = { type: string } & Record<string, unknown>;
 type EventListener = (event: HmEvent) => void;
 
 // 'pending' until the server answered the auth message sent on connect
 export type AuthState = 'pending' | 'authenticated' | 'loginRequired';
 
 interface PendingRequest {
-  resolve: (response: Response) => void;
+  resolve: (response: unknown) => void;
   reject: (error: Error) => void;
   timeout: ReturnType<typeof setTimeout>;
 }
@@ -229,15 +237,18 @@ export const useWebsocket = () => {
   // Sends a request and resolves with its response, matched by requestId.
   // Waits for the login unless options.queue is false.
   const request = useCallback(
-    (message: Message, { queue = true, timeoutMs = REQUEST_TIMEOUT_MS }: RequestOptions = {}) =>
-      new Promise<Response>((resolve, reject) => {
+    <M extends RequestMessage>(
+      message: M,
+      { queue = true, timeoutMs = REQUEST_TIMEOUT_MS }: RequestOptions = {},
+    ) =>
+      new Promise<ResponseOf<M['type']>>((resolve, reject) => {
         if (!queue && !readyRef.current) {
           reject(new RequestError('not connected', 'NOT_CONNECTED'));
           return;
         }
         const requestId = `q${nextRequestIdRef.current++}`;
         pendingRequestsRef.current.set(requestId, {
-          resolve,
+          resolve: (response) => resolve(response as ResponseOf<M['type']>),
           reject,
           timeout: setTimeout(() => {
             pendingRequestsRef.current.delete(requestId);

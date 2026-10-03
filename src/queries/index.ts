@@ -302,8 +302,12 @@ export const useConfigChange = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (change: ConfigChange) => {
-      const message = change.type === 'setGroupMember' ? { ...change, list: undefined } : change;
-      await request(message, { queue: false });
+      if (change.type === 'setGroupMember') {
+        const { list: _list, ...message } = change;
+        await request(message, { queue: false });
+      } else {
+        await request(change, { queue: false });
+      }
     },
     onMutate: (change) => {
       if (change.type !== 'setGroupMember') {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,10 +10,12 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/santhosh-tekuri/jsonschema/v6"
 
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/fakeccu"
@@ -109,13 +112,62 @@ func send(t *testing.T, conn *websocket.Conn, m message) {
 	}
 }
 
+var (
+	protocolOnce   sync.Once
+	protocolSchema *jsonschema.Schema
+)
+
+// serverMessageSchema is the definition of every server message in
+// protocol/schema.json, which the TypeScript types are generated from.
+func serverMessageSchema(t *testing.T) *jsonschema.Schema {
+	t.Helper()
+	protocolOnce.Do(func() {
+		compiler := jsonschema.NewCompiler()
+		data, err := os.ReadFile("../protocol/schema.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		doc, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := compiler.AddResource("schema.json", doc); err != nil {
+			t.Fatal(err)
+		}
+		protocolSchema = compiler.MustCompile("schema.json#/definitions/ServerMessage")
+	})
+	return protocolSchema
+}
+
+// read reads the next message and checks it against the protocol schema:
+// a server change that breaks the contract with the app fails here.
+func read(t *testing.T, conn *websocket.Conn) (message, error) {
+	t.Helper()
+	_, data, err := conn.ReadMessage()
+	if err != nil {
+		return nil, err
+	}
+	instance, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
+	if err != nil {
+		t.Fatalf("invalid JSON from the server: %s", data)
+	}
+	if err := serverMessageSchema(t).Validate(instance); err != nil {
+		t.Fatalf("message does not match protocol/schema.json: %s\n%v", data, err)
+	}
+	var m message
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatal(err)
+	}
+	return m, nil
+}
+
 // receive reads messages until one matches.
 func receive(t *testing.T, conn *websocket.Conn, match func(message) bool) message {
 	t.Helper()
 	_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 	for {
-		var m message
-		if err := conn.ReadJSON(&m); err != nil {
+		m, err := read(t, conn)
+		if err != nil {
 			t.Fatalf("no matching message: %v", err)
 		}
 		if match(m) {
@@ -132,8 +184,8 @@ func receiveAll(t *testing.T, conn *websocket.Conn, matchers ...func(message) bo
 	missing := len(matchers)
 	_ = conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 	for missing > 0 {
-		var m message
-		if err := conn.ReadJSON(&m); err != nil {
+		m, err := read(t, conn)
+		if err != nil {
 			t.Fatalf("%d messages missing: %v", missing, err)
 		}
 		for i, match := range matchers {
@@ -666,5 +718,29 @@ func TestStackDirectLinks(t *testing.T) {
 	}
 	if ccu.CallCount("HmIP-RF addLink") != 1 || ccu.CallCount("HmIP-RF removeLink") != 1 {
 		t.Fatal("link calls missing")
+	}
+}
+
+func TestProtocolSchemaIsStrict(t *testing.T) {
+	schema := serverMessageSchema(t)
+	for _, tc := range []struct {
+		json  string
+		valid bool
+	}{
+		{`{"type":"rename_response","requestId":"q1","success":true}`, true},
+		{`{"type":"rename_response","success":true,"unexpected":1}`, false},
+		{`{"deviceId":"d","rooms":[{"id":1,"name":"Küche"}]}`, true},
+		{`{"deviceId":"d","rooms":[{"id":"1","name":"Küche"}]}`, false},
+		{`{"event":{"interface":"HmIP-RF","channel":"A:1","datapoint":"STATE","value":true,"timestamp":"t"}}`, true},
+		{`{"type":"error","error":"x","code":"FORBIDDEN","requestId":"q2"}`, true},
+		{`{"type":"something_new","success":true}`, false},
+	} {
+		instance, err := jsonschema.UnmarshalJSON(strings.NewReader(tc.json))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := schema.Validate(instance); (err == nil) != tc.valid {
+			t.Errorf("%s: valid=%v, got %v", tc.json, tc.valid, err)
+		}
 	}
 }

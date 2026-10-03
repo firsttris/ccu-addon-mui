@@ -110,6 +110,8 @@ On the CCU, settings go into `/usr/local/etc/config/mui.conf` (e.g. `AUTH_MODE=n
 
 ## 🔌 WebSocket Protocol
 
+`protocol/schema.json` (JSON Schema) describes every request, response and event exactly. The app's TypeScript types are generated from it (`npm run generate:protocol`), and `integration_test.go` checks every message the server sends in the tests against it, so a change on either side that breaks the other fails CI.
+
 All messages are JSON objects with a `type`. Every request may carry a `requestId`, which is echoed in its response or error. With `AUTH_MODE=ccu`, a connection must log in (`login`) or present a stored token (`auth`) first; everything else is answered with `{"type": "error", "code": "AUTH_REQUIRED"}`.
 
 | Request | Response |
