@@ -330,5 +330,14 @@
   "SUNSHINE": "Sunshine today",
   "DEW_POINT": "Dew point",
   "TEMPERATURE": "Temperature",
-  "IS_RAINING": "Raining"
+  "IS_RAINING": "Raining",
+  "DIMMED_TO": "On · {percent} %",
+  "BRIGHTNESS_OF": "Brightness {name}",
+  "BACKLIGHT_COLOR": "Backlight color",
+  "COLOR_OF": "Color {name}",
+  "QUICK_COLORS": "Quick colors",
+  "COLOR": "Color",
+  "SECTION_BUTTONS": "Buttons",
+  "PRESS_HINT": "tap for short, hold for long",
+  "HOLD_FOR_LONG": "Hold = long"
 }

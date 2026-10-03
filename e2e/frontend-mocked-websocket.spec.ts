@@ -264,6 +264,39 @@ test('zeigt Fenster offen, gekippt und geschlossen', async ({ page }) => {
   await expect(page.getByRole('group', { name: 'Fenstergriff Küche' }).getByRole('status')).toHaveText(/^(Gekippt|Tilted)$/);
 });
 
+test('dimmt, färbt Licht und drückt Taster', async ({ page }) => {
+  await page.goto('/room/1');
+
+  // Dimmer: 60 %, one step down with the keyboard
+  const dimmer = page.getByRole('slider', { name: /(Helligkeit|Brightness) Esstisch/ });
+  await expect(dimmer).toHaveAttribute('aria-valuenow', '60');
+  await dimmer.press('ArrowLeft');
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
+    .toEqual([['LEVEL', 0.55]]);
+
+  // Color light: a quick color sets hue and saturation
+  await page.getByRole('button', { name: /(Farbe|Color) 120°/ }).click();
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).slice(1).map((m) => [m.attribute, m.value]))
+    .toEqual([
+      ['HUE', 120],
+      ['SATURATION', 1],
+    ]);
+
+  // Push button: a tap is a short press, holding a long one
+  const top = page.getByRole('button', { name: /^oben:/ });
+  await top.click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)?.attribute).toBe('PRESS_SHORT');
+  await top.hover();
+  await page.mouse.down();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)?.attribute).toBe('PRESS_LONG');
+  await page.mouse.up();
+  // Releasing after a long press sends nothing more
+  await page.waitForTimeout(200);
+  expect((await sentSetDatapoints(page)).filter((m) => m.attribute?.startsWith('PRESS'))).toHaveLength(2);
+});
+
 test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
   await page.goto('/room/1');
 

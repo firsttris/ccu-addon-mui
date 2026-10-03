@@ -45,6 +45,21 @@ describe('groupChannelsByType', () => {
   });
 });
 
+describe('groupChannelsByType with HmIP actuators', () => {
+  it('leaves out the state channel when the switchable channel is shown', () => {
+    const groups = groupChannelsByType([
+      channel('SWITCH_TRANSMITTER', 'A:1'),
+      channel('SWITCH_VIRTUAL_RECEIVER', 'A:2'),
+      // Another device: its state channel alone is kept
+      channel('SWITCH_TRANSMITTER', 'B:1'),
+    ]);
+    expect(groups.map(([type, channels]) => [type, channels.map((c) => c.address)])).toEqual([
+      ['SWITCH_VIRTUAL_RECEIVER', ['A:2']],
+      ['SWITCH_TRANSMITTER', ['B:1']],
+    ]);
+  });
+});
+
 describe('applyEvent', () => {
   const channels = [channel('SWITCH_VIRTUAL_RECEIVER', 'A:1'), channel('SWITCH_VIRTUAL_RECEIVER', 'B:1')];
 

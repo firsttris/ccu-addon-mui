@@ -7,10 +7,31 @@ export type Value = string | number | boolean;
 export const isHiddenChannel = (channel: Channel) =>
   channel.type === 'MAINTENANCE' ||
   channel.type.endsWith('_WEEK_PROFILE') ||
+  // The CCU's 50 virtual keys, as long as nobody gave them a name
+  (channel.type === 'VIRTUAL_KEY' && /^HM-RCV-50 /.test(channel.name)) ||
   Object.keys(channel.datapoints).length === 0;
+
+// HmIP actuators report their actual state on a *_TRANSMITTER channel and
+// are switched through *_VIRTUAL_RECEIVER channels. Where both are shown,
+// the transmitter only repeats the state.
+const MIRRORS: Record<string, string> = {
+  SWITCH_TRANSMITTER: 'SWITCH_VIRTUAL_RECEIVER',
+  BLIND_TRANSMITTER: 'BLIND_VIRTUAL_RECEIVER',
+  SHUTTER_TRANSMITTER: 'SHUTTER_VIRTUAL_RECEIVER',
+  DIMMER_TRANSMITTER: 'DIMMER_VIRTUAL_RECEIVER',
+  UNIVERSAL_LIGHT_TRANSMITTER: 'UNIVERSAL_LIGHT_RECEIVER',
+};
+
+const deviceOf = (channel: Channel) => channel.address.split(':')[0];
+
+const isMirror = (channel: Channel, shown: Set<string>) => {
+  const receiverType = MIRRORS[channel.type];
+  return receiverType !== undefined && shown.has(`${deviceOf(channel)}|${receiverType}`);
+};
 
 // Groups the visible channels by type, in the order they are shown
 export const groupChannelsByType = (channels: Channel[]): [string, Channel[]][] => {
+  const shown = new Set(channels.map((c) => `${deviceOf(c)}|${c.type}`));
   // Types with a hand-made control come first, in the order of the
   // registry; all others follow alphabetically and are shown by
   // GenericControl. Read here, not at load time: the registry's controls
@@ -18,7 +39,7 @@ export const groupChannelsByType = (channels: Channel[]): [string, Channel[]][] 
   const typeOrder = new Map(Object.keys(controlOverrides).map((type, index) => [type, index]));
   const channelsPerType = new Map<string, Channel[]>();
   for (const channel of channels) {
-    if (isHiddenChannel(channel)) {
+    if (isHiddenChannel(channel) || isMirror(channel, shown)) {
       continue;
     }
     channelsPerType.set(channel.type, [...(channelsPerType.get(channel.type) ?? []), channel]);

@@ -78,25 +78,28 @@ test('zeigt unbekannte Kanaltypen und Geräte ohne Raum unter „Alle Geräte“
   await expect(handle.getByRole('status')).toHaveText('Gekippt');
 });
 
-test('dimmt über den generischen Renderer aus der Paramset-Beschreibung', async ({ page }) => {
+test('dimmt über die Dimmer-Kachel', async ({ page }) => {
   await login(page);
   await page.goto('/devices');
 
-  // LEVEL is 0..1 with unit "100%": shown and entered in percent
-  const dimmer = page.getByLabel('Dimmer Esstisch', { exact: true });
-  const level = dimmer.getByRole('textbox', { name: 'LEVEL' });
-  await expect(level).toHaveValue('0');
-  // Enums by name: ACTIVITY_STATE and PROCESS are both STABLE
-  await expect(dimmer.getByText('STABLE', { exact: true })).toHaveCount(2);
-  // Write-only parameters like RAMP_TIME are not shown
-  await expect(dimmer.getByText('RAMP_TIME')).toHaveCount(0);
+  // LEVEL is 0..1: shown and set in percent
+  const brightness = page.getByRole('slider', { name: 'Helligkeit Dimmer Esstisch' });
+  await expect(brightness).toHaveAttribute('aria-valuenow', '0');
+  await expect(page.getByRole('button', { name: 'Dimmer Esstisch: Aus' })).toBeVisible();
 
-  await level.fill('40');
-  await level.press('Enter');
+  // Eight steps of 5 %, sent once after the last key
+  for (let i = 0; i < 8; i++) await brightness.press('ArrowRight');
+  await expect(page.getByRole('button', { name: 'Dimmer Esstisch: An · 40 %' })).toBeVisible();
 
-  // Survives a reload: the value went through ReGa to the (fake) CCU
+  // Survives a reload: the value went through XML-RPC to the (fake) CCU
   await page.reload();
-  await expect(page.getByLabel('Dimmer Esstisch', { exact: true }).getByRole('textbox', { name: 'LEVEL' })).toHaveValue('40');
+  await expect(page.getByRole('slider', { name: 'Helligkeit Dimmer Esstisch' })).toHaveAttribute('aria-valuenow', '40');
+
+  // A tap switches off, the next one on again at 40 %
+  await page.getByRole('button', { name: 'Dimmer Esstisch: An · 40 %' }).click();
+  await expect(page.getByRole('button', { name: 'Dimmer Esstisch: Aus' })).toBeVisible();
+  await page.getByRole('button', { name: 'Dimmer Esstisch: Aus' }).click();
+  await expect(page.getByRole('button', { name: 'Dimmer Esstisch: An · 40 %' })).toBeVisible();
 });
 
 test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ page }) => {

@@ -330,5 +330,14 @@
   "SUNSHINE": "Sonne heute",
   "DEW_POINT": "Taupunkt",
   "TEMPERATURE": "Temperatur",
-  "IS_RAINING": "Es regnet"
+  "IS_RAINING": "Es regnet",
+  "DIMMED_TO": "An · {percent} %",
+  "BRIGHTNESS_OF": "Helligkeit {name}",
+  "BACKLIGHT_COLOR": "Farbe der Beleuchtung",
+  "COLOR_OF": "Farbe {name}",
+  "QUICK_COLORS": "Schnellauswahl Farben",
+  "COLOR": "Farbe",
+  "SECTION_BUTTONS": "Taster",
+  "PRESS_HINT": "tippen für kurz, halten für lang",
+  "HOLD_FOR_LONG": "Halten = lang"
 }

@@ -103,6 +103,14 @@ const windowTypes = new Set([
 const isOpenWindow = (channel: Channel) =>
   windowTypes.has(channel.type) && ['open', 'tilted'].includes(windowState(channel));
 
+// Switches and dimmers of the "lights" section, on when STATE or LEVEL say so
+const isLight = (channel: Channel) => controlOverrides[channel.type]?.section === 'lights';
+const isLightOn = (channel: Channel) => {
+  if (!isLight(channel)) return false;
+  const dp = channel.datapoints as Record<string, unknown>;
+  return dp.STATE === true || (typeof dp.LEVEL === 'number' && dp.LEVEL > 0) || Number(dp.LEVEL) > 0;
+};
+
 const Stat = ({ icon, tint, label, value }: { icon: ReactNode; tint: string; label: string; value: string }) => (
   <div className="tile-edge flex min-w-0 items-center gap-3 rounded-2xl border bg-card p-4">
     <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5', tint)}>{icon}</div>
@@ -119,8 +127,8 @@ const Overview = ({ channels }: { channels: Channel[] }) => {
     .filter((c): c is HeatingClimateControlTransceiverChannel => c.type === ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER)
     .map((c) => c.datapoints.ACTUAL_TEMPERATURE)
     .filter((t) => typeof t === 'number');
-  const switches = channels.filter((c) => c.type === ChannelType.SWITCH_VIRTUAL_RECEIVER);
-  const switchedOn = switches.filter((c) => (c.datapoints as { STATE?: boolean }).STATE === true).length;
+  const switches = channels.filter(isLight);
+  const switchedOn = switches.filter(isLightOn).length;
   const windowChannels = channels.filter((c) => windowTypes.has(c.type));
   const openWindows = windowChannels.filter(isOpenWindow);
 
@@ -181,17 +189,19 @@ const sectionTitles: Record<SectionId, () => string> = {
   windows: m.SECTION_WINDOWS,
   doors: m.SECTION_DOORS,
   sensors: m.SECTION_SENSORS,
+  buttons: m.SECTION_BUTTONS,
   energy: m.SECTION_ENERGY,
 };
 
 const sectionGrids: Record<SectionId | 'generic', string> = {
   climate: '[grid-template-columns:repeat(auto-fill,minmax(232px,1fr))]',
   floor: '[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]',
-  lights: '[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]',
+  lights: 'items-start [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]',
   blinds: '[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]',
   windows: '[grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]',
   doors: '[grid-template-columns:repeat(auto-fill,minmax(340px,1fr))]',
   sensors: '[grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
+  buttons: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
   energy: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
   generic: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
 };
@@ -271,9 +281,7 @@ interface DashboardProps {
 export const Dashboard = ({ tabs, channelsByType, isLoading }: DashboardProps) => {
   const effects = useEffects();
   const channels = useMemo(() => channelsByType.flatMap(([, list]) => list), [channelsByType]);
-  const lightsOn = channels.filter(
-    (c) => c.type === ChannelType.SWITCH_VIRTUAL_RECEIVER && (c.datapoints as { STATE?: boolean }).STATE === true,
-  ).length;
+  const lightsOn = channels.filter(isLightOn).length;
   const a = (alpha: number) => Math.min(1, alpha * effects.k).toFixed(3);
 
   return (

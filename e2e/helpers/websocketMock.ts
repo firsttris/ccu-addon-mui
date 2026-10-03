@@ -77,6 +77,38 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
           type: 'SHUTTER_CONTACT',
           datapoints: { ERROR: 0, LOWBAT: false, STATE: false },
         },
+        {
+          id: 105,
+          name: 'Esstisch',
+          address: '0001D3C99C1A2B:4',
+          interfaceName: 'HmIP-RF',
+          type: 'DIMMER_VIRTUAL_RECEIVER',
+          datapoints: { ACTIVITY_STATE: 3, LEVEL: 0.6, LEVEL_STATUS: 0, PROCESS: 0, SECTION: 0, SECTION_STATUS: 0 },
+        },
+        {
+          id: 106,
+          name: 'LED-Streifen',
+          address: '0001E0A99B2C3D:2',
+          interfaceName: 'HmIP-RF',
+          type: 'UNIVERSAL_LIGHT_RECEIVER',
+          datapoints: { LEVEL: 0.8, HUE: 275, SATURATION: 1, COLOR_TEMPERATURE: 3000, ACTIVITY_STATE: 3 },
+        },
+        {
+          id: 107,
+          name: 'Wandtaster Wohnzimmer oben',
+          address: '0001D8A9A1B2C3:1',
+          interfaceName: 'HmIP-RF',
+          type: 'KEY_TRANSCEIVER',
+          datapoints: { PRESS_LONG: null, PRESS_LONG_RELEASE: null, PRESS_LONG_START: null, PRESS_SHORT: null },
+        },
+        {
+          id: 108,
+          name: 'Wandtaster Wohnzimmer unten',
+          address: '0001D8A9A1B2C3:2',
+          interfaceName: 'HmIP-RF',
+          type: 'KEY_TRANSCEIVER',
+          datapoints: { PRESS_LONG: null, PRESS_LONG_RELEASE: null, PRESS_LONG_START: null, PRESS_SHORT: null },
+        },
         // No own control: shown by GenericControl with its values
         {
           id: 104,
@@ -262,6 +294,14 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         interfaceName: 'HmIP-RF',
         type: 'SMOKE_DETECTOR',
         datapoints: { SMOKE_DETECTOR_ALARM_STATUS: 0, SMOKE_DETECTOR_TEST_RESULT: null },
+      },
+      {
+        id: 603,
+        name: 'Schalter Flur Beleuchtung',
+        address: '00091D89A9B8C7:8',
+        interfaceName: 'HmIP-RF',
+        type: 'DIMMER_VIRTUAL_RECEIVER',
+        datapoints: { COLOR: 1, LEVEL: 0.4, ACTIVITY_STATE: 3 },
       },
       {
         id: 602,
