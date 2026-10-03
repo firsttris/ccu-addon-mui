@@ -1,5 +1,4 @@
 import { SwitchVirtualReceiverChannel } from '../types/types';
-import styled from '@emotion/styled';
 import { useSetDataPoint } from '../queries';
 import EmojioneLightBulb from '~icons/emojione/light-bulb';
 import EmojioneMonotoneLightBulb from '~icons/emojione-monotone/light-bulb';
@@ -7,29 +6,6 @@ import EmojioneMonotoneLightBulb from '~icons/emojione-monotone/light-bulb';
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;
 }
-
-const CardHeader = styled.div<{ onClick?: () => void }>`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  padding: 10px;
-  width: 100px;
-`;
-
-const Name = styled.div`
-  white-space: normal;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100px;
-  height: 35px;
-  font-size: 13px;
-`;
-
-const IconContainer = styled.div<{ checked: boolean }>`
-  margin-top: 10px;
-  filter: ${({ checked }) => checked ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none'};
-`;
 
 export const SwitchControl = ({ channel }: ControlProps) => {
   const setDataPoint = useSetDataPoint();
@@ -41,11 +17,11 @@ export const SwitchControl = ({ channel }: ControlProps) => {
   };
 
   return (
-    <CardHeader onClick={onHandleChange}>
-      <Name>{name}</Name>
-      <IconContainer checked={checked}>
+    <div className="flex flex-col items-center cursor-pointer p-[10px] w-[100px]" onClick={onHandleChange}>
+      <div className="whitespace-normal overflow-hidden text-ellipsis max-w-[100px] h-[35px] text-[13px]">{name}</div>
+      <div className={`mt-[10px] ${checked ? 'drop-shadow-[0_0_8px_rgba(255,255,0,0.6)]' : ''}`}>
         {checked ? <EmojioneLightBulb /> : <EmojioneMonotoneLightBulb />}
-      </IconContainer>
-    </CardHeader>
+      </div>
+    </div>
   );
 };

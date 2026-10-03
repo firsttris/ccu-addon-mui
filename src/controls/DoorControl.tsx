@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { ButtonHTMLAttributes, ReactNode, useState } from 'react';
 import { KeymaticChannel } from '../types/types';
-import styled from '@emotion/styled';
 import { Button } from '../components/Button';
 import { useSetDataPoint } from '../queries';
 import MaterialSymbolsDoorOpenOutline from '~icons/material-symbols/door-open-outline';
@@ -8,101 +7,22 @@ import MaterialSymbolsLockOutline from '~icons/material-symbols/lock-outline';
 import MaterialSymbolsLockOpenOutline from '~icons/material-symbols/lock-open-outline';
 import { m } from '../paraglide/messages';
 
-const Card = styled.div`
-  border: 1px solid ${props => props.theme.colors.border};
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 200px;
-  background-color: ${props => props.theme.colors.surface};
-  transition: box-shadow 0.2s ease;
-  &:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  }
-`;
+const TextButton = ({ primary, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { primary?: boolean }) => (
+  <button
+    className={`text-[15px] font-semibold py-2 px-4 rounded-lg cursor-pointer border border-solid border-border ${
+      primary ? 'text-white bg-[#c62828]' : 'text-text bg-primary'
+    }`}
+    {...props}
+  />
+);
 
-const Title = styled.h3`
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  font-weight: 500;
-  color: ${props => props.theme.colors.text};
-  text-align: center;
-`;
+const ButtonWrapper = ({ children }: { children: ReactNode }) => (
+  <div className="flex flex-col items-center gap-1">{children}</div>
+);
 
-const ButtonContainer = styled.div({
-  display: 'flex',
-  gap: '12px',
-  alignItems: 'center',
-});
-
-const ButtonWrapper = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  gap: '4px',
-});
-
-const ButtonLabel = styled.span`
-  font-size: 12px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-align: center;
-`;
-
-const StatusText = styled.span`
-  margin-top: 12px;
-  font-size: 14px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-align: center;
-`;
-
-interface StyledTypographyProps {
-  uncertain: boolean;
-}
-
-const StyledTypography = styled('span', {
-  shouldForwardProp: (prop) => prop !== 'uncertain',
-})<StyledTypographyProps>`
-  display: ${props => props.uncertain ? 'block' : 'none'};
-  margin-top: 12px;
-  font-size: 14px;
-  color: ${props => props.theme.colors.textSecondary};
-  text-align: center;
-`;
-
-const ConfirmBox = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  min-height: 72px;
-`;
-
-const ConfirmText = styled.span`
-  font-size: 15px;
-  font-weight: 600;
-  color: ${props => props.theme.colors.text};
-`;
-
-const ConfirmButtons = styled.div`
-  display: flex;
-  gap: 10px;
-`;
-
-const TextButton = styled('button', {
-  shouldForwardProp: (prop) => prop !== 'primary',
-})<{ primary?: boolean }>`
-  font-size: 15px;
-  font-weight: 600;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 1px solid ${props => props.theme.colors.border};
-  color: ${props => (props.primary ? '#fff' : props.theme.colors.text)};
-  background: ${props => (props.primary ? '#c62828' : props.theme.colors.primary)};
-`;
+const ButtonLabel = ({ children }: { children: ReactNode }) => (
+  <span className="text-[12px] text-text-secondary text-center">{children}</span>
+);
 
 interface DoorControlProps {
   channel: KeymaticChannel;
@@ -135,12 +55,12 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   };
 
   return (
-    <Card>
-      <Title>{name}</Title>
+    <div className="border border-solid border-border rounded-lg p-4 shadow-[0_2px_4px_rgba(0,0,0,0.1)] flex flex-col items-center w-[200px] bg-surface transition-shadow duration-200 ease-[ease] hover:shadow-[0_4px_8px_rgba(0,0,0,0.15)]">
+      <h3 className="mt-0 mx-0 mb-3 text-[16px] font-medium text-text text-center">{name}</h3>
       {confirming ? (
-        <ConfirmBox>
-          <ConfirmText>{confirming === 'open' ? m.CONFIRM_OPEN() : m.CONFIRM_UNLOCK()}</ConfirmText>
-          <ConfirmButtons>
+        <div className="flex flex-col items-center gap-[10px] min-h-[72px]">
+          <span className="text-[15px] font-semibold text-text">{confirming === 'open' ? m.CONFIRM_OPEN() : m.CONFIRM_UNLOCK()}</span>
+          <div className="flex gap-[10px]">
             <TextButton onClick={() => setConfirming(null)}>{m.CANCEL()}</TextButton>
             <TextButton
               primary
@@ -155,10 +75,10 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
             >
               {m.YES()}
             </TextButton>
-          </ConfirmButtons>
-        </ConfirmBox>
+          </div>
+        </div>
       ) : (
-        <ButtonContainer>
+        <div className="flex gap-3 items-center">
           <ButtonWrapper>
             <Button onClick={lockDoor}>
               <MaterialSymbolsLockOutline />
@@ -177,14 +97,14 @@ export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
             </Button>
             <ButtonLabel>{m.OPEN()}</ButtonLabel>
           </ButtonWrapper>
-        </ButtonContainer>
+        </div>
       )}
-      <StatusText>
+      <span className="mt-3 text-[14px] text-text-secondary text-center">
         {isUncertain ? '' : (isUnlocked ? m.UNLOCKED() : m.LOCKED())}
-      </StatusText>
-      <StyledTypography uncertain={isUncertain}>
+      </span>
+      <span className={`${isUncertain ? 'block' : 'hidden'} mt-3 text-[14px] text-text-secondary text-center`}>
         {m.DOOR_STATE_UNKNOWN()}
-      </StyledTypography>
-    </Card>
+      </span>
+    </div>
   );
 };
