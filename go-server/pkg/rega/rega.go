@@ -344,3 +344,25 @@ func (c *Client) GetDeviceProblems() ([]DeviceProblem, error) {
 	}
 	return parseDeviceProblems(output), nil
 }
+
+// Tiles that can be chosen for a channel
+const (
+	TileLight  = "light"
+	TileSwitch = "switch"
+)
+
+// SetChannelTile stores the tile chosen for a channel ("light", "switch",
+// or "" for the app's own choice). Returns SetOK with the channel's name,
+// or SetNotFound.
+func (c *Client) SetChannelTile(id int64, tile string) (result, name string, err error) {
+	if tile != "" && tile != TileLight && tile != TileSwitch {
+		return "", "", fmt.Errorf("invalid tile")
+	}
+	script := strings.ReplaceAll(setChannelTileScript, "{{ID}}", strconv.FormatInt(id, 10))
+	script = strings.ReplaceAll(script, "{{TILE}}", tile)
+	output, err := c.Execute(script)
+	if err != nil {
+		return "", "", err
+	}
+	return resultWithValue(output)
+}

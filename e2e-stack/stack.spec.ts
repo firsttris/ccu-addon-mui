@@ -564,3 +564,27 @@ test('zeigt die Favoriten des Benutzers und ändert sie in der CCU', async ({ pa
   await page.reload();
   await expect(page.getByTitle('Zirkulationspumpe')).toBeVisible();
 });
+
+test('legt fest, ob ein Schaltaktor als Lampe oder Schalter erscheint', async ({ page }) => {
+  await login(page);
+  // Without a choice: a switch, its name doesn't sound like a lamp
+  await page.goto('/devices');
+  const tile = page.getByRole('button', { name: /^Zirkulationspumpe: / });
+  await expect(tile).toHaveAttribute('data-tile', 'switch');
+
+  await page.goto('/device/HmIP-RF/00195F29B04142');
+  const choice = page.getByRole('region', { name: 'Namen, Räume und Gewerke' }).getByLabel('Kachel 00195F29B04142:4');
+  await expect(choice).toHaveValue('');
+  await choice.selectOption({ label: 'Lampe' });
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+
+  // Stored in the CCU, so every device shows the lamp
+  await page.goto('/devices');
+  await expect(tile).toHaveAttribute('data-tile', 'light');
+  await page.reload();
+  await expect(tile).toHaveAttribute('data-tile', 'light');
+
+  await page.goto('/device/HmIP-RF/00195F29B04142');
+  await choice.selectOption({ label: 'Automatisch (nach Name und Gewerk)' });
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+});

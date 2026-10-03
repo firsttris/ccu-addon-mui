@@ -35,6 +35,10 @@ type Channel struct {
 	// belongs to.
 	Rooms  []int64 `json:"rooms,omitempty"`
 	Trades []int64 `json:"trades,omitempty"`
+
+	// Tile is the tile chosen for the channel in the add-on ("light" or
+	// "switch"), stored as ReGa metadata; empty lets the app decide.
+	Tile string `json:"tile,omitempty"`
 }
 
 // parseIDs parses a comma separated list of ids.
@@ -102,7 +106,7 @@ func parseNamedObjects(output string) []NamedObject {
 // parseChannels parses the output of get_channels.tcl.
 func parseChannels(output string) []Channel {
 	isRecord := func(line string) bool {
-		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t")
+		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t") || strings.HasPrefix(line, "T\t")
 	}
 
 	channels := []Channel{}
@@ -146,6 +150,13 @@ func parseChannels(output string) []Channel {
 			channel := &channels[len(channels)-1]
 			channel.Rooms = parseIDs(fields[1])
 			channel.Trades = parseIDs(fields[2])
+		case "T":
+			if len(fields) < 2 || len(channels) == 0 {
+				continue
+			}
+			if fields[1] == TileLight || fields[1] == TileSwitch {
+				channels[len(channels)-1].Tile = fields[1]
+			}
 		case "D":
 			if len(fields) < 4 || len(channels) == 0 {
 				continue

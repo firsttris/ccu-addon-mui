@@ -442,5 +442,11 @@
   "TIME_NOT_ACTIVE": "not active",
   "TIME_PERMANENT": "permanent",
   "TIME_CUSTOM": "Custom value …",
-  "TIME_UNIT": "Unit"
+  "TIME_UNIT": "Unit",
+  "START_PAGE": "Start page",
+  "START_PAGE_LAST": "Last opened",
+  "TILE": "Tile",
+  "TILE_AUTO": "Automatic (by name and trade)",
+  "TILE_LIGHT": "Lamp",
+  "TILE_SWITCH": "Switch"
 }

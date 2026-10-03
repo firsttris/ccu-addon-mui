@@ -4,6 +4,7 @@ import { useChannels, useRooms } from '../queries';
 import { usePageTitle } from '../contexts/PageTitleContext';
 import { Dashboard, NavTabs } from './Dashboard';
 import { m } from '../paraglide/messages';
+import { rememberView } from '../lib/startPage';
 
 // The start page opens the room shown last
 export const LAST_ROOM_KEY = 'last-room';
@@ -20,6 +21,7 @@ export const Room = () => {
     } catch {
       // Private mode: start with the first room
     }
+    rememberView({ kind: 'room', id: roomId });
   }, [roomId]);
 
   return (

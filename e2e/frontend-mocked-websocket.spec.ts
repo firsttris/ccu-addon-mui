@@ -434,6 +434,26 @@ test('zeigt Favoritenlisten und bearbeitet sie', async ({ page }) => {
   expect(sent).toEqual(['runProgram', 'removeFavoriteItem', 'addFavoriteItem', 'createFavorite', 'deleteFavorite']);
 });
 
+test('öffnet als Startseite die zuletzt gezeigte Ansicht oder die Favoriten', async ({ page }) => {
+  // The view shown last: a room, then a favorite list
+  await page.goto('/room/2');
+  await expect(page.getByRole('navigation', { name: /^(Räume|Rooms)$/ })).toBeVisible();
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/room\/2$/);
+  await page.goto('/favorite/1301');
+  await expect(page.getByTitle('Flur Licht')).toBeVisible();
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/favorite\/1301$/);
+
+  // Chosen in the menu: always the favorites
+  await page.goto('/room/1');
+  await page.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
+  await page.getByRole('radiogroup', { name: /^(Startseite|Start page)$/ }).getByRole('radio', { name: /^(Favoriten|Favorites)$/ }).click();
+  await page.keyboard.press('Escape');
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/favorite\/1301$/);
+});
+
 test('zeigt Alarme und bestätigt sie', async ({ page }) => {
   await page.addInitScript(() => {
     // Before the app asks for them

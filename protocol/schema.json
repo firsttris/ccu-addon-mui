@@ -157,6 +157,9 @@
     },
     "removeFavoriteItem": {
       "$ref": "#/definitions/RemoveFavoriteItemCall"
+    },
+    "setChannelTile": {
+      "$ref": "#/definitions/SetChannelTileCall"
     }
   },
   "required": [
@@ -210,7 +213,8 @@
     "renameFavorite",
     "deleteFavorite",
     "addFavoriteItem",
-    "removeFavoriteItem"
+    "removeFavoriteItem",
+    "setChannelTile"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -294,6 +298,13 @@
           "items": {
             "type": "integer"
           }
+        },
+        "tile": {
+          "enum": [
+            "light",
+            "switch"
+          ],
+          "description": "Tile chosen in the add-on (ReGa metadata)"
         }
       },
       "required": [
@@ -2573,6 +2584,9 @@
         },
         {
           "$ref": "#/definitions/RemoveFavoriteItemResponse"
+        },
+        {
+          "$ref": "#/definitions/SetChannelTileResponse"
         }
       ]
     },
@@ -4410,6 +4424,71 @@
           ]
         }
       }
+    },
+    "SetChannelTileRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setChannelTile"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "tile": {
+          "enum": [
+            "",
+            "light",
+            "switch"
+          ],
+          "description": "The tile shown for the channel; empty lets the app decide"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "tile"
+      ],
+      "additionalProperties": false
+    },
+    "SetChannelTileResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setChannelTile_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetChannelTileCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetChannelTileRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetChannelTileResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
     }
   }
 }

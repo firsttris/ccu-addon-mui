@@ -17,6 +17,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { m } from '../paraglide/messages';
+import { rememberView } from '../lib/startPage';
 
 // Favorite lists: the CCU user's own lists of channels, system variables
 // and programs from any room, as the WebUI's "Favoriten"
@@ -214,6 +215,7 @@ export const Favorite = () => {
     } catch {
       // Private mode: start with the first list
     }
+    rememberView({ kind: 'favorite', id: favoriteId });
   }, [favoriteId]);
 
   // Deleted, or not one of this user's lists

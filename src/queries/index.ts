@@ -319,7 +319,8 @@ export const useRevokeSession = () => {
 export type ConfigChange =
   | { type: 'rename'; address: string; name: string }
   // list says where the group is, for the optimistic update
-  | { type: 'setGroupMember'; groupId: number; channelId: number; member: boolean; list: 'rooms' | 'trades' };
+  | { type: 'setGroupMember'; groupId: number; channelId: number; member: boolean; list: 'rooms' | 'trades' }
+  | { type: 'setChannelTile'; id: number; tile: '' | 'light' | 'switch' };
 
 // Renames a device or channel, or changes the rooms and trades of a
 // channel (setup area, administrators). Memberships show at once and are
@@ -337,6 +338,14 @@ export const useConfigChange = () => {
       }
     },
     onMutate: (change) => {
+      if (change.type === 'setChannelTile') {
+        queryClient.setQueriesData<Channel[]>({ queryKey: ['channels'] }, (channels) =>
+          channels?.map((channel) =>
+            channel.id === change.id ? { ...channel, tile: change.tile === '' ? undefined : change.tile } : channel,
+          ),
+        );
+        return;
+      }
       if (change.type !== 'setGroupMember') {
         return;
       }

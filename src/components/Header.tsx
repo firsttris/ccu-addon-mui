@@ -4,6 +4,7 @@ import MenuIcon from '~icons/lucide/menu';
 import TriangleAlertIcon from '~icons/lucide/triangle-alert';
 import HomeIcon from '~icons/lucide/house';
 import TagIcon from '~icons/lucide/tag';
+import { getStartPage, setStartPage, StartPage } from '../lib/startPage';
 import StarIcon from '~icons/lucide/star';
 import ListIcon from '~icons/lucide/list';
 import BracesIcon from '~icons/lucide/braces';
@@ -172,6 +173,7 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
               </div>
               <span className="text-xs text-muted-foreground">{m.EFFECTS_HINT()}</span>
             </div>
+            <StartPageChoice />
           </NavSection>
           {authRequired && (
             <>
@@ -190,6 +192,41 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
         </nav>
       </SheetContent>
     </Sheet>
+  );
+};
+
+// Where the app opens: the view shown last or the favorites (per device)
+const StartPageChoice = () => {
+  const [page, setPage] = useState<StartPage>(getStartPage);
+  const options: { value: StartPage; label: () => string }[] = [
+    { value: 'last', label: m.START_PAGE_LAST },
+    { value: 'favorites', label: m.FAVORITES },
+  ];
+  return (
+    <div className="flex flex-col gap-2 px-3 pt-3">
+      <span id="start-page-label" className="text-[15px]">
+        {m.START_PAGE()}
+      </span>
+      <div role="radiogroup" aria-labelledby="start-page-label" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+        {options.map(({ value, label }) => (
+          <button
+            key={value}
+            role="radio"
+            aria-checked={page === value}
+            onClick={() => {
+              setStartPage(value);
+              setPage(value);
+            }}
+            className={cn(
+              'h-9 rounded-md text-sm font-medium transition-colors',
+              page === value ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {label()}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 };
 

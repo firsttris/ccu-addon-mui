@@ -1053,3 +1053,25 @@ func TestStackFavorites(t *testing.T) {
 		t.Fatalf("expected FORBIDDEN, got %v", r)
 	}
 }
+
+func TestStackChannelTile(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
+	receive(t, conn, byRequestID("e"))
+
+	send(t, conn, message{"type": "setChannelTile", "requestId": "t1", "id": 101, "tile": "switch"})
+	if m := receive(t, conn, byRequestID("t1")); m["success"] != true {
+		t.Fatalf("setChannelTile failed: %v", m)
+	}
+	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "roomId": "1", "requestId": "t2"})
+	for _, raw := range receive(t, conn, byRequestID("t2"))["channels"].([]interface{}) {
+		if ch := raw.(map[string]interface{}); ch["id"] == 101.0 && ch["tile"] != "switch" {
+			t.Fatalf("tile not stored: %v", ch)
+		}
+	}
+	send(t, conn, message{"type": "setChannelTile", "requestId": "t3", "id": 101, "tile": "lamp"})
+	if m := receive(t, conn, byRequestID("t3")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+}

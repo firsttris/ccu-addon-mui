@@ -3,6 +3,7 @@
 !   S <statusChannelAddress> <type> <value>   battery/reachability of the device
 !   D <type> <valueType> <value>
 !   M <roomIds> <tradeIds>                   comma separated
+!   T <tile>                                 light or switch, if chosen in the add-on
 ! The JSON is built in Go, so names and values need no escaping here.
 ! OBJECT_ID is a room, trade or favorite list id, or ALL for the channels of
 ! all devices.
@@ -53,6 +54,10 @@ if (parentObject) {
                     tradeIds = tradeIds # groupId;
                 }
                 WriteLine("M\t" # memberIds # "\t" # tradeIds);
+
+                ! The tile chosen in the add-on, see set_channel_tile.tcl
+                if (channelObject.MetaData("muiTile") == "light") { WriteLine("T\tlight"); }
+                if (channelObject.MetaData("muiTile") == "switch") { WriteLine("T\tswitch"); }
 
                 ! Battery and reachability are reported on the device's maintenance channel 0
                 if (deviceObject) {

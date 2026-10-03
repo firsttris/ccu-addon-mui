@@ -92,6 +92,8 @@ type Channel struct {
 	Name      string `json:"name"`
 	// Datapoints by name; values are bool, number, string or null
 	Datapoints map[string]interface{} `json:"datapoints"`
+	// Tile is the tile chosen in the add-on (ReGa metadata "muiTile")
+	Tile string `json:"tile,omitempty"`
 }
 
 // InterfaceData is what an XML-RPC interface (e.g. HmIP-RF) returns.
