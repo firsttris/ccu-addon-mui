@@ -1,0 +1,479 @@
+{
+  "rooms": [
+    {
+      "id": 1,
+      "name": "Wohnzimmer",
+      "channels": [
+        101,
+        102,
+        7001
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Küche",
+      "channels": [
+        201,
+        202
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Heizungsraum",
+      "channels": [
+        501,
+        502,
+        503,
+        504,
+        505
+      ]
+    }
+  ],
+  "trades": [
+    {
+      "id": 10,
+      "name": "Licht",
+      "channels": [
+        301
+      ]
+    },
+    {
+      "id": 20,
+      "name": "Heizung",
+      "channels": [
+        401
+      ]
+    }
+  ],
+  "users": [
+    {
+      "name": "Admin",
+      "password": "secret",
+      "level": 8
+    },
+    {
+      "name": "Gast",
+      "password": "gast",
+      "level": 1
+    }
+  ],
+  "channels": [
+    {
+      "id": 1000,
+      "address": "LEQ0000001:0",
+      "type": "MAINTENANCE",
+      "interface": "BidCos-RF",
+      "name": "Wohnzimmer Licht:0",
+      "datapoints": {
+        "UNREACH": false,
+        "LOWBAT": false
+      }
+    },
+    {
+      "id": 101,
+      "address": "LEQ0000001:1",
+      "type": "SWITCH_VIRTUAL_RECEIVER",
+      "interface": "BidCos-RF",
+      "name": "Wohnzimmer Licht",
+      "datapoints": {
+        "PROCESS": 0,
+        "SECTION": 0,
+        "SECTION_STATUS": 0,
+        "STATE": false
+      }
+    },
+    {
+      "id": 1020,
+      "address": "0000DBE9A5C1F2:0",
+      "type": "MAINTENANCE",
+      "interface": "HmIP-RF",
+      "name": "Fenstergriff:0",
+      "datapoints": {
+        "UNREACH": false,
+        "LOW_BAT": false
+      }
+    },
+    {
+      "id": 102,
+      "address": "0000DBE9A5C1F2:1",
+      "type": "ROTARY_HANDLE_TRANSCEIVER",
+      "interface": "HmIP-RF",
+      "name": "Fenstergriff Wohnzimmer",
+      "datapoints": {
+        "ERROR_CODE": 0,
+        "STATE": 2,
+        "SABOTAGE": false
+      }
+    },
+    {
+      "id": 201,
+      "address": "LEQ0000002:1",
+      "type": "BLIND_VIRTUAL_RECEIVER",
+      "interface": "BidCos-RF",
+      "name": "Küche Rollo",
+      "datapoints": {
+        "ACTIVITY_STATE": 0,
+        "LEVEL": 0.5,
+        "LEVEL_2": 0,
+        "LEVEL_2_STATUS": 0,
+        "LEVEL_STATUS": 0,
+        "PROCESS": 0,
+        "SECTION": 0,
+        "SECTION_STATUS": 0,
+        "STOP": false
+      }
+    },
+    {
+      "id": 202,
+      "address": "LEQ0000005:1",
+      "type": "BLIND_VIRTUAL_RECEIVER",
+      "interface": "BidCos-RF",
+      "name": "Küche Fenster",
+      "datapoints": {
+        "ACTIVITY_STATE": 0,
+        "LEVEL": 0,
+        "LEVEL_2": 0,
+        "LEVEL_2_STATUS": 0,
+        "LEVEL_STATUS": 0,
+        "PROCESS": 0,
+        "SECTION": 0,
+        "SECTION_STATUS": 0,
+        "STOP": false
+      }
+    },
+    {
+      "id": 501,
+      "address": "003FA2698BC439:1",
+      "type": "ENERGIE_METER_TRANSMITTER",
+      "interface": "HmIP-RF",
+      "name": "Stromzähler",
+      "datapoints": {
+        "CHANNEL_OPERATION_MODE": 4,
+        "GAS_FLOW": 0,
+        "POWER": 87
+      }
+    },
+    {
+      "id": 502,
+      "address": "003FA2698BC439:2",
+      "type": "ENERGIE_METER_TRANSMITTER",
+      "interface": "HmIP-RF",
+      "name": "HmIP-ESI 003FA2698BC439:2",
+      "datapoints": {
+        "ENERGY_COUNTER": 20054800.9,
+        "GAS_VOLUME": 0
+      }
+    },
+    {
+      "id": 503,
+      "address": "003FA2698BC439:4",
+      "type": "ENERGIE_METER_TRANSMITTER",
+      "interface": "HmIP-RF",
+      "name": "HmIP-ESI 003FA2698BC439:4",
+      "datapoints": {
+        "ENERGY_COUNTER": 13678471
+      }
+    },
+    {
+      "id": 504,
+      "address": "00195F29B04142:9",
+      "type": "SWITCH_WEEK_PROFILE",
+      "interface": "HmIP-RF",
+      "name": "Wochenprofil",
+      "datapoints": {
+        "WEEK_PROGRAM_CHANNEL_LOCKS": 0
+      }
+    },
+    {
+      "id": 505,
+      "address": "KEQ1063873:1",
+      "type": "KEYMATIC",
+      "interface": "BidCos-RF",
+      "name": "Haustür",
+      "datapoints": {
+        "ERROR": 0,
+        "INHIBIT": false,
+        "OPEN": false,
+        "RELOCK_DELAY": 0,
+        "STATE": false,
+        "STATE_UNCERTAIN": false
+      }
+    },
+    {
+      "id": 301,
+      "address": "LEQ0000003:1",
+      "type": "SWITCH_VIRTUAL_RECEIVER",
+      "interface": "BidCos-RF",
+      "name": "Flur Licht",
+      "datapoints": {
+        "PROCESS": 0,
+        "SECTION": 0,
+        "SECTION_STATUS": 0,
+        "STATE": true
+      }
+    },
+    {
+      "id": 401,
+      "address": "LEQ0000004:1",
+      "type": "HEATING_CLIMATECONTROL_TRANSCEIVER",
+      "interface": "BidCos-RF",
+      "name": "Wohnzimmer Thermostat",
+      "datapoints": {
+        "ACTIVE_PROFILE": 0,
+        "ACTUAL_TEMPERATURE": 21.5,
+        "ACTUAL_TEMPERATURE_STATUS": 0,
+        "BOOST_MODE": false,
+        "BOOST_TIME": 0,
+        "FROST_PROTECTION": false,
+        "HEATING_COOLING": 0,
+        "HUMIDITY": 40,
+        "HUMIDITY_STATUS": 0,
+        "PARTY_MODE": false,
+        "PARTY_SET_POINT_TEMPERATURE": 21,
+        "QUICK_VETO_TIME": 0,
+        "SET_POINT_MODE": 1,
+        "CONTROL_MODE": 1,
+        "SET_POINT_TEMPERATURE": 21,
+        "SWITCH_POINT_OCCURED": false,
+        "WINDOW_STATE": 0,
+        "VALVE_STATE": 10
+      }
+    },
+    {
+      "id": 601,
+      "address": "000A1B2C3D4E5F:1",
+      "type": "SMOKE_DETECTOR",
+      "interface": "HmIP-RF",
+      "name": "Rauchmelder Flur",
+      "datapoints": {
+        "SMOKE_DETECTOR_ALARM_STATUS": 0,
+        "SMOKE_DETECTOR_TEST_RESULT": null
+      }
+    },
+    {
+      "id": 7000,
+      "address": "000A9D89A7AF25:0",
+      "type": "MAINTENANCE",
+      "interface": "HmIP-RF",
+      "name": "Wandthermostat Flur:0",
+      "datapoints": {
+        "UNREACH": true,
+        "LOW_BAT": false
+      }
+    },
+    {
+      "id": 7001,
+      "address": "000A9D89A7AF25:1",
+      "type": "HEATING_CLIMATECONTROL_TRANSCEIVER",
+      "interface": "HmIP-RF",
+      "name": "Wandthermostat Flur",
+      "datapoints": {
+        "ACTUAL_TEMPERATURE": 0,
+        "SET_POINT_TEMPERATURE": 0,
+        "SET_POINT_MODE": 0,
+        "WINDOW_STATE": 0,
+        "BOOST_MODE": false
+      }
+    },
+    {
+      "id": 7100,
+      "address": "003660C9930AB6:0",
+      "type": "MAINTENANCE",
+      "interface": "HmIP-RF",
+      "name": "Fensterkontakt Bad:0",
+      "datapoints": {
+        "UNREACH": false,
+        "LOW_BAT": true
+      }
+    },
+    {
+      "id": 7101,
+      "address": "003660C9930AB6:1",
+      "type": "SHUTTER_CONTACT",
+      "interface": "HmIP-RF",
+      "name": "Fensterkontakt Bad",
+      "datapoints": {
+        "STATE": 0
+      }
+    }
+  ],
+  "deviceNames": {
+    "000A9D89A7AF25": "Wandthermostat Flur",
+    "003660C9930AB6": "Fensterkontakt Bad"
+  },
+  "interfaces": {
+    "BidCos-RF": {
+      "devices": [
+        {
+          "ADDRESS": "LEQ0000001",
+          "TYPE": "HM-LC-Sw1-FM",
+          "CHILDREN": [
+            "LEQ0000001:0",
+            "LEQ0000001:1"
+          ],
+          "PARAMSETS": [
+            "MASTER"
+          ],
+          "VERSION": 26,
+          "FIRMWARE": "2.8",
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "LEQ0000001:1",
+          "TYPE": "SWITCH",
+          "PARENT": "LEQ0000001",
+          "PARENT_TYPE": "HM-LC-Sw1-FM",
+          "INDEX": 1,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 26,
+          "FLAGS": 1,
+          "LINK_TARGET_ROLES": "SWITCH"
+        }
+      ],
+      "paramsetDescriptions": {
+        "LEQ0000001:1": {
+          "VALUES": {
+            "STATE": {
+              "TYPE": "BOOL",
+              "OPERATIONS": 7,
+              "FLAGS": 1,
+              "DEFAULT": false,
+              "MIN": false,
+              "MAX": true,
+              "CONTROL": "SWITCH.STATE",
+              "TAB_ORDER": 0
+            },
+            "ON_TIME": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 2,
+              "FLAGS": 1,
+              "DEFAULT": 0.0,
+              "MIN": 0.0,
+              "MAX": 8580000.0,
+              "UNIT": "s",
+              "TAB_ORDER": 1,
+              "SPECIAL": [
+                {
+                  "ID": "NOT_USED",
+                  "VALUE": 0.0
+                }
+              ]
+            },
+            "PROCESS": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 1,
+              "VALUE_LIST": [
+                "STABLE",
+                "NOT_STABLE"
+              ],
+              "TAB_ORDER": 2
+            }
+          }
+        }
+      }
+    },
+    "HmIP-RF": {
+      "devices": [
+        {
+          "ADDRESS": "0000DBE9A5C1F2",
+          "TYPE": "HmIP-SRH",
+          "CHILDREN": [
+            "0000DBE9A5C1F2:0",
+            "0000DBE9A5C1F2:1"
+          ],
+          "PARAMSETS": [
+            "MASTER",
+            "SERVICE"
+          ],
+          "VERSION": 4,
+          "FIRMWARE": "1.2.10",
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "0000DBE9A5C1F2:1",
+          "TYPE": "ROTARY_HANDLE_TRANSCEIVER",
+          "PARENT": "0000DBE9A5C1F2",
+          "PARENT_TYPE": "HmIP-SRH",
+          "INDEX": 1,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 4,
+          "FLAGS": 1
+        }
+      ],
+      "paramsetDescriptions": {
+        "0000DBE9A5C1F2:1": {
+          "VALUES": {
+            "STATE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 2,
+              "VALUE_LIST": [
+                "CLOSED",
+                "TILTED",
+                "OPEN"
+              ],
+              "TAB_ORDER": 0
+            },
+            "SABOTAGE": {
+              "TYPE": "BOOL",
+              "OPERATIONS": 5,
+              "FLAGS": 9,
+              "DEFAULT": false,
+              "MIN": false,
+              "MAX": true,
+              "TAB_ORDER": 1
+            },
+            "ERROR_CODE": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 255,
+              "TAB_ORDER": 2
+            }
+          },
+          "MASTER": {
+            "EVENT_DELAY_UNIT": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 3,
+              "VALUE_LIST": [
+                "100MS",
+                "1S",
+                "5S",
+                "10S"
+              ],
+              "TAB_ORDER": 0
+            }
+          }
+        }
+      },
+      "paramsets": {
+        "0000DBE9A5C1F2:1": {
+          "MASTER": {
+            "EVENT_DELAY_UNIT": 0
+          }
+        }
+      }
+    }
+  }
+}

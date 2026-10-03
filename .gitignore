@@ -54,3 +54,6 @@ addon_installer/dist/
 addon_installer/go-server/
 addon_installer/VERSION
 .nyc_output/
+
+# Auth key of the server running against the fake CCU
+.fake-ccu-auth.key

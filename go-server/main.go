@@ -25,6 +25,26 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	go func() {
+		sig := <-sigChan
+		logger.Info("🛑 Received signal:", sig)
+		cancel()
+	}()
+
+	if err := run(ctx, cfg); err != nil {
+		logger.Error("❌", err)
+		os.Exit(1)
+	}
+}
+
+// run starts the servers and keeps them running until ctx is cancelled or
+// one of them fails.
+func run(ctx context.Context, cfg *config.Config) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	regaClient := rega.NewClient(cfg)
 	wsServer := websocket.NewServer(cfg, regaClient)
 
@@ -34,8 +54,7 @@ func main() {
 		if err != nil {
 			// Fail closed: without the key nobody could log in, and running
 			// without authentication would expose all devices.
-			logger.Error("❌ Failed to initialise authentication:", err)
-			os.Exit(1)
+			return fmt.Errorf("failed to initialise authentication: %w", err)
 		}
 		authenticator.SetLevelFunc(func(username string) (string, error) {
 			level, err := regaClient.GetUserLevel(username)
@@ -50,13 +69,12 @@ func main() {
 	case "none":
 		logger.Info("⚠️ Authentication disabled (AUTH_MODE=none): everyone on the network can control all devices")
 	default:
-		logger.Error("❌ Invalid AUTH_MODE, expected \"ccu\" or \"none\":", cfg.AuthMode)
-		os.Exit(1)
+		return fmt.Errorf("invalid AUTH_MODE %q, expected \"ccu\" or \"none\"", cfg.AuthMode)
 	}
+
 	deviceRPC, err := ccurpc.New(cfg)
 	if err != nil {
-		logger.Error("❌ Failed to create the XML-RPC client:", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to create the XML-RPC client: %w", err)
 	}
 	wsServer.SetDeviceRPC(deviceRPC)
 
@@ -85,25 +103,14 @@ func main() {
 		logger.Error("CCU connection test failed:", err)
 	}
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-
-	select {
-	case sig := <-sigChan:
-		logger.Info("🛑 Received signal:", sig)
-	case <-ctx.Done():
-		logger.Info("🛑 Context cancelled")
-	}
-
+	<-ctx.Done()
 	logger.Info("🛑 Shutting down...")
-
-	// Stop the CCU registration loops before unregistering, so they can't
-	// re-register in between.
-	cancel()
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer shutdownCancel()
 
+	// The registration loops stopped with ctx, so they can't re-register
+	// after unregistering.
 	if err := rpcServer.Unregister(shutdownCtx); err != nil {
 		logger.Error("Error unregistering RPC clients:", err)
 	}
@@ -117,4 +124,5 @@ func main() {
 	}
 
 	logger.Info("✅ Shutdown complete")
+	return nil
 }

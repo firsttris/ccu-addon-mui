@@ -126,6 +126,14 @@ func validate(address, paramsetKey string) error {
 	return nil
 }
 
+// CallRaw calls a method and returns the decoded reply as is, e.g. for
+// exporting fixtures.
+func (c *Client) CallRaw(iface, method string, args ...interface{}) (interface{}, error) {
+	var reply interface{}
+	err := c.call(iface, method, args, &reply)
+	return reply, err
+}
+
 // ListDevices returns the descriptions of all devices and channels of an
 // interface.
 func (c *Client) ListDevices(iface string) ([]DeviceDescription, error) {

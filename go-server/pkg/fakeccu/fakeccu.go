@@ -1,0 +1,538 @@
+// Package fakeccu is a stand-in for a CCU in tests: it answers the ReGa
+// scripts of the add-on, the XML-RPC interfaces and the WebUI login from a
+// Fixture, takes writes in memory and sends events back to the registered
+// callbacks, like the real CCU. Go tests and Playwright run against it
+// without hardware.
+package fakeccu
+
+import (
+	"bytes"
+	"context"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"ccu-addon-mui-server/pkg/rega"
+)
+
+// Interface names and the order their ports are assigned in
+var interfaceNames = []string{"BidCos-RF", "HmIP-RF", "VirtualDevices"}
+
+type CCU struct {
+	mu      sync.Mutex
+	fixture *Fixture
+
+	// callbacks by interface, then by interface id (from init)
+	callbacks map[string]map[string]string
+	events    chan callbackEvent
+
+	scripts []script
+
+	servers []*http.Server
+	// Ports after Start
+	RegaPort       int
+	WebUIPort      int
+	InterfacePorts map[string]int
+
+	// calls counts XML-RPC calls by "interface method"
+	calls map[string]int
+}
+
+// CallCount returns how often an XML-RPC method was called, e.g.
+// CallCount("HmIP-RF init").
+func (c *CCU) CallCount(call string) int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.calls[call]
+}
+
+type callbackEvent struct {
+	url, interfaceID, address, datapoint string
+	value                                interface{}
+}
+
+// script matches a ReGa script built from one of the add-on's templates
+// and extracts the values substituted for its placeholders.
+type script struct {
+	name   string
+	regex  *regexp.Regexp
+	fields []string
+}
+
+var placeholderRegex = regexp.MustCompile(`\\\{\\\{([A-Z_]+)\\\}\\\}`)
+
+func compileScripts() []script {
+	var scripts []script
+	for name, template := range rega.Scripts() {
+		quoted := regexp.QuoteMeta(template)
+		var fields []string
+		pattern := placeholderRegex.ReplaceAllStringFunc(quoted, func(m string) string {
+			fields = append(fields, placeholderRegex.FindStringSubmatch(m)[1])
+			return `(.*?)`
+		})
+		scripts = append(scripts, script{name: name, regex: regexp.MustCompile(`(?s)^` + pattern + `$`), fields: fields})
+	}
+	return scripts
+}
+
+func New(fixture *Fixture) *CCU {
+	if fixture.Interfaces == nil {
+		fixture.Interfaces = map[string]*InterfaceData{}
+	}
+	return &CCU{
+		fixture:        fixture,
+		callbacks:      map[string]map[string]string{},
+		events:         make(chan callbackEvent, 1024),
+		scripts:        compileScripts(),
+		InterfacePorts: map[string]int{},
+		calls:          map[string]int{},
+	}
+}
+
+// Start listens on free ports of host (e.g. "127.0.0.1") unless ports are
+// given: rega, webui, then one per interface (BidCos-RF, HmIP-RF,
+// VirtualDevices).
+func (c *CCU) Start(host string, ports ...int) error {
+	port := func(i int) int {
+		if i < len(ports) {
+			return ports[i]
+		}
+		return 0
+	}
+	listen := func(i int, handler http.Handler) (int, error) {
+		listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port(i)))
+		if err != nil {
+			return 0, err
+		}
+		server := &http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second}
+		c.servers = append(c.servers, server)
+		go func() { _ = server.Serve(listener) }()
+		return listener.Addr().(*net.TCPAddr).Port, nil
+	}
+
+	var err error
+	if c.RegaPort, err = listen(0, http.HandlerFunc(c.handleRega)); err != nil {
+		return err
+	}
+	if c.WebUIPort, err = listen(1, http.HandlerFunc(c.handleWebUI)); err != nil {
+		return err
+	}
+	for i, iface := range interfaceNames {
+		iface := iface
+		p, err := listen(2+i, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { c.handleXMLRPC(iface, w, r) }))
+		if err != nil {
+			return err
+		}
+		c.InterfacePorts[iface] = p
+	}
+	go c.sendEvents()
+	return nil
+}
+
+func (c *CCU) Close() {
+	for _, server := range c.servers {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		_ = server.Shutdown(ctx)
+		cancel()
+	}
+}
+
+// --- ReGa -------------------------------------------------------------
+
+func (c *CCU) handleRega(w http.ResponseWriter, r *http.Request) {
+	body, _ := io.ReadAll(r.Body)
+	output, err := c.runScript(string(body))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// rega.exe appends its variables
+	_, _ = io.WriteString(w, output+"<xml><exec>/rega.exe</exec></xml>")
+}
+
+func (c *CCU) runScript(body string) (string, error) {
+	if strings.HasPrefix(body, "Write(\"Hello") {
+		return "Hello from WebSocket Server", nil
+	}
+	for _, s := range c.scripts {
+		m := s.regex.FindStringSubmatch(body)
+		if m == nil {
+			continue
+		}
+		values := map[string]string{}
+		for i, field := range s.fields {
+			if _, ok := values[field]; !ok {
+				values[field] = m[i+1]
+			}
+		}
+		c.mu.Lock()
+		defer c.mu.Unlock()
+		switch s.name {
+		case "get_rooms":
+			return writeGroups(c.fixture.Rooms), nil
+		case "get_trades":
+			return writeGroups(c.fixture.Trades), nil
+		case "get_channels":
+			return c.getChannels(values["OBJECT_ID"]), nil
+		case "set_datapoint":
+			return c.setDatapoint(values), nil
+		case "get_device_problems":
+			return c.getDeviceProblems(), nil
+		case "get_user_level":
+			for _, user := range c.fixture.Users {
+				if user.Name == values["USERNAME"] {
+					return strconv.Itoa(user.Level), nil
+				}
+			}
+			return "", nil
+		}
+	}
+	return "", fmt.Errorf("unknown script")
+}
+
+func writeGroups(groups []Group) string {
+	var b strings.Builder
+	for _, g := range groups {
+		fmt.Fprintf(&b, "%d\t%s\n", g.ID, g.Name)
+	}
+	return b.String()
+}
+
+func (c *CCU) channelByID(id int64) *Channel {
+	for i := range c.fixture.Channels {
+		if c.fixture.Channels[i].ID == id {
+			return &c.fixture.Channels[i]
+		}
+	}
+	return nil
+}
+
+func (c *CCU) channelByAddress(iface, address string) *Channel {
+	for i := range c.fixture.Channels {
+		ch := &c.fixture.Channels[i]
+		if ch.Address == address && (iface == "" || ch.Interface == iface) {
+			return ch
+		}
+	}
+	return nil
+}
+
+// valueType returns the ReGa value type the add-on parses (see rega/parse.go).
+func valueType(v interface{}) string {
+	switch v.(type) {
+	case bool:
+		return "2"
+	case float64, int:
+		return "4"
+	}
+	return "20"
+}
+
+func formatValue(v interface{}) string {
+	switch x := v.(type) {
+	case nil:
+		return ""
+	case float64:
+		return strconv.FormatFloat(x, 'f', -1, 64)
+	}
+	return fmt.Sprint(v)
+}
+
+func deviceAddress(address string) string {
+	device, _, _ := strings.Cut(address, ":")
+	return device
+}
+
+func (c *CCU) getChannels(objectID string) string {
+	var channels []*Channel
+	if objectID == "ALL" {
+		for i := range c.fixture.Channels {
+			if !strings.HasSuffix(c.fixture.Channels[i].Address, ":0") {
+				channels = append(channels, &c.fixture.Channels[i])
+			}
+		}
+	} else {
+		id, _ := strconv.ParseInt(objectID, 10, 64)
+		for _, g := range append(append([]Group{}, c.fixture.Rooms...), c.fixture.Trades...) {
+			if g.ID != id {
+				continue
+			}
+			for _, channelID := range g.Channels {
+				if ch := c.channelByID(channelID); ch != nil {
+					channels = append(channels, ch)
+				}
+			}
+		}
+	}
+
+	var b strings.Builder
+	for _, ch := range channels {
+		fmt.Fprintf(&b, "C\t%d\t%s\t%s\t%s\t%s\n", ch.ID, ch.Address, ch.Type, ch.Interface, ch.Name)
+		if status := c.channelByAddress(ch.Interface, deviceAddress(ch.Address)+":0"); status != nil {
+			for _, dp := range []string{"LOW_BAT", "LOWBAT", "UNREACH"} {
+				if v, ok := status.Datapoints[dp]; ok {
+					fmt.Fprintf(&b, "S\t%s\t%s\t%s\n", status.Address, dp, formatValue(v))
+				}
+			}
+		}
+		for name, v := range ch.Datapoints {
+			fmt.Fprintf(&b, "D\t%s\t%s\t%s\n", name, valueType(v), formatValue(v))
+		}
+	}
+	return b.String()
+}
+
+// parseRegaValue parses a value as the add-on writes it into a script:
+// true/false, a number or a quoted string.
+func parseRegaValue(s string) interface{} {
+	if s == "true" || s == "false" {
+		return s == "true"
+	}
+	if f, err := strconv.ParseFloat(s, 64); err == nil {
+		return f
+	}
+	return strings.Trim(s, `"`)
+}
+
+func (c *CCU) setDatapoint(values map[string]string) string {
+	ch := c.channelByAddress(values["INTERFACE"], values["ADDRESS"])
+	if ch == nil {
+		return "NOT_FOUND"
+	}
+	if _, ok := ch.Datapoints[values["ATTRIBUTE"]]; !ok {
+		return "NOT_FOUND"
+	}
+	if status := c.channelByAddress(ch.Interface, values["DEVICE_ADDRESS"]+":0"); status != nil && status.Datapoints["UNREACH"] == true {
+		return "UNREACH"
+	}
+	c.setValue(ch, values["ATTRIBUTE"], parseRegaValue(values["VALUE"]))
+	return "OK"
+}
+
+// setValue changes a datapoint and sends the event; c.mu must be held.
+func (c *CCU) setValue(ch *Channel, datapoint string, value interface{}) {
+	ch.Datapoints[datapoint] = value
+	for id, url := range c.callbacks[ch.Interface] {
+		c.events <- callbackEvent{url: url, interfaceID: id, address: ch.Address, datapoint: datapoint, value: value}
+	}
+}
+
+// SetValue changes a datapoint as if the device had reported it, e.g. a
+// window being opened, and sends the event.
+func (c *CCU) SetValue(iface, address, datapoint string, value interface{}) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	ch := c.channelByAddress(iface, address)
+	if ch == nil {
+		return fmt.Errorf("no channel %s %s", iface, address)
+	}
+	c.setValue(ch, datapoint, value)
+	return nil
+}
+
+func (c *CCU) getDeviceProblems() string {
+	var b strings.Builder
+	for _, ch := range c.fixture.Channels {
+		if !strings.HasSuffix(ch.Address, ":0") || ch.Interface == "VirtualDevices" {
+			continue
+		}
+		lowBat := ch.Datapoints["LOW_BAT"] == true || ch.Datapoints["LOWBAT"] == true
+		unreach := ch.Datapoints["UNREACH"] == true
+		if !lowBat && !unreach {
+			continue
+		}
+		device := deviceAddress(ch.Address)
+		roomID, roomName := "", ""
+		if first := c.channelByAddress(ch.Interface, device+":1"); first != nil {
+			for _, room := range c.fixture.Rooms {
+				for _, id := range room.Channels {
+					if id == first.ID && roomID == "" {
+						roomID, roomName = strconv.FormatInt(room.ID, 10), room.Name
+					}
+				}
+			}
+		}
+		name := c.fixture.DeviceNames[device]
+		if name == "" {
+			name = device
+		}
+		fmt.Fprintf(&b, "P\t%s\t%t\t%t\t%s\t%s\t%s\n", device, lowBat, unreach, roomID, roomName, name)
+	}
+	return b.String()
+}
+
+// --- WebUI login --------------------------------------------------------
+
+func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Method string            `json:"method"`
+		Params map[string]string `json:"params"`
+	}
+	if err := jsonDecode(r.Body, &req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	switch req.Method {
+	case "Session.login":
+		c.mu.Lock()
+		defer c.mu.Unlock()
+		for _, user := range c.fixture.Users {
+			if user.Name == req.Params["username"] && user.Password == req.Params["password"] {
+				_, _ = io.WriteString(w, `{"version":"1.1","result":"fake-session","error":null}`)
+				return
+			}
+		}
+		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":501,"message":"invalid credentials"}}`)
+	case "Session.logout":
+		_, _ = io.WriteString(w, `{"version":"1.1","result":true,"error":null}`)
+	default:
+		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"code":404,"message":"unknown method"}}`)
+	}
+}
+
+// --- XML-RPC --------------------------------------------------------------
+
+func (c *CCU) handleXMLRPC(iface string, w http.ResponseWriter, r *http.Request) {
+	method, params, err := decodeCall(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	result, fault := c.call(iface, method, params)
+	w.Header().Set("Content-Type", "text/xml")
+	if fault != "" {
+		_, _ = io.WriteString(w, encodeFault(-1, fault))
+		return
+	}
+	_, _ = io.WriteString(w, encodeResponse(result))
+}
+
+func stringParam(params []interface{}, i int) string {
+	if i < len(params) {
+		s, _ := params[i].(string)
+		return s
+	}
+	return ""
+}
+
+func (c *CCU) call(iface, method string, params []interface{}) (interface{}, string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.calls[iface+" "+method]++
+	data := c.fixture.Interfaces[iface]
+	if data == nil {
+		data = &InterfaceData{}
+		c.fixture.Interfaces[iface] = data
+	}
+
+	switch method {
+	case "system.listMethods":
+		return []string{"init", "ping", "listDevices", "getDeviceDescription", "getParamsetDescription", "getParamset", "putParamset", "setValue"}, ""
+	case "init":
+		url, id := stringParam(params, 0), stringParam(params, 1)
+		if c.callbacks[iface] == nil {
+			c.callbacks[iface] = map[string]string{}
+		}
+		if id == "" {
+			for existing, u := range c.callbacks[iface] {
+				if u == url {
+					delete(c.callbacks[iface], existing)
+				}
+			}
+		} else {
+			c.callbacks[iface][id] = url
+		}
+		return "", ""
+	case "ping":
+		id := stringParam(params, 0)
+		if url, ok := c.callbacks[iface][id]; ok {
+			c.events <- callbackEvent{url: url, interfaceID: id, address: "CENTRAL", datapoint: "PONG", value: id}
+		}
+		return true, ""
+	case "listDevices":
+		return data.Devices, ""
+	case "getDeviceDescription":
+		for _, d := range data.Devices {
+			if d["ADDRESS"] == stringParam(params, 0) {
+				return d, ""
+			}
+		}
+		return nil, "Unknown instance"
+	case "getParamsetDescription":
+		description, ok := data.ParamsetDescriptions[stringParam(params, 0)][stringParam(params, 1)]
+		if !ok {
+			return nil, "Unknown paramset"
+		}
+		return description, ""
+	case "getParamset":
+		address, key := stringParam(params, 0), stringParam(params, 1)
+		if key == "VALUES" {
+			if ch := c.channelByAddress(iface, address); ch != nil {
+				return ch.Datapoints, ""
+			}
+		}
+		if values, ok := data.Paramsets[address][key]; ok {
+			return values, ""
+		}
+		return nil, "Unknown paramset"
+	case "setValue":
+		ch := c.channelByAddress(iface, stringParam(params, 0))
+		if ch == nil || len(params) < 3 {
+			return nil, "Unknown instance"
+		}
+		c.setValue(ch, stringParam(params, 1), params[2])
+		return "", ""
+	case "putParamset":
+		address, key := stringParam(params, 0), stringParam(params, 1)
+		values, _ := params[len(params)-1].(map[string]interface{})
+		if key == "VALUES" {
+			ch := c.channelByAddress(iface, address)
+			if ch == nil {
+				return nil, "Unknown instance"
+			}
+			for name, v := range values {
+				c.setValue(ch, name, v)
+			}
+			return "", ""
+		}
+		if data.Paramsets == nil {
+			data.Paramsets = map[string]map[string]map[string]interface{}{}
+		}
+		if data.Paramsets[address] == nil {
+			data.Paramsets[address] = map[string]map[string]interface{}{}
+		}
+		if data.Paramsets[address][key] == nil {
+			data.Paramsets[address][key] = map[string]interface{}{}
+		}
+		for name, v := range values {
+			data.Paramsets[address][key][name] = v
+		}
+		return "", ""
+	}
+	return nil, "Unknown method " + method
+}
+
+// sendEvents delivers events to the callbacks one at a time, in order, as
+// system.multicall like the CCU.
+func (c *CCU) sendEvents() {
+	client := &http.Client{Timeout: 5 * time.Second}
+	for e := range c.events {
+		call := encodeCall("system.multicall", []interface{}{
+			map[string]interface{}{
+				"methodName": "event",
+				"params":     []interface{}{e.interfaceID, e.address, e.datapoint, e.value},
+			},
+		})
+		resp, err := client.Post(e.url, "text/xml", bytes.NewBufferString(call))
+		if err == nil {
+			resp.Body.Close()
+		}
+	}
+}

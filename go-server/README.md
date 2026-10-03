@@ -90,6 +90,7 @@ DEBUG=false                   # Enable debug logging
 | `REGA_PORT` | 8181 (8183 for `localhost`) | ReGa script port |
 | `RPC_PORT` | 2001 | BidCos-RF XML-RPC port of the CCU |
 | `HMIP_PORT` | 2010 | HmIP-RF XML-RPC port of the CCU |
+| `VIRTUAL_DEVICES_PORT` | 9292 | VirtualDevices (heating groups) XML-RPC port of the CCU |
 | `AUTH_MODE` | ccu | `ccu`: log in once per device with a CCU WebUI user; `none`: no login (everyone on the network can control all devices) |
 | `CCU_WEBUI_URL` | http://`CCU_HOST` | CCU WebUI whose JSON-RPC API (`/api/homematic.cgi`) verifies logins |
 | `AUTH_KEY_FILE` | /usr/local/etc/config/mui-auth.key (CCU), ./mui-auth.key (local) | Key that signs the login tokens; created on first start. Deleting it logs out all devices |
@@ -107,18 +108,20 @@ On the CCU, settings go into `/usr/local/etc/config/mui.conf` (e.g. `AUTH_MODE=n
 
 ## 🔌 WebSocket Protocol
 
-All messages are JSON objects with a `type`. With `AUTH_MODE=ccu`, a connection must log in (`login`) or present a stored token (`auth`) first; everything else is answered with `{"type": "error", "code": "AUTH_REQUIRED"}`.
+All messages are JSON objects with a `type`. Every request may carry a `requestId`, which is echoed in its response or error. With `AUTH_MODE=ccu`, a connection must log in (`login`) or present a stored token (`auth`) first; everything else is answered with `{"type": "error", "code": "AUTH_REQUIRED"}`.
 
 | Request | Response |
 |---------|----------|
-| `{"type": "auth", "token": "…"}` | `{"type": "auth_response", "success", "authRequired", "token"}`: the token is renewed, store the new one |
+| `{"type": "auth", "token": "…"}` | `{"type": "auth_response", "success", "authRequired", "user", "level", "token"}`: the token is renewed, store the new one. `level` is the CCU user level (`admin`, `user`, `guest`, empty if unknown) |
 | `{"type": "login", "username", "password"}` | `auth_response` with a token (valid for a year) or a `code`: `INVALID_CREDENTIALS`, `TOO_MANY_ATTEMPTS`, `CCU_UNREACHABLE` |
 | `{"type": "getRooms", "deviceId"}` | `{"deviceId", "rooms": [{"id", "name"}]}` |
 | `{"type": "getTrades", "deviceId"}` | `{"deviceId", "trades": [{"id", "name"}]}` |
-| `{"type": "getChannels", "deviceId", "roomId" \| "tradeId"}` | `{"deviceId", "roomId" \| "tradeId", "channels": [{"id", "address", "name", "type", "interfaceName", "datapoints", "statusAddress", "status": {"LOW_BAT", "UNREACH"}}]}` |
+| `{"type": "getChannels", "deviceId", "roomId" \| "tradeId" \| "all": true}` | `{"deviceId", "roomId" \| "tradeId" \| "all", "channels": [{"id", "address", "name", "type", "interfaceName", "datapoints", "statusAddress", "status": {"LOW_BAT", "UNREACH"}}]}` |
 | `{"type": "subscribe", "deviceId", "channels": ["<address>"]}` | `subscribe_response`; then `{"event": {"channel", "datapoint", "value"}}` for these channels |
 | `{"type": "setDatapoint", "requestId", "interfaceName", "address", "attribute", "value"}` | `{"type": "setDatapoint_response", "requestId", "success", "code"}`; `code` is `UNREACH` (not sent), `NOT_FOUND`, `INVALID_REQUEST` or `CCU_ERROR` |
 | `{"type": "getDeviceProblems"}` | `{"type": "deviceProblems", "devices": [{"address", "name", "roomId", "roomName", "lowBat", "unreach"}]}` |
+| `{"type": "getParamsetDescription", "interfaceName", "address", "paramsetKey": "VALUES" \| "MASTER"}` | `{"type": "paramsetDescription", "address", "paramsetKey", "description": {"<PARAM>": {"type", "operations", "flags", "min", "max", "default", "unit", "valueList", "special"}}}` (cached per device type and firmware) |
+| `{"type": "getParamset", "interfaceName", "address", "paramsetKey"}` | `{"type": "paramset", "address", "paramsetKey", "values"}` |
 
 ## 🧪 Testing
 
@@ -138,6 +141,21 @@ The script will:
 1. Load settings from `.env` file if present
 2. Build the local binary
 3. Start the server with test configuration
+
+### Fake CCU
+
+`pkg/fakeccu` plays the CCU from a JSON fixture: it answers the add-on's ReGa scripts, the XML-RPC interfaces and the WebUI login, takes writes in memory and sends events back like the real CCU. `integration_test.go` runs the whole server against it; you can also develop without hardware:
+
+```bash
+npm run dev:fake   # fake CCU + server + frontend, log in with Admin / secret
+```
+
+`fixtures/demo-ccu.json` is a small hand-written fixture. To create one from your own CCU (read only; names can be anonymized):
+
+```bash
+cd go-server
+CCU_HOST=192.168.178.26 go run ./cmd/ccu-export -o ../fixtures/my-ccu.json -anonymize
+```
 
 ### Manual Testing
 
