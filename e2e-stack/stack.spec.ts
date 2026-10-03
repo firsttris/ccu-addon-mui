@@ -69,13 +69,13 @@ test('zeigt unbekannte Kanaltypen und Geräte ohne Raum unter „Alle Geräte“
   await expect(page.getByRole('heading', { name: 'Rauchmelder' })).toBeVisible();
   await expect(page.getByText('Rauchmelder Flur')).toBeVisible();
 
-  // Rendered from the paramset description the server reads over XML-RPC
-  const handle = page.getByLabel('Fenstergriff Wohnzimmer');
-  await expect(handle.getByText('OPEN', { exact: true })).toBeVisible();
+  // The window handle as a picture with its state
+  const handle = page.getByRole('group', { name: 'Fenstergriff Wohnzimmer' });
+  await expect(handle.getByRole('status')).toHaveText('Offen');
 
   // Window tilted: the value arrives as event
   await deviceReports('HmIP-RF', '0000DBE9A5C1F2:1', 'STATE', 1);
-  await expect(handle.getByText('TILTED', { exact: true })).toBeVisible();
+  await expect(handle.getByRole('status')).toHaveText('Gekippt');
 });
 
 test('dimmt über den generischen Renderer aus der Paramset-Beschreibung', async ({ page }) => {

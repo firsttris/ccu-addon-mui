@@ -107,7 +107,7 @@ test('zeigt schwache Batterie und nicht erreichbare Geräte an', async ({ page }
   await page.goto('/room/1');
 
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
-  await expect(page.getByRole('status')).toHaveCount(0);
+  await expect(page.getByRole('status').filter({ hasText: /Battery low|Batterie schwach|Not reachable|Nicht erreichbar/ })).toHaveCount(0);
 
   // The maintenance channel must be subscribed to receive status events
   await expect.poll(async () => {
@@ -244,15 +244,12 @@ test('öffnet die Tür nur mit bewussten Gesten', async ({ page }) => {
     .toMatchObject({ attribute: 'LOCK_TARGET_LEVEL', value: 0 });
 });
 
-test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
+test('zeigt Fenster offen, gekippt und geschlossen', async ({ page }) => {
   await page.goto('/room/1');
-
-  // Rendered from the paramset description: the enum value by name
-  const datapoints = page.getByLabel('Fenstergriff Wohnzimmer');
-  await expect(datapoints).toBeVisible();
-  await expect(datapoints.getByText('STATE', { exact: true })).toBeVisible();
-  await expect(datapoints.getByText('OPEN', { exact: true })).toBeVisible();
-  await expect(datapoints.getByText(/^(No|Nein)$/)).toBeVisible();
+  const handle = page.getByRole('group', { name: 'Fenstergriff Wohnzimmer' });
+  await expect(handle.getByRole('status')).toHaveText(/^(Offen|Open)$/);
+  await expect(page.getByRole('group', { name: 'Terrassentür' }).getByRole('status')).toHaveText(/^(Geschlossen|Closed)$/);
+  await expect(page.getByText(/Fenster offen|Windows open/).locator('..')).toContainText('Fenstergriff Wohnzimmer');
 
   await page.evaluate(() => {
     (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
@@ -261,7 +258,29 @@ test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => 
       value: 1,
     });
   });
-  await expect(datapoints.getByText('TILTED', { exact: true })).toBeVisible();
+  await expect(handle.getByRole('status')).toHaveText(/^(Gekippt|Tilted)$/);
+
+  await page.goto('/room/2');
+  await expect(page.getByRole('group', { name: 'Fenstergriff Küche' }).getByRole('status')).toHaveText(/^(Gekippt|Tilted)$/);
+});
+
+test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
+  await page.goto('/room/1');
+
+  // Rendered from the paramset description
+  const datapoints = page.getByLabel('Neigungssensor Garage');
+  await expect(datapoints).toBeVisible();
+  await expect(datapoints.getByText('MOTION', { exact: true })).toBeVisible();
+  await expect(datapoints.getByRole('switch', { name: 'MOTION_DETECTION_ACTIVE' })).toBeChecked();
+
+  await page.evaluate(() => {
+    (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
+      channel: '0000DBE9A5C1F3:1',
+      datapoint: 'MOTION',
+      value: true,
+    });
+  });
+  await expect(datapoints.getByText(/^(Yes|Ja)$/)).toBeVisible();
 
   // Fallback for everything the app can't do yet
   const webUILink = page.getByRole('link', { name: /Open in CCU WebUI|In alter WebUI öffnen/ });

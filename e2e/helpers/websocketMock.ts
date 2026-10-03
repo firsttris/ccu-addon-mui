@@ -61,7 +61,6 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
             STATE: false,
           },
         },
-        // No own control: shown by GenericControl with its values
         {
           id: 102,
           name: 'Fenstergriff Wohnzimmer',
@@ -69,6 +68,23 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
           interfaceName: 'HmIP-RF',
           type: 'ROTARY_HANDLE_TRANSCEIVER',
           datapoints: { ERROR_CODE: 0, STATE: 2, SABOTAGE: false },
+        },
+        {
+          id: 103,
+          name: 'Terrassentür',
+          address: 'BidCos-RF.LEQ0000006:1',
+          interfaceName: 'BidCos-RF',
+          type: 'SHUTTER_CONTACT',
+          datapoints: { ERROR: 0, LOWBAT: false, STATE: false },
+        },
+        // No own control: shown by GenericControl with its values
+        {
+          id: 104,
+          name: 'Neigungssensor Garage',
+          address: '0000DBE9A5C1F3:1',
+          interfaceName: 'HmIP-RF',
+          type: 'ACCELERATION_TRANSCEIVER',
+          datapoints: { MOTION: false, MOTION_DETECTION_ACTIVE: true },
         },
       ],
       '2': [
@@ -109,6 +125,14 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
             SECTION_STATUS: '0',
             STOP: 'false',
           },
+        },
+        {
+          id: 203,
+          name: 'Fenstergriff Küche',
+          address: 'BidCos-RF.LEQ0000007:1',
+          interfaceName: 'BidCos-RF',
+          type: 'ROTARY_HANDLE_SENSOR',
+          datapoints: { ERROR: 0, LOWBAT: false, STATE: 1 },
         },
       ],
     };
@@ -251,6 +275,10 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         STATE: { type: 'ENUM', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 2, valueList: ['CLOSED', 'TILTED', 'OPEN'] },
         SABOTAGE: { type: 'BOOL', operations: 5, flags: 9, tabOrder: 1 },
         ERROR_CODE: { type: 'INTEGER', operations: 5, flags: 1, tabOrder: 2, min: 0, max: 255 },
+      },
+      '0000DBE9A5C1F3:1': {
+        MOTION: { type: 'BOOL', operations: 5, flags: 1, tabOrder: 0 },
+        MOTION_DETECTION_ACTIVE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 1 },
       },
     };
 

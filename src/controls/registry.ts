@@ -6,9 +6,10 @@ import { BlindsControl } from './BlindsControl';
 import { ThermostatControl } from './ThermostatControl';
 import { DoorControl, DoorLockControl } from './DoorControl';
 import { EnergyMeterControl } from './EnergyMeterControl';
+import { WindowControl } from './WindowControl';
 
 // Sections of the dashboard, in the order they are shown
-export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'doors' | 'energy';
+export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'windows' | 'doors' | 'energy';
 
 // Hand-made controls for common channel types. They refine the generic
 // renderer (GenericControl), which every other type falls back to.
@@ -47,4 +48,8 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   DOOR_LOCK_STATE_TRANSMITTER: channelControl('doors', DoorLockControl),
   DOOR_LOCK_TRANSCEIVER: channelControl('doors', DoorLockControl),
   [ChannelType.ENERGIE_METER_TRANSMITTER]: deviceControl('energy', EnergyMeterControl),
+  SHUTTER_CONTACT: channelControl('windows', WindowControl),
+  SHUTTER_CONTACT_TRANSCEIVER: channelControl('windows', WindowControl),
+  ROTARY_HANDLE_SENSOR: channelControl('windows', WindowControl),
+  ROTARY_HANDLE_TRANSCEIVER: channelControl('windows', WindowControl),
 };

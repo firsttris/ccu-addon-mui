@@ -6,6 +6,7 @@ import AppWindowIcon from '~icons/lucide/app-window';
 import { Channel, ChannelType, HeatingClimateControlTransceiverChannel } from '../types/types';
 import { controlOverrides, SectionId } from '../controls/registry';
 import { ControlComponent } from '../components/ControlComponent';
+import { windowState } from '../controls/WindowControl';
 import { useEffects } from '../contexts/EffectsContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
 import { getLocale } from '../paraglide/runtime';
@@ -99,11 +100,8 @@ const windowTypes = new Set([
   'ROTARY_HANDLE_TRANSCEIVER',
 ]);
 
-const isOpenWindow = (channel: Channel) => {
-  if (!windowTypes.has(channel.type)) return false;
-  const state = (channel.datapoints as Record<string, unknown>).STATE;
-  return state === true || (typeof state === 'number' && state > 0);
-};
+const isOpenWindow = (channel: Channel) =>
+  windowTypes.has(channel.type) && ['open', 'tilted'].includes(windowState(channel));
 
 const Stat = ({ icon, tint, label, value }: { icon: ReactNode; tint: string; label: string; value: string }) => (
   <div className="tile-edge flex min-w-0 items-center gap-3 rounded-2xl border bg-card p-4">
@@ -180,6 +178,7 @@ const sectionTitles: Record<SectionId, () => string> = {
   floor: m.SECTION_FLOOR,
   lights: m.SECTION_LIGHTS,
   blinds: m.SECTION_BLINDS,
+  windows: m.SECTION_WINDOWS,
   doors: m.SECTION_DOORS,
   energy: m.SECTION_ENERGY,
 };
@@ -189,6 +188,7 @@ const sectionGrids: Record<SectionId | 'generic', string> = {
   floor: '[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]',
   lights: '[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]',
   blinds: '[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]',
+  windows: '[grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]',
   doors: '[grid-template-columns:repeat(auto-fill,minmax(340px,1fr))]',
   energy: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
   generic: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',

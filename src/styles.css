@@ -221,6 +221,23 @@ html body[data-scroll-locked] {
   }
 }
 
+@keyframes fx-breeze {
+  0% {
+    transform: translateX(-36px);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(72px);
+    opacity: 0;
+  }
+}
+@utility fx-breeze {
+  animation: fx-breeze 2.4s ease-in-out infinite;
+}
+
 @utility fx-breathe {
   animation: fx-breathe 3.6s ease-in-out infinite;
 }

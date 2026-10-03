@@ -312,5 +312,11 @@
   "DOOR_OPENING": "Opening the door …",
   "DOOR_MOVING": "Lock is moving …",
   "HOLD_TO_CONFIRM": "Press and hold",
-  "SLIDE_TO_OPEN": "Slide to open"
+  "SLIDE_TO_OPEN": "Slide to open",
+  "SECTION_WINDOWS": "Windows",
+  "WINDOW_CLOSED": "Closed",
+  "WINDOW_TILTED": "Tilted",
+  "WINDOW_STATE_OPEN": "Open",
+  "WINDOW_UNKNOWN": "State unknown",
+  "SABOTAGE": "Tampering"
 }

@@ -312,5 +312,11 @@
   "DOOR_OPENING": "Tür wird geöffnet …",
   "DOOR_MOVING": "Schloss fährt …",
   "HOLD_TO_CONFIRM": "Gedrückt halten",
-  "SLIDE_TO_OPEN": "Zum Öffnen schieben"
+  "SLIDE_TO_OPEN": "Zum Öffnen schieben",
+  "SECTION_WINDOWS": "Fenster",
+  "WINDOW_CLOSED": "Geschlossen",
+  "WINDOW_TILTED": "Gekippt",
+  "WINDOW_STATE_OPEN": "Offen",
+  "WINDOW_UNKNOWN": "Zustand unbekannt",
+  "SABOTAGE": "Sabotage"
 }
