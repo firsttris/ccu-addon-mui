@@ -1,14 +1,15 @@
 ! Writes one line per active service message (ReGa's service alarms):
 !   S <id> <type> <value> <timestamp> <deviceAddress> <roomId> <roomName> <deviceName>
 ! The type is the datapoint that raised it (UNREACH, STICKY_UNREACH,
-! LOW_BAT, CONFIG_PENDING, SABOTAGE, ERROR_CODE, ...).
+! LOW_BAT, CONFIG_PENDING, SABOTAGE, ERROR_CODE, ...). Read like the WebUI
+! does it (rega/esp/system.fn): LastTriggerID, HSSID, AlOccurrenceTime.
 string alarmId;
 string roomId;
-foreach (alarmId, dom.GetObject(ID_SERVICES).EnumUsedIDs()) {
+foreach (alarmId, dom.GetObject(ID_SERVICES).EnumIDs()) {
     object alarm = dom.GetObject(alarmId);
     if (alarm) {
-        if (alarm.AlState() == asOncoming) {
-            object trigger = dom.GetObject(alarm.AlTriggerDP());
+        if (alarm.IsTypeOf(OT_ALARMDP) && (alarm.AlState() == asOncoming)) {
+            object trigger = dom.GetObject(alarm.LastTriggerID());
             if (trigger) {
                 object channel = dom.GetObject(trigger.Channel());
                 string deviceAddress = "";
@@ -31,7 +32,7 @@ foreach (alarmId, dom.GetObject(ID_SERVICES).EnumUsedIDs()) {
                         }
                     }
                 }
-                WriteLine("S\t" # alarmId # "\t" # trigger.HssType() # "\t" # trigger.Value() # "\t" # alarm.Timestamp() # "\t" # deviceAddress # "\t" # firstRoomId # "\t" # firstRoomName # "\t" # deviceName);
+                WriteLine("S\t" # alarmId # "\t" # trigger.HSSID() # "\t" # trigger.Value() # "\t" # alarm.AlOccurrenceTime() # "\t" # deviceAddress # "\t" # firstRoomId # "\t" # firstRoomName # "\t" # deviceName);
             }
         }
     }

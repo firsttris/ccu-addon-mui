@@ -18,6 +18,13 @@ if (list && sv) {
     sv.State({{INITIAL}});
     sv.Internal(false);
     sv.Visible(true);
+    ! An alarm only raises alarms as a system alarm with a condition,
+    ! like the WebUI creates it
+    if (sv.IsTypeOf(OT_ALARMDP)) {
+        sv.AlType(atSystem);
+        sv.AlArm(true);
+        sv.AlSetBinaryCondition();
+    }
     dom.RTUpdate(false);
     Write("OK\t" # sv.ID());
 } else {
