@@ -120,6 +120,17 @@ func export(cfg *config.Config, withRPC bool) (*fakeccu.Fixture, error) {
 	for _, ch := range all {
 		add(ch)
 	}
+	// The CCU's own virtual keys, which the channel list leaves out
+	keys, err := regaClient.GetVirtualKeys()
+	if err != nil {
+		return nil, fmt.Errorf("virtual keys: %w", err)
+	}
+	for _, key := range keys {
+		add(rega.Channel{
+			ID: key.ID, Address: key.Address, Type: "VIRTUAL_KEY", InterfaceName: key.InterfaceName, Name: key.Name,
+			Datapoints: map[string]interface{}{"PRESS_SHORT": false, "PRESS_LONG": false},
+		})
+	}
 	for _, address := range order {
 		fixture.Channels = append(fixture.Channels, *channels[address])
 	}

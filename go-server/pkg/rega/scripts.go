@@ -128,6 +128,7 @@ func Scripts() map[string]string {
 		"clear_history":               clearHistoryScript,
 		"set_user_password":           setUserPasswordScript,
 		"get_device_programs":         getDeviceProgramsScript,
+		"get_virtual_keys":            getVirtualKeysScript,
 	}
 }
 
@@ -190,3 +191,6 @@ var setUserPasswordScript string
 
 //go:embed scripts/get_device_programs.tcl
 var getDeviceProgramsScript string
+
+//go:embed scripts/get_virtual_keys.tcl
+var getVirtualKeysScript string

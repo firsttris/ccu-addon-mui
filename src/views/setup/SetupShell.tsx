@@ -10,6 +10,7 @@ import HomeIcon from '~icons/lucide/house';
 import BracesIcon from '~icons/lucide/braces';
 import PlayIcon from '~icons/lucide/play';
 import HistoryIcon from '~icons/lucide/history';
+import KeyboardIcon from '~icons/lucide/keyboard';
 import ShieldIcon from '~icons/lucide/shield-check';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useInbox } from '../../queries';
@@ -126,6 +127,10 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
             <Link to="/programs" className={navLink}>
               <PlayIcon />
               {m.PROGRAMS()}
+            </Link>
+            <Link to="/virtual-keys" className={navLink}>
+              <KeyboardIcon />
+              {m.VKEYS_TITLE()}
             </Link>
             <Link to="/history" className={navLink}>
               <HistoryIcon />

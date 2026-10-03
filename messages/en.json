@@ -688,5 +688,12 @@
   "PW_WRONG_CURRENT": "The current password is wrong",
   "PW_CHANGED": "Password changed",
   "PW_HINT": "Allowed are letters without umlauts, digits and . = ! $ ( ) : ; # * - . Other devices of this user are logged out.",
-  "DEVICE_PROGRAMS_NONE": "No program uses this device."
+  "DEVICE_PROGRAMS_NONE": "No program uses this device.",
+  "VKEYS_TITLE": "Virtual keys",
+  "VKEYS_HINT": "The CCU's own keys: programs react to them like to a wall button. Press them short or long here.",
+  "VKEYS_SHOW_ALL": "Show all {count} keys, also unnamed ones without a program",
+  "VKEYS_PROGRAMS": "{count} program(s)",
+  "VKEYS_SHORT": "Short",
+  "VKEYS_LONG": "Long",
+  "VKEYS_PRESSED": "{name} pressed"
 }

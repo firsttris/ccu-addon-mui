@@ -447,6 +447,39 @@
       "datapoints": {
         "WEEK_PROGRAM_CHANNEL_LOCKS": 0
       }
+    },
+    {
+      "id": 1101,
+      "address": "BidCoS-RF:1",
+      "type": "VIRTUAL_KEY",
+      "interface": "BidCos-RF",
+      "name": "Alles aus",
+      "datapoints": {
+        "PRESS_SHORT": false,
+        "PRESS_LONG": false
+      }
+    },
+    {
+      "id": 1102,
+      "address": "BidCoS-RF:2",
+      "type": "VIRTUAL_KEY",
+      "interface": "BidCos-RF",
+      "name": "HM-RCV-50 BidCoS-RF:2",
+      "datapoints": {
+        "PRESS_SHORT": false,
+        "PRESS_LONG": false
+      }
+    },
+    {
+      "id": 1103,
+      "address": "HmIP-RCV-1:1",
+      "type": "VIRTUAL_KEY",
+      "interface": "HmIP-RF",
+      "name": "Gute Nacht",
+      "datapoints": {
+        "PRESS_SHORT": false,
+        "PRESS_LONG": false
+      }
     }
   ],
   "deviceNames": {

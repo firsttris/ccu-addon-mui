@@ -688,5 +688,12 @@
   "PW_WRONG_CURRENT": "Das aktuelle Passwort stimmt nicht",
   "PW_CHANGED": "Passwort geändert",
   "PW_HINT": "Erlaubt sind Buchstaben ohne Umlaute, Ziffern und . = ! $ ( ) : ; # * - . Andere Geräte mit diesem Benutzer werden abgemeldet.",
-  "DEVICE_PROGRAMS_NONE": "Kein Programm verwendet dieses Gerät."
+  "DEVICE_PROGRAMS_NONE": "Kein Programm verwendet dieses Gerät.",
+  "VKEYS_TITLE": "Virtuelle Taster",
+  "VKEYS_HINT": "Die Taster der CCU selbst: Programme reagieren auf sie wie auf einen Wandtaster. Hier lassen sie sich kurz oder lang drücken.",
+  "VKEYS_SHOW_ALL": "Alle {count} Taster zeigen, auch unbenannte ohne Programm",
+  "VKEYS_PROGRAMS": "{count} Programm(e)",
+  "VKEYS_SHORT": "Kurz",
+  "VKEYS_LONG": "Lang",
+  "VKEYS_PRESSED": "{name} gedrückt"
 }

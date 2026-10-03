@@ -1498,3 +1498,25 @@ func TestStackDevicePrograms(t *testing.T) {
 		t.Fatalf("expected INVALID_REQUEST, got %v", m)
 	}
 }
+
+func TestStackVirtualKeys(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "getVirtualKeys", "requestId": "k1"})
+	keys := receive(t, conn, byRequestID("k1"))["keys"].([]interface{})
+	if len(keys) != 3 || keys[0].(map[string]interface{})["name"] != "Alles aus" {
+		t.Fatalf("unexpected keys: %v", keys)
+	}
+	// Not among all devices
+	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "requestId": "c", "all": true})
+	for _, ch := range receive(t, conn, byRequestID("c"))["channels"].([]interface{}) {
+		if c := ch.(map[string]interface{}); strings.HasPrefix(c["address"].(string), "BidCoS-RF:") {
+			t.Fatalf("virtual key listed among all channels: %v", c)
+		}
+	}
+	send(t, conn, message{"type": "setDatapoint", "requestId": "p", "interfaceName": "BidCos-RF", "address": "BidCoS-RF:1", "attribute": "PRESS_SHORT", "value": true})
+	if m := receive(t, conn, byRequestID("p")); m["success"] != true {
+		t.Fatalf("pressing the virtual key failed: %v", m)
+	}
+	_ = ccu
+}
