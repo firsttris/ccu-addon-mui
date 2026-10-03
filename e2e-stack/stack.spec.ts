@@ -867,3 +867,19 @@ test('führt den Funktionstest eines Geräts aus', async ({ page }) => {
   await section.getByRole('button', { name: 'Funktionstest starten' }).click();
   await expect(section.getByRole('status')).toContainText('Das Gerät hat um', { timeout: 10000 });
 });
+
+test('speichert ein Programm als neues Programm', async ({ page }) => {
+  await login(page);
+  await page.goto('/program/1201');
+  await expect(page.getByLabel('Name des Programms')).toHaveValue('Rollläden abends schließen');
+  await page.getByRole('button', { name: 'Als neues Programm speichern' }).click();
+  await expect(page.getByText('Als neues Programm gespeichert')).toBeVisible();
+  await expect(page).not.toHaveURL(/\/program\/1201$/);
+  await expect(page.getByLabel('Name des Programms')).toHaveValue('Rollläden abends schließen (Kopie)');
+
+  // Remove the copy again
+  await page.getByRole('button', { name: 'Löschen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
+  await expect(page).toHaveURL(/\/programs$/);
+  await expect(page.getByText('Rollläden abends schließen (Kopie)')).toHaveCount(0);
+});
