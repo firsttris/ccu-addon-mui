@@ -71,6 +71,7 @@ export const SwitchControl = ({ channel }: ControlProps) => {
           onClick={toggle}
           aria-pressed={on}
           aria-label={`${name}: ${state}`}
+          data-tile="switch"
           className="press relative flex flex-1 flex-col items-start justify-between overflow-hidden px-3.5 pt-3.5 pb-3 text-left"
         >
           <span className="flex w-full items-center justify-between">
@@ -123,6 +124,7 @@ export const SwitchControl = ({ channel }: ControlProps) => {
         onClick={toggle}
         aria-pressed={on}
         aria-label={`${name}: ${state}`}
+        data-tile="light"
         className="press relative flex flex-1 flex-col items-start justify-end overflow-hidden px-3.5 pb-3 text-left"
       >
         <PendantLamp level={on ? 1 : 0} changes={changes} />

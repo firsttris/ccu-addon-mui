@@ -103,6 +103,9 @@ interface BaseChannel {
   // Ids of the rooms and trades the channel belongs to
   rooms?: number[];
   trades?: number[];
+  // Tile chosen in the setup area (stored in the CCU); unset lets the app
+  // decide from the name and trade
+  tile?: 'light' | 'switch';
 }
 
 export interface SwitchVirtualReceiverChannel extends BaseChannel {

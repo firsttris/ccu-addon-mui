@@ -499,6 +499,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleElevate(client, message)
 	case "rename":
 		s.handleRename(client, message)
+	case "setChannelTile":
+		s.handleSetChannelTile(client, message)
 	case "getSystemInfo":
 		s.handleSystemInfo(client, requestID)
 	case "listSessions", "revokeSession", "logout":
@@ -1927,4 +1929,25 @@ func (s *Server) handleFavorites(client *Client, msgType string, message []byte)
 		return
 	}
 	s.sendJSON(client, response)
+}
+
+// handleSetChannelTile stores the tile shown for a channel (light or
+// switch, empty for the app's choice) in the CCU, for every device.
+// Setup, for administrators only.
+func (s *Server) handleSetChannelTile(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		ID        int64  `json:"id"`
+		Tile      string `json:"tile"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	s.configure(client, msg.RequestID, audit.Entry{Action: "setChannelTile", Target: fmt.Sprintf("channel %d", msg.ID), Value: msg.Tile},
+		func() (interface{}, string, error) {
+			// The audit log names the channel; there is no previous value
+			result, _, err := s.regaClient.SetChannelTile(msg.ID, msg.Tile)
+			return nil, result, err
+		})
 }

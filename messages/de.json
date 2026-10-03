@@ -442,5 +442,11 @@
   "TIME_NOT_ACTIVE": "nicht aktiv",
   "TIME_PERMANENT": "dauerhaft",
   "TIME_CUSTOM": "Eigener Wert …",
-  "TIME_UNIT": "Einheit"
+  "TIME_UNIT": "Einheit",
+  "START_PAGE": "Startseite",
+  "START_PAGE_LAST": "Zuletzt geöffnet",
+  "TILE": "Kachel",
+  "TILE_AUTO": "Automatisch (nach Name und Gewerk)",
+  "TILE_LIGHT": "Lampe",
+  "TILE_SWITCH": "Schalter"
 }

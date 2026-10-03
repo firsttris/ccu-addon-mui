@@ -4,6 +4,10 @@ import { useToast } from '../../contexts/ToastContext';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { m } from '../../paraglide/messages';
 import { Input } from '../../components/ui/input';
+import { NativeSelect } from '../../components/ui/select';
+
+// Channel types shown as a lamp or a plain switch (SwitchControl)
+const SWITCH_TYPES = new Set(['SWITCH_VIRTUAL_RECEIVER', 'SWITCH']);
 
 const Row = ({ children }: { children: ReactNode }) => (
   <div className="flex flex-wrap items-center gap-2">{children}</div>
@@ -68,6 +72,23 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
             name={channel.name}
             onRename={(name) => run({ type: 'rename', address: channel.address, name }, m.RENAMED())}
           />
+          {SWITCH_TYPES.has(channel.type) && (
+            <label className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-xs text-muted-foreground">{m.TILE()}</span>
+              <NativeSelect
+                className="h-8 w-auto md:text-[13px]"
+                aria-label={`${m.TILE()} ${channel.address}`}
+                value={channel.tile ?? ''}
+                onChange={(event) =>
+                  run({ type: 'setChannelTile', id: channel.id, tile: event.target.value as '' | 'light' | 'switch' }, m.SAVED())
+                }
+              >
+                <option value="">{m.TILE_AUTO()}</option>
+                <option value="light">{m.TILE_LIGHT()}</option>
+                <option value="switch">{m.TILE_SWITCH()}</option>
+              </NativeSelect>
+            </label>
+          )}
           {[
             { legend: m.ROOMS(), groups: rooms, member: channel.rooms ?? [], list: 'rooms' as const },
             { legend: m.TRADES(), groups: trades, member: channel.trades ?? [], list: 'trades' as const },

@@ -334,6 +334,13 @@ func (c *CCU) runScript(body string) (string, error) {
 			return c.getFavorites(values["USERNAME"]), nil
 		case "favorite_change":
 			return c.changeFavorite(values), nil
+		case "set_channel_tile":
+			id, _ := strconv.ParseInt(values["ID"], 10, 64)
+			if ch := c.channelByID(id); ch != nil {
+				ch.Tile = values["TILE"]
+				return "OK\t" + ch.Name, nil
+			}
+			return "NOT_FOUND", nil
 		case "get_user_level":
 			for _, user := range c.fixture.Users {
 				if user.Name == values["USERNAME"] {
@@ -541,6 +548,9 @@ func (c *CCU) getChannels(objectID string) string {
 	for _, ch := range channels {
 		fmt.Fprintf(&b, "C\t%d\t%s\t%s\t%s\t%s\n", ch.ID, ch.Address, ch.Type, ch.Interface, ch.Name)
 		fmt.Fprintf(&b, "M\t%s\t%s\n", memberOf(c.fixture.Rooms, ch.ID), memberOf(c.fixture.Trades, ch.ID))
+		if ch.Tile != "" {
+			fmt.Fprintf(&b, "T\t%s\n", ch.Tile)
+		}
 		if status := c.channelByAddress(ch.Interface, deviceAddress(ch.Address)+":0"); status != nil {
 			for _, dp := range []string{"LOW_BAT", "LOWBAT", "UNREACH"} {
 				if v, ok := status.Datapoints[dp]; ok {

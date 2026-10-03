@@ -72,7 +72,8 @@ export type ServerMessage =
   | RenameFavoriteResponse
   | DeleteFavoriteResponse
   | AddFavoriteItemResponse
-  | RemoveFavoriteItemResponse;
+  | RemoveFavoriteItemResponse
+  | SetChannelTileResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -129,6 +130,7 @@ export interface Protocol {
   deleteFavorite: DeleteFavoriteCall;
   addFavoriteItem: AddFavoriteItemCall;
   removeFavoriteItem: RemoveFavoriteItemCall;
+  setChannelTile: SetChannelTileCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -247,6 +249,10 @@ export interface Channel {
   status?: ChannelStatus;
   rooms?: number[];
   trades?: number[];
+  /**
+   * Tile chosen in the add-on (ReGa metadata)
+   */
+  tile?: "light" | "switch";
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1799,6 +1805,36 @@ export interface RemoveFavoriteItemRequest {
  */
 export interface RemoveFavoriteItemResponse {
   type: "removeFavoriteItem_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetChannelTileCall".
+ */
+export interface SetChannelTileCall {
+  request: SetChannelTileRequest;
+  response: SetChannelTileResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetChannelTileRequest".
+ */
+export interface SetChannelTileRequest {
+  type: "setChannelTile";
+  requestId?: string;
+  id: number;
+  /**
+   * The tile shown for the channel; empty lets the app decide
+   */
+  tile: "" | "light" | "switch";
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetChannelTileResponse".
+ */
+export interface SetChannelTileResponse {
+  type: "setChannelTile_response";
   requestId?: string;
   success: boolean;
 }
