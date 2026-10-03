@@ -1,47 +1,19 @@
-import styled from '@emotion/styled';
 import { ChannelGroup } from '../components/ChannelGroup';
 import { useChannels } from '../queries';
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding-top: 60px;
-
-  @media (max-width: 400px) {
-    padding-top: 80px;
-  }
-`;
-
-const OuterContainer = styled.div`
-  margin: 15px;
-
-  @media (max-width: 400px) {
-    margin: 5px;
-  }
-`;
-
-const List = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
 
 // All devices, also those not assigned to a room or trade
 export const AllDevices = () => {
   const { channelsByType } = useChannels({ all: true });
 
   return (
-    <OuterContainer>
-      <Container>
-        <List>
+    <div className="m-[15px] max-[400px]:m-[5px]">
+      <div className="flex flex-col gap-[10px] max-w-[1280px] mx-auto pt-[60px] max-[400px]:pt-[80px]">
+        <ul className="list-none p-0 m-0">
           {channelsByType.map(([channelType, channels]) => (
             <ChannelGroup key={channelType} channelType={channelType} channels={channels} />
           ))}
-        </List>
-      </Container>
-    </OuterContainer>
+        </ul>
+      </div>
+    </div>
   );
 };

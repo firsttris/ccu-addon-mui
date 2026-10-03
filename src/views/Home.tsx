@@ -1,108 +1,37 @@
+import { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
-import styled from '@emotion/styled';
 import { useDeviceProblems } from '../queries';
 import { DeviceProblem } from '../types/types';
 import { WebUILink } from '../components/WebUILink';
 import { m } from '../paraglide/messages';
 
-const Container = styled.div`
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 16px;
-  padding-top: 76px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-`;
+const MenuItem = ({ to, children }: { to: '/rooms' | '/trades' | '/devices' | '/sysvars' | '/programs'; children: ReactNode }) => (
+  <Link
+    to={to}
+    className="flex items-center p-4 border border-border rounded-lg no-underline text-text bg-surface transition-[background] duration-200 ease-[ease] hover:bg-hover"
+  >
+    {children}
+  </Link>
+);
 
-const Title = styled.h1`
-  text-align: center;
-  margin: 0 0 20px;
-  color: ${(props) => props.theme.colors.text};
-`;
+const MenuText = ({ children }: { children: ReactNode }) => (
+  <span className="text-[20px] font-semibold ml-4">{children}</span>
+);
 
-const MenuItem = styled(Link)`
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 8px;
-  text-decoration: none;
-  color: ${(props) => props.theme.colors.text};
-  background: ${(props) => props.theme.colors.surface};
-  transition: background 0.2s;
-
-  &:hover {
-    background: ${(props) => props.theme.colors.hover};
-  }
-`;
-
-const MenuText = styled.span`
-  font-size: 20px;
-  font-weight: 600;
-  margin-left: 16px;
-`;
-
-const SectionTitle = styled.h2`
-  margin: 12px 0 0;
-  font-size: 18px;
-  color: ${(props) => props.theme.colors.text};
-`;
-
-const ProblemList = styled.ul`
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 8px;
-  overflow: hidden;
-`;
-
-const ProblemItem = styled.li`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  color: ${(props) => props.theme.colors.text};
-  background: ${(props) => props.theme.colors.surface};
-  border-bottom: 1px solid ${(props) => props.theme.colors.border};
-
-  &:last-of-type {
-    border-bottom: none;
-  }
-
-  a {
-    color: inherit;
-  }
-`;
-
-const ProblemName = styled.span`
-  flex: 1;
-  min-width: 0;
-  font-weight: 600;
-`;
-
-const Badge = styled('span', {
-  shouldForwardProp: (prop) => prop !== 'severity',
-})<{ severity: 'warning' | 'error' }>`
-  flex-shrink: 0;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  background: ${({ severity }) =>
-    severity === 'error' ? 'rgba(244, 67, 54, 0.2)' : 'rgba(255, 193, 7, 0.25)'};
-`;
-
-const AllGood = styled.p`
-  margin: 0;
-  color: ${(props) => props.theme.colors.textSecondary};
-`;
+const Badge = ({ severity, children }: { severity: 'warning' | 'error'; children: ReactNode }) => (
+  <span
+    className={`shrink-0 px-2 py-[2px] rounded-[10px] text-[12px] font-semibold ${
+      severity === 'error' ? 'bg-[rgba(244,67,54,0.2)]' : 'bg-[rgba(255,193,7,0.25)]'
+    }`}
+  >
+    {children}
+  </span>
+);
 
 const ProblemRow = ({ problem }: { problem: DeviceProblem }) => {
   return (
-    <ProblemItem>
-      <ProblemName>
+    <li className="flex items-center gap-3 py-[10px] px-4 text-text bg-surface border-b border-border last-of-type:border-b-0 [&_a]:text-inherit">
+      <span className="flex-1 min-w-0 font-semibold">
         {problem.name}
         <br />
         <small style={{ fontWeight: 400 }}>
@@ -116,10 +45,10 @@ const ProblemRow = ({ problem }: { problem: DeviceProblem }) => {
           {' · '}
           <WebUILink />
         </small>
-      </ProblemName>
+      </span>
       {problem.unreach && <Badge severity="error">📡 {m.UNREACH()}</Badge>}
       {problem.lowBat && <Badge severity="warning">🪫 {m.LOW_BAT()}</Badge>}
-    </ProblemItem>
+    </li>
   );
 };
 
@@ -127,8 +56,8 @@ export const Home = () => {
   const { data: deviceProblems } = useDeviceProblems();
 
   return (
-    <Container>
-      <Title>CCU Addon MUI</Title>
+    <div className="max-w-[1280px] mx-auto p-4 pt-[76px] flex flex-col gap-5">
+      <h1 className="text-center mt-0 mx-0 mb-5 text-text">CCU Addon MUI</h1>
       <MenuItem to="/rooms">
         <span role="img" aria-hidden>
           🏠
@@ -162,18 +91,21 @@ export const Home = () => {
 
       {deviceProblems !== undefined && (
         <>
-          <SectionTitle>{m.DEVICE_PROBLEMS()}</SectionTitle>
+          <h2 className="mt-3 mx-0 mb-0 text-[18px] text-text">{m.DEVICE_PROBLEMS()}</h2>
           {deviceProblems.length === 0 ? (
-            <AllGood>✅ {m.NO_DEVICE_PROBLEMS()}</AllGood>
+            <p className="m-0 text-text-secondary">✅ {m.NO_DEVICE_PROBLEMS()}</p>
           ) : (
-            <ProblemList aria-label={m.DEVICE_PROBLEMS()}>
+            <ul
+              aria-label={m.DEVICE_PROBLEMS()}
+              className="list-none m-0 p-0 border border-border rounded-lg overflow-hidden"
+            >
               {deviceProblems.map((problem) => (
                 <ProblemRow key={problem.address} problem={problem} />
               ))}
-            </ProblemList>
+            </ul>
           )}
         </>
       )}
-    </Container>
+    </div>
   );
 };

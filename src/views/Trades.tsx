@@ -1,40 +1,15 @@
 import { useNavigate } from '@tanstack/react-router';
-import styled from '@emotion/styled';
 import { ListItem } from '../components/ChannelGroup';
 import { useTrades } from '../queries';
-
-const Container = styled.div`
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 16px;
-  padding-top: 60px;
-`;
-
-const List = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
-
-export const ListItemText = styled.p`
-  color: ${props => props.theme.colors.text};
-  max-width: 300px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-weight: 600;
-  margin: 10px 0;
-  font-size: 20px;
-  margin-left: 20px;
-`;
+import { ListItemText } from './Rooms';
 
 export const Trades = () => {
   const navigate = useNavigate();
   const { data: trades = [] } = useTrades();
 
   return (
-    <Container>
-      <List>
+    <div className="max-w-[1280px] mx-auto p-4 pt-[60px]">
+      <ul className="list-none p-0 m-0">
         {trades.map((trade) => (
           <ListItem
             key={trade.id}
@@ -48,7 +23,7 @@ export const Trades = () => {
             <ListItemText>{trade.name}</ListItemText>
           </ListItem>
         ))}
-      </List>
-    </Container>
+      </ul>
+    </div>
   );
 };

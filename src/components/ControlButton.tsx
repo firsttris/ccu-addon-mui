@@ -1,29 +1,9 @@
-import styled from '@emotion/styled';
+import { ButtonHTMLAttributes } from 'react';
 
-export const ControlButton = styled.button`
-  background: transparent;
-  border: 2px solid ${props => props.theme.colors.border};
-  border-radius: 50%;
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: ${props => props.theme.colors.text};
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: ${props => props.theme.colors.hover};
-    border-color: #03A9F4;
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  svg {
-    width: 24px;
-    height: 24px;
-  }
-`;
+// Round button with an icon, e.g. up/stop/down of a blind
+export const ControlButton = ({ className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) => (
+  <button
+    className={`bg-transparent border-2 border-solid border-border rounded-full w-14 h-14 flex items-center justify-center cursor-pointer text-text transition-all duration-200 ease-[ease] hover:bg-hover hover:border-[#03A9F4] active:scale-95 [&_svg]:w-6 [&_svg]:h-6 ${className}`}
+    {...props}
+  />
+);
