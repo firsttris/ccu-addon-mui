@@ -687,5 +687,6 @@
   "PW_REQUIRED": "Bitte ein neues Passwort eingeben",
   "PW_WRONG_CURRENT": "Das aktuelle Passwort stimmt nicht",
   "PW_CHANGED": "Passwort geändert",
-  "PW_HINT": "Erlaubt sind Buchstaben ohne Umlaute, Ziffern und . = ! $ ( ) : ; # * - . Andere Geräte mit diesem Benutzer werden abgemeldet."
+  "PW_HINT": "Erlaubt sind Buchstaben ohne Umlaute, Ziffern und . = ! $ ( ) : ; # * - . Andere Geräte mit diesem Benutzer werden abgemeldet.",
+  "DEVICE_PROGRAMS_NONE": "Kein Programm verwendet dieses Gerät."
 }

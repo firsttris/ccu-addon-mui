@@ -96,7 +96,8 @@ export type ServerMessage =
   | GetAddonsResponse
   | AddonActionResponse
   | CheckAddonUpdateResponse
-  | ChangePasswordResponse;
+  | ChangePasswordResponse
+  | GetDeviceProgramsResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -177,6 +178,7 @@ export interface Protocol {
   addonAction: AddonActionCall;
   checkAddonUpdate: CheckAddonUpdateCall;
   changePassword: ChangePasswordCall;
+  getDevicePrograms: GetDeviceProgramsCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2744,6 +2746,46 @@ export interface ChangePasswordResponse {
   type: "changePassword_response";
   requestId?: string;
   success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceProgramsCall".
+ */
+export interface GetDeviceProgramsCall {
+  request: GetDeviceProgramsRequest;
+  response: GetDeviceProgramsResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceProgramsRequest".
+ */
+export interface GetDeviceProgramsRequest {
+  type: "getDevicePrograms";
+  requestId?: string;
+  /**
+   * the device address
+   */
+  address: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceProgramsResponse".
+ */
+export interface GetDeviceProgramsResponse {
+  type: "getDevicePrograms_response";
+  requestId?: string;
+  programs: ProgramUsage[];
+}
+/**
+ * A program using channels of a device (ChnEnumDPUsagePrograms)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ProgramUsage".
+ */
+export interface ProgramUsage {
+  id: number;
+  name: string;
+  channels: string[];
 }
 /**
  * Sent first on every connection

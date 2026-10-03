@@ -229,6 +229,9 @@
     },
     "changePassword": {
       "$ref": "#/definitions/ChangePasswordCall"
+    },
+    "getDevicePrograms": {
+      "$ref": "#/definitions/GetDeviceProgramsCall"
     }
   },
   "required": [
@@ -306,7 +309,8 @@
     "getAddons",
     "addonAction",
     "checkAddonUpdate",
-    "changePassword"
+    "changePassword",
+    "getDevicePrograms"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2760,6 +2764,9 @@
         },
         {
           "$ref": "#/definitions/ChangePasswordResponse"
+        },
+        {
+          "$ref": "#/definitions/GetDeviceProgramsResponse"
         }
       ]
     },
@@ -6528,6 +6535,90 @@
         "response"
       ],
       "additionalProperties": false
+    },
+    "GetDeviceProgramsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDevicePrograms"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string",
+          "description": "the device address"
+        }
+      },
+      "required": [
+        "type",
+        "address"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceProgramsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDevicePrograms_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "programs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProgramUsage"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "programs"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceProgramsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetDeviceProgramsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetDeviceProgramsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "ProgramUsage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "channels"
+      ],
+      "description": "A program using channels of a device (ChnEnumDPUsagePrograms)",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }

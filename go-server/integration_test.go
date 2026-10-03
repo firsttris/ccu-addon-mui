@@ -1481,3 +1481,20 @@ func TestStackChangePassword(t *testing.T) {
 		t.Fatalf("expected FORBIDDEN, got %v", m)
 	}
 }
+
+func TestStackDevicePrograms(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "getDevicePrograms", "requestId": "d1", "address": "LEQ0000002"})
+	programs := receive(t, conn, byRequestID("d1"))["programs"].([]interface{})
+	if len(programs) != 1 {
+		t.Fatalf("unexpected programs: %v", programs)
+	}
+	if p := programs[0].(map[string]interface{}); p["id"] != 1201.0 || p["channels"].([]interface{})[0] != "LEQ0000002:1" {
+		t.Fatalf("unexpected program: %v", p)
+	}
+	send(t, conn, message{"type": "getDevicePrograms", "requestId": "d2", "address": "x\"; system.Exec(\""})
+	if m := receive(t, conn, byRequestID("d2")); m["code"] != "INVALID_REQUEST" {
+		t.Fatalf("expected INVALID_REQUEST, got %v", m)
+	}
+}
