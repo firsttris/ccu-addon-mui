@@ -156,6 +156,14 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         type: 'KEYMATIC',
         datapoints: { ERROR: 0, INHIBIT: false, OPEN: false, RELOCK_DELAY: 0, STATE: false, STATE_UNCERTAIN: false },
       },
+      {
+        id: 506,
+        name: 'Kellertür',
+        address: '002A1BE9A3C4D5:1',
+        interfaceName: 'HmIP-RF',
+        type: 'DOOR_LOCK_STATE_TRANSMITTER',
+        datapoints: { ACTIVITY_STATE: 3, LOCK_STATE: 2, LOCK_TARGET_LEVEL: 1, PROCESS: 0, SECTION: 0, SECTION_STATUS: 0, WP_OPTIONS: 0 },
+      },
     ];
 
     const tradeChannels: Record<string, AnyPayload[]> = {

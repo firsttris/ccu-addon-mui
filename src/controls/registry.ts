@@ -4,7 +4,7 @@ import { FloorControl } from './FloorControl';
 import { SwitchControl } from './SwitchControl';
 import { BlindsControl } from './BlindsControl';
 import { ThermostatControl } from './ThermostatControl';
-import { DoorControl } from './DoorControl';
+import { DoorControl, DoorLockControl } from './DoorControl';
 import { EnergyMeterControl } from './EnergyMeterControl';
 
 // Sections of the dashboard, in the order they are shown
@@ -20,7 +20,7 @@ export type ControlOverride = (
   | { per: 'device'; component: ComponentType<{ channels: Channel[] }> }
 ) & { section: SectionId };
 
-const channelControl = <T extends KnownChannel>(
+const channelControl = <T extends Channel>(
   section: SectionId,
   component: ComponentType<{ channel: T }>,
 ): ControlOverride => ({
@@ -44,5 +44,7 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   [ChannelType.SWITCH_VIRTUAL_RECEIVER]: channelControl('lights', SwitchControl),
   [ChannelType.BLIND_VIRTUAL_RECEIVER]: channelControl('blinds', BlindsControl),
   [ChannelType.KEYMATIC]: channelControl('doors', DoorControl),
+  DOOR_LOCK_STATE_TRANSMITTER: channelControl('doors', DoorLockControl),
+  DOOR_LOCK_TRANSCEIVER: channelControl('doors', DoorLockControl),
   [ChannelType.ENERGIE_METER_TRANSMITTER]: deviceControl('energy', EnergyMeterControl),
 };

@@ -61,8 +61,6 @@
   "DEVICE_PROBLEMS": "Geräte mit Problemen",
   "NO_DEVICE_PROBLEMS": "Alle Geräte erreichbar, keine schwachen Batterien",
   "NO_ROOM": "Kein Raum",
-  "CONFIRM_UNLOCK": "Tür wirklich entsperren?",
-  "CONFIRM_OPEN": "Tür wirklich öffnen?",
   "YES": "Ja",
   "NO": "Nein",
   "CANCEL": "Abbrechen",
@@ -309,5 +307,10 @@
   "BACKUP_WAIT": "Die CCU packt alle Daten zusammen. Das kann einige Minuten dauern.",
   "BACKUP_CREATED": "Backup erstellt",
   "BACKUP_FAILED": "Backup fehlgeschlagen",
-  "BACKUP_TIMEOUT": "Die CCU hat zu lange gebraucht. Bitte versuche es noch einmal oder erstelle das Backup in der WebUI."
+  "BACKUP_TIMEOUT": "Die CCU hat zu lange gebraucht. Bitte versuche es noch einmal oder erstelle das Backup in der WebUI.",
+  "DOOR_ERROR": "Störung am Schloss",
+  "DOOR_OPENING": "Tür wird geöffnet …",
+  "DOOR_MOVING": "Schloss fährt …",
+  "HOLD_TO_CONFIRM": "Gedrückt halten",
+  "SLIDE_TO_OPEN": "Zum Öffnen schieben"
 }

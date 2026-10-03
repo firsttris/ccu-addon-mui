@@ -189,7 +189,7 @@ const sectionGrids: Record<SectionId | 'generic', string> = {
   floor: '[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]',
   lights: '[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]',
   blinds: '[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]',
-  doors: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
+  doors: '[grid-template-columns:repeat(auto-fill,minmax(340px,1fr))]',
   energy: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
   generic: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
 };
@@ -204,26 +204,55 @@ const groupByDevice = (channels: Channel[]) => {
   return Array.from(devices);
 };
 
-const Section = ({ type, channels }: { type: string; channels: Channel[] }) => {
+// A section: all types of one kind (e.g. KeyMatic and door lock drive under
+// "Doors"), or a single type without its own control
+interface SectionGroup {
+  key: string;
+  section?: SectionId;
+  types: [string, Channel[]][];
+}
+
+// Sections in the order of SectionId (sectionTitles), then the types
+// without a control in the order they came
+export const groupIntoSections = (channelsByType: [string, Channel[]][]): SectionGroup[] => {
+  const groups = new Map<string, SectionGroup>();
+  for (const [type, channels] of channelsByType) {
+    const section = controlOverrides[type]?.section;
+    const key = section ?? `type:${type}`;
+    const group = groups.get(key) ?? { key, section, types: [] };
+    group.types.push([type, channels]);
+    groups.set(key, group);
+  }
+  const order = Object.keys(sectionTitles);
+  return Array.from(groups.values()).sort(
+    (a, b) =>
+      (a.section ? order.indexOf(a.section) : order.length) - (b.section ? order.indexOf(b.section) : order.length),
+  );
+};
+
+const Section = ({ group }: { group: SectionGroup }) => {
   const t = useTranslations();
-  const override = controlOverrides[type];
   // Types without a translation (shown by GenericControl) keep the CCU's name
-  const title = override ? sectionTitles[override.section]() : t(type as TranslationKey);
-  const id = `section-${type}`;
+  const title = group.section ? sectionTitles[group.section]() : t(group.types[0][0] as TranslationKey);
+  const id = `section-${group.key.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+  const count = group.types.reduce((sum, [, channels]) => sum + channels.length, 0);
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
       <div className="flex items-baseline gap-2">
         <h2 id={id} className="text-[19px] font-semibold tracking-tight">
           {title}
         </h2>
-        <span className="text-sm text-muted-foreground">{channels.length}</span>
+        <span className="text-sm text-muted-foreground">{count}</span>
       </div>
-      <div className={cn('grid gap-3', sectionGrids[override?.section ?? 'generic'])}>
-        {override?.per === 'device'
-          ? groupByDevice(channels).map(([deviceAddress, deviceChannels]) => (
-              <override.component key={deviceAddress} channels={deviceChannels} />
-            ))
-          : channels.map((channel) => <ControlComponent key={channel.address} channel={channel} />)}
+      <div className={cn('grid gap-3', sectionGrids[group.section ?? 'generic'])}>
+        {group.types.map(([type, channels]) => {
+          const override = controlOverrides[type];
+          return override?.per === 'device'
+            ? groupByDevice(channels).map(([deviceAddress, deviceChannels]) => (
+                <override.component key={deviceAddress} channels={deviceChannels} />
+              ))
+            : channels.map((channel) => <ControlComponent key={channel.address} channel={channel} />);
+        })}
       </div>
     </section>
   );
@@ -263,8 +292,8 @@ export const Dashboard = ({ tabs, channelsByType, isLoading }: DashboardProps) =
       )}
       {tabs}
       <Overview channels={channels} />
-      {channelsByType.map(([type, list]) => (
-        <Section key={type} type={type} channels={list} />
+      {groupIntoSections(channelsByType).map((group) => (
+        <Section key={group.key} group={group} />
       ))}
       {!isLoading && channelsByType.length === 0 && (
         <p className="py-12 text-center text-muted-foreground">{m.NO_CHANNELS()}</p>

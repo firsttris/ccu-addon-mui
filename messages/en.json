@@ -61,8 +61,6 @@
   "DEVICE_PROBLEMS": "Devices with problems",
   "NO_DEVICE_PROBLEMS": "All devices reachable, no low batteries",
   "NO_ROOM": "No room",
-  "CONFIRM_UNLOCK": "Really unlock the door?",
-  "CONFIRM_OPEN": "Really open the door?",
   "YES": "Yes",
   "NO": "No",
   "CANCEL": "Cancel",
@@ -309,5 +307,10 @@
   "BACKUP_WAIT": "The CCU packs all data. This can take a few minutes.",
   "BACKUP_CREATED": "Backup created",
   "BACKUP_FAILED": "Backup failed",
-  "BACKUP_TIMEOUT": "The CCU took too long. Please try again or create the backup in the WebUI."
+  "BACKUP_TIMEOUT": "The CCU took too long. Please try again or create the backup in the WebUI.",
+  "DOOR_ERROR": "Lock fault",
+  "DOOR_OPENING": "Opening the door …",
+  "DOOR_MOVING": "Lock is moving …",
+  "HOLD_TO_CONFIRM": "Press and hold",
+  "SLIDE_TO_OPEN": "Slide to open"
 }

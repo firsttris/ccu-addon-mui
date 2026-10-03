@@ -208,24 +208,40 @@ test('zeigt Energiezähler zusammengefasst und keine Rohdaten', async ({ page })
   await expect(page.getByText('WEEK_PROGRAM_CHANNEL_LOCKS')).toHaveCount(0);
 });
 
-test('fragt vor dem Öffnen der Tür nach', async ({ page }) => {
+test('öffnet die Tür nur mit bewussten Gesten', async ({ page }) => {
   await page.goto('/room/3');
-  await expect(page.getByText('Haustür')).toBeVisible();
+  const door = page.getByRole('group', { name: 'Haustür' });
+  await expect(door.getByRole('status')).toHaveText(/Gesperrt|Locked/);
 
-  const openButton = () => page.getByRole('button', { name: /^(Open|Öffnen)$/ });
-
-  await openButton().click();
-  await expect(page.getByText(/Really open the door\?|Tür wirklich öffnen\?/)).toBeVisible();
+  // A tap on "unlock" does nothing, it has to be held
+  const unlock = door.getByRole('button', { name: /^(Unlock|Entsperren)$/ });
+  await unlock.click();
   expect(await sentSetDatapoints(page)).toHaveLength(0);
+  await unlock.hover();
+  await page.mouse.down();
+  await expect.poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value])).toEqual([['STATE', true]]);
+  await page.mouse.up();
 
-  await page.getByRole('button', { name: /^(Cancel|Abbrechen)$/ }).click();
-  expect(await sentSetDatapoints(page)).toHaveLength(0);
-
-  await openButton().click();
-  await page.getByRole('button', { name: /^(Yes|Ja)$/ }).click();
+  // Opening: the knob has to reach the end of its track
+  const slider = door.getByRole('slider', { name: /Slide to open|Zum Öffnen schieben/ });
+  await slider.press('ArrowRight');
+  expect((await sentSetDatapoints(page)).map((m) => m.attribute)).toEqual(['STATE']);
+  await slider.press('End');
   await expect
     .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
-    .toEqual([['OPEN', true]]);
+    .toEqual([
+      ['STATE', true],
+      ['OPEN', true],
+    ]);
+  await expect(door.getByRole('status')).toHaveText(/Tür wird geöffnet|Opening the door/);
+
+  // HmIP door lock drive: locking is a tap, it sets the target level
+  const cellar = page.getByRole('group', { name: 'Kellertür' });
+  await expect(cellar.getByRole('status')).toHaveText(/Entsperrt|Unlocked/);
+  await cellar.getByRole('button', { name: /^(Lock|Sperren)$/ }).click();
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).at(-1))
+    .toMatchObject({ attribute: 'LOCK_TARGET_LEVEL', value: 0 });
 });
 
 test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
