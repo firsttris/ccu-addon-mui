@@ -5,6 +5,7 @@ import DropletIcon from '~icons/lucide/droplet';
 import FlaskIcon from '~icons/lucide/flask-conical';
 import SunDimIcon from '~icons/lucide/sun-dim';
 import RadarIcon from '~icons/lucide/radar';
+import SirenIcon from '~icons/lucide/siren';
 import PersonIcon from '~icons/lucide/person-standing';
 import { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
@@ -245,6 +246,26 @@ export const WaterDetectorControl = ({ channel }: { channel: Channel }) => {
       waves={water || wet}
       icon={<DropletIcon className={cn(water || wet ? 'fill-current' : '')} />}
       status={water ? m.WATER_DETECTED() : wet ? m.MOISTURE_DETECTED() : m.WATER_DRY()}
+    />
+  );
+};
+
+// --- Sirens
+
+// HmIP-ASIR (ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER): whether siren or flash
+// light are on. Choosing tones takes combined parameters; that stays in
+// the WebUI.
+export const SirenControl = ({ channel }: { channel: Channel }) => {
+  const dp = channel.datapoints as Record<string, DatapointValue>;
+  const acoustic = dp.ACOUSTIC_ALARM_ACTIVE === true;
+  const optical = dp.OPTICAL_ALARM_ACTIVE === true;
+  return (
+    <DetectorTile
+      channel={channel}
+      tone={acoustic ? 'alarm' : optical ? 'active' : 'calm'}
+      waves={acoustic || optical}
+      icon={<SirenIcon />}
+      status={acoustic ? m.SIREN_ACOUSTIC() : optical ? m.SIREN_OPTICAL() : m.SIREN_QUIET()}
     />
   );
 };

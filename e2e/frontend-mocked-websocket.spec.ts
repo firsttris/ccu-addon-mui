@@ -369,6 +369,28 @@ test('zeigt Zutritte und sperrt Benutzer', async ({ page }) => {
   await expect(page.getByRole('group', { name: 'HmIPW-DRAP' })).toContainText(/24[.,]4 V/);
 });
 
+test('bedient BidCos-Thermostat, Lamellen und zeigt die Sirene', async ({ page }) => {
+  await page.goto('/devices');
+
+  // HM-CC-RT-DN: set point SET_TEMPERATURE, manual mode via MANU_MODE
+  const radiator = page.getByRole('group', { name: 'Heizkörper Gästezimmer' });
+  await expect(radiator).toContainText(/(Ventil|Valve) 34 %/);
+  await radiator.getByRole('button', { name: /(Temperatur erhöhen|Increase temperature)/i }).click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'SET_TEMPERATURE', value: 21.5 });
+  await radiator.getByRole('button', { name: /^(Automatisch|Automatic)$/ }).click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)?.attribute).toBe('MANU_MODE');
+
+  // Venetian blind: slats behind their chip
+  await page.getByText(/(Lamellen|Slats) · 50 %/).click();
+  const slats = page.getByRole('slider', { name: /(Lamellen|Slats) Raffstore Büro/ });
+  await slats.press('ArrowRight');
+  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'LEVEL_2', value: 0.55 });
+  // Roller shutters (LEVEL_2 empty) have no slats
+  await expect(page.getByText(/(Lamellen|Slats) ·/)).toHaveCount(1);
+
+  await expect(page.getByRole('group', { name: 'Sirene Flur' }).getByRole('status')).toHaveText(/Ruhig|Quiet/);
+});
+
 test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
   await page.goto('/room/1');
 

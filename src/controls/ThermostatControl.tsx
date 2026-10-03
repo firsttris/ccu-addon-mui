@@ -1,4 +1,4 @@
-import { HeatingClimateControlTransceiverChannel } from '../types/types';
+import { Channel, DatapointValue, HeatingClimateControlTransceiverChannel } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import RadiatorThermostatIcon from '~icons/mui/radiator-thermostat';
 import WallThermostatIcon from '~icons/mui/wall-thermostat';
@@ -16,44 +16,59 @@ import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 
 type ThermostatProps = {
-  channel: HeatingClimateControlTransceiverChannel;
+  channel: HeatingClimateControlTransceiverChannel | Channel;
 };
 
 const BOOST_COLOR = '#FF7043';
 
 export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const effects = useEffects();
-  const datapoints = channel.datapoints;
-  const targetTemperature = datapoints.SET_POINT_TEMPERATURE;
-  const currentTemperature = datapoints.ACTUAL_TEMPERATURE;
-  const humidity = datapoints.HUMIDITY;
+  const datapoints = channel.datapoints as HeatingClimateControlTransceiverChannel['datapoints'] & Record<string, DatapointValue>;
+  // BidCos thermostats (HM-CC-RT-DN, HM-TC-IT-WM) name things differently:
+  // SET_TEMPERATURE, CONTROL_MODE 0 auto, 1 manual, 3 boost, VALVE_STATE
+  // in percent, and actions AUTO_MODE, MANU_MODE, BOOST_MODE.
+  const bidcos = typeof datapoints.SET_TEMPERATURE === 'number';
+  const targetTemperature = Number(bidcos ? datapoints.SET_TEMPERATURE : datapoints.SET_POINT_TEMPERATURE);
+  const currentTemperature = Number(datapoints.ACTUAL_TEMPERATURE);
+  const humidity = (typeof datapoints.ACTUAL_HUMIDITY === 'number' ? datapoints.ACTUAL_HUMIDITY : datapoints.HUMIDITY) as number | undefined;
   const windowOpen = datapoints.WINDOW_STATE === 1;
-  const isRadiatorThermostat = datapoints.VALVE_STATE !== undefined;
-  const manualMode = datapoints.SET_POINT_MODE === 1;
-  const boostMode = datapoints.BOOST_MODE;
-  // Valve opening of a radiator thermostat, 0..1
-  const valve = isRadiatorThermostat && typeof datapoints.LEVEL === 'number' ? Math.round(datapoints.LEVEL * 100) : undefined;
+  const isRadiatorThermostat = bidcos ? channel.type === 'CLIMATECONTROL_RT_TRANSCEIVER' : datapoints.VALVE_STATE !== undefined;
+  const manualMode = bidcos ? datapoints.CONTROL_MODE === 1 : datapoints.SET_POINT_MODE === 1;
+  const boostMode = bidcos ? datapoints.CONTROL_MODE === 3 : datapoints.BOOST_MODE === true;
+  // Valve opening of a radiator thermostat in percent
+  const valve = !isRadiatorThermostat
+    ? undefined
+    : bidcos
+      ? typeof datapoints.VALVE_STATE === 'number'
+        ? Math.round(datapoints.VALVE_STATE)
+        : undefined
+      : typeof datapoints.LEVEL === 'number'
+        ? Math.round(datapoints.LEVEL * 100)
+        : undefined;
 
   const setDataPoint = useSetDataPoint();
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const { localTarget, updateLocalTarget, commitTemperatureChange, decreaseTemperature, increaseTemperature } =
-    useThermostatState({ targetTemperature, channel });
+    useThermostatState({ targetTemperature, channel, datapoint: bidcos ? 'SET_TEMPERATURE' : 'SET_POINT_TEMPERATURE' });
 
   const color = boostMode ? BOOST_COLOR : getTemperatureColor(localTarget);
   const currentColor = getTemperatureColor(currentTemperature);
   const demand = boostMode || localTarget > currentTemperature;
 
-  const handlePowerOff = () => {
-    setDataPoint(channel.interfaceName, channel.address, 'SET_POINT_TEMPERATURE', 5);
-  };
+  const set = (datapoint: string, value: number | boolean) =>
+    setDataPoint(channel.interfaceName, channel.address, datapoint, value);
+
+  // Off: the lowest setting (BidCos 4.5 °C means "off")
+  const handlePowerOff = () => (bidcos ? set('SET_TEMPERATURE', 4.5) : set('SET_POINT_TEMPERATURE', 5));
 
   const handleToggleMode = () => {
-    setDataPoint(channel.interfaceName, channel.address, 'CONTROL_MODE', manualMode ? 0 : 1);
+    if (!bidcos) set('CONTROL_MODE', manualMode ? 0 : 1);
+    else if (manualMode) set('AUTO_MODE', true);
+    else set('MANU_MODE', localTarget);
   };
 
-  const handleToggleBoost = () => {
-    setDataPoint(channel.interfaceName, channel.address, 'BOOST_MODE', !boostMode);
-  };
+  // BidCos can't end a boost directly: back to automatic
+  const handleToggleBoost = () => (bidcos ? (boostMode ? set('AUTO_MODE', true) : set('BOOST_MODE', true)) : set('BOOST_MODE', !boostMode));
 
   const badge = boostMode
     ? { text: m.BOOST(), className: 'bg-orange-500/15 text-orange-700 dark:text-orange-300' }
@@ -68,6 +83,8 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   return (
     <Tile
       status={channel.status}
+      role="group"
+      aria-label={channel.name}
       style={effects.on && demand ? { boxShadow: `0 24px 60px -28px ${rgba(color, 0.55 * effects.k)}` } : undefined}
     >
       <div className="flex flex-col items-center gap-1 px-3.5 pt-4 pb-3.5">

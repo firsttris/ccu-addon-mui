@@ -6,9 +6,11 @@ import { Channel } from '../../../types/types';
 interface UseThermostatStateProps {
   targetTemperature: number;
   channel: Channel;
+  // HmIP: SET_POINT_TEMPERATURE, BidCos: SET_TEMPERATURE
+  datapoint?: string;
 }
 
-export const useThermostatState = ({ targetTemperature, channel }: UseThermostatStateProps) => {
+export const useThermostatState = ({ targetTemperature, channel, datapoint = 'SET_POINT_TEMPERATURE' }: UseThermostatStateProps) => {
   const setDataPoint = useSetDataPoint();
   const [localTarget, setLocalTarget] = useState(targetTemperature);
   const lastUserInteractionRef = useRef<number>(0);
@@ -47,7 +49,7 @@ export const useThermostatState = ({ targetTemperature, channel }: UseThermostat
       setDataPoint(
         channel.interfaceName,
         channel.address,
-        'SET_POINT_TEMPERATURE',
+        datapoint,
         temp
       );
     commitTimeoutRef.current = setTimeout(flushCommit, 500);

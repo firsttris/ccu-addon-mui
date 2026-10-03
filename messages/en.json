@@ -379,5 +379,10 @@
   "USER_N": "User {n}",
   "USERS_ALLOWED": "{count} of {total} users authorised",
   "ACCESS_POINT": "Access point",
-  "BUS_LINE": "Bus {n}"
+  "BUS_LINE": "Bus {n}",
+  "SLATS": "Slats",
+  "SLATS_OF": "Slats {name}",
+  "SIREN_QUIET": "Quiet",
+  "SIREN_ACOUSTIC": "Siren sounding!",
+  "SIREN_OPTICAL": "Flash light on"
 }

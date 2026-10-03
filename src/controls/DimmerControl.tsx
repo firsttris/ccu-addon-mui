@@ -78,7 +78,7 @@ export const DimmerControl = ({ channel }: { channel: Channel }) => {
       <div className="flex flex-col gap-2 px-3.5 pb-3.5">
         <LevelBar label={m.BRIGHTNESS_OF({ name: channel.name })} value={level} color={color} onChange={(v) => set('LEVEL', v / 100)} />
         {colorIndex !== undefined && (
-          <div className="flex justify-between" role="radiogroup" aria-label={m.BACKLIGHT_COLOR()}>
+          <div className="grid grid-cols-8 gap-1" role="radiogroup" aria-label={m.BACKLIGHT_COLOR()}>
             {BSL_COLORS.map((c, i) => (
               <button
                 key={c.name}
@@ -89,7 +89,7 @@ export const DimmerControl = ({ channel }: { channel: Channel }) => {
                 title={c.name}
                 onClick={() => set('COLOR', i)}
                 className={cn(
-                  'press size-5 rounded-full border border-black/10 ring-offset-2 ring-offset-card dark:border-white/15',
+                  'press aspect-square w-full max-w-5 justify-self-center rounded-full border border-black/10 ring-offset-1 ring-offset-card dark:border-white/15',
                   colorIndex === i && 'ring-2 ring-foreground/70',
                 )}
                 style={{ background: `rgb(${c.rgb.join(',')})` }}

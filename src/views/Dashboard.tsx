@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router';
 import ThermometerIcon from '~icons/lucide/thermometer';
 import LightbulbIcon from '~icons/lucide/lightbulb';
 import AppWindowIcon from '~icons/lucide/app-window';
-import { Channel, ChannelType, HeatingClimateControlTransceiverChannel } from '../types/types';
+import { Channel } from '../types/types';
 import { controlOverrides, SectionId } from '../controls/registry';
 import { ControlComponent } from '../components/ControlComponent';
 import { windowState } from '../controls/WindowControl';
@@ -124,9 +124,9 @@ const Stat = ({ icon, tint, label, value }: { icon: ReactNode; tint: string; lab
 const Overview = ({ channels }: { channels: Channel[] }) => {
   const reachable = channels.filter((c) => !c.status?.UNREACH);
   const temperatures = reachable
-    .filter((c): c is HeatingClimateControlTransceiverChannel => c.type === ChannelType.HEATING_CLIMATECONTROL_TRANSCEIVER)
-    .map((c) => c.datapoints.ACTUAL_TEMPERATURE)
-    .filter((t) => typeof t === 'number');
+    .filter((c) => controlOverrides[c.type]?.section === 'climate')
+    .map((c) => (c.datapoints as Record<string, unknown>).ACTUAL_TEMPERATURE)
+    .filter((t): t is number => typeof t === 'number');
   const switches = channels.filter(isLight);
   const switchedOn = switches.filter(isLightOn).length;
   const windowChannels = channels.filter((c) => windowTypes.has(c.type));

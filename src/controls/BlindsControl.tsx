@@ -8,6 +8,7 @@ import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
+import { LevelBar } from './light/LevelBar';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;
@@ -80,6 +81,11 @@ export const BlindsControl = ({ channel }: ControlProps) => {
 
   const open = shown / 100;
   const dragging = dragLevel !== null;
+  // Slats of venetian blinds: HmIP LEVEL_2, BidCos JALOUSIE LEVEL_SLATS.
+  // Roller shutters report LEVEL_2 empty (null), they get no slats.
+  const dp = datapoints as unknown as Record<string, unknown>;
+  const slatsKey = typeof dp.LEVEL_SLATS === 'number' ? 'LEVEL_SLATS' : typeof dp.LEVEL_2 === 'number' ? 'LEVEL_2' : null;
+  const slats = slatsKey ? Math.round(Math.min(1, Math.max(0, Number(dp[slatsKey]))) * 100) : null;
   const status = shown === 0 ? m.BLIND_CLOSED() : shown === 100 ? m.BLIND_FULLY_OPEN() : m.BLIND_PERCENT_OPEN({ percent: shown });
   const a = (alpha: number) => Math.min(1, alpha * effects.k);
 
@@ -149,6 +155,21 @@ export const BlindsControl = ({ channel }: ControlProps) => {
               {name}
             </div>
             <div className="mt-0.5 text-[13px] text-muted-foreground">{status}</div>
+            {slats !== null && slatsKey && (
+              <details className="group mt-2">
+                <summary className="w-fit cursor-pointer list-none rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground hover:bg-accent [&::-webkit-details-marker]:hidden">
+                  {m.SLATS()} · {slats} %
+                </summary>
+                <div className="mt-2">
+                  <LevelBar
+                    label={m.SLATS_OF({ name })}
+                    value={slats}
+                    color={[148, 163, 184]}
+                    onChange={(v) => setDataPoint(interfaceName, address, slatsKey, v / 100)}
+                  />
+                </div>
+              </details>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <button className={button} onClick={() => send(100)} aria-label={m.BLIND_UP()} title={m.BLIND_UP()}>

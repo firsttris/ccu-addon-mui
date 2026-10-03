@@ -379,5 +379,10 @@
   "USER_N": "Benutzer {n}",
   "USERS_ALLOWED": "{count} von {total} Benutzern berechtigt",
   "ACCESS_POINT": "Access Point",
-  "BUS_LINE": "Bus {n}"
+  "BUS_LINE": "Bus {n}",
+  "SLATS": "Lamellen",
+  "SLATS_OF": "Lamellen {name}",
+  "SIREN_QUIET": "Ruhig",
+  "SIREN_ACOUSTIC": "Sirene ertönt!",
+  "SIREN_OPTICAL": "Blitzlicht aktiv"
 }
