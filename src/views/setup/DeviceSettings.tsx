@@ -14,6 +14,7 @@ import { WebUILink } from '../../components/WebUILink';
 import { Notice, SetupContainer } from './Setup';
 import { useChannelNames } from './channelNames';
 import { NamesAndRooms } from './NamesAndRooms';
+import { Links } from './Links';
 
 const Section = styled.section`
   margin: 16px 0;
@@ -213,6 +214,13 @@ export const DeviceSettings = () => {
             {t('RESET')}
           </DialogButton>
         </Toolbar>
+      )}
+
+      {canEdit && device && (device.channels ?? []).some((c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length) && (
+        <Section aria-label={t('LINKS')}>
+          <h2>{t('LINKS')}</h2>
+          <Links interfaceName={interfaceName} deviceAddress={address} channels={device.channels ?? []} />
+        </Section>
       )}
 
       {canEdit && device && (

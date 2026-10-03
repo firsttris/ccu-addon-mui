@@ -208,6 +208,12 @@ type DeviceRPC interface {
 	GetInstallMode(iface string) (int, error)
 	DeleteDevice(iface, address string, flags int) error
 	Forget(iface, deviceAddress string)
+	GetLinks(iface, address string) ([]ccurpc.Link, error)
+	AddLink(iface, sender, receiver, name, description string) error
+	RemoveLink(iface, sender, receiver string) error
+	GetLinkParamsetDescription(iface, address, partner string) (ccurpc.ParamsetDescription, error)
+	GetLinkParamset(iface, address, partner string) (map[string]interface{}, error)
+	PutLinkParamset(iface, address, partner string, values map[string]interface{}) error
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
@@ -473,6 +479,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleRename(client, message)
 	case "listSessions", "revokeSession", "logout":
 		s.handleSessions(client, msgType, message)
+	case "getLinks", "addLink", "removeLink", "getLinkParamsetDescription", "getLinkParamset", "putLinkParamset":
+		s.handleLinks(client, msgType, message)
 	case "setGroupMember":
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
@@ -942,6 +950,8 @@ type Device struct {
 	// Name from ReGa
 	Name string `json:"name,omitempty"`
 	ccurpc.DeviceDescription
+	// Channels with their link roles, for choosing link partners
+	Channels []ccurpc.DeviceDescription `json:"channels,omitempty"`
 }
 
 type listDevicesResponse struct {
@@ -972,13 +982,110 @@ func (s *Server) handleListDevices(client *Client, requestID string) {
 			logger.Debugf("listDevices %s: %v", iface, err)
 			continue
 		}
+		channels := map[string][]ccurpc.DeviceDescription{}
+		for _, d := range list {
+			if d.Parent != "" {
+				channels[d.Parent] = append(channels[d.Parent], d)
+			}
+		}
 		for _, d := range list {
 			if d.Parent == "" {
-				devices = append(devices, Device{InterfaceName: iface, Name: names[d.Address], DeviceDescription: d})
+				devices = append(devices, Device{InterfaceName: iface, Name: names[d.Address], DeviceDescription: d, Channels: channels[d.Address]})
 			}
 		}
 	}
 	s.sendJSON(client, listDevicesResponse{Type: "devices", RequestID: requestID, Devices: devices})
+}
+
+type linksResponse struct {
+	Type        string                     `json:"type"`
+	RequestID   string                     `json:"requestId,omitempty"`
+	Success     bool                       `json:"success"`
+	Links       []ccurpc.Link              `json:"links,omitempty"`
+	Description ccurpc.ParamsetDescription `json:"description,omitempty"`
+	Values      map[string]interface{}     `json:"values,omitempty"`
+}
+
+// handleLinks: direct links and their parameters. Reading is for
+// administrators, changing needs the admin token too.
+func (s *Server) handleLinks(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID     string                 `json:"requestId"`
+		InterfaceName string                 `json:"interfaceName"`
+		Address       string                 `json:"address"`
+		Partner       string                 `json:"partner"`
+		Sender        string                 `json:"sender"`
+		Receiver      string                 `json:"receiver"`
+		Name          string                 `json:"name"`
+		Values        map[string]interface{} `json:"values"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if s.rpc == nil {
+		s.sendRequestError(client, msg.RequestID, msgType+" is not available", "NOT_AVAILABLE")
+		return
+	}
+	respond := func(r linksResponse, err error) {
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		r.Type, r.RequestID, r.Success = msgType+"_response", msg.RequestID, true
+		s.sendJSON(client, r)
+	}
+
+	switch msgType {
+	case "getLinks", "getLinkParamsetDescription", "getLinkParamset":
+		if client.level != auth.LevelAdmin {
+			s.sendRequestError(client, msg.RequestID, "only administrators may set up devices", "FORBIDDEN")
+			return
+		}
+	}
+
+	switch msgType {
+	case "getLinks":
+		links, err := s.rpc.GetLinks(msg.InterfaceName, msg.Address)
+		respond(linksResponse{Links: links}, err)
+	case "getLinkParamsetDescription":
+		description, err := s.rpc.GetLinkParamsetDescription(msg.InterfaceName, msg.Address, msg.Partner)
+		respond(linksResponse{Description: description}, err)
+	case "getLinkParamset":
+		values, err := s.rpc.GetLinkParamset(msg.InterfaceName, msg.Address, msg.Partner)
+		respond(linksResponse{Values: values}, err)
+	case "addLink":
+		entry := audit.Entry{Action: msgType, Target: msg.Sender + " > " + msg.Receiver, Value: msg.Name}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			return nil, rega.SetOK, s.rpc.AddLink(msg.InterfaceName, msg.Sender, msg.Receiver, msg.Name, "")
+		})
+	case "removeLink":
+		entry := audit.Entry{Action: msgType, Target: msg.Sender + " > " + msg.Receiver}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			return nil, rega.SetOK, s.rpc.RemoveLink(msg.InterfaceName, msg.Sender, msg.Receiver)
+		})
+	case "putLinkParamset":
+		entry := audit.Entry{Action: msgType, Target: msg.Address + " < " + msg.Partner}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			description, err := s.rpc.GetLinkParamsetDescription(msg.InterfaceName, msg.Address, msg.Partner)
+			if err != nil {
+				return nil, "", err
+			}
+			values, err := ccurpc.CoerceValues(description, msg.Values)
+			if err != nil {
+				return nil, "", fmt.Errorf("invalid value: %w", err)
+			}
+			entry.Value = values
+			var previous map[string]interface{}
+			if current, err := s.rpc.GetLinkParamset(msg.InterfaceName, msg.Address, msg.Partner); err == nil {
+				previous = map[string]interface{}{}
+				for name := range values {
+					previous[name] = current[name]
+				}
+			}
+			return previous, rega.SetOK, s.rpc.PutLinkParamset(msg.InterfaceName, msg.Address, msg.Partner, values)
+		})
+	}
 }
 
 type sessionInfo struct {

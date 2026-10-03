@@ -343,11 +343,45 @@
       "datapoints": {
         "STATE": 0
       }
+    },
+    {
+      "id": 9100,
+      "address": "000855699C4F38:0",
+      "type": "MAINTENANCE",
+      "interface": "HmIP-RF",
+      "name": "Taster Esszimmer:0",
+      "datapoints": {
+        "UNREACH": false,
+        "LOW_BAT": false
+      }
+    },
+    {
+      "id": 9101,
+      "address": "000855699C4F38:1",
+      "type": "KEY_TRANSCEIVER",
+      "interface": "HmIP-RF",
+      "name": "Taster Esszimmer oben",
+      "datapoints": {
+        "PRESS_SHORT": false,
+        "PRESS_LONG": false
+      }
+    },
+    {
+      "id": 9102,
+      "address": "000855699C4F38:2",
+      "type": "KEY_TRANSCEIVER",
+      "interface": "HmIP-RF",
+      "name": "Taster Esszimmer unten",
+      "datapoints": {
+        "PRESS_SHORT": false,
+        "PRESS_LONG": false
+      }
     }
   ],
   "deviceNames": {
     "000A9D89A7AF25": "Wandthermostat Flur",
-    "003660C9930AB6": "Fensterkontakt Bad"
+    "003660C9930AB6": "Fensterkontakt Bad",
+    "000855699C4F38": "Taster Esszimmer"
   },
   "interfaces": {
     "BidCos-RF": {
@@ -486,7 +520,8 @@
             "LINK"
           ],
           "VERSION": 12,
-          "FLAGS": 1
+          "FLAGS": 1,
+          "LINK_TARGET_ROLES": "SWITCH"
         },
         {
           "ADDRESS": "0008DA8A9F1234",
@@ -516,6 +551,52 @@
           ],
           "VERSION": 4,
           "FLAGS": 1
+        },
+        {
+          "ADDRESS": "000855699C4F38",
+          "TYPE": "HmIP-WRC2",
+          "CHILDREN": [
+            "000855699C4F38:0",
+            "000855699C4F38:1",
+            "000855699C4F38:2"
+          ],
+          "PARAMSETS": [
+            "MASTER",
+            "SERVICE"
+          ],
+          "VERSION": 4,
+          "FIRMWARE": "1.6.2",
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "000855699C4F38:1",
+          "TYPE": "KEY_TRANSCEIVER",
+          "PARENT": "000855699C4F38",
+          "PARENT_TYPE": "HmIP-WRC2",
+          "INDEX": 1,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 4,
+          "FLAGS": 1,
+          "LINK_SOURCE_ROLES": "KEYMATIC SWITCH WINDOW_SWITCH_RECEIVER WINMATIC"
+        },
+        {
+          "ADDRESS": "000855699C4F38:2",
+          "TYPE": "KEY_TRANSCEIVER",
+          "PARENT": "000855699C4F38",
+          "PARENT_TYPE": "HmIP-WRC2",
+          "INDEX": 2,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 4,
+          "FLAGS": 1,
+          "LINK_SOURCE_ROLES": "KEYMATIC SWITCH WINDOW_SWITCH_RECEIVER WINMATIC"
         }
       ],
       "paramsetDescriptions": {
@@ -698,6 +779,74 @@
               "MAX": true,
               "TAB_ORDER": 8
             }
+          },
+          "LINK": {
+            "SHORT_PROFILE_ACTION_TYPE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 1,
+              "MIN": 0,
+              "MAX": 5,
+              "VALUE_LIST": [
+                "NOP",
+                "JUMP_TO_TARGET",
+                "TOGGLE_TO_COUNTER",
+                "TOGGLE_INVERSE_TO_COUNTER",
+                "UPDIM",
+                "DOWNDIM"
+              ],
+              "TAB_ORDER": 0
+            },
+            "SHORT_ON_LEVEL": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 1.0,
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "UNIT": "100%",
+              "TAB_ORDER": 1,
+              "SPECIAL": [
+                {
+                  "ID": "OLD_LEVEL",
+                  "VALUE": 1.005
+                }
+              ]
+            },
+            "SHORT_ON_TIME": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 111600.0,
+              "MIN": 0.0,
+              "MAX": 111600.0,
+              "UNIT": "s",
+              "TAB_ORDER": 2,
+              "SPECIAL": [
+                {
+                  "ID": "NOT_USED",
+                  "VALUE": 111600.0
+                }
+              ]
+            },
+            "LONG_PROFILE_ACTION_TYPE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 4,
+              "MIN": 0,
+              "MAX": 5,
+              "VALUE_LIST": [
+                "NOP",
+                "JUMP_TO_TARGET",
+                "TOGGLE_TO_COUNTER",
+                "TOGGLE_INVERSE_TO_COUNTER",
+                "UPDIM",
+                "DOWNDIM"
+              ],
+              "TAB_ORDER": 3
+            }
           }
         }
       },
@@ -707,7 +856,16 @@
             "EVENT_DELAY_UNIT": 0
           }
         }
-      }
+      },
+      "links": [
+        {
+          "SENDER": "000855699C4F38:1",
+          "RECEIVER": "00151BE9A1C2D3:4",
+          "NAME": "Esstisch an",
+          "DESCRIPTION": "",
+          "FLAGS": 0
+        }
+      ]
     }
   },
   "inbox": [

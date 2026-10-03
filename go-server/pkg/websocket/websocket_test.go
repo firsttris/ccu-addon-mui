@@ -516,6 +516,24 @@ func (f *fakeDeviceRPC) DeleteDevice(iface, address string, flags int) error { r
 
 func (f *fakeDeviceRPC) Forget(iface, deviceAddress string) {}
 
+func (f *fakeDeviceRPC) GetLinks(iface, address string) ([]ccurpc.Link, error) { return nil, nil }
+
+func (f *fakeDeviceRPC) AddLink(iface, sender, receiver, name, description string) error { return nil }
+
+func (f *fakeDeviceRPC) RemoveLink(iface, sender, receiver string) error { return nil }
+
+func (f *fakeDeviceRPC) GetLinkParamsetDescription(iface, address, partner string) (ccurpc.ParamsetDescription, error) {
+	return nil, nil
+}
+
+func (f *fakeDeviceRPC) GetLinkParamset(iface, address, partner string) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+func (f *fakeDeviceRPC) PutLinkParamset(iface, address, partner string, values map[string]interface{}) error {
+	return nil
+}
+
 func (f *fakeDeviceRPC) PutParamset(iface, address, key string, values map[string]interface{}) error {
 	f.calls = append(f.calls, fmt.Sprintf("put %s %s %s %v", iface, address, key, values))
 	return nil

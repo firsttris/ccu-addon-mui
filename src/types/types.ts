@@ -247,6 +247,15 @@ export interface InboxDevice {
 }
 
 // A device (not a channel) as listed by the CCU's interfaces
+export interface DeviceChannel {
+  type: string;
+  address: string;
+  index: number;
+  paramsets: string[];
+  linkSourceRoles?: string[];
+  linkTargetRoles?: string[];
+}
+
 export interface Device {
   interfaceName: string;
   // Name from ReGa
@@ -257,4 +266,12 @@ export interface Device {
   paramsets: string[];
   version: number;
   firmware?: string;
+  channels?: DeviceChannel[];
+}
+
+// A direct link: the sender channel controls the receiver channel
+export interface Link {
+  sender: string;
+  receiver: string;
+  name?: string;
 }

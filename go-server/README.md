@@ -126,7 +126,7 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 | `{"type": "getParamset", "interfaceName", "address", "paramsetKey"}` | `{"type": "paramset", "address", "paramsetKey", "values"}` |
 | `{"type": "putParamset", "interfaceName", "address", "paramsetKey": "MASTER", "values"}` | `{"type": "putParamset_response", "success"}` or an error with `code` `FORBIDDEN` (not an administrator), `ELEVATION_REQUIRED` (password needed again), `INVALID_VALUE` (checked against the description), `CCU_ERROR`. Recorded in the audit log |
 | `{"type": "elevate", "password"}` | `{"type": "elevate_response", "success", "adminToken"}`: administrators get a token for changing settings, valid for 8 hours; pass it as `adminToken` in `auth` after a reconnect |
-| `{"type": "listDevices"}` | `{"type": "devices", "devices": [{"interfaceName", "address", "name", "type", "firmware", "children", "paramsets"}]}` |
+| `{"type": "listDevices"}` | `{"type": "devices", "devices": [{"interfaceName", "address", "name", "type", "firmware", "children", "paramsets", "channels": [{"address", "type", "index", "linkSourceRoles", "linkTargetRoles"}]}]}` |
 | `{"type": "rename", "address", "name"}` | `{"type": "rename_response", "success"}`: renames a device or channel (administrators with admin token; audited) |
 | `{"type": "setGroupMember", "groupId", "channelId", "member"}` | `{"type": "setGroupMember_response", "success"}`: adds a channel to a room or trade, or removes it |
 | `{"type": "setInstallMode", "interfaceName", "on", "seconds"}` | `{"type": "setInstallMode_response", "success"}`: starts or stops pairing |
@@ -134,6 +134,10 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 | `{"type": "getInbox"}` | `{"type": "getInbox_response", "devices": [{"address", "type", "interfaceName", "name"}]}`: paired devices not yet accepted |
 | `{"type": "acceptDevice", "address"}` | `{"type": "acceptDevice_response", "success"}`: takes a device out of the inbox (sets `ReadyConfig`; to be verified on real hardware) |
 | `{"type": "deleteDevice", "interfaceName", "address", "reset", "force"}` | `{"type": "deleteDevice_response", "success"}` |
+| `{"type": "getLinks", "interfaceName", "address"}` | `{"type": "getLinks_response", "links": [{"sender", "receiver", "name"}]}`: direct links of a device or channel (administrators) |
+| `{"type": "addLink", "interfaceName", "sender", "receiver", "name"}`, `{"type": "removeLink", "interfaceName", "sender", "receiver"}` | `{"type": "addLink_response" \| "removeLink_response", "success"}` (administrators with admin token; audited) |
+| `{"type": "getLinkParamsetDescription" \| "getLinkParamset", "interfaceName", "address", "partner"}` | `description` or `values` of a link on the side of `address` |
+| `{"type": "putLinkParamset", "interfaceName", "address", "partner", "values"}` | `{"type": "putLinkParamset_response", "success"}`; values are checked against the description |
 | `{"type": "logout"}` | `{"type": "logout_response", "success"}`: revokes the token of this device |
 | `{"type": "listSessions"}` | `{"type": "listSessions_response", "sessions": [{"id", "user", "device", "created", "lastUsed", "current"}]}` (administrators with admin token) |
 | `{"type": "revokeSession", "id"}` | `{"type": "revokeSession_response", "success"}`: logs a device out; its open connections are closed |

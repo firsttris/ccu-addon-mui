@@ -248,8 +248,8 @@ func TestStackAllDevices(t *testing.T) {
 			t.Fatalf("maintenance channel listed: %s", ch.Address)
 		}
 	}
-	if len(channels) != 16 {
-		t.Fatalf("expected all 16 channels, got %d", len(channels))
+	if len(channels) != 18 {
+		t.Fatalf("expected all 18 channels, got %d", len(channels))
 	}
 }
 
@@ -348,7 +348,7 @@ func TestStackListDevices(t *testing.T) {
 		d := raw.(map[string]interface{})
 		types[d["address"].(string)] = d["interfaceName"].(string) + " " + d["type"].(string)
 	}
-	if len(types) != 4 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" {
+	if len(types) != 5 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" {
 		t.Fatalf("unexpected devices: %v", types)
 	}
 }
@@ -616,5 +616,55 @@ func TestStackLogOutDevices(t *testing.T) {
 	send(t, conn, message{"type": "listSessions", "requestId": "q5"})
 	if m := receive(t, conn, byRequestID("q5")); m["sessions"] != nil {
 		t.Fatalf("expected no sessions, got %v", m)
+	}
+}
+
+func TestStackDirectLinks(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	call := func(id string, m message) message {
+		m["requestId"] = id
+		m["interfaceName"] = "HmIP-RF"
+		send(t, conn, m)
+		return receive(t, conn, byRequestID(id))
+	}
+
+	links := call("q1", message{"type": "getLinks", "address": "00151BE9A1C2D3"})["links"].([]interface{})
+	if len(links) != 1 || links[0].(map[string]interface{})["sender"] != "000855699C4F38:1" {
+		t.Fatalf("unexpected links: %v", links)
+	}
+
+	if m := call("q2", message{"type": "addLink", "sender": "000855699C4F38:2", "receiver": "00151BE9A1C2D3:4", "name": "Esstisch aus"}); m["success"] != true {
+		t.Fatalf("addLink failed: %v", m)
+	}
+	if n := len(call("q3", message{"type": "getLinks", "address": "000855699C4F38"})["links"].([]interface{})); n != 2 {
+		t.Fatalf("expected 2 links of the button, got %d", n)
+	}
+
+	description := call("q4", message{"type": "getLinkParamsetDescription", "address": "00151BE9A1C2D3:4", "partner": "000855699C4F38:2"})["description"].(map[string]interface{})
+	if description["SHORT_ON_LEVEL"] == nil {
+		t.Fatalf("unexpected description: %v", description)
+	}
+	if m := call("q5", message{"type": "putLinkParamset", "address": "00151BE9A1C2D3:4", "partner": "000855699C4F38:2",
+		"values": map[string]interface{}{"SHORT_PROFILE_ACTION_TYPE": 1, "SHORT_ON_LEVEL": 0}}); m["success"] != true {
+		t.Fatalf("putLinkParamset failed: %v", m)
+	}
+	values := call("q6", message{"type": "getLinkParamset", "address": "00151BE9A1C2D3:4", "partner": "000855699C4F38:2"})["values"].(map[string]interface{})
+	if values["SHORT_ON_LEVEL"] != 0.0 {
+		t.Fatalf("link parameter not stored: %v", values)
+	}
+	if m := call("q7", message{"type": "putLinkParamset", "address": "00151BE9A1C2D3:4", "partner": "000855699C4F38:2",
+		"values": map[string]interface{}{"SHORT_ON_LEVEL": 2}}); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+
+	if m := call("q8", message{"type": "removeLink", "sender": "000855699C4F38:1", "receiver": "00151BE9A1C2D3:4"}); m["success"] != true {
+		t.Fatalf("removeLink failed: %v", m)
+	}
+	if n := len(call("q9", message{"type": "getLinks", "address": "00151BE9A1C2D3:4"})["links"].([]interface{})); n != 1 {
+		t.Fatalf("expected 1 link left, got %d", n)
+	}
+	if ccu.CallCount("HmIP-RF addLink") != 1 || ccu.CallCount("HmIP-RF removeLink") != 1 {
+		t.Fatal("link calls missing")
 	}
 }

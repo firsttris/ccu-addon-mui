@@ -85,8 +85,12 @@ type InterfaceData struct {
 	// ParamsetDescriptions by address and paramset key
 	ParamsetDescriptions map[string]map[string]map[string]interface{} `json:"paramsetDescriptions,omitempty"`
 	// Paramsets (MASTER values) by address and paramset key. VALUES are
-	// taken from the ReGa datapoints, so both stay in sync.
+	// taken from the ReGa datapoints, so both stay in sync. Link
+	// parameters are keyed by the partner's address; their description is
+	// the "LINK" entry of ParamsetDescriptions.
 	Paramsets map[string]map[string]map[string]interface{} `json:"paramsets,omitempty"`
+	// Links as getLinks returns them (SENDER, RECEIVER, NAME, DESCRIPTION)
+	Links []map[string]interface{} `json:"links,omitempty"`
 }
 
 // LoadFixture reads a fixture from a JSON file.

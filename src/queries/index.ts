@@ -10,6 +10,7 @@ import {
   Device,
   HmEvent,
   InboxDevice,
+  Link,
   ParamsetDescription,
   Program,
   SessionInfo,
@@ -209,6 +210,60 @@ export const useLogicAction = () => {
     },
     onSettled: (_, __, action) =>
       queryClient.invalidateQueries({ queryKey: [action.type === 'setSysvar' ? 'sysvars' : 'programs'] }),
+  });
+};
+
+// Direct links of a device or channel
+export const useLinks = (interfaceName: string, address: string) => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['links', interfaceName, address],
+    queryFn: async () => ((await request({ type: 'getLinks', interfaceName, address })).links ?? []) as Link[],
+    retry: false,
+  });
+};
+
+// Parameters of a link on the receiver's side
+export const useLinkParamset = (interfaceName: string, receiver: string, sender: string) => {
+  const { request } = useWebSocketActions();
+  const description = useQuery({
+    queryKey: ['linkParamsetDescription', interfaceName, receiver, sender],
+    queryFn: async () =>
+      ((await request({ type: 'getLinkParamsetDescription', interfaceName, address: receiver, partner: sender }))
+        .description ?? {}) as ParamsetDescription,
+    staleTime: Infinity,
+    retry: false,
+  });
+  const values = useQuery({
+    queryKey: ['linkParamset', interfaceName, receiver, sender],
+    queryFn: async () =>
+      ((await request({ type: 'getLinkParamset', interfaceName, address: receiver, partner: sender })).values ??
+        {}) as Record<string, DatapointValue>,
+    retry: false,
+  });
+  return { description, values };
+};
+
+export type LinkAction =
+  | { type: 'addLink'; interfaceName: string; sender: string; receiver: string; name: string }
+  | { type: 'removeLink'; interfaceName: string; sender: string; receiver: string }
+  | {
+      type: 'putLinkParamset';
+      interfaceName: string;
+      address: string;
+      partner: string;
+      values: Record<string, DatapointValue>;
+    };
+
+export const useLinkAction = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (action: LinkAction) => {
+      await request(action, { queue: false });
+    },
+    onSettled: () =>
+      Promise.all(['links', 'linkParamset'].map((key) => queryClient.invalidateQueries({ queryKey: [key] }))),
   });
 };
 

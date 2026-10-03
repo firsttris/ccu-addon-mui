@@ -729,7 +729,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 	switch method {
 	case "system.listMethods":
 		return []string{"init", "ping", "listDevices", "getDeviceDescription", "getParamsetDescription", "getParamset",
-			"putParamset", "setValue", "setInstallMode", "getInstallMode", "deleteDevice"}, ""
+			"putParamset", "setValue", "setInstallMode", "getInstallMode", "deleteDevice", "getLinks", "addLink", "removeLink"}, ""
 	case "setInstallMode":
 		on, _ := params[0].(bool)
 		seconds := 60
@@ -786,7 +786,12 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		}
 		return nil, "Unknown instance"
 	case "getParamsetDescription":
-		description, ok := data.ParamsetDescriptions[stringParam(params, 0)][stringParam(params, 1)]
+		address, key := stringParam(params, 0), stringParam(params, 1)
+		description, ok := data.ParamsetDescriptions[address][key]
+		if !ok && strings.Contains(key, ":") {
+			// Link parameters: the same for every partner
+			description, ok = data.ParamsetDescriptions[address]["LINK"]
+		}
 		if !ok {
 			return nil, "Unknown paramset"
 		}
@@ -801,7 +806,49 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		if values, ok := data.Paramsets[address][key]; ok {
 			return values, ""
 		}
+		if description, ok := data.ParamsetDescriptions[address]["LINK"]; ok && strings.Contains(key, ":") {
+			defaults := map[string]interface{}{}
+			for name, raw := range description {
+				if p, ok := raw.(map[string]interface{}); ok {
+					defaults[name] = p["DEFAULT"]
+				}
+			}
+			return defaults, ""
+		}
 		return nil, "Unknown paramset"
+	case "getLinks":
+		address := stringParam(params, 0)
+		links := []interface{}{}
+		for _, link := range data.Links {
+			for _, end := range []interface{}{link["SENDER"], link["RECEIVER"]} {
+				if end == address || deviceAddress(fmt.Sprint(end)) == address {
+					links = append(links, link)
+					break
+				}
+			}
+		}
+		return links, ""
+	case "addLink":
+		data.Links = append(data.Links, map[string]interface{}{
+			"SENDER": stringParam(params, 0), "RECEIVER": stringParam(params, 1),
+			"NAME": stringParam(params, 2), "DESCRIPTION": stringParam(params, 3), "FLAGS": 0,
+		})
+		return "", ""
+	case "removeLink":
+		kept := data.Links[:0]
+		removed := false
+		for _, link := range data.Links {
+			if link["SENDER"] == stringParam(params, 0) && link["RECEIVER"] == stringParam(params, 1) {
+				removed = true
+				continue
+			}
+			kept = append(kept, link)
+		}
+		data.Links = kept
+		if !removed {
+			return nil, "Unknown link"
+		}
+		return "", ""
 	case "setValue":
 		ch := c.channelByAddress(iface, stringParam(params, 0))
 		if ch == nil || len(params) < 3 {

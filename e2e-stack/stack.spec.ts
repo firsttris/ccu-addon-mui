@@ -290,3 +290,44 @@ test('meldet ein anderes Gerät ab', async ({ page, browser }) => {
   await expect(tablet.getByRole('button', { name: 'Anmelden' })).toBeVisible({ timeout: 15000 });
   await tabletContext.close();
 });
+
+test('legt Direktverknüpfungen an, ändert ihre Parameter und löscht sie', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/HmIP-RF/000855699C4F38');
+
+  const section = page.getByRole('region', { name: 'Direktverknüpfungen' });
+  const list = section.getByRole('list', { name: 'Direktverknüpfungen' });
+  await expect(list.getByRole('listitem')).toHaveCount(1);
+  await expect(list).toContainText('Taster Esszimmer oben (000855699C4F38:1) → Dimmer Esstisch (00151BE9A1C2D3:4) · Esstisch an');
+
+  // Lower button to the dimmer: only fitting partners are offered
+  const form = section.getByRole('form', { name: 'Verknüpfung anlegen' });
+  await form.getByLabel('Kanal dieses Geräts').selectOption('000855699C4F38:2');
+  const partner = form.getByLabel('Partner');
+  await expect(partner.locator('option')).toHaveCount(2);
+  await partner.selectOption('00151BE9A1C2D3:4');
+  await form.getByLabel('Name der Verknüpfung').fill('Esstisch dimmen');
+  await form.getByRole('button', { name: 'Verknüpfen' }).click();
+  await expect(page.getByText('Verknüpfung angelegt')).toBeVisible();
+  await expect(list.getByRole('listitem')).toHaveCount(2);
+
+  // Parameters of the new link on the dimmer's side
+  const item = list.getByRole('listitem').filter({ hasText: 'Esstisch dimmen' });
+  await item.getByRole('button', { name: 'Parameter' }).click();
+  const level = item.getByRole('textbox', { name: 'SHORT_ON_LEVEL' });
+  await expect(level).toHaveValue('100');
+  await level.fill('40');
+  await level.press('Enter');
+  await item.getByRole('button', { name: 'Speichern (1)' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Änderungen speichern?' });
+  await expect(dialog).toContainText('100 % → 40 %');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+  await expect(level).toHaveValue('40');
+
+  // Remove the first one
+  await list.getByRole('listitem').filter({ hasText: 'Esstisch an' }).getByRole('button', { name: 'Löschen' }).click();
+  await page.getByRole('dialog', { name: 'Verknüpfung löschen' }).getByRole('button', { name: 'Löschen' }).click();
+  await expect(page.getByText('Verknüpfung gelöscht')).toBeVisible();
+  await expect(list.getByRole('listitem')).toHaveCount(1);
+});

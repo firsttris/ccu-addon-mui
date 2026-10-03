@@ -55,6 +55,7 @@ export interface Response {
   seconds?: number;
   sysvars?: unknown[];
   sessions?: unknown[];
+  links?: unknown[];
   programs?: unknown[];
   // paramsetDescription, paramset
   description?: unknown;
