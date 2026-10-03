@@ -48,6 +48,8 @@ export interface Response {
   requestId?: string;
   // deviceProblems
   devices?: DeviceProblem[];
+  // paramsetDescription
+  description?: unknown;
 }
 
 // A failed request; code is the server's error code, or NOT_CONNECTED and

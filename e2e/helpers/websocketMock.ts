@@ -224,6 +224,15 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       return Array.from(byAddress.values());
     };
 
+    // Paramset descriptions as the server sends them (camelCase)
+    const paramsetDescriptions: Record<string, AnyPayload> = {
+      '0000DBE9A5C1F2:1': {
+        STATE: { type: 'ENUM', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 2, valueList: ['CLOSED', 'TILTED', 'OPEN'] },
+        SABOTAGE: { type: 'BOOL', operations: 5, flags: 9, tabOrder: 1 },
+        ERROR_CODE: { type: 'INTEGER', operations: 5, flags: 1, tabOrder: 2, min: 0, max: 255 },
+      },
+    };
+
     const state: {
       sockets: unknown[];
       sentMessages: Message[];
@@ -334,6 +343,16 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
           deviceId: message.deviceId,
           channels: state.subscriptions,
         });
+        return;
+      }
+
+      if (message.type === 'getParamsetDescription') {
+        const description = paramsetDescriptions[String(message.address)];
+        delayedBroadcast(
+          description && message.paramsetKey === 'VALUES'
+            ? { type: 'paramsetDescription', requestId: message.requestId, address: message.address, paramsetKey: message.paramsetKey, description }
+            : { type: 'error', error: 'getParamsetDescription failed: Unknown paramset', requestId: message.requestId },
+        );
         return;
       }
 

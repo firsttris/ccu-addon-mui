@@ -4,7 +4,7 @@ import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
 import { applyEvent, groupChannelsByType, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
-import { Channel, HmEvent } from '../types/types';
+import { Channel, HmEvent, ParamsetDescription } from '../types/types';
 
 // Server data loaded through TanStack Query. The queryFn sends its request
 // over the WebSocket (request() in useWebsocket); after a reconnect all
@@ -38,6 +38,25 @@ export const useDeviceProblems = () => {
     queryKey: ['deviceProblems'],
     queryFn: async () => (await request({ type: 'getDeviceProblems' })).devices ?? [],
     refetchInterval: DEVICE_PROBLEMS_REFRESH_MS,
+  });
+};
+
+// What the parameters of a channel are (type, range, unit, writable). Only
+// changes with new firmware, so it is never refetched.
+export const useParamsetDescription = (
+  interfaceName: string,
+  address: string,
+  paramsetKey: 'VALUES' | 'MASTER' = 'VALUES',
+) => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['paramsetDescription', interfaceName, address, paramsetKey],
+    queryFn: async () =>
+      ((await request({ type: 'getParamsetDescription', interfaceName, address, paramsetKey }))
+        .description ?? {}) as ParamsetDescription,
+    staleTime: Infinity,
+    // Not every interface has descriptions (e.g. CUxD); show the raw values
+    retry: false,
   });
 };
 

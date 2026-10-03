@@ -295,6 +295,32 @@
       "datapoints": {
         "STATE": 0
       }
+    },
+    {
+      "id": 8000,
+      "address": "00151BE9A1C2D3:0",
+      "type": "MAINTENANCE",
+      "interface": "HmIP-RF",
+      "name": "Dimmer Esstisch:0",
+      "datapoints": {
+        "UNREACH": false,
+        "LOW_BAT": false
+      }
+    },
+    {
+      "id": 8004,
+      "address": "00151BE9A1C2D3:4",
+      "type": "DIMMER_VIRTUAL_RECEIVER",
+      "interface": "HmIP-RF",
+      "name": "Dimmer Esstisch",
+      "datapoints": {
+        "ACTIVITY_STATE": 3,
+        "LEVEL": 0,
+        "LEVEL_STATUS": 0,
+        "PROCESS": 0,
+        "SECTION": 0,
+        "SECTION_STATUS": 0
+      }
     }
   ],
   "deviceNames": {
@@ -410,6 +436,35 @@
           ],
           "VERSION": 4,
           "FLAGS": 1
+        },
+        {
+          "ADDRESS": "00151BE9A1C2D3",
+          "TYPE": "HmIP-BDT",
+          "CHILDREN": [
+            "00151BE9A1C2D3:0",
+            "00151BE9A1C2D3:4"
+          ],
+          "PARAMSETS": [
+            "MASTER",
+            "SERVICE"
+          ],
+          "VERSION": 12,
+          "FIRMWARE": "1.4.8",
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "00151BE9A1C2D3:4",
+          "TYPE": "DIMMER_VIRTUAL_RECEIVER",
+          "PARENT": "00151BE9A1C2D3",
+          "PARENT_TYPE": "HmIP-BDT",
+          "INDEX": 4,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 12,
+          "FLAGS": 1
         }
       ],
       "paramsetDescriptions": {
@@ -463,6 +518,134 @@
                 "10S"
               ],
               "TAB_ORDER": 0
+            }
+          }
+        },
+        "00151BE9A1C2D3:4": {
+          "VALUES": {
+            "LEVEL": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 7,
+              "FLAGS": 1,
+              "DEFAULT": 0.0,
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "UNIT": "100%",
+              "TAB_ORDER": 0,
+              "CONTROL": "DIMMER.LEVEL",
+              "SPECIAL": [
+                {
+                  "ID": "OLD_LEVEL",
+                  "VALUE": 1.005
+                },
+                {
+                  "ID": "NO_CHANGE",
+                  "VALUE": 1.01
+                }
+              ]
+            },
+            "ACTIVITY_STATE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 3,
+              "VALUE_LIST": [
+                "UNKNOWN",
+                "UP",
+                "DOWN",
+                "STABLE"
+              ],
+              "TAB_ORDER": 1
+            },
+            "LEVEL_STATUS": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 5,
+              "VALUE_LIST": [
+                "NORMAL",
+                "UNKNOWN",
+                "OVERFLOW",
+                "UNDERFLOW",
+                "ERROR",
+                "INVALID"
+              ],
+              "TAB_ORDER": 2
+            },
+            "PROCESS": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 1,
+              "VALUE_LIST": [
+                "STABLE",
+                "NOT_STABLE"
+              ],
+              "TAB_ORDER": 3
+            },
+            "SECTION": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 15,
+              "TAB_ORDER": 4
+            },
+            "SECTION_STATUS": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 2,
+              "VALUE_LIST": [
+                "NORMAL",
+                "UNKNOWN",
+                "OVERFLOW"
+              ],
+              "TAB_ORDER": 5
+            },
+            "ON_TIME": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 2,
+              "FLAGS": 1,
+              "DEFAULT": 0.0,
+              "MIN": 0.0,
+              "MAX": 8580000.0,
+              "UNIT": "s",
+              "TAB_ORDER": 6,
+              "SPECIAL": [
+                {
+                  "ID": "NOT_USED",
+                  "VALUE": 0.0
+                }
+              ]
+            },
+            "RAMP_TIME": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 2,
+              "FLAGS": 1,
+              "DEFAULT": 0.5,
+              "MIN": 0.0,
+              "MAX": 8580000.0,
+              "UNIT": "s",
+              "TAB_ORDER": 7
+            },
+            "RAMP_STOP": {
+              "TYPE": "ACTION",
+              "OPERATIONS": 2,
+              "FLAGS": 1,
+              "DEFAULT": false,
+              "MIN": false,
+              "MAX": true,
+              "TAB_ORDER": 8
             }
           }
         }

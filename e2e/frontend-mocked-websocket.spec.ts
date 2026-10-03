@@ -231,11 +231,21 @@ test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => 
   await page.goto('/room/1');
   await page.getByText('ROTARY_HANDLE_TRANSCEIVER', { exact: true }).click();
 
+  // Rendered from the paramset description: the enum value by name
   const datapoints = page.getByLabel('Fenstergriff Wohnzimmer');
   await expect(datapoints).toBeVisible();
   await expect(datapoints.getByText('STATE', { exact: true })).toBeVisible();
-  await expect(datapoints.getByText('2', { exact: true })).toBeVisible();
+  await expect(datapoints.getByText('OPEN', { exact: true })).toBeVisible();
   await expect(datapoints.getByText(/^(No|Nein)$/)).toBeVisible();
+
+  await page.evaluate(() => {
+    (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
+      channel: '0000DBE9A5C1F2:1',
+      datapoint: 'STATE',
+      value: 1,
+    });
+  });
+  await expect(datapoints.getByText('TILTED', { exact: true })).toBeVisible();
 
   // Fallback for everything the app can't do yet
   const webUILink = page.getByRole('link', { name: /Open in CCU WebUI|In alter WebUI öffnen/ });

@@ -211,7 +211,7 @@ func TestStackAllDevices(t *testing.T) {
 			t.Fatalf("maintenance channel listed: %s", ch.Address)
 		}
 	}
-	if len(channels) != 14 {
-		t.Fatalf("expected all 14 channels, got %d", len(channels))
+	if len(channels) != 15 {
+		t.Fatalf("expected all 15 channels, got %d", len(channels))
 	}
 }

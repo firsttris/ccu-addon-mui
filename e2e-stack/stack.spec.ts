@@ -68,10 +68,34 @@ test('zeigt unbekannte Kanaltypen und Geräte ohne Raum unter „Alle Geräte“
   await expect(page.getByText('Rauchmelder Flur')).toBeVisible();
 
   await page.getByText('ROTARY_HANDLE_TRANSCEIVER', { exact: true }).click();
+  // Rendered from the paramset description the server reads over XML-RPC
   const handle = page.getByLabel('Fenstergriff Wohnzimmer');
-  await expect(handle.getByText('2', { exact: true })).toBeVisible();
+  await expect(handle.getByText('OPEN', { exact: true })).toBeVisible();
 
-  // Window opened: the value arrives as event
+  // Window tilted: the value arrives as event
   await deviceReports('HmIP-RF', '0000DBE9A5C1F2:1', 'STATE', 1);
-  await expect(handle.getByText('1', { exact: true })).toBeVisible();
+  await expect(handle.getByText('TILTED', { exact: true })).toBeVisible();
+});
+
+test('dimmt über den generischen Renderer aus der Paramset-Beschreibung', async ({ page }) => {
+  await login(page);
+  await page.getByRole('link', { name: 'Alle Geräte' }).click();
+  await page.getByText('DIMMER_VIRTUAL_RECEIVER', { exact: true }).click();
+
+  // LEVEL is 0..1 with unit "100%": shown and entered in percent
+  const dimmer = page.getByLabel('Dimmer Esstisch', { exact: true });
+  const level = dimmer.getByRole('textbox', { name: 'LEVEL' });
+  await expect(level).toHaveValue('0');
+  // Enums by name: ACTIVITY_STATE and PROCESS are both STABLE
+  await expect(dimmer.getByText('STABLE', { exact: true })).toHaveCount(2);
+  // Write-only parameters like RAMP_TIME are not shown
+  await expect(dimmer.getByText('RAMP_TIME')).toHaveCount(0);
+
+  await level.fill('40');
+  await level.press('Enter');
+
+  // Survives a reload: the value went through ReGa to the (fake) CCU
+  // (the group stays open, its state is stored)
+  await page.reload();
+  await expect(page.getByLabel('Dimmer Esstisch', { exact: true }).getByRole('textbox', { name: 'LEVEL' })).toHaveValue('40');
 });

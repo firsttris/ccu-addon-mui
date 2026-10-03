@@ -1,5 +1,7 @@
 import styled from '@emotion/styled';
-import { DatapointValue, GenericChannel } from '../types/types';
+import { DatapointValue, GenericChannel, ParamsetDescription } from '../types/types';
+import { useParamsetDescription, useSetDataPoint } from '../queries';
+import { ParamsetView, shownParameters } from './generic/ParamsetView';
 import { defaultLang, useTranslations } from '../i18n/utils';
 import { WebUILink } from '../components/WebUILink';
 
@@ -48,13 +50,18 @@ const Footer = styled.div`
 
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 2 });
 
-interface ControlProps {
+interface ViewProps {
   channel: GenericChannel;
+  // The channel's VALUES paramset description, if the CCU provides one
+  description?: ParamsetDescription;
+  onSet?: (name: string, value: string | number | boolean) => void;
 }
 
-// Fallback for channel types without their own control: shows the channel's
-// datapoints read-only, so every device at least appears with its values.
-export const GenericControl = ({ channel }: ControlProps) => {
+// Fallback for channel types without their own control. With a paramset
+// description, every parameter gets the element its type calls for;
+// without one (still loading, or an interface without descriptions) the
+// datapoints are shown read-only.
+export const GenericControlView = ({ channel, description, onSet = () => {} }: ViewProps) => {
   const t = useTranslations();
 
   const format = (value: DatapointValue) => {
@@ -75,17 +82,33 @@ export const GenericControl = ({ channel }: ControlProps) => {
   return (
     <Container>
       <Name>{channel.name}</Name>
-      <Datapoints aria-label={channel.name}>
-        {datapoints.map(([key, value]) => (
-          <div key={key} style={{ display: 'contents' }}>
-            <Key title={key}>{key}</Key>
-            <Value>{format(value)}</Value>
-          </div>
-        ))}
-      </Datapoints>
+      {description && shownParameters(description).length > 0 ? (
+        <ParamsetView label={channel.name} description={description} values={channel.datapoints} onSet={onSet} />
+      ) : (
+        <Datapoints aria-label={channel.name}>
+          {datapoints.map(([key, value]) => (
+            <div key={key} style={{ display: 'contents' }}>
+              <Key title={key}>{key}</Key>
+              <Value>{format(value)}</Value>
+            </div>
+          ))}
+        </Datapoints>
+      )}
       <Footer>
         <WebUILink />
       </Footer>
     </Container>
+  );
+};
+
+export const GenericControl = ({ channel }: { channel: GenericChannel }) => {
+  const { data: description } = useParamsetDescription(channel.interfaceName, channel.address);
+  const setDataPoint = useSetDataPoint();
+  return (
+    <GenericControlView
+      channel={channel}
+      description={description}
+      onSet={(name, value) => setDataPoint(channel.interfaceName, channel.address, name, value)}
+    />
   );
 };

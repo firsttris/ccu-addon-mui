@@ -179,3 +179,26 @@ export interface DeviceProblem {
   lowBat: boolean;
   unreach: boolean;
 }
+
+// Paramset descriptions from the CCU's XML-RPC interfaces (see the
+// HomeMatic XML-RPC documentation, ParameterDescription)
+export type ParameterType = 'FLOAT' | 'INTEGER' | 'BOOL' | 'ENUM' | 'STRING' | 'ACTION';
+
+export const Operation = { READ: 1, WRITE: 2, EVENT: 4 } as const;
+export const ParameterFlag = { VISIBLE: 0x01, INTERNAL: 0x02, SERVICE: 0x08 } as const;
+
+export interface ParameterDescription {
+  type: ParameterType;
+  operations: number;
+  flags: number;
+  default?: DatapointValue;
+  min?: DatapointValue;
+  max?: DatapointValue;
+  unit?: string;
+  tabOrder: number;
+  control?: string;
+  valueList?: string[];
+  special?: { id: string; value: DatapointValue }[];
+}
+
+export type ParamsetDescription = Record<string, ParameterDescription>;
