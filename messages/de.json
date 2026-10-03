@@ -720,5 +720,6 @@
   "DEVHIST_RANGE": "{min} – {max}",
   "DEVHIST_NONE": "Kein Kanal dieses Geräts wird protokolliert. Die Option „protokolliert“ steht unter Namen, Räume und Gewerke.",
   "DEVHIST_EMPTY": "Noch keine Einträge im Systemprotokoll.",
-  "DEVHIST_HINT": "Aus den letzten {count} Einträgen des Systemprotokolls je Kanal."
+  "DEVHIST_HINT": "Aus den letzten {count} Einträgen des Systemprotokolls je Kanal.",
+  "FW_UPDATE_HINT": "Aktualisiert wird in der WebUI unter Einstellungen › Systemsteuerung › Zentralen-Wartung."
 }

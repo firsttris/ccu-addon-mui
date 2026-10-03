@@ -102,7 +102,8 @@ export type ServerMessage =
   | ListReplaceableDevicesResponse
   | ReplaceDeviceResponse
   | StartComTestResponse
-  | PollComTestResponse;
+  | PollComTestResponse
+  | CheckFirmwareUpdateResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -189,6 +190,7 @@ export interface Protocol {
   replaceDevice: ReplaceDeviceCall;
   startComTest: StartComTestCall;
   pollComTest: PollComTestCall;
+  checkFirmwareUpdate: CheckFirmwareUpdateCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2975,6 +2977,32 @@ export interface PollComTestResponse {
    * when the device answered, empty while it hasn't
    */
   answered: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckFirmwareUpdateCall".
+ */
+export interface CheckFirmwareUpdateCall {
+  request: CheckFirmwareUpdateRequest;
+  response: CheckFirmwareUpdateResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckFirmwareUpdateRequest".
+ */
+export interface CheckFirmwareUpdateRequest {
+  type: "checkFirmwareUpdate";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckFirmwareUpdateResponse".
+ */
+export interface CheckFirmwareUpdateResponse {
+  type: "checkFirmwareUpdate_response";
+  requestId?: string;
+  current: string;
+  latest: string;
 }
 /**
  * Sent first on every connection

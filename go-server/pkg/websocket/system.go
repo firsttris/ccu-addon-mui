@@ -35,6 +35,12 @@ func addonVersion() string {
 }
 
 func firmwareVersion() string {
+	return versionFileValue("VERSION")
+}
+
+// versionFileValue reads KEY=value from the firmware's VERSION file
+// (VERSION, PRODUCT and, on OpenCCU, PLATFORM)
+func versionFileValue(key string) string {
 	f, err := os.Open(firmwareVersionFile)
 	if err != nil {
 		return ""
@@ -42,7 +48,7 @@ func firmwareVersion() string {
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		if value, ok := strings.CutPrefix(strings.TrimSpace(scanner.Text()), "VERSION="); ok {
+		if value, ok := strings.CutPrefix(strings.TrimSpace(scanner.Text()), key+"="); ok {
 			return value
 		}
 	}

@@ -720,5 +720,6 @@
   "DEVHIST_RANGE": "{min} – {max}",
   "DEVHIST_NONE": "No channel of this device is logged. The option “logged” is under names, rooms and functions.",
   "DEVHIST_EMPTY": "No entries in the system protocol yet.",
-  "DEVHIST_HINT": "From the last {count} entries of the system protocol per channel."
+  "DEVHIST_HINT": "From the last {count} entries of the system protocol per channel.",
+  "FW_UPDATE_HINT": "The update is installed in the WebUI under Settings › Control panel › Central maintenance."
 }
