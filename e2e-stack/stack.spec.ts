@@ -463,3 +463,46 @@ test('erstellt ein Backup und lädt es herunter', async ({ page }) => {
   await expect(dialog).toHaveCount(0);
   await expect(panel.getByRole('status')).toContainText('ccu3-webui-2026-10-03.sbk');
 });
+
+test('bearbeitet das Wochenprogramm eines Schaltaktors', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/HmIP-RF/00195F29B04142');
+  await page.getByRole('button', { name: 'Wochenprogramm bearbeiten' }).click();
+
+  const sheet = page.getByRole('dialog', { name: 'Zeitplan' });
+  const points = sheet.getByRole('list', { name: 'Zeitplan' }).getByRole('listitem');
+  await expect(points).toHaveCount(2);
+  await expect(points.nth(0)).toContainText('06:00');
+  await expect(points.nth(0)).toContainText('Mo–Fr');
+  await expect(points.nth(0)).toContainText('An');
+  await expect(points.nth(1)).toContainText('22:00');
+  await expect(points.nth(1)).toContainText('Aus');
+
+  // 22:00 → 21:30
+  await points.nth(1).getByRole('button').click();
+  let dialog = page.getByRole('dialog', { name: 'Schaltzeit' });
+  await dialog.getByRole('combobox', { name: 'Stunde' }).selectOption('21');
+  await dialog.getByRole('combobox', { name: 'Minute' }).selectOption('30');
+  await dialog.getByRole('button', { name: 'Übernehmen' }).click();
+
+  // A new one: weekends at sunrise + 30 min, on
+  await sheet.getByRole('button', { name: 'Schaltzeit hinzufügen' }).click();
+  dialog = page.getByRole('dialog', { name: 'Schaltzeit' });
+  await dialog.getByRole('button', { name: 'Wochenende' }).click();
+  await dialog.getByRole('radio', { name: 'Sonnenaufgang' }).click();
+  await dialog.getByRole('combobox').selectOption('30');
+  await dialog.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(sheet.getByText('2 Änderungen')).toBeVisible();
+
+  await sheet.getByRole('button', { name: 'Speichern' }).click();
+  await page.getByRole('dialog', { name: 'Änderungen speichern?' }).getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+
+  // Stored in the (fake) CCU
+  await page.reload();
+  await page.getByRole('button', { name: 'Wochenprogramm bearbeiten' }).click();
+  const stored = page.getByRole('dialog', { name: 'Zeitplan' }).getByRole('list', { name: 'Zeitplan' }).getByRole('listitem');
+  await expect(stored).toHaveCount(3);
+  await expect(stored.filter({ hasText: 'Sonnenaufgang +30 min' })).toContainText('Wochenende');
+  await expect(stored.filter({ hasText: '21:30' })).toContainText('Aus');
+});

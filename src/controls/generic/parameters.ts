@@ -125,7 +125,8 @@ const catalog: Record<string, Entry> = {
 
 const groupRules: [RegExp, ParameterGroup][] = [
   [/^P\d+_(ENDTIME|TEMPERATURE)_/, 'hidden'],
-  [/^\d+_WP_/, 'schedule'],
+  // The actuators' own week program: edited in WeekProgramSheet
+  [/^\d+_WP_/, 'hidden'],
   [/^(ROUTER_|MULTICAST_|BACKBONE_)/, 'expert'],
   [/^(CYCLIC_|DST_|DUTY|ARR_|ROUTING|LOW_BAT|LOCAL_RESET|DAYLIGHT)/, 'radio'],
   [/^(POWERUP_|ON_TIME|REFERENCE_|ANGLE_|EVENT_|LOGIC_|OUTPUT_)/, 'switching'],

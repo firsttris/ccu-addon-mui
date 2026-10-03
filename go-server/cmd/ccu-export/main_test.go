@@ -64,7 +64,7 @@ func TestExportRoundTrip(t *testing.T) {
 	}
 
 	hmip := exported.Interfaces["HmIP-RF"]
-	if hmip == nil || len(hmip.Devices) != 9 || hmip.ParamsetDescriptions["0000DBE9A5C1F2:1"]["VALUES"] == nil ||
+	if hmip == nil || len(hmip.Devices) != 16 || hmip.ParamsetDescriptions["0000DBE9A5C1F2:1"]["VALUES"] == nil ||
 		fmt.Sprint(hmip.Paramsets["0000DBE9A5C1F2:1"]["MASTER"]["EVENT_DELAY_UNIT"]) != "0" {
 		t.Fatalf("unexpected HmIP-RF data: %+v", hmip)
 	}
