@@ -6,6 +6,7 @@ import { WebSocketProvider } from './hooks/useWebsocket';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
 import '@fontsource/roboto';
+import './styles.css';
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';

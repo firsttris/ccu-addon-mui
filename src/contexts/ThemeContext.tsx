@@ -68,6 +68,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     document.body.style.backgroundColor = theme.colors.background;
     document.body.style.color = theme.colors.text;
+    // For the Tailwind colors and the dark: variant (styles.css)
+    document.documentElement.dataset.theme = theme.mode;
   }, [isDark, theme]);
 
   return (

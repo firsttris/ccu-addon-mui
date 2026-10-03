@@ -5,6 +5,7 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import fs from 'fs';
 import Icons from 'unplugin-icons/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
+import tailwindcss from '@tailwindcss/vite';
 import { FileSystemIconLoader } from 'unplugin-icons/loaders';
 
 // Default sizes of icons that had a fixed size as hand-written components;
@@ -60,6 +61,7 @@ export default defineConfig(({ command, mode, isPreview }) => ({
       autoCodeSplitting: true,
     }),
     react(),
+    tailwindcss(),
     // Texts from messages/<locale>.json, compiled to typed functions (m.KEY())
     paraglideVitePlugin({
       project: './project.inlang',

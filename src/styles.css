@@ -1,0 +1,41 @@
+/* Tailwind CSS, for now without its reset (preflight): while components
+   move over from Emotion one by one, the page must look exactly the same
+   (checked by the screenshot tests). */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Dark mode follows the theme switch in the header, not the system */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* The app's colors (see ThemeContext), as utilities: bg-surface,
+   text-text-secondary, border-border, ... */
+@theme inline {
+  --color-background: var(--mui-background);
+  --color-surface: var(--mui-surface);
+  --color-text: var(--mui-text);
+  --color-text-secondary: var(--mui-text-secondary);
+  --color-border: var(--mui-border);
+  --color-primary: var(--mui-primary);
+  --color-hover: var(--mui-hover);
+}
+
+:root {
+  --mui-background: #ffffff;
+  --mui-surface: #f9f9f9;
+  --mui-text: #333333;
+  --mui-text-secondary: #555555;
+  --mui-border: #dddddd;
+  --mui-primary: #ffffff;
+  --mui-hover: #f0f0f0;
+}
+
+:root[data-theme='dark'] {
+  --mui-background: #181a1b;
+  --mui-surface: #202224;
+  --mui-text: #c8c3bc;
+  --mui-text-secondary: #a8a3a4;
+  --mui-border: #333333;
+  --mui-primary: #202224;
+  --mui-hover: #282a2c;
+}
