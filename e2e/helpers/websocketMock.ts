@@ -594,6 +594,23 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         return;
       }
 
+      if (message.type === 'getPush') {
+        delayedBroadcast({
+          type: 'getPush_response',
+          publicKey: 'BMockVapidPublicKeyOnlyForTheMockedWebSocketServer000000000000000000000000000000000000',
+          subscribed: false,
+          alarms: false,
+          service: false,
+          requestId: message.requestId,
+        });
+        return;
+      }
+
+      if (message.type === 'subscribePush' || message.type === 'unsubscribePush' || message.type === 'testPush') {
+        delayedBroadcast({ type: `${message.type}_response`, success: true, requestId: message.requestId });
+        return;
+      }
+
       if (message.type === 'getFavorites') {
         delayedBroadcast({ type: 'getFavorites_response', favorites, requestId: message.requestId });
         return;

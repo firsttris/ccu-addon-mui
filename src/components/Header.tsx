@@ -5,6 +5,7 @@ import TriangleAlertIcon from '~icons/lucide/triangle-alert';
 import HomeIcon from '~icons/lucide/house';
 import TagIcon from '~icons/lucide/tag';
 import { getStartPage, setStartPage, StartPage } from '../lib/startPage';
+import { PushSettings } from './PushSettings';
 import StarIcon from '~icons/lucide/star';
 import ListIcon from '~icons/lucide/list';
 import BracesIcon from '~icons/lucide/braces';
@@ -174,6 +175,9 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
               <span className="text-xs text-muted-foreground">{m.EFFECTS_HINT()}</span>
             </div>
             <StartPageChoice />
+          </NavSection>
+          <NavSection title={m.PUSH_TITLE()}>
+            <PushSettings />
           </NavSection>
           {authRequired && (
             <>

@@ -15,6 +15,7 @@ import (
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
+	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/websocket"
 	"ccu-addon-mui-server/pkg/xmlrpc"
@@ -85,6 +86,17 @@ func run(ctx context.Context, cfg *config.Config) error {
 		return fmt.Errorf("failed to create the XML-RPC client: %w", err)
 	}
 	wsServer.SetDeviceRPC(deviceRPC)
+
+	// Push notifications about new alarms and service messages
+	if store, err := push.OpenStore(cfg.PushFile); err != nil {
+		logger.Error("Push notifications disabled:", err)
+	} else if vapid, err := store.VAPID(cfg.PushSubject); err != nil {
+		logger.Error("Push notifications disabled:", err)
+	} else {
+		notifier := push.NewNotifier(store, vapid, regaClient)
+		wsServer.SetPush(store, notifier)
+		go notifier.Run(ctx, 30*time.Second)
+	}
 
 	rpcServer := xmlrpc.NewServer(cfg, wsServer.BroadcastToClients)
 	// Descriptions change with new firmware or re-pairing

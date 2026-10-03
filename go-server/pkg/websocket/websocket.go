@@ -23,6 +23,7 @@ import (
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/logger"
+	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/subscriptions"
 	"ccu-addon-mui-server/pkg/types"
@@ -188,6 +189,9 @@ type Server struct {
 	clientsMu       sync.RWMutex
 	subscriptionMgr *subscriptions.Manager
 	httpServer      *http.Server
+	// Push notifications, if enabled
+	pushStore *push.Store
+	notifier  *push.Notifier
 
 	// auth is nil when authentication is disabled (AUTH_MODE=none).
 	auth *auth.Authenticator
@@ -253,6 +257,13 @@ func (s *Server) SetBackup(service *backup.Service) {
 // BackupPath is where created backups are downloaded, next to the
 // WebSocket (the CCU's lighttpd forwards /ws/mui to the server).
 const BackupPath = "/ws/mui/backup/"
+
+// SetPush enables push notifications: subscribing devices and test
+// notifications.
+func (s *Server) SetPush(store *push.Store, notifier *push.Notifier) {
+	s.pushStore = store
+	s.notifier = notifier
+}
 
 // SetDeviceRPC enables requests that need XML-RPC (paramsets).
 func (s *Server) SetDeviceRPC(rpc DeviceRPC) {
@@ -512,6 +523,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleAllLinks(client, requestID)
 	case "getLayout", "setLayout":
 		s.handleLayout(client, msgType, message)
+	case "getPush", "subscribePush", "unsubscribePush", "testPush":
+		s.handlePush(client, msgType, message)
 	case "setGroupMember":
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
@@ -2100,4 +2113,75 @@ func (s *Server) handleLayout(client *Client, msgType string, message []byte) {
 		return
 	}
 	s.sendJSON(client, changeResponse{Type: "setLayout_response", RequestID: msg.RequestID, Success: true})
+}
+
+type pushResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	// The key browsers subscribe with
+	PublicKey string `json:"publicKey"`
+	// The device's subscription, if any
+	Subscribed bool `json:"subscribed"`
+	Alarms     bool `json:"alarms"`
+	Service    bool `json:"service"`
+}
+
+// handlePush subscribes a device to notifications about new alarms and
+// service messages, and sends test notifications. Any logged-in user.
+func (s *Server) handlePush(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID    string            `json:"requestId"`
+		Endpoint     string            `json:"endpoint"`
+		Subscription push.Subscription `json:"subscription"`
+		Alarms       bool              `json:"alarms"`
+		Service      bool              `json:"service"`
+		Language     string            `json:"language"`
+		Device       string            `json:"device"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if s.notifier == nil {
+		s.sendRequestError(client, msg.RequestID, "push notifications are not available", "UNAVAILABLE")
+		return
+	}
+	switch msgType {
+	case "getPush":
+		entry, ok := s.pushStore.Get(msg.Endpoint)
+		s.sendJSON(client, pushResponse{
+			Type: "getPush_response", RequestID: msg.RequestID, PublicKey: s.notifier.PublicKey(),
+			Subscribed: ok && msg.Endpoint != "", Alarms: entry.Alarms, Service: entry.Service,
+		})
+		return
+	case "subscribePush":
+		u, err := url.Parse(msg.Subscription.Endpoint)
+		if err != nil || u.Scheme != "https" || u.Host == "" || msg.Subscription.Keys.P256dh == "" || msg.Subscription.Keys.Auth == "" {
+			s.sendRequestError(client, msg.RequestID, "invalid subscription", "INVALID_VALUE")
+			return
+		}
+		language := "de"
+		if msg.Language == "en" {
+			language = "en"
+		}
+		err = s.pushStore.Put(push.Entry{
+			Subscription: msg.Subscription, User: client.user, Device: msg.Device, Language: language,
+			Alarms: msg.Alarms, Service: msg.Service, Created: time.Now(),
+		})
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "subscribePush failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+	case "unsubscribePush":
+		if _, err := s.pushStore.Remove(msg.Endpoint); err != nil {
+			s.sendRequestError(client, msg.RequestID, "unsubscribePush failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+	case "testPush":
+		if err := s.notifier.Test(msg.Endpoint, "ccu-addon-mui", "Test"); err != nil {
+			s.sendRequestError(client, msg.RequestID, "testPush failed: "+err.Error(), "PUSH_FAILED")
+			return
+		}
+	}
+	s.sendJSON(client, changeResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true})
 }

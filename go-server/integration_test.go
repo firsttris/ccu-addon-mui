@@ -62,6 +62,8 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		AuditLogFile:       filepath.Join(t.TempDir(), "audit.log"),
 		SessionsFile:       filepath.Join(t.TempDir(), "sessions.json"),
 		BackupDir:          filepath.Join(t.TempDir(), "backups"),
+		PushFile:           filepath.Join(t.TempDir(), "push.json"),
+		PushSubject:        "mailto:test@example.com",
 	}
 	auditLogs[ccu] = cfg.AuditLogFile
 
@@ -1178,5 +1180,37 @@ func TestStackLayout(t *testing.T) {
 	send(t, conn, message{"type": "getLayout", "requestId": "y4", "id": 424242})
 	if m := receive(t, conn, byRequestID("y4")); m["code"] != "NOT_FOUND" {
 		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}
+
+func TestStackPushSubscription(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Gast", "gast")
+	endpoint := "https://push.example.com/send/abc"
+	send(t, conn, message{"type": "getPush", "requestId": "p1", "endpoint": endpoint})
+	status := receive(t, conn, byRequestID("p1"))
+	if key, _ := status["publicKey"].(string); len(key) < 80 || status["subscribed"] != false {
+		t.Fatalf("unexpected status: %v", status)
+	}
+	sub := message{"endpoint": endpoint, "keys": message{"p256dh": "BPKa", "auth": "c2VjcmV0"}}
+	send(t, conn, message{"type": "subscribePush", "requestId": "p2", "subscription": sub, "alarms": true, "service": false, "language": "en", "device": "Handy"})
+	if m := receive(t, conn, byRequestID("p2")); m["success"] != true {
+		t.Fatalf("subscribePush failed: %v", m)
+	}
+	send(t, conn, message{"type": "getPush", "requestId": "p3", "endpoint": endpoint})
+	if m := receive(t, conn, byRequestID("p3")); m["subscribed"] != true || m["alarms"] != true || m["service"] != false {
+		t.Fatalf("not subscribed: %v", m)
+	}
+	// Only https push services
+	sub["endpoint"] = "http://127.0.0.1/evil"
+	send(t, conn, message{"type": "subscribePush", "requestId": "p4", "subscription": sub, "alarms": true})
+	if m := receive(t, conn, byRequestID("p4")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+	send(t, conn, message{"type": "unsubscribePush", "requestId": "p5", "endpoint": endpoint})
+	receive(t, conn, byRequestID("p5"))
+	send(t, conn, message{"type": "getPush", "requestId": "p6", "endpoint": endpoint})
+	if m := receive(t, conn, byRequestID("p6")); m["subscribed"] != false {
+		t.Fatalf("still subscribed: %v", m)
 	}
 }

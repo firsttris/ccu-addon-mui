@@ -93,6 +93,8 @@ export default defineConfig(({ command, mode, isPreview }) => ({
         // The direct link profiles (1.5 MB) are loaded when needed, in the
         // setup area only, not installed on every device
         globIgnores: ['**/linkProfiles-*.js'],
+        // Push notifications (public/push-sw.js)
+        importScripts: ['push-sw.js'],
       },
       manifest: {
         name: 'ccu-addon-mui',

@@ -32,6 +32,10 @@ type Config struct {
 	AuthKeyFile string
 	// SessionsFile keeps the list of logged-in devices
 	SessionsFile string
+	// PushFile keeps the Web Push key and the subscribed devices
+	PushFile string
+	// PushSubject is the contact sent to the push services (VAPID "sub")
+	PushSubject string
 	// AuditLogFile records every change made through the add-on; empty
 	// disables it.
 	AuditLogFile string
@@ -68,6 +72,8 @@ func Load() *Config {
 		AuthKeyFile:        getEnv("AUTH_KEY_FILE", defaultAuthKeyFile()),
 		AuditLogFile:       getEnv("AUDIT_LOG_FILE", defaultConfigFile("mui-audit.log")),
 		SessionsFile:       getEnv("SESSIONS_FILE", defaultConfigFile("mui-sessions.json")),
+		PushFile:           getEnv("PUSH_FILE", defaultConfigFile("mui-push.json")),
+		PushSubject:        getEnv("PUSH_SUBJECT", "https://github.com/firsttris/ccu-addon-mui"),
 		BackupDir:          getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
 	}
 }
