@@ -1,6 +1,5 @@
-import styled from '@emotion/styled';
 import { useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { ButtonHTMLAttributes, HTMLAttributes, useState, useEffect } from 'react';
 import MdiMenu from '~icons/mui/menu';
 import TeenyiconsFloorplanSolid from '~icons/teenyicons/floorplan-solid';
 import MdiPipeValve from '~icons/mdi/pipe-valve';
@@ -12,177 +11,70 @@ import { m } from '../paraglide/messages';
 // A short reconnect (e.g. at startup) should not flash a warning
 const CONNECTION_WARNING_DELAY_MS = 2000;
 
-const ProblemBadge = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  border: none;
-  border-radius: 14px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  background: #e65100;
-`;
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
+type DivProps = HTMLAttributes<HTMLDivElement>;
 
-const ConnectionBanner = styled.div`
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  padding: 6px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  color: #fff;
-  background: #c62828;
-`;
+const ProblemBadge = (props: ButtonProps) => (
+  <button
+    className="flex items-center gap-1 px-[10px] py-[6px] border-none rounded-[14px] cursor-pointer text-[14px] font-semibold text-white bg-[#e65100]"
+    {...props}
+  />
+);
 
-const ConnectionDot = styled('span', {
-  shouldForwardProp: (prop) => prop !== 'connected',
-})<{ connected: boolean }>`
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: ${({ connected }) => (connected ? '#43a047' : '#c62828')};
-`;
+const ConnectionBanner = (props: DivProps) => (
+  <div
+    className="absolute top-full left-0 right-0 px-4 py-[6px] text-[14px] font-semibold text-center text-white bg-[#c62828]"
+    {...props}
+  />
+);
 
-const RightGroup = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 14px;
-`;
+const ConnectionDot = ({ connected, ...props }: HTMLAttributes<HTMLSpanElement> & { connected: boolean }) => (
+  <span className={`w-[10px] h-[10px] rounded-full ${connected ? 'bg-[#43a047]' : 'bg-[#c62828]'}`} {...props} />
+);
 
-const HeaderContainer = styled.div`
-  position: fixed;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  background-color: ${props => props.theme.colors.primary};
-  padding: 10px 20px;
-  box-sizing: border-box;
-`;
+const IconButton = (props: ButtonProps) => (
+  <button
+    className="bg-primary border-2 border-solid border-border p-[10px] cursor-pointer flex items-center justify-center text-[20px] rounded-lg shadow-[0_2px_4px_rgba(0,0,0,0.1)] transition-all duration-200 ease-[ease] text-text hover:bg-hover hover:border-border hover:scale-105 active:scale-95"
+    {...props}
+  />
+);
 
-const IconButton = styled.button`
-  background: ${props => props.theme.colors.primary};
-  border: 2px solid ${props => props.theme.colors.border};
-  padding: 10px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
-  color: ${props => props.theme.colors.text};
+// Moved out of view with an inline transform when closed
+const Menu = (props: DivProps & { inert?: boolean }) => (
+  <div
+    className="fixed top-0 left-0 bg-surface border border-solid border-border border-l-0 rounded-[0_8px_8px_0] shadow-[2px_0_8px_rgba(0,0,0,0.1)] z-[999] w-[220px] h-screen transition-transform duration-300 ease-[ease] flex flex-col overflow-x-hidden overflow-y-auto"
+    {...props}
+  />
+);
 
-  &:hover {
-    background: ${props => props.theme.colors.hover};
-    border-color: ${props => props.theme.colors.border};
-    transform: scale(1.05);
-  }
+const MenuHeader = (props: DivProps) => (
+  <div
+    className="py-[10px] px-4 text-[18px] font-semibold text-text border-b border-border bg-primary rounded-[0_8px_0_0] flex justify-between items-center"
+    {...props}
+  />
+);
 
-  &:active {
-    transform: scale(0.95);
-  }
-`;
+const CloseButton = (props: ButtonProps) => (
+  <button
+    className="bg-transparent border-none text-[24px] text-text-secondary cursor-pointer p-2 rounded transition-[background-color] duration-200 ease-[ease] hover:bg-hover"
+    {...props}
+  />
+);
 
-const Menu = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  background: ${props => props.theme.colors.surface};
-  border: 1px solid ${props => props.theme.colors.border};
-  border-left: none;
-  border-radius: 0 8px 8px 0;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-  z-index: 999;
-  width: 220px;
-  height: 100vh;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  /* Long names must not stick out of the hidden menu; many rooms scroll */
-  overflow-x: hidden;
-  overflow-y: auto;
-`;
+const MenuSection = (props: DivProps) => (
+  <div className="border-b border-border last-of-type:border-b-0" {...props} />
+);
 
-const MenuHeader = styled.div`
-  padding: 10px 16px;
-  font-size: 18px;
-  font-weight: 600;
-  color: ${props => props.theme.colors.text};
-  border-bottom: 1px solid ${props => props.theme.colors.border};
-  background: ${props => props.theme.colors.primary};
-  border-radius: 0 8px 0 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
+const MenuSectionTitle = (props: DivProps) => (
+  <div className="p-4 text-[16px] font-semibold text-text bg-surface uppercase tracking-[0.5px]" {...props} />
+);
 
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: ${props => props.theme.colors.textSecondary};
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: ${props => props.theme.colors.hover};
-  }
-`;
-
-const MenuSection = styled.div`
-  border-bottom: 1px solid ${props => props.theme.colors.border};
-  &:last-of-type {
-    border-bottom: none;
-  }
-`;
-
-const MenuSectionTitle = styled.div`
-  padding: 16px 16px;
-  font-size: 16px;
-  font-weight: 600;
-  color: ${props => props.theme.colors.text};
-  background: ${props => props.theme.colors.surface};
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-`;
-
-const SubMenuItem = styled.button`
-  background: none;
-  border: none;
-  padding: 12px 16px 12px 40px;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 16px;
-  color: ${props => props.theme.colors.textSecondary};
-  transition: background-color 0.2s ease;
-
-  &:hover {
-    background-color: ${props => props.theme.colors.hover};
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-  }
-`;
+const SubMenuItem = (props: ButtonProps) => (
+  <button
+    className="bg-transparent border-none pt-3 pr-4 pb-3 pl-10 w-full text-left cursor-pointer flex items-center gap-3 text-[16px] text-text-secondary transition-[background-color] duration-200 ease-[ease] hover:bg-hover [&_svg]:w-5 [&_svg]:h-5 [&_svg]:shrink-0"
+    {...props}
+  />
+);
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -214,7 +106,7 @@ export const Header: React.FC = () => {
   const { data: trades = [] } = useTrades({ enabled: menuOpen });
 
   return (
-    <HeaderContainer>
+    <div className="fixed flex justify-between items-center w-full top-0 left-0 z-[1000] bg-primary py-[10px] px-5 box-border">
       <div style={{ position: 'relative' }}>
         <Menu
           // Closed, it is only moved out of view: keep it out of reach of
@@ -317,7 +209,7 @@ export const Header: React.FC = () => {
           <MdiMenu />
         </IconButton>
       </div>
-      <RightGroup>
+      <div className="flex items-center gap-[14px]">
         {problemCount > 0 && (
           <ProblemBadge
             onClick={() => navigate({ to: '/' })}
@@ -336,10 +228,10 @@ export const Header: React.FC = () => {
         <IconButton onClick={toggleTheme} aria-label="Toggle Theme">
           {theme.mode === 'light' ? '🌙' : '☀️'}
         </IconButton>
-      </RightGroup>
+      </div>
       {showConnectionWarning && (
         <ConnectionBanner role="status">{m.CONNECTION_LOST()}</ConnectionBanner>
       )}
-    </HeaderContainer>
+    </div>
   );
 };
