@@ -30,11 +30,25 @@ export const NavTabs = ({ label, items, activeId, to }: NavTabsProps) => {
     const update = () => {
       const active = listRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
       setMarker(active ? { left: active.offsetLeft, width: active.offsetWidth } : null);
-      active?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      // Only the tab row scrolls sideways, never the page
+      const row = listRef.current?.parentElement;
+      if (active && row) {
+        const left = active.offsetLeft;
+        const right = left + active.offsetWidth;
+        if (left < row.scrollLeft) row.scrollLeft = left - 8;
+        else if (right > row.scrollLeft + row.clientWidth) row.scrollLeft = right - row.clientWidth + 8;
+      }
     };
     update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    // Tab widths change when the font has loaded or the window is resized
+    const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(update);
+    if (listRef.current) observer?.observe(listRef.current);
+    let active = true;
+    document.fonts?.ready.then(() => active && update());
+    return () => {
+      active = false;
+      observer?.disconnect();
+    };
   }, [activeId, items]);
 
   if (items.length < 2) {

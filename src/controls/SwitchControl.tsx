@@ -11,23 +11,26 @@ interface ControlProps {
 }
 
 // Counts how often the state changed, to restart the swing each time, and
-// whether the last change came from elsewhere (the wall switch, a program)
+// whether the last change came from elsewhere (the wall switch, a program):
+// anything but the state this tile just asked for.
 const useStateChanges = (on: boolean) => {
   const [changes, setChanges] = useState(0);
   const [external, setExternal] = useState(false);
   const previous = useRef(on);
-  const pressedAt = useRef(0);
+  const requested = useRef<{ state: boolean; at: number } | null>(null);
   useEffect(() => {
     if (previous.current === on) return;
     previous.current = on;
     setChanges((c) => c + 1);
-    if (Date.now() - pressedAt.current > 3000) {
+    const own = requested.current && requested.current.state === on && Date.now() - requested.current.at < 3000;
+    requested.current = null;
+    if (!own) {
       setExternal(true);
       const timer = setTimeout(() => setExternal(false), 1500);
       return () => clearTimeout(timer);
     }
   }, [on]);
-  return { changes, external, markPressed: () => (pressedAt.current = Date.now()) };
+  return { changes, external, markRequested: (state: boolean) => (requested.current = { state, at: Date.now() }) };
 };
 
 // A switch actuator as a pendant lamp: switched on, it casts a cone of
@@ -38,13 +41,13 @@ export const SwitchControl = ({ channel }: ControlProps) => {
   const id = useId();
   const { datapoints, name, address, interfaceName } = channel;
   const on = datapoints.STATE === true;
-  const { changes, external, markPressed } = useStateChanges(on);
+  const { changes, external, markRequested } = useStateChanges(on);
   const k = effects.k;
   const a = (alpha: number) => Math.min(1, alpha * k);
   const state = on ? m.ON() : m.OFF();
 
   const toggle = () => {
-    markPressed();
+    markRequested(!on);
     setDataPoint(interfaceName, address, 'STATE', !on);
   };
 

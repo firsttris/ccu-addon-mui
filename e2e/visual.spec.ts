@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { installWebSocketMock } from './helpers/websocketMock';
 
-// Screenshot baselines for refactorings that must not change the look.
+// Screenshot baselines, so changes to the look are seen and intended.
 // The tolerance is absolute: a ratio (e.g. 0.1 % of the pixels) lets a
 // whole new line of text through on a phone screenshot.
-// (icon library, styling migration). Font rendering differs between
-// machines, so they only run on request in a fixed environment:
+// Font rendering differs between machines, so they only run on request in
+// a fixed environment:
 //   VISUAL=1 npx playwright test visual            compare
 //   VISUAL=1 npx playwright test visual -u         update the baselines
 test.skip(!process.env.VISUAL, 'visual regression tests run with VISUAL=1');
@@ -16,20 +16,7 @@ const viewports = [
   { name: 'tablet-landscape', width: 1024, height: 768 },
 ];
 
-// Every channel group open, so all controls are on the screenshot
-const expandedGroups = [
-  'SWITCH_VIRTUAL_RECEIVER',
-  'BLIND_VIRTUAL_RECEIVER',
-  'HEATING_CLIMATECONTROL_TRANSCEIVER',
-  'CLIMATECONTROL_FLOOR_TRANSCEIVER',
-  'KEYMATIC',
-  'ENERGIE_METER_TRANSMITTER',
-  'ROTARY_HANDLE_TRANSCEIVER',
-  'SMOKE_DETECTOR',
-];
-
 const views = [
-  { name: 'home', path: '/', ready: 'Wandthermostat Flur' },
   { name: 'rooms', path: '/rooms', ready: 'Heizungsraum' },
   { name: 'room-switch-generic', path: '/room/1', ready: 'Fenstergriff Wohnzimmer' },
   { name: 'room-blinds', path: '/room/2', ready: 'Küche Fenster' },
@@ -49,15 +36,7 @@ for (const dark of [false, true]) {
       test.beforeEach(async ({ page }) => {
         await page.clock.install({ time: new Date('2026-01-15T10:00:00+01:00') });
         await installWebSocketMock(page);
-        await page.addInitScript(
-          ({ dark, groups }) => {
-            localStorage.setItem('theme-dark', JSON.stringify(dark));
-            for (const group of groups) {
-              localStorage.setItem(group, 'true');
-            }
-          },
-          { dark, groups: expandedGroups },
-        );
+        await page.addInitScript((dark) => localStorage.setItem('theme-dark', JSON.stringify(dark)), dark);
       });
 
       for (const view of views) {
@@ -88,10 +67,21 @@ for (const dark of [false, true]) {
         });
       });
 
+      test('notices', async ({ page }) => {
+        await page.goto('/room/1');
+        await page.getByRole('button', { name: /Geräte mit Problemen/ }).click();
+        await expect(page.getByRole('dialog').getByText('Fensterkontakt Bad')).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        await expect(page).toHaveScreenshot(`notices-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
+          animations: 'disabled',
+          maxDiffPixels: 10,
+        });
+      });
+
       test('menu', async ({ page }) => {
-        await page.goto('/');
-        await page.getByRole('button', { name: 'Menu' }).click();
-        await expect(page.getByText('Heizungsraum')).toBeVisible();
+        await page.goto('/room/1');
+        await page.getByRole('button', { name: 'Menü' }).click();
+        await expect(page.getByRole('dialog').getByText('Heizungsraum')).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
         await expect(page).toHaveScreenshot(`menu-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
           animations: 'disabled',

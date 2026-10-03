@@ -196,5 +196,17 @@
   "NO_RESULTS": "Nothing found.",
   "LOGIC": "Logic",
   "OVERVIEW": "Overview",
-  "EMPTY_LIST": "No entries."
+  "EMPTY_LIST": "No entries.",
+  "ROTARY_HANDLE_TRANSCEIVER": "Window handles",
+  "ROTARY_HANDLE_SENSOR": "Window handles",
+  "SHUTTER_CONTACT": "Window contacts",
+  "SHUTTER_CONTACT_TRANSCEIVER": "Window contacts",
+  "SMOKE_DETECTOR": "Smoke detectors",
+  "DIMMER_VIRTUAL_RECEIVER": "Dimmers",
+  "MOTION_DETECTOR": "Motion detectors",
+  "MOTIONDETECTOR_TRANSCEIVER": "Motion detectors",
+  "PRESENCEDETECTOR_TRANSCEIVER": "Presence detectors",
+  "WEATHER_TRANSMIT": "Weather",
+  "CLIMATE_TRANSCEIVER": "Climate sensors",
+  "WATER_DETECTION_TRANSMITTER": "Water detectors"
 }

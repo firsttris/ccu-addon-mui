@@ -21,5 +21,5 @@ export const login = async (page: Page) => {
   await page.getByLabel(/Benutzername/).fill('Admin');
   await page.getByLabel(/Passwort/).fill('secret');
   await page.getByRole('button', { name: 'Anmelden' }).click();
-  await expect(page.getByRole('heading', { name: 'CCU Addon MUI' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Menü' })).toBeVisible();
 };

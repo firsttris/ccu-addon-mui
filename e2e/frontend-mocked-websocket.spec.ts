@@ -7,13 +7,18 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('lädt Räume ohne echte CCU3-Verbindung', async ({ page }) => {
+  // The start page is the first room, with all rooms as tabs
   await page.goto('/');
+  await expect(page).toHaveURL(/\/room\/1$/);
 
-  await expect(page.getByRole('heading', { name: 'CCU Addon MUI' })).toBeVisible();
-  await page.getByRole('link', { name: /Räume|Rooms/ }).click();
+  const tabs = page.getByRole('navigation', { name: /Räume|Rooms/ });
+  await expect(tabs.getByRole('link', { name: 'Wohnzimmer' })).toHaveAttribute('aria-current', 'page');
+  await tabs.getByRole('link', { name: 'Küche' }).click();
+  await expect(page).toHaveURL(/\/room\/2$/);
 
-  await expect(page.getByText('Wohnzimmer').first()).toBeVisible();
-  await expect(page.getByText('Küche').first()).toBeVisible();
+  // Reloading the start page opens the room shown last
+  await page.goto('/');
+  await expect(page).toHaveURL(/\/room\/2$/);
 });
 
 test('lädt Trades und springt in Trade-Details mit Channels', async ({ page }) => {
@@ -26,16 +31,11 @@ test('lädt Trades und springt in Trade-Details mit Channels', async ({ page }) 
   await tradeList.getByText('Licht', { exact: true }).click();
   await expect(page).toHaveURL(/\/trade\/10$/);
 
-  const switchGroup = page.getByText(/Switch|Schalter/).first();
-  await switchGroup.click();
   await expect(page.getByText('Flur Licht')).toBeVisible();
 });
 
 test('sendet setDatapoint und verarbeitet Event-Updates', async ({ page }) => {
   await page.goto('/room/1');
-
-  const switchGroup = page.getByText(/Switch|Schalter/).first();
-  await switchGroup.click();
 
   const channelCard = page.getByText('Wohnzimmer Licht');
   await expect(channelCard).toBeVisible();
@@ -83,7 +83,6 @@ test('sendet setDatapoint und verarbeitet Event-Updates', async ({ page }) => {
 test('verarbeitet mehrere direkt aufeinanderfolgende Events', async ({ page }) => {
   await page.goto('/room/2');
 
-  await page.getByText(/Blind|Rolladen/).first().click();
   await expect(page.getByText('Küche Fenster')).toBeVisible();
 
   // Both events are dispatched in the same task, like a multicall from the
@@ -107,7 +106,6 @@ test('verarbeitet mehrere direkt aufeinanderfolgende Events', async ({ page }) =
 test('zeigt schwache Batterie und nicht erreichbare Geräte an', async ({ page }) => {
   await page.goto('/room/1');
 
-  await page.getByText(/Switch|Schalter/).first().click();
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
   await expect(page.getByRole('status')).toHaveCount(0);
 
@@ -164,7 +162,6 @@ const sentSetDatapoints = (page: Page) =>
 
 test('meldet einen fehlgeschlagenen Befehl und nimmt die Änderung zurück', async ({ page }) => {
   await page.goto('/room/1');
-  await page.getByText(/Switch|Schalter/).first().click();
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
 
   await page.evaluate(() => (window as MockWindow).__wsMock?.failNextSet('UNREACH'));
@@ -177,8 +174,9 @@ test('meldet einen fehlgeschlagenen Befehl und nimmt die Änderung zurück', asy
   await expect.poll(async () => (await sentSetDatapoints(page)).map((m) => m.value)).toEqual([true, true]);
 });
 
-test('zeigt Geräte mit Problemen auf der Startseite', async ({ page }) => {
-  await page.goto('/');
+test('zeigt Geräte mit Problemen in den Meldungen', async ({ page }) => {
+  await page.goto('/room/2');
+  await page.getByRole('button', { name: /(Devices with problems|Geräte mit Problemen): 2/ }).click();
 
   const list = page.getByRole('list', { name: /Devices with problems|Geräte mit Problemen/ });
   await expect(list.getByText('Wandthermostat Flur')).toBeVisible();
@@ -192,7 +190,6 @@ test('zeigt Geräte mit Problemen auf der Startseite', async ({ page }) => {
 
 test('zeigt Energiezähler zusammengefasst und keine Rohdaten', async ({ page }) => {
   await page.goto('/room/3');
-  await page.getByText(/^(Energy|Energie)$/).click();
 
   // One card for the four channels of the meter
   await expect(page.getByText(/Electricity|Strom$/)).toHaveCount(1);
@@ -207,11 +204,9 @@ test('zeigt Energiezähler zusammengefasst und keine Rohdaten', async ({ page })
 
 test('fragt vor dem Öffnen der Tür nach', async ({ page }) => {
   await page.goto('/room/3');
-  await page.getByText('Keymatic').click();
   await expect(page.getByText('Haustür')).toBeVisible();
 
-  // The door buttons are icons; find them by the label below
-  const openButton = () => page.getByText(/^(Open|Öffnen)$/).locator('..').getByRole('button');
+  const openButton = () => page.getByRole('button', { name: /^(Open|Öffnen)$/ });
 
   await openButton().click();
   await expect(page.getByText(/Really open the door\?|Tür wirklich öffnen\?/)).toBeVisible();
@@ -229,7 +224,6 @@ test('fragt vor dem Öffnen der Tür nach', async ({ page }) => {
 
 test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
   await page.goto('/room/1');
-  await page.getByText('ROTARY_HANDLE_TRANSCEIVER', { exact: true }).click();
 
   // Rendered from the paramset description: the enum value by name
   const datapoints = page.getByLabel('Fenstergriff Wohnzimmer');
@@ -254,8 +248,9 @@ test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => 
 });
 
 test('listet unter „Alle Geräte“ auch Geräte ohne Raum', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('link', { name: /All devices|Alle Geräte/ }).click();
+  await page.goto('/room/1');
+  await page.getByRole('button', { name: /^(Menu|Menü)$/ }).click();
+  await page.getByRole('button', { name: /All devices|Alle Geräte/ }).click();
   await expect(page).toHaveURL(/\/devices$/);
 
   await expect
@@ -269,11 +264,9 @@ test('listet unter „Alle Geräte“ auch Geräte ohne Raum', async ({ page }) 
     )
     .toBe(true);
 
-  await page.getByText('SMOKE_DETECTOR', { exact: true }).click();
   await expect(page.getByText('Rauchmelder Flur')).toBeVisible();
 
   // Channels from rooms and trades are listed as well
-  await page.getByText(/^(Switch|Schalter)$/).click();
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
   await expect(page.getByText('Flur Licht')).toBeVisible();
 });
@@ -284,6 +277,5 @@ test('zeigt die Anzahl der Geräte mit Problemen im Header', async ({ page }) =>
   const badge = page.getByRole('button', { name: /(Devices with problems|Geräte mit Problemen): 2/ });
   await expect(badge).toBeVisible();
   await badge.click();
-  await expect(page).toHaveURL(/127\.0\.0\.1:4200\/$/);
-  await expect(page.getByRole('list', { name: /Devices with problems|Geräte mit Problemen/ })).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('list', { name: /Devices with problems|Geräte mit Problemen/ })).toBeVisible();
 });

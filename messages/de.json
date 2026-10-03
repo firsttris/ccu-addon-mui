@@ -196,5 +196,17 @@
   "NO_RESULTS": "Nichts gefunden.",
   "LOGIC": "Logik",
   "OVERVIEW": "Übersicht",
-  "EMPTY_LIST": "Keine Einträge."
+  "EMPTY_LIST": "Keine Einträge.",
+  "ROTARY_HANDLE_TRANSCEIVER": "Fenstergriffe",
+  "ROTARY_HANDLE_SENSOR": "Fenstergriffe",
+  "SHUTTER_CONTACT": "Fensterkontakte",
+  "SHUTTER_CONTACT_TRANSCEIVER": "Fensterkontakte",
+  "SMOKE_DETECTOR": "Rauchmelder",
+  "DIMMER_VIRTUAL_RECEIVER": "Dimmer",
+  "MOTION_DETECTOR": "Bewegungsmelder",
+  "MOTIONDETECTOR_TRANSCEIVER": "Bewegungsmelder",
+  "PRESENCEDETECTOR_TRANSCEIVER": "Präsenzmelder",
+  "WEATHER_TRANSMIT": "Wetter",
+  "CLIMATE_TRANSCEIVER": "Klimasensoren",
+  "WATER_DETECTION_TRANSMITTER": "Wassermelder"
 }
