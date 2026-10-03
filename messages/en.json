@@ -104,7 +104,6 @@
   "REMOVE_LINK_CONFIRM": "Remove this link? The sender no longer controls the receiver.",
   "REMOVE": "Remove",
   "LINK_PARAMETERS": "Parameters",
-  "LINK_PROFILES_HINT": "Parameters as the devices describe them; the profiles of the old WebUI are not available yet.",
   "SESSIONS": "Logged-in devices",
   "SESSION_DEVICE": "Device",
   "SESSION_USER": "User",
@@ -431,5 +430,17 @@
   "REMOVE_FROM_LIST": "Remove from list",
   "ADD_TO_LIST": "Add to list",
   "SECTION_LOGIC": "System variables & programs",
-  "DELETE_FAVORITE_CONFIRM": "The list is deleted; the devices, variables and programs in it stay."
+  "DELETE_FAVORITE_CONFIRM": "The list is deleted; the devices, variables and programs in it stay.",
+  "LINK_PROFILE": "Profile",
+  "LINK_PROFILE_EXPERT": "Custom settings (expert)",
+  "LINK_ALL_PARAMETERS": "All parameters",
+  "LINK_SHORT_PRESS": "Short press",
+  "LINK_LONG_PRESS": "Long press",
+  "LINK_NO_PROFILES": "There are no profiles for this combination. The parameters are shown as the devices describe them.",
+  "LINK_PROFILE_CHANGE": "Profile: {from} → {to}",
+  "LINK_PARAMS_CHANGED": "{count} parameters will change.",
+  "TIME_NOT_ACTIVE": "not active",
+  "TIME_PERMANENT": "permanent",
+  "TIME_CUSTOM": "Custom value …",
+  "TIME_UNIT": "Unit"
 }

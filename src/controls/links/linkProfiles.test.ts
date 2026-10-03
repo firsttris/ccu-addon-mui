@@ -1,0 +1,59 @@
+import { describe, expect, it } from 'vitest';
+import { ParamsetDescription } from '../../types/types';
+import { decodeHmipTime, detectProfile, encodeHmipTime, LinkProfile, PERMANENT, profilesFor, profileValues } from './linkProfiles';
+import table from './linkProfiles.json';
+
+const profile = (id: number, values: LinkProfile['values'], extra: Partial<LinkProfile> = {}): LinkProfile => ({
+  id,
+  name: { de: `P${id}` },
+  description: { de: '' },
+  values,
+  fields: [],
+  ...extra,
+});
+
+const on = profile(1, { SHORT_PROFILE_ACTION_TYPE: [1], SHORT_JT_ON: [1, 3], SHORT_ON_TIME_BASE: { default: 7, min: 0, max: 7 } });
+const off = profile(2, { SHORT_PROFILE_ACTION_TYPE: [1], SHORT_JT_ON: [4, 6] });
+const description = {
+  SHORT_PROFILE_ACTION_TYPE: { type: 'INTEGER' },
+  SHORT_JT_ON: { type: 'INTEGER' },
+  SHORT_ON_TIME_BASE: { type: 'INTEGER' },
+} as unknown as ParamsetDescription;
+
+describe('linkProfiles', () => {
+  it('detects the profile whose values fit, like get_cur_profile2', () => {
+    expect(detectProfile([on, off], { SHORT_PROFILE_ACTION_TYPE: 1, SHORT_JT_ON: 3, SHORT_ON_TIME_BASE: 2 })).toBe(1);
+    expect(detectProfile([on, off], { SHORT_PROFILE_ACTION_TYPE: 1, SHORT_JT_ON: 6 })).toBe(2);
+    // Nothing fits: expert
+    expect(detectProfile([on, off], { SHORT_PROFILE_ACTION_TYPE: 0, SHORT_JT_ON: 3 })).toBe(0);
+  });
+
+  it('writes the first values, keeping adjustable ones of the current profile', () => {
+    const current = { SHORT_PROFILE_ACTION_TYPE: 1, SHORT_JT_ON: 3, SHORT_ON_TIME_BASE: 2 };
+    expect(profileValues(on, description, current, false)).toEqual({ SHORT_PROFILE_ACTION_TYPE: 1, SHORT_JT_ON: 1, SHORT_ON_TIME_BASE: 7 });
+    expect(profileValues(on, description, current, true)).toEqual(current);
+  });
+
+  it('filters by the sender device type', () => {
+    const only = profile(3, {}, { whitelist: ['HmIP-WRC2'] });
+    const t = { R: { S: [on, only] } };
+    expect(profilesFor(t, 'R', 'S', 'HmIP-BRC2').map((p) => p.id)).toEqual([1]);
+    expect(profilesFor(t, 'R', 'S', 'HmIP-WRC2').map((p) => p.id)).toEqual([1, 3]);
+  });
+
+  it('encodes HmIP times as base and factor', () => {
+    expect(encodeHmipTime(0)).toEqual({ base: 0, factor: 0 });
+    expect(encodeHmipTime(45)).toEqual({ base: 2, factor: 9 });
+    expect(encodeHmipTime(180)).toEqual({ base: 3, factor: 18 });
+    expect(encodeHmipTime(3600)).toEqual({ base: 5, factor: 12 });
+    expect(encodeHmipTime(PERMANENT)).toEqual({ base: 7, factor: 31 });
+    expect(decodeHmipTime(4, 3)).toBe(180);
+    expect(decodeHmipTime(7, 31)).toBe(PERMANENT);
+  });
+
+  it('has the imported profiles of the WebUI', () => {
+    const switchKey = (table as unknown as Record<string, Record<string, LinkProfile[]>>).SWITCH_VIRTUAL_RECEIVER.KEY_TRANSCEIVER;
+    expect(switchKey.map((p) => p.name.de)).toEqual(['Schalter ein', 'Schalter aus', 'Schalter ein / aus']);
+    expect(switchKey[0].fields.map((f) => f.params[0])).toContain('SHORT_ON_TIME');
+  });
+});

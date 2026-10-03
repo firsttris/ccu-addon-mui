@@ -115,7 +115,7 @@ const NumberParameter = ({ name, label, parameter, value, onSet }: ParameterProp
   );
 };
 
-const ParameterValue = (props: ParameterProps) => {
+export const ParameterValue = (props: ParameterProps) => {
   const { name, label, parameter, value, onSet, readOnly } = props;
   const t = useTranslations();
   const writable = !readOnly && (parameter.operations & Operation.WRITE) !== 0;

@@ -104,7 +104,6 @@
   "REMOVE_LINK_CONFIRM": "Diese Verknüpfung löschen? Der Sender steuert den Empfänger dann nicht mehr.",
   "REMOVE": "Löschen",
   "LINK_PARAMETERS": "Parameter",
-  "LINK_PROFILES_HINT": "Parameter so, wie die Geräte sie beschreiben; die Profile der alten WebUI gibt es noch nicht.",
   "SESSIONS": "Angemeldete Geräte",
   "SESSION_DEVICE": "Gerät",
   "SESSION_USER": "Benutzer",
@@ -431,5 +430,17 @@
   "REMOVE_FROM_LIST": "Aus der Liste entfernen",
   "ADD_TO_LIST": "Zur Liste hinzufügen",
   "SECTION_LOGIC": "Systemvariablen & Programme",
-  "DELETE_FAVORITE_CONFIRM": "Die Liste wird gelöscht, die Geräte, Variablen und Programme darin bleiben erhalten."
+  "DELETE_FAVORITE_CONFIRM": "Die Liste wird gelöscht, die Geräte, Variablen und Programme darin bleiben erhalten.",
+  "LINK_PROFILE": "Vorlage",
+  "LINK_PROFILE_EXPERT": "Eigene Einstellungen (Experte)",
+  "LINK_ALL_PARAMETERS": "Alle Parameter",
+  "LINK_SHORT_PRESS": "Kurzer Tastendruck",
+  "LINK_LONG_PRESS": "Langer Tastendruck",
+  "LINK_NO_PROFILES": "Für diese Kombination gibt es keine Vorlagen. Die Parameter stehen so da, wie die Geräte sie beschreiben.",
+  "LINK_PROFILE_CHANGE": "Vorlage: {from} → {to}",
+  "LINK_PARAMS_CHANGED": "{count} Parameter werden geändert.",
+  "TIME_NOT_ACTIVE": "nicht aktiv",
+  "TIME_PERMANENT": "dauerhaft",
+  "TIME_CUSTOM": "Eigener Wert …",
+  "TIME_UNIT": "Einheit"
 }
