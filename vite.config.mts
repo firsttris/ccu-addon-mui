@@ -24,6 +24,8 @@ const iconSizes: Record<string, string> = {
 const proxyTargets: Record<string, string> = {
   development: 'ws://localhost:8088',
   ccu3: 'ws://192.168.178.26',
+  // Server against the fake CCU in the Playwright stack tests
+  stack: 'ws://127.0.0.1:28088',
 };
 
 export default defineConfig(({ command, mode, isPreview }) => ({

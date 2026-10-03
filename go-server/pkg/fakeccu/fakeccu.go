@@ -8,6 +8,7 @@ package fakeccu
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -27,6 +28,8 @@ var interfaceNames = []string{"BidCos-RF", "HmIP-RF", "VirtualDevices"}
 type CCU struct {
 	mu      sync.Mutex
 	fixture *Fixture
+	// original is the fixture as loaded, for Reset
+	original []byte
 
 	// callbacks by interface, then by interface id (from init)
 	callbacks map[string]map[string]string
@@ -85,8 +88,10 @@ func New(fixture *Fixture) *CCU {
 	if fixture.Interfaces == nil {
 		fixture.Interfaces = map[string]*InterfaceData{}
 	}
+	original, _ := json.Marshal(fixture)
 	return &CCU{
 		fixture:        fixture,
+		original:       original,
 		callbacks:      map[string]map[string]string{},
 		events:         make(chan callbackEvent, 1024),
 		scripts:        compileScripts(),
@@ -367,9 +372,59 @@ func (c *CCU) getDeviceProblems() string {
 	return b.String()
 }
 
-// --- WebUI login --------------------------------------------------------
+// Reset restores the fixture as it was loaded; the callbacks stay.
+func (c *CCU) Reset() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	var fixture Fixture
+	_ = json.Unmarshal(c.original, &fixture)
+	if fixture.Interfaces == nil {
+		fixture.Interfaces = map[string]*InterfaceData{}
+	}
+	c.fixture = &fixture
+}
+
+// --- WebUI login and test control -----------------------------------------
+
+// handleControl lets tests outside Go drive the fake CCU:
+//
+//	POST /fake/set   {"interface", "address", "datapoint", "value"}  a device reports a value
+//	POST /fake/reset                                                  back to the fixture
+func (c *CCU) handleControl(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST only", http.StatusMethodNotAllowed)
+		return
+	}
+	switch r.URL.Path {
+	case "/fake/reset":
+		c.Reset()
+	case "/fake/set":
+		var req struct {
+			Interface string      `json:"interface"`
+			Address   string      `json:"address"`
+			Datapoint string      `json:"datapoint"`
+			Value     interface{} `json:"value"`
+		}
+		if err := jsonDecode(r.Body, &req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := c.SetValue(req.Interface, req.Address, req.Datapoint, req.Value); err != nil {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+	default:
+		http.NotFound(w, r)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
 
 func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
+	if strings.HasPrefix(r.URL.Path, "/fake/") {
+		c.handleControl(w, r)
+		return
+	}
 	var req struct {
 		Method string            `json:"method"`
 		Params map[string]string `json:"params"`

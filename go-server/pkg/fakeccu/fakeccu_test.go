@@ -1,6 +1,8 @@
 package fakeccu
 
 import (
+	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 	"testing"
@@ -45,5 +47,40 @@ func TestXMLRPCCodecRoundTrip(t *testing.T) {
 	}
 	if list := values["LIST"].([]interface{}); len(list) != 2 || list[1] != 1 {
 		t.Fatalf("unexpected list: %#v", values["LIST"])
+	}
+}
+
+func TestControlEndpoints(t *testing.T) {
+	fixture, err := LoadFixture("../../../fixtures/demo-ccu.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ccu := New(fixture)
+	if err := ccu.Start("127.0.0.1"); err != nil {
+		t.Fatal(err)
+	}
+	defer ccu.Close()
+	base := fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort)
+
+	resp, err := http.Post(base+"/fake/set", "application/json",
+		strings.NewReader(`{"interface":"BidCos-RF","address":"LEQ0000001:1","datapoint":"STATE","value":true}`))
+	if err != nil || resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("set: %v %v", resp, err)
+	}
+	if !strings.Contains(ccu.getChannels("1"), "D\tSTATE\t2\ttrue") {
+		t.Fatal("value not set")
+	}
+
+	resp, err = http.Post(base+"/fake/reset", "", nil)
+	if err != nil || resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("reset: %v %v", resp, err)
+	}
+	if !strings.Contains(ccu.getChannels("1"), "D\tSTATE\t2\tfalse") {
+		t.Fatal("value not reset")
+	}
+
+	resp, _ = http.Post(base+"/fake/set", "application/json", strings.NewReader(`{"interface":"X","address":"Y","datapoint":"Z"}`))
+	if resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("expected 404 for an unknown channel, got %d", resp.StatusCode)
 	}
 }

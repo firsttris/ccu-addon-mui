@@ -19,6 +19,7 @@
     "test:unit:watch": "vitest",
     "typecheck": "tsc --noEmit -p .",
     "test:e2e": "playwright test",
+    "test:stack": "playwright test -c playwright.stack.config.ts",
     "test:visual": "VISUAL=1 playwright test visual",
     "test:visual:update": "VISUAL=1 playwright test visual -u",
     "test:e2e:coverage": "npm run test:e2e:coverage:collect && npm run test:e2e:coverage:report",

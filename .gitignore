@@ -57,3 +57,4 @@ addon_installer/VERSION
 
 # Auth key of the server running against the fake CCU
 .fake-ccu-auth.key
+.fake-ccu-stack-auth.key
