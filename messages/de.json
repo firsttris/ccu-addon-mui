@@ -695,5 +695,14 @@
   "VKEYS_PROGRAMS": "{count} Programm(e)",
   "VKEYS_SHORT": "Kurz",
   "VKEYS_LONG": "Lang",
-  "VKEYS_PRESSED": "{name} gedrückt"
+  "VKEYS_PRESSED": "{name} gedrückt",
+  "REPLACE_BUTTON": "Gerät ersetzen",
+  "REPLACE_TITLE": "Altes Gerät ersetzen",
+  "REPLACE_CONFIRM": "Ersetzen",
+  "REPLACE_HINT": "{name} ({type}) übernimmt den Platz eines vorhandenen Geräts desselben Typs, mit Namen, Räumen, Einstellungen, Direktverknüpfungen und Programmen.",
+  "REPLACE_WHICH": "Welches Gerät wird ersetzt?",
+  "REPLACE_NONE": "Es gibt kein Gerät, das dieses Gerät ersetzen kann.",
+  "REPLACE_FAILED_LIST": "Die ersetzbaren Geräte ließen sich nicht abfragen.",
+  "REPLACE_WARNING": "{old} verschwindet danach aus der CCU. Das alte Gerät nicht mehr einschalten, sonst stört es das neue.",
+  "REPLACE_DONE": "{name} wurde ersetzt"
 }

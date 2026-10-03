@@ -7,6 +7,8 @@ import { DialogButton } from '../../components/ConfirmDialog';
 import { m } from '../../paraglide/messages';
 import { NativeSelect } from '../../components/ui/select';
 import { usePageTitle } from '../../contexts/PageTitleContext';
+import { ReplaceDeviceDialog } from './ReplaceDeviceDialog';
+import type { InboxDevice } from '../../types/protocol';
 
 const Row = ({ children }: { children: ReactNode }) => (
   <div className="flex flex-wrap items-center gap-2">{children}</div>
@@ -25,6 +27,7 @@ export const Pairing = () => {
   const active = seconds > 0;
   const { data: inbox = [] } = useInbox({ poll: started && active });
   const action = usePairingAction();
+  const [replacing, setReplacing] = useState<InboxDevice | null>(null);
 
   const run = (variables: Parameters<typeof action.mutate>[0], success?: string) =>
     action.mutate(variables, {
@@ -85,13 +88,21 @@ export const Pairing = () => {
                 </Link>{' '}
                 ({device.type})
               </span>
-              <DialogButton type="button" onClick={() => run({ type: 'acceptDevice', address: device.address }, m.ACCEPTED())}>
-                {m.ACCEPT()}
-              </DialogButton>
+              <span className="flex flex-wrap gap-2">
+                {device.interfaceName !== 'HmIP-RF' && (
+                  <DialogButton type="button" aria-label={`${m.REPLACE_BUTTON()} ${device.name}`} onClick={() => setReplacing(device)}>
+                    {m.REPLACE_BUTTON()}
+                  </DialogButton>
+                )}
+                <DialogButton type="button" onClick={() => run({ type: 'acceptDevice', address: device.address }, m.ACCEPTED())}>
+                  {m.ACCEPT()}
+                </DialogButton>
+              </span>
             </li>
           ))}
         </ul>
       )}
+      {replacing && <ReplaceDeviceDialog device={replacing} onDone={() => setReplacing(null)} />}
     </Panel>
   );
 };

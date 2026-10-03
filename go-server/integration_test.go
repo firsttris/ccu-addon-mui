@@ -1520,3 +1520,42 @@ func TestStackVirtualKeys(t *testing.T) {
 	}
 	_ = ccu
 }
+
+func TestStackReplaceDevice(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	ccu.AddInboxDevice("BidCos-RF", "LEQ0000099", "HM-LC-Sw1-FM")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
+	receive(t, conn, byRequestID("e"))
+
+	send(t, conn, message{"type": "listReplaceableDevices", "requestId": "r1", "interfaceName": "BidCos-RF", "address": "LEQ0000099"})
+	devices := receive(t, conn, byRequestID("r1"))["devices"].([]interface{})
+	if len(devices) != 1 || devices[0].(map[string]interface{})["address"] != "LEQ0000001" {
+		t.Fatalf("unexpected replaceable devices: %v", devices)
+	}
+	send(t, conn, message{"type": "listReplaceableDevices", "requestId": "r2", "interfaceName": "HmIP-RF", "address": "0008DA8A9F1234"})
+	if m := receive(t, conn, byRequestID("r2")); m["code"] != "NOT_SUPPORTED" {
+		t.Fatalf("expected NOT_SUPPORTED for HmIP, got %v", m)
+	}
+	send(t, conn, message{"type": "replaceDevice", "requestId": "r3", "interfaceName": "BidCos-RF", "address": "LEQ0000099", "oldAddress": "LEQ0000001"})
+	if m := receive(t, conn, byRequestID("r3")); m["success"] != true {
+		t.Fatalf("replaceDevice failed: %v", m)
+	}
+	// The living room light now has the new address, in its rooms as before
+	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "roomId": "1", "requestId": "c"})
+	found := false
+	for _, ch := range receive(t, conn, byRequestID("c"))["channels"].([]interface{}) {
+		if c := ch.(map[string]interface{}); c["address"] == "LEQ0000099:1" && c["name"] == "Wohnzimmer Licht" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("the new device did not take the old one's place")
+	}
+	send(t, conn, message{"type": "getInbox", "requestId": "i"})
+	for _, d := range receive(t, conn, byRequestID("i"))["devices"].([]interface{}) {
+		if d.(map[string]interface{})["address"] == "LEQ0000099" {
+			t.Fatal("the new device is still in the inbox")
+		}
+	}
+}

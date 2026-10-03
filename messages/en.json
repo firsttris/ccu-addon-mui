@@ -695,5 +695,14 @@
   "VKEYS_PROGRAMS": "{count} program(s)",
   "VKEYS_SHORT": "Short",
   "VKEYS_LONG": "Long",
-  "VKEYS_PRESSED": "{name} pressed"
+  "VKEYS_PRESSED": "{name} pressed",
+  "REPLACE_BUTTON": "Replace device",
+  "REPLACE_TITLE": "Replace an old device",
+  "REPLACE_CONFIRM": "Replace",
+  "REPLACE_HINT": "{name} ({type}) takes the place of an existing device of the same type, with its name, rooms, settings, direct links and programs.",
+  "REPLACE_WHICH": "Which device is replaced?",
+  "REPLACE_NONE": "There is no device this device can replace.",
+  "REPLACE_FAILED_LIST": "The replaceable devices could not be queried.",
+  "REPLACE_WARNING": "{old} then disappears from the CCU. Do not power the old device again, it would interfere with the new one.",
+  "REPLACE_DONE": "{name} was replaced"
 }

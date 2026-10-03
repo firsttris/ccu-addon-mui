@@ -220,6 +220,8 @@ type DeviceRPC interface {
 	SetInstallMode(iface string, on bool, seconds int) error
 	GetInstallMode(iface string) (int, error)
 	DeleteDevice(iface, address string, flags int) error
+	ListReplaceableDevices(iface, newAddress string) ([]ccurpc.DeviceDescription, error)
+	ReplaceDevice(iface, oldAddress, newAddress string) error
 	Forget(iface, deviceAddress string)
 	GetLinks(iface, address string) ([]ccurpc.Link, error)
 	GetAllLinks(iface string) ([]ccurpc.Link, error)
@@ -552,7 +554,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handlePush(client, msgType, message)
 	case "setGroupMember":
 		s.handleSetGroupMember(client, message)
-	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
+	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice", "listReplaceableDevices", "replaceDevice":
 		s.handlePairing(client, msgType, message)
 	case "createBackup":
 		s.handleCreateBackup(client, message)
@@ -1620,6 +1622,8 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 		Reset bool `json:"reset"`
 		// deleteDevice: delete even if it can't be reached
 		Force bool `json:"force"`
+		// replaceDevice: the device the new one (Address) replaces
+		OldAddress string `json:"oldAddress"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -1630,8 +1634,26 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 		return
 	}
 
+	// HmIP can't replace devices (ic_seldevice.cgi leaves HmIP out)
+	if (msgType == "listReplaceableDevices" || msgType == "replaceDevice") && msg.InterfaceName == "HmIP-RF" {
+		s.sendRequestError(client, msg.RequestID, "HmIP devices can't be replaced", "NOT_SUPPORTED")
+		return
+	}
+
 	// Reading is allowed for administrators even without admin token
 	switch msgType {
+	case "listReplaceableDevices":
+		if client.level != auth.LevelAdmin {
+			s.sendRequestError(client, msg.RequestID, "only administrators may set up devices", "FORBIDDEN")
+			return
+		}
+		devices, err := s.rpc.ListReplaceableDevices(msg.InterfaceName, msg.Address)
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "listReplaceableDevices failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		s.sendJSON(client, replaceableResponse{Type: "listReplaceableDevices_response", RequestID: msg.RequestID, Devices: devices})
+		return
 	case "getInstallMode", "getInbox":
 		if client.level != auth.LevelAdmin {
 			s.sendRequestError(client, msg.RequestID, "only administrators may set up devices", "FORBIDDEN")
@@ -1671,6 +1693,16 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 			result, err := s.regaClient.AcceptDevice(msg.Address)
 			return nil, result, err
 		})
+	case "replaceDevice":
+		entry.Value = map[string]interface{}{"replaces": msg.OldAddress}
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			if err := s.rpc.ReplaceDevice(msg.InterfaceName, msg.OldAddress, msg.Address); err != nil {
+				return nil, "", err
+			}
+			s.rpc.Forget(msg.InterfaceName, msg.OldAddress)
+			s.rpc.Forget(msg.InterfaceName, msg.Address)
+			return nil, rega.SetOK, nil
+		})
 	case "deleteDevice":
 		flags := 0
 		if msg.Reset {
@@ -1688,6 +1720,12 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 			return nil, rega.SetOK, nil
 		})
 	}
+}
+
+type replaceableResponse struct {
+	Type      string                     `json:"type"`
+	RequestID string                     `json:"requestId,omitempty"`
+	Devices   []ccurpc.DeviceDescription `json:"devices"`
 }
 
 type putParamsetResponse struct {
