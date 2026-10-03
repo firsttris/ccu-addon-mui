@@ -90,6 +90,7 @@
       "name": "Fenstergriff:0",
       "datapoints": {
         "UNREACH": false,
+        "STICKY_UNREACH": true,
         "LOW_BAT": false
       }
     },

@@ -67,30 +67,38 @@ var renameSysvarScript string
 //go:embed scripts/delete_sysvar.tcl
 var deleteSysvarScript string
 
+//go:embed scripts/get_service_messages.tcl
+var getServiceMessagesScript string
+
+//go:embed scripts/acknowledge_service_message.tcl
+var acknowledgeServiceMessageScript string
+
 // Scripts returns the script templates by name, for the fake CCU used in
 // tests, which recognises scripts by their template.
 func Scripts() map[string]string {
 	return map[string]string{
-		"get_rooms":           getRoomsScript,
-		"get_trades":          getTradesScript,
-		"get_channels":        getChannelsScript,
-		"set_datapoint":       setDatapointScript,
-		"get_device_problems": getDeviceProblemsScript,
-		"get_user_level":      getUserLevelScript,
-		"set_name":            setNameScript,
-		"get_device_names":    getDeviceNamesScript,
-		"get_inbox":           getInboxScript,
-		"accept_device":       acceptDeviceScript,
-		"get_sysvars":         getSysvarsScript,
-		"set_sysvar":          setSysvarScript,
-		"get_programs":        getProgramsScript,
-		"program_action":      programActionScript,
-		"set_group_member":    setGroupMemberScript,
-		"create_group":        createGroupScript,
-		"rename_group":        renameGroupScript,
-		"delete_group":        deleteGroupScript,
-		"create_sysvar":       createSysvarScript,
-		"rename_sysvar":       renameSysvarScript,
-		"delete_sysvar":       deleteSysvarScript,
+		"get_rooms":                   getRoomsScript,
+		"get_trades":                  getTradesScript,
+		"get_channels":                getChannelsScript,
+		"set_datapoint":               setDatapointScript,
+		"get_device_problems":         getDeviceProblemsScript,
+		"get_user_level":              getUserLevelScript,
+		"set_name":                    setNameScript,
+		"get_device_names":            getDeviceNamesScript,
+		"get_inbox":                   getInboxScript,
+		"accept_device":               acceptDeviceScript,
+		"get_sysvars":                 getSysvarsScript,
+		"set_sysvar":                  setSysvarScript,
+		"get_programs":                getProgramsScript,
+		"program_action":              programActionScript,
+		"set_group_member":            setGroupMemberScript,
+		"create_group":                createGroupScript,
+		"rename_group":                renameGroupScript,
+		"delete_group":                deleteGroupScript,
+		"create_sysvar":               createSysvarScript,
+		"rename_sysvar":               renameSysvarScript,
+		"delete_sysvar":               deleteSysvarScript,
+		"get_service_messages":        getServiceMessagesScript,
+		"acknowledge_service_message": acknowledgeServiceMessageScript,
 	}
 }

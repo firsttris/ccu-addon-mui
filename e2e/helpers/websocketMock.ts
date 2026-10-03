@@ -34,6 +34,11 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       { address: '003660C9930AB6', name: 'Fensterkontakt Bad', lowBat: true, unreach: false },
     ];
 
+    let serviceMessages = [
+      { id: 501, type: 'UNREACH', timestamp: '2026-01-15 09:12:00', address: '000A9D89A7AF25', name: 'Wandthermostat Flur', roomId: 1, roomName: 'Wohnzimmer' },
+      { id: 502, type: 'LOW_BAT', timestamp: '2026-01-15 08:40:00', address: '003660C9930AB6', name: 'Fensterkontakt Bad' },
+    ];
+
     const trades = [
       { id: 10, name: 'Licht' },
       { id: 20, name: 'Heizung' },
@@ -294,6 +299,17 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
       if (!state.authenticated) {
         delayedBroadcast({ type: 'error', error: 'authentication required', code: 'AUTH_REQUIRED', requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'getServiceMessages') {
+        delayedBroadcast({ type: 'getServiceMessages_response', messages: serviceMessages, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'acknowledgeServiceMessage') {
+        serviceMessages = serviceMessages.filter((m) => m.id !== message.id);
+        delayedBroadcast({ type: 'acknowledgeServiceMessage_response', success: true, requestId: message.requestId });
         return;
       }
 

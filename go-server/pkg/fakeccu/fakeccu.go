@@ -288,6 +288,19 @@ func (c *CCU) runScript(body string) (string, error) {
 				}
 			}
 			return "NOT_FOUND", nil
+		case "get_service_messages":
+			return c.getServiceMessages(), nil
+		case "acknowledge_service_message":
+			for _, m := range c.serviceMessages() {
+				if strconv.FormatInt(m.id, 10) == values["ID"] {
+					// Acknowledging ends a sticky message
+					if strings.HasPrefix(m.datapoint, "STICKY_") {
+						m.channel.Datapoints[m.datapoint] = false
+					}
+					return "OK\t" + m.datapoint, nil
+				}
+			}
+			return "NOT_FOUND", nil
 		case "get_user_level":
 			for _, user := range c.fixture.Users {
 				if user.Name == values["USERNAME"] {
@@ -683,6 +696,61 @@ func (c *CCU) getDeviceProblems() string {
 			name = device
 		}
 		fmt.Fprintf(&b, "P\t%s\t%t\t%t\t%s\t%s\t%s\n", device, lowBat, unreach, roomID, roomName, name)
+	}
+	return b.String()
+}
+
+// serviceDatapoints raise a service message while true (or, for the error
+// codes, not 0), in the order ReGa would number their alarms.
+var serviceDatapoints = []string{
+	"UNREACH", "STICKY_UNREACH", "LOW_BAT", "LOWBAT", "CONFIG_PENDING", "UPDATE_PENDING",
+	"SABOTAGE", "STICKY_SABOTAGE", "ERROR_CODE", "DUTY_CYCLE", "DEVICE_IN_BOOTLOADER",
+}
+
+type serviceMessage struct {
+	id        int64
+	channel   *Channel
+	datapoint string
+}
+
+func (c *CCU) serviceMessages() []serviceMessage {
+	var messages []serviceMessage
+	for i := range c.fixture.Channels {
+		ch := &c.fixture.Channels[i]
+		if !strings.HasSuffix(ch.Address, ":0") || ch.Interface == "VirtualDevices" {
+			continue
+		}
+		for j, datapoint := range serviceDatapoints {
+			value, ok := ch.Datapoints[datapoint]
+			if !ok || value == false || value == nil || value == 0.0 || value == 0 {
+				continue
+			}
+			messages = append(messages, serviceMessage{id: ch.ID*100 + int64(j), channel: ch, datapoint: datapoint})
+		}
+	}
+	return messages
+}
+
+func (c *CCU) getServiceMessages() string {
+	var b strings.Builder
+	for _, m := range c.serviceMessages() {
+		device := deviceAddress(m.channel.Address)
+		roomID, roomName := "", ""
+		if first := c.channelByAddress(m.channel.Interface, device+":1"); first != nil {
+			for _, room := range c.fixture.Rooms {
+				for _, id := range room.Channels {
+					if id == first.ID && roomID == "" {
+						roomID, roomName = strconv.FormatInt(room.ID, 10), room.Name
+					}
+				}
+			}
+		}
+		name := c.fixture.DeviceNames[device]
+		if name == "" {
+			name = device
+		}
+		fmt.Fprintf(&b, "S\t%d\t%s\t%s\t2026-01-15 09:00:00\t%s\t%s\t%s\t%s\n",
+			m.id, m.datapoint, formatValue(m.channel.Datapoints[m.datapoint]), device, roomID, roomName, name)
 	}
 	return b.String()
 }

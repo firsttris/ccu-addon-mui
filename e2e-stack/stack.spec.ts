@@ -47,8 +47,8 @@ test('schaltet ein Licht und zeigt Änderungen vom Gerät live an', async ({ pag
 test('zeigt Geräteprobleme aus der CCU an und aktualisiert den Status live', async ({ page }) => {
   await login(page);
 
-  await page.getByRole('button', { name: 'Geräte mit Problemen: 2' }).click();
-  const problems = page.getByRole('list', { name: 'Geräte mit Problemen' });
+  await page.getByRole('button', { name: 'Meldungen: 3' }).click();
+  const problems = page.getByRole('list', { name: 'Meldungen', exact: true });
   await expect(problems.getByText('Wandthermostat Flur')).toBeVisible();
   await expect(problems.getByText('Fensterkontakt Bad')).toBeVisible();
   await page.keyboard.press('Escape');

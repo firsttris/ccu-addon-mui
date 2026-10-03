@@ -488,6 +488,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
 		s.handlePairing(client, msgType, message)
+	case "getServiceMessages", "acknowledgeServiceMessage":
+		s.handleServiceMessages(client, msgType, message)
 	case "createGroup", "renameGroup", "deleteGroup", "createSysvar", "renameSysvar", "deleteSysvar":
 		s.handleObjects(client, msgType, message)
 	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive":
@@ -1206,6 +1208,59 @@ func (s *Server) configure(client *Client, requestID string, entry audit.Entry, 
 		response.ID = *createdID[0]
 	}
 	s.sendJSON(client, response)
+}
+
+type serviceMessagesResponse struct {
+	Type      string                `json:"type"`
+	RequestID string                `json:"requestId,omitempty"`
+	Messages  []rega.ServiceMessage `json:"messages"`
+}
+
+// handleServiceMessages lists the CCU's service messages and acknowledges
+// them. Acknowledging is operating, like in the WebUI: not for guests.
+func (s *Server) handleServiceMessages(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		ID        int64  `json:"id"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if msgType == "getServiceMessages" {
+		messages, err := s.regaClient.GetServiceMessages()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getServiceMessages failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		s.sendJSON(client, serviceMessagesResponse{Type: "getServiceMessages_response", RequestID: msg.RequestID, Messages: messages})
+		return
+	}
+	entry := audit.Entry{User: client.user, Action: msgType, Target: fmt.Sprintf("service message %d", msg.ID)}
+	finish := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
+	if !canOperate(client.level) {
+		finish("FORBIDDEN")
+		s.sendRequestError(client, msg.RequestID, "guests may not acknowledge service messages", "FORBIDDEN")
+		return
+	}
+	result, messageType, err := s.regaClient.AcknowledgeServiceMessage(msg.ID)
+	if err != nil {
+		finish("CCU_ERROR")
+		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	entry.Previous = messageType
+	finish(result)
+	if result != rega.SetOK {
+		s.sendRequestError(client, msg.RequestID, msgType+": "+result, result)
+		return
+	}
+	s.sendJSON(client, changeResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true})
 }
 
 // handleObjects creates, renames and deletes rooms, trades and system

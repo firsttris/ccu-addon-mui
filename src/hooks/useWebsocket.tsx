@@ -403,6 +403,20 @@ export const useWebsocket = () => {
 export type UseWebsocketReturnType = ReturnType<typeof useWebsocket>['state'];
 export type WebSocketActions = ReturnType<typeof useWebsocket>['actions'];
 
+// Datapoints that raise or end a service message
+const SERVICE_DATAPOINTS = new Set([
+  'UNREACH',
+  'STICKY_UNREACH',
+  'LOW_BAT',
+  'LOWBAT',
+  'CONFIG_PENDING',
+  'UPDATE_PENDING',
+  'SABOTAGE',
+  'STICKY_SABOTAGE',
+  'ERROR_CODE',
+  'DUTY_CYCLE',
+]);
+
 const WebSocketContext = createContext<UseWebsocketReturnType | undefined>(undefined);
 
 // Separate context for the actions: controls and queries only need these
@@ -421,6 +435,11 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
         queryClient.setQueriesData<Channel[]>({ queryKey: ['channels'] }, (channels) =>
           channels ? applyEvent(channels, event) : channels,
         );
+        // A device's status changed: the service messages follow
+        if (SERVICE_DATAPOINTS.has(event.datapoint)) {
+          queryClient.invalidateQueries({ queryKey: ['serviceMessages'] });
+          queryClient.invalidateQueries({ queryKey: ['deviceProblems'] });
+        }
       }),
     [actions, queryClient],
   );

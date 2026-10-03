@@ -60,7 +60,9 @@ export type ServerMessage =
   | DeleteGroupResponse
   | CreateSysvarResponse
   | RenameSysvarResponse
-  | DeleteSysvarResponse;
+  | DeleteSysvarResponse
+  | GetServiceMessagesResponse
+  | AcknowledgeServiceMessageResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -105,6 +107,8 @@ export interface Protocol {
   createSysvar: CreateSysvarCall;
   renameSysvar: RenameSysvarCall;
   deleteSysvar: DeleteSysvarCall;
+  getServiceMessages: GetServiceMessagesCall;
+  acknowledgeServiceMessage: AcknowledgeServiceMessageCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1390,6 +1394,76 @@ export interface DeleteSysvarRequest {
  */
 export interface DeleteSysvarResponse {
   type: "deleteSysvar_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetServiceMessagesCall".
+ */
+export interface GetServiceMessagesCall {
+  request: GetServiceMessagesRequest;
+  response: GetServiceMessagesResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetServiceMessagesRequest".
+ */
+export interface GetServiceMessagesRequest {
+  type: "getServiceMessages";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetServiceMessagesResponse".
+ */
+export interface GetServiceMessagesResponse {
+  type: "getServiceMessages_response";
+  requestId?: string;
+  messages: ServiceMessage[];
+}
+/**
+ * An active service message of the CCU
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ServiceMessage".
+ */
+export interface ServiceMessage {
+  id: number;
+  /**
+   * The datapoint that raised it, e.g. STICKY_UNREACH
+   */
+  type: string;
+  value?: string;
+  timestamp?: string;
+  address?: string;
+  name: string;
+  roomId?: number;
+  roomName?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AcknowledgeServiceMessageCall".
+ */
+export interface AcknowledgeServiceMessageCall {
+  request: AcknowledgeServiceMessageRequest;
+  response: AcknowledgeServiceMessageResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AcknowledgeServiceMessageRequest".
+ */
+export interface AcknowledgeServiceMessageRequest {
+  type: "acknowledgeServiceMessage";
+  requestId?: string;
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AcknowledgeServiceMessageResponse".
+ */
+export interface AcknowledgeServiceMessageResponse {
+  type: "acknowledgeServiceMessage_response";
   requestId?: string;
   success: boolean;
 }

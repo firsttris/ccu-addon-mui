@@ -176,13 +176,19 @@ test('meldet einen fehlgeschlagenen Befehl und nimmt die Änderung zurück', asy
 
 test('zeigt Geräte mit Problemen in den Meldungen', async ({ page }) => {
   await page.goto('/room/2');
-  await page.getByRole('button', { name: /(Devices with problems|Geräte mit Problemen): 2/ }).click();
+  await page.getByRole('button', { name: /(Notices|Meldungen): 2/ }).click();
 
-  const list = page.getByRole('list', { name: /Devices with problems|Geräte mit Problemen/ });
+  const list = page.getByRole('list', { name: /^(Notices|Meldungen)$/ });
   await expect(list.getByText('Wandthermostat Flur')).toBeVisible();
   await expect(list.getByText('Fensterkontakt Bad')).toBeVisible();
   await expect(list.getByText(/Not reachable|Nicht erreichbar/)).toHaveCount(1);
   await expect(list.getByText(/Battery low|Batterie schwach/)).toHaveCount(1);
+
+  // Acknowledged messages disappear, the count follows
+  await list.getByRole('button', { name: /(Acknowledge|Bestätigen): Fensterkontakt Bad/ }).click();
+  await expect(list.getByText('Fensterkontakt Bad')).toHaveCount(0);
+  // (behind the open sheet, hidden from the accessibility tree)
+  await expect(page.getByRole('button', { name: /(Notices|Meldungen): 1/, includeHidden: true })).toBeAttached();
 
   await list.getByRole('link', { name: 'Wohnzimmer' }).click();
   await expect(page).toHaveURL(/\/room\/1$/);
@@ -274,8 +280,8 @@ test('listet unter „Alle Geräte“ auch Geräte ohne Raum', async ({ page }) 
 test('zeigt die Anzahl der Geräte mit Problemen im Header', async ({ page }) => {
   await page.goto('/room/1');
 
-  const badge = page.getByRole('button', { name: /(Devices with problems|Geräte mit Problemen): 2/ });
+  const badge = page.getByRole('button', { name: /(Notices|Meldungen): 2/ });
   await expect(badge).toBeVisible();
   await badge.click();
-  await expect(page.getByRole('dialog').getByRole('list', { name: /Devices with problems|Geräte mit Problemen/ })).toBeVisible();
+  await expect(page.getByRole('dialog').getByRole('list', { name: /^(Notices|Meldungen)$/ })).toBeVisible();
 });

@@ -121,6 +121,12 @@
     },
     "deleteSysvar": {
       "$ref": "#/definitions/DeleteSysvarCall"
+    },
+    "getServiceMessages": {
+      "$ref": "#/definitions/GetServiceMessagesCall"
+    },
+    "acknowledgeServiceMessage": {
+      "$ref": "#/definitions/AcknowledgeServiceMessageCall"
     }
   },
   "required": [
@@ -162,7 +168,9 @@
     "deleteGroup",
     "createSysvar",
     "renameSysvar",
-    "deleteSysvar"
+    "deleteSysvar",
+    "getServiceMessages",
+    "acknowledgeServiceMessage"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2471,6 +2479,12 @@
         },
         {
           "$ref": "#/definitions/DeleteSysvarResponse"
+        },
+        {
+          "$ref": "#/definitions/GetServiceMessagesResponse"
+        },
+        {
+          "$ref": "#/definitions/AcknowledgeServiceMessageResponse"
         }
       ]
     },
@@ -3482,6 +3496,154 @@
       "required": [
         "request",
         "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetServiceMessagesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getServiceMessages"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetServiceMessagesResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getServiceMessages_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ServiceMessage"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "messages"
+      ],
+      "additionalProperties": false
+    },
+    "GetServiceMessagesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetServiceMessagesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetServiceMessagesResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "AcknowledgeServiceMessageRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "acknowledgeServiceMessage"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "AcknowledgeServiceMessageResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "acknowledgeServiceMessage_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "AcknowledgeServiceMessageCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/AcknowledgeServiceMessageRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/AcknowledgeServiceMessageResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "ServiceMessage": {
+      "type": "object",
+      "description": "An active service message of the CCU",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "type": {
+          "type": "string",
+          "description": "The datapoint that raised it, e.g. STICKY_UNREACH"
+        },
+        "value": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "roomId": {
+          "type": "integer"
+        },
+        "roomName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "name"
       ],
       "additionalProperties": false
     }

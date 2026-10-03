@@ -829,3 +829,40 @@ func TestStackCreateRenameDeleteRoomsAndSysvars(t *testing.T) {
 		t.Fatalf("expected FORBIDDEN, got %v", m)
 	}
 }
+
+func TestStackServiceMessages(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getServiceMessages", "requestId": "q1"})
+	messages := receive(t, conn, byRequestID("q1"))["messages"].([]interface{})
+	types := map[string]float64{}
+	for _, raw := range messages {
+		m := raw.(map[string]interface{})
+		types[m["type"].(string)] = m["id"].(float64)
+	}
+	if len(messages) != 3 || types["UNREACH"] == 0 || types["LOW_BAT"] == 0 || types["STICKY_UNREACH"] == 0 {
+		t.Fatalf("unexpected service messages: %v", messages)
+	}
+
+	// Guests may look, not acknowledge
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "acknowledgeServiceMessage", "requestId": "q2", "id": types["STICKY_UNREACH"]})
+	if m := receive(t, conn, byRequestID("q2")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "acknowledgeServiceMessage", "requestId": "q3", "id": types["STICKY_UNREACH"]})
+	if m := receive(t, conn, byRequestID("q3")); m["success"] != true {
+		t.Fatalf("acknowledge failed: %v", m)
+	}
+	send(t, conn, message{"type": "getServiceMessages", "requestId": "q4"})
+	if messages := receive(t, conn, byRequestID("q4"))["messages"].([]interface{}); len(messages) != 2 {
+		t.Fatalf("sticky message not acknowledged: %v", messages)
+	}
+	send(t, conn, message{"type": "acknowledgeServiceMessage", "requestId": "q5", "id": 1})
+	if m := receive(t, conn, byRequestID("q5")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}

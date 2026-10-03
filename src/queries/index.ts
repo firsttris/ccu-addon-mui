@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
+import { ServiceMessage } from '../types/protocol';
 import { applyEvent, groupChannelsByType, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
@@ -23,6 +24,8 @@ import {
 
 // Battery and reachability problems are not pushed by the server
 const DEVICE_PROBLEMS_REFRESH_MS = 5 * 60 * 1000;
+// Also reloaded when a device reports a change of its status
+const SERVICE_MESSAGES_REFRESH_MS = 60 * 1000;
 const SET_DATAPOINT_TIMEOUT_MS = 15000;
 
 export const useRooms = ({ enabled = true }: { enabled?: boolean } = {}) => {
@@ -492,6 +495,32 @@ export const useObjectChange = () => {
       } else {
         queryClient.invalidateQueries({ queryKey: ['sysvars'] });
       }
+    },
+  });
+};
+
+// The CCU's service messages (unreachable, battery, sticky messages, error
+// codes, settings waiting for the device, ...)
+export const useServiceMessages = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['serviceMessages'],
+    queryFn: async () => ((await request({ type: 'getServiceMessages' })).messages ?? []) as ServiceMessage[],
+    refetchInterval: SERVICE_MESSAGES_REFRESH_MS,
+  });
+};
+
+// Acknowledges a service message; it disappears at once
+export const useAcknowledgeServiceMessage = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => request({ type: 'acknowledgeServiceMessage', id }, { queue: false }),
+    onMutate: (id) =>
+      queryClient.setQueryData<ServiceMessage[]>(['serviceMessages'], (messages) => messages?.filter((m) => m.id !== id)),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['serviceMessages'] });
+      queryClient.invalidateQueries({ queryKey: ['deviceProblems'] });
     },
   });
 };

@@ -69,7 +69,7 @@ for (const dark of [false, true]) {
 
       test('notices', async ({ page }) => {
         await page.goto('/room/1');
-        await page.getByRole('button', { name: /Geräte mit Problemen/ }).click();
+        await page.getByRole('button', { name: /^Meldungen: / }).click();
         await expect(page.getByRole('dialog').getByText('Fensterkontakt Bad')).toBeVisible();
         await page.evaluate(() => document.fonts.ready);
         await expect(page).toHaveScreenshot(`notices-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
