@@ -503,3 +503,52 @@ func TestStackPairingInboxAndDelete(t *testing.T) {
 		t.Fatalf("expected FORBIDDEN, got %v", m)
 	}
 }
+
+func TestStackSysvarsAndPrograms(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getSysvars", "requestId": "q1"})
+	sysvars := receive(t, conn, byRequestID("q1"))["sysvars"].([]interface{})
+	if len(sysvars) != 6 {
+		t.Fatalf("unexpected sysvars: %v", sysvars)
+	}
+	mode := sysvars[2].(map[string]interface{})
+	if mode["kind"] != "enum" || mode["value"] != 1.0 || len(mode["valueList"].([]interface{})) != 3 {
+		t.Fatalf("unexpected mode: %v", mode)
+	}
+
+	send(t, conn, message{"type": "setSysvar", "requestId": "q2", "id": 952, "value": 2})
+	if m := receive(t, conn, byRequestID("q2")); m["success"] != true {
+		t.Fatalf("setSysvar failed: %v", m)
+	}
+	send(t, conn, message{"type": "setSysvar", "requestId": "q3", "id": 953, "value": `x"); system.Exec("y`})
+	if m := receive(t, conn, byRequestID("q3")); m["code"] != "CCU_ERROR" {
+		t.Fatalf("expected the injection to be refused, got %v", m)
+	}
+	send(t, conn, message{"type": "getSysvars", "requestId": "q4"})
+	if v := receive(t, conn, byRequestID("q4"))["sysvars"].([]interface{})[2].(map[string]interface{})["value"]; v != 2.0 {
+		t.Fatalf("sysvar not set: %v", v)
+	}
+
+	send(t, conn, message{"type": "getPrograms", "requestId": "q5"})
+	if programs := receive(t, conn, byRequestID("q5"))["programs"].([]interface{}); len(programs) != 3 {
+		t.Fatalf("unexpected programs: %v", programs)
+	}
+	send(t, conn, message{"type": "runProgram", "requestId": "q6", "id": 1200})
+	receive(t, conn, byRequestID("q6"))
+	if ccu.ProgramRuns(1200) != 1 {
+		t.Fatal("program not run")
+	}
+	send(t, conn, message{"type": "setProgramActive", "requestId": "q7", "id": 1202, "active": true})
+	if m := receive(t, conn, byRequestID("q7")); m["success"] != true {
+		t.Fatalf("setProgramActive failed: %v", m)
+	}
+
+	// Guests may look, not act
+	loginAs(t, conn, "Gast", "gast")
+	send(t, conn, message{"type": "runProgram", "requestId": "q8", "id": 1200})
+	if m := receive(t, conn, byRequestID("q8")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}

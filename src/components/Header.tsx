@@ -274,6 +274,22 @@ export const Header: React.FC = () => {
             >
               {t('ALL_DEVICES')}
             </SubMenuItem>
+            <SubMenuItem
+              onClick={() => {
+                navigate({ to: '/sysvars' });
+                setMenuOpen(false);
+              }}
+            >
+              {t('SYSVARS')}
+            </SubMenuItem>
+            <SubMenuItem
+              onClick={() => {
+                navigate({ to: '/programs' });
+                setMenuOpen(false);
+              }}
+            >
+              {t('PROGRAMS')}
+            </SubMenuItem>
             {userLevel === 'admin' && (
               <SubMenuItem
                 onClick={() => {

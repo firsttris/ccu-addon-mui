@@ -53,6 +53,8 @@ export interface Response {
   devices?: DeviceProblem[];
   // getInstallMode
   seconds?: number;
+  sysvars?: unknown[];
+  programs?: unknown[];
   // paramsetDescription, paramset
   description?: unknown;
   values?: Record<string, unknown>;

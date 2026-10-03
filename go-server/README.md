@@ -133,6 +133,11 @@ All messages are JSON objects with a `type`. Every request may carry a `requestI
 | `{"type": "getInbox"}` | `{"type": "getInbox_response", "devices": [{"address", "type", "interfaceName", "name"}]}`: paired devices not yet accepted |
 | `{"type": "acceptDevice", "address"}` | `{"type": "acceptDevice_response", "success"}`: takes a device out of the inbox (sets `ReadyConfig`; to be verified on real hardware) |
 | `{"type": "deleteDevice", "interfaceName", "address", "reset", "force"}` | `{"type": "deleteDevice_response", "success"}` |
+| `{"type": "getSysvars"}` | `{"type": "getSysvars_response", "sysvars": [{"id", "name", "visible", "kind", "unit", "min", "max", "value", "falseName", "trueName", "valueList"}]}`; `kind` is `bool`, `alarm`, `number`, `enum` or `string` |
+| `{"type": "setSysvar", "id", "value"}` | `{"type": "setSysvar_response", "success"}` (not for guests; audited) |
+| `{"type": "getPrograms"}` | `{"type": "getPrograms_response", "programs": [{"id", "name", "active", "visible"}]}` |
+| `{"type": "runProgram", "id"}` | `{"type": "runProgram_response", "success"}` (not for guests) |
+| `{"type": "setProgramActive", "id", "active"}` | `{"type": "setProgramActive_response", "success"}` (administrators with admin token) |
 
 ## 🧪 Testing
 

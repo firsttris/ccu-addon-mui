@@ -712,5 +712,85 @@
   },
   "inbox": [
     "0008DA8A9F1234"
+  ],
+  "sysvars": [
+    {
+      "id": 950,
+      "name": "Anwesenheit",
+      "visible": true,
+      "valueType": 2,
+      "subType": 23,
+      "falseName": "abwesend",
+      "trueName": "anwesend",
+      "value": true
+    },
+    {
+      "id": 951,
+      "name": "Außentemperatur",
+      "visible": true,
+      "valueType": 4,
+      "subType": 0,
+      "unit": "°C",
+      "min": "-50",
+      "max": "60",
+      "value": 12.5
+    },
+    {
+      "id": 952,
+      "name": "Heizmodus",
+      "visible": true,
+      "valueType": 16,
+      "subType": 29,
+      "valueList": "Aus;Tag;Nacht",
+      "value": 1
+    },
+    {
+      "id": 953,
+      "name": "Notiz",
+      "visible": true,
+      "valueType": 20,
+      "subType": 11,
+      "value": "Müll rausbringen"
+    },
+    {
+      "id": 954,
+      "name": "Alarmzone 1",
+      "visible": true,
+      "valueType": 2,
+      "subType": 6,
+      "falseName": "nicht ausgelöst",
+      "trueName": "ausgelöst",
+      "value": false
+    },
+    {
+      "id": 955,
+      "name": "Intern",
+      "visible": false,
+      "valueType": 2,
+      "subType": 2,
+      "falseName": "nein",
+      "trueName": "ja",
+      "value": false
+    }
+  ],
+  "programs": [
+    {
+      "id": 1200,
+      "name": "Alles aus",
+      "active": true,
+      "visible": true
+    },
+    {
+      "id": 1201,
+      "name": "Rollläden abends schließen",
+      "active": true,
+      "visible": true
+    },
+    {
+      "id": 1202,
+      "name": "Urlaub",
+      "active": false,
+      "visible": true
+    }
   ]
 }

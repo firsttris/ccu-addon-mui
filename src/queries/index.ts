@@ -4,7 +4,16 @@ import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
 import { applyEvent, groupChannelsByType, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
-import { Channel, DatapointValue, Device, HmEvent, InboxDevice, ParamsetDescription } from '../types/types';
+import {
+  Channel,
+  DatapointValue,
+  Device,
+  HmEvent,
+  InboxDevice,
+  ParamsetDescription,
+  Program,
+  Sysvar,
+} from '../types/types';
 
 // Server data loaded through TanStack Query. The queryFn sends its request
 // over the WebSocket (request() in useWebsocket); after a reconnect all
@@ -148,6 +157,57 @@ export const usePairingAction = () => {
       Promise.all(
         ['installMode', 'inbox', 'devices', 'channels'].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
       ),
+  });
+};
+
+// ReGa doesn't send events for system variables: reload now and then
+const SYSVARS_REFRESH_MS = 10000;
+
+export const useSysvars = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['sysvars'],
+    queryFn: async () => ((await request({ type: 'getSysvars' })).sysvars ?? []) as Sysvar[],
+    refetchInterval: SYSVARS_REFRESH_MS,
+  });
+};
+
+export const usePrograms = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['programs'],
+    queryFn: async () => ((await request({ type: 'getPrograms' })).programs ?? []) as Program[],
+  });
+};
+
+export type LogicAction =
+  | { type: 'setSysvar'; id: number; value: string | number | boolean }
+  | { type: 'runProgram'; id: number }
+  | { type: 'setProgramActive'; id: number; active: boolean };
+
+// Sets a system variable (shown at once), runs a program or switches it
+// on or off
+export const useLogicAction = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (action: LogicAction) => {
+      await request(action, { queue: false });
+    },
+    onMutate: (action) => {
+      if (action.type === 'setSysvar') {
+        queryClient.setQueryData<Sysvar[]>(['sysvars'], (sysvars) =>
+          sysvars?.map((sv) => (sv.id === action.id ? { ...sv, value: action.value } : sv)),
+        );
+      }
+      if (action.type === 'setProgramActive') {
+        queryClient.setQueryData<Program[]>(['programs'], (programs) =>
+          programs?.map((p) => (p.id === action.id ? { ...p, active: action.active } : p)),
+        );
+      }
+    },
+    onSettled: (_, __, action) =>
+      queryClient.invalidateQueries({ queryKey: [action.type === 'setSysvar' ? 'sysvars' : 'programs'] }),
   });
 };
 

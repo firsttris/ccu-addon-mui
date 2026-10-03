@@ -206,6 +206,28 @@ export interface ParameterDescription {
 
 export type ParamsetDescription = Record<string, ParameterDescription>;
 
+// A system variable of the CCU
+export interface Sysvar {
+  id: number;
+  name: string;
+  visible: boolean;
+  kind: 'bool' | 'alarm' | 'number' | 'enum' | 'string';
+  unit?: string;
+  min?: number;
+  max?: number;
+  value: DatapointValue;
+  falseName?: string;
+  trueName?: string;
+  valueList?: string[];
+}
+
+export interface Program {
+  id: number;
+  name: string;
+  active: boolean;
+  visible: boolean;
+}
+
 // A paired device waiting in the CCU's inbox
 export interface InboxDevice {
   address: string;

@@ -205,6 +205,38 @@ func (c *CCU) runScript(body string) (string, error) {
 				}
 			}
 			return "NOT_FOUND", nil
+		case "get_sysvars":
+			return c.getSysvars(), nil
+		case "set_sysvar":
+			id, _ := strconv.ParseInt(values["ID"], 10, 64)
+			for i := range c.fixture.Sysvars {
+				if sv := &c.fixture.Sysvars[i]; sv.ID == id {
+					previous := formatValue(sv.Value)
+					sv.Value = parseRegaValue(values["VALUE"])
+					return "OK\t" + previous, nil
+				}
+			}
+			return "NOT_FOUND", nil
+		case "get_programs":
+			var b strings.Builder
+			for _, p := range c.fixture.Programs {
+				fmt.Fprintf(&b, "P\t%d\t%t\t%t\t%s\n", p.ID, p.Active, p.Visible, p.Name)
+			}
+			return b.String(), nil
+		case "program_action":
+			id, _ := strconv.ParseInt(values["ID"], 10, 64)
+			for i := range c.fixture.Programs {
+				if p := &c.fixture.Programs[i]; p.ID == id {
+					switch values["ACTION"] {
+					case "run":
+						p.Runs++
+					case "on", "off":
+						p.Active = values["ACTION"] == "on"
+					}
+					return "OK", nil
+				}
+			}
+			return "NOT_FOUND", nil
 		case "get_device_names":
 			return c.getDeviceNames(), nil
 		case "set_group_member":
@@ -325,6 +357,31 @@ func memberOf(groups []Group, channelID int64) string {
 		}
 	}
 	return strings.Join(ids, ",")
+}
+
+func (c *CCU) getSysvars() string {
+	var b strings.Builder
+	for _, sv := range c.fixture.Sysvars {
+		fmt.Fprintf(&b, "V\t%d\t%t\t%s\n", sv.ID, sv.Visible, sv.Name)
+		fmt.Fprintf(&b, "T\t%d\t%d\t%s\n", sv.ValueType, sv.SubType, sv.Unit)
+		fmt.Fprintf(&b, "R\t%s\t%s\n", sv.Min, sv.Max)
+		fmt.Fprintf(&b, "B\t%s\t%s\n", sv.FalseName, sv.TrueName)
+		fmt.Fprintf(&b, "L\t%s\n", sv.ValueList)
+		fmt.Fprintf(&b, "X\t%s\n", formatValue(sv.Value))
+	}
+	return b.String()
+}
+
+// ProgramRuns returns how often a program was run.
+func (c *CCU) ProgramRuns(id int64) int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, p := range c.fixture.Programs {
+		if p.ID == id {
+			return p.Runs
+		}
+	}
+	return 0
 }
 
 // device returns the description of a device and its interface.

@@ -18,10 +18,39 @@ type Fixture struct {
 	// (":0") that report UNREACH and LOW_BAT.
 	Channels []Channel `json:"channels"`
 	// DeviceNames by device address, for the device problem list
+	Sysvars     []Sysvar          `json:"sysvars,omitempty"`
+	Programs    []Program         `json:"programs,omitempty"`
 	DeviceNames map[string]string `json:"deviceNames,omitempty"`
 	// Inbox holds the addresses of paired devices not yet accepted
 	Inbox      []string                  `json:"inbox,omitempty"`
 	Interfaces map[string]*InterfaceData `json:"interfaces,omitempty"`
+}
+
+// Sysvar is a system variable as ReGa describes it.
+type Sysvar struct {
+	ID      int64  `json:"id"`
+	Name    string `json:"name"`
+	Visible bool   `json:"visible"`
+	// ValueType and SubType as ReGa numbers them (2/2 bool, 2/6 alarm,
+	// 4/0 number, 16/29 enum, 20/11 string)
+	ValueType int         `json:"valueType"`
+	SubType   int         `json:"subType"`
+	Unit      string      `json:"unit,omitempty"`
+	Min       string      `json:"min,omitempty"`
+	Max       string      `json:"max,omitempty"`
+	FalseName string      `json:"falseName,omitempty"`
+	TrueName  string      `json:"trueName,omitempty"`
+	ValueList string      `json:"valueList,omitempty"`
+	Value     interface{} `json:"value"`
+}
+
+type Program struct {
+	ID      int64  `json:"id"`
+	Name    string `json:"name"`
+	Active  bool   `json:"active"`
+	Visible bool   `json:"visible"`
+	// Runs counts how often the program was run (not part of ReGa)
+	Runs int `json:"runs,omitempty"`
 }
 
 // Group is a room or trade with the ReGa ids of its channels.

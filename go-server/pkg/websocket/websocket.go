@@ -456,6 +456,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice":
 		s.handlePairing(client, msgType, message)
+	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive":
+		s.handleLogic(client, msgType, message)
 	default:
 		s.sendRequestError(client, requestID, fmt.Sprintf("unknown message type: %s", msgType), "")
 	}
@@ -1034,6 +1036,103 @@ func (s *Server) handleSetGroupMember(client *Client, message []byte) {
 			result, err := s.regaClient.SetGroupMember(msg.GroupID, msg.ChannelID, msg.Member)
 			return !msg.Member, result, err
 		})
+}
+
+type logicResponse struct {
+	Type      string         `json:"type"`
+	RequestID string         `json:"requestId,omitempty"`
+	Success   bool           `json:"success"`
+	Sysvars   []rega.Sysvar  `json:"sysvars,omitempty"`
+	Programs  []rega.Program `json:"programs,omitempty"`
+}
+
+// handleLogic: system variables and programs. Reading, setting a variable
+// and running a program is operating (not for guests); switching a
+// program on or off is setup.
+func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string      `json:"requestId"`
+		ID        int64       `json:"id"`
+		Value     interface{} `json:"value"`
+		Active    bool        `json:"active"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	respond := func(r logicResponse) {
+		r.Type, r.RequestID, r.Success = msgType+"_response", msg.RequestID, true
+		s.sendJSON(client, r)
+	}
+
+	switch msgType {
+	case "getSysvars":
+		sysvars, err := s.regaClient.GetSysvars()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getSysvars failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		respond(logicResponse{Sysvars: sysvars})
+		return
+	case "getPrograms":
+		programs, err := s.regaClient.GetPrograms()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getPrograms failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		respond(logicResponse{Programs: programs})
+		return
+	case "setProgramActive":
+		action := rega.ProgramOff
+		if msg.Active {
+			action = rega.ProgramOn
+		}
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: fmt.Sprintf("program %d", msg.ID), Value: msg.Active},
+			func() (interface{}, string, error) {
+				result, err := s.regaClient.ProgramAction(msg.ID, action)
+				return !msg.Active, result, err
+			})
+		return
+	}
+
+	// setSysvar, runProgram: operating
+	entry := audit.Entry{User: client.user, Action: msgType, Target: fmt.Sprintf("%d", msg.ID), Value: msg.Value}
+	finish := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
+	if !canOperate(client.level) {
+		finish("FORBIDDEN")
+		s.sendRequestError(client, msg.RequestID, "guests may not control devices", "FORBIDDEN")
+		return
+	}
+	var result string
+	var err error
+	if msgType == "runProgram" {
+		entry.Target = fmt.Sprintf("program %d", msg.ID)
+		entry.Value = nil
+		result, err = s.regaClient.ProgramAction(msg.ID, rega.ProgramRun)
+	} else {
+		entry.Target = fmt.Sprintf("sysvar %d", msg.ID)
+		var value, previous string
+		if value, err = formatValue(msg.Value); err == nil {
+			result, previous, err = s.regaClient.SetSysvar(msg.ID, value)
+			entry.Previous = previous
+		}
+	}
+	if err != nil {
+		finish("CCU_ERROR")
+		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	finish(result)
+	if result != rega.SetOK {
+		s.sendRequestError(client, msg.RequestID, msgType+": "+result, result)
+		return
+	}
+	respond(logicResponse{})
 }
 
 type pairingResponse struct {

@@ -17,7 +17,7 @@ func TestRecognisesAllScripts(t *testing.T) {
 	values := map[string]string{
 		"OBJECT_ID": "ALL", "USERNAME": "Admin", "INTERFACE": "HmIP-RF", "ADDRESS": "A:1",
 		"DEVICE_ADDRESS": "A", "ATTRIBUTE": "STATE", "VALUE": "true",
-		"NAME": "Neu", "GROUP_ID": "1", "CHANNEL_ID": "2", "ACTION": "Add",
+		"NAME": "Neu", "GROUP_ID": "1", "CHANNEL_ID": "2", "ACTION": "Add", "ID": "950",
 	}
 	placeholder := regexp.MustCompile(`\{\{([A-Z_]+)\}\}`)
 	for name, template := range rega.Scripts() {

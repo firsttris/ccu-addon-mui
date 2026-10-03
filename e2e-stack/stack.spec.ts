@@ -230,3 +230,41 @@ test('lernt an, übernimmt neue Geräte aus dem Posteingang und löscht Geräte'
   await expect(page.getByText('Gerät gelöscht')).toBeVisible();
   await expect(page.getByRole('table')).not.toContainText('0008DA8A9F1234');
 });
+
+test('setzt Systemvariablen', async ({ page }) => {
+  await login(page);
+  await page.getByRole('link', { name: 'Systemvariablen' }).click();
+
+  const list = page.getByRole('list', { name: 'Systemvariablen' });
+  // Internal variables are hidden
+  await expect(list.getByRole('listitem')).toHaveCount(5);
+
+  const presence = list.getByRole('switch', { name: 'Anwesenheit' });
+  await expect(presence).toHaveText('anwesend');
+  await presence.click();
+  await expect(presence).toHaveText('abwesend');
+
+  await list.getByRole('combobox', { name: 'Heizmodus' }).selectOption('Nacht');
+  const temperature = list.getByRole('textbox', { name: 'Außentemperatur' });
+  await temperature.fill('21,5');
+  await temperature.press('Enter');
+
+  // Stored in the (fake) CCU
+  await page.reload();
+  await expect(list.getByRole('switch', { name: 'Anwesenheit' })).toHaveText('abwesend');
+  await expect(list.getByRole('combobox', { name: 'Heizmodus' })).toHaveValue('2');
+  await expect(list.getByRole('textbox', { name: 'Außentemperatur' })).toHaveValue('21.5');
+});
+
+test('führt Programme aus und schaltet sie als Administrator aktiv', async ({ page }) => {
+  await login(page);
+  await page.getByRole('link', { name: 'Programme' }).click();
+
+  const list = page.getByRole('list', { name: 'Programme' });
+  await expect(list.getByRole('listitem').filter({ hasText: 'Urlaub' })).toContainText('inaktiv');
+  await list.getByRole('button', { name: 'Ausführen Alles aus' }).click();
+  await expect(page.getByText('Programm gestartet')).toBeVisible();
+
+  await list.getByRole('checkbox', { name: 'Aktiv Urlaub' }).click();
+  await expect(list.getByRole('listitem').filter({ hasText: 'Urlaub' })).not.toContainText('inaktiv');
+});

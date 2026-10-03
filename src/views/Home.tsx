@@ -149,6 +149,18 @@ export const Home = () => {
         </span>
         <MenuText>{t('ALL_DEVICES')}</MenuText>
       </MenuItem>
+      <MenuItem to="/sysvars">
+        <span role="img" aria-hidden>
+          🔢
+        </span>
+        <MenuText>{t('SYSVARS')}</MenuText>
+      </MenuItem>
+      <MenuItem to="/programs">
+        <span role="img" aria-hidden>
+          ▶️
+        </span>
+        <MenuText>{t('PROGRAMS')}</MenuText>
+      </MenuItem>
 
       {deviceProblems !== undefined && (
         <>
