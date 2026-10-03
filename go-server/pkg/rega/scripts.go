@@ -108,5 +108,13 @@ func Scripts() map[string]string {
 		"acknowledge_service_message": acknowledgeServiceMessageScript,
 		"get_alarm_messages":          getAlarmMessagesScript,
 		"acknowledge_alarm_message":   acknowledgeAlarmMessageScript,
+		"get_favorites":               getFavoritesScript,
+		"favorite_change":             favoriteChangeScript,
 	}
 }
+
+//go:embed scripts/get_favorites.tcl
+var getFavoritesScript string
+
+//go:embed scripts/favorite_change.tcl
+var favoriteChangeScript string

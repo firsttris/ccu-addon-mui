@@ -416,5 +416,20 @@
   "ALARMS_MORE": "+{count} more",
   "ALARM_TIMES": "triggered {count}×",
   "ALARM_ACTIVE": "Triggered",
-  "ALARM_OVER": "Over, not yet acknowledged"
+  "ALARM_OVER": "Over, not yet acknowledged",
+  "FAVORITES": "Favorites",
+  "NO_FAVORITES": "No favorites yet",
+  "FAVORITES_HINT": "Put together your own lists of devices, system variables and programs, such as \"Evening\" or \"Vacation\". They also apply in the CCU's web interface.",
+  "NEW_FAVORITE_LIST": "New list",
+  "FAVORITE_LIST_NAME": "Name of the list",
+  "EDIT_FAVORITE_LIST": "Edit list",
+  "EDIT": "Edit",
+  "FAVORITE_EMPTY": "This list is still empty. Use \"Edit\" to add devices, system variables and programs.",
+  "FAVORITE_ITEMS": "In the list",
+  "FAVORITE_ADD_ITEMS": "Add",
+  "FAVORITE_SEARCH": "Search device, variable or program",
+  "REMOVE_FROM_LIST": "Remove from list",
+  "ADD_TO_LIST": "Add to list",
+  "SECTION_LOGIC": "System variables & programs",
+  "DELETE_FAVORITE_CONFIRM": "The list is deleted; the devices, variables and programs in it stay."
 }

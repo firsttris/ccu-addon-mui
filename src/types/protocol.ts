@@ -66,7 +66,13 @@ export type ServerMessage =
   | InstallFirmwareResponse
   | CreateBackupResponse
   | GetAlarmMessagesResponse
-  | AcknowledgeAlarmMessageResponse;
+  | AcknowledgeAlarmMessageResponse
+  | GetFavoritesResponse
+  | CreateFavoriteResponse
+  | RenameFavoriteResponse
+  | DeleteFavoriteResponse
+  | AddFavoriteItemResponse
+  | RemoveFavoriteItemResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -117,6 +123,12 @@ export interface Protocol {
   createBackup: CreateBackupCall;
   getAlarmMessages: GetAlarmMessagesCall;
   acknowledgeAlarmMessage: AcknowledgeAlarmMessageCall;
+  getFavorites: GetFavoritesCall;
+  createFavorite: CreateFavoriteCall;
+  renameFavorite: RenameFavoriteCall;
+  deleteFavorite: DeleteFavoriteCall;
+  addFavoriteItem: AddFavoriteItemCall;
+  removeFavoriteItem: RemoveFavoriteItemCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -189,7 +201,7 @@ export interface GetChannelsCall {
   response: GetChannelsResponse;
 }
 /**
- * Channels of a room, a trade or (all) of all devices
+ * Channels of a room, a trade, a favorite list or (all) of all devices
  *
  * This interface was referenced by `Protocol`'s JSON-Schema
  * via the `definition` "GetChannelsRequest".
@@ -200,6 +212,7 @@ export interface GetChannelsRequest {
   deviceId: string;
   roomId?: string;
   tradeId?: string;
+  favoriteId?: string;
   all?: boolean;
 }
 /**
@@ -211,6 +224,7 @@ export interface GetChannelsResponse {
   deviceId: string;
   roomId?: string;
   tradeId?: string;
+  favoriteId?: string;
   all?: boolean;
   channels: Channel[];
 }
@@ -1607,6 +1621,184 @@ export interface AcknowledgeAlarmMessageRequest {
  */
 export interface AcknowledgeAlarmMessageResponse {
   type: "acknowledgeAlarmMessage_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetFavoritesCall".
+ */
+export interface GetFavoritesCall {
+  request: GetFavoritesRequest;
+  response: GetFavoritesResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetFavoritesRequest".
+ */
+export interface GetFavoritesRequest {
+  type: "getFavorites";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetFavoritesResponse".
+ */
+export interface GetFavoritesResponse {
+  type: "getFavorites_response";
+  requestId?: string;
+  favorites: Favorite[];
+}
+/**
+ * A favorite list of the CCU user
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "Favorite".
+ */
+export interface Favorite {
+  id: number;
+  name: string;
+  items: FavoriteItem[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "FavoriteItem".
+ */
+export interface FavoriteItem {
+  id: number;
+  type: "CHANNEL" | "SYSVAR" | "PROGRAM" | "SEPARATOR";
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateFavoriteCall".
+ */
+export interface CreateFavoriteCall {
+  request: CreateFavoriteRequest;
+  response: CreateFavoriteResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateFavoriteRequest".
+ */
+export interface CreateFavoriteRequest {
+  type: "createFavorite";
+  requestId?: string;
+  name: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CreateFavoriteResponse".
+ */
+export interface CreateFavoriteResponse {
+  type: "createFavorite_response";
+  requestId?: string;
+  success: boolean;
+  id?: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameFavoriteCall".
+ */
+export interface RenameFavoriteCall {
+  request: RenameFavoriteRequest;
+  response: RenameFavoriteResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameFavoriteRequest".
+ */
+export interface RenameFavoriteRequest {
+  type: "renameFavorite";
+  requestId?: string;
+  id: number;
+  name: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RenameFavoriteResponse".
+ */
+export interface RenameFavoriteResponse {
+  type: "renameFavorite_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteFavoriteCall".
+ */
+export interface DeleteFavoriteCall {
+  request: DeleteFavoriteRequest;
+  response: DeleteFavoriteResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteFavoriteRequest".
+ */
+export interface DeleteFavoriteRequest {
+  type: "deleteFavorite";
+  requestId?: string;
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteFavoriteResponse".
+ */
+export interface DeleteFavoriteResponse {
+  type: "deleteFavorite_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddFavoriteItemCall".
+ */
+export interface AddFavoriteItemCall {
+  request: AddFavoriteItemRequest;
+  response: AddFavoriteItemResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddFavoriteItemRequest".
+ */
+export interface AddFavoriteItemRequest {
+  type: "addFavoriteItem";
+  requestId?: string;
+  id: number;
+  itemId: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddFavoriteItemResponse".
+ */
+export interface AddFavoriteItemResponse {
+  type: "addFavoriteItem_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RemoveFavoriteItemCall".
+ */
+export interface RemoveFavoriteItemCall {
+  request: RemoveFavoriteItemRequest;
+  response: RemoveFavoriteItemResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RemoveFavoriteItemRequest".
+ */
+export interface RemoveFavoriteItemRequest {
+  type: "removeFavoriteItem";
+  requestId?: string;
+  id: number;
+  itemId: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RemoveFavoriteItemResponse".
+ */
+export interface RemoveFavoriteItemResponse {
+  type: "removeFavoriteItem_response";
   requestId?: string;
   success: boolean;
 }

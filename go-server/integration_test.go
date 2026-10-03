@@ -985,3 +985,71 @@ func TestStackAlarmMessages(t *testing.T) {
 		t.Fatalf("expected the alarm again, got %v", list)
 	}
 }
+
+func TestStackFavorites(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	favorites := func(requestID string) []interface{} {
+		send(t, conn, message{"type": "getFavorites", "requestId": requestID})
+		return receive(t, conn, byRequestID(requestID))["favorites"].([]interface{})
+	}
+	change := func(requestID string, m message) message {
+		m["requestId"] = requestID
+		send(t, conn, m)
+		return receive(t, conn, byRequestID(requestID))
+	}
+	list := favorites("f1")
+	if len(list) != 2 {
+		t.Fatalf("expected both lists of Admin, got %v", list)
+	}
+	evening := list[0].(map[string]interface{})
+	if evening["name"] != "Abends" || len(evening["items"].([]interface{})) != 6 {
+		t.Fatalf("unexpected list: %v", evening)
+	}
+
+	// Its channels, without the system variable and the program
+	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "favoriteId": "1300", "requestId": "f2"})
+	if channels := receive(t, conn, byRequestID("f2"))["channels"].([]interface{}); len(channels) != 4 {
+		t.Fatalf("expected 4 channels, got %d", len(channels))
+	}
+
+	created := change("f3", message{"type": "createFavorite", "name": "Morgens"})
+	if created["success"] != true {
+		t.Fatalf("create failed: %v", created)
+	}
+	id := created["id"]
+	for i, m := range []message{
+		{"type": "addFavoriteItem", "id": id, "itemId": 9104},
+		{"type": "addFavoriteItem", "id": id, "itemId": 950},
+		{"type": "renameFavorite", "id": id, "name": "Früh"},
+		{"type": "removeFavoriteItem", "id": id, "itemId": 950},
+	} {
+		if r := change(fmt.Sprintf("f4-%d", i), m); r["success"] != true {
+			t.Fatalf("%v failed: %v", m, r)
+		}
+	}
+	if r := change("f5", message{"type": "addFavoriteItem", "id": id, "itemId": 424242}); r["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND for an unknown item, got %v", r)
+	}
+	list = favorites("f6")
+	morning := list[2].(map[string]interface{})
+	if morning["name"] != "Früh" || len(morning["items"].([]interface{})) != 1 {
+		t.Fatalf("unexpected new list: %v", morning)
+	}
+	if r := change("f7", message{"type": "deleteFavorite", "id": id}); r["success"] != true {
+		t.Fatalf("delete failed: %v", r)
+	}
+	if list := favorites("f8"); len(list) != 2 {
+		t.Fatalf("list not deleted: %v", list)
+	}
+
+	// The guest sees only its own list and changes nothing
+	loginAs(t, conn, "Gast", "gast")
+	if list := favorites("g1"); len(list) != 1 || list[0].(map[string]interface{})["name"] != "Gäste" {
+		t.Fatalf("unexpected lists of the guest: %v", list)
+	}
+	if r := change("g2", message{"type": "createFavorite", "name": "Meins"}); r["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", r)
+	}
+}

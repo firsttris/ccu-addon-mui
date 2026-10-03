@@ -139,6 +139,24 @@
     },
     "acknowledgeAlarmMessage": {
       "$ref": "#/definitions/AcknowledgeAlarmMessageCall"
+    },
+    "getFavorites": {
+      "$ref": "#/definitions/GetFavoritesCall"
+    },
+    "createFavorite": {
+      "$ref": "#/definitions/CreateFavoriteCall"
+    },
+    "renameFavorite": {
+      "$ref": "#/definitions/RenameFavoriteCall"
+    },
+    "deleteFavorite": {
+      "$ref": "#/definitions/DeleteFavoriteCall"
+    },
+    "addFavoriteItem": {
+      "$ref": "#/definitions/AddFavoriteItemCall"
+    },
+    "removeFavoriteItem": {
+      "$ref": "#/definitions/RemoveFavoriteItemCall"
     }
   },
   "required": [
@@ -186,7 +204,13 @@
     "installFirmware",
     "createBackup",
     "getAlarmMessages",
-    "acknowledgeAlarmMessage"
+    "acknowledgeAlarmMessage",
+    "getFavorites",
+    "createFavorite",
+    "renameFavorite",
+    "deleteFavorite",
+    "addFavoriteItem",
+    "removeFavoriteItem"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -824,6 +848,9 @@
         "tradeId": {
           "type": "string"
         },
+        "favoriteId": {
+          "type": "string"
+        },
         "all": {
           "type": "boolean"
         }
@@ -833,7 +860,7 @@
         "deviceId"
       ],
       "additionalProperties": false,
-      "description": "Channels of a room, a trade or (all) of all devices"
+      "description": "Channels of a room, a trade, a favorite list or (all) of all devices"
     },
     "GetChannelsResponse": {
       "type": "object",
@@ -848,6 +875,9 @@
           "type": "string"
         },
         "tradeId": {
+          "type": "string"
+        },
+        "favoriteId": {
           "type": "string"
         },
         "all": {
@@ -2525,6 +2555,24 @@
         },
         {
           "$ref": "#/definitions/AcknowledgeAlarmMessageResponse"
+        },
+        {
+          "$ref": "#/definitions/GetFavoritesResponse"
+        },
+        {
+          "$ref": "#/definitions/CreateFavoriteResponse"
+        },
+        {
+          "$ref": "#/definitions/RenameFavoriteResponse"
+        },
+        {
+          "$ref": "#/definitions/DeleteFavoriteResponse"
+        },
+        {
+          "$ref": "#/definitions/AddFavoriteItemResponse"
+        },
+        {
+          "$ref": "#/definitions/RemoveFavoriteItemResponse"
         }
       ]
     },
@@ -3965,6 +4013,401 @@
         },
         "message": {
           "type": "string"
+        }
+      }
+    },
+    "GetFavoritesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getFavorites"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetFavoritesResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getFavorites_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "favorites": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Favorite"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "favorites"
+      ],
+      "additionalProperties": false
+    },
+    "GetFavoritesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetFavoritesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetFavoritesResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CreateFavoriteRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "createFavorite"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "CreateFavoriteResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "createFavorite_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "CreateFavoriteCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/CreateFavoriteRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/CreateFavoriteResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RenameFavoriteRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "renameFavorite"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "RenameFavoriteResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "renameFavorite_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "RenameFavoriteCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/RenameFavoriteRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/RenameFavoriteResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteFavoriteRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteFavorite"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteFavoriteResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteFavorite_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteFavoriteCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DeleteFavoriteRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DeleteFavoriteResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "AddFavoriteItemRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "addFavoriteItem"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "itemId": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "itemId"
+      ],
+      "additionalProperties": false
+    },
+    "AddFavoriteItemResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "addFavoriteItem_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "AddFavoriteItemCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/AddFavoriteItemRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/AddFavoriteItemResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RemoveFavoriteItemRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "removeFavoriteItem"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "itemId": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "itemId"
+      ],
+      "additionalProperties": false
+    },
+    "RemoveFavoriteItemResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "removeFavoriteItem_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "RemoveFavoriteItemCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/RemoveFavoriteItemRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/RemoveFavoriteItemResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "Favorite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "items"
+      ],
+      "description": "A favorite list of the CCU user",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FavoriteItem"
+          }
+        }
+      }
+    },
+    "FavoriteItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "type": {
+          "enum": [
+            "CHANNEL",
+            "SYSVAR",
+            "PROGRAM",
+            "SEPARATOR"
+          ]
         }
       }
     }

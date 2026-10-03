@@ -5729,5 +5729,34 @@
       "active": false,
       "visible": true
     }
+  ],
+  "favorites": [
+    {
+      "id": 1300,
+      "name": "Abends",
+      "users": [
+        "Admin"
+      ],
+      "items": [
+        101,
+        301,
+        201,
+        401,
+        950,
+        1201
+      ]
+    },
+    {
+      "id": 1301,
+      "name": "Gäste",
+      "users": [
+        "Admin",
+        "Gast"
+      ],
+      "items": [
+        301,
+        8004
+      ]
+    }
   ]
 }

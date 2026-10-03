@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -518,6 +519,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleObjects(client, msgType, message)
 	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive":
 		s.handleLogic(client, msgType, message)
+	case "getFavorites", "createFavorite", "renameFavorite", "deleteFavorite", "addFavoriteItem", "removeFavoriteItem":
+		s.handleFavorites(client, msgType, message)
 	default:
 		s.sendRequestError(client, requestID, fmt.Sprintf("unknown message type: %s", msgType), "")
 	}
@@ -563,6 +566,8 @@ type request struct {
 	DeviceID  string `json:"deviceId"`
 	RoomID    string `json:"roomId"`
 	TradeID   string `json:"tradeId"`
+	// FavoriteID requests the channels of a favorite list (getChannels only)
+	FavoriteID string `json:"favoriteId"`
 	// All requests the channels of all devices (getChannels only)
 	All bool `json:"all"`
 }
@@ -599,12 +604,13 @@ type tradesResponse struct {
 }
 
 type channelsResponse struct {
-	RequestID string         `json:"requestId,omitempty"`
-	DeviceID  string         `json:"deviceId"`
-	RoomID    string         `json:"roomId,omitempty"`
-	TradeID   string         `json:"tradeId,omitempty"`
-	All       bool           `json:"all,omitempty"`
-	Channels  []rega.Channel `json:"channels"`
+	RequestID  string         `json:"requestId,omitempty"`
+	DeviceID   string         `json:"deviceId"`
+	RoomID     string         `json:"roomId,omitempty"`
+	TradeID    string         `json:"tradeId,omitempty"`
+	FavoriteID string         `json:"favoriteId,omitempty"`
+	All        bool           `json:"all,omitempty"`
+	Channels   []rega.Channel `json:"channels"`
 }
 
 func (s *Server) handleGetRooms(client *Client, message []byte) {
@@ -653,13 +659,17 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 		return
 	}
 
-	// Rooms and trades are both ReGa enumerations, read the same way.
+	// Rooms, trades and favorite lists are all ReGa enumerations, read
+	// the same way.
 	objectID := msg.RoomID
 	if objectID == "" {
 		objectID = msg.TradeID
 	}
 	if objectID == "" {
-		s.sendRequestError(client, msg.RequestID, "roomId, tradeId or all is required", "")
+		objectID = msg.FavoriteID
+	}
+	if objectID == "" {
+		s.sendRequestError(client, msg.RequestID, "roomId, tradeId, favoriteId or all is required", "")
 		return
 	}
 
@@ -670,11 +680,12 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 	}
 
 	s.sendJSON(client, channelsResponse{
-		RequestID: msg.RequestID,
-		DeviceID:  msg.DeviceID,
-		RoomID:    msg.RoomID,
-		TradeID:   msg.TradeID,
-		Channels:  channels,
+		RequestID:  msg.RequestID,
+		DeviceID:   msg.DeviceID,
+		RoomID:     msg.RoomID,
+		TradeID:    msg.TradeID,
+		FavoriteID: msg.FavoriteID,
+		Channels:   channels,
 	})
 }
 
@@ -1827,4 +1838,93 @@ func (s *Server) handleCreateBackup(client *Client, message []byte) {
 		Type: "createBackup_response", RequestID: msg.RequestID, Success: true,
 		URL: BackupPath + created.ID, FileName: created.FileName, Size: created.Size,
 	})
+}
+
+type favoritesResponse struct {
+	Type      string          `json:"type"`
+	RequestID string          `json:"requestId,omitempty"`
+	Favorites []rega.Favorite `json:"favorites"`
+}
+
+// favoriteActions maps the change messages to favorite_change.tcl actions.
+var favoriteActions = map[string]string{
+	"createFavorite":     rega.FavoriteCreate,
+	"renameFavorite":     rega.FavoriteRename,
+	"deleteFavorite":     rega.FavoriteDelete,
+	"addFavoriteItem":    rega.FavoriteAdd,
+	"removeFavoriteItem": rega.FavoriteRemove,
+}
+
+// handleFavorites lists the favorite lists the logged-in CCU user sees and
+// changes them. Like the WebUI, users keep their own lists: anyone but a
+// guest may change them, but only lists they see.
+func (s *Server) handleFavorites(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		ID        int64  `json:"id"`
+		ItemID    int64  `json:"itemId"`
+		Name      string `json:"name"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	favorites, err := s.regaClient.GetFavorites(client.user)
+	if err != nil {
+		s.sendRequestError(client, msg.RequestID, "getFavorites failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	if msgType == "getFavorites" {
+		s.sendJSON(client, favoritesResponse{Type: "getFavorites_response", RequestID: msg.RequestID, Favorites: favorites})
+		return
+	}
+
+	action := favoriteActions[msgType]
+	target := fmt.Sprintf("favorite %d", msg.ID)
+	value := msg.Name
+	if action == rega.FavoriteAdd || action == rega.FavoriteRemove {
+		value = strconv.FormatInt(msg.ItemID, 10)
+	}
+	entry := audit.Entry{User: client.user, Action: msgType, Target: target, Value: value}
+	finish := func(result string) {
+		entry.Result = result
+		if err := s.audit.Record(entry); err != nil {
+			logger.Error("Failed to write the audit log:", err)
+		}
+	}
+	if !canOperate(client.level) {
+		finish("FORBIDDEN")
+		s.sendRequestError(client, msg.RequestID, "guests may not change favorites", "FORBIDDEN")
+		return
+	}
+	if action != rega.FavoriteCreate && !slices.ContainsFunc(favorites, func(f rega.Favorite) bool { return f.ID == msg.ID }) {
+		finish(rega.SetNotFound)
+		s.sendRequestError(client, msg.RequestID, msgType+": "+rega.SetNotFound, rega.SetNotFound)
+		return
+	}
+	result, previous, err := s.regaClient.ChangeFavorite(rega.FavoriteChange{
+		Action: action, ListID: msg.ID, ItemID: msg.ItemID, Name: msg.Name, Username: client.user,
+	})
+	if err != nil {
+		code := "CCU_ERROR"
+		if strings.HasPrefix(err.Error(), "invalid") {
+			code = "INVALID_VALUE"
+		}
+		finish(code)
+		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), code)
+		return
+	}
+	response := changeResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}
+	if action == rega.FavoriteCreate {
+		response.ID, _ = strconv.ParseInt(previous, 10, 64)
+		entry.Target = fmt.Sprintf("favorite %d", response.ID)
+	} else if previous != "" {
+		entry.Previous = previous
+	}
+	finish(result)
+	if result != rega.SetOK {
+		s.sendRequestError(client, msg.RequestID, msgType+": "+result, result)
+		return
+	}
+	s.sendJSON(client, response)
 }
