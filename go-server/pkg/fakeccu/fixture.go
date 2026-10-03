@@ -111,6 +111,7 @@ type Channel struct {
 	Hidden   bool `json:"hidden,omitempty"`
 	ReadOnly bool `json:"readOnly,omitempty"`
 	Logged   bool `json:"logged,omitempty"`
+	AES      bool `json:"aes,omitempty"`
 }
 
 // InterfaceData is what an XML-RPC interface (e.g. HmIP-RF) returns.

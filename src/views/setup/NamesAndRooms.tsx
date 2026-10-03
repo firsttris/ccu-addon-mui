@@ -100,6 +100,10 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
               { option: 'visible' as const, label: m.CHANNEL_VISIBLE(), checked: !channel.hidden },
               { option: 'usable' as const, label: m.CHANNEL_USABLE(), checked: !channel.readOnly },
               { option: 'logged' as const, label: m.CHANNEL_LOGGED(), checked: !!channel.logged },
+              // BidCos only: HmIP always transmits secured (Channel.setMode)
+              ...(channel.interfaceName === 'BidCos-RF'
+                ? [{ option: 'aes' as const, label: m.CHANNEL_AES(), checked: !!channel.aes }]
+                : []),
             ].map(({ option, label, checked }) => (
               <label key={option}>
                 <input

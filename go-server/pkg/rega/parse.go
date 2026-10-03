@@ -45,6 +45,8 @@ type Channel struct {
 	Hidden   bool `json:"hidden,omitempty"`
 	ReadOnly bool `json:"readOnly,omitempty"`
 	Logged   bool `json:"logged,omitempty"`
+	// Secured transmission (AES), the WebUI's "Übertragungsmodus"
+	AES bool `json:"aes,omitempty"`
 }
 
 // parseIDs parses a comma separated list of ids.
@@ -171,6 +173,7 @@ func parseChannels(output string) []Channel {
 			channel.Hidden = fields[1] == "false"
 			channel.ReadOnly = fields[2] == "false"
 			channel.Logged = fields[3] == "true"
+			channel.AES = len(fields) > 4 && fields[4] == "true"
 		case "D":
 			if len(fields) < 4 || len(channels) == 0 {
 				continue

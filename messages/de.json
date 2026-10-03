@@ -714,5 +714,6 @@
   "COMTEST_HINT": "Die CCU bittet das Gerät um eine Antwort. Batteriegeräte antworten erst, wenn sie aufwachen; dafür kurz eine Taste am Gerät drücken.",
   "PRG_SAVE_AS_NEW": "Als neues Programm speichern",
   "PRG_COPY_NAME": "{name} (Kopie)",
-  "PRG_COPIED": "Als neues Programm gespeichert"
+  "PRG_COPIED": "Als neues Programm gespeichert",
+  "CHANNEL_AES": "gesichert (AES)"
 }

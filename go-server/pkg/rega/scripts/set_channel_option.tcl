@@ -1,6 +1,7 @@
 ! Sets one channel option as the WebUI's Channel.setVisibility,
 ! Channel.setUsability and Channel.setLogging do
-! (api/methods/channel/set*.tcl): OPTION visible, usable or logged. Writes
+! (api/methods/channel/set*.tcl), and the transmission mode as
+! Channel.setMode (ChnAESActive): OPTION visible, usable, logged or aes. Writes
 ! OK, a tab and the channel name, or NOT_FOUND.
 object channel = dom.GetObject({{ID}});
 boolean found = false;
@@ -21,6 +22,9 @@ if (channel) {
         }
         if (option == "logged") {
             channel.ChnArchive(value);
+        }
+        if (option == "aes") {
+            channel.ChnAESActive(value);
         }
         Write("OK\t" # channel.Name());
     }

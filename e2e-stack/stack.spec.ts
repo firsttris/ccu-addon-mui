@@ -883,3 +883,22 @@ test('speichert ein Programm als neues Programm', async ({ page }) => {
   await expect(page).toHaveURL(/\/programs$/);
   await expect(page.getByText('Rollläden abends schließen (Kopie)')).toHaveCount(0);
 });
+
+test('stellt den Übertragungsmodus von BidCos-Kanälen ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/BidCos-RF/LEQ0000001');
+  const options = page.getByRole('group', { name: 'Optionen LEQ0000001:1' });
+  const aes = options.getByLabel('gesichert (AES)');
+  await expect(aes).not.toBeChecked();
+  await aes.click();
+  await expect(aes).toBeChecked();
+  await page.reload();
+  await expect(aes).toBeChecked();
+  await aes.click();
+  await expect(aes).not.toBeChecked();
+
+  // HmIP always transmits secured
+  await page.goto('/device/HmIP-RF/0000DBE9A5C1F2');
+  await expect(page.getByRole('group', { name: 'Optionen 0000DBE9A5C1F2:1' })).toBeVisible();
+  await expect(page.getByLabel('gesichert (AES)')).toHaveCount(0);
+});

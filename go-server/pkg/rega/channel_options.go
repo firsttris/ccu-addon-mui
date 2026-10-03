@@ -7,7 +7,7 @@ import (
 )
 
 // The channel options of the WebUI (set_channel_option.tcl)
-var channelOptions = map[string]bool{"visible": true, "usable": true, "logged": true}
+var channelOptions = map[string]bool{"visible": true, "usable": true, "logged": true, "aes": true}
 
 // SetChannelOption sets visible, usable or logged of a channel; SetOK with
 // the channel name, or SetNotFound.
