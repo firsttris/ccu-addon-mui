@@ -1,5 +1,4 @@
-import styled from '@emotion/styled';
-import { useEffect, useState } from 'react';
+import { ButtonHTMLAttributes, useEffect, useState } from 'react';
 import {
   DatapointValue,
   Operation,
@@ -13,71 +12,17 @@ import { m } from '../../paraglide/messages';
 // Renders a channel's parameters from its paramset description: the element
 // follows the parameter's type, writable parameters get inputs.
 
-const List = styled.dl`
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 4px 8px;
-  margin: 0;
-  font-size: 12px;
-`;
+// font: inherit, then 12px (as one utility each, so their order can't matter)
+const inputFont = 'font-[inherit] [font-style:inherit] [font-weight:inherit] leading-[inherit] text-[12px] box-border';
 
-const Key = styled.dt`
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: ${(props) => props.theme.colors.textSecondary};
-`;
-
-const Value = styled.dd`
-  margin: 0;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  color: ${(props) => props.theme.colors.text};
-`;
-
-const Toggle = styled.button<{ checked: boolean }>`
-  width: 36px;
-  height: 20px;
-  padding: 2px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  background: ${({ checked }) => (checked ? '#43a047' : '#9e9e9e')};
-  display: flex;
-  justify-content: ${({ checked }) => (checked ? 'flex-end' : 'flex-start')};
-
-  &::after {
-    content: '';
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #fff;
-  }
-`;
-
-const inputStyle = `
-  font: inherit;
-  font-size: 12px;
-  max-width: 110px;
-  box-sizing: border-box;
-`;
-
-const Select = styled.select`
-  ${inputStyle}
-`;
-
-const NumberInput = styled.input`
-  ${inputStyle}
-  width: 80px;
-  text-align: right;
-`;
-
-const ActionButton = styled.button`
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-`;
+const Toggle = ({ checked, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { checked: boolean }) => (
+  <button
+    className={`w-9 h-5 p-[2px] border-none rounded-[10px] cursor-pointer flex after:content-[''] after:w-4 after:h-4 after:rounded-full after:bg-white ${
+      checked ? 'bg-[#43a047] justify-end' : 'bg-[#9e9e9e] justify-start'
+    }`}
+    {...props}
+  />
+);
 
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 2 });
 
@@ -157,7 +102,8 @@ const NumberParameter = ({ name, parameter, value, onSet }: ParameterProps) => {
 
   return (
     <>
-      <NumberInput
+      <input
+        className={`${inputFont} max-w-[110px] w-20 text-right`}
         aria-label={name}
         inputMode="decimal"
         value={draft}
@@ -188,9 +134,9 @@ const ParameterValue = (props: ParameterProps) => {
         return <>–</>;
       }
       return (
-        <ActionButton type="button" onClick={() => onSet(name, true)}>
+        <button className={`${inputFont} cursor-pointer`} type="button" onClick={() => onSet(name, true)}>
           {m.RUN()}
-        </ActionButton>
+        </button>
       );
     case 'BOOL':
       if (writable) {
@@ -210,7 +156,8 @@ const ParameterValue = (props: ParameterProps) => {
       const options = parameter.valueList ?? [];
       if (writable) {
         return (
-          <Select
+          <select
+            className={`${inputFont} max-w-[110px]`}
             aria-label={name}
             value={typeof value === 'number' ? value : ''}
             onChange={(event) => onSet(name, Number(event.target.value))}
@@ -220,7 +167,7 @@ const ParameterValue = (props: ParameterProps) => {
                 {option}
               </option>
             ))}
-          </Select>
+          </select>
         );
       }
       return <>{typeof value === 'number' ? options[value] ?? value : value ?? '–'}</>;
@@ -259,18 +206,18 @@ interface ParamsetViewProps {
 export const ParamsetView = ({ label, description, values, onSet, readOnly, changed }: ParamsetViewProps) => {
   const t = useTranslations();
   return (
-    <List aria-label={label}>
+    <dl aria-label={label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 m-0 text-[12px]">
       {shownParameters(description).map(([name, parameter]) => (
         <div key={name} style={{ display: 'contents' }}>
-          <Key title={name} style={changed?.has(name) ? { fontWeight: 700 } : undefined}>
+          <dt className="overflow-hidden text-ellipsis whitespace-nowrap text-text-secondary" title={name} style={changed?.has(name) ? { fontWeight: 700 } : undefined}>
             {t(name as TranslationKey)}
             {changed?.has(name) ? ' •' : ''}
-          </Key>
-          <Value>
+          </dt>
+          <dd className="m-0 text-right tabular-nums text-text">
             <ParameterValue name={name} parameter={parameter} value={values[name]} onSet={onSet} readOnly={readOnly} />
-          </Value>
+          </dd>
         </div>
       ))}
-    </List>
+    </dl>
   );
 };
