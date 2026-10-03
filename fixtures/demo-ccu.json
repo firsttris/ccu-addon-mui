@@ -377,12 +377,83 @@
         "PRESS_SHORT": false,
         "PRESS_LONG": false
       }
+    },
+    {
+      "id": 9100,
+      "address": "00195F29B04142:0",
+      "type": "MAINTENANCE",
+      "interface": "HmIP-RF",
+      "name": "HmIP-WHS2 00195F29B04142:0",
+      "datapoints": {
+        "UNREACH": false,
+        "LOW_BAT": false
+      }
+    },
+    {
+      "id": 9103,
+      "address": "00195F29B04142:3",
+      "type": "SWITCH_TRANSMITTER",
+      "interface": "HmIP-RF",
+      "name": "HmIP-WHS2 00195F29B04142:3",
+      "datapoints": {
+        "STATE": true
+      }
+    },
+    {
+      "id": 9104,
+      "address": "00195F29B04142:4",
+      "type": "SWITCH_VIRTUAL_RECEIVER",
+      "interface": "HmIP-RF",
+      "name": "Zirkulationspumpe",
+      "datapoints": {
+        "STATE": true,
+        "PROCESS": 0,
+        "SECTION": 0,
+        "SECTION_STATUS": 0
+      }
+    },
+    {
+      "id": 9105,
+      "address": "00195F29B04142:5",
+      "type": "SWITCH_VIRTUAL_RECEIVER",
+      "interface": "HmIP-RF",
+      "name": "HmIP-WHS2 00195F29B04142:5",
+      "datapoints": {
+        "STATE": true,
+        "PROCESS": 0,
+        "SECTION": 0,
+        "SECTION_STATUS": 0
+      }
+    },
+    {
+      "id": 9106,
+      "address": "00195F29B04142:6",
+      "type": "SWITCH_VIRTUAL_RECEIVER",
+      "interface": "HmIP-RF",
+      "name": "HmIP-WHS2 00195F29B04142:6",
+      "datapoints": {
+        "STATE": true,
+        "PROCESS": 0,
+        "SECTION": 0,
+        "SECTION_STATUS": 0
+      }
+    },
+    {
+      "id": 9107,
+      "address": "00195F29B04142:7",
+      "type": "SWITCH_WEEK_PROFILE",
+      "interface": "HmIP-RF",
+      "name": "Zirkulationspumpe Zeitplan",
+      "datapoints": {
+        "WEEK_PROGRAM_CHANNEL_LOCKS": 0
+      }
     }
   ],
   "deviceNames": {
     "000A9D89A7AF25": "Wandthermostat Flur",
     "003660C9930AB6": "Fensterkontakt Bad",
-    "000855699C4F38": "Taster Esszimmer"
+    "000855699C4F38": "Taster Esszimmer",
+    "00195F29B04142": "Zirkulationspumpe"
   },
   "interfaces": {
     "BidCos-RF": {
@@ -4662,6 +4733,106 @@
           "VERSION": 4,
           "FLAGS": 1,
           "LINK_SOURCE_ROLES": "KEYMATIC SWITCH WINDOW_SWITCH_RECEIVER WINMATIC"
+        },
+        {
+          "ADDRESS": "00195F29B04142",
+          "TYPE": "HmIP-WHS2",
+          "CHILDREN": [
+            "00195F29B04142:0",
+            "00195F29B04142:3",
+            "00195F29B04142:4",
+            "00195F29B04142:5",
+            "00195F29B04142:6",
+            "00195F29B04142:7"
+          ],
+          "PARAMSETS": [
+            "MASTER",
+            "SERVICE"
+          ],
+          "VERSION": 10,
+          "FIRMWARE": "1.2.4",
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "00195F29B04142:0",
+          "TYPE": "MAINTENANCE",
+          "PARENT": "00195F29B04142",
+          "PARENT_TYPE": "HmIP-WHS2",
+          "INDEX": 0,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES"
+          ],
+          "VERSION": 10,
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "00195F29B04142:3",
+          "TYPE": "SWITCH_TRANSMITTER",
+          "PARENT": "00195F29B04142",
+          "PARENT_TYPE": "HmIP-WHS2",
+          "INDEX": 3,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES"
+          ],
+          "VERSION": 10,
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "00195F29B04142:4",
+          "TYPE": "SWITCH_VIRTUAL_RECEIVER",
+          "PARENT": "00195F29B04142",
+          "PARENT_TYPE": "HmIP-WHS2",
+          "INDEX": 4,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 10,
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "00195F29B04142:5",
+          "TYPE": "SWITCH_VIRTUAL_RECEIVER",
+          "PARENT": "00195F29B04142",
+          "PARENT_TYPE": "HmIP-WHS2",
+          "INDEX": 5,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 10,
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "00195F29B04142:6",
+          "TYPE": "SWITCH_VIRTUAL_RECEIVER",
+          "PARENT": "00195F29B04142",
+          "PARENT_TYPE": "HmIP-WHS2",
+          "INDEX": 6,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 10,
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "00195F29B04142:7",
+          "TYPE": "SWITCH_WEEK_PROFILE",
+          "PARENT": "00195F29B04142",
+          "PARENT_TYPE": "HmIP-WHS2",
+          "INDEX": 7,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES"
+          ],
+          "VERSION": 10,
+          "FLAGS": 1
         }
       ],
       "paramsetDescriptions": {
@@ -4913,12 +5084,534 @@
               "TAB_ORDER": 3
             }
           }
+        },
+        "00195F29B04142:7": {
+          "VALUES": {
+            "WEEK_PROGRAM_CHANNEL_LOCKS": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 255,
+              "TAB_ORDER": 0
+            }
+          },
+          "MASTER": {
+            "01_WP_WEEKDAY": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 127,
+              "TAB_ORDER": 0
+            },
+            "01_WP_CONDITION": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "FIXED_TIME",
+                "ASTRO",
+                "FIXED_IF_BEFORE_ASTRO",
+                "ASTRO_IF_BEFORE_FIXED",
+                "FIXED_IF_AFTER_ASTRO",
+                "ASTRO_IF_AFTER_FIXED",
+                "EARLIEST",
+                "LATEST"
+              ]
+            },
+            "01_WP_FIXED_HOUR": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 23,
+              "TAB_ORDER": 0
+            },
+            "01_WP_FIXED_MINUTE": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 59,
+              "TAB_ORDER": 0
+            },
+            "01_WP_ASTRO_TYPE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 1,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "SUNRISE",
+                "SUNSET"
+              ]
+            },
+            "01_WP_ASTRO_OFFSET": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": -720,
+              "MAX": 720,
+              "TAB_ORDER": 0,
+              "UNIT": "min"
+            },
+            "01_WP_TARGET_CHANNELS": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0
+            },
+            "01_WP_LEVEL": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0.0,
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "TAB_ORDER": 0
+            },
+            "01_WP_DURATION_BASE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "100MS",
+                "1S",
+                "5S",
+                "10S",
+                "1M",
+                "5M",
+                "10M",
+                "1H"
+              ]
+            },
+            "01_WP_DURATION_FACTOR": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 31,
+              "MIN": 0,
+              "MAX": 31,
+              "TAB_ORDER": 0
+            },
+            "02_WP_WEEKDAY": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 127,
+              "TAB_ORDER": 0
+            },
+            "02_WP_CONDITION": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "FIXED_TIME",
+                "ASTRO",
+                "FIXED_IF_BEFORE_ASTRO",
+                "ASTRO_IF_BEFORE_FIXED",
+                "FIXED_IF_AFTER_ASTRO",
+                "ASTRO_IF_AFTER_FIXED",
+                "EARLIEST",
+                "LATEST"
+              ]
+            },
+            "02_WP_FIXED_HOUR": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 23,
+              "TAB_ORDER": 0
+            },
+            "02_WP_FIXED_MINUTE": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 59,
+              "TAB_ORDER": 0
+            },
+            "02_WP_ASTRO_TYPE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 1,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "SUNRISE",
+                "SUNSET"
+              ]
+            },
+            "02_WP_ASTRO_OFFSET": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": -720,
+              "MAX": 720,
+              "TAB_ORDER": 0,
+              "UNIT": "min"
+            },
+            "02_WP_TARGET_CHANNELS": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0
+            },
+            "02_WP_LEVEL": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0.0,
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "TAB_ORDER": 0
+            },
+            "02_WP_DURATION_BASE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "100MS",
+                "1S",
+                "5S",
+                "10S",
+                "1M",
+                "5M",
+                "10M",
+                "1H"
+              ]
+            },
+            "02_WP_DURATION_FACTOR": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 31,
+              "MIN": 0,
+              "MAX": 31,
+              "TAB_ORDER": 0
+            },
+            "03_WP_WEEKDAY": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 127,
+              "TAB_ORDER": 0
+            },
+            "03_WP_CONDITION": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "FIXED_TIME",
+                "ASTRO",
+                "FIXED_IF_BEFORE_ASTRO",
+                "ASTRO_IF_BEFORE_FIXED",
+                "FIXED_IF_AFTER_ASTRO",
+                "ASTRO_IF_AFTER_FIXED",
+                "EARLIEST",
+                "LATEST"
+              ]
+            },
+            "03_WP_FIXED_HOUR": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 23,
+              "TAB_ORDER": 0
+            },
+            "03_WP_FIXED_MINUTE": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 59,
+              "TAB_ORDER": 0
+            },
+            "03_WP_ASTRO_TYPE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 1,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "SUNRISE",
+                "SUNSET"
+              ]
+            },
+            "03_WP_ASTRO_OFFSET": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": -720,
+              "MAX": 720,
+              "TAB_ORDER": 0,
+              "UNIT": "min"
+            },
+            "03_WP_TARGET_CHANNELS": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0
+            },
+            "03_WP_LEVEL": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0.0,
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "TAB_ORDER": 0
+            },
+            "03_WP_DURATION_BASE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "100MS",
+                "1S",
+                "5S",
+                "10S",
+                "1M",
+                "5M",
+                "10M",
+                "1H"
+              ]
+            },
+            "03_WP_DURATION_FACTOR": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 31,
+              "MIN": 0,
+              "MAX": 31,
+              "TAB_ORDER": 0
+            },
+            "04_WP_WEEKDAY": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 127,
+              "TAB_ORDER": 0
+            },
+            "04_WP_CONDITION": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "FIXED_TIME",
+                "ASTRO",
+                "FIXED_IF_BEFORE_ASTRO",
+                "ASTRO_IF_BEFORE_FIXED",
+                "FIXED_IF_AFTER_ASTRO",
+                "ASTRO_IF_AFTER_FIXED",
+                "EARLIEST",
+                "LATEST"
+              ]
+            },
+            "04_WP_FIXED_HOUR": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 23,
+              "TAB_ORDER": 0
+            },
+            "04_WP_FIXED_MINUTE": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 59,
+              "TAB_ORDER": 0
+            },
+            "04_WP_ASTRO_TYPE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 1,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "SUNRISE",
+                "SUNSET"
+              ]
+            },
+            "04_WP_ASTRO_OFFSET": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": -720,
+              "MAX": 720,
+              "TAB_ORDER": 0,
+              "UNIT": "min"
+            },
+            "04_WP_TARGET_CHANNELS": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0
+            },
+            "04_WP_LEVEL": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0.0,
+              "MIN": 0.0,
+              "MAX": 1.0,
+              "TAB_ORDER": 0
+            },
+            "04_WP_DURATION_BASE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 7,
+              "TAB_ORDER": 0,
+              "VALUE_LIST": [
+                "100MS",
+                "1S",
+                "5S",
+                "10S",
+                "1M",
+                "5M",
+                "10M",
+                "1H"
+              ]
+            },
+            "04_WP_DURATION_FACTOR": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 31,
+              "MIN": 0,
+              "MAX": 31,
+              "TAB_ORDER": 0
+            }
+          }
         }
       },
       "paramsets": {
         "0000DBE9A5C1F2:1": {
           "MASTER": {
             "EVENT_DELAY_UNIT": 0
+          }
+        },
+        "00195F29B04142:7": {
+          "MASTER": {
+            "01_WP_WEEKDAY": 62,
+            "01_WP_CONDITION": 0,
+            "01_WP_FIXED_HOUR": 6,
+            "01_WP_FIXED_MINUTE": 0,
+            "01_WP_ASTRO_TYPE": 0,
+            "01_WP_ASTRO_OFFSET": 0,
+            "01_WP_TARGET_CHANNELS": 1,
+            "01_WP_LEVEL": 1.0,
+            "01_WP_DURATION_BASE": 0,
+            "01_WP_DURATION_FACTOR": 31,
+            "02_WP_WEEKDAY": 62,
+            "02_WP_CONDITION": 0,
+            "02_WP_FIXED_HOUR": 22,
+            "02_WP_FIXED_MINUTE": 0,
+            "02_WP_ASTRO_TYPE": 0,
+            "02_WP_ASTRO_OFFSET": 0,
+            "02_WP_TARGET_CHANNELS": 1,
+            "02_WP_LEVEL": 0.0,
+            "02_WP_DURATION_BASE": 0,
+            "02_WP_DURATION_FACTOR": 31,
+            "03_WP_WEEKDAY": 0,
+            "03_WP_CONDITION": 0,
+            "03_WP_FIXED_HOUR": 0,
+            "03_WP_FIXED_MINUTE": 0,
+            "03_WP_ASTRO_TYPE": 0,
+            "03_WP_ASTRO_OFFSET": 0,
+            "03_WP_TARGET_CHANNELS": 0,
+            "03_WP_LEVEL": 0.0,
+            "03_WP_DURATION_BASE": 0,
+            "03_WP_DURATION_FACTOR": 31,
+            "04_WP_WEEKDAY": 0,
+            "04_WP_CONDITION": 0,
+            "04_WP_FIXED_HOUR": 0,
+            "04_WP_FIXED_MINUTE": 0,
+            "04_WP_ASTRO_TYPE": 0,
+            "04_WP_ASTRO_OFFSET": 0,
+            "04_WP_TARGET_CHANNELS": 0,
+            "04_WP_LEVEL": 0.0,
+            "04_WP_DURATION_BASE": 0,
+            "04_WP_DURATION_FACTOR": 31
+          },
+          "VALUES": {
+            "WEEK_PROGRAM_CHANNEL_LOCKS": 0
           }
         }
       },

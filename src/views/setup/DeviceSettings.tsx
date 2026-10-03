@@ -21,12 +21,22 @@ import { useChannelNames } from './channelNames';
 import { NamesAndRooms } from './NamesAndRooms';
 import { GroupedSettings } from './GroupedSettings';
 import { WeekProfileSheet } from '../../controls/ThermostatControl/profile/WeekProfileSheet';
+import { WeekProgramSheet, WeekProgramKind } from '../../controls/schedule/WeekProgramSheet';
 import { parameterLabel } from '../../controls/generic/parameters';
 import { Links } from './Links';
 import { Firmware } from './Firmware';
 import { m } from '../../paraglide/messages';
 
 const Section = (props: HTMLAttributes<HTMLElement>) => <Panel {...props} />;
+
+const weekProgramKindOf = (type: string): WeekProgramKind | null =>
+  !type.endsWith('_WEEK_PROFILE')
+    ? null
+    : type.startsWith('BLIND') || type.startsWith('SHUTTER')
+      ? 'blind'
+      : type.startsWith('SWITCH') || type.startsWith('WATER_SWITCH')
+        ? 'switch'
+        : 'dimmer';
 
 type Values = Record<string, DatapointValue>;
 
@@ -135,6 +145,18 @@ export const DeviceSettings = () => {
     }
   };
 
+  // HmIP actuators keep their own week program on a *_WEEK_PROFILE channel
+  const scheduleType = device?.channels?.find((c) => c.address === scheduleAddress)?.type ?? '';
+  const weekProgramKind = weekProgramKindOf(scheduleType);
+  const weekProgramTargets = useMemo(
+    () =>
+      // Bits of WP_TARGET_CHANNELS: the device's virtual channels in order
+      // (getWPVirtualChannels in the WebUI's HmIPWeeklyProgram.js)
+      (device?.channels ?? [])
+        .filter((c) => /_VIRTUAL_RECEIVER|ACCESS_RECEIVER|ACCESS_TRANSCEIVER|DOOR_LOCK_STATE_TRANSMITTER/.test(c.type))
+        .map((c, index) => ({ index, label: names.get(c.address) ?? c.address })),
+    [device, names],
+  );
   const loading = descriptions.some((d) => d.isPending);
   const title = names.get(address) ?? address;
   usePageTitle(title);
@@ -284,13 +306,25 @@ export const DeviceSettings = () => {
       )}
 
       {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}
-      <WeekProfileSheet
-        open={scheduleAddress !== null}
-        onOpenChange={(open) => !open && setScheduleAddress(null)}
-        interfaceName={interfaceName}
-        address={scheduleAddress ?? address}
-        name={names.get(scheduleAddress ?? address) ?? title}
-      />
+      {weekProgramKind ? (
+        <WeekProgramSheet
+          open={scheduleAddress !== null}
+          onOpenChange={(open) => !open && setScheduleAddress(null)}
+          interfaceName={interfaceName}
+          address={scheduleAddress ?? address}
+          name={title}
+          kind={weekProgramKind}
+          targets={weekProgramTargets}
+        />
+      ) : (
+        <WeekProfileSheet
+          open={scheduleAddress !== null}
+          onOpenChange={(open) => !open && setScheduleAddress(null)}
+          interfaceName={interfaceName}
+          address={scheduleAddress ?? address}
+          name={names.get(scheduleAddress ?? address) ?? title}
+        />
+      )}
 
       {confirming && (
         <ConfirmDialog
