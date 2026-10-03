@@ -412,3 +412,25 @@ test('bearbeitet das Wochenprogramm eines Thermostats', async ({ page }) => {
   await expect(friday.getByRole('listitem').nth(1)).toContainText('21,5 °C');
   await expect(friday.getByRole('combobox', { name: 'Ende von 06:00' })).toHaveValue('510');
 });
+
+test('installiert ein bereitliegendes Firmware-Update', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup');
+
+  // Only the window contact has newer firmware
+  await page.getByRole('button', { name: /Nur mit Update \(1\)/ }).click();
+  const table = page.getByRole('table', { name: 'Geräte' });
+  await expect(table.getByRole('row')).toHaveCount(2);
+  await expect(table.getByRole('row').nth(1)).toContainText('1.0.121.2.6');
+  await table.getByRole('link').first().click();
+
+  const firmware = page.getByRole('region', { name: 'Firmware' });
+  await expect(firmware.getByRole('status')).toHaveText(/Firmware 1\.2\.6 liegt auf dem Gerät bereit/);
+  await firmware.getByRole('button', { name: 'Update installieren' }).click();
+  await page.getByRole('dialog', { name: 'Firmware-Update' }).getByRole('button', { name: 'Update installieren' }).click();
+  await expect(page.getByText('Update gestartet')).toBeVisible();
+
+  await expect(firmware.getByRole('status')).toHaveText('Die Firmware ist aktuell.');
+  await expect(firmware.getByRole('button', { name: 'Update installieren' })).toHaveCount(0);
+  await expect(firmware.getByRole('definition').first()).toHaveText('1.2.6');
+});

@@ -166,6 +166,18 @@ export const usePairingAction = () => {
   });
 };
 
+// Installs the firmware the CCU has delivered to a device
+export const useInstallFirmware = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ interfaceName, address }: { interfaceName: string; address: string }) => {
+      await request({ type: 'installFirmware', interfaceName, address }, { queue: false });
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['devices'] }),
+  });
+};
+
 // ReGa doesn't send events for system variables: reload now and then
 const SYSVARS_REFRESH_MS = 10000;
 

@@ -283,5 +283,20 @@
   "GROUP_SCHEDULE": "Schaltzeiten (Wochenprogramm)",
   "GROUP_EXPERT": "Experten-Einstellungen",
   "EDIT_WEEK_PROFILE": "Wochenprogramm bearbeiten",
-  "SETTINGS_COUNT": "{count} Einstellungen"
+  "SETTINGS_COUNT": "{count} Einstellungen",
+  "UPDATE_AVAILABLE": "Update verfügbar",
+  "ONLY_UPDATES": "Nur mit Update",
+  "FIRMWARE_UPDATE": "Firmware-Update",
+  "INSTALL_FIRMWARE": "Update installieren",
+  "INSTALL_FIRMWARE_CONFIRM": "Firmware {version} jetzt auf dem Gerät installieren? Das Gerät ist während des Updates einige Minuten nicht bedienbar.",
+  "FIRMWARE_UPDATE_STARTED": "Update gestartet",
+  "FIRMWARE_UP_TO_DATE": "Die Firmware ist aktuell.",
+  "FIRMWARE_NEW_AVAILABLE": "Neue Firmware {version} verfügbar. Die CCU überträgt sie im Hintergrund zum Gerät.",
+  "FIRMWARE_DELIVERING": "Firmware {version} wird zum Gerät übertragen. Das kann bei Batteriegeräten Stunden dauern.",
+  "FIRMWARE_READY": "Firmware {version} liegt auf dem Gerät bereit und kann installiert werden.",
+  "FIRMWARE_PERFORMING": "Das Update wird installiert …",
+  "FIRMWARE_OTHER": "Firmware {version} verfügbar ({state}).",
+  "FIRMWARE_NO_INFO": "Die CCU meldet für dieses Gerät keine Update-Informationen. Updates für BidCos-Geräte gehen über die alte WebUI.",
+  "INSTALLED": "Installiert",
+  "AVAILABLE": "Verfügbar"
 }

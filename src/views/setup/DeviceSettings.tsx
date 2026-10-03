@@ -23,6 +23,7 @@ import { GroupedSettings } from './GroupedSettings';
 import { WeekProfileSheet } from '../../controls/ThermostatControl/profile/WeekProfileSheet';
 import { parameterLabel } from '../../controls/generic/parameters';
 import { Links } from './Links';
+import { Firmware } from './Firmware';
 import { m } from '../../paraglide/messages';
 
 const Section = (props: HTMLAttributes<HTMLElement>) => <Panel {...props} />;
@@ -212,6 +213,12 @@ export const DeviceSettings = () => {
           {!loading && sections.length === 0 && <p className="text-sm text-muted-foreground">{m.NO_SETTINGS()}</p>}
         </div>
         <div className="flex min-w-0 flex-col gap-5">
+          {device && (
+            <Section aria-label={m.FIRMWARE()}>
+              <h2>{m.FIRMWARE()}</h2>
+              <Firmware device={device} canEdit={canEdit} />
+            </Section>
+          )}
           {canEdit && (
             <Section aria-label={m.NAMES_AND_ROOMS()}>
               <h2>{m.NAMES_AND_ROOMS()}</h2>

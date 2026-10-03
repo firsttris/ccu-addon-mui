@@ -283,5 +283,20 @@
   "GROUP_SCHEDULE": "Switching times (week program)",
   "GROUP_EXPERT": "Expert settings",
   "EDIT_WEEK_PROFILE": "Edit week schedule",
-  "SETTINGS_COUNT": "{count} settings"
+  "SETTINGS_COUNT": "{count} settings",
+  "UPDATE_AVAILABLE": "Update available",
+  "ONLY_UPDATES": "Only with update",
+  "FIRMWARE_UPDATE": "Firmware update",
+  "INSTALL_FIRMWARE": "Install update",
+  "INSTALL_FIRMWARE_CONFIRM": "Install firmware {version} on the device now? The device can't be used for a few minutes during the update.",
+  "FIRMWARE_UPDATE_STARTED": "Update started",
+  "FIRMWARE_UP_TO_DATE": "The firmware is up to date.",
+  "FIRMWARE_NEW_AVAILABLE": "New firmware {version} available. The CCU transfers it to the device in the background.",
+  "FIRMWARE_DELIVERING": "Firmware {version} is being transferred to the device. For battery devices this can take hours.",
+  "FIRMWARE_READY": "Firmware {version} is on the device and ready to install.",
+  "FIRMWARE_PERFORMING": "The update is being installed …",
+  "FIRMWARE_OTHER": "Firmware {version} available ({state}).",
+  "FIRMWARE_NO_INFO": "The CCU reports no update information for this device. Updates for BidCos devices go through the old WebUI.",
+  "INSTALLED": "Installed",
+  "AVAILABLE": "Available"
 }

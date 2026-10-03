@@ -13,6 +13,7 @@ import SearchIcon from '~icons/lucide/search';
 import ArrowUpIcon from '~icons/lucide/arrow-up';
 import ArrowDownIcon from '~icons/lucide/arrow-down';
 import TriangleAlertIcon from '~icons/lucide/triangle-alert';
+import DownloadIcon from '~icons/lucide/circle-arrow-down';
 import { useDeviceProblems, useDevices } from '../../queries';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { useChannelNames } from './channelNames';
@@ -29,6 +30,8 @@ interface DeviceRow {
   address: string;
   interfaceName: string;
   firmware: string;
+  // Newer firmware the CCU has for the device
+  availableFirmware: string;
   unreach: boolean;
   lowBat: boolean;
 }
@@ -61,6 +64,7 @@ export const Setup = () => {
   const names = useChannelNames();
   const [filter, setFilter] = useState('');
   const [onlyProblems, setOnlyProblems] = useState(false);
+  const [onlyUpdates, setOnlyUpdates] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
 
   const rows = useMemo<DeviceRow[]>(() => {
@@ -71,12 +75,18 @@ export const Setup = () => {
       address: device.address,
       interfaceName: device.interfaceName,
       firmware: device.firmware ?? '',
+      availableFirmware: device.availableFirmware ?? '',
       unreach: problemOf(device.address)?.unreach ?? false,
       lowBat: problemOf(device.address)?.lowBat ?? false,
     }));
   }, [devices, names, problems]);
   const problemCount = rows.filter((r) => r.unreach || r.lowBat).length;
-  const shownRows = useMemo(() => (onlyProblems ? rows.filter((r) => r.unreach || r.lowBat) : rows), [rows, onlyProblems]);
+  const updateCount = rows.filter((r) => r.availableFirmware).length;
+  const shownRows = useMemo(
+    () =>
+      rows.filter((r) => (!onlyProblems || r.unreach || r.lowBat) && (!onlyUpdates || r.availableFirmware !== '')),
+    [rows, onlyProblems, onlyUpdates],
+  );
 
   const columns = useMemo(
     () => [
@@ -98,7 +108,20 @@ export const Setup = () => {
         cell: (info) => <span className="font-mono text-[13px] text-muted-foreground">{info.getValue()}</span>,
       }),
       column.accessor('interfaceName', { header: m.INTERFACE() }),
-      column.accessor('firmware', { header: m.FIRMWARE() }),
+      column.accessor('firmware', {
+        header: m.FIRMWARE(),
+        cell: (info) => (
+          <span className="inline-flex flex-wrap items-center gap-1.5 tabular-nums">
+            {info.getValue()}
+            {info.row.original.availableFirmware && (
+              <Badge variant="info" title={m.UPDATE_AVAILABLE()}>
+                <DownloadIcon className="size-3" />
+                {info.row.original.availableFirmware}
+              </Badge>
+            )}
+          </span>
+        ),
+      }),
       column.accessor((row) => (row.unreach ? 0 : row.lowBat ? 1 : 2), {
         id: 'status',
         header: m.STATUS(),
@@ -146,6 +169,17 @@ export const Setup = () => {
           >
             <TriangleAlertIcon className="text-amber-600" />
             {m.ONLY_PROBLEMS()} ({problemCount})
+          </Button>
+        )}
+        {updateCount > 0 && (
+          <Button
+            variant="outline"
+            aria-pressed={onlyUpdates}
+            onClick={() => setOnlyUpdates(!onlyUpdates)}
+            className={cn('border-dashed', onlyUpdates && 'border-solid bg-accent')}
+          >
+            <DownloadIcon className="text-sky-600" />
+            {m.ONLY_UPDATES()} ({updateCount})
           </Button>
         )}
       </div>
