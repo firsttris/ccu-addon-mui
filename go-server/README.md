@@ -180,9 +180,10 @@ npm run dev:fake   # fake CCU + server + frontend, log in with Admin / secret
 `fixtures/demo-ccu.json` is a small hand-written fixture. To create one from your own CCU (read only; names can be anonymized):
 
 ```bash
-cd go-server
-CCU_HOST=192.168.178.26 go run ./cmd/ccu-export -o ../fixtures/my-ccu.json -anonymize
+npm run export:ccu -- -o ../fixtures/my-ccu.json -anonymize
 ```
+
+Like `npm run dev`, this reads `CCU_HOST`, `CCU_USER` and `CCU_PASS` from `go-server/.env`; the server doesn't need to run. Paths are relative to `go-server/`.
 
 ### Manual Testing
 
