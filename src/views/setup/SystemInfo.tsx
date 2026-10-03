@@ -1,5 +1,6 @@
 import { Panel } from './Panel';
 import { Backup } from './Backup';
+import { SystemSettings } from './SystemSettings';
 import { useSystemInfo } from '../../queries';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Badge } from '../../components/ui/badge';
@@ -9,6 +10,7 @@ import { cn } from '../../lib/utils';
 export const SystemInfo = () => (
   <>
     <Versions />
+    <SystemSettings />
     <Backup />
   </>
 );

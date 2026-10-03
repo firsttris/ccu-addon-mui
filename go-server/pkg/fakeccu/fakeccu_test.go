@@ -20,7 +20,7 @@ func TestRecognisesAllScripts(t *testing.T) {
 		"NAME": "Neu", "GROUP_ID": "1", "CHANNEL_ID": "2", "ACTION": "Add", "ID": "950",
 		"LIST_ID": "ID_ROOMS", "ENUM_TYPE": "etRoom", "OBJECT_TYPE": "OT_VARDP", "VALUE_TYPE": "4",
 		"SUB_TYPE": "0", "UNIT": "°C", "MIN": "0", "MAX": "40", "FALSE_NAME": "", "TRUE_NAME": "",
-		"VALUE_LIST": "", "INITIAL": "0", "ITEM_ID": "0", "TILE": "light", "DATA": "{}", "CODE": "", "DESCRIPTION": "", "ACTIVE": "true", "LAYOUT": "",
+		"VALUE_LIST": "", "INITIAL": "0", "ITEM_ID": "0", "TILE": "light", "DATA": "{}", "CODE": "", "DESCRIPTION": "", "ACTIVE": "true", "LAYOUT": "", "LATITUDE": "52.52", "LONGITUDE": "13.405",
 	}
 	placeholder := regexp.MustCompile(`\{\{([A-Z_]+)\}\}`)
 	for name, template := range rega.Scripts() {

@@ -190,6 +190,15 @@
     },
     "testPush": {
       "$ref": "#/definitions/TestPushCall"
+    },
+    "getSystemSettings": {
+      "$ref": "#/definitions/GetSystemSettingsCall"
+    },
+    "setLocation": {
+      "$ref": "#/definitions/SetLocationCall"
+    },
+    "powerAction": {
+      "$ref": "#/definitions/PowerActionCall"
     }
   },
   "required": [
@@ -254,7 +263,10 @@
     "getPush",
     "subscribePush",
     "unsubscribePush",
-    "testPush"
+    "testPush",
+    "getSystemSettings",
+    "setLocation",
+    "powerAction"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2657,6 +2669,15 @@
         },
         {
           "$ref": "#/definitions/TestPushResponse"
+        },
+        {
+          "$ref": "#/definitions/GetSystemSettingsResponse"
+        },
+        {
+          "$ref": "#/definitions/SetLocationResponse"
+        },
+        {
+          "$ref": "#/definitions/PowerActionResponse"
         }
       ]
     },
@@ -5447,6 +5468,207 @@
           }
         }
       }
+    },
+    "GetSystemSettingsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getSystemSettings"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetSystemSettingsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getSystemSettings_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "timeZoneOffset": {
+          "type": "integer",
+          "description": "minutes east of UTC"
+        },
+        "time": {
+          "type": "string",
+          "description": "the CCU's local time, YYYY-MM-DD HH:MM:SS"
+        },
+        "timeZone": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "canPower": {
+          "type": "boolean",
+          "description": "whether reboot and shutdown work (the add-on runs on the CCU)"
+        }
+      },
+      "required": [
+        "type",
+        "latitude",
+        "longitude",
+        "timeZoneOffset",
+        "time",
+        "canPower"
+      ],
+      "additionalProperties": false
+    },
+    "GetSystemSettingsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetSystemSettingsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetSystemSettingsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetLocationRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setLocation"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "latitude": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      },
+      "required": [
+        "type",
+        "latitude",
+        "longitude"
+      ],
+      "additionalProperties": false
+    },
+    "SetLocationResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setLocation_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetLocationCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetLocationRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetLocationResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "PowerActionRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "powerAction"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "reboot",
+            "shutdown"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "action"
+      ],
+      "additionalProperties": false
+    },
+    "PowerActionResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "powerAction_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "PowerActionCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/PowerActionRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/PowerActionResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
     }
   }
 }
