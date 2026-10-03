@@ -83,7 +83,10 @@ export type ServerMessage =
   | GetPushResponse
   | SubscribePushResponse
   | UnsubscribePushResponse
-  | TestPushResponse;
+  | TestPushResponse
+  | GetSystemSettingsResponse
+  | SetLocationResponse
+  | PowerActionResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -151,6 +154,9 @@ export interface Protocol {
   subscribePush: SubscribePushCall;
   unsubscribePush: UnsubscribePushCall;
   testPush: TestPushCall;
+  getSystemSettings: GetSystemSettingsCall;
+  setLocation: SetLocationCall;
+  powerAction: PowerActionCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2257,6 +2263,99 @@ export interface TestPushRequest {
  */
 export interface TestPushResponse {
   type: "testPush_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetSystemSettingsCall".
+ */
+export interface GetSystemSettingsCall {
+  request: GetSystemSettingsRequest;
+  response: GetSystemSettingsResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetSystemSettingsRequest".
+ */
+export interface GetSystemSettingsRequest {
+  type: "getSystemSettings";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetSystemSettingsResponse".
+ */
+export interface GetSystemSettingsResponse {
+  type: "getSystemSettings_response";
+  requestId?: string;
+  latitude: number;
+  longitude: number;
+  /**
+   * minutes east of UTC
+   */
+  timeZoneOffset: number;
+  /**
+   * the CCU's local time, YYYY-MM-DD HH:MM:SS
+   */
+  time: string;
+  timeZone?: string;
+  city?: string;
+  /**
+   * whether reboot and shutdown work (the add-on runs on the CCU)
+   */
+  canPower: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLocationCall".
+ */
+export interface SetLocationCall {
+  request: SetLocationRequest;
+  response: SetLocationResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLocationRequest".
+ */
+export interface SetLocationRequest {
+  type: "setLocation";
+  requestId?: string;
+  latitude: number;
+  longitude: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLocationResponse".
+ */
+export interface SetLocationResponse {
+  type: "setLocation_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PowerActionCall".
+ */
+export interface PowerActionCall {
+  request: PowerActionRequest;
+  response: PowerActionResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PowerActionRequest".
+ */
+export interface PowerActionRequest {
+  type: "powerAction";
+  requestId?: string;
+  action: "reboot" | "shutdown";
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PowerActionResponse".
+ */
+export interface PowerActionResponse {
+  type: "powerAction_response";
   requestId?: string;
   success: boolean;
 }

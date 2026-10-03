@@ -671,3 +671,22 @@ test('listet alle Direktverknüpfungen in Einrichten und legt neue an', async ({
   await page.getByRole('dialog', { name: 'Verknüpfung löschen' }).getByRole('button', { name: 'Löschen' }).click();
   await expect(item).toHaveCount(0);
 });
+
+test('stellt den Standort der CCU ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Standort und Uhrzeit' });
+  await expect(panel).toContainText('UTC+1');
+  await expect(panel.getByLabel('Breitengrad')).toHaveValue('52.52');
+
+  await panel.getByLabel('Breitengrad').fill('48,137154');
+  await panel.getByLabel('Längengrad').fill('11.576124');
+  await panel.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+  await page.reload();
+  await expect(panel.getByLabel('Breitengrad')).toHaveValue('48.137154');
+  await expect(panel.getByLabel('Längengrad')).toHaveValue('11.576124');
+
+  // The fake CCU is no CCU: no restart from here
+  await expect(page.getByRole('region', { name: 'Neustart' })).toContainText('nur, wenn das Add-on auf der CCU selbst läuft');
+});

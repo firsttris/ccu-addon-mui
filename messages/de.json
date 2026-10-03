@@ -586,5 +586,21 @@
   "PUSH_INSECURE": "Benachrichtigungen brauchen eine sichere Verbindung: die App über https:// öffnen.",
   "PUSH_UNSUPPORTED": "Dieser Browser kann keine Benachrichtigungen empfangen. Auf dem iPhone die App zum Home-Bildschirm hinzufügen.",
   "PUSH_DENIED": "Benachrichtigungen sind im Browser blockiert.",
-  "PUSH_FAILED": "Benachrichtigungen einrichten fehlgeschlagen"
+  "PUSH_FAILED": "Benachrichtigungen einrichten fehlgeschlagen",
+  "SYS_LOCATION": "Standort und Uhrzeit",
+  "SYS_CCU_TIME": "Uhrzeit der CCU",
+  "SYS_CITY": "Ort",
+  "SYS_LATITUDE": "Breitengrad",
+  "SYS_LONGITUDE": "Längengrad",
+  "SYS_LOCATE": "Aktueller Standort",
+  "SYS_LOCATE_FAILED": "Der Standort dieses Geräts ist nicht verfügbar",
+  "SYS_LOCATION_HINT": "Die CCU berechnet daraus Sonnenauf- und -untergang für Programme mit Astro-Zeitsteuerung. Zeitzone und Zeitserver stellen Sie in der alten WebUI ein.",
+  "SYS_MAINTENANCE": "Neustart",
+  "SYS_REBOOT": "CCU neu starten",
+  "SYS_SHUTDOWN": "CCU herunterfahren",
+  "SYS_REBOOT_CONFIRM": "Die CCU speichert ihre Einstellungen und startet neu. Für einige Minuten ist sie nicht erreichbar und schaltet nichts.",
+  "SYS_SHUTDOWN_CONFIRM": "Die CCU speichert ihre Einstellungen und schaltet sich aus. Danach läuft sie erst wieder, wenn Sie die Stromversorgung kurz trennen.",
+  "SYS_REBOOTING": "Die CCU startet neu …",
+  "SYS_SHUTTING_DOWN": "Die CCU fährt herunter …",
+  "SYS_POWER_UNAVAILABLE": "Neu starten und herunterfahren geht nur, wenn das Add-on auf der CCU selbst läuft."
 }

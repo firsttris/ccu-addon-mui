@@ -116,6 +116,9 @@ func Scripts() map[string]string {
 		"delete_program":              deleteProgramScript,
 		"get_layout":                  getLayoutScript,
 		"set_layout":                  setLayoutScript,
+		"get_system_settings":         getSystemSettingsScript,
+		"set_location":                setLocationScript,
+		"save_system":                 saveSystemScript,
 	}
 }
 
@@ -142,3 +145,12 @@ var getLayoutScript string
 
 //go:embed scripts/set_layout.tcl
 var setLayoutScript string
+
+//go:embed scripts/get_system_settings.tcl
+var getSystemSettingsScript string
+
+//go:embed scripts/set_location.tcl
+var setLocationScript string
+
+//go:embed scripts/save_system.tcl
+var saveSystemScript string

@@ -53,6 +53,8 @@ type CCU struct {
 	timeModules int
 	// Tile layouts by room, trade or favorite list id (ReGa metadata)
 	layouts map[string]string
+	// The location set with set_location (system.Latitude/Longitude)
+	latitude, longitude string
 }
 
 // CallCount returns how often an XML-RPC method was called, e.g.
@@ -377,6 +379,17 @@ func (c *CCU) runScript(body string) (string, error) {
 				return "OK\tview", nil
 			}
 			return "OK\t" + c.layouts[id], nil
+		case "get_system_settings":
+			lat, lon := c.latitude, c.longitude
+			if lat == "" {
+				lat, lon = "52.520000", "13.405000"
+			}
+			return fmt.Sprintf("OK\t%s\t%s\t60.000000\t%s", lat, lon, time.Now().Format("2006-01-02 15:04:05")), nil
+		case "set_location":
+			c.latitude, c.longitude = values["LATITUDE"], values["LONGITUDE"]
+			return "OK", nil
+		case "save_system":
+			return "OK", nil
 		case "get_user_level":
 			for _, user := range c.fixture.Users {
 				if user.Name == values["USERNAME"] {

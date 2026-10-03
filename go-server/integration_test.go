@@ -1214,3 +1214,33 @@ func TestStackPushSubscription(t *testing.T) {
 		t.Fatalf("still subscribed: %v", m)
 	}
 }
+
+func TestStackSystemSettings(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
+	receive(t, conn, byRequestID("e"))
+
+	send(t, conn, message{"type": "getSystemSettings", "requestId": "s1"})
+	settings := receive(t, conn, byRequestID("s1"))
+	if settings["latitude"] != 52.52 || settings["timeZoneOffset"] != 60.0 || settings["time"] == "" || settings["canPower"] != false {
+		t.Fatalf("unexpected settings: %v", settings)
+	}
+	send(t, conn, message{"type": "setLocation", "requestId": "s2", "latitude": 48.137154, "longitude": 11.576124})
+	if m := receive(t, conn, byRequestID("s2")); m["success"] != true {
+		t.Fatalf("setLocation failed: %v", m)
+	}
+	send(t, conn, message{"type": "getSystemSettings", "requestId": "s3"})
+	if m := receive(t, conn, byRequestID("s3")); m["latitude"] != 48.137154 || m["longitude"] != 11.576124 {
+		t.Fatalf("location not stored: %v", m)
+	}
+	send(t, conn, message{"type": "setLocation", "requestId": "s4", "latitude": 91, "longitude": 0})
+	if m := receive(t, conn, byRequestID("s4")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+	// Not on a CCU: no reboot
+	send(t, conn, message{"type": "powerAction", "requestId": "s5", "action": "reboot"})
+	if m := receive(t, conn, byRequestID("s5")); m["code"] != "NOT_SUPPORTED" {
+		t.Fatalf("expected NOT_SUPPORTED, got %v", m)
+	}
+}
