@@ -2,7 +2,7 @@ import { useNavigate } from '@tanstack/react-router';
 import styled from '@emotion/styled';
 import { ListItem } from '../components/ChannelGroup';
 import { useRooms } from '../queries';
-import { TeenyiconsFloorplanSolid } from '../components/icons/TeenyiconsFloorplanSolid';
+import TeenyiconsFloorplanSolid from '~icons/teenyicons/floorplan-solid';
 
 const Container = styled.div`
   max-width: 1280px;

@@ -3,6 +3,22 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import fs from 'fs';
+import Icons from 'unplugin-icons/vite';
+import { FileSystemIconLoader } from 'unplugin-icons/loaders';
+
+// Default sizes of icons that had a fixed size as hand-written components;
+// all others have none and are sized by CSS or props.
+const iconSizes: Record<string, string> = {
+  'emojione:light-bulb': '64',
+  'emojione-monotone:light-bulb': '64',
+  'material-symbols-light:window-open': '24',
+  'mui:window-closed': '1em',
+  'mdi:thermostat-auto': '1em',
+  'mdi:thermostat-cog': '1em',
+  'mui:menu': '24',
+  'mui:wall-thermostat': '24',
+  'mui:radiator-thermostat': '24',
+};
 
 // WebSocket target of the go-server, selected via `vite --mode <name>`
 const proxyTargets: Record<string, string> = {
@@ -36,6 +52,23 @@ export default defineConfig(({ command, mode, isPreview }) => ({
       autoCodeSplitting: true,
     }),
     react(),
+    // Icons are compiled into the bundle (no requests at runtime, works
+    // offline on the CCU). "mui" holds our own SVGs from src/assets/icons.
+    Icons({
+      compiler: 'jsx',
+      jsx: 'react',
+      scale: 0,
+      customCollections: {
+        mui: FileSystemIconLoader('./src/assets/icons'),
+      },
+      iconCustomizer(collection, icon, props) {
+        const size = iconSizes[`${collection}:${icon}`];
+        if (size) {
+          props.width = size;
+          props.height = size;
+        }
+      },
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {

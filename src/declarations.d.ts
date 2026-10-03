@@ -1,3 +1,4 @@
+/// <reference types="unplugin-icons/types/react" />
 import '@emotion/react';
 
 declare module '@emotion/react' {

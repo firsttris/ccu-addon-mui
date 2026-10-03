@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { keyframes, css } from '@emotion/react';
-import { MaterialSymbolsLightWindowOpen } from '../../components/icons/MaterialSymbolsLightWindowOpen';
-import { MaterialSymbolsLightWindowClosed } from '../../components/icons/MaterialSymbolsLightWindowClosed';
+import MaterialSymbolsLightWindowOpen from '~icons/material-symbols-light/window-open';
+import MaterialSymbolsLightWindowClosed from '~icons/mui/window-closed';
 import { useTranslations } from '../../i18n/utils';
 
 interface TemperatureDisplayProps {

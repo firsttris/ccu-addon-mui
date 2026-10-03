@@ -4,9 +4,9 @@ import { useTranslations } from '../i18n/utils';
 import styled from '@emotion/styled';
 import { Button } from '../components/Button';
 import { useWebSocketActions } from '../hooks/useWebsocket';
-import { MaterialSymbolsDoorOpenOutline } from '../components/icons/MaterialSymbolsDoorOpenOutline';
-import { MaterialSymbolsLockOutline } from '../components/icons/MaterialSymbolsLockOutline';
-import { MaterialSymbolsLockOpenOutline } from '../components/icons/MaterialSymbolsLockOpenOutline';
+import MaterialSymbolsDoorOpenOutline from '~icons/material-symbols/door-open-outline';
+import MaterialSymbolsLockOutline from '~icons/material-symbols/lock-outline';
+import MaterialSymbolsLockOpenOutline from '~icons/material-symbols/lock-open-outline';
 
 const Card = styled.div`
   border: 1px solid ${props => props.theme.colors.border};

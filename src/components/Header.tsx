@@ -1,9 +1,9 @@
 import styled from '@emotion/styled';
 import { useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { MdiMenu } from '../components/icons/MdiMenu';
-import { TeenyiconsFloorplanSolid } from '../components/icons/TeenyiconsFloorplanSolid';
-import { MdiPipeValve } from '../components/icons/MdiPipeValve';
+import MdiMenu from '~icons/mui/menu';
+import TeenyiconsFloorplanSolid from '~icons/teenyicons/floorplan-solid';
+import MdiPipeValve from '~icons/mdi/pipe-valve';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useTranslations } from '../i18n/utils';

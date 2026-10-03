@@ -1,8 +1,8 @@
 import styled from '@emotion/styled';
-import { MdiPowerStandby } from '../../components/icons/MdiPowerStandby';
-import { MdiCalendarAuto } from '../../components/icons/MdiCalendarAuto';
-import { MdiHandManual } from '../../components/icons/MdiHandManual';
-import { MdiFlame } from '../../components/icons/MdiFlame';
+import MdiPowerStandby from '~icons/mdi/power-standby';
+import MdiCalendarAuto from '~icons/mdi/thermostat-auto';
+import MdiHandManual from '~icons/mdi/thermostat-cog';
+import MdiFlame from '~icons/mdi/fire';
 import { useTranslations } from '../../i18n/utils';
 
 interface ThermostatIconButtonsProps {

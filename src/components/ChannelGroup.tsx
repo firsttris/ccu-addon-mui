@@ -4,7 +4,7 @@ import { EnergyMeterControl } from '../controls/EnergyMeterControl';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import styled from '@emotion/styled';
 import { ControlComponent } from './ControlComponent';
-import { UiwDown } from './icons/UiwDown';
+import UiwDown from '~icons/uiw/down';
 
 interface ExpandMoreProps {
   expanded: boolean;

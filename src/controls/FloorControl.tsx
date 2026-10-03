@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import { keyframes } from '@emotion/react';
 import { FloorClimateControlTransceiverChannel } from '../types/types';
-import { MdiPipeValve } from '../components/icons/MdiPipeValve';
+import MdiPipeValve from '~icons/mdi/pipe-valve';
 import { ChannelName } from '../components/ChannelName';
 import { getPercentageColor, getPercentageGradient } from '../utils/colors';
 

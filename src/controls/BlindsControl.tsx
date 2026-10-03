@@ -1,9 +1,9 @@
 import { BlindVirtualReceiverChannel } from '../types/types';
-import { Shutters } from '../components/icons/Shutters';
+import { Shutters } from '../components/Shutters';
 import { useWebSocketActions } from '../hooks/useWebsocket';
-import { UiwDown } from '../components/icons/UiwDown';
-import { UiwUp } from '../components/icons/UiwUp';
-import { MaterialSymbolsStop } from '../components/icons/MaterialSymbolsStop';
+import UiwDown from '~icons/uiw/down';
+import UiwUp from '~icons/uiw/up';
+import MaterialSymbolsStop from '~icons/material-symbols/stop';
 import { ChannelName } from '../components/ChannelName';
 import { ControlButton } from '../components/ControlButton';
 import { useTranslations } from '../i18n/utils';

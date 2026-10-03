@@ -1,8 +1,8 @@
 import { SwitchVirtualReceiverChannel } from '../types/types';
 import styled from '@emotion/styled';
 import { useWebSocketActions } from '../hooks/useWebsocket';
-import { EmojioneLightBulb } from '../components/icons/EmojioneLightBlub';
-import { EmojioneMonotoneLightBulb } from '../components/icons/EmojioneMonotoneLightBulb';
+import EmojioneLightBulb from '~icons/emojione/light-bulb';
+import EmojioneMonotoneLightBulb from '~icons/emojione-monotone/light-bulb';
 
 interface ControlProps {
   channel: SwitchVirtualReceiverChannel;

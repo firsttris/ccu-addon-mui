@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
-import { MdiMinus } from '../../components/icons/MdiMinus';
-import { MdiPlus } from '../../components/icons/MdiPlus';
+import MdiMinus from '~icons/mdi/minus';
+import MdiPlus from '~icons/mdi/plus';
 import { ControlButton } from '../../components/ControlButton';
 import { useTranslations } from '../../i18n/utils';
 
