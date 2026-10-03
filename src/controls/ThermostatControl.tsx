@@ -10,6 +10,8 @@ import { TemperatureDisplay } from './ThermostatControl/TemperatureDisplay';
 import { ControlButtons } from './ThermostatControl/ControlButtons';
 import { ThermostatIconButtons } from './ThermostatControl/ThermostatIconButtons';
 import { useThermostatState } from './ThermostatControl/hooks/useThermostatState';
+import { WeekProfileSheet } from './ThermostatControl/profile/WeekProfileSheet';
+import { useState } from 'react';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 
@@ -33,6 +35,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const valve = isRadiatorThermostat && typeof datapoints.LEVEL === 'number' ? Math.round(datapoints.LEVEL * 100) : undefined;
 
   const setDataPoint = useSetDataPoint();
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const { localTarget, updateLocalTarget, commitTemperatureChange, decreaseTemperature, increaseTemperature } =
     useThermostatState({ targetTemperature, channel });
 
@@ -74,7 +77,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
               {isRadiatorThermostat ? <RadiatorThermostatIcon /> : <WallThermostatIcon />}
             </span>
             <div className="flex min-w-0 flex-col">
-              <span className="line-clamp-2 text-[15px] leading-snug font-medium wrap-anywhere" title={channel.name}>
+              <span className="line-clamp-2 text-[15px] leading-snug font-medium break-words" title={channel.name}>
                 {channel.name}
               </span>
               <span className="truncate text-xs text-muted-foreground">{kind}</span>
@@ -113,8 +116,20 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
           />
         </div>
 
-        <ControlButtons onDecrease={decreaseTemperature} onIncrease={increaseTemperature} />
+        <ControlButtons
+          onDecrease={decreaseTemperature}
+          onIncrease={increaseTemperature}
+          onSchedule={() => setScheduleOpen(true)}
+        />
       </div>
+      <WeekProfileSheet
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        interfaceName={channel.interfaceName}
+        address={channel.address}
+        name={channel.name}
+        activeProfile={typeof datapoints.ACTIVE_PROFILE === 'number' ? datapoints.ACTIVE_PROFILE : undefined}
+      />
     </Tile>
   );
 };

@@ -380,3 +380,35 @@ test('legt Räume und Systemvariablen an, benennt sie um und löscht sie', async
   await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
   await expect(list.getByRole('combobox', { name: 'Gäste' })).toHaveCount(0);
 });
+
+test('bearbeitet das Wochenprogramm eines Thermostats', async ({ page }) => {
+  await login(page);
+  await page.goto('/trade/20');
+  await page.getByRole('button', { name: 'Wochenprogramm' }).click();
+
+  const sheet = page.getByRole('dialog', { name: 'Wochenprogramm' });
+  await expect(sheet.getByRole('tab', { name: /Profil 1/ })).toHaveAttribute('aria-selected', 'true');
+  await sheet.getByRole('button', { name: 'Montag' }).click();
+
+  // Monday: 6:00–8:00 at 21 °C; one step warmer, then to all weekdays
+  const monday = sheet.getByRole('region', { name: 'Montag' });
+  await expect(monday.getByRole('listitem')).toHaveCount(5);
+  await monday.getByRole('button', { name: 'Wärmer 06:00' }).click();
+  await expect(monday.getByRole('listitem').nth(1)).toContainText('21,5 °C');
+  await monday.getByRole('combobox', { name: 'Ende von 06:00' }).selectOption('08:30');
+  await sheet.getByRole('button', { name: 'Auf Werktage kopieren' }).click();
+  await expect(sheet.getByText('10 Änderungen')).toBeVisible();
+
+  await sheet.getByRole('button', { name: 'Speichern' }).click();
+  await page.getByRole('dialog', { name: 'Änderungen speichern?' }).getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+
+  // Stored in the (fake) CCU
+  await page.reload();
+  await page.getByRole('button', { name: 'Wochenprogramm' }).click();
+  await page.getByRole('dialog', { name: 'Wochenprogramm' }).getByRole('button', { name: 'Freitag' }).click();
+  const friday = page.getByRole('dialog', { name: 'Wochenprogramm' }).getByRole('region', { name: 'Freitag' });
+  await expect(friday.getByRole('listitem').nth(1)).toContainText('06:00bis');
+  await expect(friday.getByRole('listitem').nth(1)).toContainText('21,5 °C');
+  await expect(friday.getByRole('combobox', { name: 'Ende von 06:00' })).toHaveValue('510');
+});
