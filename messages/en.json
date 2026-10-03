@@ -687,5 +687,6 @@
   "PW_REQUIRED": "Please enter a new password",
   "PW_WRONG_CURRENT": "The current password is wrong",
   "PW_CHANGED": "Password changed",
-  "PW_HINT": "Allowed are letters without umlauts, digits and . = ! $ ( ) : ; # * - . Other devices of this user are logged out."
+  "PW_HINT": "Allowed are letters without umlauts, digits and . = ! $ ( ) : ; # * - . Other devices of this user are logged out.",
+  "DEVICE_PROGRAMS_NONE": "No program uses this device."
 }

@@ -830,3 +830,15 @@ test('ändert das eigene Passwort', async ({ page }) => {
   await change('neu123', 'secret');
   await expect(page.getByRole('dialog', { name: 'Passwort ändern' })).toHaveCount(0);
 });
+
+test('zeigt auf der Geräteseite die Programme, die das Gerät verwenden', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/BidCos-RF/LEQ0000002');
+  const section = page.getByRole('region', { name: 'Programme' });
+  await expect(section).toContainText('Küche Rollo');
+  await section.getByRole('link', { name: 'Rollläden abends schließen' }).click();
+  await expect(page).toHaveURL(/\/program\/1201$/);
+
+  await page.goto('/device/BidCos-RF/LEQ0000003');
+  await expect(page.getByRole('region', { name: 'Programme' })).toContainText('Kein Programm verwendet dieses Gerät.');
+});

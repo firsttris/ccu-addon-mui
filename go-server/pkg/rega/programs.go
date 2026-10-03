@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -488,4 +489,50 @@ func (c *Client) DeleteProgram(id int64) (result, name string, err error) {
 		return "", "", err
 	}
 	return resultWithValue(output)
+}
+
+// ProgramUsage is a program that uses channels of a device.
+type ProgramUsage struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+	// The device's channels it uses
+	Channels []string `json:"channels"`
+}
+
+// GetDevicePrograms returns the programs using a channel of the device
+// (get_device_programs.tcl), in the order found.
+func (c *Client) GetDevicePrograms(address string) ([]ProgramUsage, error) {
+	if !safeIdentifierRegex.MatchString(address) {
+		return nil, fmt.Errorf("invalid address")
+	}
+	output, err := c.Execute(strings.ReplaceAll(getDeviceProgramsScript, "{{ADDRESS}}", address))
+	if err != nil {
+		return nil, err
+	}
+	return parseProgramUsages(output), nil
+}
+
+func parseProgramUsages(output string) []ProgramUsage {
+	usages := []ProgramUsage{}
+	index := map[int64]int{}
+	for _, line := range strings.Split(output, "\n") {
+		fields := strings.Split(strings.TrimRight(line, "\r"), "\t")
+		if len(fields) < 4 || fields[0] != "P" {
+			continue
+		}
+		id, err := strconv.ParseInt(fields[1], 10, 64)
+		if err != nil {
+			continue
+		}
+		i, seen := index[id]
+		if !seen {
+			i = len(usages)
+			index[id] = i
+			usages = append(usages, ProgramUsage{ID: id, Name: fields[2], Channels: []string{}})
+		}
+		if !slices.Contains(usages[i].Channels, fields[3]) {
+			usages[i].Channels = append(usages[i].Channels, fields[3])
+		}
+	}
+	return usages
 }

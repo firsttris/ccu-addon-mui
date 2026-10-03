@@ -434,6 +434,8 @@ func (c *CCU) runScript(body string) (string, error) {
 					u.ID, u.Name, u.FirstName, u.LastName, u.Level, u.Password != "", u.ShowLogin, u.Name != "Admin", u.Mail, u.Phone)
 			}
 			return b.String(), nil
+		case "get_device_programs":
+			return c.deviceProgramUsages(values["ADDRESS"]), nil
 		case "set_user_password":
 			for i := range c.fixture.Users {
 				if c.fixture.Users[i].Name == values["USERNAME"] {
@@ -559,6 +561,41 @@ func (c *CCU) groups(listID string) *[]Group {
 		return &c.fixture.Trades
 	}
 	return nil
+}
+
+// deviceProgramUsages finds the programs whose conditions or destinations
+// name a channel of the device, as get_device_programs.tcl
+func (c *CCU) deviceProgramUsages(address string) string {
+	var b strings.Builder
+	for _, ch := range c.fixture.Channels {
+		if !strings.HasPrefix(ch.Address, address+":") {
+			continue
+		}
+		for _, p := range c.fixture.Programs {
+			used := false
+			var branches []rega.ProgramBranch
+			for _, rule := range p.Rules {
+				for _, group := range rule.Groups {
+					for _, cond := range group {
+						used = used || cond.Channel == ch.ID
+					}
+				}
+				branches = append(branches, rule.ProgramBranch)
+			}
+			if p.Else != nil {
+				branches = append(branches, *p.Else)
+			}
+			for _, branch := range branches {
+				for _, dest := range branch.Destinations {
+					used = used || dest.Channel == ch.ID
+				}
+			}
+			if used {
+				fmt.Fprintf(&b, "P\t%d\t%s\t%s\n", p.ID, p.Name, ch.Address)
+			}
+		}
+	}
+	return b.String()
 }
 
 // users returns the fixture's users, with ids

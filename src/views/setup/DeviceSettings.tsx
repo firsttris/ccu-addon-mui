@@ -24,6 +24,7 @@ import { WeekProfileSheet } from '../../controls/ThermostatControl/profile/WeekP
 import { WeekProgramSheet, WeekProgramKind } from '../../controls/schedule/WeekProgramSheet';
 import { parameterLabel } from '../../controls/generic/parameters';
 import { Links } from './Links';
+import { DevicePrograms } from './DevicePrograms';
 import { Firmware } from './Firmware';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
@@ -251,6 +252,10 @@ export const DeviceSettings = () => {
               <NamesAndRooms deviceAddress={address} deviceName={title} />
             </Section>
           )}
+          <Section aria-label={m.PROGRAMS()}>
+            <h2>{m.PROGRAMS()}</h2>
+            <DevicePrograms address={address} />
+          </Section>
           {canEdit &&
             device &&
             (device.channels ?? []).some((c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length) && (

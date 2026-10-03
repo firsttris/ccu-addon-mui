@@ -49,3 +49,33 @@ func (s *Server) handleHistory(client *Client, msgType string, message []byte) {
 	}
 	s.sendJSON(client, historyResponse{Type: "getHistory_response", RequestID: msg.RequestID, Entries: entries, Total: total})
 }
+
+type deviceProgramsResponse struct {
+	Type      string              `json:"type"`
+	RequestID string              `json:"requestId,omitempty"`
+	Programs  []rega.ProgramUsage `json:"programs"`
+}
+
+// handleDevicePrograms lists the programs that use a channel of a device,
+// as the WebUI's "Programme" button in the device list; like the program
+// list, everyone logged in may see it.
+func (s *Server) handleDevicePrograms(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		Address   string `json:"address"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	programs, err := s.regaClient.GetDevicePrograms(msg.Address)
+	if err != nil {
+		code := "CCU_ERROR"
+		if err.Error() == "invalid address" {
+			code = "INVALID_REQUEST"
+		}
+		s.sendRequestError(client, msg.RequestID, "getDevicePrograms failed: "+err.Error(), code)
+		return
+	}
+	s.sendJSON(client, deviceProgramsResponse{Type: "getDevicePrograms_response", RequestID: msg.RequestID, Programs: programs})
+}

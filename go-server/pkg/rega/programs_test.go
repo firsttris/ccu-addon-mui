@@ -130,3 +130,10 @@ func TestProgramCodeRefusesUnsafeValues(t *testing.T) {
 		t.Error("expected an error for ^ in the description")
 	}
 }
+
+func TestParseProgramUsages(t *testing.T) {
+	usages := parseProgramUsages("P\t1201\tRollläden abends\tLEQ0000002:1\nP\t1300\tLicht\tLEQ0000002:1\nP\t1201\tRollläden abends\tLEQ0000002:2\nP\t1201\tRollläden abends\tLEQ0000002:2\n")
+	if len(usages) != 2 || usages[0].ID != 1201 || len(usages[0].Channels) != 2 || usages[1].Name != "Licht" {
+		t.Fatalf("got %+v", usages)
+	}
+}
