@@ -1,26 +1,8 @@
-import styled from '@emotion/styled';
 import { useState } from 'react';
 import { ConfirmDialog } from './ConfirmDialog';
 import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
 import { TranslationKey, useTranslations } from '../i18n/utils';
 import { m } from '../paraglide/messages';
-
-const Input = styled.input`
-  font: inherit;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 8px 10px;
-  margin-top: 8px;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  border-radius: 6px;
-  color: ${(props) => props.theme.colors.text};
-  background: ${(props) => props.theme.colors.background};
-`;
-
-const ErrorText = styled.p`
-  margin: 8px 0 0;
-  color: #c62828;
-`;
 
 const errorMessages: Record<string, TranslationKey> = {
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
@@ -62,7 +44,8 @@ export const ElevateDialog = ({ onDone, onCancel }: { onDone: () => void; onCanc
       >
         <label>
           {m.ELEVATE_HINT()}
-          <Input
+          <input
+            className="[font:inherit] w-full box-border py-2 px-[10px] mt-2 border border-solid border-border rounded-md text-text bg-background"
             type="password"
             aria-label={m.PASSWORD()}
             autoComplete="current-password"
@@ -71,7 +54,11 @@ export const ElevateDialog = ({ onDone, onCancel }: { onDone: () => void; onCanc
             onChange={(event) => setPassword(event.target.value)}
           />
         </label>
-        {error && <ErrorText role="alert">{error}</ErrorText>}
+        {error && (
+          <p role="alert" className="mt-2 mx-0 mb-0 text-[#c62828]">
+            {error}
+          </p>
+        )}
       </form>
     </ConfirmDialog>
   );

@@ -1,56 +1,18 @@
-import styled from '@emotion/styled';
-import { ReactNode, useEffect, useRef } from 'react';
+import { ComponentPropsWithRef, ReactNode, useEffect, useRef } from 'react';
 import { m } from '../paraglide/messages';
 
-const Backdrop = styled.div`
-  position: fixed;
-  inset: 0;
-  z-index: 1500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.5);
-`;
-
-const Panel = styled.div`
-  width: min(480px, 100%);
-  max-height: calc(100vh - 32px);
-  overflow-y: auto;
-  box-sizing: border-box;
-  padding: 20px;
-  border-radius: 8px;
-  color: ${(props) => props.theme.colors.text};
-  background: ${(props) => props.theme.colors.surface};
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-`;
-
-const Title = styled.h2`
-  margin: 0 0 12px;
-  font-size: 18px;
-`;
-
-const Actions = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
-`;
-
-export const DialogButton = styled.button<{ primary?: boolean }>`
-  font: inherit;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  border: 1px solid ${(props) => props.theme.colors.border};
-  color: ${({ primary, theme }) => (primary ? '#fff' : theme.colors.text)};
-  background: ${({ primary, theme }) => (primary ? '#1976d2' : theme.colors.background)};
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
-`;
+export const DialogButton = ({
+  primary,
+  className = '',
+  ...props
+}: ComponentPropsWithRef<'button'> & { primary?: boolean }) => (
+  <button
+    className={`[font:inherit] py-2 px-[14px] rounded-md cursor-pointer border border-solid border-border disabled:opacity-50 disabled:cursor-default ${
+      primary ? 'text-white bg-[#1976d2]' : 'text-text bg-background'
+    } ${className}`}
+    {...props}
+  />
+);
 
 interface ConfirmDialogProps {
   title: string;
@@ -77,19 +39,25 @@ export const ConfirmDialog = ({ title, children, confirmLabel, busy, onConfirm, 
   }, [onCancel]);
 
   return (
-    <Backdrop onClick={onCancel}>
-      <Panel role="dialog" aria-modal="true" aria-label={title} onClick={(event) => event.stopPropagation()}>
-        <Title>{title}</Title>
+    <div className="fixed inset-0 z-[1500] flex items-center justify-center p-4 bg-[rgba(0,0,0,0.5)]" onClick={onCancel}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onClick={(event) => event.stopPropagation()}
+        className="w-[min(480px,100%)] max-h-[calc(100vh_-_32px)] overflow-y-auto box-border p-5 rounded-lg text-text bg-surface shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+      >
+        <h2 className="mt-0 mx-0 mb-3 text-[18px]">{title}</h2>
         {children}
-        <Actions>
+        <div className="flex justify-end gap-2 mt-4">
           <DialogButton ref={cancelRef} type="button" onClick={onCancel}>
             {m.CANCEL()}
           </DialogButton>
           <DialogButton type="button" primary disabled={busy} onClick={onConfirm}>
             {confirmLabel}
           </DialogButton>
-        </Actions>
-      </Panel>
-    </Backdrop>
+        </div>
+      </div>
+    </div>
   );
 };
