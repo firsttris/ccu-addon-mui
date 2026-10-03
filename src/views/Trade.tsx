@@ -1,8 +1,7 @@
 import { useParams } from '@tanstack/react-router';
 import { ChannelGroup } from '../components/ChannelGroup';
 import styled from '@emotion/styled';
-import { useWebSocketContext } from '../hooks/useWebsocket';
-import { useEffect } from 'react';
+import { useChannels } from '../queries';
 
 const Container = styled.div`
   display: flex;
@@ -30,19 +29,13 @@ const ListItem = styled.li`
 
 export const Trade: React.FC = () => {
   const { tradeId } = useParams({ from: '/trade/$tradeId' });
-  const { getChannelsForTrade, sortedChannelsByType } = useWebSocketContext();
-
-  useEffect(() => {
-    if (tradeId) {
-      getChannelsForTrade(Number(tradeId));
-    }
-  }, [tradeId, getChannelsForTrade]);
+  const { channelsByType } = useChannels({ tradeId });
 
   return (
     <div style={{ margin: '15px' }}>
       <Container>
         <List>
-          {sortedChannelsByType.map(([channelType, channels]) => (
+          {channelsByType.map(([channelType, channels]) => (
             <ListItem key={channelType}>
               <ChannelGroup channelType={channelType} channels={channels} />
             </ListItem>

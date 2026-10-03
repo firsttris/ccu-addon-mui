@@ -1,6 +1,6 @@
 import { BlindVirtualReceiverChannel } from '../types/types';
 import { Shutters } from '../components/Shutters';
-import { useWebSocketActions } from '../hooks/useWebsocket';
+import { useSetDataPoint } from '../queries';
 import UiwDown from '~icons/uiw/down';
 import UiwUp from '~icons/uiw/up';
 import MaterialSymbolsStop from '~icons/material-symbols/stop';
@@ -14,7 +14,7 @@ interface ControlProps {
 
 export const BlindsControl = ({ channel }: ControlProps) => {
   const t = useTranslations();
-  const { setDataPoint } = useWebSocketActions();
+  const setDataPoint = useSetDataPoint();
   const { datapoints, name, address, interfaceName } = channel;
   // Rounded: e.g. 0.29 * 100 is 28.999999999999996 in floating point
   const blindValue = Math.round(Number(datapoints.LEVEL) * 100);

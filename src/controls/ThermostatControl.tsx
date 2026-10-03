@@ -1,6 +1,6 @@
 import styled from '@emotion/styled';
 import { HeatingClimateControlTransceiverChannel } from '../types/types';
-import { useWebSocketActions } from '../hooks/useWebsocket';
+import { useSetDataPoint } from '../queries';
 import { ChannelName } from '../components/ChannelName';
 import RadiatorThermostatIcon from '~icons/mui/radiator-thermostat';
 import WallThermostatIcon from '~icons/mui/wall-thermostat';
@@ -55,7 +55,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const manualMode = datapoints.SET_POINT_MODE === 1;
   const boostMode = datapoints.BOOST_MODE;
 
-  const { setDataPoint } = useWebSocketActions();
+  const setDataPoint = useSetDataPoint();
   const {
     localTarget,
     updateLocalTarget,

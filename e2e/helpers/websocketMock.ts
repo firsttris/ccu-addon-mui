@@ -281,7 +281,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       }
 
       if (message.type === 'getDeviceProblems') {
-        delayedBroadcast({ type: 'deviceProblems', devices: deviceProblems });
+        delayedBroadcast({ type: 'deviceProblems', devices: deviceProblems, requestId: message.requestId });
         return;
       }
 
@@ -304,7 +304,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       }
 
       if (message.type === 'getChannels' && message.all === true) {
-        delayedBroadcast({ channels: allChannels(), deviceId: message.deviceId, all: true });
+        delayedBroadcast({ channels: allChannels(), deviceId: message.deviceId, all: true, requestId: message.requestId });
         return;
       }
 
@@ -318,6 +318,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
           deviceId: message.deviceId,
           roomId: message.roomId,
           tradeId: message.tradeId,
+          requestId: message.requestId,
         });
         return;
       }

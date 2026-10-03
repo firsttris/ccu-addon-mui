@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useWebSocketActions } from '../../../hooks/useWebsocket';
+import { useSetDataPoint } from '../../../queries';
 import { MIN_TEMP, MAX_TEMP, STEP } from '../constants';
 import { Channel } from '../../../types/types';
 
@@ -9,7 +9,7 @@ interface UseThermostatStateProps {
 }
 
 export const useThermostatState = ({ targetTemperature, channel }: UseThermostatStateProps) => {
-  const { setDataPoint } = useWebSocketActions();
+  const setDataPoint = useSetDataPoint();
   const [localTarget, setLocalTarget] = useState(targetTemperature);
   const lastUserInteractionRef = useRef<number>(0);
   const commitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

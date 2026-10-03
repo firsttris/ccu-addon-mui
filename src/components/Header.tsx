@@ -7,13 +7,10 @@ import MdiPipeValve from '~icons/mdi/pipe-valve';
 import { useTheme } from '../contexts/ThemeContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useTranslations } from '../i18n/utils';
-import { useRooms, useTrades } from '../queries';
+import { useDeviceProblems, useRooms, useTrades } from '../queries';
 
 // A short reconnect (e.g. at startup) should not flash a warning
 const CONNECTION_WARNING_DELAY_MS = 2000;
-
-// Battery and reachability problems are not pushed by the server
-const DEVICE_PROBLEMS_REFRESH_MS = 5 * 60 * 1000;
 
 const ProblemBadge = styled.button`
   display: flex;
@@ -196,15 +193,8 @@ export const Header: React.FC = () => {
     connectionStatus,
     authRequired,
     logout,
-    deviceProblems,
-    getDeviceProblems,
   } = useWebSocketContext();
-
-  useEffect(() => {
-    getDeviceProblems();
-    const timer = setInterval(getDeviceProblems, DEVICE_PROBLEMS_REFRESH_MS);
-    return () => clearInterval(timer);
-  }, [getDeviceProblems]);
+  const { data: deviceProblems } = useDeviceProblems();
 
   const problemCount = deviceProblems?.length ?? 0;
 

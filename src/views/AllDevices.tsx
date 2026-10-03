@@ -1,7 +1,6 @@
 import styled from '@emotion/styled';
-import { useEffect } from 'react';
 import { ChannelGroup } from '../components/ChannelGroup';
-import { useWebSocketContext } from '../hooks/useWebsocket';
+import { useChannels } from '../queries';
 
 const Container = styled.div`
   display: flex;
@@ -32,17 +31,13 @@ const List = styled.ul`
 
 // All devices, also those not assigned to a room or trade
 export const AllDevices = () => {
-  const { getAllChannels, sortedChannelsByType } = useWebSocketContext();
-
-  useEffect(() => {
-    getAllChannels();
-  }, [getAllChannels]);
+  const { channelsByType } = useChannels({ all: true });
 
   return (
     <OuterContainer>
       <Container>
         <List>
-          {sortedChannelsByType.map(([channelType, channels]) => (
+          {channelsByType.map(([channelType, channels]) => (
             <ChannelGroup key={channelType} channelType={channelType} channels={channels} />
           ))}
         </List>

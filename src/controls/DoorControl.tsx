@@ -3,7 +3,7 @@ import { KeymaticChannel } from '../types/types';
 import { useTranslations } from '../i18n/utils';
 import styled from '@emotion/styled';
 import { Button } from '../components/Button';
-import { useWebSocketActions } from '../hooks/useWebsocket';
+import { useSetDataPoint } from '../queries';
 import MaterialSymbolsDoorOpenOutline from '~icons/material-symbols/door-open-outline';
 import MaterialSymbolsLockOutline from '~icons/material-symbols/lock-outline';
 import MaterialSymbolsLockOpenOutline from '~icons/material-symbols/lock-open-outline';
@@ -110,7 +110,7 @@ interface DoorControlProps {
 
 export const DoorControl: React.FC<DoorControlProps> = ({ channel }) => {
   const t = useTranslations();
-  const { setDataPoint } = useWebSocketActions();
+  const setDataPoint = useSetDataPoint();
   const {
     datapoints: { STATE, STATE_UNCERTAIN },
     name,

@@ -1,8 +1,7 @@
 import { useParams } from '@tanstack/react-router';
 import { ChannelGroup } from '../components/ChannelGroup';
 import styled from '@emotion/styled';
-import { useWebSocketContext } from '../hooks/useWebsocket';
-import { useEffect } from 'react';
+import { useChannels } from '../queries';
 
 const Container = styled.div`
   display: flex;
@@ -34,17 +33,13 @@ const List = styled.ul`
 export const Room = () => {
   const { roomId } = useParams({ from: '/room/$roomId' });
 
-  const { getChannelsForRoomId, sortedChannelsByType } = useWebSocketContext();
-
-  useEffect(() => {
-    getChannelsForRoomId(Number(roomId));
-  }, [roomId, getChannelsForRoomId]);
+  const { channelsByType } = useChannels({ roomId });
 
   return (
     <OuterContainer>
       <Container>
         <List>
-          {sortedChannelsByType.map(([channelType, channels]) => (
+          {channelsByType.map(([channelType, channels]) => (
             <ChannelGroup
               key={channelType}
               channelType={channelType}

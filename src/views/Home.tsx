@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
 import { Link } from '@tanstack/react-router';
 import styled from '@emotion/styled';
-import { useWebSocketContext } from '../hooks/useWebsocket';
+import { useDeviceProblems } from '../queries';
 import { useTranslations } from '../i18n/utils';
 import { DeviceProblem } from '../types/types';
 import { WebUILink } from '../components/WebUILink';
@@ -127,11 +126,7 @@ const ProblemRow = ({ problem }: { problem: DeviceProblem }) => {
 
 export const Home = () => {
   const t = useTranslations();
-  const { deviceProblems, getDeviceProblems } = useWebSocketContext();
-
-  useEffect(() => {
-    getDeviceProblems();
-  }, [getDeviceProblems]);
+  const { data: deviceProblems } = useDeviceProblems();
 
   return (
     <Container>
@@ -155,7 +150,7 @@ export const Home = () => {
         <MenuText>{t('ALL_DEVICES')}</MenuText>
       </MenuItem>
 
-      {deviceProblems !== null && (
+      {deviceProblems !== undefined && (
         <>
           <SectionTitle>{t('DEVICE_PROBLEMS')}</SectionTitle>
           {deviceProblems.length === 0 ? (
