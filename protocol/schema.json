@@ -241,6 +241,12 @@
     },
     "replaceDevice": {
       "$ref": "#/definitions/ReplaceDeviceCall"
+    },
+    "startComTest": {
+      "$ref": "#/definitions/StartComTestCall"
+    },
+    "pollComTest": {
+      "$ref": "#/definitions/PollComTestCall"
     }
   },
   "required": [
@@ -322,7 +328,9 @@
     "getDevicePrograms",
     "getVirtualKeys",
     "listReplaceableDevices",
-    "replaceDevice"
+    "replaceDevice",
+    "startComTest",
+    "pollComTest"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2788,6 +2796,12 @@
         },
         {
           "$ref": "#/definitions/ReplaceDeviceResponse"
+        },
+        {
+          "$ref": "#/definitions/StartComTestResponse"
+        },
+        {
+          "$ref": "#/definitions/PollComTestResponse"
         }
       ]
     },
@@ -6848,6 +6862,129 @@
         },
         "response": {
           "$ref": "#/definitions/ReplaceDeviceResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "StartComTestRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "startComTest"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string",
+          "description": "the device address"
+        }
+      },
+      "required": [
+        "type",
+        "address"
+      ],
+      "additionalProperties": false
+    },
+    "StartComTestResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "startComTest_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "started": {
+          "type": "string",
+          "description": "the start time, which identifies the test"
+        },
+        "answered": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "started"
+      ],
+      "additionalProperties": false
+    },
+    "StartComTestCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/StartComTestRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/StartComTestResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "PollComTestRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "pollComTest"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "started": {
+          "type": "string",
+          "description": "YYYY-MM-DD HH:MM:SS from startComTest"
+        }
+      },
+      "required": [
+        "type",
+        "address",
+        "started"
+      ],
+      "additionalProperties": false
+    },
+    "PollComTestResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "pollComTest_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "answered": {
+          "type": "string",
+          "description": "when the device answered, empty while it hasn't"
+        }
+      },
+      "required": [
+        "type",
+        "answered"
+      ],
+      "additionalProperties": false
+    },
+    "PollComTestCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/PollComTestRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/PollComTestResponse"
         }
       },
       "required": [

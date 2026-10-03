@@ -2,8 +2,10 @@ package websocket
 
 import (
 	"encoding/json"
+	"strings"
 
 	"ccu-addon-mui-server/pkg/audit"
+	"ccu-addon-mui-server/pkg/auth"
 	"ccu-addon-mui-server/pkg/rega"
 )
 
@@ -95,4 +97,58 @@ func (s *Server) handleVirtualKeys(client *Client, requestID string) {
 		return
 	}
 	s.sendJSON(client, virtualKeysResponse{Type: "getVirtualKeys_response", RequestID: requestID, Keys: keys})
+}
+
+type comTestResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	// startComTest: when the test started (its id)
+	Started string `json:"started,omitempty"`
+	// pollComTest: when the device answered, "" while it hasn't
+	Answered string `json:"answered"`
+}
+
+// handleComTest starts a device's function test or checks it, as the
+// WebUI's device dialog does (Device.startComTest, Device.pollComTest).
+// Administrators, like the rest of the device page's setup.
+func (s *Server) handleComTest(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		Address   string `json:"address"`
+		Started   string `json:"started"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if client.level != auth.LevelAdmin {
+		s.sendRequestError(client, msg.RequestID, "only administrators may test devices", "FORBIDDEN")
+		return
+	}
+	var result, value string
+	var err error
+	if msgType == "startComTest" {
+		result, value, err = s.regaClient.StartComTest(msg.Address)
+	} else {
+		result, value, err = s.regaClient.PollComTest(msg.Address, msg.Started)
+	}
+	if err != nil {
+		code := "CCU_ERROR"
+		if strings.HasPrefix(err.Error(), "invalid") {
+			code = "INVALID_REQUEST"
+		}
+		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), code)
+		return
+	}
+	if result != rega.SetOK {
+		s.sendRequestError(client, msg.RequestID, msgType+": "+result, result)
+		return
+	}
+	response := comTestResponse{Type: msgType + "_response", RequestID: msg.RequestID}
+	if msgType == "startComTest" {
+		response.Started = value
+	} else {
+		response.Answered = value
+	}
+	s.sendJSON(client, response)
 }
