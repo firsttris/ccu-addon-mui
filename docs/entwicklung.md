@@ -84,7 +84,7 @@ fixtures/            Daten für Fake-CCU und Tests
 e2e/, e2e-stack/     Playwright-Tests
 addon_installer/     Dateien, die ins Add-on-Archiv kommen (Startskript, lighttpd, update_script)
 scripts/             import-link-profiles.mjs (Verknüpfungsvorlagen aus OpenCCU-Base)
-docs/                diese Dokumentation; docs/api: Referenz zu den Schnittstellen der CCU
+docs/                diese Dokumentation
 ```
 
 ## Konventionen

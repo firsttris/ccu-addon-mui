@@ -36,9 +36,6 @@ export const EffectsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return <EffectsContext.Provider value={{ level, setLevel, k, on: k > 0 }}>{children}</EffectsContext.Provider>;
 };
 
-// Alpha scaled by the effect factor, capped at 1
-export const fxAlpha = (k: number, alpha: number) => Math.min(1, alpha * k);
-
 // "#rrggbb" with an alpha as rgba()
 export const rgba = (hex: string, alpha: number) => {
   const n = parseInt(hex.slice(1), 16);

@@ -74,13 +74,6 @@ func (r *Recorder) SetWanted(keys map[string]bool) {
 	r.wanted = keys
 }
 
-// Wanted reports whether a series is recorded
-func (r *Recorder) Wanted(key string) bool {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.wanted[key]
-}
-
 // Record adds a value of a series; values that are no number or boolean
 // are ignored
 func (r *Recorder) Record(key string, value interface{}, at time.Time) {

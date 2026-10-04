@@ -46,7 +46,7 @@ npm run dev:fake   # Fake-CCU + Server + App, Anmeldung Admin / secret
 ```
 
 **Gegen die eigene CCU**: `.env` aus `.env.example` anlegen, dann im Wurzelverzeichnis `npm run dev` (Server
-und App) oder hier `./test-local.sh` (nur der Server).
+und App) oder `npm run start:server` (nur der Server).
 
 ```bash
 CCU_HOST=192.168.178.26   # Adresse der CCU

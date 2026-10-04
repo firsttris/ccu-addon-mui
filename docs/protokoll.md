@@ -1,4 +1,4 @@
-# WebSocket-Protokoll
+# API: WebSocket-Protokoll
 
 App und Server sprechen über eine WebSocket-Verbindung mit JSON-Nachrichten. Dieses Dokument beschreibt
 die Regeln und listet alle 131 Nachrichtentypen. Maßgeblich ist das Schema `protocol/schema.json`; daraus

@@ -11,13 +11,6 @@ import { FileSystemIconLoader } from 'unplugin-icons/loaders';
 // Default sizes of icons that had a fixed size as hand-written components;
 // all others have none and are sized by CSS or props.
 const iconSizes: Record<string, string> = {
-  'emojione:light-bulb': '64',
-  'emojione-monotone:light-bulb': '64',
-  'material-symbols-light:window-open': '24',
-  'mui:window-closed': '1em',
-  'mdi:thermostat-auto': '1em',
-  'mdi:thermostat-cog': '1em',
-  'mui:menu': '24',
   'mui:wall-thermostat': '24',
   'mui:radiator-thermostat': '24',
 };
