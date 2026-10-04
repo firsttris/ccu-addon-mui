@@ -290,6 +290,7 @@ func (s *Server) Start(ctx context.Context) error {
 	mux.HandleFunc("/", s.handleWebSocket)
 	if s.backup != nil {
 		mux.Handle(BackupPath, s.backup)
+		mux.HandleFunc(RestorePath, s.serveRestoreUpload)
 	}
 	if s.logs != nil {
 		mux.Handle(LogsPath, s.logs)
@@ -537,6 +538,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSystemInfo(client, requestID)
 	case "getLogging", "setLogging", "downloadLogs":
 		s.handleLogging(client, msgType, message)
+	case "prepareRestore", "checkRestore", "restoreBackup":
+		s.handleRestore(client, msgType, message)
 	case "getHeatingGroups":
 		s.handleHeatingGroups(client, requestID)
 	case "runScript":

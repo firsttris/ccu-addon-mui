@@ -1016,6 +1016,30 @@ test('zeigt die Heizgruppen mit ihren Mitgliedern', async ({ page }) => {
   await expect(page).toHaveURL(/\/device\/BidCos-RF\/LEQ0000004$/);
 });
 
+test('spielt ein Backup mit Sicherheitsschlüssel ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Backup' });
+  await panel.getByRole('button', { name: 'Backup einspielen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Backup einspielen' });
+
+  await dialog.getByLabel('Backup-Datei (.sbk)').setInputFiles({ name: 'urlaub.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('holiday photos') });
+  await dialog.getByLabel('Passwort').fill('secret');
+  await dialog.getByRole('button', { name: 'Prüfen' }).click();
+  await expect(dialog.getByRole('alert')).toContainText('kein Systembackup');
+
+  const backup = 'fake CCU backup (usr_local.tar.gz, signature, key_index, firmware_version) signed with a user key';
+  await dialog.getByLabel('Backup-Datei (.sbk)').setInputFiles({ name: 'ccu3.sbk', mimeType: 'application/octet-stream', buffer: Buffer.from(backup) });
+  await dialog.getByRole('button', { name: 'Prüfen' }).click();
+  await expect(dialog).toContainText('Das Backup „ccu3.sbk“ ist gültig');
+  await dialog.getByLabel('System-Sicherheitsschlüssel des Backups').fill('falsch');
+  await dialog.getByRole('button', { name: 'Einspielen und neu starten' }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Sicherheitsschlüssel passt nicht');
+  await dialog.getByLabel('System-Sicherheitsschlüssel des Backups').fill('Schluessel1');
+  await dialog.getByRole('button', { name: 'Einspielen und neu starten' }).click();
+  await expect(dialog.getByRole('status')).toContainText('Das Backup ist eingespielt');
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {

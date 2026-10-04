@@ -113,7 +113,10 @@ export type ServerMessage =
   | SetTimeServersResponse
   | SetTimeZoneResponse
   | SetClockResponse
-  | GetHeatingGroupsResponse;
+  | GetHeatingGroupsResponse
+  | PrepareRestoreResponse
+  | CheckRestoreResponse
+  | RestoreBackupResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -211,6 +214,9 @@ export interface Protocol {
   setTimeZone: SetTimeZoneCall;
   setClock: SetClockCall;
   getHeatingGroups: GetHeatingGroupsCall;
+  prepareRestore: PrepareRestoreCall;
+  checkRestore: CheckRestoreCall;
+  restoreBackup: RestoreBackupCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3348,6 +3354,91 @@ export interface HeatingGroup {
     address: string;
     type: string;
   }[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareRestoreCall".
+ */
+export interface PrepareRestoreCall {
+  request: PrepareRestoreRequest;
+  response: PrepareRestoreResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareRestoreRequest".
+ */
+export interface PrepareRestoreRequest {
+  type: "prepareRestore";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareRestoreResponse".
+ */
+export interface PrepareRestoreResponse {
+  type: "prepareRestore_response";
+  requestId?: string;
+  success: boolean;
+  id: string;
+  url: string;
+  needsKey?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckRestoreCall".
+ */
+export interface CheckRestoreCall {
+  request: CheckRestoreRequest;
+  response: CheckRestoreResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckRestoreRequest".
+ */
+export interface CheckRestoreRequest {
+  type: "checkRestore";
+  requestId?: string;
+  id: string;
+  password: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckRestoreResponse".
+ */
+export interface CheckRestoreResponse {
+  type: "checkRestore_response";
+  requestId?: string;
+  success: boolean;
+  needsKey: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RestoreBackupCall".
+ */
+export interface RestoreBackupCall {
+  request: RestoreBackupRequest;
+  response: RestoreBackupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RestoreBackupRequest".
+ */
+export interface RestoreBackupRequest {
+  type: "restoreBackup";
+  requestId?: string;
+  id: string;
+  password: string;
+  key?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RestoreBackupResponse".
+ */
+export interface RestoreBackupResponse {
+  type: "restoreBackup_response";
+  requestId?: string;
+  success: boolean;
+  needsKey?: boolean;
 }
 /**
  * Sent first on every connection

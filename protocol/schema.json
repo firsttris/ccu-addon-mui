@@ -280,6 +280,15 @@
     },
     "getHeatingGroups": {
       "$ref": "#/definitions/GetHeatingGroupsCall"
+    },
+    "prepareRestore": {
+      "$ref": "#/definitions/PrepareRestoreCall"
+    },
+    "checkRestore": {
+      "$ref": "#/definitions/CheckRestoreCall"
+    },
+    "restoreBackup": {
+      "$ref": "#/definitions/RestoreBackupCall"
     }
   },
   "required": [
@@ -374,7 +383,10 @@
     "setTimeServers",
     "setTimeZone",
     "setClock",
-    "getHeatingGroups"
+    "getHeatingGroups",
+    "prepareRestore",
+    "checkRestore",
+    "restoreBackup"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2900,6 +2912,15 @@
         },
         {
           "$ref": "#/definitions/GetHeatingGroupsResponse"
+        },
+        {
+          "$ref": "#/definitions/PrepareRestoreResponse"
+        },
+        {
+          "$ref": "#/definitions/CheckRestoreResponse"
+        },
+        {
+          "$ref": "#/definitions/RestoreBackupResponse"
         }
       ]
     },
@@ -7849,6 +7870,199 @@
         },
         "response": {
           "$ref": "#/definitions/GetHeatingGroupsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareRestoreRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "prepareRestore"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareRestoreResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "prepareRestore_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "needsKey": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "id",
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareRestoreCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/PrepareRestoreRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/PrepareRestoreResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CheckRestoreRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "checkRestore"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "CheckRestoreResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "checkRestore_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "needsKey": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "needsKey"
+      ],
+      "additionalProperties": false
+    },
+    "CheckRestoreCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/CheckRestoreRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/CheckRestoreResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RestoreBackupRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "restoreBackup"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "RestoreBackupResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "restoreBackup_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "needsKey": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "RestoreBackupCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/RestoreBackupRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/RestoreBackupResponse"
         }
       },
       "required": [

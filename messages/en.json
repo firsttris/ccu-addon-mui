@@ -299,7 +299,6 @@
   "BACKUP": "Backup",
   "CREATE_BACKUP": "Create backup",
   "BACKUP_HINT": "Saves all devices, rooms, programs, system variables and passwords of the CCU to an .sbk file, like the WebUI's backup.",
-  "BACKUP_RESTORE_HINT": "Restore it under Settings → Security in the old WebUI.",
   "BACKUP_PASSWORD_HINT": "The backup contains every password of the CCU. Please enter your password again.",
   "BACKUP_PASSWORD_HINT_ADMIN": "Password of the CCU user \"Admin\" (leave empty if the WebUI has none).",
   "BACKUP_RUNNING": "Creating …",
@@ -767,5 +766,19 @@
   "HG_NO_MEMBERS": "No members yet.",
   "HG_MEMBERS": "Members of {name}",
   "HG_NONE": "No heating groups yet.",
-  "HG_EDIT_IN_WEBUI": "Create and change groups in the WebUI"
+  "HG_EDIT_IN_WEBUI": "Create and change groups in the WebUI",
+  "RESTORE_TITLE": "Restore backup",
+  "RESTORE_HINT": "A backup replaces every setting, device, program and password of the CCU. Afterwards the CCU restarts.",
+  "RESTORE_FILE": "Backup file (.sbk)",
+  "RESTORE_CHECK": "Check",
+  "RESTORE_CHECKING": "Checking …",
+  "RESTORE_CONFIRM": "The backup “{name}” is valid. Restore it now? All current settings are lost, the CCU restarts and is unreachable for a few minutes.",
+  "RESTORE_KEY": "System security key of the backup",
+  "RESTORE_APPLY": "Restore and restart",
+  "RESTORE_RUNNING": "Restoring …",
+  "RESTORE_DONE": "The backup is restored, the CCU restarts. This takes a few minutes; reload this page afterwards.",
+  "RESTORE_INVALID": "The file is no system backup of the CCU.",
+  "RESTORE_WRONG_KEY": "The security key fits neither the backup nor the CCU.",
+  "RESTORE_FIRMWARE_TOO_OLD": "The backup is from a newer firmware. Update the CCU's firmware first.",
+  "RESTORE_FAILED": "Restore failed"
 }

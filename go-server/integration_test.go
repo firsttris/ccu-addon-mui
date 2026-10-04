@@ -1908,3 +1908,72 @@ func TestStackHeatingGroups(t *testing.T) {
 		t.Fatalf("expected FORBIDDEN, got %v", m)
 	}
 }
+
+func TestStackRestoreBackup(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	base := fmt.Sprintf("http://127.0.0.1:%d", wsPorts[ccu])
+
+	upload := func(content string) string {
+		t.Helper()
+		send(t, conn, message{"type": "prepareRestore", "requestId": "p"})
+		prepared := receive(t, conn, byRequestID("p"))
+		resp, err := http.Post(base+prepared["url"].(string), "application/octet-stream", strings.NewReader(content))
+		if err != nil || resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("upload failed: %v %v", err, resp)
+		}
+		// Once only
+		if again, _ := http.Post(base+prepared["url"].(string), "application/octet-stream", strings.NewReader(content)); again.StatusCode != http.StatusNotFound {
+			t.Fatal("an upload id must take one file only")
+		}
+		return prepared["id"].(string)
+	}
+	call := func(m message) message {
+		t.Helper()
+		m["requestId"] = "r"
+		send(t, conn, m)
+		return receive(t, conn, byRequestID("r"))
+	}
+
+	// Not a backup
+	id := upload("holiday photos")
+	if m := call(message{"type": "checkRestore", "id": id, "password": "secret"}); m["code"] != "INVALID_BACKUP" {
+		t.Fatalf("expected INVALID_BACKUP, got %v", m)
+	}
+	// Wrong password
+	if m := call(message{"type": "checkRestore", "id": id, "password": "falsch"}); m["code"] != "INVALID_CREDENTIALS" {
+		t.Fatalf("expected INVALID_CREDENTIALS, got %v", m)
+	}
+	// From a newer firmware
+	id = upload(fakeccu.FakeBackup + " " + fakeccu.FakeBackupNewer)
+	if m := call(message{"type": "restoreBackup", "id": id, "password": "secret"}); m["code"] != "FIRMWARE_TOO_OLD" {
+		t.Fatalf("expected FIRMWARE_TOO_OLD, got %v", m)
+	}
+	// With a security key
+	keyed := fakeccu.FakeBackup + " " + fakeccu.FakeBackupKeyed
+	id = upload(keyed)
+	if m := call(message{"type": "checkRestore", "id": id, "password": "secret"}); m["success"] != true || m["needsKey"] != true {
+		t.Fatalf("expected a key to be needed, got %v", m)
+	}
+	if m := call(message{"type": "restoreBackup", "id": id, "password": "secret", "key": "falsch"}); m["code"] != "WRONG_KEY" {
+		t.Fatalf("expected WRONG_KEY, got %v", m)
+	}
+	if _, rebooted := ccu.RestoredBackup(); rebooted {
+		t.Fatal("nothing may be restored with a wrong key")
+	}
+	if m := call(message{"type": "restoreBackup", "id": id, "password": "secret", "key": fakeccu.FakeBackupKey}); m["success"] != true {
+		t.Fatalf("restoreBackup failed: %v", m)
+	}
+	if restored, rebooted := ccu.RestoredBackup(); restored != keyed || !rebooted {
+		t.Fatalf("backup not restored: %q %v", restored, rebooted)
+	}
+	// The upload is gone afterwards
+	if m := call(message{"type": "restoreBackup", "id": id, "password": "secret"}); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+	// A plain backup needs no key
+	id = upload(fakeccu.FakeBackup)
+	if m := call(message{"type": "checkRestore", "id": id, "password": "secret"}); m["needsKey"] != false {
+		t.Fatalf("expected no key, got %v", m)
+	}
+}
