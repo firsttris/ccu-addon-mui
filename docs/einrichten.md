@@ -163,7 +163,7 @@ welches Funkmodul die Zentrale mit welchem BidCos-Gerät spricht, mit *Roaming*.
 | **Standort und Uhrzeit** | Koordinaten für Astro-Zeiten, Zeitzone, Zeitserver, Uhr stellen; **Neustart**, **Herunterfahren** und **Neustart im abgesicherten Modus** (Zusatzsoftware startet einmalig nicht, auch dieses Add-on nicht; die alte WebUI bleibt erreichbar); auf der eQ-3-Firmware die **Version der Logikschicht** (Standard oder Kompatibilitätsmodus) |
 | **Allgemeine Einstellungen** | Strom- und Gaspreise (für Diagramme), Info-LED, Beta-Firmware für Geräte, Meldungen „nicht erreichbar“ ausblenden, Speicherplatz der Diagramme |
 | **Netzwerk** | Hostname, DHCP oder feste IP, DNS; Tailscale (OpenCCU). Wirkt nach dem nächsten Neustart |
-| **Sicherheit** | Sicherheitsschlüssel, SSH (mit Passwort), Authentifizierung der Script-API, Umleitung auf HTTPS, Sitzungs-Timeout der WebUI, **Sicherheitsstufe**, **Werkseinstellungen** (mit Prüfung des Schlüssels und Bestätigungswort) |
+| **Sicherheit** | Sicherheitsschlüssel, SSH (mit Passwort), Authentifizierung der Script-API, Umleitung auf HTTPS, Sitzungs-Timeout der WebUI, **SNMP** (SNMPv3-Benutzer, öffnet den Dienst in der Firewall), **Sicherheitsstufe**, **Werkseinstellungen** (mit Prüfung des Schlüssels und Bestätigungswort) |
 | **Firewall** | Richtlinie, Zugriff auf XML-RPC, Script-API und mediola, erlaubte Adressen und Ports |
 | **HTTPS-Zertifikat** | eigenes Zertifikat hochladen (wird geprüft) oder zurück zum Standard |
 | **Zusatzsoftware** | installierte Add-ons mit Version und Updates, öffnen, neu starten, deinstallieren; neues Add-on installieren |

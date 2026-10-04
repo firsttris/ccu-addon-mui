@@ -1306,5 +1306,12 @@
   "SYS_REGA_HINT": "Welche Version der Logikschicht (ReGaHss) die CCU verwendet. Wechseln Sie zum Kompatibilitätsmodus, wenn ältere Skripte Probleme machen.",
   "SYS_REGA_RESTART": "Damit die Änderung der Logikschicht-Version wirksam wird, muss die CCU neu gestartet werden.",
   "SYS_REGA_RESTART_NOW": "Jetzt neu starten",
-  "SYS_REGA_RESTART_LATER": "Später neu starten"
+  "SYS_REGA_RESTART_LATER": "Später neu starten",
+  "SEC_SNMP": "SNMP",
+  "SEC_SNMP_HINT": "Bei Aktivierung ist der SNMP-Dienst aktiv. Unterstützt wird ausschließlich SNMPv3 mit SHA und AES.",
+  "SEC_SNMP_USER": "SNMP-Benutzer",
+  "SEC_SNMP_PASSWORD": "SNMP-Passwort",
+  "SEC_SNMP_REPEAT": "SNMP-Passwort wiederholen",
+  "SEC_SNMP_RULES": "Benutzername aus Buchstaben, Ziffern, . _ -; Passwort mindestens 8 Zeichen, ohne Anführungszeichen und Backslash.",
+  "SEC_SNMP_SAVE": "SNMP speichern"
 }

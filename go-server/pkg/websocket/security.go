@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -29,7 +30,12 @@ type securityResponse struct {
 	SessionTimeout int `json:"sessionTimeout"`
 	// The level of the security wizard: LOW, MEDIUM, HIGH or CUSTOM
 	SecurityLevel string `json:"securityLevel"`
+	// Whether the SNMP agent is set up (ccu/getsnmpenabled.tcl)
+	SNMP bool `json:"snmp"`
 }
+
+// An SNMP user name: one word, as setSNMPUser.sh passes it to snmpd
+var snmpUserRegex = regexp.MustCompile(`^[A-Za-z0-9._-]{1,32}$`)
 
 // After a change of authentication or HTTPS redirect lighttpd restarts,
 // which ends the connections through it: after the answer
@@ -53,6 +59,10 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		Seconds int `json:"seconds"`
 		// setSecurityLevel
 		Level string `json:"level"`
+		// setSnmp
+		SNMP         bool   `json:"snmp"`
+		SNMPUser     string `json:"snmpUser"`
+		SNMPPassword string `json:"snmpPassword"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -83,7 +93,41 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 			s.sendRequestError(client, msg.RequestID, "security level: "+err.Error(), "CCU_ERROR")
 			return
 		}
-		s.sendJSON(client, securityResponse{Type: "getSecurity_response", RequestID: msg.RequestID, securitySettings: current, SessionTimeout: timeout, SecurityLevel: level})
+		s.sendJSON(client, securityResponse{Type: "getSecurity_response", RequestID: msg.RequestID, securitySettings: current, SessionTimeout: timeout, SecurityLevel: level,
+			SNMP: s.settings.Flag(settings.SNMPEnabled)})
+	case "setSnmp":
+		// cp_security.cgi's onSNMPSaveBtn: a user and a password of at least
+		// 8 characters to switch on; CCU.setSNMPEnabled runs setSNMPUser.sh
+		// or unsetSNMPUser.sh and opens or closes SNMP in the firewall. The
+		// password is never written to the audit log.
+		entry := audit.Entry{User: client.user, Action: "setSnmp", Target: "SNMP",
+			Value: map[string]interface{}{"enabled": msg.SNMP, "user": msg.SNMPUser}, Previous: s.settings.Flag(settings.SNMPEnabled)}
+		if code, errorMsg := configureError(client); code != "" {
+			s.recordAudit(entry, code)
+			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+			return
+		}
+		if msg.SNMP {
+			// setSNMPUser.sh writes the password in quotes into snmpd.conf
+			if !snmpUserRegex.MatchString(msg.SNMPUser) || len(msg.SNMPPassword) < 8 || strings.ContainsAny(msg.SNMPPassword, "\"\\\r\n") {
+				s.recordAudit(entry, "INVALID_VALUE")
+				s.sendRequestError(client, msg.RequestID, "a user and a password of at least 8 characters are needed", "INVALID_VALUE")
+				return
+			}
+		} else {
+			msg.SNMPUser, msg.SNMPPassword = "", ""
+		}
+		result, err := s.backup.AdminCall(client.user, msg.Password, "CCU.setSNMPEnabled",
+			map[string]interface{}{"enabled": msg.SNMP, "usr": msg.SNMPUser, "pass": msg.SNMPPassword})
+		if answer, ok := result.(map[string]interface{}); err == nil && (!ok || answer["msg"] != "noError") {
+			err = fmt.Errorf("SNMP was not set up: %v", result)
+		}
+		if err != nil {
+			s.securityFailed(client, msg.RequestID, entry, err)
+			return
+		}
+		s.recordAudit(entry, rega.SetOK)
+		s.sendJSON(client, changeResponse{Type: "setSnmp_response", RequestID: msg.RequestID, Success: true})
 	case "setSecurityLevel":
 		// The security wizard (DialogChooseSecuritySettings): firewall and
 		// authentication together through CCU.setSecurityLevel, then

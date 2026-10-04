@@ -1306,5 +1306,12 @@
   "SYS_REGA_HINT": "Which version of the logic layer (ReGaHss) the CCU uses. Switch to compatibility mode if older scripts cause trouble.",
   "SYS_REGA_RESTART": "The CCU has to restart for the new logic layer version to take effect.",
   "SYS_REGA_RESTART_NOW": "Restart now",
-  "SYS_REGA_RESTART_LATER": "Restart later"
+  "SYS_REGA_RESTART_LATER": "Restart later",
+  "SEC_SNMP": "SNMP",
+  "SEC_SNMP_HINT": "After activation, the SNMP service is active. Only SNMPv3 with SHA and AES is supported.",
+  "SEC_SNMP_USER": "SNMP user",
+  "SEC_SNMP_PASSWORD": "SNMP password",
+  "SEC_SNMP_REPEAT": "Repeat SNMP password",
+  "SEC_SNMP_RULES": "User name of letters, digits, . _ -; password at least 8 characters, without quotes and backslash.",
+  "SEC_SNMP_SAVE": "Save SNMP"
 }

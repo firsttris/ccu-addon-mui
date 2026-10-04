@@ -153,6 +153,7 @@ export type ServerMessage =
   | SetSessionTimeoutResponse
   | FactoryResetResponse
   | SetSecurityLevelResponse
+  | SetSnmpResponse
   | GetInterfacesResponse
   | SearchWiredDevicesResponse
   | GetDeviceFirmwareResponse
@@ -298,6 +299,7 @@ export interface Protocol {
   setSessionTimeout: SetSessionTimeoutCall;
   factoryReset: FactoryResetCall;
   setSecurityLevel: SetSecurityLevelCall;
+  setSnmp: SetSnmpCall;
   getInterfaces: GetInterfacesCall;
   searchWiredDevices: SearchWiredDevicesCall;
   getDeviceFirmware: GetDeviceFirmwareCall;
@@ -4188,6 +4190,10 @@ export interface GetSecurityResponse {
    * Level of the security wizard (libsecuritylevel.tcl)
    */
   securityLevel: "LOW" | "MEDIUM" | "HIGH" | "CUSTOM";
+  /**
+   * whether the SNMP agent is set up (snmpd-ccu3.conf)
+   */
+  snmp: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4781,6 +4787,44 @@ export interface SetSecurityLevelRequest {
  */
 export interface SetSecurityLevelResponse {
   type: "setSecurityLevel_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSnmpCall".
+ */
+export interface SetSnmpCall {
+  request: SetSnmpRequest;
+  response: SetSnmpResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSnmpRequest".
+ */
+export interface SetSnmpRequest {
+  type: "setSnmp";
+  requestId?: string;
+  snmp: boolean;
+  /**
+   * needed to switch on
+   */
+  snmpUser?: string;
+  /**
+   * at least 8 characters, needed to switch on; never logged
+   */
+  snmpPassword?: string;
+  /**
+   * the user's CCU password when no WebUI session is kept
+   */
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSnmpResponse".
+ */
+export interface SetSnmpResponse {
+  type: "setSnmp_response";
   requestId?: string;
   success: boolean;
 }

@@ -395,6 +395,9 @@
     "setSecurityLevel": {
       "$ref": "#/definitions/SetSecurityLevelCall"
     },
+    "setSnmp": {
+      "$ref": "#/definitions/SetSnmpCall"
+    },
     "getInterfaces": {
       "$ref": "#/definitions/GetInterfacesCall"
     },
@@ -557,6 +560,7 @@
     "setSessionTimeout",
     "factoryReset",
     "setSecurityLevel",
+    "setSnmp",
     "getInterfaces",
     "searchWiredDevices",
     "getDeviceFirmware",
@@ -3270,6 +3274,9 @@
         },
         {
           "$ref": "#/definitions/SetSecurityLevelResponse"
+        },
+        {
+          "$ref": "#/definitions/SetSnmpResponse"
         },
         {
           "$ref": "#/definitions/GetInterfacesResponse"
@@ -9793,6 +9800,10 @@
             "CUSTOM"
           ],
           "description": "Level of the security wizard (libsecuritylevel.tcl)"
+        },
+        "snmp": {
+          "type": "boolean",
+          "description": "whether the SNMP agent is set up (snmpd-ccu3.conf)"
         }
       },
       "required": [
@@ -9801,7 +9812,8 @@
         "auth",
         "httpsRedirect",
         "sessionTimeout",
-        "securityLevel"
+        "securityLevel",
+        "snmp"
       ],
       "additionalProperties": false
     },
@@ -11187,6 +11199,74 @@
         },
         "response": {
           "$ref": "#/definitions/SetSecurityLevelResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetSnmpRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setSnmp"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "snmp": {
+          "type": "boolean"
+        },
+        "snmpUser": {
+          "type": "string",
+          "description": "needed to switch on"
+        },
+        "snmpPassword": {
+          "type": "string",
+          "description": "at least 8 characters, needed to switch on; never logged"
+        },
+        "password": {
+          "type": "string",
+          "description": "the user's CCU password when no WebUI session is kept"
+        }
+      },
+      "required": [
+        "type",
+        "snmp"
+      ],
+      "additionalProperties": false
+    },
+    "SetSnmpResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setSnmp_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetSnmpCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetSnmpRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetSnmpResponse"
         }
       },
       "required": [

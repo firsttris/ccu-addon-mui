@@ -154,6 +154,8 @@ const (
 	SSHEnabled           = "sshEnabled"
 	AuthEnabled          = "authEnabled"
 	HTTPSRedirectEnabled = "httpsRedirectEnabled"
+	// SNMP is on while setSNMPUser.sh's config is there (ccu/getsnmpenabled.tcl)
+	SNMPEnabled = "snmp/snmpd-ccu3.conf"
 )
 
 // Flag reports whether a flag file exists

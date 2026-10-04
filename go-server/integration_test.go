@@ -2523,6 +2523,40 @@ func TestStackSecurity(t *testing.T) {
 	}
 }
 
+// SNMP as cp_security.cgi's onSNMPSaveBtn: CCU.setSNMPEnabled with a user
+// and a password of at least 8 characters; the state is snmpd-ccu3.conf
+func TestStackSNMP(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getSecurity", "requestId": "n1"})
+	if m := receive(t, conn, byRequestID("n1")); m["snmp"] != false {
+		t.Fatalf("snmp on at start: %v", m)
+	}
+	send(t, conn, message{"type": "setSnmp", "requestId": "n2", "snmp": true, "snmpUser": "monitor", "snmpPassword": "kurz", "password": "secret"})
+	if m := receive(t, conn, byRequestID("n2")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("short password: %v", m)
+	}
+	send(t, conn, message{"type": "setSnmp", "requestId": "n3", "snmp": true, "snmpUser": "monitor", "snmpPassword": "Snmp-Geheim9", "password": "secret"})
+	if m := receive(t, conn, byRequestID("n3")); m["success"] != true || ccu.SNMPUser != "monitor" {
+		t.Fatalf("enable: %v %q", m, ccu.SNMPUser)
+	}
+	send(t, conn, message{"type": "getSecurity", "requestId": "n4"})
+	if m := receive(t, conn, byRequestID("n4")); m["snmp"] != true {
+		t.Fatalf("snmp off after enabling: %v", m)
+	}
+	send(t, conn, message{"type": "setSnmp", "requestId": "n5", "snmp": false})
+	if m := receive(t, conn, byRequestID("n5")); m["success"] != true || ccu.SNMPUser != "" {
+		t.Fatalf("disable: %v", m)
+	}
+	if _, err := os.Stat(filepath.Join(ccu.ConfigDir, "snmp", "snmpd-ccu3.conf")); err == nil {
+		t.Fatal("config still there")
+	}
+	if data, _ := os.ReadFile(auditLogs[ccu]); strings.Contains(string(data), "Snmp-Geheim9") {
+		t.Errorf("SNMP password in the audit log: %s", data)
+	}
+}
+
 func TestStackNetwork(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
