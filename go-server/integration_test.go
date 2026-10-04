@@ -2585,3 +2585,39 @@ func TestStackFactoryReset(t *testing.T) {
 		t.Fatal("not reset")
 	}
 }
+
+func TestStackSecurityLevel(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	level := func(id string) string {
+		send(t, conn, message{"type": "getSecurity", "requestId": id})
+		return fmt.Sprint(receive(t, conn, byRequestID(id))["securityLevel"])
+	}
+	// The fixture's firewall restricts two services and leaves one open
+	if got := level("l1"); got != "CUSTOM" {
+		t.Fatalf("level: %s", got)
+	}
+	send(t, conn, message{"type": "setSecurityLevel", "requestId": "l2", "level": "HIGH", "password": "secret"})
+	if m := receive(t, conn, byRequestID("l2")); m["success"] != true {
+		t.Fatalf("set: %v", m)
+	}
+	if got := level("l3"); got != "HIGH" {
+		t.Fatalf("after HIGH: %s", got)
+	}
+	send(t, conn, message{"type": "setSecurityLevel", "requestId": "l4", "level": "LOW"})
+	if m := receive(t, conn, byRequestID("l4")); m["success"] != true {
+		t.Fatalf("set: %v", m)
+	}
+	if got := level("l5"); got != "LOW" {
+		t.Fatalf("after LOW: %s", got)
+	}
+	send(t, conn, message{"type": "getFirewall", "requestId": "l6"})
+	if fw := receive(t, conn, byRequestID("l6"))["firewall"].(map[string]interface{}); fw["mode"] != "MOST_OPEN" || len(fw["ips"].([]interface{})) != 2 {
+		t.Errorf("firewall: %v", fw)
+	}
+	send(t, conn, message{"type": "setSecurityLevel", "requestId": "l7", "level": "SUPER"})
+	if m := receive(t, conn, byRequestID("l7")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("unknown level: %v", m)
+	}
+	_ = ccu
+}

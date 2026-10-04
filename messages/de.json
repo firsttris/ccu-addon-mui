@@ -1044,5 +1044,17 @@
   "RESET_KEY": "System-Sicherheitsschlüssel",
   "RESET_KEY_WRONG": "Der Sicherheitsschlüssel stimmt nicht.",
   "RESET_TYPE": "Zur Bestätigung „{word}“ eingeben",
-  "RESET_STARTED": "Die Zentrale wird auf Werkseinstellungen zurückgesetzt und startet neu. Dieses Add-on wird dabei entfernt; melden Sie sich danach in der WebUI der Zentrale an."
+  "RESET_STARTED": "Die Zentrale wird auf Werkseinstellungen zurückgesetzt und startet neu. Dieses Add-on wird dabei entfernt; melden Sie sich danach in der WebUI der Zentrale an.",
+  "SEC_LEVEL": "Sicherheitsstufe",
+  "SEC_LEVEL_HIGH": "Maximal gesichert",
+  "SEC_LEVEL_MEDIUM": "Restriktiv",
+  "SEC_LEVEL_LOW": "Relaxed",
+  "SEC_LEVEL_HIGH_HINT": "Nur die Weboberfläche ist erreichbar; Programmierschnittstellen und Mediola sind gesperrt, die Authentifizierung ist an.",
+  "SEC_LEVEL_MEDIUM_HINT": "Schnittstellen, Zusatzsoftware und Mediola nur aus den freigegebenen Netzen; die Authentifizierung ist an.",
+  "SEC_LEVEL_LOW_HINT": "Alle Ports offen, XML-RPC und Mediola für alle, keine Authentifizierung. Nur wenn Sie die Zentrale selbst gegen Zugriff schützen.",
+  "SEC_LEVEL_CUSTOM": "Benutzerdefiniert",
+  "SEC_LEVEL_ACTIVE": "aktiv",
+  "SEC_LEVEL_HINT": "Eine Stufe setzt Firewall und Authentifizierung zusammen. Spätere Änderungen an der Firewall machen daraus „Benutzerdefiniert“.",
+  "SEC_LEVEL_APPLY": "Sicherheitsstufe übernehmen",
+  "SEC_LEVEL_SAVED": "Sicherheitsstufe gesetzt. Der Webserver startet neu."
 }

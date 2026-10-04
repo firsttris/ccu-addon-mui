@@ -1661,3 +1661,40 @@ test('setzt die Zentrale erst nach Bestätigung auf Werkseinstellungen zurück',
   }
   await expect(started).toContainText('wird auf Werkseinstellungen zurückgesetzt');
 });
+
+test('setzt die Sicherheitsstufe wie der Sicherheitsassistent', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Sicherheit' });
+  const levels = panel.getByRole('radiogroup', { name: 'Sicherheitsstufe' });
+  // The fixture's firewall fits no level
+  await expect(panel).toContainText('Benutzerdefiniert');
+  await levels.getByRole('radio', { name: /Maximal gesichert/ }).click();
+  const apply = panel.getByRole('button', { name: 'Sicherheitsstufe übernehmen' });
+  await apply.click();
+  const done = page.getByText('Sicherheitsstufe gesetzt');
+  const passwordField = panel.getByLabel('Passwort', { exact: true }).first();
+  await expect(done.or(passwordField)).toBeVisible();
+  if (await passwordField.isVisible()) {
+    await passwordField.fill('secret');
+    await apply.click();
+  }
+  await expect(done).toBeVisible();
+  await expect(levels.getByRole('radio', { name: /Maximal gesichert/ })).toContainText('aktiv');
+  await expect(panel.getByLabel('Authentifizierung der Fernzugriffs-Schnittstellen')).toBeChecked();
+
+  // The firewall follows: every service closed
+  const firewall = page.getByRole('region', { name: 'Firewall' });
+  for (const service of ['Homematic XML-RPC API', 'Remote Homematic-Script API', 'Mediola-Zugriff']) {
+    await expect(firewall.getByRole('radiogroup', { name: service }).getByRole('radio', { name: 'Kein Zugriff' })).toHaveAttribute('aria-checked', 'true');
+  }
+
+  // Back to the fixture's settings, for the other tests and a second run
+  await firewall.getByRole('radiogroup', { name: 'Homematic XML-RPC API' }).getByRole('radio', { name: 'Eingeschränkt' }).click();
+  await firewall.getByRole('radiogroup', { name: 'Remote Homematic-Script API' }).getByRole('radio', { name: 'Eingeschränkt' }).click();
+  await firewall.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert').first()).toBeVisible();
+  await panel.getByLabel('Authentifizierung der Fernzugriffs-Schnittstellen').click();
+  await panel.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(panel).toContainText('Benutzerdefiniert');
+});

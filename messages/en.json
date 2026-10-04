@@ -1044,5 +1044,17 @@
   "RESET_KEY": "System security key",
   "RESET_KEY_WRONG": "The security key is wrong.",
   "RESET_TYPE": "Type “{word}” to confirm",
-  "RESET_STARTED": "The central unit is being reset to factory settings and restarts. This add-on is removed; log in to the WebUI of the central unit afterwards."
+  "RESET_STARTED": "The central unit is being reset to factory settings and restarts. This add-on is removed; log in to the WebUI of the central unit afterwards.",
+  "SEC_LEVEL": "Security level",
+  "SEC_LEVEL_HIGH": "Maximum security",
+  "SEC_LEVEL_MEDIUM": "Restrictive",
+  "SEC_LEVEL_LOW": "Relaxed",
+  "SEC_LEVEL_HIGH_HINT": "Only the web interface is reachable; programming interfaces and Mediola are blocked, authentication is on.",
+  "SEC_LEVEL_MEDIUM_HINT": "Interfaces, add-ons and Mediola only from the allowed networks; authentication is on.",
+  "SEC_LEVEL_LOW_HINT": "All ports open, XML-RPC and Mediola for everyone, no authentication. Only if you protect the central unit yourself.",
+  "SEC_LEVEL_CUSTOM": "Custom",
+  "SEC_LEVEL_ACTIVE": "active",
+  "SEC_LEVEL_HINT": "A level sets the firewall and authentication together. Later changes to the firewall make it “custom”.",
+  "SEC_LEVEL_APPLY": "Apply security level",
+  "SEC_LEVEL_SAVED": "Security level set. The web server restarts."
 }

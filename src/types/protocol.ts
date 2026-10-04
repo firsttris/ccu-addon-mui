@@ -149,7 +149,8 @@ export type ServerMessage =
   | UploadCertificateResponse
   | DeleteCertificateResponse
   | SetSessionTimeoutResponse
-  | FactoryResetResponse;
+  | FactoryResetResponse
+  | SetSecurityLevelResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -283,6 +284,7 @@ export interface Protocol {
   deleteCertificate: DeleteCertificateCall;
   setSessionTimeout: SetSessionTimeoutCall;
   factoryReset: FactoryResetCall;
+  setSecurityLevel: SetSecurityLevelCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4102,6 +4104,10 @@ export interface GetSecurityResponse {
    * Seconds until an idle WebUI session ends (rega.conf)
    */
   sessionTimeout: number;
+  /**
+   * Level of the security wizard (libsecuritylevel.tcl)
+   */
+  securityLevel: "LOW" | "MEDIUM" | "HIGH" | "CUSTOM";
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4668,6 +4674,33 @@ export interface FactoryResetRequest {
  */
 export interface FactoryResetResponse {
   type: "factoryReset_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSecurityLevelCall".
+ */
+export interface SetSecurityLevelCall {
+  request: SetSecurityLevelRequest;
+  response: SetSecurityLevelResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSecurityLevelRequest".
+ */
+export interface SetSecurityLevelRequest {
+  type: "setSecurityLevel";
+  requestId?: string;
+  level: "LOW" | "MEDIUM" | "HIGH";
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSecurityLevelResponse".
+ */
+export interface SetSecurityLevelResponse {
+  type: "setSecurityLevel_response";
   requestId?: string;
   success: boolean;
 }

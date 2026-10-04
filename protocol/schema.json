@@ -388,6 +388,9 @@
     },
     "factoryReset": {
       "$ref": "#/definitions/FactoryResetCall"
+    },
+    "setSecurityLevel": {
+      "$ref": "#/definitions/SetSecurityLevelCall"
     }
   },
   "required": [
@@ -518,7 +521,8 @@
     "uploadCertificate",
     "deleteCertificate",
     "setSessionTimeout",
-    "factoryReset"
+    "factoryReset",
+    "setSecurityLevel"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3178,6 +3182,9 @@
         },
         {
           "$ref": "#/definitions/FactoryResetResponse"
+        },
+        {
+          "$ref": "#/definitions/SetSecurityLevelResponse"
         }
       ]
     },
@@ -9579,6 +9586,16 @@
         "sessionTimeout": {
           "type": "integer",
           "description": "Seconds until an idle WebUI session ends (rega.conf)"
+        },
+        "securityLevel": {
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "CUSTOM"
+          ],
+          "description": "Level of the security wizard (libsecuritylevel.tcl)"
         }
       },
       "required": [
@@ -9586,7 +9603,8 @@
         "ssh",
         "auth",
         "httpsRedirect",
-        "sessionTimeout"
+        "sessionTimeout",
+        "securityLevel"
       ],
       "additionalProperties": false
     },
@@ -10908,6 +10926,70 @@
         },
         "response": {
           "$ref": "#/definitions/FactoryResetResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetSecurityLevelRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setSecurityLevel"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ]
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "level"
+      ],
+      "additionalProperties": false
+    },
+    "SetSecurityLevelResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setSecurityLevel_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetSecurityLevelCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetSecurityLevelRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetSecurityLevelResponse"
         }
       },
       "required": [

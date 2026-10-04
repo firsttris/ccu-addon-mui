@@ -1472,6 +1472,12 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		_, _ = io.WriteString(w, c.securityMethod(req.Method, req.Params))
+	case "CCU.setSecurityLevel":
+		if req.Params["_session_id_"] != "fakeSession1" {
+			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
+			return
+		}
+		_, _ = io.WriteString(w, c.setSecurityLevel(fmt.Sprint(req.Params["level"])))
 	case "Firewall.setConfiguration":
 		if req.Params["_session_id_"] != "fakeSession1" {
 			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
