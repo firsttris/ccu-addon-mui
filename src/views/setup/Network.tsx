@@ -6,7 +6,7 @@ import { Switch } from '../../components/ui/switch';
 import { Button } from '../../components/ui/button';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
-import { Panel } from './Panel';
+import { OnlyOnCCU, Panel } from './Panel';
 import { m } from '../../paraglide/messages';
 import type { NetConfig } from '../../types/protocol';
 
@@ -69,7 +69,8 @@ export const Network = () => {
     setTailscale(data.tailscale.enabled);
   }, [data]);
 
-  if (userLevel !== 'admin' || isError) return null;
+  if (userLevel !== 'admin') return null;
+  if (isError) return <OnlyOnCCU title={m.NET_TITLE()} />;
   if (!data || !config) {
     return (
       <Panel aria-label={m.NET_TITLE()} aria-busy>

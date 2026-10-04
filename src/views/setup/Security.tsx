@@ -11,7 +11,7 @@ import { Button } from "../../components/ui/button";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { PanelSkeleton } from "../../components/ui/skeleton";
 import { useToast } from "../../contexts/ToastContext";
-import { Panel } from "./Panel";
+import { OnlyOnCCU, Panel } from "./Panel";
 import { usePasswordRetry } from "./usePasswordRetry";
 import { m } from "../../paraglide/messages";
 
@@ -648,7 +648,8 @@ export const Security = () => {
     setHttps(data.httpsRedirect);
   }, [data]);
 
-  if (userLevel !== "admin" || isError) return null;
+  if (userLevel !== "admin") return null;
+  if (isError) return <OnlyOnCCU title={m.SEC_TITLE()} />;
   if (!data) {
     return (
       <Panel aria-label={m.SEC_TITLE()} aria-busy>

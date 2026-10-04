@@ -11,7 +11,7 @@ import { Badge } from '../../components/ui/badge';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
-import { Panel } from './Panel';
+import { OnlyOnCCU, Panel } from './Panel';
 import { usePasswordRetry } from './usePasswordRetry';
 import { m } from '../../paraglide/messages';
 import type { LanGateway, LanGatewayState, RadioModule } from '../../types/protocol';
@@ -219,7 +219,8 @@ export const LanGateways = () => {
     if (data && list === null) setList(data.gateways.map(stripState));
   }, [data, list]);
 
-  if (userLevel !== 'admin' || isError) return null;
+  if (userLevel !== 'admin') return null;
+  if (isError) return <OnlyOnCCU title={m.LGW_TITLE()} />;
   const header = (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="flex flex-col gap-1">
