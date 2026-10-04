@@ -45,10 +45,19 @@ und *Bearbeiten* legst du sie direkt an.
 
 ### Kacheln anordnen
 
-*Anordnen* schaltet die Ansicht in den Bearbeitungsmodus: Kacheln ziehen, an der rechten Kante die
-Breite ändern, *Fertig*. Das Layout wird in der CCU am Raum, Gewerk oder an der Favoritenliste
-gespeichert und gilt damit auf allen Geräten. Für Handy, Tablet und Desktop passt es sich an.
-Ohne eigenes Layout zeigt die App die Abschnitte.
+*Anordnen* schaltet die Ansicht in den Bearbeitungsmodus. Sie sieht dabei genauso aus wie sonst, nur
+verschiebbar:
+
+- **Räume und Gewerke** behalten ihre Bereiche (Licht, Heizung, Rollläden …). Kacheln ziehst du innerhalb
+  ihres Bereichs und änderst an der rechten Kante die Breite. Ganze Bereiche verschiebst du mit den
+  Pfeilen neben der Überschrift, z. B. Heizung nach oben.
+- **Favoritenlisten** stellst du selbst zusammen. Dort gibt es keine Bereiche: Alle Kacheln liegen auf
+  einer Fläche, zuerst in der Reihenfolge der Liste, und lassen sich frei verschieben.
+
+*Fertig* speichert das Layout in der CCU am Raum, Gewerk oder an der Favoritenliste; es gilt damit auf
+allen Geräten und passt sich für Handy, Tablet und Desktop an. *Automatisch anordnen* stellt die
+ursprüngliche Anordnung wieder her. Layouts aus älteren Versionen, die alle Kacheln ohne Bereiche
+gemischt hatten, verwirft die App einmalig.
 
 <img src="screenshot-anordnen.png" alt="Favoritenliste im Modus Anordnen mit Thermostat, Lichtern und Rollladen" width="900">
 

@@ -707,7 +707,13 @@ test('ordnet die Kacheln eines Raums per Drag & Drop an', async ({ page }) => {
   );
   expect(stored).toHaveLength(1);
   expect(stored[0].id).toBe(1);
-  expect(JSON.parse(stored[0].layout!).layouts.lg.some((t: { i: string; x: number }) => t.i === key && t.x > 0)).toBe(true);
+  const layout = JSON.parse(stored[0].layout!);
+  expect(layout.v).toBe(2);
+  expect(
+    Object.values(layout.sections as Record<string, { lg?: { i: string; x: number }[] }>).some((section) =>
+      section.lg?.some((t) => t.i === key && t.x > 0),
+    ),
+  ).toBe(true);
 
   // Arranged after a reload too
   await page.reload();
@@ -859,4 +865,33 @@ test('zeigt Benachrichtigungsregeln und schaltet sie aus', async ({ page }) => {
     )
     .toBe(false);
   await expect(windowRule).toContainText('Off');
+});
+
+test('verschiebt beim Anordnen ganze Bereiche, die Kacheln bleiben in ihrem Bereich', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const headings = page.getByRole('main').getByRole('heading', { level: 2 });
+  await expect(headings.nth(1)).toBeVisible();
+  const [first, second] = [await headings.nth(0).textContent(), await headings.nth(1).textContent()];
+
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  // The sections stay while arranging, each with its own grid
+  await expect(headings.nth(0)).toHaveText(first!);
+  await expect(page.getByRole('button', { name: `Move "${first}" up` })).toBeDisabled();
+  await page.getByRole('button', { name: `Move "${first}" down` }).click();
+  await expect(headings.nth(0)).toHaveText(second!);
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+
+  const stored = await page.evaluate(() =>
+    ((window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string; layout?: string }> } }).__wsMock?.sentMessages() ?? [])
+      .filter((m) => m.type === 'setLayout')
+      .map((m) => JSON.parse(m.layout!)),
+  );
+  expect(stored).toHaveLength(1);
+  expect(stored[0].order.length).toBeGreaterThan(1);
+
+  // Kept after a reload, still with headings
+  await page.reload();
+  await expect(headings.nth(0)).toHaveText(second!);
+  await expect(headings.nth(1)).toHaveText(first!);
 });

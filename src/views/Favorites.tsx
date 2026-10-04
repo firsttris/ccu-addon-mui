@@ -246,6 +246,8 @@ export const Favorite = () => {
         }
         layoutId={favorite?.id}
         channelsByType={channelsByType}
+        // A list the user put together: arranged freely, in its order
+        freeOrder={favorite?.items.filter((item) => item.type === 'CHANNEL').map((item) => item.id) ?? []}
         isLoading={isLoading || !favorites}
         extra={favorite && hasLogic ? <LogicItems favorite={favorite} /> : undefined}
         empty={m.FAVORITE_EMPTY()}
