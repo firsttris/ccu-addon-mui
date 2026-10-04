@@ -537,6 +537,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSystemInfo(client, requestID)
 	case "getLogging", "setLogging", "downloadLogs":
 		s.handleLogging(client, msgType, message)
+	case "getHeatingGroups":
+		s.handleHeatingGroups(client, requestID)
 	case "runScript":
 		s.handleRunScript(client, message)
 	case "checkFirmwareUpdate":

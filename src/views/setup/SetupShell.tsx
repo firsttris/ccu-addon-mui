@@ -12,6 +12,7 @@ import PlayIcon from '~icons/lucide/play';
 import HistoryIcon from '~icons/lucide/history';
 import KeyboardIcon from '~icons/lucide/keyboard';
 import ShieldIcon from '~icons/lucide/shield-check';
+import FlameIcon from '~icons/lucide/flame';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useInbox } from '../../queries';
 import { ElevateDialog } from '../../components/ElevateDialog';
@@ -71,6 +72,12 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
               <Link to="/setup/groups" className={navLink}>
                 <HomeIcon />
                 {m.ROOMS_AND_TRADES()}
+              </Link>
+            )}
+            {isAdmin && (
+              <Link to="/setup/heating-groups" className={navLink}>
+                <FlameIcon />
+                {m.HG_TITLE()}
               </Link>
             )}
             {isAdmin && elevated && (

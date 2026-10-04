@@ -65,6 +65,7 @@ export default defineConfig({
         TIME_CONF_FILE: path.join(stateDir, 'time.conf'),
         NTP_CLIENT_FILE: path.join(stateDir, 'ntpclient'),
         TZ_FILE: path.join(stateDir, 'TZ'),
+        GROUPS_FILE: path.resolve('fixtures/groups.gson'),
       },
     },
     {

@@ -1001,6 +1001,21 @@ test('blendet systeminterne Programme nur auf Wunsch ein', async ({ page }) => {
   await expect(list).toContainText('Systemintern: Tastensperre');
 });
 
+test('zeigt die Heizgruppen mit ihren Mitgliedern', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup');
+  await page.getByRole('link', { name: 'Heizgruppen' }).click();
+  const list = page.getByRole('list', { name: 'Heizgruppen' });
+  const flur = list.getByRole('listitem', { name: 'Heizung Flur' });
+  await expect(flur).toContainText('HomeMatic IP');
+  await expect(flur).toContainText('Heizung Flur INT0000001');
+  await expect(flur.getByRole('list', { name: 'Mitglieder von Heizung Flur' })).toContainText('Wandthermostat Flur');
+  const wohnzimmer = list.getByRole('listitem', { name: 'Heizung Wohnzimmer' });
+  await expect(wohnzimmer).toContainText('Einzelbedienung gesperrt');
+  await wohnzimmer.getByRole('link', { name: 'Wohnzimmer Thermostat' }).click();
+  await expect(page).toHaveURL(/\/device\/BidCos-RF\/LEQ0000004$/);
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {

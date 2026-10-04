@@ -759,5 +759,13 @@
   "GROUP_REMOVE_CHANNEL": "Remove {name}",
   "GROUP_ADD_CHANNEL": "Add a channel to {name}",
   "GROUP_CHOOSE_CHANNEL": "Choose a channel …",
-  "PRG_SHOW_INTERNAL": "Show system-internal programs ({count})"
+  "PRG_SHOW_INTERNAL": "Show system-internal programs ({count})",
+  "HG_TITLE": "Heating groups",
+  "HG_HINT": "The CCU's heating groups with their members. The group itself is a device of its own, operated and set up like any other.",
+  "HG_DEVICE": "Group device",
+  "HG_FORBID_SINGLE": "Single operation locked",
+  "HG_NO_MEMBERS": "No members yet.",
+  "HG_MEMBERS": "Members of {name}",
+  "HG_NONE": "No heating groups yet.",
+  "HG_EDIT_IN_WEBUI": "Create and change groups in the WebUI"
 }

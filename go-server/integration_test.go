@@ -68,6 +68,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	}
 	cfg.SyslogConfig, cfg.LogDir = logFiles(t)
 	cfg.TimeConfFile, cfg.NTPClientFile, cfg.TZFile = clockFiles(t)
+	cfg.GroupsFile = "../fixtures/groups.gson"
 	auditLogs[ccu] = cfg.AuditLogFile
 	wsPorts[ccu] = cfg.WSPort
 
@@ -1877,5 +1878,33 @@ func TestStackClock(t *testing.T) {
 	send(t, conn, message{"type": "setClock", "requestId": "c1", "time": "2026-10-04 12:30:00"})
 	if r := receive(t, conn, byRequestID("c1")); r["code"] != "NOT_SUPPORTED" {
 		t.Fatalf("expected NOT_SUPPORTED, got %v", r)
+	}
+}
+
+func TestStackHeatingGroups(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "getHeatingGroups", "requestId": "h"})
+	groups := receive(t, conn, byRequestID("h"))["groups"].([]interface{})
+	if len(groups) != 2 {
+		t.Fatalf("unexpected groups: %v", groups)
+	}
+	flur := groups[0].(map[string]interface{})
+	if flur["name"] != "Heizung Flur" || flur["deviceAddress"] != "INT0000001" || flur["type"] != "hmip.heating.group" {
+		t.Fatalf("unexpected group: %v", flur)
+	}
+	if m := flur["members"].([]interface{})[0].(map[string]interface{}); m["address"] != "000A9D89A7AF25:1" {
+		t.Fatalf("unexpected member: %v", m)
+	}
+
+	guest, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/", conn.RemoteAddr().String()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer guest.Close()
+	loginAs(t, guest, "Gast", "gast")
+	send(t, guest, message{"type": "getHeatingGroups", "requestId": "g"})
+	if m := receive(t, guest, byRequestID("g")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
 	}
 }

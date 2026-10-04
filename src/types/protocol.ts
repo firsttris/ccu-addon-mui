@@ -112,7 +112,8 @@ export type ServerMessage =
   | EditSysvarResponse
   | SetTimeServersResponse
   | SetTimeZoneResponse
-  | SetClockResponse;
+  | SetClockResponse
+  | GetHeatingGroupsResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -209,6 +210,7 @@ export interface Protocol {
   setTimeServers: SetTimeServersCall;
   setTimeZone: SetTimeZoneCall;
   setClock: SetClockCall;
+  getHeatingGroups: GetHeatingGroupsCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3304,6 +3306,48 @@ export interface SetClockResponse {
   type: "setClock_response";
   requestId?: string;
   success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetHeatingGroupsCall".
+ */
+export interface GetHeatingGroupsCall {
+  request: GetHeatingGroupsRequest;
+  response: GetHeatingGroupsResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetHeatingGroupsRequest".
+ */
+export interface GetHeatingGroupsRequest {
+  type: "getHeatingGroups";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetHeatingGroupsResponse".
+ */
+export interface GetHeatingGroupsResponse {
+  type: "getHeatingGroups_response";
+  requestId?: string;
+  groups: HeatingGroup[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "HeatingGroup".
+ */
+export interface HeatingGroup {
+  id: number;
+  name: string;
+  type: string;
+  typeLabel?: string;
+  deviceAddress?: string;
+  deviceName?: string;
+  forbidSingleOperation: boolean;
+  members: {
+    address: string;
+    type: string;
+  }[];
 }
 /**
  * Sent first on every connection
