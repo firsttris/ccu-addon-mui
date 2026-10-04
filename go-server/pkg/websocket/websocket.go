@@ -108,6 +108,8 @@ type Client struct {
 
 	// device describes the browser, from the User-Agent
 	device string
+	// source is the client's address, for the login lockout
+	source string
 
 	// authenticated, user and level are only accessed by the read pump,
 	// which handles all messages of this client.
@@ -417,6 +419,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	client := newClient(conn)
 	client.device = deviceLabel(r.UserAgent())
+	client.source = clientAddress(r)
 
 	s.addClient(client)
 
@@ -861,7 +864,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 		return
 	}
 
-	session, token, err := s.auth.Login(msg.Username, msg.Password, client.device)
+	session, token, err := s.auth.Login(msg.Username, msg.Password, client.device, client.source)
 	if err != nil {
 		code := "CCU_UNREACHABLE"
 		switch err {
@@ -913,7 +916,7 @@ func (s *Server) handleElevate(client *Client, message []byte) {
 		return
 	}
 
-	adminToken, err := s.auth.Elevate(client.user, msg.Password, client.SessionID())
+	adminToken, err := s.auth.Elevate(client.user, msg.Password, client.SessionID(), client.source)
 	if err != nil {
 		code := "CCU_UNREACHABLE"
 		switch err {
@@ -1063,6 +1066,13 @@ func (s *Server) handleParamsetRequest(client *Client, msgType string, message [
 	}
 	if s.rpc == nil {
 		s.sendRequestError(client, msg.RequestID, msgType+" is not available", "NOT_AVAILABLE")
+		return
+	}
+	// Values and settings only: with a partner address as key the CCU would
+	// hand out the parameters of a direct link, which only administrators
+	// may read (getLinkParamset)
+	if msg.ParamsetKey != "VALUES" && msg.ParamsetKey != "MASTER" {
+		s.sendRequestError(client, msg.RequestID, "paramsetKey must be VALUES or MASTER", "INVALID_REQUEST")
 		return
 	}
 
@@ -2031,7 +2041,7 @@ func (s *Server) handleCreateBackup(client *Client, message []byte) {
 	username := client.user
 	if s.auth == nil {
 		username = "Admin"
-	} else if err := s.auth.CheckLockout(); err != nil {
+	} else if err := s.auth.CheckLockout(username, client.source); err != nil {
 		finish("TOO_MANY_ATTEMPTS")
 		s.sendRequestError(client, msg.RequestID, err.Error(), "TOO_MANY_ATTEMPTS")
 		return
@@ -2043,7 +2053,7 @@ func (s *Server) handleCreateBackup(client *Client, message []byte) {
 		if errors.Is(err, backup.ErrInvalidCredentials) {
 			code = "INVALID_CREDENTIALS"
 			if s.auth != nil {
-				s.auth.RecordFailure()
+				s.auth.RecordFailure(username, client.source)
 			}
 		}
 		logger.Info(fmt.Sprintf("💾 Backup failed for user %q: %v", username, err))

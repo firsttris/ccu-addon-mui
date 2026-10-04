@@ -42,7 +42,7 @@ func (s *Server) handleChangePassword(client *Client, message []byte) {
 		finish("FORBIDDEN", "guests may not change their password")
 		return
 	}
-	if err := s.auth.CheckPassword(client.user, msg.CurrentPassword); err != nil {
+	if err := s.auth.CheckPassword(client.user, msg.CurrentPassword, client.source); err != nil {
 		switch err {
 		case auth.ErrInvalidCredentials:
 			finish("INVALID_CREDENTIALS", "the current password is wrong")

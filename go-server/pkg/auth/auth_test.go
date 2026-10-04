@@ -51,7 +51,7 @@ func TestLoginIssuesVerifiableTokenAndLogsOutOfCCU(t *testing.T) {
 	defer ccu.Close()
 	a := newTestAuthenticator(t, ccu.URL)
 
-	_, token, err := a.Login("Admin", "secret", "test")
+	_, token, err := a.Login("Admin", "secret", "test", "192.0.2.1")
 	if err != nil {
 		t.Fatalf("Login: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestLoginRejectsWrongPassword(t *testing.T) {
 	defer ccu.Close()
 	a := newTestAuthenticator(t, ccu.URL)
 
-	if _, _, err := a.Login("Admin", "wrong", "test"); err != ErrInvalidCredentials {
+	if _, _, err := a.Login("Admin", "wrong", "test", "192.0.2.1"); err != ErrInvalidCredentials {
 		t.Fatalf("expected ErrInvalidCredentials, got %v", err)
 	}
 }
@@ -84,16 +84,40 @@ func TestLoginLocksOutAfterRepeatedFailures(t *testing.T) {
 	a.now = func() time.Time { return now }
 
 	for i := 0; i < maxFailures; i++ {
-		_, _, _ = a.Login("Admin", "wrong", "test")
+		_, _, _ = a.Login("Admin", "wrong", "test", "192.0.2.1")
 	}
 	// Even the right password is refused during the lockout
-	if _, _, err := a.Login("Admin", "secret", "test"); err != ErrTooManyAttempts {
+	if _, _, err := a.Login("Admin", "secret", "test", "192.0.2.1"); err != ErrTooManyAttempts {
 		t.Fatalf("expected ErrTooManyAttempts, got %v", err)
 	}
 
 	now = now.Add(lockoutDuration + time.Second)
-	if _, _, err := a.Login("Admin", "secret", "test"); err != nil {
+	if _, _, err := a.Login("Admin", "secret", "test", "192.0.2.1"); err != nil {
 		t.Fatalf("expected login to work after the lockout, got %v", err)
+	}
+}
+
+// Wrong passwords on one device must not lock out the same user elsewhere,
+// nor other users on that device
+func TestLockoutIsPerUserAndAddress(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	a := newTestAuthenticator(t, ccu.URL)
+	now := time.Now()
+	a.now = func() time.Time { return now }
+
+	for i := 0; i < maxFailures; i++ {
+		_, _, _ = a.Login("Admin", "wrong", "test", "192.0.2.66")
+	}
+	if _, _, err := a.Login("admin", "secret", "test", "192.0.2.66"); err != ErrTooManyAttempts {
+		t.Fatalf("expected the user to be locked out on that address (case-insensitive), got %v", err)
+	}
+	if _, _, err := a.Login("Admin", "secret", "test", "192.0.2.1"); err != nil {
+		t.Fatalf("expected the same user to log in from another address, got %v", err)
+	}
+	if err := a.CheckLockout("Gast", "192.0.2.66"); err != nil {
+		t.Fatalf("expected other users on that address not to be locked out, got %v", err)
 	}
 }
 
@@ -178,7 +202,7 @@ func TestLoginStoresUserLevelInToken(t *testing.T) {
 		return LevelAdmin, nil
 	})
 
-	session, token, err := a.Login("Admin", "secret", "test")
+	session, token, err := a.Login("Admin", "secret", "test", "192.0.2.1")
 	if err != nil || session.Level != LevelAdmin {
 		t.Fatalf("Login = %+v, %v", session, err)
 	}
@@ -195,7 +219,7 @@ func TestLoginSucceedsWhenLevelLookupFails(t *testing.T) {
 	a := newTestAuthenticator(t, ccu.URL)
 	a.SetLevelFunc(func(string) (string, error) { return "", errors.New("rega down") })
 
-	session, _, err := a.Login("Admin", "secret", "test")
+	session, _, err := a.Login("Admin", "secret", "test", "192.0.2.1")
 	if err != nil || session.Level != LevelUnknown {
 		t.Fatalf("Login = %+v, %v", session, err)
 	}
@@ -246,7 +270,7 @@ func TestAdminTokens(t *testing.T) {
 		t.Fatalf("expected ErrNotAdmin, got %v", err)
 	}
 
-	token, err := a.Elevate("Admin", "secret", "")
+	token, err := a.Elevate("Admin", "secret", "", "192.0.2.1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -270,7 +294,7 @@ func TestAdminTokens(t *testing.T) {
 		t.Fatal("admin token must expire")
 	}
 
-	if _, err := a.Elevate("Admin", "wrong", ""); err != ErrInvalidCredentials {
+	if _, err := a.Elevate("Admin", "wrong", "", "192.0.2.1"); err != ErrInvalidCredentials {
 		t.Fatalf("expected ErrInvalidCredentials, got %v", err)
 	}
 }

@@ -10,9 +10,12 @@ protokolliert.
   (`Session.login`, sofort danach `Session.logout`). Das Passwort wird nirgends gespeichert, auch nicht im
   Browser.
 - **Stufe**: Der Server liest die Berechtigung des Benutzers aus ReGa: Administrator, Benutzer oder Gast.
-- **Sperre**: Nach 5 falschen Passwörtern innerhalb einer Minute ist die Anmeldung eine Minute gesperrt.
-  Die Sperre gilt für Anmeldung, Admin-Token, Passwort ändern und die Passwortabfragen bei Backup und
-  Restore.
+- **Sperre**: Nach 5 falschen Passwörtern innerhalb einer Minute ist die Anmeldung eine Minute gesperrt,
+  und zwar für diesen Benutzer von diesem Gerät aus. Wer sich auf einem Gerät vertippt, sperrt also weder
+  andere Benutzer noch denselben Benutzer auf seinen anderen Geräten aus. Als Adresse zählt hinter lighttpd
+  der letzte Eintrag in `X-Forwarded-For`, den lighttpd selbst anhängt; davor stehende Einträge kann ein
+  Client erfinden. Die Sperre gilt für Anmeldung, Admin-Token, Passwort ändern und die Passwortabfragen bei
+  Backup und Restore.
 
 ## Tokens
 
@@ -63,6 +66,10 @@ Dazu kommen die Regeln der CCU:
 - Programme ohne *bedienbar* starten nur Administratoren.
 - Favoritenlisten sieht nur, wer sie in der CCU sehen darf.
 - Niemand kann sich selbst löschen oder die eigene Stufe ändern.
+- Ansehen dürfen alle Stufen, was die WebUI ihnen zeigt (`mainmenu/user.js`: Status und Bedienung,
+  Systemprotokoll, Diagramme), dazu die Geräteeinstellungen schreibgeschützt. Paramsets lassen sich nur als
+  `VALUES` oder `MASTER` lesen; die Parameter von Direktverknüpfungen (`getLinkParamset`) bleiben
+  Administratoren vorbehalten.
 
 Aktionen, die die CCU nur in der WebUI anbietet (Backup, Firewall, Sicherheitsstufe …), laufen über eine
 WebUI-Sitzung des Benutzers. Die hält der Server nach der ersten Passworteingabe im Speicher.

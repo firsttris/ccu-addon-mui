@@ -90,7 +90,7 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 	username := client.user
 	if s.auth == nil {
 		username = "Admin"
-	} else if err := s.auth.CheckLockout(); err != nil {
+	} else if err := s.auth.CheckLockout(username, client.source); err != nil {
 		finish("TOO_MANY_ATTEMPTS")
 		s.sendRequestError(client, msg.RequestID, err.Error(), "TOO_MANY_ATTEMPTS")
 		return
@@ -116,7 +116,7 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		case errors.Is(err, backup.ErrInvalidCredentials):
 			code = "INVALID_CREDENTIALS"
 			if s.auth != nil {
-				s.auth.RecordFailure()
+				s.auth.RecordFailure(username, client.source)
 			}
 		case errors.Is(err, backup.ErrInvalidBackup):
 			code = "INVALID_BACKUP"

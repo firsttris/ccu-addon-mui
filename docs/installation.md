@@ -164,7 +164,7 @@ prüft die Verbindung jede Minute. Nach einem Neustart der Funkdienste dauert es
 sich neu anmeldet. Ein Neustart des Add-ons geht schneller.
 
 **„Zu viele Versuche“ bei der Anmeldung**: Nach 5 falschen Passwörtern in einer Minute ist die Anmeldung
-eine Minute gesperrt.
+für diesen Benutzer auf diesem Gerät eine Minute gesperrt. Andere Geräte und Benutzer betrifft das nicht.
 
 **Einrichten fragt nach dem Passwort**: Das Admin-Token ist nach 8 Stunden abgelaufen. Einmal das Passwort
 eingeben, dann geht es weiter.

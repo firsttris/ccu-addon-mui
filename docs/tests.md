@@ -9,9 +9,9 @@ echten Server und eine nachgebaute CCU.
 | Ebene | Was echt ist | Was nachgebaut ist | Tests | in der CI |
 |---|---|---|---:|:---:|
 | **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 185 in 27 Dateien | ✅ |
-| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 201 Testfunktionen in 47 Dateien | ✅ |
+| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 203 Testfunktionen in 48 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests | – | gegen `protocol/schema.json` | ✅ |
-| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 21 + 2 | ✅ (21) |
+| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 21 + 2 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 64 | ✅ |
 | **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 60 | lokal |
 
@@ -133,9 +133,9 @@ erzeugt und im Pull Request mitgeliefert.
 
 | Workflow | Auslöser | Schritte |
 |---|---|---|
-| `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Unit-Tests, Build mit Typprüfung, Go-Build für ARM und `tar.gz` |
+| `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Unit-Tests, Build mit Typprüfung (`vite build && tsc`), Go-Build für ARM und `tar.gz` |
 | `go-unit-tests.yml` | Push und Pull Request auf `main` | `go test ./...` mit Coverage-Bericht als Artefakt |
-| `playwright-e2e.yml` | Push und Pull Request auf `main` | E2E mit Mock (mit Frontend-Coverage) und E2E gegen den Stack, Berichte als Artefakte |
+| `playwright-e2e.yml` | Push und Pull Request auf `main` | E2E mit Mock inkl. Anmeldung (mit Frontend-Coverage) und E2E gegen den Stack, Berichte als Artefakte |
 | `release.yml` | von Hand | Version erhöhen, bauen, Changelog aus den Commits, Release mit `mui-<version>.tar.gz` |
 
 Ein Pull Request wird erst gemergt, wenn alle Prüfungen grün sind.

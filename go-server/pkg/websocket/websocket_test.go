@@ -603,6 +603,13 @@ func TestParamsetRequests(t *testing.T) {
 	if len(rpc.calls) != 3 || rpc.calls[0] != "description HmIP-RF A:1 VALUES" {
 		t.Fatalf("unexpected calls: %v", rpc.calls)
 	}
+
+	// A partner address as key would return a direct link's parameters
+	s.handleMessage(client, []byte(`{"type":"getParamset","requestId":"q4","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"B:2"}`))
+	assertErrorMessageContains(t, <-client.send, "VALUES or MASTER")
+	if len(rpc.calls) != 3 {
+		t.Fatalf("a link paramset must not be requested: %v", rpc.calls)
+	}
 }
 
 func TestPutParamsetOnlyForAdministrators(t *testing.T) {
