@@ -68,11 +68,14 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   DOOR_RECEIVER: channelControl('doors', GarageDoorControl),
   SMOKE_DETECTOR: channelControl('security', SmokeDetectorControl),
   MOTION_DETECTOR: channelControl('security', MotionDetectorControl),
-  MOTION_DETECTOR_TRANSCEIVER: channelControl('security', MotionDetectorControl),
-  PRESENCE_DETECTOR_TRANSCEIVER: channelControl('security', MotionDetectorControl),
+  // HmIP names, as in the WebUI's functions.fn and motiondetector.fn
+  MOTIONDETECTOR_TRANSCEIVER: channelControl('security', MotionDetectorControl),
+  MOTIONDETECTOR_VIRTUAL_TRANSCEIVER: channelControl('security', MotionDetectorControl),
+  PRESENCEDETECTOR_TRANSCEIVER: channelControl('security', MotionDetectorControl),
   WATER_DETECTION_TRANSMITTER: channelControl('security', WaterDetectorControl),
   WATERDETECTIONSENSOR: channelControl('security', WaterDetectorControl),
-  ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER: channelControl('security', SirenControl),
+  // HmIP-ASIR alarm sirens (the WebUI's alarmsirene.fn)
+  ALARM_SWITCH_VIRTUAL_RECEIVER: channelControl('security', SirenControl),
   [ChannelType.ENERGIE_METER_TRANSMITTER]: deviceControl('energy', EnergyMeterControl),
   // BidCos metering plugs (HM-ES-PMSw1): POWER and ENERGY_COUNTER as well
   POWERMETER: deviceControl('energy', EnergyMeterControl),

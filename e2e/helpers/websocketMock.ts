@@ -417,7 +417,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         name: 'Sirene Flur',
         address: '0039E0A9A4B5C6:3',
         interfaceName: 'HmIP-RF',
-        type: 'ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER',
+        type: 'ALARM_SWITCH_VIRTUAL_RECEIVER',
         datapoints: { ACOUSTIC_ALARM_ACTIVE: false, OPTICAL_ALARM_ACTIVE: false, ACOUSTIC_ALARM_SELECTION: 0, OPTICAL_ALARM_SELECTION: 0 },
       },
       {
@@ -425,7 +425,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         name: 'Bewegungsmelder Eingang',
         address: '000BBD89A1C2D3:1',
         interfaceName: 'HmIP-RF',
-        type: 'MOTION_DETECTOR_TRANSCEIVER',
+        type: 'MOTIONDETECTOR_TRANSCEIVER',
         datapoints: { ILLUMINATION: 118.5, MOTION: true, MOTION_DETECTION_ACTIVE: true },
       },
       {
