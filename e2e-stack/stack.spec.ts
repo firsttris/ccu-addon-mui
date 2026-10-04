@@ -187,21 +187,22 @@ test('benennt Kanäle um und ordnet sie Räumen zu', async ({ page }) => {
   await login(page);
   await page.goto('/device/BidCos-RF/LEQ0000001');
 
-  const section = page.getByRole('region', { name: 'Namen, Räume und Gewerke' });
-  const name = section.getByLabel('Name LEQ0000001:1');
+  // One card per channel: name, rooms and trades together
+  const card = page.getByRole('region', { name: 'Wohnzimmer Licht' });
+  const name = card.getByLabel('Name LEQ0000001:1');
   await expect(name).toHaveValue('Wohnzimmer Licht');
   await name.fill('Deckenlicht');
-  await name.press('Enter');
+  await card.getByRole('button', { name: 'Umbenennen' }).click();
   await expect(page.getByText('Umbenannt')).toBeVisible();
 
   // From the living room to the kitchen
-  const rooms = section.getByRole('group', { name: 'Räume LEQ0000001:1' });
-  await expect(rooms.getByLabel('Wohnzimmer')).toBeChecked();
-  // (click, not check(): the box follows the cache a moment later)
-  await rooms.getByLabel('Küche').click();
-  await expect(rooms.getByLabel('Küche')).toBeChecked();
-  await rooms.getByLabel('Wohnzimmer').click();
-  await expect(rooms.getByLabel('Wohnzimmer')).not.toBeChecked();
+  const channel = page.getByRole('region', { name: 'Deckenlicht' });
+  const rooms = channel.getByRole('list', { name: 'Räume LEQ0000001:1' });
+  await expect(rooms).toHaveText(/^Wohnzimmer/);
+  await channel.getByLabel('Raum LEQ0000001:1').selectOption('Küche');
+  await expect(rooms.getByRole('listitem')).toHaveText(['Wohnzimmer', 'Küche']);
+  await rooms.getByRole('button', { name: 'Aus Wohnzimmer entfernen' }).click();
+  await expect(rooms.getByRole('listitem')).toHaveText(['Küche']);
 
   // The kitchen now shows the renamed light
   await page.goto('/room/2');
@@ -301,7 +302,7 @@ test('meldet ein anderes Gerät ab', async ({ page, browser }) => {
 
 test('stellt eine Direktverknüpfung über eine Vorlage der WebUI ein', async ({ page }) => {
   await login(page);
-  await page.goto('/device/HmIP-RF/000855699C4F38');
+  await page.goto('/device/HmIP-RF/000855699C4F38?tab=links');
   const list = page.getByRole('region', { name: 'Direktverknüpfungen' }).getByRole('list', { name: 'Direktverknüpfungen' });
   const item = list.getByRole('listitem').filter({ hasText: 'Esstisch an' });
   await item.getByRole('button', { name: 'Parameter' }).click();
@@ -327,7 +328,7 @@ test('stellt eine Direktverknüpfung über eine Vorlage der WebUI ein', async ({
 
 test('legt Direktverknüpfungen an, ändert ihre Parameter und löscht sie', async ({ page }) => {
   await login(page);
-  await page.goto('/device/HmIP-RF/000855699C4F38');
+  await page.goto('/device/HmIP-RF/000855699C4F38?tab=links');
 
   const section = page.getByRole('region', { name: 'Direktverknüpfungen' });
   const list = section.getByRole('list', { name: 'Direktverknüpfungen' });
@@ -467,6 +468,7 @@ test('installiert ein bereitliegendes Firmware-Update', async ({ page }) => {
   const windowContact = table.getByRole('row').filter({ hasText: '0008DA8A9F1234' });
   await expect(windowContact).toContainText('1.0.121.2.6');
   await windowContact.getByRole('link').first().click();
+  await page.getByRole('tab', { name: 'Wartung' }).click();
 
   const firmware = page.getByRole('region', { name: 'Firmware' });
   await expect(firmware.getByRole('status')).toHaveText(/Firmware 1\.2\.6 liegt auf dem Gerät bereit/);
@@ -483,7 +485,7 @@ test('aktualisiert BidCos-Geräte mit updateFirmware', async ({ page }) => {
   await login(page);
 
   // A sleeping device has to be woken with its key
-  await page.goto('/device/BidCos-RF/LEQ0000004');
+  await page.goto('/device/BidCos-RF/LEQ0000004?tab=maintenance');
   const firmware = page.getByRole('region', { name: 'Firmware' });
   await expect(firmware.getByRole('status')).toHaveText(/Firmware 1\.5 liegt auf der CCU bereit/);
   await firmware.getByRole('button', { name: 'Update installieren' }).click();
@@ -491,7 +493,7 @@ test('aktualisiert BidCos-Geräte mit updateFirmware', async ({ page }) => {
   await expect(page.getByText(/Das Gerät ist nicht erreichbar/)).toBeVisible();
   await expect(firmware.getByRole('definition').first()).toHaveText('1.4');
 
-  await page.goto('/device/BidCos-RF/LEQ0000001');
+  await page.goto('/device/BidCos-RF/LEQ0000001?tab=maintenance');
   await expect(firmware.getByRole('status')).toHaveText(/Firmware 2\.11 liegt auf der CCU bereit/);
   await firmware.getByRole('button', { name: 'Update installieren' }).click();
   await page.getByRole('dialog', { name: 'Firmware-Update' }).getByRole('button', { name: 'Update installieren' }).click();
@@ -609,7 +611,7 @@ test('legt fest, ob ein Schaltaktor als Lampe oder Schalter erscheint', async ({
   await expect(tile).toHaveAttribute('data-tile', 'switch');
 
   await page.goto('/device/HmIP-RF/00195F29B04142');
-  const choice = page.getByRole('region', { name: 'Namen, Räume und Gewerke' }).getByLabel('Kachel 00195F29B04142:4');
+  const choice = page.getByRole('region', { name: 'Zirkulationspumpe' }).getByLabel('Kachel 00195F29B04142:4');
   await expect(choice).toHaveValue('');
   await choice.selectOption({ label: 'Lampe' });
   await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
@@ -831,17 +833,19 @@ test('zeigt das Systemprotokoll der protokollierten Kanäle', async ({ page }) =
 
 test('zeigt den Verlauf protokollierter Werte auf der Geräteseite', async ({ page }) => {
   await login(page);
-  await page.goto('/device/BidCos-RF/LEQ0000004');
+  await page.goto('/device/BidCos-RF/LEQ0000004?tab=history');
   const history = page.getByRole('region', { name: 'Verlauf' });
   await expect(history).toContainText('Kein Kanal dieses Geräts wird protokolliert');
+  await page.getByRole('tab', { name: 'Kanäle' }).click();
   const options = page.getByRole('group', { name: 'Optionen LEQ0000004:1' });
   await options.getByLabel('protokolliert').click();
   await expect(options.getByLabel('protokolliert')).toBeChecked();
 
-  await page.reload();
+  await page.getByRole('tab', { name: 'Verlauf' }).click();
   await expect(history.getByRole('img', { name: 'Temperatur' })).toBeVisible();
   await expect(history.getByRole('img', { name: 'Luftfeuchte' })).toBeVisible();
 
+  await page.getByRole('tab', { name: 'Kanäle' }).click();
   await options.getByLabel('protokolliert').click();
   await expect(options.getByLabel('protokolliert')).not.toBeChecked();
 });
@@ -989,7 +993,7 @@ test('ordnet eine Systemvariable einem Kanal zu und zeigt sie beim Gerät', asyn
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toHaveCount(0);
 
-  await page.goto('/device/BidCos-RF/LEQ0000004');
+  await page.goto('/device/BidCos-RF/LEQ0000004?tab=programs');
   const section = page.getByRole('region', { name: 'Systemvariablen' });
   await expect(section.getByRole('listitem')).toContainText('Anwesenheit');
   await expect(section.getByRole('listitem')).toContainText('Wohnzimmer Thermostat');
@@ -1000,7 +1004,7 @@ test('ordnet eine Systemvariable einem Kanal zu und zeigt sie beim Gerät', asyn
   await dialog.getByLabel('Kanalzuordnung').selectOption({ label: 'keine' });
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toHaveCount(0);
-  await page.goto('/device/BidCos-RF/LEQ0000004');
+  await page.goto('/device/BidCos-RF/LEQ0000004?tab=programs');
   await expect(page.getByRole('region', { name: 'Programme' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Systemvariablen' })).toHaveCount(0);
 });
@@ -1146,13 +1150,13 @@ test('ändert das eigene Passwort', async ({ page }) => {
 
 test('zeigt auf der Geräteseite die Programme, die das Gerät verwenden', async ({ page }) => {
   await login(page);
-  await page.goto('/device/BidCos-RF/LEQ0000002');
+  await page.goto('/device/BidCos-RF/LEQ0000002?tab=programs');
   const section = page.getByRole('region', { name: 'Programme' });
   await expect(section).toContainText('Küche Rollo');
   await section.getByRole('link', { name: 'Rollläden abends schließen' }).click();
   await expect(page).toHaveURL(/\/program\/1201$/);
 
-  await page.goto('/device/BidCos-RF/LEQ0000003');
+  await page.goto('/device/BidCos-RF/LEQ0000003?tab=programs');
   await expect(page.getByRole('region', { name: 'Programme' })).toContainText('Kein Programm verwendet dieses Gerät.');
 });
 
@@ -1175,7 +1179,7 @@ test('drückt die virtuellen Taster der CCU', async ({ page }) => {
 
 test('führt den Funktionstest eines Geräts aus', async ({ page }) => {
   await login(page);
-  await page.goto('/device/BidCos-RF/LEQ0000001');
+  await page.goto('/device/BidCos-RF/LEQ0000001?tab=maintenance');
   const section = page.getByRole('region', { name: 'Funktionstest' });
   await section.getByRole('button', { name: 'Funktionstest starten' }).click();
   await expect(section.getByRole('status')).toContainText('Das Gerät hat um', { timeout: 10000 });
@@ -1810,7 +1814,7 @@ test('setzt die Sicherheitsstufe wie der Sicherheitsassistent', async ({ page })
 test('lädt Geräte-Firmware direkt von eQ-3 auf die CCU', async ({ page }) => {
   await login(page);
   // The device page names the newer firmware at eQ-3
-  await page.goto('/device/HmIP-RF/000855699C4F38');
+  await page.goto('/device/HmIP-RF/000855699C4F38?tab=maintenance');
   const devicePanel = page.getByRole('region', { name: 'Firmware' });
   await expect(devicePanel).toContainText('Bei eQ-3: 1.6.4');
   await expect(devicePanel.getByRole('button', { name: 'Auf die CCU laden' })).toBeVisible();
@@ -1851,7 +1855,7 @@ test('lädt Geräte-Firmware direkt von eQ-3 auf die CCU', async ({ page }) => {
   await changelog.getByRole('button', { name: 'OK' }).click();
 
   // The remote control's page offers the update now
-  await page.goto('/device/HmIP-RF/000855699C4F38');
+  await page.goto('/device/HmIP-RF/000855699C4F38?tab=maintenance');
   await expect(page.getByRole('region', { name: 'Firmware' }).getByRole('status')).toHaveText(/Firmware 1\.6\.4 liegt auf dem Gerät bereit/);
 
   await page.goto('/setup/system');
@@ -1918,8 +1922,10 @@ test('zeigt Gerätebilder der WebUI mit markiertem Kanal', async ({ page }) => {
 
   // On the device page the channel pointed at is marked in the picture
   await page.goto('/device/BidCos-RF/LEQ0000001');
-  const picture = page.locator('[data-device-image="250/demo-actuator.png"]').first();
+  const picture = page.locator('[data-device-image="250/demo-actuator.png"]').filter({ visible: true });
   await expect(picture).toBeVisible();
+  // (the pointer away from the cards)
+  await page.mouse.move(0, 0);
   await expect(picture.locator('svg')).toHaveCount(0);
   // Channel 1 of the switch actuator: its off and on buttons (a set of two)
   await page.getByLabel('Name LEQ0000001:1').hover();
