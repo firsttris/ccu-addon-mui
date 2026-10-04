@@ -131,7 +131,8 @@ const Versions = () => {
                   <div
                     className="h-2 w-40 overflow-hidden rounded-full bg-muted"
                     role="meter"
-                    aria-label={`${m.DUTY_CYCLE()} ${module.interfaceName}`}
+                    // The default module by its interface, LAN gateways also by serial
+                    aria-label={`${m.DUTY_CYCLE()} ${module.interfaceName}${module.default ? '' : ` ${module.address}`}`}
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-valuenow={module.dutyCycle}

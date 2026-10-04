@@ -14,6 +14,7 @@ import KeyboardIcon from '~icons/lucide/keyboard';
 import ShieldIcon from '~icons/lucide/shield-check';
 import FlameIcon from '~icons/lucide/flame';
 import ChartIcon from '~icons/lucide/chart-line';
+import GatewayIcon from '~icons/lucide/router';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useInbox } from '../../queries';
 import { ElevateDialog } from '../../components/ElevateDialog';
@@ -119,6 +120,12 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
                   </div>
                 ))}
               </div>
+            )}
+            {isAdmin && (
+              <Link to="/setup/gateways" className={navLink}>
+                <GatewayIcon />
+                {m.LGW_TITLE()}
+              </Link>
             )}
             {isAdmin && (
               <Link to="/setup/system" className={navLink}>

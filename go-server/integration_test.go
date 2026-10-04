@@ -78,7 +78,8 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	cfg.DiagramsDir = filepath.Join(t.TempDir(), "diagrams")
 	cfg.ConfigDir = t.TempDir()
 	ccu.ConfigDir = cfg.ConfigDir
-	for _, name := range []string{"netconfig", "firewall.conf"} {
+	cfg.StatusDir = "../fixtures/status"
+	for _, name := range []string{"netconfig", "firewall.conf", "rfd.conf"} {
 		if data, err := os.ReadFile("../fixtures/" + name); err == nil {
 			_ = os.WriteFile(filepath.Join(cfg.ConfigDir, name), data, 0o644)
 		}
@@ -803,7 +804,8 @@ func TestStackSystemInfo(t *testing.T) {
 	send(t, conn, message{"type": "getSystemInfo", "requestId": "q1"})
 	info := receive(t, conn, byRequestID("q1"))
 	modules := info["radioInterfaces"].([]interface{})
-	if len(modules) != 2 {
+	// The built-in modules and the LAN gateway of rfd.conf
+	if len(modules) != 3 {
 		t.Fatalf("expected the radio modules of BidCos-RF and HmIP-RF: %v", info)
 	}
 	first := modules[0].(map[string]interface{})
@@ -2426,5 +2428,62 @@ func TestStackFirewall(t *testing.T) {
 	send(t, conn, message{"type": "setFirewall", "requestId": "f5", "firewall": next})
 	if m := receive(t, conn, byRequestID("f5")); m["code"] != "INVALID_VALUE" {
 		t.Errorf("invalid address: %v", m)
+	}
+}
+
+func TestStackLanGateways(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "getLanGateways", "requestId": "g1"})
+	m := receive(t, conn, byRequestID("g1"))
+	gateways, modules := m["gateways"].([]interface{}), m["modules"].([]interface{})
+	if len(gateways) != 1 || len(modules) != 2 {
+		t.Fatalf("gateways: %v", m)
+	}
+	if g := gateways[0].(map[string]interface{}); g["serial"] != "NEQ0987654" || g["state"] != "connected" || g["name"] != "Keller" {
+		t.Fatalf("gateway: %v", g)
+	}
+	next := []map[string]interface{}{
+		{"class": "RF", "type": "HMLGW2", "name": "Keller", "serial": "NEQ0987654", "key": "KellerKey1", "ip": "192.168.178.40"},
+		{"class": "Wired", "type": "HMWLGW", "name": "", "serial": "JEQ0000001", "key": "wired1", "ip": ""},
+	}
+	send(t, conn, message{"type": "setLanGateways", "requestId": "g2", "gateways": next})
+	if m := receive(t, conn, byRequestID("g2")); m["code"] != "PASSWORD_REQUIRED" {
+		t.Fatalf("without password: %v", m)
+	}
+	send(t, conn, message{"type": "setLanGateways", "requestId": "g3", "gateways": next, "password": "secret"})
+	if m := receive(t, conn, byRequestID("g3")); m["success"] != true || ccu.CallCount("JSON BidCoS_Wired.setConfigurationWired") != 1 {
+		t.Fatalf("set: %v", m)
+	}
+	send(t, conn, message{"type": "getLanGateways", "requestId": "g4"})
+	gateways = receive(t, conn, byRequestID("g4"))["gateways"].([]interface{})
+	if len(gateways) != 2 || gateways[1].(map[string]interface{})["state"] != "inactive" {
+		t.Fatalf("after set: %v", gateways)
+	}
+	// The kept session needs no password now
+	send(t, conn, message{"type": "changeLanGatewayKey", "requestId": "g5", "serial": "NEQ0987654", "key": "Neu#1"})
+	if m := receive(t, conn, byRequestID("g5")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("forbidden character: %v", m)
+	}
+	send(t, conn, message{"type": "changeLanGatewayKey", "requestId": "g6", "serial": "NEQ0987654", "key": "NeuerKey2"})
+	if m := receive(t, conn, byRequestID("g6")); m["success"] != true {
+		t.Fatalf("change key: %v", m)
+	}
+	if data, _ := os.ReadFile(filepath.Join(ccu.ConfigDir, "NEQ0987654.keychange")); !strings.Contains(string(data), "KEY=NeuerKey2") || !strings.Contains(string(data), "CURKEY=KellerKey1") {
+		t.Errorf("keychange: %s", data)
+	}
+	send(t, conn, message{"type": "setBidcosInterface", "requestId": "g7", "address": "LEQ0000001", "module": "NEQ0987654", "roaming": false})
+	if m := receive(t, conn, byRequestID("g7")); m["success"] != true {
+		t.Fatalf("assign: %v", m)
+	}
+	send(t, conn, message{"type": "setBidcosInterface", "requestId": "g8", "address": "LEQ0000001", "module": "XYZ", "roaming": false})
+	if m := receive(t, conn, byRequestID("g8")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("unknown module: %v", m)
+	}
+	send(t, conn, message{"type": "listDevices", "requestId": "g9"})
+	for _, d := range receive(t, conn, byRequestID("g9"))["devices"].([]interface{}) {
+		if d := d.(map[string]interface{}); d["address"] == "LEQ0000001" && d["interface"] != "NEQ0987654" {
+			t.Errorf("assigned device: %v", d)
+		}
 	}
 }

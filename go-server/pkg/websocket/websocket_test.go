@@ -520,6 +520,10 @@ func (f *fakeDeviceRPC) ReplaceDevice(iface, oldAddress, newAddress string) erro
 
 func (f *fakeDeviceRPC) Forget(iface, deviceAddress string) {}
 
+func (f *fakeDeviceRPC) SetBidcosInterface(iface, address, module string, roaming bool) error {
+	return nil
+}
+
 func (f *fakeDeviceRPC) ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error) {
 	return nil, nil
 }

@@ -114,3 +114,76 @@ func (c *CCU) setFirewall(params map[string]interface{}) string {
 	_ = os.WriteFile(filepath.Join(c.ConfigDir, "firewall.conf"), []byte(b.String()), 0o644)
 	return `{"version":"1.1","result":true,"error":null}`
 }
+
+// lanGatewayMethod writes the LAN gateways as the WebUI's
+// setconfiguration-rf.tcl and setconfiguration-wired.tcl do (the header up
+// to the first gateway kept), and a key change as changeLanGatewayKey.tcl
+func (c *CCU) lanGatewayMethod(method string, params map[string]interface{}) string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.calls["JSON "+method]++
+	if c.ConfigDir == "" {
+		return `{"version":"1.1","result":true,"error":null}`
+	}
+	if method == "BidCoS.changeLanGatewayKey" {
+		serial := fmt.Sprint(params["lgwserial"])
+		content := fmt.Sprintf("Class=%v\nSerial=%s\nIP=%v\nKEY=%v\nCURKEY=%v\n", params["lgwclass"], serial, params["lgwip"], params["newkey"], params["curkey"])
+		_ = os.WriteFile(filepath.Join(c.ConfigDir, filepath.Base(serial)+".keychange"), []byte(content), 0o644)
+		return `{"version":"1.1","result":true,"error":null}`
+	}
+	file, first, header := "rfd.conf", 1, "Listen Port = 2001\n\n[Interface 0]\nType = CCU2\nComPortFile = /dev/mmd_bidcos\n\n"
+	if method == "BidCoS_Wired.setConfigurationWired" {
+		file, first, header = "hs485d.conf", 0, "Listen Port = 32000\n\n"
+	}
+	path := filepath.Join(c.ConfigDir, file)
+	if old, err := os.ReadFile(path); err == nil {
+		text := string(old)
+		marker := fmt.Sprintf("[Interface %d]", first)
+		if i := strings.Index(text, marker); i >= 0 {
+			text = text[:i]
+		}
+		header = text
+	}
+	var b strings.Builder
+	b.WriteString(header)
+	if items, ok := params["interfaces"].([]interface{}); ok {
+		for i, item := range items {
+			g, _ := item.(map[string]interface{})
+			fmt.Fprintf(&b, "[Interface %d]\nType = %v\nName = %v\nSerial Number = %v\nEncryption Key = %v\n", first+i, g["type"], g["userName"], g["serialNumber"], g["encryptionKey"])
+			if ip := fmt.Sprint(g["ipAddress"]); ip != "" && g["ipAddress"] != nil {
+				fmt.Fprintf(&b, "IP Address = %s\n", ip)
+			}
+			b.WriteString("\n")
+		}
+	}
+	_ = os.WriteFile(path, []byte(b.String()), 0o644)
+	return `{"version":"1.1","result":true,"error":null}`
+}
+
+// lanGatewayModules are the RF gateways of rfd.conf as radio modules of
+// BidCos-RF (the real rfd takes them on its next start)
+func (c *CCU) lanGatewayModules(iface string) []map[string]interface{} {
+	if iface != "BidCos-RF" || c.ConfigDir == "" {
+		return nil
+	}
+	data, err := os.ReadFile(filepath.Join(c.ConfigDir, "rfd.conf"))
+	if err != nil {
+		return nil
+	}
+	modules := []map[string]interface{}{}
+	gateway := false
+	for _, line := range strings.Split(string(data), "\n") {
+		key, value, _ := strings.Cut(line, "=")
+		key, value = strings.TrimSpace(key), strings.TrimSpace(value)
+		if key == "Type" {
+			gateway = value != "CCU2"
+		}
+		if key == "Serial Number" && gateway {
+			modules = append(modules, map[string]interface{}{
+				"ADDRESS": value, "DESCRIPTION": "", "CONNECTED": true, "DEFAULT": false, "DUTY_CYCLE": 2,
+				"TYPE": "HMLGW2", "FIRMWARE_VERSION": "1.1.5",
+			})
+		}
+	}
+	return modules
+}

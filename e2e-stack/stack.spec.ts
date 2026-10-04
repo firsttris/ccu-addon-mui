@@ -367,8 +367,10 @@ test('zeigt Versionen und Duty Cycle der Funkmodule', async ({ page }) => {
   await page.goto('/setup/system');
   const system = page.getByRole('region', { name: 'System' });
   await expect(system).toContainText('Add-on-Version');
-  await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF' })).toHaveAttribute('aria-valuenow', '12');
+  await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF', exact: true })).toHaveAttribute('aria-valuenow', '12');
   await expect(system.getByRole('meter', { name: 'Duty Cycle HmIP-RF' })).toHaveAttribute('aria-valuenow', '3');
+  // The LAN gateway as a radio module of its own
+  await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF NEQ0987654' })).toHaveAttribute('aria-valuenow', '2');
 });
 
 test('legt Räume und Systemvariablen an, benennt sie um und löscht sie', async ({ page }) => {
@@ -1405,4 +1407,62 @@ test('gibt die Script-API frei und schränkt sie wieder ein', async ({ page }) =
   await reloaded.getByLabel('Port-Freigabe').fill('');
   await reloaded.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+});
+
+test('richtet ein LAN-Gateway ein und ordnet ein Gerät zu', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/gateways');
+  const panel = page.getByRole('region', { name: 'LAN-Gateways' });
+  const keller = panel.getByRole('listitem', { name: 'Keller' });
+  await expect(keller).toContainText('HomeMatic RF-LAN Gateway · 192.168.178.40');
+  await expect(keller).toContainText('Verbunden');
+
+  // Added locally, written with „Übernehmen“
+  await page.getByRole('button', { name: 'Gateway hinzufügen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Gateway hinzufügen' });
+  await dialog.getByLabel('Typ').selectOption({ label: 'Wired: HomeMatic RS485 Gateway' });
+  await dialog.getByLabel('Seriennummer').fill('jeq0000001');
+  await dialog.getByLabel('Sicherheitsschlüssel').fill('wired1');
+  await dialog.getByRole('button', { name: 'OK' }).click();
+  await expect(panel).toContainText('Nicht übernommene Änderungen');
+  const done = page.getByText('Konfiguration übernommen');
+  const apply = panel.getByRole('button', { name: 'Übernehmen' });
+  await apply.click();
+  const passwordField = panel.getByLabel('Passwort', { exact: true });
+  await expect(done.or(passwordField)).toBeVisible();
+  if (await passwordField.isVisible()) {
+    await passwordField.fill('secret');
+    await apply.click();
+  }
+  await expect(done).toBeVisible();
+
+  await page.reload();
+  const wired = page.getByRole('region', { name: 'LAN-Gateways' }).getByRole('listitem', { name: 'JEQ0000001' });
+  await expect(wired).toContainText('Inaktiv');
+  await wired.getByRole('button', { name: 'Entfernen' }).click();
+  await page.getByRole('dialog', { name: 'Entfernen' }).getByRole('button', { name: 'Entfernen' }).click();
+  await page.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(page.getByText('Konfiguration übernommen').first()).toBeVisible();
+  await expect(page.getByRole('listitem', { name: 'JEQ0000001' })).toHaveCount(0);
+
+  // A new key for the gateway: checked as the WebUI does
+  await page.getByRole('listitem', { name: 'Keller' }).getByRole('button', { name: 'Sicherheitsschlüssel ändern' }).click();
+  const keyDialog = page.getByRole('dialog', { name: 'Sicherheitsschlüssel ändern: Keller' });
+  await keyDialog.getByLabel('Neuer Sicherheitsschlüssel', { exact: true }).fill('neu#1');
+  await expect(keyDialog).toContainText('Nicht erlaubt');
+  await keyDialog.getByLabel('Neuer Sicherheitsschlüssel', { exact: true }).fill('NeuerKey2');
+  await keyDialog.getByLabel('Neuer Sicherheitsschlüssel (Wiederholung)').fill('NeuerKey2');
+  await keyDialog.getByRole('button', { name: 'Sicherheitsschlüssel ändern' }).click();
+  await expect(page.getByText('Konfiguration übernommen').first()).toBeVisible();
+
+  // The device served by the gateway instead of the built-in module
+  const assignment = page.getByRole('region', { name: 'Interface-Zuordnung' });
+  const select = assignment.getByRole('combobox').first();
+  await expect(select).toHaveValue('NEQ1234567');
+  await select.selectOption({ label: 'Keller' });
+  await expect(select.locator('option').first()).toHaveText('Zentrale NEQ1234567 (Standard)');
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first()).toHaveValue('NEQ0987654');
+  await page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first().selectOption('NEQ1234567');
+  await expect(page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first()).toHaveValue('NEQ1234567');
 });
