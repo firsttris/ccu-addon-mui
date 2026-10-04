@@ -22,6 +22,9 @@ export const useTheme = () => {
   return context;
 };
 
+// --background in styles.css
+const themeColors = { light: '#ffffff', dark: '#0a0a0a' };
+
 const darkQuery = () => window.matchMedia?.('(prefers-color-scheme: dark)');
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -40,6 +43,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     document.documentElement.dataset.theme = mode;
+    // Browser bar and installed app follow the switch, not only the system
+    document
+      .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
+      .forEach((meta) => (meta.content = themeColors[mode]));
   }, [mode]);
 
   return (

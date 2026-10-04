@@ -97,14 +97,20 @@ export default defineConfig(({ command, mode, isPreview }) => ({
         importScripts: ['push-sw.js'],
       },
       manifest: {
-        name: 'ccu-addon-mui',
-        short_name: 'ccu-addon-mui',
+        name: 'MUI · Homematic',
+        short_name: 'MUI',
+        description: 'Die moderne WebUI für die Homematic-Zentrale CCU3 und OpenCCU',
+        lang: 'de',
+        display: 'standalone',
+        // Dark like the app's dark theme, so the splash screen does not flash white
+        background_color: '#0a0a0a',
+        theme_color: '#0a0a0a',
+        categories: ['utilities', 'lifestyle'],
         icons: [
-          {
-            src: 'android-chrome-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
+          { src: 'android-chrome-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
         ],
       },
     }),
