@@ -146,6 +146,8 @@ type Program struct {
 	Name    string `json:"name"`
 	Active  bool   `json:"active"`
 	Visible bool   `json:"visible"`
+	// Operate: users other than administrators may run it ("bedienbar")
+	Operate bool `json:"operate"`
 }
 
 // GetPrograms returns all programs.
@@ -157,14 +159,16 @@ func (c *Client) GetPrograms() ([]Program, error) {
 	isRecord := func(line string) bool { return strings.HasPrefix(line, "P\t") }
 	programs := []Program{}
 	for _, fields := range splitRecords(output, isRecord) {
-		if len(fields) < 5 {
+		if len(fields) < 6 {
 			continue
 		}
 		id, err := strconv.ParseInt(fields[1], 10, 64)
 		if err != nil {
 			continue
 		}
-		programs = append(programs, Program{ID: id, Active: fields[2] == "true", Visible: fields[3] == "true", Name: rejoin(fields, 4)})
+		programs = append(programs, Program{
+			ID: id, Active: fields[2] == "true", Visible: fields[3] == "true", Operate: fields[4] == "true", Name: rejoin(fields, 5),
+		})
 	}
 	return programs, nil
 }
@@ -194,4 +198,21 @@ func (c *Client) ProgramAction(id int64, action string) (string, error) {
 	default:
 		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
 	}
+}
+
+// SetLogicOption sets "visible" of a program or system variable, or
+// "operate" of a program. Returns SetOK with the previous value, or
+// SetNotFound.
+func (c *Client) SetLogicOption(id int64, option string, value bool) (string, bool, error) {
+	if option != "visible" && option != "operate" {
+		return "", false, fmt.Errorf("invalid option")
+	}
+	script := strings.NewReplacer("{{ID}}", strconv.FormatInt(id, 10), "{{OPTION}}", option, "{{VALUE}}", strconv.FormatBool(value)).
+		Replace(setLogicOptionScript)
+	output, err := c.Execute(script)
+	if err != nil {
+		return "", false, err
+	}
+	result, previous, err := resultWithValue(output)
+	return result, previous == "true", err
 }

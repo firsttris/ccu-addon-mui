@@ -239,6 +239,8 @@ export interface Program {
   name: string;
   active: boolean;
   visible: boolean;
+  // Users other than administrators may run it ("bedienbar")
+  operate: boolean;
 }
 
 // A paired device waiting in the CCU's inbox

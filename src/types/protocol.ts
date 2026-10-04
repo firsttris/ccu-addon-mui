@@ -107,7 +107,8 @@ export type ServerMessage =
   | GetLoggingResponse
   | SetLoggingResponse
   | DownloadLogsResponse
-  | RunScriptResponse;
+  | RunScriptResponse
+  | SetLogicOptionResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -199,6 +200,7 @@ export interface Protocol {
   setLogging: SetLoggingCall;
   downloadLogs: DownloadLogsCall;
   runScript: RunScriptCall;
+  setLogicOption: SetLogicOptionCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1166,6 +1168,10 @@ export interface Program {
   name: string;
   active: boolean;
   visible: boolean;
+  /**
+   * Users other than administrators may run it ("bedienbar")
+   */
+  operate: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3122,6 +3128,34 @@ export interface RunScriptResponse {
   requestId?: string;
   syntaxError?: string;
   output: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLogicOptionCall".
+ */
+export interface SetLogicOptionCall {
+  request: SetLogicOptionRequest;
+  response: SetLogicOptionResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLogicOptionRequest".
+ */
+export interface SetLogicOptionRequest {
+  type: "setLogicOption";
+  requestId?: string;
+  id: number;
+  option: "visible" | "operate";
+  value: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLogicOptionResponse".
+ */
+export interface SetLogicOptionResponse {
+  type: "setLogicOption_response";
+  requestId?: string;
+  success: boolean;
 }
 /**
  * Sent first on every connection

@@ -238,8 +238,10 @@ test('setzt Systemvariablen', async ({ page }) => {
   await page.goto('/sysvars');
 
   const list = page.getByRole('list', { name: 'Systemvariablen' });
-  // Internal variables are hidden
-  await expect(list.getByRole('listitem')).toHaveCount(6);
+  // Administrators see hidden variables too, marked, as in the WebUI's list
+  // (systemvars.htm, EnumEnabledIDs)
+  await expect(list.getByRole('listitem')).toHaveCount(7);
+  await expect(list.getByRole('listitem').filter({ hasText: 'Intern' })).toContainText('unsichtbar');
 
   const presence = list.getByRole('switch', { name: 'Anwesenheit' });
   await expect(presence).toHaveText('anwesend');
@@ -861,6 +863,36 @@ test('testet ein Skript auf der Programmseite', async ({ page }) => {
   await dialog.getByLabel('Skript').fill('dom.Kaputt(');
   await dialog.getByRole('button', { name: 'Ausführen' }).click();
   await expect(dialog.getByRole('alert')).toContainText('Syntaxfehler');
+});
+
+test('stellt Programme und Systemvariablen sichtbar und bedienbar ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/programs');
+  const item = page.getByRole('listitem').filter({ hasText: 'Alles aus' });
+  await item.getByLabel('bedienbar Alles aus').click();
+  await expect(item.getByLabel('bedienbar Alles aus')).not.toBeChecked();
+  await item.getByLabel('sichtbar Alles aus').click();
+  await expect(item.getByLabel('sichtbar Alles aus')).not.toBeChecked();
+  await expect(item.getByText('unsichtbar')).toBeVisible();
+  await page.reload();
+  await expect(item.getByLabel('bedienbar Alles aus')).not.toBeChecked();
+  await expect(item.getByLabel('sichtbar Alles aus')).not.toBeChecked();
+  await item.getByLabel('bedienbar Alles aus').click();
+  await expect(item.getByLabel('bedienbar Alles aus')).toBeChecked();
+  await item.getByLabel('sichtbar Alles aus').click();
+  await expect(item.getByLabel('sichtbar Alles aus')).toBeChecked();
+  await expect(item.getByText('unsichtbar')).toHaveCount(0);
+
+  await page.goto('/sysvars');
+  const sysvar = page.getByRole('listitem').filter({ hasText: 'Notiz' });
+  await sysvar.getByLabel('sichtbar Notiz').click();
+  await expect(sysvar.getByLabel('sichtbar Notiz')).not.toBeChecked();
+  await expect(sysvar.getByText('unsichtbar')).toBeVisible();
+  await page.reload();
+  await expect(sysvar.getByLabel('sichtbar Notiz')).not.toBeChecked();
+  await sysvar.getByLabel('sichtbar Notiz').click();
+  await expect(sysvar.getByLabel('sichtbar Notiz')).toBeChecked();
+  await expect(sysvar.getByText('unsichtbar')).toHaveCount(0);
 });
 
 test('ändert das eigene Passwort', async ({ page }) => {

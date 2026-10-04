@@ -1683,3 +1683,71 @@ func TestStackRunScript(t *testing.T) {
 		t.Fatal("tested scripts must be audit logged")
 	}
 }
+
+func TestStackLogicOptions(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	program := func(id string) map[string]interface{} {
+		send(t, conn, message{"type": "getPrograms", "requestId": id})
+		for _, p := range receive(t, conn, byRequestID(id))["programs"].([]interface{}) {
+			if p := p.(map[string]interface{}); p["id"] == 1200.0 {
+				return p
+			}
+		}
+		t.Fatal("program 1200 missing")
+		return nil
+	}
+	if p := program("p0"); p["operate"] != true || p["visible"] != true {
+		t.Fatalf("unexpected program: %v", p)
+	}
+	send(t, conn, message{"type": "setLogicOption", "requestId": "o1", "id": 1200, "option": "operate", "value": false})
+	if m := receive(t, conn, byRequestID("o1")); m["success"] != true {
+		t.Fatalf("setLogicOption failed: %v", m)
+	}
+	send(t, conn, message{"type": "setLogicOption", "requestId": "o2", "id": 1200, "option": "visible", "value": false})
+	receive(t, conn, byRequestID("o2"))
+	if p := program("p1"); p["operate"] != false || p["visible"] != false {
+		t.Fatalf("options not saved: %v", p)
+	}
+
+	// A user may no longer run it, an administrator still may
+	send(t, conn, message{"type": "saveUser", "requestId": "u", "id": 0, "fullName": "Anna Muster", "level": "user", "password": "geheim!1"})
+	receive(t, conn, byRequestID("u"))
+	other, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/", conn.RemoteAddr().String()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer other.Close()
+	loginAs(t, other, "AnnaMuster", "geheim!1")
+	send(t, other, message{"type": "runProgram", "requestId": "r1", "id": 1200})
+	if m := receive(t, other, byRequestID("r1")); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+	send(t, other, message{"type": "runProgram", "requestId": "r2", "id": 1201})
+	if m := receive(t, other, byRequestID("r2")); m["success"] != true {
+		t.Fatalf("an operable program must run: %v", m)
+	}
+	send(t, conn, message{"type": "runProgram", "requestId": "r3", "id": 1200})
+	if m := receive(t, conn, byRequestID("r3")); m["success"] != true {
+		t.Fatalf("administrators may run any program: %v", m)
+	}
+
+	// System variables: visible only
+	send(t, conn, message{"type": "setLogicOption", "requestId": "o3", "id": 950, "option": "visible", "value": false})
+	receive(t, conn, byRequestID("o3"))
+	send(t, conn, message{"type": "getSysvars", "requestId": "s"})
+	for _, sv := range receive(t, conn, byRequestID("s"))["sysvars"].([]interface{}) {
+		if sv := sv.(map[string]interface{}); sv["id"] == 950.0 && sv["visible"] != false {
+			t.Fatalf("sysvar still visible: %v", sv)
+		}
+	}
+	send(t, conn, message{"type": "setLogicOption", "requestId": "o4", "id": 950, "option": "operate", "value": false})
+	if m := receive(t, conn, byRequestID("o4")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("operate is for programs only, got %v", m)
+	}
+	send(t, conn, message{"type": "setLogicOption", "requestId": "o5", "id": 950, "option": "visible", "value": "yes"})
+	if m := receive(t, conn, byRequestID("o5")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+}

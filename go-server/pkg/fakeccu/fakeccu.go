@@ -242,7 +242,7 @@ func (c *CCU) runScript(body string) (string, error) {
 		case "get_programs":
 			var b strings.Builder
 			for _, p := range c.fixture.Programs {
-				fmt.Fprintf(&b, "P\t%d\t%t\t%t\t%s\n", p.ID, p.Active, p.Visible, p.Name)
+				fmt.Fprintf(&b, "P\t%d\t%t\t%t\t%t\t%s\n", p.ID, p.Active, p.Visible, !p.ReadOnly, p.Name)
 			}
 			return b.String(), nil
 		case "program_action":
@@ -422,6 +422,31 @@ func (c *CCU) runScript(body string) (string, error) {
 		case "clear_history":
 			c.historyCleared = true
 			return "OK", nil
+		case "set_logic_option":
+			id, _ := strconv.ParseInt(values["ID"], 10, 64)
+			value := values["VALUE"] == "true"
+			for i := range c.fixture.Programs {
+				if p := &c.fixture.Programs[i]; p.ID == id {
+					switch values["OPTION"] {
+					case "visible":
+						previous := p.Visible
+						p.Visible = value
+						return fmt.Sprintf("OK\t%t", previous), nil
+					case "operate":
+						previous := !p.ReadOnly
+						p.ReadOnly = !value
+						return fmt.Sprintf("OK\t%t", previous), nil
+					}
+				}
+			}
+			for i := range c.fixture.Sysvars {
+				if sv := &c.fixture.Sysvars[i]; sv.ID == id && values["OPTION"] == "visible" {
+					previous := sv.Visible
+					sv.Visible = value
+					return fmt.Sprintf("OK\t%t", previous), nil
+				}
+			}
+			return "NOT_FOUND", nil
 		case "check_script":
 			code := strings.ReplaceAll(values["CODE"], `^#"^"#^`, "^")
 			return checkTestScript(code), nil

@@ -32,14 +32,14 @@ export const List = ({ children, loading, ...props }: HTMLAttributes<HTMLUListEl
 );
 
 export const Item = ({ children }: Children) => (
-  <li className="flex min-h-16 items-center justify-between gap-3 px-4 py-3">{children}</li>
+  <li className="flex min-h-16 flex-wrap items-center justify-between gap-3 px-4 py-3">{children}</li>
 );
 
 export const Name = ({ children }: Children) => (
-  <span className="flex min-w-0 flex-wrap items-center gap-2 font-medium wrap-anywhere">{children}</span>
+  <span className="flex min-w-40 flex-1 flex-wrap items-center gap-2 font-medium wrap-anywhere">{children}</span>
 );
 
-export const Controls = ({ children }: Children) => <span className="flex shrink-0 items-center gap-2">{children}</span>;
+export const Controls = ({ children }: Children) => <span className="flex flex-wrap items-center justify-end gap-2">{children}</span>;
 
 const Toggle = ({ on, alarm, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { on: boolean; alarm?: boolean }) => (
   <button
@@ -149,6 +149,15 @@ export const SysvarControl = ({ sysvar, onSet }: { sysvar: Sysvar; onSet: (value
   }
 };
 
+// A checkbox of a program or system variable as the WebUI's lists have
+// them: aktiv, bedienbar, sichtbar
+const OptionCheckbox = ({ label, name, checked, onChange }: { label: string; name: string; checked: boolean; onChange: (checked: boolean) => void }) => (
+  <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
+    <input type="checkbox" checked={checked} aria-label={`${label} ${name}`} onChange={(event) => onChange(event.target.checked)} />
+    {label}
+  </label>
+);
+
 export const Sysvars = () => {
   const { showToast } = useToast();
   const { userLevel, elevated } = useWebSocketContext();
@@ -181,7 +190,7 @@ export const Sysvars = () => {
       )}
       <List aria-label={m.SYSVARS()} loading={loading}>
         {sysvars
-          .filter((sv) => sv.visible)
+          .filter((sv) => sv.visible || userLevel === 'admin')
           .map((sysvar) => (
             <Item key={sysvar.id}>
               {canConfigure ? (
@@ -193,7 +202,21 @@ export const Sysvars = () => {
               ) : (
                 <Name>{sysvar.name}</Name>
               )}
+              {!sysvar.visible && <Badge>{m.LOGIC_HIDDEN()}</Badge>}
               <Controls>
+                {canConfigure && (
+                  <OptionCheckbox
+                    label={m.LOGIC_VISIBLE()}
+                    name={sysvar.name}
+                    checked={sysvar.visible}
+                    onChange={(value) =>
+                      action.mutate(
+                        { type: 'setLogicOption', id: sysvar.id, option: 'visible', value },
+                        { onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`) },
+                      )
+                    }
+                  />
+                )}
                 <SysvarControl
                   sysvar={sysvar}
                   onSet={(value) =>
@@ -258,7 +281,7 @@ export const Programs = () => {
       {testing && <ScriptTestDialog onDone={() => setTesting(false)} />}
       <List aria-label={m.PROGRAMS()} loading={loading}>
         {programs
-          .filter((p) => p.visible)
+          .filter((p) => p.visible || userLevel === 'admin')
           .map((program) => (
             <Item key={program.id}>
               <Name>
@@ -269,27 +292,40 @@ export const Programs = () => {
                 >
                   {program.name}
                 </Link>{' '}
-                {!program.active && <Badge>{m.INACTIVE()}</Badge>}
+                {!program.active && <Badge>{m.INACTIVE()}</Badge>} {!program.visible && <Badge>{m.LOGIC_HIDDEN()}</Badge>}
               </Name>
               <Controls>
                 {canConfigure && (
-                  <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <input
-                      type="checkbox"
+                  <>
+                    <OptionCheckbox
+                      label={m.ACTIVE()}
+                      name={program.name}
                       checked={program.active}
-                      aria-label={`${m.ACTIVE()} ${program.name}`}
-                      onChange={(event) => run({ type: 'setProgramActive', id: program.id, active: event.target.checked })}
+                      onChange={(active) => run({ type: 'setProgramActive', id: program.id, active })}
                     />
-                    {m.ACTIVE()}
-                  </label>
+                    <OptionCheckbox
+                      label={m.LOGIC_OPERATE()}
+                      name={program.name}
+                      checked={program.operate}
+                      onChange={(value) => run({ type: 'setLogicOption', id: program.id, option: 'operate', value })}
+                    />
+                    <OptionCheckbox
+                      label={m.LOGIC_VISIBLE()}
+                      name={program.name}
+                      checked={program.visible}
+                      onChange={(value) => run({ type: 'setLogicOption', id: program.id, option: 'visible', value })}
+                    />
+                  </>
                 )}
-                <DialogButton
-                  type="button"
-                  aria-label={`${m.RUN()} ${program.name}`}
-                  onClick={() => run({ type: 'runProgram', id: program.id }, m.PROGRAM_RUN())}
-                >
-                  {m.RUN()}
-                </DialogButton>
+                {(program.operate || userLevel === 'admin') && (
+                  <DialogButton
+                    type="button"
+                    aria-label={`${m.RUN()} ${program.name}`}
+                    onClick={() => run({ type: 'runProgram', id: program.id }, m.PROGRAM_RUN())}
+                  >
+                    {m.RUN()}
+                  </DialogButton>
+                )}
               </Controls>
             </Item>
           ))}
