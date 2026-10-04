@@ -125,6 +125,7 @@ func Scripts() map[string]string {
 		"set_location":                setLocationScript,
 		"save_system":                 saveSystemScript,
 		"get_build_label":             getBuildLabelScript,
+		"get_device_health":           getDeviceHealthScript,
 		"get_users":                   getUsersScript,
 		"save_user":                   saveUserScript,
 		"delete_user":                 deleteUserScript,
@@ -184,6 +185,9 @@ var saveSystemScript string
 
 //go:embed scripts/get_build_label.tcl
 var getBuildLabelScript string
+
+//go:embed scripts/get_device_health.tcl
+var getDeviceHealthScript string
 
 //go:embed scripts/get_users.tcl
 var getUsersScript string
