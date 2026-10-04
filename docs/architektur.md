@@ -153,7 +153,11 @@ Benutzers:
 - **CGI-Seiten**, genau wie die WebUI sie aufruft: Backup (`cp_security.cgi?action=create_backup`),
   Restore, Werkseinstellungen, Sicherheitsschlüssel, CCU-Firmware (`cp_maintenance.cgi`), Add-ons
   (`cp_software.cgi`), Uploads über `fileupload.ccc`.
-- **HMServer** für Heizgruppen (`/pages/jpages/group/*`).
+- **HMServer** für Heizgruppen (`/pages/jpages/group/*`) und Geräte-Firmware
+  (`/pages/jpages/system/DeviceFirmware/addFirmware`, `deleteFirmware`), danach
+  `refreshDeployedDeviceFirmwareList` bei BidCos-RF und HmIP-RF.
+- **eQ-3-Updateserver** (`ccu3-update.homematic.com`): Liste der neuesten Geräte-Firmware
+  (`/firmware/api/firmware/search/DEVICE`) und Download, wie `webui.js` (`homematic.com`).
 
 ### Dateien und Befehle
 

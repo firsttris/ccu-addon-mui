@@ -1,0 +1,338 @@
+package websocket
+
+import (
+	"bufio"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"sync"
+	"time"
+
+	"ccu-addon-mui-server/pkg/audit"
+	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/backup"
+	"ccu-addon-mui-server/pkg/logger"
+	"ccu-addon-mui-server/pkg/rega"
+)
+
+// Device firmware: what is on the CCU (/etc/config/firmware), the newest
+// versions eQ-3 offers, and getting one onto the CCU without the detour
+// over the user's computer. The WebUI only links to eQ-3's download and
+// has the file uploaded again on its device firmware page; here the server
+// downloads it and hands it to the HMServer itself.
+
+var deviceFirmwareClient = &http.Client{Timeout: 2 * time.Minute}
+
+// How long eQ-3's list of device firmware is kept
+const deviceFirmwareCatalogLifetime = time.Hour
+
+type deviceFirmwareCatalog struct {
+	mu       sync.Mutex
+	versions []DeviceFirmwareVersion
+	fetched  time.Time
+}
+
+// DeviceFirmwareVersion is the newest firmware eQ-3 offers for a device
+// type; Type is the device type as the CCU names it, in lower case
+type DeviceFirmwareVersion struct {
+	Type    string `json:"type"`
+	Version string `json:"version"`
+}
+
+// catalogTypes are the device types an entry of eQ-3's list stands for,
+// in lower case, as webui.js fetchAndSetDeviceVersion maps them: the last
+// "_" becomes a space (SPHM-1039), HmIP-HAP-JS1 is "HmIP-HAP JS1"
+// (SPHM-1034) and HmIP-HAP serves the HAP-B1 too (SPHM-1022)
+func catalogTypes(eq3Type string) []string {
+	t := strings.ToLower(eq3Type)
+	if i := strings.LastIndex(t, "_"); i >= 0 {
+		t = t[:i] + " " + t[i+1:]
+	}
+	switch eq3Type {
+	case "HmIP-HAP-JS1":
+		return []string{"hmip-hap js1"}
+	case "HmIP-HAP":
+		return []string{t, "hmip-hap-b1"}
+	}
+	return []string{t}
+}
+
+// downloadProduct is the product name eQ-3's download takes for a device
+// type (webui.js setDeviceVersion: deviceTypeForUrl)
+func downloadProduct(deviceType string) string {
+	switch deviceType {
+	case "HmIP-HAP JS1":
+		return "HmIP-HAP-JS1"
+	case "HmIP-HAP-B1":
+		return "HmIP-HAP"
+	}
+	if i := strings.LastIndex(deviceType, " "); i >= 0 {
+		return deviceType[:i] + "_" + deviceType[i+1:]
+	}
+	return deviceType
+}
+
+// The list comes as JSONP: homematic.com.setDeviceFirmwareVersions([...])
+var catalogRegex = regexp.MustCompile(`(?s)setDeviceFirmwareVersions\((.*)\)`)
+
+// fetchDeviceFirmwareCatalog asks eQ-3 for the newest device firmware, as
+// webui.js getListOfAvailableFirmware does
+func (s *Server) fetchDeviceFirmwareCatalog() ([]DeviceFirmwareVersion, error) {
+	c := &s.deviceFirmwareCatalog
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.versions != nil && time.Since(c.fetched) < deviceFirmwareCatalogLifetime {
+		return c.versions, nil
+	}
+	u := s.cfg.DeviceFirmwareServer + "/firmware/api/firmware/search/DEVICE?product=HM-CCU3&version=" +
+		url.QueryEscape(firmwareVersion())
+	resp, err := deviceFirmwareClient.Get(u)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("the update server returned status %d", resp.StatusCode)
+	}
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return nil, err
+	}
+	match := catalogRegex.FindSubmatch(body)
+	if match == nil {
+		return nil, errors.New("unexpected answer from the update server")
+	}
+	var entries []struct {
+		Type    string `json:"type"`
+		Version string `json:"version"`
+	}
+	if err := json.Unmarshal(match[1], &entries); err != nil {
+		return nil, fmt.Errorf("unexpected answer from the update server: %w", err)
+	}
+	versions := []DeviceFirmwareVersion{}
+	for _, e := range entries {
+		if e.Type == "" || e.Version == "" || e.Version == "n/a" {
+			continue
+		}
+		for _, t := range catalogTypes(e.Type) {
+			versions = append(versions, DeviceFirmwareVersion{Type: t, Version: e.Version})
+		}
+	}
+	c.versions, c.fetched = versions, time.Now()
+	return versions, nil
+}
+
+// ccuSerial is the CCU's serial number for eQ-3's download, "0" if unknown
+// (CCU.getSerial, webui.js homematic.com.init)
+func (s *Server) ccuSerial() string {
+	file, err := os.Open(s.cfg.IDsFile)
+	if err != nil {
+		return "0"
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		key, value, ok := strings.Cut(scanner.Text(), "=")
+		if ok && strings.TrimSpace(key) == "SerialNumber" && strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return "0"
+}
+
+// downloadDeviceFirmware fetches the newest firmware for a device type
+// from eQ-3 (downloadURLServer + "&serial=...&product=...") into a file
+func (s *Server) downloadDeviceFirmware(deviceType string) (string, error) {
+	u := s.cfg.DeviceFirmwareServer + "/firmware/download?cmd=download&serial=" + url.QueryEscape(s.ccuSerial()) +
+		"&product=" + url.QueryEscape(downloadProduct(deviceType))
+	resp, err := deviceFirmwareClient.Get(u)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("the update server returned status %d", resp.StatusCode)
+	}
+	return s.backup.SaveDownload(resp.Body)
+}
+
+func (s *Server) deviceFirmwareDir() string {
+	return filepath.Join(s.cfg.ConfigDir, "firmware")
+}
+
+// refreshDeviceFirmware lets the interface processes read the firmware
+// directory again, as AvailableFirmware.ftl does after adding or deleting
+func (s *Server) refreshDeviceFirmware() {
+	if s.rpc == nil {
+		return
+	}
+	for _, iface := range []string{"BidCos-RF", "HmIP-RF"} {
+		if err := s.rpc.RefreshDeployedDeviceFirmwareList(iface); err != nil {
+			logger.Debugf("refreshDeployedDeviceFirmwareList on %s failed: %v", iface, err)
+		}
+	}
+}
+
+type deviceFirmwareResponse struct {
+	Type      string `json:"type"`
+	RequestID string `json:"requestId,omitempty"`
+	Success   bool   `json:"success"`
+	// Pointers: an empty list is still sent, a missing one not
+	Files     *[]backup.DeviceFirmware `json:"files,omitempty"`
+	Versions  *[]DeviceFirmwareVersion `json:"versions,omitempty"`
+	Changelog *string                  `json:"changelog,omitempty"`
+}
+
+// handleDeviceFirmware: getDeviceFirmware lists the firmware on the CCU,
+// checkDeviceFirmware the newest versions at eQ-3,
+// getDeviceFirmwareChangelog shows one's changelog (administrators);
+// downloadDeviceFirmware, addDeviceFirmware (an upload prepared with
+// prepareDeviceFirmwareUpload) and deleteDeviceFirmware change them:
+// elevated, with audit log and a WebUI session for the HMServer.
+func (s *Server) handleDeviceFirmware(client *Client, msgType string, message []byte) {
+	var msg struct {
+		RequestID  string `json:"requestId"`
+		ID         string `json:"id"`
+		DeviceType string `json:"deviceType"`
+		FileName   string `json:"fileName"`
+		Password   string `json:"password"`
+	}
+	if err := json.Unmarshal(message, &msg); err != nil {
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+		return
+	}
+	if client.level != auth.LevelAdmin {
+		s.sendRequestError(client, msg.RequestID, "only administrators may manage device firmware", "FORBIDDEN")
+		return
+	}
+	response := deviceFirmwareResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}
+	switch msgType {
+	case "getDeviceFirmware":
+		files, err := backup.ListDeviceFirmware(s.deviceFirmwareDir())
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getDeviceFirmware failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		response.Files = &files
+		s.sendJSON(client, response)
+		return
+	case "checkDeviceFirmware":
+		versions, err := s.fetchDeviceFirmwareCatalog()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "checkDeviceFirmware failed: "+err.Error(), "UPDATE_SERVER_ERROR")
+			return
+		}
+		response.Versions = &versions
+		s.sendJSON(client, response)
+		return
+	case "getDeviceFirmwareChangelog":
+		changelog, err := backup.DeviceFirmwareChangelog(s.deviceFirmwareDir(), msg.ID)
+		if errors.Is(err, backup.ErrUploadNotFound) {
+			s.sendRequestError(client, msg.RequestID, "no changelog", rega.SetNotFound)
+			return
+		}
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "getDeviceFirmwareChangelog failed: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		response.Changelog = &changelog
+		s.sendJSON(client, response)
+		return
+	}
+
+	entry := audit.Entry{User: client.user, Action: msgType, Target: msg.DeviceType}
+	if msgType != "downloadDeviceFirmware" {
+		entry.Target = msg.ID
+	}
+	if code, errorMsg := configureError(client); code != "" {
+		s.recordAudit(entry, code)
+		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		return
+	}
+	if s.backup == nil {
+		s.recordAudit(entry, "NOT_SUPPORTED")
+		s.sendRequestError(client, msg.RequestID, msgType+" needs the WebUI", "NOT_SUPPORTED")
+		return
+	}
+	username := client.user
+	if s.auth == nil {
+		username = "Admin"
+	}
+	var err error
+	switch msgType {
+	case "downloadDeviceFirmware":
+		if msg.DeviceType == "" || len(msg.DeviceType) > 64 || strings.ContainsAny(msg.DeviceType, "/\\\"\r\n") {
+			s.recordAudit(entry, "INVALID_VALUE")
+			s.sendRequestError(client, msg.RequestID, "invalid device type", "INVALID_VALUE")
+			return
+		}
+		// The session first: no download for nothing
+		if err = s.backup.EnsureSession(username, msg.Password); err != nil {
+			break
+		}
+		var path string
+		path, err = s.downloadDeviceFirmware(msg.DeviceType)
+		if err != nil {
+			s.recordAudit(entry, "UPDATE_SERVER_ERROR")
+			s.sendRequestError(client, msg.RequestID, "downloadDeviceFirmware failed: "+err.Error(), "UPDATE_SERVER_ERROR")
+			return
+		}
+		err = s.backup.AddDeviceFirmware(username, msg.Password, path, downloadProduct(msg.DeviceType)+".tgz")
+		os.Remove(path)
+	case "addDeviceFirmware":
+		var path string
+		if path, err = s.backup.DeviceFirmwarePath(msg.ID); err == nil {
+			err = s.backup.AddDeviceFirmware(username, msg.Password, path, msg.FileName)
+			if !errors.Is(err, backup.ErrSessionRequired) {
+				// Kept for the retry with the password
+				s.backup.Discard(msg.ID)
+			}
+		}
+	case "deleteDeviceFirmware":
+		files, listErr := backup.ListDeviceFirmware(s.deviceFirmwareDir())
+		var name string
+		for _, f := range files {
+			if f.ID == msg.ID {
+				name = f.Name
+			}
+		}
+		if listErr != nil || name == "" {
+			s.recordAudit(entry, rega.SetNotFound)
+			s.sendRequestError(client, msg.RequestID, "unknown device firmware", rega.SetNotFound)
+			return
+		}
+		entry.Target = name
+		err = s.backup.DeleteDeviceFirmware(username, msg.Password, msg.ID, name)
+	}
+	if err != nil {
+		code := "CCU_ERROR"
+		switch {
+		case errors.Is(err, backup.ErrSessionRequired):
+			code = "PASSWORD_REQUIRED"
+		case errors.Is(err, backup.ErrInvalidCredentials):
+			code = "INVALID_CREDENTIALS"
+		case errors.Is(err, backup.ErrInvalidDeviceFirmware):
+			code = "INVALID_FIRMWARE"
+		case errors.Is(err, backup.ErrDeviceFirmwareNeedsNewerCCU):
+			code = "FIRMWARE_NEEDS_NEWER_CCU"
+		case errors.Is(err, backup.ErrUploadNotFound):
+			code = rega.SetNotFound
+		}
+		s.recordAudit(entry, code)
+		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), code)
+		return
+	}
+	s.recordAudit(entry, rega.SetOK)
+	s.refreshDeviceFirmware()
+	if files, err := backup.ListDeviceFirmware(s.deviceFirmwareDir()); err == nil {
+		response.Files = &files
+	}
+	s.sendJSON(client, response)
+}

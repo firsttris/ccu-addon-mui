@@ -71,6 +71,13 @@ type Config struct {
 	// BackupDir keeps created backups until they are downloaded; on the
 	// CCU /tmp is in RAM, not on the flash memory being backed up.
 	BackupDir string
+	// DeviceFirmwareServer is eQ-3's update server, which lists and serves
+	// the newest device firmware (webui.js homematic.com: m_URLServer,
+	// downloadURLServer)
+	DeviceFirmwareServer string
+	// IDsFile holds the CCU's serial number, sent along with a download
+	// (CCU.getSerial: /var/ids SerialNumber)
+	IDsFile string
 }
 
 func Load() *Config {
@@ -96,38 +103,40 @@ func Load() *Config {
 		WSPort: getEnvInt("WS_PORT", 8088),
 		// Only lighttpd (or the Vite dev proxy) needs to reach the
 		// WebSocket server; it must not be reachable directly from the LAN.
-		WSBindHost:         getEnv("WS_BIND_HOST", "127.0.0.1"),
-		RPCPort:            getEnvInt("RPC_PORT", rpcPort),
-		HmIPPort:           getEnvInt("HMIP_PORT", hmipPort),
-		VirtualDevicesPort: getEnvInt("VIRTUAL_DEVICES_PORT", virtualDevicesPort),
-		WiredPort:          getEnvInt("WIRED_PORT", wiredPort),
-		RPCServerPort:      getEnvInt("RPC_SERVER_PORT", 9099),
-		CCUHost:            ccuHost,
-		CCUUser:            getEnv("CCU_USER", ""),
-		CCUPass:            getEnv("CCU_PASS", ""),
-		Debug:              getEnv("DEBUG", "false") == "true",
-		CallbackHost:       getEnv("CALLBACK_HOST", "127.0.0.1"),
-		RegaPort:           getEnvInt("REGA_PORT", regaPort),
-		SysvarInterval:     time.Duration(getEnvInt("SYSVAR_INTERVAL", 5)) * time.Second,
-		AuthMode:           getEnv("AUTH_MODE", "ccu"),
-		WebUIURL:           getEnv("CCU_WEBUI_URL", "http://"+ccuHost),
-		AuthKeyFile:        getEnv("AUTH_KEY_FILE", defaultAuthKeyFile()),
-		AuditLogFile:       getEnv("AUDIT_LOG_FILE", defaultConfigFile("mui-audit.log")),
-		SessionsFile:       getEnv("SESSIONS_FILE", defaultConfigFile("mui-sessions.json")),
-		PushFile:           getEnv("PUSH_FILE", defaultConfigFile("mui-push.json")),
-		PushSubject:        getEnv("PUSH_SUBJECT", "https://github.com/firsttris/ccu-addon-mui"),
-		AddonsDir:          getEnv("ADDONS_DIR", "/etc/config/rc.d"),
-		SyslogConfig:       getEnv("SYSLOG_CONFIG", "/etc/config/syslog"),
-		LogDir:             getEnv("LOG_DIR", "/var/log"),
-		TimeConfFile:       getEnv("TIME_CONF_FILE", "/etc/config/time.conf"),
-		NTPClientFile:      getEnv("NTP_CLIENT_FILE", "/etc/config/ntpclient"),
-		TZFile:             getEnv("TZ_FILE", "/etc/config/TZ"),
-		GroupsFile:         getEnv("GROUPS_FILE", "/etc/config/groups.gson"),
-		ConfigDir:          getEnv("CCU_CONFIG_DIR", "/etc/config"),
-		StatusDir:          getEnv("CCU_STATUS_DIR", "/var/status"),
-		DiagramsFile:       getEnv("DIAGRAMS_FILE", defaultConfigFile("mui-diagrams.json")),
-		DiagramsDir:        getEnv("DIAGRAMS_DIR", defaultDataDir("mui-diagrams")),
-		BackupDir:          getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
+		WSBindHost:           getEnv("WS_BIND_HOST", "127.0.0.1"),
+		RPCPort:              getEnvInt("RPC_PORT", rpcPort),
+		HmIPPort:             getEnvInt("HMIP_PORT", hmipPort),
+		VirtualDevicesPort:   getEnvInt("VIRTUAL_DEVICES_PORT", virtualDevicesPort),
+		WiredPort:            getEnvInt("WIRED_PORT", wiredPort),
+		RPCServerPort:        getEnvInt("RPC_SERVER_PORT", 9099),
+		CCUHost:              ccuHost,
+		CCUUser:              getEnv("CCU_USER", ""),
+		CCUPass:              getEnv("CCU_PASS", ""),
+		Debug:                getEnv("DEBUG", "false") == "true",
+		CallbackHost:         getEnv("CALLBACK_HOST", "127.0.0.1"),
+		RegaPort:             getEnvInt("REGA_PORT", regaPort),
+		SysvarInterval:       time.Duration(getEnvInt("SYSVAR_INTERVAL", 5)) * time.Second,
+		AuthMode:             getEnv("AUTH_MODE", "ccu"),
+		WebUIURL:             getEnv("CCU_WEBUI_URL", "http://"+ccuHost),
+		AuthKeyFile:          getEnv("AUTH_KEY_FILE", defaultAuthKeyFile()),
+		AuditLogFile:         getEnv("AUDIT_LOG_FILE", defaultConfigFile("mui-audit.log")),
+		SessionsFile:         getEnv("SESSIONS_FILE", defaultConfigFile("mui-sessions.json")),
+		PushFile:             getEnv("PUSH_FILE", defaultConfigFile("mui-push.json")),
+		PushSubject:          getEnv("PUSH_SUBJECT", "https://github.com/firsttris/ccu-addon-mui"),
+		AddonsDir:            getEnv("ADDONS_DIR", "/etc/config/rc.d"),
+		SyslogConfig:         getEnv("SYSLOG_CONFIG", "/etc/config/syslog"),
+		LogDir:               getEnv("LOG_DIR", "/var/log"),
+		TimeConfFile:         getEnv("TIME_CONF_FILE", "/etc/config/time.conf"),
+		NTPClientFile:        getEnv("NTP_CLIENT_FILE", "/etc/config/ntpclient"),
+		TZFile:               getEnv("TZ_FILE", "/etc/config/TZ"),
+		GroupsFile:           getEnv("GROUPS_FILE", "/etc/config/groups.gson"),
+		ConfigDir:            getEnv("CCU_CONFIG_DIR", "/etc/config"),
+		StatusDir:            getEnv("CCU_STATUS_DIR", "/var/status"),
+		DiagramsFile:         getEnv("DIAGRAMS_FILE", defaultConfigFile("mui-diagrams.json")),
+		DiagramsDir:          getEnv("DIAGRAMS_DIR", defaultDataDir("mui-diagrams")),
+		BackupDir:            getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
+		DeviceFirmwareServer: getEnv("DEVICE_FIRMWARE_SERVER", "https://ccu3-update.homematic.com"),
+		IDsFile:              getEnv("IDS_FILE", "/var/ids"),
 	}
 }
 

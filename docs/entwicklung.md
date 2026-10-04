@@ -200,6 +200,8 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `BACKUP_DIR` | `$TMPDIR/mui-backups` | Backups bis zum Download, Uploads |
 | `CCU_CONFIG_DIR`, `CCU_STATUS_DIR` | `/etc/config`, `/var/status` | Konfiguration der CCU |
 | `ADDONS_DIR`, `SYSLOG_CONFIG`, `LOG_DIR`, `TIME_CONF_FILE`, `NTP_CLIENT_FILE`, `TZ_FILE`, `GROUPS_FILE` | Pfade der CCU | Zusatzsoftware, Logs, Uhr, Heizgruppen |
+| `DEVICE_FIRMWARE_SERVER` | `https://ccu3-update.homematic.com` | eQ-3-Updateserver für Geräte-Firmware |
+| `IDS_FILE` | `/var/ids` | Seriennummer der CCU für den Firmware-Download |
 | `PUSH_SUBJECT` | GitHub-URL | Kontakt in Push-Anfragen |
 | `DEBUG` | `false` | ausführliches Log |
 

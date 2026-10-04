@@ -531,7 +531,8 @@
           "FIRMWARE": "2.8",
           "FLAGS": 1,
           "AVAILABLE_FIRMWARE": "2.11",
-          "RX_MODE": 1
+          "RX_MODE": 1,
+          "UPDATABLE": 1
         },
         {
           "ADDRESS": "LEQ0000001:1",
@@ -562,7 +563,8 @@
           "FIRMWARE": "1.4",
           "FLAGS": 1,
           "AVAILABLE_FIRMWARE": "1.5",
-          "RX_MODE": 28
+          "RX_MODE": 28,
+          "UPDATABLE": 1
         },
         {
           "ADDRESS": "LEQ0000004:1",
@@ -4760,7 +4762,8 @@
           ],
           "VERSION": 4,
           "FIRMWARE": "1.2.10",
-          "FLAGS": 1
+          "FLAGS": 1,
+          "UPDATABLE": 1
         },
         {
           "ADDRESS": "0000DBE9A5C1F2:0",
@@ -4802,7 +4805,8 @@
           ],
           "VERSION": 12,
           "FIRMWARE": "1.4.8",
-          "FLAGS": 1
+          "FLAGS": 1,
+          "UPDATABLE": 1
         },
         {
           "ADDRESS": "00151BE9A1C2D3:4",
@@ -4835,7 +4839,7 @@
           "FLAGS": 1,
           "AVAILABLE_FIRMWARE": "1.2.6",
           "FIRMWARE_UPDATE_STATE": "READY_FOR_UPDATE",
-          "UPDATABLE": true
+          "UPDATABLE": 1
         },
         {
           "ADDRESS": "0008DA8A9F1234:1",
@@ -4865,7 +4869,8 @@
           ],
           "VERSION": 4,
           "FIRMWARE": "1.6.2",
-          "FLAGS": 1
+          "FLAGS": 1,
+          "UPDATABLE": 1
         },
         {
           "ADDRESS": "000855699C4F38:1",
@@ -4914,7 +4919,8 @@
           ],
           "VERSION": 10,
           "FIRMWARE": "1.2.4",
-          "FLAGS": 1
+          "FLAGS": 1,
+          "UPDATABLE": 1
         },
         {
           "ADDRESS": "00195F29B04142:0",
@@ -5010,7 +5016,8 @@
           ],
           "VERSION": 4,
           "FIRMWARE": "1.2.4",
-          "FLAGS": 1
+          "FLAGS": 1,
+          "UPDATABLE": 1
         },
         {
           "ADDRESS": "0019A0C9B3E2D1:0",

@@ -1463,6 +1463,14 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		c.handleGroups(w, r)
 		return
 	}
+	if strings.HasPrefix(r.URL.Path, "/pages/jpages/system/DeviceFirmware/") && r.Method == http.MethodPost {
+		c.handleDeviceFirmware(w, r)
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/firmware/") {
+		c.handleUpdateServer(w, r)
+		return
+	}
 	if r.URL.Path == "/config/cp_security.cgi" {
 		c.handleBackup(w, r)
 		return
@@ -1907,6 +1915,9 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 			return true, ""
 		}
 		return nil, "-2:Unknown instance"
+	case "refreshDeployedDeviceFirmwareList":
+		c.refreshFirmware(iface, data)
+		return true, ""
 	case "updateFirmware":
 		// BidCos: transfers and installs the firmware the CCU has. A device
 		// that is not always listening (RX_MODE without ALWAYS) has to be

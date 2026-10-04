@@ -73,6 +73,9 @@ export default defineConfig({
         DIAGRAMS_DIR: path.join(stateDir, 'diagrams'),
         CCU_CONFIG_DIR: stateDir,
         CCU_STATUS_DIR: path.join(stateDir, 'status'),
+        // The fake CCU also stands in for eQ-3's update server
+        DEVICE_FIRMWARE_SERVER: FAKE_CCU_URL,
+        IDS_FILE: path.join(stateDir, 'ids'),
       },
     },
     {
