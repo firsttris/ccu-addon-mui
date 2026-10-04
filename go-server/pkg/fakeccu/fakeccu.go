@@ -29,8 +29,12 @@ import (
 var interfaceNames = []string{"BidCos-RF", "HmIP-RF", "VirtualDevices"}
 
 type CCU struct {
-	mu      sync.Mutex
-	fixture *Fixture
+	mu sync.Mutex
+	// GroupsFile is where the fake HMServer keeps the heating groups
+	// (groups.gson); empty: none
+	GroupsFile    string
+	groupMetadata map[string]string
+	fixture       *Fixture
 	// original is the fixture as loaded, for Reset
 	original []byte
 
@@ -221,6 +225,8 @@ func (c *CCU) runScript(body string) (string, error) {
 			return c.setName(values["ADDRESS"], values["NAME"]), nil
 		case "get_inbox":
 			return c.getInbox(), nil
+		case "setup_group_device":
+			return c.setupGroupDevice(values), nil
 		case "accept_device":
 			for i, address := range c.fixture.Inbox {
 				if address == values["ADDRESS"] {
@@ -1387,6 +1393,10 @@ func (c *CCU) handleControl(w http.ResponseWriter, r *http.Request) {
 func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/fake/") {
 		c.handleControl(w, r)
+		return
+	}
+	if strings.HasPrefix(r.URL.Path, "/pages/jpages/group/") && r.Method == http.MethodPost {
+		c.handleGroups(w, r)
 		return
 	}
 	if r.URL.Path == "/config/cp_security.cgi" {

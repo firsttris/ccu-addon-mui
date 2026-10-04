@@ -37,6 +37,9 @@ var getInboxScript string
 //go:embed scripts/accept_device.tcl
 var acceptDeviceScript string
 
+//go:embed scripts/setup_group_device.tcl
+var setupGroupDeviceScript string
+
 //go:embed scripts/get_sysvars.tcl
 var getSysvarsScript string
 
@@ -93,6 +96,7 @@ func Scripts() map[string]string {
 		"get_device_names":            getDeviceNamesScript,
 		"get_inbox":                   getInboxScript,
 		"accept_device":               acceptDeviceScript,
+		"setup_group_device":          setupGroupDeviceScript,
 		"get_sysvars":                 getSysvarsScript,
 		"set_sysvar":                  setSysvarScript,
 		"get_programs":                getProgramsScript,

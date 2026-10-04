@@ -128,7 +128,10 @@ export type ServerMessage =
   | SaveDiagramResponse
   | DeleteDiagramResponse
   | GetGeneralSettingsResponse
-  | SetGeneralSettingsResponse;
+  | SetGeneralSettingsResponse
+  | GetHeatingGroupMembersResponse
+  | SaveHeatingGroupResponse
+  | DeleteHeatingGroupResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -241,6 +244,9 @@ export interface Protocol {
   deleteDiagram: DeleteDiagramCall;
   getGeneralSettings: GetGeneralSettingsCall;
   setGeneralSettings: SetGeneralSettingsCall;
+  getHeatingGroupMembers: GetHeatingGroupMembersCall;
+  saveHeatingGroup: SaveHeatingGroupCall;
+  deleteHeatingGroup: DeleteHeatingGroupCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3888,6 +3894,120 @@ export interface SetGeneralSettingsRequest {
  */
 export interface SetGeneralSettingsResponse {
   type: "setGeneralSettings_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetHeatingGroupMembersCall".
+ */
+export interface GetHeatingGroupMembersCall {
+  request: GetHeatingGroupMembersRequest;
+  response: GetHeatingGroupMembersResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetHeatingGroupMembersRequest".
+ */
+export interface GetHeatingGroupMembersRequest {
+  type: "getHeatingGroupMembers";
+  requestId?: string;
+  groupType: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetHeatingGroupMembersResponse".
+ */
+export interface GetHeatingGroupMembersResponse {
+  type: "getHeatingGroupMembers_response";
+  requestId?: string;
+  members: {
+    assignable: HeatingGroupCandidate[];
+    leftover: HeatingGroupCandidate[];
+  };
+}
+/**
+ * A channel a heating group may contain
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "HeatingGroupCandidate".
+ */
+export interface HeatingGroupCandidate {
+  /**
+   * The channel address
+   */
+  id: string;
+  type: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveHeatingGroupCall".
+ */
+export interface SaveHeatingGroupCall {
+  request: SaveHeatingGroupRequest;
+  response: SaveHeatingGroupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveHeatingGroupRequest".
+ */
+export interface SaveHeatingGroupRequest {
+  type: "saveHeatingGroup";
+  requestId?: string;
+  group: HeatingGroupChange;
+  /**
+   * For a new WebUI session, when the last answer was PASSWORD_REQUIRED
+   */
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "HeatingGroupChange".
+ */
+export interface HeatingGroupChange {
+  /**
+   * 0 for a new group
+   */
+  id: number;
+  name: string;
+  type: "hmip.heating.group" | "HomeMatic.heating";
+  forbidSingleOperation?: boolean;
+  members?: string[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveHeatingGroupResponse".
+ */
+export interface SaveHeatingGroupResponse {
+  type: "saveHeatingGroup_response";
+  requestId?: string;
+  success: boolean;
+  id: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteHeatingGroupCall".
+ */
+export interface DeleteHeatingGroupCall {
+  request: DeleteHeatingGroupRequest;
+  response: DeleteHeatingGroupResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteHeatingGroupRequest".
+ */
+export interface DeleteHeatingGroupRequest {
+  type: "deleteHeatingGroup";
+  requestId?: string;
+  id: number;
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteHeatingGroupResponse".
+ */
+export interface DeleteHeatingGroupResponse {
+  type: "deleteHeatingGroup_response";
   requestId?: string;
   success: boolean;
 }

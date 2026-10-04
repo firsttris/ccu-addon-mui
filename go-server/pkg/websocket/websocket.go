@@ -552,6 +552,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleGeneralSettings(client, msgType, message)
 	case "getDiagrams", "getDiagramData", "saveDiagram", "deleteDiagram":
 		s.handleDiagrams(client, msgType, message)
+	case "getHeatingGroupMembers", "saveHeatingGroup", "deleteHeatingGroup":
+		s.handleHeatingGroupChange(client, msgType, message)
 	case "getHeatingGroups":
 		s.handleHeatingGroups(client, requestID)
 	case "runScript":
