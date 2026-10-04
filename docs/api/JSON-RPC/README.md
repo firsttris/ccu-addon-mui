@@ -1,8 +1,39 @@
-[English Version](./README.en.md)
+# JSON-RPC
 
-# HomeMatic JSON-RPC 
+Die API der WebUI unter `/api/homematic.cgi`. Sie fasst Funktionen der Zentrale hinter einer Schnittstelle
+zusammen und arbeitet mit Sitzungen der WebUI: erst anmelden, dann die Sitzungs-ID bei jedem Aufruf mitgeben.
 
-JSON API Die HomeMatic JSON API vereinheitlicht Zugriff auf die verschiedenen Teile der HomeMatic Zentrale unter einer einheitlichen Schnittstelle. Diese Schnittstelle basiert auf JSON-RPC, einer Form des entfernen Prozeduraufrufs, der auf JSON aufsetzt. 
+## Aufruf
+
+```bash
+curl -s http://<CCU>/api/homematic.cgi \
+  -d '{"version":"1.1","method":"Session.login","params":{"username":"Admin","password":"…"}}'
+# {"version":"1.1","result":"Ab12Cd34Ef","error":null}
+
+curl -s http://<CCU>/api/homematic.cgi \
+  -d '{"version":"1.1","method":"CCU.getVersion","params":{"_session_id_":"Ab12Cd34Ef"}}'
+
+curl -s http://<CCU>/api/homematic.cgi \
+  -d '{"version":"1.1","method":"Session.logout","params":{"_session_id_":"Ab12Cd34Ef"}}'
+```
+
+Die CCU erlaubt nur wenige gleichzeitige Sitzungen; nicht mehr gebrauchte deshalb abmelden. Die
+Privilegstufe in der Tabelle unten ist die Mindeststufe des angemeldeten Benutzers.
+
+## Wie das Add-on JSON-RPC nutzt
+
+- **Anmeldung prüfen**: `Session.login` mit den eingegebenen Daten, bei Erfolg sofort `Session.logout`.
+- **Systemsteuerung** mit einer gehaltenen Sitzung des Administrators: `CCU.setSecurityLevel`, `CCU.setSSH`,
+  `CCU.setSSHPassword`, `CCU.restartSSHDaemon`, `CCU.setAuthEnabled`, `CCU.setHttpsRedirectEnabled`,
+  `Firewall.setConfiguration`, `BidCoS_RF.setConfigurationRF`, `BidCoS_Wired.setConfigurationWired`,
+  `BidCoS.changeLanGatewayKey`, `BidCoS_RF.isKeySet`, `BidCoS_RF.validateKey`, `User.restartLighttpd`.
+
+Alles andere erledigt es direkt über [ReGa](../Rega/README.md) und [XML-RPC](../XML-RPC/README.md).
+
+Die vollständige, aktuelle Liste der Methoden steht in `www/api/methods.conf` in
+[OpenCCU-Base](https://github.com/OpenCCU/OpenCCU-Base/blob/main/www/api/methods.conf); die Umsetzung der
+Methoden unter `www/api/methods/`. `system.listMethods` und `system.describe` liefern sie auch zur Laufzeit.
+Die Tabelle unten ist eine Übersicht aus einer älteren Version und nicht vollständig.
 
 ## Methodenübersicht
 
