@@ -85,11 +85,15 @@ erreichbar ist. Dann erscheint ein Hinweis.
 | **Regen, Helligkeit** | Regen ja oder nein mit Heizung und Temperatur; Helligkeit mit Durchschnitt, Minimum und Maximum |
 | **CO₂, Feinstaub** | Messwert mit Bewertung (CO₂ nach Umweltbundesamt, Feinstaub nach dem Europäischen Luftqualitätsindex) |
 | **Bodenfeuchte** | Feuchte in Prozent mit Bewertung, Bodentemperatur |
+| **Abstand** (ELV-SH-DUSI) | Distanz, Höhe (Referenzhöhe minus Distanz) und Referenzhöhe |
+| **Durchgang** (HmIP-SPDR) | erkannter und letzter Durchgang, Zähler je Richtung mit Überlauf |
+| **Füllstand** (HM-Sen-Wa-Od) | Füllstand in Prozent und die Füllmenge in Litern aus der eingestellten Tankform |
 | **Bewässerung** | Ventil öffnen und schließen, auch für 10, 30 oder 60 Minuten; Wasserzähler mit Durchfluss und Mengen |
 | **Wasserschutz** | Absperrventil öffnen und schließen, Durchfluss und Wasserdruck |
 | **Taster** | kurz antippen oder für einen langen Tastendruck halten |
 | **Eingänge** | je nach Betriebsart: Tastendrücke leuchten auf, Kontakt offen oder geschlossen, Level |
 | **Energiezähler** | Leistung und Zählerstände, Gas mit Durchfluss |
+| **Zählersensor** (HM-ES-TX-WM) | Leistung und Zählerstand für den angeschlossenen Sensor (Strom, Gas oder IEC) |
 | **Access Point / DRAP** | Busspannung und Strom der Wired-Busse |
 | **Alle anderen** | generische Kachel aus der Gerätebeschreibung: Schalter, Auswahlfelder, Zahlen, Aktionen |
 

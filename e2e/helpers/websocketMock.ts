@@ -424,6 +424,49 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         type: 'ALARM_ACTUATOR_RECEIVER',
         datapoints: { STATE: false },
       },
+      // Distance sensor ELV-SH-DUSI, passage detector HmIP-SPDR (channel 2
+      // right to left, 3 left to right), filling level sensor HM-Sen-Wa-Od
+      // and the meter sensor HM-ES-TX-WM with an IEC sensor
+      {
+        id: 661,
+        name: 'Zisterne Abstand',
+        address: '00369D89A1B2C1:1',
+        interfaceName: 'HmIP-RF',
+        type: 'DISTANCE_TRANSMITTER',
+        datapoints: { DISTANCE: 0.8, DISTANCE_STATUS: 0, HEIGHT: 1.2, REFERENCE_HEIGHT: 2 },
+      },
+      {
+        id: 662,
+        name: 'Durchgang Flur',
+        address: '00379D89A1B2C1:2',
+        interfaceName: 'HmIP-RF',
+        type: 'PASSAGE_DETECTOR_DIRECTION_TRANSMITTER',
+        datapoints: { PASSAGE_COUNTER_VALUE: 12, PASSAGE_COUNTER_OVERFLOW: false, CURRENT_PASSAGE_DIRECTION: false, LAST_PASSAGE_DIRECTION: true },
+      },
+      {
+        id: 663,
+        name: 'Durchgang Flur links nach rechts',
+        address: '00379D89A1B2C1:3',
+        interfaceName: 'HmIP-RF',
+        type: 'PASSAGE_DETECTOR_DIRECTION_TRANSMITTER',
+        datapoints: { PASSAGE_COUNTER_VALUE: 9, PASSAGE_COUNTER_OVERFLOW: false, CURRENT_PASSAGE_DIRECTION: false, LAST_PASSAGE_DIRECTION: false },
+      },
+      {
+        id: 664,
+        name: 'Heizöltank',
+        address: 'LEQ0000030:1',
+        interfaceName: 'BidCos-RF',
+        type: 'CAPACITIVE_FILLING_LEVEL_SENSOR',
+        datapoints: { FILLING_LEVEL: 40 },
+      },
+      {
+        id: 665,
+        name: 'Stromzähler Hausanschluss',
+        address: 'LEQ0000031:1',
+        interfaceName: 'BidCos-RF',
+        type: 'POWERMETER_IEC1',
+        datapoints: { ENERGY_COUNTER: 0, POWER: 0, IEC_ENERGY_COUNTER: 18342.5, IEC_POWER: 512.3, BOOT: false },
+      },
       // Irrigation, its water meter and window drives
       {
         id: 641,
@@ -661,6 +704,15 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
     // Paramset descriptions as the server sends them (camelCase)
     const paramsetDescriptions: Record<string, AnyPayload> = {
+      '00369D89A1B2C1:1': {
+        DISTANCE: { type: 'FLOAT', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 10, unit: 'm' },
+        HEIGHT: { type: 'FLOAT', operations: 5, flags: 1, tabOrder: 1, min: 0, max: 10, unit: 'm' },
+        REFERENCE_HEIGHT: { type: 'FLOAT', operations: 5, flags: 1, tabOrder: 2, min: 0, max: 10, unit: 'm' },
+      },
+      'LEQ0000031:1': {
+        IEC_ENERGY_COUNTER: { type: 'FLOAT', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 214748364.7, unit: 'kWh' },
+        IEC_POWER: { type: 'FLOAT', operations: 5, flags: 1, tabOrder: 1, min: 0, max: 214748364.7, unit: 'W' },
+      },
       '0000DBE9A5C1F2:1': {
         STATE: { type: 'ENUM', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 2, valueList: ['CLOSED', 'TILTED', 'OPEN'] },
         SABOTAGE: { type: 'BOOL', operations: 5, flags: 9, tabOrder: 1 },
@@ -933,9 +985,15 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         return;
       }
 
-      // MASTER values: the tilt sensor reports vibration (operation mode 1)
+      // MASTER values: the tilt sensor reports vibration (operation mode 1),
       if (message.type === 'getParamset') {
-        const values = message.paramsetKey === 'MASTER' && message.address === '00199D89A1B2C8:1' ? { CHANNEL_OPERATION_MODE: 1 } : {};
+        // the filling level sensor sits in a vertical barrel, the meter sensor has an IEC sensor
+        const master: Record<string, AnyPayload> = {
+          '00199D89A1B2C8:1': { CHANNEL_OPERATION_MODE: 1 },
+          'LEQ0000030:1': { CASE_DESIGN: 0, CASE_HIGH: 100, CASE_WIDTH: 100 },
+          'LEQ0000031:1': { METER_TYPE: 3 },
+        };
+        const values = (message.paramsetKey === 'MASTER' && master[String(message.address)]) || {};
         delayedBroadcast({ type: 'paramset', requestId: message.requestId, address: message.address, paramsetKey: message.paramsetKey, values });
         return;
       }

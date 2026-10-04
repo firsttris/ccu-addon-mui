@@ -389,6 +389,34 @@ test('stellt Servos und schaltet den Alarmausgang', async ({ page }) => {
   await expect.poll(last).toMatchObject({ attribute: 'STATE', value: true });
 });
 
+test('zeigt Abstand, Durchgang, Füllstand und Zählersensor', async ({ page }) => {
+  await page.goto('/devices');
+
+  // Distance with height (reference − distance) and reference height
+  const distance = page.getByRole('group', { name: 'Zisterne Abstand' });
+  await expect(distance).toContainText(/0[.,]8\s*m/);
+  await expect(distance).toContainText(/1[.,]2 m/);
+  await expect(distance).toContainText(/2[.,]0 m/);
+
+  // Both directions of the HmIP-SPDR in one tile
+  const passage = page.getByRole('group', { name: 'Durchgang Flur', exact: true });
+  await expect(passage.getByRole('status')).toHaveText(/(Unbekannt|Unknown)/);
+  await expect(passage).toContainText(/(Rechts nach links|Right to left)/);
+  await expect(passage).toContainText('12');
+  await expect(passage).toContainText('9');
+  await expect(page.getByRole('group', { name: 'Durchgang Flur links nach rechts' })).toHaveCount(0);
+
+  // Level and the volume of the vertical barrel set up in MASTER
+  const tank = page.getByRole('group', { name: 'Heizöltank' });
+  await expect(tank).toContainText('40');
+  await expect(tank).toContainText('314 l');
+
+  // IEC sensor: its power and counter
+  const meter = page.getByRole('group', { name: 'Stromzähler Hausanschluss' });
+  await expect(meter).toContainText(/512[.,]30/);
+  await expect(meter).toContainText(/18[.,]?342[.,]50 kWh/);
+});
+
 test('zeigt Sensoren mit eigenen Kacheln', async ({ page }) => {
   await page.goto('/devices');
   const emit = (channel: string, datapoint: string, value: unknown) =>

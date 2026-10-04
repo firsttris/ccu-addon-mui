@@ -1193,5 +1193,20 @@
   "SERVO_RIGHT": "Rechts · {percent} %",
   "SERVO_STATUS_UNKNOWN": "Position unbekannt",
   "SERVO_STATUS_ERROR": "Fehler am Servo",
-  "SERVO_RESTART_NEEDED": "Neustart des Geräts nötig"
+  "SERVO_RESTART_NEEDED": "Neustart des Geräts nötig",
+  "DISTANCE": "Distanz",
+  "DISTANCE_HEIGHT": "Höhe",
+  "DISTANCE_REFERENCE": "Referenzhöhe",
+  "PASSAGE_LEFT_TO_RIGHT": "Links nach rechts",
+  "PASSAGE_RIGHT_TO_LEFT": "Rechts nach links",
+  "PASSAGE_UNKNOWN": "Unbekannt",
+  "PASSAGE_DETECTED": "Erkannter Durchgang",
+  "PASSAGE_LAST": "Letzter Durchgang",
+  "PASSAGE_OVERFLOW": "Überlauf",
+  "PASSAGE_COUNT_LEFT_TO_RIGHT": "Links → rechts",
+  "PASSAGE_COUNT_RIGHT_TO_LEFT": "Rechts → links",
+  "FILLING_LEVEL": "Füllstand",
+  "FILLING_VOLUME": "Füllmenge",
+  "METER_POWER": "Leistung",
+  "METER_CONSUMPTION": "Verbrauch"
 }
