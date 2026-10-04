@@ -170,7 +170,7 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | Push | `getPush` | VAPID-Public-Key und Abo-Status des Endpoints | alle |
 | | `subscribePush`, `unsubscribePush` | Push-Abo anlegen oder entfernen | alle |
 | | `testPush` | Testbenachrichtigung senden | alle |
-| System | `getSystemInfo` | Add-on- und Firmware-Version, Funkmodule mit Duty Cycle | Admin |
+| System | `getSystemInfo` | Add-on- und Firmware-Version, Produkt, Plattform, ReGaHss-Version (`dom.BuildLabel()`), auf der CCU der Systemzustand wie `help.cgi` (`system`), Funkmodule mit Duty Cycle | Admin |
 | | `checkFirmwareUpdate` | Neueste CCU-Firmware online abfragen; ob die CCU sie selbst laden kann und wie viel Platz frei ist | Admin |
 | | `getDeviceFirmware`, `getDeviceFirmwareChangelog` | Geräte-Firmware auf der CCU (`/etc/config/firmware`) und ihre Änderungen | Admin |
 | | `checkDeviceFirmware` | Neueste Geräte-Firmware bei eQ-3 (eine Stunde zwischengespeichert) | Admin |

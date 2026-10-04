@@ -9,7 +9,7 @@ in den Tabellen unten.
 
 | | |
 |---|---|
-| Funktionen der WebUI | **62 von 66 vorhanden (94 %)** |
+| Funktionen der WebUI | **63 von 66 vorhanden (95 %)** |
 | Fehlen | 8, meist Einzeloptionen; der größte Brocken sind die Kopplungen (Hue, Lightify) |
 | Gerätetypen | alle 472 an HmIP, HmIP Wired, BidCos-RF und BidCos-Wired bedienbar, 95 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
 
@@ -99,7 +99,7 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 | Zusatzsoftware | ✅ | anzeigen, installieren, neu starten, deinstallieren, Updates |
 | Allgemeine Einstellungen | ✅ | Energiepreise, Info-LED, Beta-Firmware, Meldungen ausblenden |
 | Kopplungen (Philips Hue, OSRAM Lightify) | ❌ | |
-| Hilfe, Lizenzen | ❌ | Versionen stehen unter *System* |
+| Hilfe, Lizenzen | ✅ | unter *System*: Produkt, ReGaHss-Version, Hardware, Speicher, Laufzeit, Last, Temperatur, Betriebssystem, freier Platz und Netzwerkstatus wie `help.cgi`; Links zu Hilfe, OpenCCU-Doku und den Lizenzinformationen |
 
 ## Schnittstellen
 

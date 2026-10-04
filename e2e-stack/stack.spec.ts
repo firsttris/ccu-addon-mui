@@ -375,6 +375,12 @@ test('zeigt Versionen und Duty Cycle der Funkmodule', async ({ page }) => {
   await expect(system.getByRole('meter', { name: 'Duty Cycle HmIP-RF' })).toHaveAttribute('aria-valuenow', '3');
   // The LAN gateway as a radio module of its own
   await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF NEQ0987654' })).toHaveAttribute('aria-valuenow', '2');
+  // The ReGaHss version as on the WebUI's help page (dom.BuildLabel())
+  await expect(system).toContainText('R1.00.0388.0235');
+  // Help and licences (help.cgi)
+  const help = page.getByRole('region', { name: 'Hilfe und Lizenzen' });
+  await expect(help.getByRole('link', { name: /Lizenzinformationen der CCU-Software/ })).toHaveAttribute('href', /licenseinfo\.htm$/);
+  await expect(help.getByRole('link', { name: /Lizenz des Add-ons/ })).toBeVisible();
 });
 
 test('legt Räume und Systemvariablen an, benennt sie um und löscht sie', async ({ page }) => {
