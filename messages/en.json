@@ -732,5 +732,11 @@
   "LOG_LOGIC": "Logic tier",
   "LOG_HOST": "Syslog server",
   "LOG_DOWNLOAD": "Download log files",
-  "LOG_HINT": "As in the WebUI's central maintenance. Verbose levels fill the CCU's storage quickly – only turn them on for troubleshooting."
+  "LOG_HINT": "As in the WebUI's central maintenance. Verbose levels fill the CCU's storage quickly – only turn them on for troubleshooting.",
+  "SCRIPT_TEST": "Test script",
+  "SCRIPT_RUN": "Run",
+  "SCRIPT_OUTPUT": "Output",
+  "SCRIPT_NO_OUTPUT": "(no output)",
+  "SCRIPT_SYNTAX_ERROR": "Syntax error",
+  "SCRIPT_HINT": "The script really runs on the CCU and can change anything. Its syntax is checked first."
 }

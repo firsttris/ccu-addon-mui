@@ -1662,3 +1662,24 @@ func TestStackLogging(t *testing.T) {
 		t.Fatal("a download link must work only once")
 	}
 }
+
+func TestStackRunScript(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "runScript", "requestId": "s1", "script": "WriteLine(\"Hallo\");\nWrite(\"a^b\");"})
+	if m := receive(t, conn, byRequestID("s1")); m["output"] != "Hallo\na^b" || m["syntaxError"] != nil {
+		t.Fatalf("unexpected answer: %v", m)
+	}
+	send(t, conn, message{"type": "runScript", "requestId": "s2", "script": "Write(\"x\"); dom.Kaputt("})
+	if m := receive(t, conn, byRequestID("s2")); m["syntaxError"] == nil || m["output"] != "" {
+		t.Fatalf("expected a syntax error, got %v", m)
+	}
+	send(t, conn, message{"type": "runScript", "requestId": "s3", "script": ""})
+	if m := receive(t, conn, byRequestID("s3")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+	if data, _ := os.ReadFile(auditLogs[ccu]); !strings.Contains(string(data), "runScript") {
+		t.Fatal("tested scripts must be audit logged")
+	}
+}

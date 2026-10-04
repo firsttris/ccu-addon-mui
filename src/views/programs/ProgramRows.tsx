@@ -1,3 +1,4 @@
+import { ScriptTestButton } from './ScriptTest';
 import { useState } from 'react';
 import XIcon from '~icons/lucide/x';
 import { TimeModuleDialog, useTimeTexts } from './TimeModuleDialog';
@@ -463,6 +464,7 @@ export const DestinationRow = ({
           />
         </label>
       )}
+      {kind === 'script' && <ScriptTestButton script={destination.value} />}
       {kind === 'other' && <span className="self-center text-sm text-muted-foreground">{m.PRG_KIND_OTHER()}</span>}
       <DelayInput delay={destination.delay} onChange={(delay) => onChange({ ...destination, delay })} />
       <span className="flex-1" />
