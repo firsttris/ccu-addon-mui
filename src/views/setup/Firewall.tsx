@@ -5,7 +5,7 @@ import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
-import { Panel } from './Panel';
+import { OnlyOnCCU, Panel } from './Panel';
 import { usePasswordRetry } from './usePasswordRetry';
 import { m } from '../../paraglide/messages';
 import type { Firewall as FirewallConfig, FirewallService } from '../../types/protocol';
@@ -93,7 +93,8 @@ export const Firewall = () => {
     setPorts(fw.userPorts.join('; '));
   }, [data]);
 
-  if (userLevel !== 'admin' || isError) return null;
+  if (userLevel !== 'admin') return null;
+  if (isError) return <OnlyOnCCU title={m.FW_TITLE()} />;
   if (!data) {
     return (
       <Panel aria-label={m.FW_TITLE()} aria-busy>

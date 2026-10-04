@@ -8,7 +8,7 @@ import { NativeSelect } from '../../components/ui/select';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
 import { m } from '../../paraglide/messages';
-import { Panel } from './Panel';
+import { OnlyOnCCU, Panel } from './Panel';
 
 // The levels the WebUI offers (cp_maintenance.cgi: LOGLEVELS,
 // HMIP_LOGLEVELS, REGA_LOGLEVELS), most verbose first
@@ -65,8 +65,11 @@ export const Logging = () => {
     if (data) setDraft({ host: data.host, rfd: data.rfd, hmip: data.hmip, rega: data.rega });
   }, [data]);
 
-  if (userLevel !== 'admin' || isError) {
+  if (userLevel !== 'admin') {
     return null;
+  }
+  if (isError) {
+    return <OnlyOnCCU title={m.LOG_TITLE()} />;
   }
   if (isPending) {
     return (

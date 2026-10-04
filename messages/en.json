@@ -1462,5 +1462,6 @@
   "USERS_AUTO_LOGIN_BADGE": "logs in automatically",
   "USERS_AUTO_LOGIN_HINT": "Whoever opens the app is logged in as this user without a password. Only one user can be; after logging out, the login appears.",
   "PICKER_CHOOSE_ONE": "Tap a channel",
-  "PICKER_CHOOSE_CHANNEL": "Choose a channel …"
+  "PICKER_CHOOSE_CHANNEL": "Choose a channel …",
+  "ONLY_ON_CCU": "Only available when the add-on runs on the CCU itself (the setting is in files of the CCU). Until then in the old WebUI:"
 }
