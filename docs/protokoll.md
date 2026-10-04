@@ -132,10 +132,10 @@ Systemvariablen erzeugen keine Events; die App fragt sie ab (`getSysvars`).
 | | `acknowledgeAlarmMessage` | Alarm bestätigen | Bed. (A) |
 | | `getHistory` | Systemprotokoll (seitenweise, optional pro Kanal) | alle |
 | | `clearHistory` | Systemprotokoll löschen | Admin+T (A) |
-| Geräte einrichten | `getParamsetDescription` | Paramset-Beschreibung (VALUES/MASTER) per XML-RPC, gecacht | alle (keine Stufenprüfung im Code) |
-| | `getParamset` | Paramset-Werte per XML-RPC | alle (keine Stufenprüfung im Code) |
+| Geräte einrichten | `getParamsetDescription` | Paramset-Beschreibung (`VALUES` oder `MASTER`) per XML-RPC, gecacht | alle |
+| | `getParamset` | Paramset-Werte (`VALUES` oder `MASTER`; andere Schlüssel ergeben `INVALID_REQUEST`) | alle |
 | | `putParamset` | MASTER-Paramset schreiben (gegen die Beschreibung geprüft und konvertiert) | Admin+T (A) |
-| | `listDevices` | Geräte aller Interfaces mit Kanälen, Link-Rollen und Firmware | alle (keine Stufenprüfung im Code) |
+| | `listDevices` | Geräte aller Interfaces mit Kanälen, Link-Rollen und Firmware | Admin |
 | | `rename` | Gerät oder Kanal umbenennen | Admin+T (A) |
 | | `setChannelTile` | Kachel eines Kanals festlegen (`muiTile`: light/switch/leer) | Admin+T (A) |
 | | `setChannelOption` | Kanaloptionen der WebUI (z. B. `usable`, sichtbar, protokolliert) | Admin+T (A) |

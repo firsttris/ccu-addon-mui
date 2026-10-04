@@ -38,7 +38,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run frontend E2E tests with coverage
-        run: rm -rf .nyc_output coverage/playwright && mkdir -p .nyc_output && PW_COVERAGE=1 npx playwright test e2e/frontend-mocked-websocket.spec.ts --project=chromium --reporter=github
+        run: rm -rf .nyc_output coverage/playwright && mkdir -p .nyc_output && PW_COVERAGE=1 npx playwright test e2e/frontend-mocked-websocket.spec.ts e2e/auth.spec.ts --project=chromium --reporter=github
 
       - name: Generate Playwright coverage report
         if: always()

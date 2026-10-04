@@ -17,11 +17,11 @@ func TestSessionsCanBeRevoked(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	session, tablet, err := a.Login("Admin", "secret", "Wandtablet")
+	session, tablet, err := a.Login("Admin", "secret", "Wandtablet", "192.0.2.1")
 	if err != nil || session.ID == "" {
 		t.Fatalf("Login = %+v, %v", session, err)
 	}
-	_, phone, _ := a.Login("Admin", "secret", "Handy")
+	_, phone, _ := a.Login("Admin", "secret", "Handy", "192.0.2.1")
 	adminToken, err := a.IssueAdminToken(session)
 	if err != nil {
 		t.Fatal(err)

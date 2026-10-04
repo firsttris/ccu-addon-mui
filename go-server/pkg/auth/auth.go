@@ -29,7 +29,9 @@ const (
 	adminTokenLifetime = 8 * time.Hour
 
 	// After maxFailures failed logins within failureWindow, logins are
-	// refused for lockoutDuration to slow down password guessing.
+	// refused for lockoutDuration to slow down password guessing. Counted
+	// per user and client address, so wrong passwords on one device don't
+	// lock everybody else out.
 	maxFailures     = 5
 	failureWindow   = time.Minute
 	lockoutDuration = time.Minute
@@ -93,10 +95,9 @@ type Authenticator struct {
 	now        func() time.Time
 	level      LevelFunc
 
-	mu          sync.Mutex
-	failures    []time.Time
-	lockedUntil time.Time
-	store       *sessionStore
+	mu       sync.Mutex
+	attempts map[string]*attempts
+	store    *sessionStore
 }
 
 // New loads the signing key from keyFile, creating it on first start.
@@ -156,12 +157,12 @@ func (a *Authenticator) lookupLevel(username string) string {
 // Login verifies the credentials against the CCU and returns a token.
 // device describes the device logging in, for the list of logged-in
 // devices.
-func (a *Authenticator) Login(username, password, device string) (Session, string, error) {
-	if err := a.checkLockout(); err != nil {
+func (a *Authenticator) Login(username, password, device, source string) (Session, string, error) {
+	if err := a.checkLockout(username, source); err != nil {
 		return Session{}, "", err
 	}
 	if username == "" {
-		a.recordFailure()
+		a.recordFailure(username, source)
 		return Session{}, "", ErrInvalidCredentials
 	}
 
@@ -170,7 +171,7 @@ func (a *Authenticator) Login(username, password, device string) (Session, strin
 		return Session{}, "", err
 	}
 	if !ok {
-		a.recordFailure()
+		a.recordFailure(username, source)
 		return Session{}, "", ErrInvalidCredentials
 	}
 	session := Session{User: username, Level: a.lookupLevel(username)}
@@ -257,9 +258,10 @@ func (a *Authenticator) AdminTokenExpiry() time.Time {
 
 // Elevate checks the password of a logged-in user again and returns an
 // admin token. Failed attempts count towards the lockout like logins.
-// sessionID is the device the admin token is for.
-func (a *Authenticator) Elevate(username, password, sessionID string) (string, error) {
-	if err := a.checkLockout(); err != nil {
+// sessionID is the device the admin token is for, source the client
+// address the password came from.
+func (a *Authenticator) Elevate(username, password, sessionID, source string) (string, error) {
+	if err := a.checkLockout(username, source); err != nil {
 		return "", err
 	}
 	ok, err := a.verifyWithCCU(username, password)
@@ -267,7 +269,7 @@ func (a *Authenticator) Elevate(username, password, sessionID string) (string, e
 		return "", err
 	}
 	if !ok {
-		a.recordFailure()
+		a.recordFailure(username, source)
 		return "", ErrInvalidCredentials
 	}
 	return a.IssueAdminToken(Session{User: username, Level: a.lookupLevel(username), ID: sessionID})
@@ -275,8 +277,8 @@ func (a *Authenticator) Elevate(username, password, sessionID string) (string, e
 
 // CheckPassword checks a user's password with the CCU, for changing it.
 // Wrong passwords count towards the lockout like logins.
-func (a *Authenticator) CheckPassword(username, password string) error {
-	if err := a.checkLockout(); err != nil {
+func (a *Authenticator) CheckPassword(username, password, source string) error {
+	if err := a.checkLockout(username, source); err != nil {
 		return err
 	}
 	ok, err := a.verifyWithCCU(username, password)
@@ -284,7 +286,7 @@ func (a *Authenticator) CheckPassword(username, password string) error {
 		return err
 	}
 	if !ok {
-		a.recordFailure()
+		a.recordFailure(username, source)
 		return ErrInvalidCredentials
 	}
 	return nil
@@ -314,42 +316,72 @@ func (a *Authenticator) sign(payload string) string {
 	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
 }
 
-// CheckLockout fails while too many wrong passwords lock out logins, for
-// other places that check a password (backups).
-func (a *Authenticator) CheckLockout() error {
-	return a.checkLockout()
+// attempts are the failed logins of one user from one address
+type attempts struct {
+	failures    []time.Time
+	lockedUntil time.Time
+}
+
+// maxTrackedAttempts bounds the lockout bookkeeping; entries without a
+// recent failure are dropped first
+const maxTrackedAttempts = 1000
+
+func attemptKey(username, source string) string {
+	return source + "|" + strings.ToLower(username)
+}
+
+// CheckLockout fails while too many wrong passwords lock out this user from
+// this address, for other places that check a password (backups).
+func (a *Authenticator) CheckLockout(username, source string) error {
+	return a.checkLockout(username, source)
 }
 
 // RecordFailure counts a wrong password entered elsewhere towards the
 // lockout.
-func (a *Authenticator) RecordFailure() {
-	a.recordFailure()
+func (a *Authenticator) RecordFailure(username, source string) {
+	a.recordFailure(username, source)
 }
 
-func (a *Authenticator) checkLockout() error {
+func (a *Authenticator) checkLockout(username, source string) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if a.now().Before(a.lockedUntil) {
+	if at := a.attempts[attemptKey(username, source)]; at != nil && a.now().Before(at.lockedUntil) {
 		return ErrTooManyAttempts
 	}
 	return nil
 }
 
-func (a *Authenticator) recordFailure() {
+func (a *Authenticator) recordFailure(username, source string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	now := a.now()
-	recent := a.failures[:0]
-	for _, t := range a.failures {
+	if a.attempts == nil {
+		a.attempts = map[string]*attempts{}
+	}
+	if len(a.attempts) >= maxTrackedAttempts {
+		for k, at := range a.attempts {
+			if now.After(at.lockedUntil) && (len(at.failures) == 0 || now.Sub(at.failures[len(at.failures)-1]) >= failureWindow) {
+				delete(a.attempts, k)
+			}
+		}
+	}
+	key := attemptKey(username, source)
+	at := a.attempts[key]
+	if at == nil {
+		at = &attempts{}
+		a.attempts[key] = at
+	}
+	recent := at.failures[:0]
+	for _, t := range at.failures {
 		if now.Sub(t) < failureWindow {
 			recent = append(recent, t)
 		}
 	}
-	a.failures = append(recent, now)
-	if len(a.failures) >= maxFailures {
-		a.lockedUntil = now.Add(lockoutDuration)
-		a.failures = nil
+	at.failures = append(recent, now)
+	if len(at.failures) >= maxFailures {
+		at.lockedUntil = now.Add(lockoutDuration)
+		at.failures = nil
 	}
 }
 
