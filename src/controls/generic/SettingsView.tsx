@@ -13,6 +13,7 @@ import { m } from "../../paraglide/messages";
 import { Switch } from "../../components/ui/switch";
 import { Input } from "../../components/ui/input";
 import { NativeSelect } from "../../components/ui/select";
+import { TimePicker } from "../../components/ui/time-picker";
 import { Button } from "../../components/ui/button";
 import { cn } from "../../lib/utils";
 import { shownParameters } from "./ParamsetView";
@@ -351,7 +352,7 @@ const SingleControl = ({
       const minuteStep = step === 30 ? 30 : max === 1425 ? 15 : 1;
       const factor = step === 30 ? 30 : 1;
       return (
-        <TimeOfDayInput
+        <TimePicker
           label={label}
           minutes={num === undefined ? undefined : num * factor}
           step={minuteStep}
@@ -714,63 +715,5 @@ export const SettingsView = ({
         );
       })}
     </div>
-  );
-};
-
-// A time of day with the system's time picker. The device knows only full
-// steps (15 or 30 minutes), so a typed time is rounded when leaving the field.
-const TimeOfDayInput = ({
-  label,
-  minutes,
-  step,
-  max,
-  onChange,
-}: {
-  label: string;
-  minutes?: number;
-  step: number;
-  max: number;
-  onChange: (minutes: number) => void;
-}) => {
-  const current = minutes === undefined ? "" : formatTimeOfDay(minutes);
-  const [draft, setDraft] = useState(current);
-  useEffect(() => setDraft(current), [current]);
-  const parse = (text: string) => {
-    const match = /^(\d{1,2}):(\d{2})/.exec(text);
-    if (!match) return undefined;
-    const total = Number(match[1]) * 60 + Number(match[2]);
-    return Math.min(Math.round(total / step) * step, max);
-  };
-  const commit = (text: string) => {
-    const next = parse(text);
-    if (next === undefined) {
-      setDraft(current);
-    } else if (next !== minutes) {
-      onChange(next);
-    } else {
-      setDraft(current);
-    }
-  };
-  return (
-    <Input
-      type="time"
-      step={step * 60}
-      className="h-9 w-32 tabular-nums"
-      aria-label={label}
-      value={draft}
-      onChange={(event) => {
-        setDraft(event.target.value);
-        // Picked in the system picker: a full step, take it at once
-        const next = parse(event.target.value);
-        if (
-          next !== undefined &&
-          formatTimeOfDay(next) === event.target.value &&
-          next !== minutes
-        ) {
-          onChange(next);
-        }
-      }}
-      onBlur={(event) => commit(event.target.value)}
-    />
   );
 };

@@ -83,6 +83,9 @@ export const responsiveLayouts = (
   tiles: TileSpec[],
   saved: SectionLayout | undefined,
   heights: Record<string, number>,
+  // Tiles starting in the same row get the height of the tallest, as in
+  // the sections' own grids
+  equalRows = false,
 ): ResponsiveLayouts<BreakpointName> => {
   const keys = new Set(tiles.map((t) => t.key));
   const result = {} as Record<BreakpointName, Layout>;
@@ -92,13 +95,17 @@ export const responsiveLayouts = (
     const missing = tiles.filter((t) => !placed.has(t.key));
     const appended = defaultLayout(missing, bp).map((t) => ({ ...t, y: t.y + 100000 }));
     const base = saved?.[bp] ? [...stored, ...appended] : defaultLayout(tiles, bp);
+    const rowHeight = new Map<number, number>();
+    if (equalRows) {
+      for (const t of base) rowHeight.set(t.y, Math.max(rowHeight.get(t.y) ?? 0, heights[t.i] ?? 0));
+    }
     result[bp] = base.map(
       (t): LayoutItem => ({
         i: t.i,
         x: Math.min(t.x, COLS[bp] - 1),
         y: t.y,
         w: Math.min(Math.max(1, t.w), COLS[bp]),
-        h: rowsFor(heights[t.i] ?? 160),
+        h: rowsFor((equalRows ? rowHeight.get(t.y) : heights[t.i]) ?? 0),
       }),
     );
   }
