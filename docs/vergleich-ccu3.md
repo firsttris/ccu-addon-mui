@@ -9,7 +9,7 @@ in den Tabellen unten.
 
 | | |
 |---|---|
-| Funktionen der WebUI | **59 von 66 vorhanden (89 %)** |
+| Funktionen der WebUI | **60 von 66 vorhanden (91 %)** |
 | Fehlen | 8, meist Einzeloptionen; der größte Brocken sind die Kopplungen (Hue, Lightify) |
 | Gerätetypen | alle 472 an HmIP, HmIP Wired, BidCos-RF und BidCos-Wired bedienbar, 95 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
 
@@ -79,7 +79,7 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 | Neustart, Herunterfahren | ✅ | |
 | Neustart im abgesicherten Modus | ✅ | wie `SafeMode.enter`: Zusatzsoftware startet einmalig nicht, auch das Add-on nicht |
 | Protokollierung (Log-Level, Syslog, Logdateien) | ✅ | |
-| ReGa-Version wählen (OpenCCU) | ❌ | |
+| ReGa-Version wählen | ✅ | Standard oder Kompatibilitätsmodus, mit Rückfrage zum Neustart; nur in der eQ-3-Firmware, denn OpenCCU liefert eine einzige ReGaHss und hat die Auswahl entfernt (Patch `0008-WebUI-Disable-ReGa`) |
 | Backup erstellen | ✅ | |
 | Backup einspielen | ✅ | |
 | Sicherheitsschlüssel | ✅ | |

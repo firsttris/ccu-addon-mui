@@ -278,6 +278,9 @@
     "setClock": {
       "$ref": "#/definitions/SetClockCall"
     },
+    "setRegaVersion": {
+      "$ref": "#/definitions/SetRegaVersionCall"
+    },
     "getHeatingGroups": {
       "$ref": "#/definitions/GetHeatingGroupsCall"
     },
@@ -515,6 +518,7 @@
     "setTimeServers",
     "setTimeZone",
     "setClock",
+    "setRegaVersion",
     "getHeatingGroups",
     "prepareRestore",
     "checkRestore",
@@ -3149,6 +3153,9 @@
         },
         {
           "$ref": "#/definitions/SetClockResponse"
+        },
+        {
+          "$ref": "#/definitions/SetRegaVersionResponse"
         },
         {
           "$ref": "#/definitions/GetHeatingGroupsResponse"
@@ -6147,6 +6154,14 @@
         },
         "canSetClock": {
           "type": "boolean"
+        },
+        "regaVersion": {
+          "type": "string",
+          "enum": [
+            "NORMAL",
+            "COMMUNITY"
+          ],
+          "description": "the chosen logic layer, only where the CCU has both (eQ-3 firmware; OpenCCU ships one)"
         }
       },
       "required": [
@@ -8147,6 +8162,67 @@
         },
         "response": {
           "$ref": "#/definitions/SetClockResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetRegaVersionRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setRegaVersion"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "enum": [
+            "NORMAL",
+            "COMMUNITY"
+          ],
+          "description": "the logic layer to start next time (/etc/config/ReGaHssVersion)"
+        }
+      },
+      "required": [
+        "type",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "SetRegaVersionResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setRegaVersion_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetRegaVersionCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetRegaVersionRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetRegaVersionResponse"
         }
       },
       "required": [

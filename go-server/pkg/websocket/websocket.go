@@ -605,7 +605,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleDevicePrograms(client, message)
 	case "getHistory", "clearHistory":
 		s.handleHistory(client, msgType, message)
-	case "getSystemSettings", "setLocation", "powerAction", "setTimeServers", "setTimeZone", "setClock":
+	case "getSystemSettings", "setLocation", "powerAction", "setTimeServers", "setTimeZone", "setClock", "setRegaVersion":
 		s.handleSystemSettings(client, msgType, message)
 	case "listSessions", "revokeSession", "logout":
 		s.handleSessions(client, msgType, message)

@@ -11,7 +11,14 @@ vi.mock('../../hooks/useWebsocket', async (importOriginal) => ({
   useWebSocketContext: () => ({ authRequired: true, elevated: true }),
 }));
 
-const { Power } = await import('./SystemSettings');
+const { Power, RegaVersion } = await import('./SystemSettings');
+
+const renderWithProviders = (ui: React.ReactElement) =>
+  renderWithTheme(
+    <QueryClientProvider client={new QueryClient()}>
+      <ToastProvider>{ui}</ToastProvider>
+    </QueryClientProvider>,
+  );
 
 describe('maintenance', () => {
   it('restarts in safe mode after asking, as cp_maintenance.cgi OnEnterSafeMode', async () => {
@@ -42,5 +49,45 @@ describe('maintenance', () => {
     await waitFor(() =>
       expect(request).toHaveBeenCalledWith({ type: 'powerAction', action: 'safemode' }, { queue: false }),
     );
+  });
+
+  it('chooses the logic layer, then offers a restart, as the eQ-3 maintenance page', async () => {
+    request.mockReset();
+    request.mockImplementation(async (message: { type: string }) =>
+      message.type === 'getSystemSettings'
+        ? {
+            latitude: 50,
+            longitude: 8,
+            timeZoneOffset: 60,
+            time: '',
+            canPower: true,
+            canSetClock: true,
+            regaVersion: 'COMMUNITY',
+          }
+        : { success: true },
+    );
+    renderWithProviders(<RegaVersion />);
+    fireEvent.change(await screen.findByLabelText('Logic layer version'), { target: { value: 'NORMAL' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(request).toHaveBeenCalledWith({ type: 'setRegaVersion', version: 'NORMAL' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Restart now' }));
+    await waitFor(() =>
+      expect(request).toHaveBeenCalledWith({ type: 'powerAction', action: 'reboot' }, { queue: false }),
+    );
+  });
+
+  it('shows no choice where the CCU has one ReGaHss (OpenCCU)', async () => {
+    request.mockReset();
+    request.mockResolvedValue({
+      latitude: 50,
+      longitude: 8,
+      timeZoneOffset: 60,
+      time: '',
+      canPower: true,
+      canSetClock: true,
+    });
+    const { container } = renderWithProviders(<RegaVersion />);
+    await waitFor(() => expect(request).toHaveBeenCalled());
+    expect(container.textContent).toBe('');
   });
 });

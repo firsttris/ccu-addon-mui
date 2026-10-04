@@ -179,6 +179,7 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | | `setLocation` | Koordinaten (ReGa und `time.conf`) | Admin+T (A) |
 | | `setTimeServers`, `setTimeZone`, `setClock` | Uhr wie `cp_time.cgi` | Admin+T (A) |
 | | `powerAction` | `reboot`, `shutdown` oder `safemode` (Neustart im abgesicherten Modus) der CCU | Admin+T (A) |
+| | `setRegaVersion` | Logikschicht `NORMAL` oder `COMMUNITY` in `/etc/config/ReGaHssVersion` (nur eQ-3-Firmware, wie `User.setReGaVersion`); `getSystemSettings` liefert dann `regaVersion` | Admin+T (A) |
 | | `getGeneralSettings` | Energiepreis, Info-LED, hideStickyUnreach, Beta-Firmware, Speicherbelegung | Admin |
 | | `setGeneralSettings` | Diese Einstellungen schreiben | Admin+T (A) |
 | | `getLogging` | Logging-Einstellungen | Admin |

@@ -160,7 +160,7 @@ welches Funkmodul die Zentrale mit welchem BidCos-Gerät spricht, mit *Roaming*.
 | Bereich | Inhalt |
 |---|---|
 | **Versionen** | Add-on, Firmware der Zentrale, Funkmodule mit Status und **Duty Cycle**. **CCU-Firmware**: nach neuer Version suchen (OpenCCU oder eQ-3); bei OpenCCU **„Herunterladen und installieren“**: die CCU lädt das Release selbst von GitHub, der Server prüft die SHA256-Prüfsumme und den freien Speicher (2,8 GB); sonst Datei hochladen; Lizenz bestätigen, installieren |
-| **Standort und Uhrzeit** | Koordinaten für Astro-Zeiten, Zeitzone, Zeitserver, Uhr stellen; **Neustart**, **Herunterfahren** und **Neustart im abgesicherten Modus** (Zusatzsoftware startet einmalig nicht, auch dieses Add-on nicht; die alte WebUI bleibt erreichbar) |
+| **Standort und Uhrzeit** | Koordinaten für Astro-Zeiten, Zeitzone, Zeitserver, Uhr stellen; **Neustart**, **Herunterfahren** und **Neustart im abgesicherten Modus** (Zusatzsoftware startet einmalig nicht, auch dieses Add-on nicht; die alte WebUI bleibt erreichbar); auf der eQ-3-Firmware die **Version der Logikschicht** (Standard oder Kompatibilitätsmodus) |
 | **Allgemeine Einstellungen** | Strom- und Gaspreise (für Diagramme), Info-LED, Beta-Firmware für Geräte, Meldungen „nicht erreichbar“ ausblenden, Speicherplatz der Diagramme |
 | **Netzwerk** | Hostname, DHCP oder feste IP, DNS; Tailscale (OpenCCU). Wirkt nach dem nächsten Neustart |
 | **Sicherheit** | Sicherheitsschlüssel, SSH (mit Passwort), Authentifizierung der Script-API, Umleitung auf HTTPS, Sitzungs-Timeout der WebUI, **Sicherheitsstufe**, **Werkseinstellungen** (mit Prüfung des Schlüssels und Bestätigungswort) |

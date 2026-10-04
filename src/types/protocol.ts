@@ -114,6 +114,7 @@ export type ServerMessage =
   | SetTimeServersResponse
   | SetTimeZoneResponse
   | SetClockResponse
+  | SetRegaVersionResponse
   | GetHeatingGroupsResponse
   | PrepareRestoreResponse
   | CheckRestoreResponse
@@ -258,6 +259,7 @@ export interface Protocol {
   setTimeServers: SetTimeServersCall;
   setTimeZone: SetTimeZoneCall;
   setClock: SetClockCall;
+  setRegaVersion: SetRegaVersionCall;
   getHeatingGroups: GetHeatingGroupsCall;
   prepareRestore: PrepareRestoreCall;
   checkRestore: CheckRestoreCall;
@@ -2529,6 +2531,10 @@ export interface GetSystemSettingsResponse {
    */
   timeZones?: string[];
   canSetClock: boolean;
+  /**
+   * the chosen logic layer, only where the CCU has both (eQ-3 firmware; OpenCCU ships one)
+   */
+  regaVersion?: "NORMAL" | "COMMUNITY";
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3445,6 +3451,35 @@ export interface SetClockRequest {
  */
 export interface SetClockResponse {
   type: "setClock_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetRegaVersionCall".
+ */
+export interface SetRegaVersionCall {
+  request: SetRegaVersionRequest;
+  response: SetRegaVersionResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetRegaVersionRequest".
+ */
+export interface SetRegaVersionRequest {
+  type: "setRegaVersion";
+  requestId?: string;
+  /**
+   * the logic layer to start next time (/etc/config/ReGaHssVersion)
+   */
+  version: "NORMAL" | "COMMUNITY";
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetRegaVersionResponse".
+ */
+export interface SetRegaVersionResponse {
+  type: "setRegaVersion_response";
   requestId?: string;
   success: boolean;
 }

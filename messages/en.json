@@ -1298,5 +1298,13 @@
   "DISPLAY_RC19_STATUS": "Up to 5 characters with symbols",
   "SYS_SAFE_MODE": "Restart in safe mode",
   "SYS_SAFE_MODE_CONFIRM": "The central unit starts once in safe mode: installed add-ons are not started, this one neither. The old WebUI stays reachable; a normal restart ends the mode. Changed settings are saved before.",
-  "SYS_SAFE_MODE_STARTING": "The central unit starts in safe mode. This add-on is not reachable until the next normal restart."
+  "SYS_SAFE_MODE_STARTING": "The central unit starts in safe mode. This add-on is not reachable until the next normal restart.",
+  "SYS_REGA": "Logic layer",
+  "SYS_REGA_VERSION": "Logic layer version",
+  "SYS_REGA_COMMUNITY": "Standard",
+  "SYS_REGA_NORMAL": "Compatibility mode",
+  "SYS_REGA_HINT": "Which version of the logic layer (ReGaHss) the CCU uses. Switch to compatibility mode if older scripts cause trouble.",
+  "SYS_REGA_RESTART": "The CCU has to restart for the new logic layer version to take effect.",
+  "SYS_REGA_RESTART_NOW": "Restart now",
+  "SYS_REGA_RESTART_LATER": "Restart later"
 }
