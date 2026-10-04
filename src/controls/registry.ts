@@ -16,6 +16,12 @@ import { GarageDoorControl } from './GarageDoorControl';
 import { AccessControl, AccessPointControl } from './AccessControls';
 import { InputControl } from './InputControl';
 import { ServoControl } from './ServoControl';
+import {
+  DistanceControl,
+  FillingLevelControl,
+  MeterSensorControl,
+  PassageDetectorControl,
+} from './MeterSensorControls';
 import { SwitchControl as AlarmOutputControl } from './SwitchControl';
 import { AutoRelockControl, DoorStateControl, FloorOutputControl, LockStateControl } from './SideChannelControls';
 import {
@@ -135,6 +141,10 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   [ChannelType.ENERGIE_METER_TRANSMITTER]: deviceControl('energy', EnergyMeterControl),
   // BidCos metering plugs (HM-ES-PMSw1): POWER and ENERGY_COUNTER as well
   POWERMETER: deviceControl('energy', EnergyMeterControl),
+  // Meter sensor HM-ES-TX-WM (powermeter.fn)
+  POWERMETER_IGL: channelControl('energy', MeterSensorControl),
+  POWERMETER_IEC1: channelControl('energy', MeterSensorControl),
+  POWERMETER_IEC2: channelControl('energy', MeterSensorControl),
   SHUTTER_CONTACT: channelControl('windows', WindowControl),
   SHUTTER_CONTACT_TRANSCEIVER: channelControl('windows', WindowControl),
   ROTARY_HANDLE_SENSOR: channelControl('windows', WindowControl),
@@ -155,6 +165,10 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   SENSOR_FOR_CARBON_DIOXIDE: channelControl('sensors', Co2LevelControl),
   TEMP_HUMIDITY_PARTICULATE_MATTER_TRANSMITTER: channelControl('sensors', ParticulateMatterControl),
   SOIL_MOISTURE_TRANSMITTER: channelControl('sensors', SoilMoistureControl),
+  // distance_transmitter.fn, passagedetector.fn, capacitive_filling_level_sensor.fn
+  DISTANCE_TRANSMITTER: channelControl('sensors', DistanceControl),
+  PASSAGE_DETECTOR_DIRECTION_TRANSMITTER: deviceControl('sensors', PassageDetectorControl),
+  CAPACITIVE_FILLING_LEVEL_SENSOR: channelControl('sensors', FillingLevelControl),
   // Irrigation (switch.fn CreateWaterSwitch, flow_meter_transmitter.fn) and
   // the water safety system HmIP-WSS
   WATER_SWITCH_VIRTUAL_RECEIVER: channelControl('water', WaterSwitchControl),

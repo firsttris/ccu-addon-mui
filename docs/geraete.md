@@ -13,12 +13,12 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
 
 | Familie | im Katalog | bedienbar | alle Kanäle mit eigener Kachel | Hauptfunktion mit eigener Kachel | nur generisch |
 |---|---:|---:|---:|---:|---:|
-| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 202 | 16 | 5 |
+| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 204 | 16 | 3 |
 | HomeMatic IP Wired (HmIPW) | 38 | 38 | 36 | 0 | 2 |
-| BidCos-RF (HM-) | 186 | 168 | 137 | 15 | 16 |
+| BidCos-RF (HM-) | 186 | 168 | 139 | 15 | 14 |
 | BidCos-RF, ältere und OEM-Typen | 41 | 36 | 31 | 1 | 4 |
 | BidCos-Wired (HMW-) | 15 | 11 | 6 | 0 | 5 |
-| **Summe** | **524** | **476** | **412 (87 %)** | **32 (7 %)** | **32 (7 %)** |
+| **Summe** | **524** | **476** | **416 (87 %)** | **32 (7 %)** | **28 (6 %)** |
 | virtuelle Typen (VIR-) | 11 | nicht geprüft | | | |
 
 - **BidCos-Wired** ist angebunden, sobald ein Wired-Gateway (HMW-LGW) eingerichtet ist, aber noch nicht an
@@ -31,7 +31,7 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
   Display eines Wandthermostats.
 - **nur generisch**: kein Kanal hat eine eigene Kachel. Das Gerät ist trotzdem voll bedienbar.
 
-Zusammen haben **444 von 476 Gerätetypen (93 %)** eine eigene Kachel für ihre Hauptfunktion.
+Zusammen haben **448 von 476 Gerätetypen (94 %)** eine eigene Kachel für ihre Hauptfunktion.
 
 Die Zählung ist reproduzierbar. Die Skripte vergleichen die Gerätebeschreibungen mit
 `src/controls/registry.ts`, gegengeprüft an einem Export einer echten CCU (`fixtures/my-ccu.json`).
@@ -106,11 +106,10 @@ Nach Bedeutung:
 
 1. **Display-Geräte**: HmIP-WGD, HmIPW-WGD und das Display des HmIP-WRCD haben keinen Baukasten für Texte und
    Symbole; die Werte sind nur generisch bedienbar.
-2. **Weitere Sensoren**: Abstand, Durchgang (HmIP-SPDR), Füllstand, Zählersensoren (HM-ES-TX-WM).
-3. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
+2. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
    Profile). Für die übrigen 59 Empfängertypen der WebUI (2065 Profile) geht nur der Expertenmodus mit allen
    Parametern.
-4. **Gerätebilder** der WebUI zeigt das Add-on nicht.
+3. **Gerätebilder** der WebUI zeigt das Add-on nicht.
 
 ## Ein Gerät fehlt oder sieht falsch aus?
 
