@@ -138,3 +138,15 @@ describe('downsample and scaleUnit', () => {
     expect(scaleUnit('°C', 100000)).toEqual({ unit: '°C', factor: 1 });
   });
 });
+
+describe('costOf', async () => {
+  const { costOf } = await import('./Diagrams');
+  const price = { currency: 'EUR', electricity: 0.3, gas: 0.1, gasHeatingValue: 11, gasConditionNumber: 0.95 };
+  it('prices electricity and gas', () => {
+    expect(costOf(2000, 'Wh', price)).toBeCloseTo(0.6);
+    expect(costOf(10, 'kWh', price)).toBeCloseTo(3);
+    expect(costOf(100, 'm³', price)).toBeCloseTo(104.5);
+    expect(costOf(10, '°C', price)).toBeNull();
+    expect(costOf(10, 'kWh', undefined)).toBeNull();
+  });
+});

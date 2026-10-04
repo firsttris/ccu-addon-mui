@@ -71,6 +71,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	cfg.GroupsFile = "../fixtures/groups.gson"
 	cfg.DiagramsFile = filepath.Join(t.TempDir(), "diagrams.json")
 	cfg.DiagramsDir = filepath.Join(t.TempDir(), "diagrams")
+	cfg.ConfigDir = t.TempDir()
 	auditLogs[ccu] = cfg.AuditLogFile
 	wsPorts[ccu] = cfg.WSPort
 
@@ -2149,5 +2150,77 @@ func TestStackDiagrams(t *testing.T) {
 	send(t, conn, message{"type": "deleteDiagram", "requestId": "d8", "id": id})
 	if m := receive(t, conn, byRequestID("d8")); m["code"] != "NOT_FOUND" {
 		t.Errorf("delete twice: %v", m)
+	}
+}
+
+func TestStackGeneralSettings(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getGeneralSettings", "requestId": "g1"})
+	m := receive(t, conn, byRequestID("g1"))
+	price := m["energyPrice"].(map[string]interface{})
+	if price["currency"] != "EUR" || price["electricity"] != 0.0 || m["infoLed"].(map[string]interface{})["service"] != true ||
+		m["hideStickyUnreach"] != false || len(m["currencies"].([]interface{})) != 5 || m["storage"].(map[string]interface{})["total"].(float64) <= 0 {
+		t.Fatalf("settings: %v", m)
+	}
+
+	stickyBefore := false
+	send(t, conn, message{"type": "getServiceMessages", "requestId": "g2"})
+	for _, item := range receive(t, conn, byRequestID("g2"))["messages"].([]interface{}) {
+		stickyBefore = stickyBefore || item.(map[string]interface{})["type"] == "STICKY_UNREACH"
+	}
+
+	send(t, conn, message{"type": "setGeneralSettings", "requestId": "g3",
+		"energyPrice":       map[string]interface{}{"currency": "EUR", "electricity": 0.32, "gas": 0.11, "gasHeatingValue": 11.3, "gasConditionNumber": 0.95},
+		"infoLed":           map[string]interface{}{"service": false, "alarm": true},
+		"hideStickyUnreach": true, "betaFirmware": false})
+	if m := receive(t, conn, byRequestID("g3")); m["success"] != true {
+		t.Fatalf("set: %v", m)
+	}
+	send(t, conn, message{"type": "getGeneralSettings", "requestId": "g4"})
+	m = receive(t, conn, byRequestID("g4"))
+	if m["energyPrice"].(map[string]interface{})["electricity"] != 0.32 || m["infoLed"].(map[string]interface{})["service"] != false || m["hideStickyUnreach"] != true {
+		t.Errorf("after set: %v", m)
+	}
+
+	// Messages of devices that were unreachable are hidden and acknowledged
+	sticky := func(id string) bool {
+		send(t, conn, message{"type": "getServiceMessages", "requestId": id})
+		for _, item := range receive(t, conn, byRequestID(id))["messages"].([]interface{}) {
+			if item.(map[string]interface{})["type"] == "STICKY_UNREACH" {
+				return true
+			}
+		}
+		return false
+	}
+	if !stickyBefore {
+		t.Fatal("the fixture has no sticky unreach message")
+	}
+	if sticky("g5") {
+		t.Error("sticky unreach shown")
+	}
+	// Acknowledged: gone without the option too
+	send(t, conn, message{"type": "setGeneralSettings", "requestId": "g5b",
+		"energyPrice": map[string]interface{}{"currency": "EUR", "electricity": 0.32, "gas": 0.11, "gasHeatingValue": 11.3, "gasConditionNumber": 0.95},
+		"infoLed":     map[string]interface{}{"service": false, "alarm": true}, "hideStickyUnreach": false})
+	receive(t, conn, byRequestID("g5b"))
+	deadline := time.Now().Add(3 * time.Second)
+	for i := 0; sticky(fmt.Sprintf("g5c%d", i)); i++ {
+		if time.Now().After(deadline) {
+			t.Fatal("sticky unreach not acknowledged")
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	// The prices come with the diagrams
+	send(t, conn, message{"type": "getDiagrams", "requestId": "g6"})
+	if m := receive(t, conn, byRequestID("g6")); m["energyPrice"].(map[string]interface{})["electricity"] != 0.32 {
+		t.Errorf("diagrams: %v", m)
+	}
+
+	send(t, conn, message{"type": "setGeneralSettings", "requestId": "g7", "energyPrice": map[string]interface{}{"currency": "USD"}})
+	if m := receive(t, conn, byRequestID("g7")); m["code"] != "INVALID_VALUE" {
+		t.Errorf("invalid currency: %v", m)
 	}
 }

@@ -25,6 +25,7 @@ export const guessUnit = (datapoint: string) => {
   if (datapoint.includes('TEMPERATURE')) return '°C';
   if (datapoint === 'HUMIDITY' || datapoint.startsWith('LEVEL') || datapoint === 'VALVE_STATE') return '%';
   if (datapoint === 'POWER' || datapoint.endsWith('_POWER')) return 'W';
+  if (datapoint === 'GAS_ENERGY_COUNTER' || datapoint === 'GAS_VOLUME' || datapoint === 'WATER_VOLUME') return 'm³';
   if (datapoint.endsWith('ENERGY_COUNTER')) return 'Wh';
   if (datapoint === 'VOLTAGE' || datapoint === 'OPERATING_VOLTAGE') return 'V';
   if (datapoint === 'CURRENT') return 'mA';

@@ -1232,3 +1232,25 @@ test('legt ein Diagramm an, zeigt die aufgezeichneten Werte und löscht es', asy
   await expect(card).toHaveCount(0);
   await expect(page.getByText('Noch keine Diagramme.')).toBeVisible();
 });
+
+test('stellt Energiepreise und Info-LED in den allgemeinen Einstellungen ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Allgemeine Einstellungen' });
+  await expect(panel.getByLabel('Währung')).toHaveValue('EUR');
+  await panel.getByLabel('Strompreis').fill('0,3245');
+  await panel.getByLabel('Gaspreis').fill('abc');
+  await expect(panel.getByRole('button', { name: 'Speichern' })).toBeDisabled();
+  await panel.getByLabel('Gaspreis').fill('0,11');
+  await panel.getByLabel('Info-LED bei Servicemeldungen').click();
+  await panel.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+  await expect(panel.getByRole('meter', { name: 'Speicher' })).toBeVisible();
+
+  await page.reload();
+  const reloaded = page.getByRole('region', { name: 'Allgemeine Einstellungen' });
+  await expect(reloaded.getByLabel('Strompreis')).toHaveValue('0,3245');
+  await expect(reloaded.getByLabel('Gaspreis')).toHaveValue('0,11');
+  await expect(reloaded.getByLabel('Info-LED bei Servicemeldungen')).not.toBeChecked();
+  await expect(reloaded.getByLabel('Info-LED bei Alarmen')).toBeChecked();
+});

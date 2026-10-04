@@ -68,6 +68,7 @@ export default defineConfig({
         GROUPS_FILE: path.resolve('fixtures/groups.gson'),
         DIAGRAMS_FILE: path.join(stateDir, 'diagrams.json'),
         DIAGRAMS_DIR: path.join(stateDir, 'diagrams'),
+        CCU_CONFIG_DIR: stateDir,
       },
     },
     {

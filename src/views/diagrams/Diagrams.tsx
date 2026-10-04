@@ -40,7 +40,7 @@ import {
   type Period,
   type RenderSeries,
 } from './chart';
-import type { Diagram, DiagramSeries, GetDiagramDataResponse } from '../../types/protocol';
+import type { Diagram, DiagramSeries, EnergyPrice, GetDiagramDataResponse } from '../../types/protocol';
 
 const periodLabels: Record<Period, () => string> = {
   day: m.DIAG_PERIOD_DAY,
@@ -67,6 +67,20 @@ const useMinute = () => {
   }, []);
   return now;
 };
+
+// The costs of a consumption: electricity in Wh or kWh, gas in m³ (turned
+// into kWh with calorific value and condition number) or kWh
+export const costOf = (sum: number, unit: string, price?: EnergyPrice): number | null => {
+  if (!price) return null;
+  if (unit === 'Wh' && price.electricity > 0) return (sum / 1000) * price.electricity;
+  if (unit === 'kWh' && price.electricity > 0) return sum * price.electricity;
+  if (unit === 'm³' && price.gas > 0 && price.gasHeatingValue > 0) {
+    return sum * price.gasHeatingValue * (price.gasConditionNumber || 1) * price.gas;
+  }
+  return null;
+};
+
+const costFormat = (currency: string) => new Intl.NumberFormat(defaultLang, { style: 'currency', currency });
 
 type Range = { period: Period; end: number | null } | { period: Period; from: number; to: number; zoomed: true };
 
@@ -125,9 +139,11 @@ interface DiagramCardProps {
   names: Map<string, string>;
   // A tile in a room, trade or favorite list: smaller, without changing
   compact?: boolean;
+  // For the costs of consumption
+  energyPrice?: EnergyPrice;
 }
 
-const DiagramCard = ({ diagram, canEdit, names, compact = false }: DiagramCardProps) => {
+const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: DiagramCardProps) => {
   const { request } = useWebSocketActions();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -310,6 +326,11 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false }: DiagramCardPr
                     </span>
                   )}
                 </span>
+                {stats?.sum !== undefined && costOf(stats.sum, s.unit, energyPrice) !== null && (
+                  <span className="text-xs font-medium text-emerald-700 tabular-nums dark:text-emerald-400">
+                    {m.DIAG_COST({ value: costFormat(energyPrice!.currency).format(costOf(stats.sum, s.unit, energyPrice)!) })}
+                  </span>
+                )}
                 {stats && s.kind !== 'state' && !(s.kind === 'step' && stats.min === 0 && stats.max === 1) && (
                   <span className="text-xs text-muted-foreground tabular-nums">
                     {stats.sum !== undefined
@@ -430,9 +451,9 @@ export const Diagrams = () => {
 
   const diagrams = useQuery({
     queryKey: ['diagrams'],
-    queryFn: async () => (await request({ type: 'getDiagrams' })).diagrams,
+    queryFn: () => request({ type: 'getDiagrams' }),
   });
-  useLiveUpdates(diagrams.data);
+  useLiveUpdates(diagrams.data?.diagrams);
 
   return (
     <>
@@ -445,17 +466,19 @@ export const Diagrams = () => {
           </Button>
         )}
       </div>
-      {diagrams.data === undefined ? (
+      {diagrams.data?.diagrams === undefined ? (
         <Panel aria-busy>
           <PanelSkeleton lines={6} />
         </Panel>
-      ) : diagrams.data.length === 0 ? (
+      ) : diagrams.data.diagrams.length === 0 ? (
         <Panel>
           <p>{m.DIAG_NONE()}</p>
           {canEdit && <p>{m.DIAG_NONE_ADMIN()}</p>}
         </Panel>
       ) : (
-        diagrams.data.map((diagram) => <DiagramCard key={diagram.id} diagram={diagram} canEdit={canEdit} names={names} />)
+        diagrams.data.diagrams.map((diagram) => (
+          <DiagramCard key={diagram.id} diagram={diagram} canEdit={canEdit} names={names} energyPrice={diagrams.data?.energyPrice} />
+        ))
       )}
       <p className="text-xs text-muted-foreground">{m.DIAG_HINT()}</p>
       {creating && <DiagramEditor onClose={() => setCreating(false)} />}
@@ -468,23 +491,23 @@ export const PlaceDiagrams = ({ place }: { place: number }) => {
   const { request } = useWebSocketActions();
   const diagrams = useQuery({
     queryKey: ['diagrams'],
-    queryFn: async () => (await request({ type: 'getDiagrams' })).diagrams,
+    queryFn: () => request({ type: 'getDiagrams' }),
     // Without the recorder (an older server) there are none
     retry: false,
   });
-  const shown = useMemo(() => (diagrams.data ?? []).filter((d) => d.places?.includes(place)), [diagrams.data, place]);
+  const shown = useMemo(() => (diagrams.data?.diagrams ?? []).filter((d) => d.places?.includes(place)), [diagrams.data, place]);
   useLiveUpdates(shown, false);
-  return shown.length > 0 ? <PlaceDiagramTiles diagrams={shown} /> : null;
+  return shown.length > 0 ? <PlaceDiagramTiles diagrams={shown} energyPrice={diagrams.data?.energyPrice} /> : null;
 };
 
 // Only rooms with diagrams load the names of all channels
-const PlaceDiagramTiles = ({ diagrams: shown }: { diagrams: Diagram[] }) => {
+const PlaceDiagramTiles = ({ diagrams: shown, energyPrice }: { diagrams: Diagram[]; energyPrice?: EnergyPrice }) => {
   const candidates = useCandidates();
   const names = useMemo(() => new Map(candidates.map((c) => [keyOf(c.series), c.name])), [candidates]);
   return (
     <section aria-label={m.DIAGRAMS()} className="grid gap-4 lg:grid-cols-2">
       {shown.map((diagram) => (
-        <DiagramCard key={diagram.id} diagram={diagram} canEdit={false} names={names} compact />
+        <DiagramCard key={diagram.id} diagram={diagram} canEdit={false} names={names} energyPrice={energyPrice} compact />
       ))}
     </section>
   );
