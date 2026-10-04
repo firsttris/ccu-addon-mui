@@ -1,4 +1,6 @@
 import { DatapointValue, ParamsetDescription } from '../../types/types';
+import { parameterLabel } from '../generic/parameters';
+import { enumLabel } from '../generic/settingKinds';
 
 // The direct link profiles of the WebUI ("easymodes"), imported from
 // OpenCCU-Base by scripts/import-link-profiles.mjs. A profile sets all
@@ -13,6 +15,8 @@ export interface ProfileField {
   kind: 'time' | 'value';
   params: string[];
   label: Record<string, string>;
+  // The choices of a value, by value, as the WebUI names them
+  options?: Record<string, Record<string, string>>;
 }
 
 export interface LinkProfile {
@@ -29,8 +33,14 @@ export interface LinkProfile {
 // By receiver channel type, then sender channel type
 export type ProfileTable = Record<string, Record<string, LinkProfile[]>>;
 
-// Loaded with the link page only (about 50 kB compressed)
-export const loadProfileTable = async () => (await import('./linkProfiles.json')).default as unknown as ProfileTable;
+// One file per receiver type, loaded when a link with such a receiver is
+// shown (all of them are about 4 MB)
+const files = import.meta.glob<{ default: Record<string, LinkProfile[]> }>('./profiles/*.json');
+
+export const loadProfileTable = async (receiverType: string): Promise<ProfileTable> => {
+  const load = files[`./profiles/${receiverType}.json`];
+  return load ? { [receiverType]: (await load()).default } : {};
+};
 
 export const profilesFor = (table: ProfileTable, receiverType: string, senderType: string, peerType?: string) =>
   (table[receiverType]?.[senderType] ?? []).filter(
@@ -105,3 +115,37 @@ export const BIDCOS_PERMANENT = 111600;
 
 // Choices for times, as the WebUI's time selector (hmip_helper.tcl)
 export const TIME_PRESETS = [0, 0.1, 0.5, 1, 2, 3, 5, 10, 30, 60, 120, 300, 600, 1800, 3600, 7200, 10800, 18000, 28800, 43200, 86400, PERMANENT];
+
+// Readable names of link parameters and their choices: as the WebUI's
+// profiles for this pair label them, else the translations and the
+// catalog of settings; the long-press ones marked as such
+export const linkParameterNames = (
+  profiles: LinkProfile[],
+  lang: string,
+  t: (key: string) => string,
+  long: string,
+) => {
+  const labels = new Map<string, string>();
+  const choices = new Map<string, Record<string, Record<string, string>>>();
+  for (const field of profiles.flatMap((p) => p.fields)) {
+    const label = field.label[lang] || field.label.de;
+    for (const param of field.params) {
+      if (label && !labels.has(param)) labels.set(param, label);
+      if (field.options && !choices.has(param)) choices.set(param, field.options);
+    }
+  }
+  return {
+    nameOf: (name: string) => {
+      const base = name.replace(/^(SHORT|LONG)_/, '');
+      const translated = t(name);
+      const label =
+        labels.get(name) ?? (translated !== name ? translated : labels.get(`SHORT_${base}`) ?? parameterLabel(base));
+      return name.startsWith('LONG_') ? `${label} (${long})` : label;
+    },
+    optionOf: (name: string, index: number, option: string) => {
+      const base = name.replace(/^(SHORT|LONG)_/, '');
+      const own = (choices.get(name) ?? choices.get(`SHORT_${base}`))?.[String(index)];
+      return own ? own[lang] || own.de : enumLabel(option);
+    },
+  };
+};

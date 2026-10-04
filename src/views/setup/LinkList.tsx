@@ -47,14 +47,14 @@ const useNearScreen = <T extends Element>() => {
 const useBehaviour = (link: InterfaceLink, enabled: boolean) => {
   const channelInfo = useLinkChannelInfo();
   const { description, values } = useLinkParamset(link.interfaceName, link.receiver, link.sender, enabled);
-  const { data: table } = useQuery({
-    queryKey: ['linkProfiles'],
-    queryFn: loadProfileTable,
-    staleTime: Infinity,
-    enabled,
-  });
   const receiverType = channelInfo.get(link.receiver)?.channel.type;
   const sender = channelInfo.get(link.sender);
+  const { data: table } = useQuery({
+    queryKey: ['linkProfiles', receiverType],
+    queryFn: () => loadProfileTable(receiverType!),
+    staleTime: Infinity,
+    enabled: enabled && !!receiverType,
+  });
   if (!table || !values.data || !description.data || !receiverType || !sender) return undefined;
   const profiles = profilesFor(table, receiverType, sender.channel.type, sender.deviceType);
   if (profiles.length === 0) return undefined;
