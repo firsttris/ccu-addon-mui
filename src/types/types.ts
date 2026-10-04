@@ -62,11 +62,6 @@ export type FloorClimateControlTransceiverDatapoint = {
   VALVE_STATE: string;
 };
 
-export type RainDesctionTransmitterDatapoint = {
-  RAINING: string;
-  HEATER_STATE: string;
-};
-
 // HmIP-ESI: channel 1 has the current power/flow, channels 2-4 the meter
 // readings. Which values are set depends on the connected sensor.
 export type EnergyMeterDatapoint = {

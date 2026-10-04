@@ -41,8 +41,6 @@ export const profileLayout = (description: ParamsetDescription | undefined) => {
   return { profiles, slots };
 };
 
-export const hasWeekProfile = (description: ParamsetDescription | undefined) => profileLayout(description).profiles > 0;
-
 // The used slots of one day: up to and including the one ending at 24:00.
 // Values out of order or missing end the day at the last sensible slot.
 export const readDay = (values: Record<string, DatapointValue>, profile: number, day: Day, slots: number): DayProfile => {

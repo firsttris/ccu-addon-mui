@@ -153,7 +153,7 @@ Optionen wie `AUTH_MODE` und Deinstallation stehen in der [Installation](docs/in
 | [Geräteunterstützung](docs/geraete.md) | Welche Geräte welche Kachel bekommen, Zahlen, was noch fehlt |
 | [Vergleich mit der CCU3-WebUI](docs/vergleich-ccu3.md) | Funktion für Funktion: vorhanden, fehlt, besser |
 | [Architektur](docs/architektur.md) | Aufbau, Datenfluss, Schnittstellen der CCU, Entscheidungen |
-| [WebSocket-Protokoll](docs/protokoll.md) | Nachrichten, Anmeldung, Events, Fehlercodes, alle 131 Nachrichtentypen |
+| [API: WebSocket-Protokoll](docs/protokoll.md) | die API des Add-ons: Nachrichten, Anmeldung, Events, Fehlercodes, alle 131 Nachrichtentypen |
 | [Sicherheit](docs/sicherheit.md) | Anmeldung, Tokens, Rechte, Audit-Log |
 | [Tests](docs/tests.md) | Unit, Go, Fake-CCU, End-to-End, Screenshots, CI |
 | [Entwicklung](docs/entwicklung.md) | Lokale Umgebung, Befehle, Protokoll erweitern, Übersetzungen, Release |
