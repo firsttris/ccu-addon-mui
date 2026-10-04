@@ -149,6 +149,11 @@ const (
 	HideStickyUnreach = "hideStickyUnreach"
 	// Offers beta firmware for devices (activateDeviceBetaFw)
 	FieldTest = "fieldTestActive"
+	// The security settings of cp_security.cgi (CCU.getSSHState,
+	// libsecuritylevel.tcl SEC_getAuthEnabled, CCU.getHttpsRedirectEnabled)
+	SSHEnabled           = "sshEnabled"
+	AuthEnabled          = "authEnabled"
+	HTTPSRedirectEnabled = "httpsRedirectEnabled"
 )
 
 // Flag reports whether a flag file exists

@@ -1299,3 +1299,43 @@ test('legt Heizgruppen an, verschiebt ein Thermostat und löscht sie wieder', as
   await back.getByRole('button', { name: 'Speichern' }).click();
   await expect(list.getByRole('list', { name: 'Mitglieder von Heizung Flur' })).toContainText('Wandthermostat Flur');
 });
+
+test('schaltet SSH ein und setzt den Sicherheitsschlüssel', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Sicherheit' });
+  // The WebUI session may be kept from before: then no password is asked
+  const saveWithSession = async (button: ReturnType<typeof page.getByRole>, scope: ReturnType<typeof page.getByRole>, done: ReturnType<typeof page.getByText>) => {
+    await button.click();
+    const passwordField = scope.getByLabel('Passwort', { exact: true });
+    await expect(done.or(passwordField)).toBeVisible();
+    if (await passwordField.isVisible()) {
+      await passwordField.fill('secret');
+      await button.click();
+    }
+    await expect(done).toBeVisible();
+  };
+
+  await expect(panel.getByLabel('SSH-Zugang')).not.toBeChecked();
+  await panel.getByLabel('SSH-Zugang').click();
+  await panel.getByLabel('Neues SSH-Passwort').fill('geheim123');
+  await panel.getByLabel('Passwort wiederholen').fill('geheim12');
+  await expect(panel.getByRole('button', { name: 'Speichern' })).toBeDisabled();
+  await panel.getByLabel('Passwort wiederholen').fill('geheim123');
+  await saveWithSession(panel.getByRole('button', { name: 'Speichern' }), panel, page.getByText('Einstellungen gespeichert'));
+  await page.reload();
+  const reloaded = page.getByRole('region', { name: 'Sicherheit' });
+  await expect(reloaded.getByLabel('SSH-Zugang')).toBeChecked();
+  await reloaded.getByLabel('SSH-Zugang').click();
+  await reloaded.getByRole('button', { name: 'Speichern' }).click();
+  await expect(reloaded.getByLabel('SSH-Zugang')).not.toBeChecked();
+
+  await reloaded.getByLabel('Neuer Schlüssel').fill('ab');
+  await expect(reloaded).toContainText('Mindestens 5 Zeichen');
+  await reloaded.getByLabel('Neuer Schlüssel').fill('Neuer_Key_1');
+  await reloaded.getByLabel('Schlüssel wiederholen').fill('Neuer_Key_1');
+  await reloaded.getByRole('button', { name: 'Schlüssel setzen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Sicherheitsschlüssel (HomeMatic)' });
+  await expect(dialog).toContainText('Notieren Sie den Schlüssel');
+  await saveWithSession(dialog.getByRole('button', { name: 'Schlüssel setzen' }), dialog, page.getByText('Sicherheitsschlüssel gesetzt'));
+});

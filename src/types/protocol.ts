@@ -131,7 +131,10 @@ export type ServerMessage =
   | SetGeneralSettingsResponse
   | GetHeatingGroupMembersResponse
   | SaveHeatingGroupResponse
-  | DeleteHeatingGroupResponse;
+  | DeleteHeatingGroupResponse
+  | GetSecurityResponse
+  | SetSecurityResponse
+  | ChangeSecurityKeyResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -247,6 +250,9 @@ export interface Protocol {
   getHeatingGroupMembers: GetHeatingGroupMembersCall;
   saveHeatingGroup: SaveHeatingGroupCall;
   deleteHeatingGroup: DeleteHeatingGroupCall;
+  getSecurity: GetSecurityCall;
+  setSecurity: SetSecurityCall;
+  changeSecurityKey: ChangeSecurityKeyCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4008,6 +4014,99 @@ export interface DeleteHeatingGroupRequest {
  */
 export interface DeleteHeatingGroupResponse {
   type: "deleteHeatingGroup_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetSecurityCall".
+ */
+export interface GetSecurityCall {
+  request: GetSecurityRequest;
+  response: GetSecurityResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetSecurityRequest".
+ */
+export interface GetSecurityRequest {
+  type: "getSecurity";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetSecurityResponse".
+ */
+export interface GetSecurityResponse {
+  type: "getSecurity_response";
+  requestId?: string;
+  ssh: boolean;
+  /**
+   * Authentication of the remote API
+   */
+  auth: boolean;
+  httpsRedirect: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSecurityCall".
+ */
+export interface SetSecurityCall {
+  request: SetSecurityRequest;
+  response: SetSecurityResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSecurityRequest".
+ */
+export interface SetSecurityRequest {
+  type: "setSecurity";
+  requestId?: string;
+  ssh: boolean;
+  /**
+   * A new SSH password (root); empty keeps it
+   */
+  sshPassword?: string;
+  auth: boolean;
+  httpsRedirect: boolean;
+  /**
+   * For a new WebUI session, when the last answer was PASSWORD_REQUIRED
+   */
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSecurityResponse".
+ */
+export interface SetSecurityResponse {
+  type: "setSecurity_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ChangeSecurityKeyCall".
+ */
+export interface ChangeSecurityKeyCall {
+  request: ChangeSecurityKeyRequest;
+  response: ChangeSecurityKeyResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ChangeSecurityKeyRequest".
+ */
+export interface ChangeSecurityKeyRequest {
+  type: "changeSecurityKey";
+  requestId?: string;
+  key: string;
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ChangeSecurityKeyResponse".
+ */
+export interface ChangeSecurityKeyResponse {
+  type: "changeSecurityKey_response";
   requestId?: string;
   success: boolean;
 }
