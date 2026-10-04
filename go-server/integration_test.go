@@ -76,6 +76,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		BackupDir:          filepath.Join(t.TempDir(), "backups"),
 		PushFile:           filepath.Join(t.TempDir(), "push.json"),
 		RulesFile:          filepath.Join(t.TempDir(), "rules.json"),
+		WWWDir:             "../fixtures/www",
 		PushSubject:        "mailto:test@example.com",
 		AddonsDir:          addonsDir(t),
 	}
@@ -2950,5 +2951,37 @@ func TestStackRules(t *testing.T) {
 	send(t, conn, message{"type": "deleteRule", "requestId": "r5", "id": id})
 	if m := receive(t, conn, byRequestID("r5")); m["code"] != "NOT_FOUND" {
 		t.Fatalf("delete twice: %v", m)
+	}
+}
+
+// The WebUI's device pictures: the list from DEVDB.tcl over the WebSocket,
+// the files over HTTP next to it
+func TestStackDeviceImages(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "getDeviceImages", "requestId": "i1"})
+	images := receive(t, conn, byRequestID("i1"))["images"].(map[string]interface{})
+	wrc2 := images["hmip-wrc2"].(map[string]interface{})
+	if wrc2["path"] != "250/demo-wallswitch.png" {
+		t.Fatalf("HmIP-WRC2: %v", wrc2)
+	}
+	shapes := wrc2["channels"].(map[string]interface{})["1"].([]interface{})
+	if len(shapes) != 1 || shapes[0].(map[string]interface{})["kind"] != "ellipse" {
+		t.Fatalf("channel 1: %v", shapes)
+	}
+
+	base := "http://" + conn.RemoteAddr().String() + "/ws/mui/img/"
+	resp, err := http.Get(base + "250/demo-wallswitch.png")
+	if err != nil || resp.StatusCode != http.StatusOK || resp.Header.Get("Content-Type") != "image/png" {
+		t.Fatalf("picture: %v %v", resp, err)
+	}
+	resp.Body.Close()
+	// Only the pictures, no listings, nothing outside
+	for _, path := range []string{"250/", "../devdescr/DEVDB.tcl", "..%2f..%2fdevdescr%2fDEVDB.tcl"} {
+		resp, err := http.Get(base + path)
+		if err != nil || resp.StatusCode == http.StatusOK {
+			t.Fatalf("%s: %v %v", path, resp, err)
+		}
+		resp.Body.Close()
 	}
 }

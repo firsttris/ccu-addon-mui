@@ -1,3 +1,4 @@
+import { DeviceImage } from '../../components/DeviceImage';
 import { useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
@@ -94,13 +95,16 @@ export const Setup = () => {
       column.accessor('name', {
         header: m.NAME(),
         cell: (info) => (
-          <Link
-            to="/device/$interfaceName/$address"
-            params={{ interfaceName: info.row.original.interfaceName, address: info.row.original.address }}
-            className="font-medium after:absolute after:inset-0 hover:underline"
-          >
-            {info.getValue()}
-          </Link>
+          <span className="flex items-center gap-3">
+            <DeviceImage type={info.row.original.type} size={40} />
+            <Link
+              to="/device/$interfaceName/$address"
+              params={{ interfaceName: info.row.original.interfaceName, address: info.row.original.address }}
+              className="font-medium after:absolute after:inset-0 hover:underline"
+            >
+              {info.getValue()}
+            </Link>
+          </span>
         ),
       }),
       column.accessor('type', { header: m.DEVICE_TYPE() }),

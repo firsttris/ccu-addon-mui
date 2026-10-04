@@ -1,7 +1,13 @@
+import { DeviceImage } from "../../components/DeviceImage";
 import { Panel } from "./Panel";
 import { ReactNode, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useInbox, useInstallMode, useInterfaces, usePairingAction } from "../../queries";
+import {
+  useInbox,
+  useInstallMode,
+  useInterfaces,
+  usePairingAction,
+} from "../../queries";
 import { useToast } from "../../contexts/ToastContext";
 import { DialogButton } from "../../components/ConfirmDialog";
 import { m } from "../../paraglide/messages";
@@ -161,7 +167,9 @@ export const Pairing = () => {
   const [interfaceName, setInterfaceName] = useState(INTERFACES[0]);
   const [started, setStarted] = useState(false);
   const { data: connected = [] } = useInterfaces();
-  const interfaces = INTERFACES.filter((name) => name !== "BidCos-Wired" || connected.includes(name));
+  const interfaces = INTERFACES.filter(
+    (name) => name !== "BidCos-Wired" || connected.includes(name),
+  );
   const wired = interfaceName === "BidCos-Wired";
   const { data: { seconds, keyMismatch } = { seconds: 0 }, dataUpdatedAt } =
     useInstallMode(interfaceName, { poll: started, enabled: !wired });
@@ -240,7 +248,9 @@ export const Pairing = () => {
             type="button"
             primary
             disabled={action.isPending}
-            onClick={() => run({ type: "searchWiredDevices" }, m.WIRED_SEARCH_DONE())}
+            onClick={() =>
+              run({ type: "searchWiredDevices" }, m.WIRED_SEARCH_DONE())
+            }
           >
             {m.WIRED_SEARCH()}
           </DialogButton>
@@ -321,17 +331,20 @@ export const Pairing = () => {
         >
           {inbox.map((device) => (
             <li key={device.address}>
-              <span>
-                <Link
-                  to="/device/$interfaceName/$address"
-                  params={{
-                    interfaceName: device.interfaceName,
-                    address: device.address,
-                  }}
-                >
-                  {device.name}
-                </Link>{" "}
-                ({device.type})
+              <span className="flex min-w-0 items-center gap-3">
+                <DeviceImage type={device.type} size={64} />
+                <span>
+                  <Link
+                    to="/device/$interfaceName/$address"
+                    params={{
+                      interfaceName: device.interfaceName,
+                      address: device.address,
+                    }}
+                  >
+                    {device.name}
+                  </Link>{" "}
+                  ({device.type})
+                </span>
               </span>
               <span className="flex flex-wrap gap-2">
                 {device.interfaceName !== "HmIP-RF" && (

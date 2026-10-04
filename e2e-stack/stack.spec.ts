@@ -1896,3 +1896,27 @@ test('legt eine Benachrichtigungsregel aus einer Vorlage an', async ({ page }) =
   await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
   await expect(rule).toHaveCount(0);
 });
+
+test('zeigt Gerätebilder der WebUI mit markiertem Kanal', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup');
+  // The pictures and their list come from the WebUI's DEVDB.tcl
+  const row = page.getByRole('row', { name: /Taster Esszimmer/ });
+  await expect(row.locator('[data-device-image="250/demo-wallswitch.png"] img')).toBeVisible();
+  await expect
+    .poll(() => row.locator('img').evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth))
+    .toBe(250);
+
+  // On the device page the channel pointed at is marked in the picture
+  await page.goto('/device/BidCos-RF/LEQ0000001');
+  const picture = page.locator('[data-device-image="250/demo-actuator.png"]').first();
+  await expect(picture).toBeVisible();
+  await expect(picture.locator('svg')).toHaveCount(0);
+  // Channel 1 of the switch actuator: its off and on buttons (a set of two)
+  await page.getByLabel('Name LEQ0000001:1').hover();
+  await expect(picture.locator('svg rect')).toHaveCount(2);
+
+  // Types without a picture get a symbol
+  await page.goto('/setup');
+  await expect(page.getByRole('row', { name: /Kontakt-Schnittstelle Gartentor/ }).locator('[data-device-image="none"]')).toBeVisible();
+});
