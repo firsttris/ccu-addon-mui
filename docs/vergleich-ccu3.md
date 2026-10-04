@@ -9,7 +9,7 @@ in den Tabellen unten.
 
 | | |
 |---|---|
-| Funktionen der WebUI | **58 von 66 vorhanden (88 %)** |
+| Funktionen der WebUI | **59 von 66 vorhanden (89 %)** |
 | Fehlen | 8, meist Einzeloptionen; der größte Brocken sind die Kopplungen (Hue, Lightify) |
 | Gerätetypen | alle 472 an HmIP, HmIP Wired, BidCos-RF und BidCos-Wired bedienbar, 95 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
 
@@ -77,7 +77,7 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 |---|:---:|---|
 | CCU-Firmware: Update suchen und einspielen | ➕ | OpenCCU lädt das Update selbst, mit Prüfsumme und Speicherprüfung |
 | Neustart, Herunterfahren | ✅ | |
-| Neustart im abgesicherten Modus | ❌ | |
+| Neustart im abgesicherten Modus | ✅ | wie `SafeMode.enter`: Zusatzsoftware startet einmalig nicht, auch das Add-on nicht |
 | Protokollierung (Log-Level, Syslog, Logdateien) | ✅ | |
 | ReGa-Version wählen (OpenCCU) | ❌ | |
 | Backup erstellen | ✅ | |

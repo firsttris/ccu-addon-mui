@@ -6254,7 +6254,8 @@
           "type": "string",
           "enum": [
             "reboot",
-            "shutdown"
+            "shutdown",
+            "safemode"
           ]
         }
       },

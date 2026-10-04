@@ -167,7 +167,7 @@ Benutzers:
 Was die WebUI über eigene Tcl-Skripte erledigt, macht der Server direkt und auf dieselbe Weise: Uhr und
 Zeitzone (`date`, `hwclock`, `updateTZ.sh`, `time.conf`, `ntpclient`), Netzwerk (`netconfig`), Syslog
 (`/etc/config/syslog`, `monit restart syslogd`), Zertifikat (`server.pem`), Sitzungs-Timeout (`rega.conf`),
-Neustart und Herunterfahren (nach `SaveSystem` in ReGa), Zusatzsoftware über deren rc.d-Skripte.
+Neustart, Herunterfahren und abgesicherter Modus (nach `SaveSystem` in ReGa; für den abgesicherten Modus zusätzlich `/etc/config/safemode` wie `safemode/enter.tcl`), Zusatzsoftware über deren rc.d-Skripte.
 
 ## Die App
 

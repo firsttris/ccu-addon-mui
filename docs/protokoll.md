@@ -178,7 +178,7 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | | `getSystemSettings` | Standort, Zeitzone, Zeitserver, Fähigkeiten (Neustart, Uhr) | Admin |
 | | `setLocation` | Koordinaten (ReGa und `time.conf`) | Admin+T (A) |
 | | `setTimeServers`, `setTimeZone`, `setClock` | Uhr wie `cp_time.cgi` | Admin+T (A) |
-| | `powerAction` | `reboot` oder `shutdown` der CCU | Admin+T (A) |
+| | `powerAction` | `reboot`, `shutdown` oder `safemode` (Neustart im abgesicherten Modus) der CCU | Admin+T (A) |
 | | `getGeneralSettings` | Energiepreis, Info-LED, hideStickyUnreach, Beta-Firmware, Speicherbelegung | Admin |
 | | `setGeneralSettings` | Diese Einstellungen schreiben | Admin+T (A) |
 | | `getLogging` | Logging-Einstellungen | Admin |

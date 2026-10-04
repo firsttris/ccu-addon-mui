@@ -1295,5 +1295,8 @@
   "DISPLAY_SOUND_6": "Event",
   "DISPLAY_SOUND_7": "Fehler",
   "DISPLAY_EPAPER_STATUS": "5 Zeilen mit Text und Symbolen",
-  "DISPLAY_RC19_STATUS": "Bis zu 5 Zeichen mit Symbolen"
+  "DISPLAY_RC19_STATUS": "Bis zu 5 Zeichen mit Symbolen",
+  "SYS_SAFE_MODE": "Neustart im abgesicherten Modus",
+  "SYS_SAFE_MODE_CONFIRM": "Die Zentrale startet einmalig im abgesicherten Modus: Installierte Zusatzsoftware wird nicht gestartet, auch dieses Add-on nicht. Erreichbar bleibt die alte WebUI; ein normaler Neustart beendet den Modus. Veränderte Einstellungen werden vorher gespeichert.",
+  "SYS_SAFE_MODE_STARTING": "Die Zentrale startet im abgesicherten Modus. Dieses Add-on ist bis zum nächsten normalen Neustart nicht erreichbar."
 }
