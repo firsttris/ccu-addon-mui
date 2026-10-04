@@ -34,7 +34,7 @@ export const kelvinToRgb = (kelvin: number): RGB => {
 const WHITES = [2700, 4000, 6500];
 const COLORS = [0, 30, 55, 120, 200, 275];
 
-const HueBar = ({ label, hue, onChange }: { label: string; hue: number; onChange: (hue: number) => void }) => {
+export const HueBar = ({ label, hue, onChange }: { label: string; hue: number; onChange: (hue: number) => void }) => {
   const bar = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<number | null>(null);
   const shown = drag ?? hue;

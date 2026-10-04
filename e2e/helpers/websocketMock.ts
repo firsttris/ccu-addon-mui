@@ -729,6 +729,12 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         type: 'DIMMER_VIRTUAL_RECEIVER',
         datapoints: { COLOR: 1, LEVEL: 0.4, ACTIVITY_STATE: 3 },
       },
+      // BidCos LED controllers (rgbw.fn, dual_white_controller.fn)
+      { id: 610, name: 'LED-Band Terrasse', address: 'LEQ0000040:1', interfaceName: 'BidCos-RF', type: 'DIMMER', datapoints: { LEVEL: 0.7 } },
+      { id: 611, name: 'LED-Band Terrasse Farbe', address: 'LEQ0000040:2', interfaceName: 'BidCos-RF', type: 'RGBW_COLOR', datapoints: { COLOR: 132 } },
+      { id: 612, name: 'LED-Band Terrasse Programm', address: 'LEQ0000040:3', interfaceName: 'BidCos-RF', type: 'RGBW_AUTOMATIC', datapoints: { PROGRAM: 0 } },
+      { id: 613, name: 'Deckenlicht Büro', address: 'LEQ0000041:1', interfaceName: 'BidCos-RF', type: 'DUAL_WHITE_BRIGHTNESS', datapoints: { LEVEL: 0.5 } },
+      { id: 614, name: 'Deckenlicht Büro Weiß', address: 'LEQ0000041:2', interfaceName: 'BidCos-RF', type: 'DUAL_WHITE_COLOR', datapoints: { LEVEL: 0.3 } },
       {
         id: 602,
         name: 'Wetterstation Garten',
