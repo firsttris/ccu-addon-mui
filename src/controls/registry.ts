@@ -15,6 +15,7 @@ import { MotionDetectorControl, SirenControl, SmokeDetectorControl, WaterDetecto
 import { GarageDoorControl } from './GarageDoorControl';
 import { AccessControl, AccessPointControl } from './AccessControls';
 import { InputControl } from './InputControl';
+import { AutoRelockControl, DoorStateControl, FloorOutputControl, LockStateControl } from './SideChannelControls';
 import {
   BrightnessControl,
   Co2Control,
@@ -37,12 +38,25 @@ import {
 } from './WaterControls';
 
 // Sections of the dashboard, in the order they are shown
-export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'windows' | 'doors' | 'security' | 'sensors' | 'water' | 'buttons' | 'inputs' | 'energy' | 'system';
+export type SectionId =
+  | 'climate'
+  | 'floor'
+  | 'lights'
+  | 'blinds'
+  | 'windows'
+  | 'doors'
+  | 'security'
+  | 'sensors'
+  | 'water'
+  | 'buttons'
+  | 'inputs'
+  | 'energy'
+  | 'system';
 
 // Hand-made controls for common channel types. They refine the generic
 // renderer (GenericControl), which every other type falls back to.
-export type ControlOverride = (
-  // One tile per channel
+export type ControlOverride = // One tile per channel
+(
   | { per: 'channel'; component: ComponentType<{ channel: Channel }> }
   // One tile for all channels of a device of this type (e.g. the four
   // channels of an energy meter)
@@ -73,6 +87,9 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   CLIMATECONTROL_RT_TRANSCEIVER: channelControl('climate', ThermostatControl),
   THERMALCONTROL_TRANSMIT: channelControl('climate', ThermostatControl),
   [ChannelType.CLIMATECONTROL_FLOOR_TRANSCEIVER]: channelControl('floor', FloorControl),
+  // Pump and direct output of floor heating controllers
+  CLIMATECONTROL_FLOOR_PUMP_TRANSCEIVER: channelControl('floor', FloorOutputControl),
+  CLIMATECONTROL_FLOOR_DIRECT_TRANSMITTER: channelControl('floor', FloorOutputControl),
   [ChannelType.SWITCH_VIRTUAL_RECEIVER]: channelControl('lights', SwitchControl),
   [ChannelType.BLIND_VIRTUAL_RECEIVER]: channelControl('blinds', BlindsControl),
   // HmIP shutter actuators and the BidCos actuators work the same way
@@ -82,11 +99,25 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   SWITCH: channelControl('lights', SwitchControl),
   DIMMER_VIRTUAL_RECEIVER: channelControl('lights', DimmerControl),
   DIMMER: channelControl('lights', DimmerControl),
+  // The virtual channels of BidCos dimmers (expert channels in the WebUI's
+  // channel chooser), backlights of wall thermostats and the status LEDs
+  // of HmIP(W)-WRC6 and HCU, all dimmer.fn in the WebUI
+  VIRTUAL_DIMMER: channelControl('lights', DimmerControl),
+  BACKLIGHTING_RECEIVER: channelControl('system', DimmerControl),
+  OPTICAL_SIGNAL_RECEIVER: channelControl('buttons', DimmerControl),
   UNIVERSAL_LIGHT_RECEIVER: channelControl('lights', ColorLightControl),
   [ChannelType.KEYMATIC]: channelControl('doors', DoorControl),
   DOOR_LOCK_STATE_TRANSMITTER: channelControl('doors', DoorLockControl),
   DOOR_LOCK_TRANSCEIVER: channelControl('doors', DoorLockControl),
   DOOR_RECEIVER: channelControl('doors', GarageDoorControl),
+  // Door lock side channels (door_opener.fn): door state and auto relock of
+  // the HmIP-DLP, lock state of the HmIP-DLS
+  DOOR_STATE_TRANSCEIVER: channelControl('doors', DoorStateControl),
+  AUTO_RELOCK_TRANSCEIVER: channelControl('doors', AutoRelockControl),
+  DOOR_LOCK_STATE_TRANSCEIVER: channelControl('doors', LockStateControl),
+  // Their users (accessreceiver.fn): HmIP-DLD, HmIP-DLP and HmIP-FDC
+  ACCESS_RECEIVER: deviceControl('doors', AccessControl),
+  PERMISSION_TRANSCEIVER: deviceControl('doors', AccessControl),
   SMOKE_DETECTOR: channelControl('security', SmokeDetectorControl),
   MOTION_DETECTOR: channelControl('security', MotionDetectorControl),
   // HmIP names, as in the WebUI's functions.fn and motiondetector.fn

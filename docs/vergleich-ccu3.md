@@ -54,7 +54,7 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 | Gerät löschen | ✅ | mit und ohne Zurücksetzen |
 | Gerät ersetzen | ✅ | BidCos, wie in der WebUI |
 | Funktionstest | ✅ | |
-| Geräte-Firmware | ✅ | Übersicht, Update starten (HmIP) |
+| Geräte-Firmware | ➕ | Update starten (HmIP, BidCos, Access Points); neue Firmware direkt von eQ-3 auf die CCU laden statt herunter- und hochladen; Dateien verwalten |
 | Wochenprogramme und Heizprofile | ➕ | Zeitleiste mit Kopieren, statt Tabelle mit Uhrzeitfeldern |
 | Gruppen (Heizgruppen) | ✅ | anlegen, ändern, löschen |
 | Wired-Gerätesuche (BidCos-Wired) | ✅ | wie in der WebUI, gefundene Geräte landen im Posteingang |
@@ -75,7 +75,7 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 
 | Funktion der WebUI | | Im Add-on |
 |---|:---:|---|
-| CCU-Firmware: Update suchen und einspielen | ✅ | |
+| CCU-Firmware: Update suchen und einspielen | ➕ | OpenCCU lädt das Update selbst, mit Prüfsumme und Speicherprüfung |
 | Neustart, Herunterfahren | ✅ | |
 | Neustart im abgesicherten Modus | ❌ | |
 | Protokollierung (Log-Level, Syslog, Logdateien) | ✅ | |

@@ -20,7 +20,8 @@ const isDefaultName = (channel: Channel) => channel.name.endsWith(channel.addres
 
 const timeFormat = () => new Intl.DateTimeFormat(getLocale(), { hour: '2-digit', minute: '2-digit' });
 
-// --- Access authorisations (HmIP-FWI Wiegand interface, HmIP-WKP keypad)
+// --- Access authorisations (HmIP-FWI Wiegand interface, HmIP-WKP keypad,
+// the users of the door lock drives HmIP-DLD and HmIP-DLP, HmIP-FDC)
 
 type Access = { label: string; granted: boolean; at: number };
 
@@ -37,16 +38,41 @@ const User = ({
   const { data: description } = useParamsetDescription(channel.interfaceName, channel.address);
   const dp = channel.datapoints as Record<string, DatapointValue>;
   const authorization = useValueList(channel, 'ACCESS_AUTHORIZATION', []);
-  // STATE: "channel authorised" (the WebUI's string table)
-  const allowed = dp.STATE === true;
-  const writable = ((description?.STATE?.operations ?? 0) & Operation.WRITE) !== 0;
+  const canWrite = (datapoint: string) => ((description?.[datapoint]?.operations ?? 0) & Operation.WRITE) !== 0;
+  // HmIP-DLP and -FDC users (PERMISSION_TRANSCEIVER) have PERMISSION_STATE;
+  // the others STATE: "channel authorised" (the WebUI's string table),
+  // which they switch with ACCESS_AUTHORIZATION 0/1 (accessreceiver.fn)
+  const permission = 'PERMISSION_STATE' in dp;
+  const allowed = (permission ? dp.PERMISSION_STATE : dp.STATE) === true;
+  const target = permission
+    ? canWrite('PERMISSION_STATE')
+      ? 'PERMISSION_STATE'
+      : undefined
+    : canWrite('STATE')
+      ? 'STATE'
+      : canWrite('ACCESS_AUTHORIZATION')
+        ? 'ACCESS_AUTHORIZATION'
+        : undefined;
+  const written = useRef(0);
+  const toggle = (checked: boolean) => {
+    if (!target) return;
+    written.current = Date.now();
+    setDataPoint(
+      channel.interfaceName,
+      channel.address,
+      target,
+      target === 'ACCESS_AUTHORIZATION' ? (checked ? 1 : 0) : checked,
+    );
+  };
 
-  // ACCESS_AUTHORIZATION arrives as event when someone used the reader
+  // ACCESS_AUTHORIZATION arrives as event when someone used the reader;
+  // the echo of switching a user here is no access
   const seen = useRef(dp.ACCESS_AUTHORIZATION);
   useEffect(() => {
     if (dp.ACCESS_AUTHORIZATION === seen.current) return;
     seen.current = dp.ACCESS_AUTHORIZATION;
     if (dp.ACCESS_AUTHORIZATION === null || dp.ACCESS_AUTHORIZATION === undefined) return;
+    if (Date.now() - written.current < 5000) return;
     onAccess({ label, granted: authorization.name !== 'DISABLE', at: Date.now() });
   }, [dp.ACCESS_AUTHORIZATION, authorization.name, label, onAccess]);
 
@@ -61,12 +87,8 @@ const User = ({
         <UserIcon />
       </span>
       <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{label}</span>
-      {writable ? (
-        <Switch
-          aria-label={`${m.ACCESS_ALLOWED()}: ${label}`}
-          checked={allowed}
-          onCheckedChange={(checked) => setDataPoint(channel.interfaceName, channel.address, 'STATE', checked)}
-        />
+      {target ? (
+        <Switch aria-label={`${m.ACCESS_ALLOWED()}: ${label}`} checked={allowed} onCheckedChange={toggle} />
       ) : (
         <span className={cn('text-xs', allowed ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground')}>
           {allowed ? m.ACCESS_ALLOWED() : m.ACCESS_BLOCKED()}
@@ -89,7 +111,10 @@ export const AccessControl = ({ channels }: { channels: Channel[] }) => {
     setLast(access);
     setFlash((f) => f + 1);
   }).current;
-  const allowed = users.filter((c) => (c.datapoints as Record<string, DatapointValue>).STATE === true).length;
+  const allowed = users.filter((c) => {
+    const dp = c.datapoints as Record<string, DatapointValue>;
+    return ('PERMISSION_STATE' in dp ? dp.PERMISSION_STATE : dp.STATE) === true;
+  }).length;
   const tone = last ? (last.granted ? '34,197,94' : '239,68,68') : '161,161,170';
 
   return (
@@ -100,13 +125,20 @@ export const AccessControl = ({ channels }: { channels: Channel[] }) => {
             key={effects.on ? flash : 0}
             className={cn(
               'flex size-11 shrink-0 items-center justify-center rounded-xl border [&_svg]:size-6',
-              last ? (last.granted ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-400') : 'text-muted-foreground',
+              last
+                ? last.granted
+                  ? 'text-green-600 dark:text-green-300'
+                  : 'text-red-600 dark:text-red-400'
+                : 'text-muted-foreground',
               effects.on && flash > 0 && 'fx-bloom',
             )}
             style={{
               background: `rgba(${tone},0.12)`,
               borderColor: `rgba(${tone},0.35)`,
-              boxShadow: effects.on && last ? `0 0 ${16 * effects.k}px rgba(${tone},${Math.min(1, 0.4 * effects.k)})` : undefined,
+              boxShadow:
+                effects.on && last
+                  ? `0 0 ${16 * effects.k}px rgba(${tone},${Math.min(1, 0.4 * effects.k)})`
+                  : undefined,
             }}
           >
             <FingerprintIcon />
@@ -158,7 +190,10 @@ const BusLine = ({ channel }: { channel: Channel }) => {
         {voltage !== undefined ? `${format(voltage, 1)} V` : '–'}
       </span>
       <div className="h-1.5 overflow-hidden rounded-full bg-background" aria-hidden>
-        <div className={cn('h-full rounded-full', low ? 'bg-red-500' : 'bg-amber-400')} style={{ width: `${share * 100}%` }} />
+        <div
+          className={cn('h-full rounded-full', low ? 'bg-red-500' : 'bg-amber-400')}
+          style={{ width: `${share * 100}%` }}
+        />
       </div>
       {current !== undefined && (
         <span className="text-xs text-muted-foreground tabular-nums">

@@ -13,12 +13,12 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
 
 | Familie | im Katalog | bedienbar | alle Kanäle mit eigener Kachel | Hauptfunktion mit eigener Kachel | nur generisch |
 |---|---:|---:|---:|---:|---:|
-| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 175 | 42 | 6 |
-| HomeMatic IP Wired (HmIPW) | 38 | 38 | 24 | 12 | 2 |
-| BidCos-RF (HM-) | 186 | 168 | 116 | 36 | 16 |
-| BidCos-RF, ältere und OEM-Typen | 41 | 36 | 29 | 3 | 4 |
+| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 198 | 20 | 5 |
+| HomeMatic IP Wired (HmIPW) | 38 | 38 | 36 | 0 | 2 |
+| BidCos-RF (HM-) | 186 | 168 | 137 | 15 | 16 |
+| BidCos-RF, ältere und OEM-Typen | 41 | 36 | 31 | 1 | 4 |
 | BidCos-Wired (HMW-) | 15 | 11 | 6 | 0 | 5 |
-| **Summe** | **524** | **476** | **350 (74 %)** | **93 (20 %)** | **33 (7 %)** |
+| **Summe** | **524** | **476** | **408 (86 %)** | **36 (8 %)** | **32 (7 %)** |
 | virtuelle Typen (VIR-) | 11 | nicht geprüft | | | |
 
 - **BidCos-Wired** ist angebunden, sobald ein Wired-Gateway (HMW-LGW) eingerichtet ist, aber noch nicht an
@@ -27,11 +27,11 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
   Access Points, Repeater und Funkmodule ohne bedienbaren Kanal sowie Typen, zu denen OpenCCU keine
   Beschreibung mitliefert (z. B. die -644-Dimmer und WS550).
 - **alle Kanäle mit eigener Kachel**: Jeder sichtbare Kanal des Geräts hat eine gestaltete Kachel.
-- **Hauptfunktion mit eigener Kachel**: Der Hauptkanal ist gestaltet, ein Nebenkanal generisch, z. B. die
-  Hintergrundbeleuchtung eines Wandthermostats oder die Pumpe einer Fußbodenheizung.
+- **Hauptfunktion mit eigener Kachel**: Der Hauptkanal ist gestaltet, ein Nebenkanal generisch, z. B. das
+  Display eines Wandthermostats oder der Servo-Ausgang eines Wassersensors.
 - **nur generisch**: kein Kanal hat eine eigene Kachel. Das Gerät ist trotzdem voll bedienbar.
 
-Zusammen haben **443 von 476 Gerätetypen (93 %)** eine eigene Kachel für ihre Hauptfunktion.
+Zusammen haben **444 von 476 Gerätetypen (93 %)** eine eigene Kachel für ihre Hauptfunktion.
 
 Die Zählung ist reproduzierbar. Die Skripte vergleichen die Gerätebeschreibungen mit
 `src/controls/registry.ts`, gegengeprüft an einem Export einer echten CCU (`fixtures/my-ccu.json`).
@@ -108,13 +108,10 @@ Nach Bedeutung:
    Symbole; die Werte sind nur generisch bedienbar.
 2. **Antriebe**: der Servo-Antrieb HmIP-WSC und der Alarmausgang der HmIP-WSS haben noch keine eigene Kachel.
 3. **Weitere Sensoren**: Abstand, Durchgang (HmIP-SPDR), Füllstand, Zählersensoren (HM-ES-TX-WM).
-4. **Nebenkanäle**: Pumpe und Direktausgang der Fußbodenheizung, Zusatzkanäle von Türschlössern
-   (Zugang, Auto-Relock, Türzustand), Status-LEDs und Hintergrundbeleuchtung, die virtuellen Kanäle der
-   BidCos-Dimmer.
-5. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
+4. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
    Profile). Für die übrigen 59 Empfängertypen der WebUI (2065 Profile) geht nur der Expertenmodus mit allen
    Parametern.
-6. **Gerätebilder** der WebUI zeigt das Add-on nicht.
+5. **Gerätebilder** der WebUI zeigt das Add-on nicht.
 
 ## Ein Gerät fehlt oder sieht falsch aus?
 

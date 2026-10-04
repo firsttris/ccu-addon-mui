@@ -333,6 +333,37 @@ test('bedient Bewässerung und Fensterantriebe', async ({ page }) => {
   await expect.poll(last).toMatchObject({ attribute: 'STOP', value: true });
 });
 
+test('zeigt Nebenkanäle von Fußbodenheizung, Türschloss und LEDs', async ({ page }) => {
+  await page.goto('/devices');
+  const last = async () => (await sentSetDatapoints(page)).at(-1);
+
+  // Floor heating pump: running, humidity limiter active, switchable
+  const pump = page.getByRole('group', { name: 'Fußbodenheizung Pumpe' });
+  await expect(pump.getByRole('status')).toHaveText(/Pumpe läuft|Pump running/);
+  await expect(pump).toContainText(/Feuchtebegrenzer|Humidity limiter/);
+  await pump.getByRole('switch', { name: /Pumpe|Pump/ }).click();
+  await expect.poll(last).toMatchObject({ attribute: 'STATE', value: false });
+
+  // Door lock drive: door state with calibration, auto relock, users
+  const door = page.getByRole('group', { name: 'Haustür Zustand' });
+  await expect(door.getByRole('status')).toHaveText(/Tür geschlossen|Door closed/);
+  await door.getByRole('button', { name: /kalibrieren|Calibrate/ }).click();
+  await expect.poll(last).toMatchObject({ attribute: 'CALIBRATE_DOOR_STATE', value: true });
+  const relock = page.getByRole('group', { name: 'Haustür Auto-Relock' });
+  await expect(relock.getByRole('status')).toHaveText(/Auto-Relock an|Auto relock on/);
+  await relock.getByRole('switch').click();
+  await expect.poll(last).toMatchObject({ attribute: 'AUTO_RELOCK_STATE', value: false });
+  const users = page.getByRole('group', { name: 'Haustür', exact: true });
+  await expect(users.getByRole('switch', { name: /Anna/ })).toBeChecked();
+  await users.getByRole('switch', { name: /Ben/ }).click();
+  await expect.poll(last).toMatchObject({ attribute: 'PERMISSION_STATE', value: true });
+
+  // Lock sensor and status LED (color, behaviour)
+  await expect(page.getByRole('group', { name: 'Riegelkontakt Keller' }).getByRole('status')).toHaveText(/Gesperrt|Locked/);
+  await page.getByLabel(/(Verhalten|Behaviour): Status-LED Flur/).selectOption('5');
+  await expect.poll(last).toMatchObject({ attribute: 'COLOR_BEHAVIOUR', value: 5 });
+});
+
 test('zeigt Sensoren mit eigenen Kacheln', async ({ page }) => {
   await page.goto('/devices');
   const emit = (channel: string, datapoint: string, value: unknown) =>
@@ -636,16 +667,17 @@ test('zeigt Alarme und bestätigt sie', async ({ page }) => {
 test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
   await page.goto('/room/1');
 
-  // Rendered from the paramset description (the pump of an HmIP-FALMOT)
-  const datapoints = page.getByLabel('Heizkreispumpe');
+  // Rendered from the paramset description (the power threshold of a
+  // metering plug HM-ES-PMSw1)
+  const datapoints = page.getByLabel('Leistungsschwelle Waschmaschine');
   await expect(datapoints).toBeVisible();
-  await expect(datapoints.getByText('DEW_POINT_ALARM', { exact: true })).toBeVisible();
-  await expect(datapoints.getByRole('switch', { name: 'STATE' })).toBeChecked();
+  await expect(datapoints.getByText('DECISION_VALUE', { exact: true })).toBeVisible();
+  await expect(datapoints.getByText(/^(No|Nein)$/)).toBeVisible();
 
   await page.evaluate(() => {
     (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
-      channel: '0000DBE9A5C1F3:1',
-      datapoint: 'DEW_POINT_ALARM',
+      channel: 'LEQ0000020:3',
+      datapoint: 'DECISION_VALUE',
       value: true,
     });
   });

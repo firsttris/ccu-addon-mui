@@ -69,6 +69,9 @@ erreichbar ist. Dann erscheint ein Hinweis.
 | **Fenster** | Fensterkontakt und Fenstergriff: geschlossen, gekippt, offen, als Bild |
 | **Fensterantrieb** | Öffnen, Schließen, Stopp; die Winmatic auch Verriegeln, dazu ihr Akku |
 | **Türschloss** | Entsperren und Sperren durch **Gedrückthalten**, Öffnen durch **Schieben**, damit nichts versehentlich aufgeht |
+| **Türschloss-Zusatzkanäle** | Türzustand (offen/geschlossen, kalibrieren), Auto-Relock an/aus, Riegelkontakt; Benutzer des Türschlossantriebs freigeben oder sperren |
+| **Fußbodenheizung: Pumpe, Direktausgang** | läuft oder aus, schaltbar; Taupunkt-, Feuchte- und Notbetrieb-Warnungen, Frostschutz |
+| **Status-LEDs, Hintergrundbeleuchtung** | Helligkeit, Farbe und Blinkverhalten (Blinken, Blitzen, Pulsieren) |
 | **Garagentor** | Öffnen gedrückt halten, Zu, Lüften, Stopp |
 | **Rauchmelder** | Zustand, Rauchtest gedrückt halten |
 | **Bewegungs- und Präsenzmelder** | Bewegung als Radarwellen, letzte Bewegung, Helligkeit, Erkennung ein/aus |
