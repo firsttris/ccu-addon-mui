@@ -567,7 +567,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSystemInfo(client, requestID)
 	case "getLogging", "setLogging", "downloadLogs":
 		s.handleLogging(client, msgType, message)
-	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "prepareDeviceFirmwareUpload", "checkCcuFirmware", "installCcuFirmware", "cancelCcuFirmware", "prepareAddonUpload", "installAddon":
+	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "prepareDeviceFirmwareUpload", "checkCcuFirmware", "downloadCcuFirmware", "installCcuFirmware", "cancelCcuFirmware", "prepareAddonUpload", "installAddon":
 		s.handleRestore(client, msgType, message)
 	case "getLanGateways", "setLanGateways", "changeLanGatewayKey", "setBidcosInterface":
 		s.handleLanGateways(client, msgType, message)

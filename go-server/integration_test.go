@@ -22,14 +22,24 @@ import (
 	"ccu-addon-mui-server/pkg/fakeccu"
 )
 
+// Ports handed out in this run: the listener is closed again at once, so
+// the kernel may offer the same port to the next call, and two servers of
+// one stack would then fight over it (address already in use)
+var usedPorts sync.Map
+
 func freePort(t *testing.T) int {
 	t.Helper()
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
+	for {
+		l, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		port := l.Addr().(*net.TCPAddr).Port
+		l.Close()
+		if _, taken := usedPorts.LoadOrStore(port, true); !taken {
+			return port
+		}
 	}
-	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port
 }
 
 // startStack runs the fake CCU and the real server against it and returns

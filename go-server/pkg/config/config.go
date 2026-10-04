@@ -75,6 +75,15 @@ type Config struct {
 	// the newest device firmware (webui.js homematic.com: m_URLServer,
 	// downloadURLServer)
 	DeviceFirmwareServer string
+	// UserFSDir is the CCU's user partition, which needs room for a
+	// firmware update (cp_maintenance.cgi: df -m /usr/local)
+	UserFSDir string
+	// FirmwareDownloadFile is where OpenCCU's CCU.downloadFirmware stores
+	// the downloaded update (/usr/local/tmp/firmwareUpdateFile)
+	FirmwareDownloadFile string
+	// CcuFirmwareReleases is where OpenCCU's releases and their SHA256
+	// files are (checkFirmwareUpdate.sh)
+	CcuFirmwareReleases string
 	// IDsFile holds the CCU's serial number, sent along with a download
 	// (CCU.getSerial: /var/ids SerialNumber)
 	IDsFile string
@@ -137,6 +146,9 @@ func Load() *Config {
 		BackupDir:            getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
 		DeviceFirmwareServer: getEnv("DEVICE_FIRMWARE_SERVER", "https://ccu3-update.homematic.com"),
 		IDsFile:              getEnv("IDS_FILE", "/var/ids"),
+		UserFSDir:            getEnv("USERFS_DIR", "/usr/local"),
+		FirmwareDownloadFile: getEnv("FIRMWARE_DOWNLOAD_FILE", "/usr/local/tmp/firmwareUpdateFile"),
+		CcuFirmwareReleases:  getEnv("CCU_FIRMWARE_RELEASES", "https://github.com/openccu/openccu/releases/download"),
 	}
 }
 

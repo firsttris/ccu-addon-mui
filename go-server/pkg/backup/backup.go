@@ -207,8 +207,12 @@ func (s *Service) logout(sessionID string) {
 }
 
 func (s *Service) call(method string, params interface{}, result *rpcResponse) error {
+	return s.callWith(s.httpClient, method, params, result)
+}
+
+func (s *Service) callWith(client *http.Client, method string, params interface{}, result *rpcResponse) error {
 	body, _ := json.Marshal(map[string]interface{}{"version": "1.1", "method": method, "params": params})
-	resp, err := s.httpClient.Post(s.webUIURL+"/api/homematic.cgi", "application/json", bytes.NewReader(body))
+	resp, err := client.Post(s.webUIURL+"/api/homematic.cgi", "application/json", bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("CCU not reachable: %w", err)
 	}
