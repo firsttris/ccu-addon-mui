@@ -583,6 +583,11 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         return;
       }
 
+      if (message.type === 'getDiagrams') {
+        delayedBroadcast({ type: 'getDiagrams_response', diagrams: [], requestId: message.requestId });
+        return;
+      }
+
       if (message.type === 'getLayout') {
         delayedBroadcast({ type: 'getLayout_response', layout: layouts[String(message.id)] ?? '', requestId: message.requestId });
         return;

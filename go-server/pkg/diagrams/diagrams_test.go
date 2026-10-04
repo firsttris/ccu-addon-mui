@@ -53,6 +53,7 @@ func TestValidate(t *testing.T) {
 		"bad addr":   {Name: "x", Series: []Series{{Address: "../x", Datapoint: "LEVEL"}}},
 		"bad color":  {Name: "x", Series: []Series{{Address: "A:1", Datapoint: "LEVEL", Color: "red"}}},
 		"bad period": {Name: "x", Series: []Series{ok}, Period: "decade"},
+		"bad place":  {Name: "x", Series: []Series{ok}, Places: []int64{0}},
 		"bad chart":  {Name: "x", Series: []Series{{Address: "A:1", Datapoint: "LEVEL", Chart: "pie"}}},
 		"bad agg":    {Name: "x", Series: []Series{{Address: "A:1", Datapoint: "LEVEL", Aggregate: "sum"}}},
 		"bad axis":   {Name: "x", Series: []Series{{Address: "A:1", Datapoint: "LEVEL", Axis: "top"}}},

@@ -8848,6 +8848,13 @@
             "month",
             "year"
           ]
+        },
+        "places": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "description": "Rooms, trades and favorite lists (ReGa ids) that show the diagram as a tile"
         }
       },
       "required": [

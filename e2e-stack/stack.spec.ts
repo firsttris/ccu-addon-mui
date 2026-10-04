@@ -1188,6 +1188,7 @@ test('legt ein Diagramm an, zeigt die aufgezeichneten Werte und löscht es', asy
   await dialog.getByLabel('Bezeichnung Außentemperatur').fill('Draußen');
   await dialog.getByLabel('Darstellung Wohnzimmer Thermostat · Temperatur').selectOption('area');
   await dialog.getByLabel('Achse Außentemperatur').selectOption('right');
+  await dialog.getByRole('group', { name: 'Räume' }).getByRole('button', { name: 'Wohnzimmer' }).click();
   await expect(dialog.getByRole('list', { name: 'Datenquellen' }).getByRole('listitem')).toHaveCount(2);
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toHaveCount(0);
@@ -1217,6 +1218,15 @@ test('legt ein Diagramm an, zeigt die aufgezeichneten Werte und löscht es', asy
   await card.getByRole('button', { name: 'Früher' }).click();
   await expect(card.getByRole('button', { name: 'Später' })).toBeEnabled();
 
+  // As a tile in the living room
+  await page.goto('/room/1');
+  const tile = page.getByRole('region', { name: 'Diagramme' }).getByRole('region', { name: 'Klima' });
+  await expect(tile.getByRole('img', { name: 'Klima' })).toBeVisible();
+  await expect(tile.getByRole('button', { name: 'Diagramm löschen' })).toHaveCount(0);
+  await page.goto('/room/2');
+  await expect(page.getByRole('region', { name: 'Diagramme' })).toHaveCount(0);
+
+  await page.goto('/diagrams');
   await card.getByRole('button', { name: 'Diagramm löschen' }).click();
   await page.getByRole('dialog', { name: 'Diagramm löschen' }).getByRole('button', { name: 'Löschen' }).click();
   await expect(card).toHaveCount(0);

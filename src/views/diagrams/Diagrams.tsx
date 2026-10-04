@@ -89,6 +89,8 @@ const useSeriesData = (diagram: Diagram, from: number, to: number, enabled: bool
       ).series,
     placeholderData: (previous) => previous,
     staleTime: live ? 0 : 5 * MINUTE,
+    // New values also come with events; this keeps a live chart moving
+    refetchInterval: live ? MINUTE : false,
     enabled,
   });
 };
@@ -117,7 +119,15 @@ const toRender = (
   return { key: keyOf(s), points, bars, kind, aggregate };
 };
 
-const DiagramCard = ({ diagram, canEdit, names }: { diagram: Diagram; canEdit: boolean; names: Map<string, string> }) => {
+interface DiagramCardProps {
+  diagram: Diagram;
+  canEdit: boolean;
+  names: Map<string, string>;
+  // A tile in a room, trade or favorite list: smaller, without changing
+  compact?: boolean;
+}
+
+const DiagramCard = ({ diagram, canEdit, names, compact = false }: DiagramCardProps) => {
   const { request } = useWebSocketActions();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -271,7 +281,7 @@ const DiagramCard = ({ diagram, canEdit, names }: { diagram: Diagram; canEdit: b
   );
 
   const legend = (
-    <ul className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2 xl:grid-cols-3" aria-label={m.DIAG_SERIES()}>
+    <ul className={cn('grid gap-x-4 gap-y-1.5', compact && !fullscreen ? 'grid-cols-1' : 'sm:grid-cols-2 xl:grid-cols-3')} aria-label={m.DIAG_SERIES()}>
       {series.map((s) => {
         const stats = seriesStats(s);
         return (
@@ -319,14 +329,16 @@ const DiagramCard = ({ diagram, canEdit, names }: { diagram: Diagram; canEdit: b
     <Panel aria-label={diagram.name}>
       <div className="flex flex-wrap items-center gap-1">
         <h2 className="mr-auto">{diagram.name}</h2>
-        <Button type="button" variant="ghost" size="sm" className="h-8" disabled={empty || !data.data} onClick={exportCSV}>
-          <DownloadIcon />
-          <span className="hidden sm:inline">{m.DIAG_EXPORT()}</span>
-        </Button>
+        {!compact && (
+          <Button type="button" variant="ghost" size="sm" className="h-8" disabled={empty || !data.data} onClick={exportCSV}>
+            <DownloadIcon />
+            <span className="hidden sm:inline">{m.DIAG_EXPORT()}</span>
+          </Button>
+        )}
         <Button type="button" variant="ghost" size="icon" className="size-8" aria-label={m.DIAG_FULLSCREEN()} onClick={() => setFullscreen(true)}>
           <MaximizeIcon />
         </Button>
-        {canEdit && (
+        {canEdit && !compact && (
           <>
             <Button type="button" variant="ghost" size="icon" className="size-8" aria-label={m.EDIT()} onClick={() => setEditing(true)}>
               <PencilIcon />
@@ -338,9 +350,9 @@ const DiagramCard = ({ diagram, canEdit, names }: { diagram: Diagram; canEdit: b
         )}
       </div>
       {toolbar}
-      {!fullscreen && chart(300)}
+      {!fullscreen && chart(compact ? 210 : 300)}
       {legend}
-      {!empty && data.data !== undefined && <p className="text-xs">{compare ? `${m.DIAG_ZOOM_HINT()} · ${m.DIAG_COMPARE_HINT()}` : m.DIAG_ZOOM_HINT()}</p>}
+      {!compact && !empty && data.data !== undefined && <p className="text-xs">{compare ? `${m.DIAG_ZOOM_HINT()} · ${m.DIAG_COMPARE_HINT()}` : m.DIAG_ZOOM_HINT()}</p>}
       {fullscreen && (
         <Dialog open onOpenChange={(open) => !open && setFullscreen(false)}>
           <DialogContent aria-label={diagram.name} className="flex max-h-[calc(100vh-16px)] w-[calc(100vw-16px)] max-w-[calc(100vw-16px)] flex-col gap-3 overflow-y-auto sm:max-w-[calc(100vw-32px)]">
@@ -366,7 +378,9 @@ const DiagramCard = ({ diagram, canEdit, names }: { diagram: Diagram; canEdit: b
 
 // New values of the series shown reload their diagrams, at most every few
 // seconds: the server records them before passing them on
-const useLiveUpdates = (diagrams: Diagram[] | undefined) => {
+// Elsewhere (a room) the page subscribes to its own channels: then the
+// events of those are used without asking for others
+const useLiveUpdates = (diagrams: Diagram[] | undefined, subscribeToSeries = true) => {
   const { subscribe, addEventListener } = useWebSocketActions();
   const queryClient = useQueryClient();
   const pending = useRef(new Map<string, number>());
@@ -376,8 +390,8 @@ const useLiveUpdates = (diagrams: Diagram[] | undefined) => {
   );
 
   useEffect(() => {
-    if (addresses !== '') subscribe(addresses.split('\n'));
-  }, [addresses, subscribe]);
+    if (subscribeToSeries && addresses !== '') subscribe(addresses.split('\n'));
+  }, [addresses, subscribe, subscribeToSeries]);
 
   useEffect(() => {
     const timers = pending.current;
@@ -446,5 +460,32 @@ export const Diagrams = () => {
       <p className="text-xs text-muted-foreground">{m.DIAG_HINT()}</p>
       {creating && <DiagramEditor onClose={() => setCreating(false)} />}
     </>
+  );
+};
+
+// The diagrams shown as tiles in a room, trade or favorite list
+export const PlaceDiagrams = ({ place }: { place: number }) => {
+  const { request } = useWebSocketActions();
+  const diagrams = useQuery({
+    queryKey: ['diagrams'],
+    queryFn: async () => (await request({ type: 'getDiagrams' })).diagrams,
+    // Without the recorder (an older server) there are none
+    retry: false,
+  });
+  const shown = useMemo(() => (diagrams.data ?? []).filter((d) => d.places?.includes(place)), [diagrams.data, place]);
+  useLiveUpdates(shown, false);
+  return shown.length > 0 ? <PlaceDiagramTiles diagrams={shown} /> : null;
+};
+
+// Only rooms with diagrams load the names of all channels
+const PlaceDiagramTiles = ({ diagrams: shown }: { diagrams: Diagram[] }) => {
+  const candidates = useCandidates();
+  const names = useMemo(() => new Map(candidates.map((c) => [keyOf(c.series), c.name])), [candidates]);
+  return (
+    <section aria-label={m.DIAGRAMS()} className="grid gap-4 lg:grid-cols-2">
+      {shown.map((diagram) => (
+        <DiagramCard key={diagram.id} diagram={diagram} canEdit={false} names={names} compact />
+      ))}
+    </section>
   );
 };
