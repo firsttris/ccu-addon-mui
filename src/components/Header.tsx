@@ -191,7 +191,7 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
             <StartPageChoice />
           </NavSection>
           <NavSection title={m.PUSH_TITLE()}>
-            <PushSettings />
+            <PushSettings onOpenRules={() => go(() => navigate({ to: '/rules' }))} />
           </NavSection>
           {authRequired && (
             <>

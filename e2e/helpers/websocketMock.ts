@@ -53,6 +53,19 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         values: health({ RSSI_DEVICE: [-65, 60], RSSI_PEER: [-63, 60], UNREACH: [false, 60], STICKY_UNREACH: [false, 60] }) },
     ];
 
+    // Notification rules
+    let rules: AnyPayload[] = [
+      { id: 'rule-1', name: 'Fenster Bad lange offen', enabled: true, minutes: 15, message: '',
+        summary: 'Fensterkontakt Bad: Zustand ist nicht geschlossen und Wandthermostat Flur: Temperatur kleiner als 18 °C · seit 15 Minuten',
+        conditions: [
+          { channelId: 1301, interfaceName: 'HmIP-RF', address: '003660C9930AB6:1', datapoint: 'STATE', op: 'ne', value: 0 },
+          { channelId: 1102, interfaceName: 'HmIP-RF', address: '000A9D89A7AF25:1', datapoint: 'ACTUAL_TEMPERATURE', op: 'lt', value: 18 },
+        ] },
+      { id: 'rule-2', name: 'Haustür nachts geöffnet', enabled: false, minutes: 0, from: '22:00', to: '06:00', message: 'Die Haustür wurde nachts geöffnet',
+        summary: 'Haustür: Zustand ist nicht geschlossen · 22:00–06:00 Uhr',
+        conditions: [{ channelId: 1201, interfaceName: 'HmIP-RF', address: '0000DBE9A5C1F2:1', datapoint: 'STATE', op: 'ne', value: 0 }] },
+    ];
+
     // Alarm messages: none unless a test sets them (__wsMock.setAlarms)
     let alarms: AnyPayload[] = [];
 
@@ -907,6 +920,27 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         return;
       }
 
+      if (message.type === 'getRules') {
+        delayedBroadcast({ type: 'getRules_response', rules, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'saveRule') {
+        const rule = { ...(message.rule as AnyPayload) };
+        if (!rule.id) rule.id = `rule-${rules.length + 1}`;
+        const index = rules.findIndex((r) => r.id === rule.id);
+        if (index >= 0) rules[index] = rule;
+        else rules.push(rule);
+        delayedBroadcast({ type: 'saveRule_response', success: true, rule, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'deleteRule') {
+        rules = rules.filter((r) => r.id !== message.id);
+        delayedBroadcast({ type: 'deleteRule_response', success: true, requestId: message.requestId });
+        return;
+      }
+
       if (message.type === 'getPush') {
         delayedBroadcast({
           type: 'getPush_response',
@@ -914,6 +948,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
           subscribed: false,
           alarms: false,
           service: false,
+          rules: false,
           requestId: message.requestId,
         });
         return;

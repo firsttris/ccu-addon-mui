@@ -833,3 +833,30 @@ test('zeigt die Geräte-Gesundheit nach Dringlichkeit', async ({ page }) => {
   await expect(devices.getByRole('listitem')).toHaveCount(5);
   await expect(devices.getByRole('listitem', { name: 'Taster Esszimmer' }).getByText('Last seen 2 days ago')).toBeVisible();
 });
+
+test('zeigt Benachrichtigungsregeln und schaltet sie aus', async ({ page }) => {
+  await page.goto('/room/1');
+  await page.getByRole('button', { name: /^(Menu|Menü)$/ }).click();
+  await page.getByRole('button', { name: 'Manage rules' }).click();
+  await expect(page).toHaveURL(/\/rules$/);
+
+  const rules = page.getByRole('list', { name: 'Notification rules' });
+  const windowRule = rules.getByRole('listitem', { name: 'Fenster Bad lange offen' });
+  // Without an own text the summary the editor wrote
+  await expect(windowRule).toContainText('Fensterkontakt Bad: Zustand ist nicht geschlossen');
+  await expect(windowRule).toContainText('for 15 minutes');
+  await expect(rules.getByRole('listitem', { name: 'Haustür nachts geöffnet' })).toContainText('22:00–06:00');
+
+  await windowRule.getByRole('switch', { name: 'Rule "Fenster Bad lange offen" active' }).click();
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const mock = (window as Window & {
+          __wsMock?: { sentMessages: () => Array<{ type: string; rule?: { enabled: boolean } }> };
+        }).__wsMock;
+        return mock?.sentMessages().find((m) => m.type === 'saveRule')?.rule?.enabled;
+      }),
+    )
+    .toBe(false);
+  await expect(windowRule).toContainText('Off');
+});

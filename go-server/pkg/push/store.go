@@ -16,8 +16,10 @@ type Entry struct {
 	// "de" or "en", for the texts
 	Language string `json:"language,omitempty"`
 	// What to notify about
-	Alarms  bool      `json:"alarms"`
-	Service bool      `json:"service"`
+	Alarms  bool `json:"alarms"`
+	Service bool `json:"service"`
+	// Notification rules (package rules)
+	Rules   bool      `json:"rules,omitempty"`
 	Created time.Time `json:"created"`
 }
 

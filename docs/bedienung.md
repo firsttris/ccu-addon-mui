@@ -19,7 +19,7 @@ ab, erscheint nach zwei Sekunden ein roter Balken, und die App verbindet sich vo
 | Navigation | Räume, Gewerke |
 | Ansichten | Favoriten, Alle Geräte, Systemvariablen, Programme, Diagramme, Geräte-Gesundheit, Einrichten |
 | Darstellung | Dunkles Design, Effekte (Aus, Dezent, Kräftig), Sprache (je Benutzer), Startseite (zuletzt geöffnet oder Favoriten) |
-| Konto | Benachrichtigungen (Push), Passwort ändern, Abmelden |
+| Konto | Benachrichtigungen (Push für Alarme, Servicemeldungen und Regeln), Passwort ändern, Abmelden |
 
 **Startseite**: die zuletzt geöffnete Ansicht, auf Wunsch immer die Favoriten. Gibt es noch keine Räume,
 zeigt die App alle Geräte.
@@ -117,6 +117,32 @@ Batterie leer oder nicht erreichbar steht an der Kachel. Welche Geräte welche K
   sich die Liste sofort.
 - **Push**: Beides kann als Benachrichtigung aufs Handy kommen, auch wenn die App geschlossen ist
   (siehe [Installation](installation.md#push-benachrichtigungen)).
+
+## Benachrichtigungsregeln
+
+Eine Regel schickt eine Push-Benachrichtigung, sobald Geräte einen bestimmten Zustand haben, ohne dass
+du dafür ein Programm in der CCU anlegen musst. Beispiele:
+
+- Fenster länger als 15 Minuten offen und draußen kälter als 10 °C
+- Wasser erkannt
+- Haustür nachts zwischen 22 und 6 Uhr geöffnet
+
+*Benachrichtigungsregeln* findest du unter *Logik* in der Seitenleiste, oder im Menü unter
+*Benachrichtigungen* → *Regeln verwalten*. Administratoren legen Regeln an, auch aus einer Vorlage.
+Eine Regel besteht aus:
+
+- **Bedingungen**: Kanal, Datenpunkt, Vergleich und Wert, mit denselben Feldern wie im Programm-Editor.
+  Alle Bedingungen müssen gleichzeitig erfüllt sein.
+- **Dauer**: Wie lange die Bedingungen mindestens erfüllt sein müssen; 0 meldet sofort.
+- **Zeitraum** (optional): Die Regel meldet nur zwischen zwei Uhrzeiten, auch über Mitternacht.
+- **Text** (optional): Ohne eigenen Text beschreibt die Benachrichtigung die Bedingungen.
+
+Eine Regel meldet sich einmal und erst wieder, nachdem ihre Bedingungen zwischendurch nicht mehr erfüllt
+waren. Das Add-on prüft die Regeln bei jeder Änderung, die die CCU meldet, und zusätzlich alle 30 Sekunden.
+Welche Geräte die Benachrichtigungen bekommen, stellt jedes Gerät im Menü unter *Benachrichtigungen* mit
+dem Schalter *Regeln* ein.
+
+<img src="screenshot-regeln.png" alt="Benachrichtigungsregeln mit Bedingungen, Dauer und Zeitraum" width="900">
 
 ## Geräte-Gesundheit
 

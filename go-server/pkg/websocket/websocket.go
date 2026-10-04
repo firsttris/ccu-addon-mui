@@ -28,6 +28,7 @@ import (
 	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
+	"ccu-addon-mui-server/pkg/rules"
 	"ccu-addon-mui-server/pkg/settings"
 	"ccu-addon-mui-server/pkg/subscriptions"
 	"ccu-addon-mui-server/pkg/types"
@@ -214,6 +215,8 @@ type Server struct {
 	// Push notifications, if enabled
 	pushStore *push.Store
 	notifier  *push.Notifier
+	rules     *rules.Store
+	ruleRun   *rules.Engine
 
 	// auth is nil when authentication is disabled (AUTH_MODE=none).
 	auth *auth.Authenticator
@@ -621,6 +624,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleLayout(client, msgType, message)
 	case "getPush", "subscribePush", "unsubscribePush", "testPush":
 		s.handlePush(client, msgType, message)
+	case "getRules", "saveRule", "deleteRule":
+		s.handleRules(client, msgType, message)
 	case "setGroupMember":
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice", "listReplaceableDevices", "replaceDevice", "addDeviceBySerial", "setTempKey", "searchWiredDevices", "getInterfaces":
@@ -2412,6 +2417,7 @@ type pushResponse struct {
 	Subscribed bool `json:"subscribed"`
 	Alarms     bool `json:"alarms"`
 	Service    bool `json:"service"`
+	Rules      bool `json:"rules"`
 }
 
 // handlePush subscribes a device to notifications about new alarms and
@@ -2423,6 +2429,7 @@ func (s *Server) handlePush(client *Client, msgType string, message []byte) {
 		Subscription push.Subscription `json:"subscription"`
 		Alarms       bool              `json:"alarms"`
 		Service      bool              `json:"service"`
+		Rules        bool              `json:"rules"`
 		Language     string            `json:"language"`
 		Device       string            `json:"device"`
 	}
@@ -2439,7 +2446,7 @@ func (s *Server) handlePush(client *Client, msgType string, message []byte) {
 		entry, ok := s.pushStore.Get(msg.Endpoint)
 		s.sendJSON(client, pushResponse{
 			Type: "getPush_response", RequestID: msg.RequestID, PublicKey: s.notifier.PublicKey(),
-			Subscribed: ok && msg.Endpoint != "", Alarms: entry.Alarms, Service: entry.Service,
+			Subscribed: ok && msg.Endpoint != "", Alarms: entry.Alarms, Service: entry.Service, Rules: entry.Rules,
 		})
 		return
 	case "subscribePush":
@@ -2454,7 +2461,7 @@ func (s *Server) handlePush(client *Client, msgType string, message []byte) {
 		}
 		err = s.pushStore.Put(push.Entry{
 			Subscription: msg.Subscription, User: client.user, Device: msg.Device, Language: language,
-			Alarms: msg.Alarms, Service: msg.Service, Created: time.Now(),
+			Alarms: msg.Alarms, Service: msg.Service, Rules: msg.Rules, Created: time.Now(),
 		})
 		if err != nil {
 			s.sendRequestError(client, msg.RequestID, "subscribePush failed: "+err.Error(), "CCU_ERROR")

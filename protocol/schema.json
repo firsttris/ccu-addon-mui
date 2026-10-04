@@ -436,6 +436,15 @@
     },
     "downloadCcuFirmware": {
       "$ref": "#/definitions/DownloadCcuFirmwareCall"
+    },
+    "getRules": {
+      "$ref": "#/definitions/GetRulesCall"
+    },
+    "saveRule": {
+      "$ref": "#/definitions/SaveRuleCall"
+    },
+    "deleteRule": {
+      "$ref": "#/definitions/DeleteRuleCall"
     }
   },
   "required": [
@@ -582,7 +591,10 @@
     "prepareDeviceFirmwareUpload",
     "addDeviceFirmware",
     "deleteDeviceFirmware",
-    "downloadCcuFirmware"
+    "downloadCcuFirmware",
+    "getRules",
+    "saveRule",
+    "deleteRule"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3328,6 +3340,15 @@
         },
         {
           "$ref": "#/definitions/DownloadCcuFirmwareResponse"
+        },
+        {
+          "$ref": "#/definitions/GetRulesResponse"
+        },
+        {
+          "$ref": "#/definitions/SaveRuleResponse"
+        },
+        {
+          "$ref": "#/definitions/DeleteRuleResponse"
         }
       ]
     },
@@ -5897,6 +5918,10 @@
         },
         "service": {
           "type": "boolean"
+        },
+        "rules": {
+          "type": "boolean",
+          "description": "notified when a notification rule holds"
         }
       },
       "required": [
@@ -5948,6 +5973,9 @@
         },
         "device": {
           "type": "string"
+        },
+        "rules": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -12298,6 +12326,265 @@
       "required": [
         "cpus",
         "status"
+      ],
+      "additionalProperties": false
+    },
+    "RuleCondition": {
+      "type": "object",
+      "description": "a channel's datapoint compared with a value; booleans as 1 and 0, enums by index",
+      "properties": {
+        "channelId": {
+          "type": "integer"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string",
+          "description": "channel address"
+        },
+        "datapoint": {
+          "type": "string"
+        },
+        "op": {
+          "type": "string",
+          "enum": [
+            "eq",
+            "ne",
+            "lt",
+            "gt"
+          ]
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "interfaceName",
+        "address",
+        "datapoint",
+        "op",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "NotificationRule": {
+      "type": "object",
+      "description": "push notification once all conditions hold for minutes, inside the time window if set (pkg/rules)",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RuleCondition"
+          }
+        },
+        "minutes": {
+          "type": "integer"
+        },
+        "from": {
+          "type": "string",
+          "description": "HH:MM"
+        },
+        "to": {
+          "type": "string",
+          "description": "HH:MM"
+        },
+        "message": {
+          "type": "string",
+          "description": "the notification's text; empty uses summary"
+        },
+        "summary": {
+          "type": "string",
+          "description": "the conditions in words, written by the app"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "enabled",
+        "conditions",
+        "minutes",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "GetRulesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getRules"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetRulesResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getRules_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NotificationRule"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "rules"
+      ],
+      "additionalProperties": false
+    },
+    "GetRulesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetRulesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetRulesResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SaveRuleRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "saveRule"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "rule": {
+          "$ref": "#/definitions/NotificationRule"
+        }
+      },
+      "required": [
+        "type",
+        "rule"
+      ],
+      "additionalProperties": false
+    },
+    "SaveRuleResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "saveRule_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "rule": {
+          "$ref": "#/definitions/NotificationRule"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "rule"
+      ],
+      "additionalProperties": false
+    },
+    "SaveRuleCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SaveRuleRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SaveRuleResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteRuleRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteRule"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteRuleResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteRule_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteRuleCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DeleteRuleRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DeleteRuleResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
       ],
       "additionalProperties": false
     }

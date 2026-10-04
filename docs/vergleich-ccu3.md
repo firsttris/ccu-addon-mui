@@ -130,6 +130,8 @@ Entwicklerwerkzeug *devconfig*.
 
 - **Live-Updates** über WebSocket statt Abfrage alle 3 Sekunden
 - **Push-Benachrichtigungen** für Alarme und Servicemeldungen
+- **Benachrichtigungsregeln** ohne Programm: „Fenster seit 15 Minuten offen und kalt“, „Wasser erkannt“,
+  „Tür nachts geöffnet“; in der WebUI braucht das ein Programm mit Verzögerung und ein E-Mail-Add-on
 - **Als App installierbar**, für Handy, Tablet und Wand, hell und dunkel, mit WakeLock
 - **Kacheln anordnen** per Drag & Drop, für alle Geräte gleich
 - **Eigene Diagramme** für jeden Datenpunkt, ohne microSD-Karte
