@@ -373,6 +373,15 @@
     },
     "setTempKey": {
       "$ref": "#/definitions/SetTempKeyCall"
+    },
+    "getCertificate": {
+      "$ref": "#/definitions/GetCertificateCall"
+    },
+    "uploadCertificate": {
+      "$ref": "#/definitions/UploadCertificateCall"
+    },
+    "deleteCertificate": {
+      "$ref": "#/definitions/DeleteCertificateCall"
     }
   },
   "required": [
@@ -498,7 +507,10 @@
     "changeLanGatewayKey",
     "setBidcosInterface",
     "addDeviceBySerial",
-    "setTempKey"
+    "setTempKey",
+    "getCertificate",
+    "uploadCertificate",
+    "deleteCertificate"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3143,6 +3155,15 @@
         },
         {
           "$ref": "#/definitions/SetTempKeyResponse"
+        },
+        {
+          "$ref": "#/definitions/GetCertificateResponse"
+        },
+        {
+          "$ref": "#/definitions/UploadCertificateResponse"
+        },
+        {
+          "$ref": "#/definitions/DeleteCertificateResponse"
         }
       ]
     },
@@ -10557,6 +10578,206 @@
       "required": [
         "request",
         "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetCertificateRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getCertificate"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetCertificateResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getCertificate_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "certificate": {
+          "$ref": "#/definitions/CertificateInfo"
+        }
+      },
+      "required": [
+        "type",
+        "certificate"
+      ],
+      "additionalProperties": false
+    },
+    "GetCertificateCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetCertificateRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetCertificateResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "UploadCertificateRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "uploadCertificate"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "pem": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "pem"
+      ],
+      "additionalProperties": false
+    },
+    "UploadCertificateResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "uploadCertificate_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "UploadCertificateCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/UploadCertificateRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/UploadCertificateResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteCertificateRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteCertificate"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteCertificateResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteCertificate_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteCertificateCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DeleteCertificateRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DeleteCertificateResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CertificateInfo": {
+      "type": "object",
+      "description": "The HTTPS certificate of the WebUI (/etc/config/server.pem)",
+      "properties": {
+        "exists": {
+          "type": "boolean"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "issuer": {
+          "type": "string"
+        },
+        "dnsNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notBefore": {
+          "type": "string"
+        },
+        "notAfter": {
+          "type": "string"
+        },
+        "selfSigned": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "exists"
       ],
       "additionalProperties": false
     }

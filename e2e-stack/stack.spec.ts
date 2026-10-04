@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import { expect, test } from '@playwright/test';
 import { deviceReports, login, resetFakeCCU } from './helpers';
 
@@ -1573,4 +1574,37 @@ test('stellt Geräteeinstellungen mit passenden Bedienelementen ein und übertr�
   await bar.getByRole('button', { name: 'Speichern und übertragen (1)' }).click();
   await page.getByRole('dialog', { name: 'Änderungen speichern?' }).getByRole('button', { name: 'Speichern' }).click();
   await expect(bar).toContainText(/Übernahme ausstehend|gespeichert/);
+});
+
+test('lädt ein eigenes HTTPS-Zertifikat hoch und löscht es wieder', async ({ page }) => {
+  // Certificate and key, made for the test (nothing secret in the repository)
+  const pem = execSync('openssl req -x509 -newkey rsa:2048 -nodes -keyout - -subj /CN=ccu.example.org -days 30 2>/dev/null').toString();
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'HTTPS-Zertifikat' });
+  await expect(panel).toContainText('automatisch erzeugtes Zertifikat');
+
+  // Only the certificate, no key: refused before upload
+  await panel.getByLabel('Zertifikatsdatei (PEM)').setInputFiles({ name: 'nur-zertifikat.pem', mimeType: 'application/x-pem-file', buffer: Buffer.from(pem.slice(pem.indexOf('-----BEGIN CERTIFICATE-----'))) });
+  await expect(panel.getByRole('alert')).toContainText('privaten Schlüssel');
+  await expect(panel.getByRole('button', { name: 'Hochladen' })).toBeDisabled();
+
+  await panel.getByLabel('Zertifikatsdatei (PEM)').setInputFiles({ name: 'server.pem', mimeType: 'application/x-pem-file', buffer: Buffer.from(pem) });
+  const done = page.getByText('Zertifikat gespeichert');
+  await panel.getByRole('button', { name: 'Hochladen' }).click();
+  // The WebUI session may be kept from before: then no password is asked
+  const passwordField = panel.getByLabel('Passwort', { exact: true });
+  await expect(done.or(passwordField)).toBeVisible();
+  if (await passwordField.isVisible()) {
+    await passwordField.fill('secret');
+    await panel.getByRole('button', { name: 'Hochladen' }).click();
+  }
+  await expect(done).toBeVisible();
+  await expect(panel).toContainText('ccu.example.org');
+  await expect(panel).toContainText('selbst signiert');
+
+  await panel.getByRole('button', { name: 'Eigenes Zertifikat löschen' }).click();
+  await page.getByRole('dialog', { name: 'Eigenes Zertifikat löschen' }).getByRole('button', { name: 'Eigenes Zertifikat löschen' }).click();
+  await expect(page.getByText('Zertifikat gelöscht')).toBeVisible();
+  await expect(panel).toContainText('automatisch erzeugtes Zertifikat');
 });

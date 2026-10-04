@@ -38,6 +38,9 @@ func (c *CCU) securityMethod(method string, params map[string]interface{}) strin
 		flag("authEnabled", isTrue("enabled"))
 	case "CCU.setHttpsRedirectEnabled":
 		flag("httpsRedirectEnabled", isTrue("enabled"))
+	case "User.existsCertificate":
+		_, err := os.Stat(filepath.Join(c.ConfigDir, "server.pem"))
+		return fmt.Sprintf(`{"version":"1.1","result":%v,"error":null}`, c.ConfigDir != "" && err == nil)
 	}
 	return `{"version":"1.1","result":true,"error":null}`
 }

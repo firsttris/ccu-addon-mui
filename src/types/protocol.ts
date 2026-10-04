@@ -144,7 +144,10 @@ export type ServerMessage =
   | ChangeLanGatewayKeyResponse
   | SetBidcosInterfaceResponse
   | AddDeviceBySerialResponse
-  | SetTempKeyResponse;
+  | SetTempKeyResponse
+  | GetCertificateResponse
+  | UploadCertificateResponse
+  | DeleteCertificateResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -273,6 +276,9 @@ export interface Protocol {
   setBidcosInterface: SetBidcosInterfaceCall;
   addDeviceBySerial: AddDeviceBySerialCall;
   setTempKey: SetTempKeyCall;
+  getCertificate: GetCertificateCall;
+  uploadCertificate: UploadCertificateCall;
+  deleteCertificate: DeleteCertificateCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4508,6 +4514,99 @@ export interface SetTempKeyRequest {
  */
 export interface SetTempKeyResponse {
   type: "setTempKey_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetCertificateCall".
+ */
+export interface GetCertificateCall {
+  request: GetCertificateRequest;
+  response: GetCertificateResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetCertificateRequest".
+ */
+export interface GetCertificateRequest {
+  type: "getCertificate";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetCertificateResponse".
+ */
+export interface GetCertificateResponse {
+  type: "getCertificate_response";
+  requestId?: string;
+  certificate: CertificateInfo;
+}
+/**
+ * The HTTPS certificate of the WebUI (/etc/config/server.pem)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CertificateInfo".
+ */
+export interface CertificateInfo {
+  exists: boolean;
+  subject?: string;
+  issuer?: string;
+  dnsNames?: string[];
+  notBefore?: string;
+  notAfter?: string;
+  selfSigned?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "UploadCertificateCall".
+ */
+export interface UploadCertificateCall {
+  request: UploadCertificateRequest;
+  response: UploadCertificateResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "UploadCertificateRequest".
+ */
+export interface UploadCertificateRequest {
+  type: "uploadCertificate";
+  requestId?: string;
+  pem: string;
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "UploadCertificateResponse".
+ */
+export interface UploadCertificateResponse {
+  type: "uploadCertificate_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteCertificateCall".
+ */
+export interface DeleteCertificateCall {
+  request: DeleteCertificateRequest;
+  response: DeleteCertificateResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteCertificateRequest".
+ */
+export interface DeleteCertificateRequest {
+  type: "deleteCertificate";
+  requestId?: string;
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteCertificateResponse".
+ */
+export interface DeleteCertificateResponse {
+  type: "deleteCertificate_response";
   requestId?: string;
   success: boolean;
 }

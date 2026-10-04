@@ -555,6 +555,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleRestore(client, msgType, message)
 	case "getLanGateways", "setLanGateways", "changeLanGatewayKey", "setBidcosInterface":
 		s.handleLanGateways(client, msgType, message)
+	case "getCertificate", "uploadCertificate", "deleteCertificate":
+		s.handleCertificate(client, msgType, message)
 	case "getFirewall", "setFirewall":
 		s.handleFirewall(client, msgType, message)
 	case "getNetwork", "setNetwork":
