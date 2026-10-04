@@ -297,6 +297,40 @@ test('dimmt, färbt Licht und drückt Taster', async ({ page }) => {
   expect((await sentSetDatapoints(page)).filter((m) => m.attribute?.startsWith('PRESS'))).toHaveLength(2);
 });
 
+test('zeigt Sensoren mit eigenen Kacheln', async ({ page }) => {
+  await page.goto('/devices');
+  const emit = (channel: string, datapoint: string, value: unknown) =>
+    page.evaluate(
+      (e) => (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent(e),
+      { channel, datapoint, value },
+    );
+
+  const rain = page.getByRole('group', { name: 'Regensensor' });
+  await expect(rain.getByRole('status')).toHaveText(/^(Trocken|Dry)$/);
+  await emit('00199D89A1B2C3:1', 'RAINING', true);
+  await expect(rain.getByRole('status')).toHaveText(/Es regnet|Raining/);
+
+  await expect(page.getByRole('group', { name: 'Lichtsensor Terrasse' })).toContainText(/5[.,]320/);
+  const co2 = page.getByRole('group', { name: 'CO₂ Arbeitszimmer' });
+  await expect(co2.getByRole('status')).toHaveText(/Gute Luft|Good air/);
+  await emit('00199D89A1B2C5:1', 'CONCENTRATION', 1450);
+  await expect(co2.getByRole('status')).toHaveText(/Lüften empfohlen|Time to air the room/);
+
+  await expect(page.getByRole('group', { name: 'Feinstaub Wohnzimmer' }).getByRole('status')).toHaveText(/^(Gut|Good)$/);
+  await expect(page.getByRole('group', { name: 'Beet Bodenfeuchte' }).getByRole('status')).toHaveText(/^(Trocken|Dry)$/);
+
+  // Tilt sensor set up for vibration (CHANNEL_OPERATION_MODE 1)
+  const tilt = page.getByRole('group', { name: 'Neigungssensor Garage' });
+  await expect(tilt.getByRole('status')).toHaveText(/(Erschütterung|Vibration): (Nein|No)/);
+  await emit('00199D89A1B2C8:1', 'MOTION', true);
+  await expect(tilt.getByRole('status')).toHaveText(/(Erschütterung|Vibration): (Ja|Yes)/);
+
+  const power = page.getByRole('group', { name: 'Netzausfall Keller' });
+  await expect(power.getByRole('status')).toHaveText(/Netzspannung vorhanden|Mains power present/);
+  await emit('00199D89A1B2C9:1', 'POWER_MAINS_FAILURE', true);
+  await expect(power.getByRole('status')).toHaveText(/Stromausfall|Power failure/);
+});
+
 test('zeigt Eingänge je nach Kanalmodus', async ({ page }) => {
   await page.goto('/devices');
   const emit = (channel: string, datapoint: string, value: unknown) =>
@@ -566,16 +600,16 @@ test('zeigt Alarme und bestätigt sie', async ({ page }) => {
 test('zeigt Kanäle ohne eigenes Control mit ihren Werten', async ({ page }) => {
   await page.goto('/room/1');
 
-  // Rendered from the paramset description
-  const datapoints = page.getByLabel('Neigungssensor Garage');
+  // Rendered from the paramset description (the pump of an HmIP-FALMOT)
+  const datapoints = page.getByLabel('Heizkreispumpe');
   await expect(datapoints).toBeVisible();
-  await expect(datapoints.getByText('MOTION', { exact: true })).toBeVisible();
-  await expect(datapoints.getByRole('switch', { name: 'MOTION_DETECTION_ACTIVE' })).toBeChecked();
+  await expect(datapoints.getByText('DEW_POINT_ALARM', { exact: true })).toBeVisible();
+  await expect(datapoints.getByRole('switch', { name: 'STATE' })).toBeChecked();
 
   await page.evaluate(() => {
     (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent({
       channel: '0000DBE9A5C1F3:1',
-      datapoint: 'MOTION',
+      datapoint: 'DEW_POINT_ALARM',
       value: true,
     });
   });

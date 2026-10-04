@@ -29,9 +29,9 @@ describe('isHiddenChannel', () => {
 describe('groupChannelsByType', () => {
   it('puts types with a control first, then the others alphabetically', () => {
     const groups = groupChannelsByType([
-      channel('RAIN_DETECTION_TRANSMITTER', 'A:1'),
+      channel('DISPLAY_INPUT_TRANSMITTER', 'A:1'),
       channel('SWITCH_VIRTUAL_RECEIVER', 'B:1'),
-      channel('ACCELERATION_TRANSCEIVER', 'C:1'),
+      channel('CONDITION_POWER', 'C:1'),
       channel('HEATING_CLIMATECONTROL_TRANSCEIVER', 'D:1'),
       channel('SWITCH_VIRTUAL_RECEIVER', 'E:1'),
       channel('SWITCH_WEEK_PROFILE', 'F:1'),
@@ -39,8 +39,8 @@ describe('groupChannelsByType', () => {
     expect(groups.map(([type, channels]) => [type, channels.map((c) => c.address)])).toEqual([
       ['HEATING_CLIMATECONTROL_TRANSCEIVER', ['D:1']],
       ['SWITCH_VIRTUAL_RECEIVER', ['B:1', 'E:1']],
-      ['ACCELERATION_TRANSCEIVER', ['C:1']],
-      ['RAIN_DETECTION_TRANSMITTER', ['A:1']],
+      ['CONDITION_POWER', ['C:1']],
+      ['DISPLAY_INPUT_TRANSMITTER', ['A:1']],
     ]);
   });
 });

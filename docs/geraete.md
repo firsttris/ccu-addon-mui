@@ -13,12 +13,12 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
 
 | Familie | im Katalog | bedienbar | alle Kanäle mit eigener Kachel | Hauptfunktion mit eigener Kachel | nur generisch |
 |---|---:|---:|---:|---:|---:|
-| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 163 | 46 | 14 |
+| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 172 | 45 | 6 |
 | HomeMatic IP Wired (HmIPW) | 38 | 38 | 24 | 12 | 2 |
-| BidCos-RF (HM-) | 186 | 168 | 113 | 36 | 19 |
-| BidCos-RF, ältere und OEM-Typen | 41 | 36 | 28 | 3 | 5 |
+| BidCos-RF (HM-) | 186 | 168 | 115 | 36 | 17 |
+| BidCos-RF, ältere und OEM-Typen | 41 | 36 | 29 | 3 | 4 |
 | BidCos-Wired (HMW-) | 15 | 11 | 6 | 0 | 5 |
-| **Summe** | **524** | **476** | **334 (70 %)** | **97 (20 %)** | **45 (9 %)** |
+| **Summe** | **524** | **476** | **346 (73 %)** | **96 (20 %)** | **34 (7 %)** |
 | virtuelle Typen (VIR-) | 11 | nicht geprüft | | | |
 
 - **BidCos-Wired** ist angebunden, sobald ein Wired-Gateway (HMW-LGW) eingerichtet ist, aber noch nicht an
@@ -31,7 +31,7 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
   Hintergrundbeleuchtung eines Wandthermostats oder die Pumpe einer Fußbodenheizung.
 - **nur generisch**: kein Kanal hat eine eigene Kachel. Das Gerät ist trotzdem voll bedienbar.
 
-Zusammen haben **431 von 476 Gerätetypen (91 %)** eine eigene Kachel für ihre Hauptfunktion.
+Zusammen haben **442 von 476 Gerätetypen (93 %)** eine eigene Kachel für ihre Hauptfunktion.
 
 Die Zählung ist reproduzierbar. Die Skripte vergleichen die Gerätebeschreibungen mit
 `src/controls/registry.ts`, gegengeprüft an einem Export einer echten CCU (`fixtures/my-ccu.json`).
@@ -59,6 +59,13 @@ Welche Kachel ein Kanal bekommt, entscheidet sein Kanaltyp (`src/controls/regist
 | Sirene | `ALARM_SWITCH_VIRTUAL_RECEIVER` | HmIP-ASIR, -ASIR-2, -ASIR-O |
 | Zutritt | `ACCESS_TRANSCEIVER` (eine Kachel je Gerät) | HmIP-WKP, -FWI |
 | Klima und Wetter | `CLIMATE_TRANSCEIVER`, `WEATHER_TRANSMIT`, `WEATHER` | HmIP-STHO, -SWO, HM-WDS10-TH-O, HM-WDS100 |
+| Regen | `RAIN_DETECTION_TRANSMITTER`: Regen, Heizung, Temperatur | HmIP-SRD |
+| Helligkeit | `BRIGHTNESS_TRANSMITTER`, `LUXMETER`: aktuell, Durchschnitt, Minimum, Maximum | HmIP-SLO, HM-Sen-LI-O |
+| CO₂ | `CARBON_DIOXIDE_RECEIVER` (ppm, bewertet nach Umweltbundesamt), `SENSOR_FOR_CARBON_DIOXIDE` (Stufe) | HmIP-SCTH230, HM-CC-SCD |
+| Feinstaub | `TEMP_HUMIDITY_PARTICULATE_MATTER_TRANSMITTER`: PM2.5 (bewertet nach dem Europäischen Luftqualitätsindex), PM10, Partikelgröße, Temperatur, Luftfeuchte | HmIP-SFD |
+| Bodenfeuchte | `SOIL_MOISTURE_TRANSMITTER`: Feuchte, Bodentemperatur | ELV-SH-SMSI |
+| Erschütterung und Neigung | `ACCELERATION_TRANSCEIVER`, je nach Betriebsart Erschütterung, Lage oder Neigung | HmIP-SAM, -STV, ELV-SH-CTV, -TACO |
+| Netzausfall | `POWER_MAINS_TRANSMITTER` | HmIP-PMFS |
 | Taster | `KEY_TRANSCEIVER`, `KEY`, `VIRTUAL_KEY` (eine Kachel je Gerät) | HmIP-WRC2, -WRC6, -BRC2, HM-PB-2-WM55, Fernbedienungen |
 | Eingang | `MULTI_MODE_INPUT_TRANSMITTER`, je nach Betriebsart Taster, Schalter, Kontakt oder Level | HmIP-FCI1, -FCI6, -DSD-PCB, die Eingänge von HmIP-BSL, -DRSI4, HmIPW-DRI16 |
 | Energiezähler | `ENERGIE_METER_TRANSMITTER`, `POWERMETER` (eine Kachel je Gerät) | HmIP-ESI, HmIP-PSM, HM-ES-PMSw1 |
@@ -98,8 +105,7 @@ Nach Bedeutung:
    Symbole; die Werte sind nur generisch bedienbar.
 2. **Bewässerung und Antriebe**: HmIP-WSM, ELV-SH-WSM, HmIP-WSS; Fenster- und Lüftungsantriebe (HmIP-WSC,
    Winmatic).
-3. **Spezialsensoren**: Regen, Licht, Neigung, Feinstaub, CO₂, Bodenfeuchte, Abstand, Durchgang, Netzausfall,
-   Zählersensoren (HM-ES-TX-WM).
+3. **Weitere Sensoren**: Abstand, Durchgang (HmIP-SPDR), Füllstand, Zählersensoren (HM-ES-TX-WM).
 4. **Nebenkanäle**: Pumpe und Direktausgang der Fußbodenheizung, Zusatzkanäle von Türschlössern
    (Zugang, Auto-Relock, Türzustand), Status-LEDs und Hintergrundbeleuchtung, die virtuellen Kanäle der
    BidCos-Dimmer.
