@@ -1853,3 +1853,19 @@ test('lädt Geräte-Firmware direkt von eQ-3 auf die CCU', async ({ page }) => {
   await expect(page.getByText('Firmware HmIP-WRC2 entfernt.')).toBeVisible();
   await expect(files).toContainText('Auf der CCU liegt keine Geräte-Firmware.');
 });
+
+test('zeigt Batterie, Empfang und Erreichbarkeit aller Geräte', async ({ page }) => {
+  await login(page);
+  await page.goto('/health');
+  const devices = page.getByRole('list', { name: 'Geräte' });
+  // The bathroom window contact reports LOW_BAT; its limit comes from MASTER LOW_BAT_LIMIT
+  const bath = devices.getByRole('listitem', { name: 'Fensterkontakt Bad' });
+  await expect(bath.getByLabel('Batterie: Batterie leer, 1,00 V')).toBeVisible();
+  await expect(bath).toContainText('leer bei 1,10 V');
+  await expect(bath.getByLabel('Empfang: Mittlerer Empfang, -71 dBm')).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Zusammenfassung' })).toContainText('Batterie leer');
+
+  // Administrators get to the device from here
+  await bath.getByRole('link', { name: 'Fensterkontakt Bad' }).click();
+  await expect(page).toHaveURL(/\/device\/HmIP-RF\/003660C9930AB6$/);
+});

@@ -2525,6 +2525,34 @@ func TestStackSecurity(t *testing.T) {
 
 // SNMP as cp_security.cgi's onSNMPSaveBtn: CCU.setSNMPEnabled with a user
 // and a password of at least 8 characters; the state is snmpd-ccu3.conf
+// The health of all devices: maintenance values from ReGa, and the voltage
+// at which HmIP devices report LOW_BAT from their MASTER paramset
+func TestStackDeviceHealth(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "getDeviceHealth", "requestId": "h1"})
+	m := receive(t, conn, byRequestID("h1"))
+	devices, _ := m["devices"].([]interface{})
+	byAddress := map[string]map[string]interface{}{}
+	for _, d := range devices {
+		device := d.(map[string]interface{})
+		byAddress[device["address"].(string)] = device
+	}
+	bath := byAddress["003660C9930AB6"]
+	if bath == nil || bath["name"] != "Fensterkontakt Bad" || bath["lowBatLimit"] != 1.1 {
+		t.Fatalf("bath contact: %v", bath)
+	}
+	values := bath["values"].(map[string]interface{})
+	if values["LOW_BAT"].(map[string]interface{})["value"] != true || values["OPERATING_VOLTAGE"].(map[string]interface{})["value"] != 1.0 {
+		t.Fatalf("bath values: %v", values)
+	}
+	// BidCos: LOWBAT as LOW_BAT, no limit
+	bidcos := byAddress["LEQ0000001"]
+	if bidcos == nil || bidcos["lowBatLimit"] != nil || bidcos["values"].(map[string]interface{})["LOW_BAT"] == nil {
+		t.Fatalf("bidcos: %v", bidcos)
+	}
+}
+
 func TestStackSNMP(t *testing.T) {
 	ccu, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")

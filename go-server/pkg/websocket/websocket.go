@@ -549,6 +549,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSetDatapoint(client, message)
 	case "getDeviceProblems":
 		s.handleGetDeviceProblems(client, requestID)
+	case "getDeviceHealth":
+		s.handleDeviceHealth(client, requestID)
 	case "getParamsetDescription", "getParamset":
 		s.handleParamsetRequest(client, msgType, message)
 	case "putParamset":

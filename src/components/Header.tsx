@@ -10,6 +10,7 @@ import StarIcon from '~icons/lucide/star';
 import ListIcon from '~icons/lucide/list';
 import BracesIcon from '~icons/lucide/braces';
 import ChartIcon from '~icons/lucide/chart-line';
+import HeartPulseIcon from '~icons/lucide/heart-pulse';
 import PlayIcon from '~icons/lucide/play';
 import SlidersIcon from '~icons/lucide/sliders-horizontal';
 import LogOutIcon from '~icons/lucide/log-out';
@@ -140,6 +141,9 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
             </NavLink>
             <NavLink icon={<ChartIcon />} onClick={() => go(() => navigate({ to: '/diagrams' }))}>
               {m.DIAGRAMS()}
+            </NavLink>
+            <NavLink icon={<HeartPulseIcon />} onClick={() => go(() => navigate({ to: '/health' }))}>
+              {m.HEALTH()}
             </NavLink>
             {userLevel === 'admin' && (
               <NavLink icon={<SlidersIcon />} onClick={() => go(() => navigate({ to: '/setup' }))}>

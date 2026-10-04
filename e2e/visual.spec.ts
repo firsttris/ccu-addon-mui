@@ -21,6 +21,7 @@ const views = [
   { name: 'room-switch-generic', path: '/room/1', ready: 'Fenstergriff Wohnzimmer' },
   { name: 'room-blinds', path: '/room/2', ready: 'Küche Fenster' },
   { name: 'room-energy-door', path: '/room/3', ready: 'Haustür' },
+  { name: 'health', path: '/health', ready: 'Fensterkontakt Bad' },
   { name: 'trades', path: '/trades', ready: 'Heizung' },
   { name: 'trade-thermostat', path: '/trade/20', ready: 'Fußbodenheizung Bad' },
   // Tiles that read the device's value lists grow once those arrived

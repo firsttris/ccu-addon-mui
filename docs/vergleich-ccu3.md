@@ -133,6 +133,9 @@ Entwicklerwerkzeug *devconfig*.
 - **Als App installierbar**, für Handy, Tablet und Wand, hell und dunkel, mit WakeLock
 - **Kacheln anordnen** per Drag & Drop, für alle Geräte gleich
 - **Eigene Diagramme** für jeden Datenpunkt, ohne microSD-Karte
+- **Geräte-Gesundheit**: Batteriespannung mit Abschaltgrenze, Empfang in beide Richtungen, letzte Meldung
+  und Erreichbarkeit aller Geräte auf einer Seite, die dringendsten oben; die WebUI zeigt das nur Gerät für
+  Gerät
 - **Angemeldete Geräte** sehen und einzeln abmelden
 - **Admin-Token**: Einstellungen nur mit frischem Passwort, auch wenn ein Gerät dauerhaft angemeldet ist
 - **Audit-Log** jeder Änderung mit altem und neuem Wert

@@ -112,6 +112,7 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | | `getChannels` | Kanäle eines Raums, Gewerks oder einer Favoritenliste oder `all` mit Datenpunkten, Status und Optionen, bei Eingängen mit Betriebsart (`mode`) | alle |
 | | `setDatapoint` | Datenpunkt per ReGa setzen. Antwort `setDatapoint_response` mit `UNREACH`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_REQUEST`, `CCU_ERROR` | Bed. (A). Kanäle mit Option „bedienbar=aus“ dürfen nur Admins bedienen (`operable`, Cache 30 s) |
 | | `getDeviceProblems` | Geräte mit LOW_BAT oder UNREACH | alle |
+| | `getDeviceHealth` | Wartungswerte aller Geräte mit Zeitstempel (`get_device_health.tcl`: LOW_BAT, OPERATING_VOLTAGE, RSSI_DEVICE/PEER, UNREACH, STICKY_UNREACH, CONFIG_PENDING, UPDATE_PENDING, DUTY_CYCLE, SABOTAGE), bei HmIP zusätzlich `lowBatLimit` aus MASTER `LOW_BAT_LIMIT` (Cache 1 h) | alle |
 | | `getLayout` | Kachel-Layout einer Ansicht (ReGa-Metadaten `muiLayout`) | alle |
 | | `setLayout` | Kachel-Layout speichern (für alle Geräte gleich) | Bed. (A) |
 | | `getVirtualKeys` | Virtuelle Taster der CCU | alle |

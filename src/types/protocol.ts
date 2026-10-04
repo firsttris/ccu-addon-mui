@@ -156,6 +156,7 @@ export type ServerMessage =
   | SetSnmpResponse
   | GetUserLanguageResponse
   | SetUserLanguageResponse
+  | GetDeviceHealthResponse
   | GetInterfacesResponse
   | SearchWiredDevicesResponse
   | GetDeviceFirmwareResponse
@@ -304,6 +305,7 @@ export interface Protocol {
   setSnmp: SetSnmpCall;
   getUserLanguage: GetUserLanguageCall;
   setUserLanguage: SetUserLanguageCall;
+  getDeviceHealth: GetDeviceHealthCall;
   getInterfaces: GetInterfacesCall;
   searchWiredDevices: SearchWiredDevicesCall;
   getDeviceFirmware: GetDeviceFirmwareCall;
@@ -4946,6 +4948,66 @@ export interface SetUserLanguageResponse {
   type: "setUserLanguage_response";
   requestId?: string;
   success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceHealthCall".
+ */
+export interface GetDeviceHealthCall {
+  request: GetDeviceHealthRequest;
+  response: GetDeviceHealthResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceHealthRequest".
+ */
+export interface GetDeviceHealthRequest {
+  type: "getDeviceHealth";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceHealthResponse".
+ */
+export interface GetDeviceHealthResponse {
+  type: "getDeviceHealth_response";
+  requestId?: string;
+  devices: DeviceHealth[];
+}
+/**
+ * what a device's maintenance channel reports (get_device_health.tcl)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeviceHealth".
+ */
+export interface DeviceHealth {
+  address: string;
+  name: string;
+  type: string;
+  interfaceName: string;
+  roomId?: number;
+  roomName?: string;
+  /**
+   * LOW_BAT, OPERATING_VOLTAGE, RSSI_DEVICE, RSSI_PEER, UNREACH, STICKY_UNREACH, CONFIG_PENDING, UPDATE_PENDING, DUTY_CYCLE, SABOTAGE when the device has them
+   */
+  values: {
+    [k: string]: HealthValue;
+  };
+  /**
+   * HmIP: the voltage at which the device reports LOW_BAT (MASTER LOW_BAT_LIMIT)
+   */
+  lowBatLimit?: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "HealthValue".
+ */
+export interface HealthValue {
+  value: boolean | number | string | null;
+  /**
+   * Unix seconds the value was last set
+   */
+  time?: number;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

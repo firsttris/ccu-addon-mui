@@ -17,7 +17,7 @@ ab, erscheint nach zwei Sekunden ein roter Balken, und die App verbindet sich vo
 | Bereich | Inhalt |
 |---|---|
 | Navigation | Räume, Gewerke |
-| Ansichten | Favoriten, Alle Geräte, Systemvariablen, Programme, Diagramme, Einrichten |
+| Ansichten | Favoriten, Alle Geräte, Systemvariablen, Programme, Diagramme, Geräte-Gesundheit, Einrichten |
 | Darstellung | Dunkles Design, Effekte (Aus, Dezent, Kräftig), Sprache (je Benutzer), Startseite (zuletzt geöffnet oder Favoriten) |
 | Konto | Benachrichtigungen (Push), Passwort ändern, Abmelden |
 
@@ -117,6 +117,27 @@ Batterie leer oder nicht erreichbar steht an der Kachel. Welche Geräte welche K
   sich die Liste sofort.
 - **Push**: Beides kann als Benachrichtigung aufs Handy kommen, auch wenn die App geschlossen ist
   (siehe [Installation](installation.md#push-benachrichtigungen)).
+
+## Geräte-Gesundheit
+
+*Geräte-Gesundheit* im Menü zeigt Batterie, Empfang und Erreichbarkeit aller Geräte auf einer Seite.
+Die Werte stammen vom Wartungskanal jedes Geräts (`:0`), aus dem auch die Servicemeldungen kommen.
+
+- **Oben** steht, wie viele Geräte nicht erreichbar sind, eine leere Batterie haben, deren Batterie bald
+  leer ist oder die schlechten Empfang haben.
+- **Die Liste** zeigt zuerst die Geräte mit Hinweis, die dringendsten oben. *Alle* zeigt jedes Gerät.
+- **Batterie**: Spannung (`OPERATING_VOLTAGE`) und bei HmIP die Spannung, bei der das Gerät „Batterie
+  leer“ meldet (`LOW_BAT_LIMIT` aus den Geräteeinstellungen). *Bald leer* heißt höchstens 10 % darüber.
+  Geräte ohne Spannungswert zeigen nur leer oder OK (`LOW_BAT`).
+- **Empfang**: der schwächere der beiden Werte `RSSI_DEVICE` (wie das Gerät die CCU hört) und `RSSI_PEER`
+  (wie die CCU das Gerät hört). Ab −70 dBm gut, ab −85 dBm mittel, darunter schlecht.
+- **Zuletzt**: wann das Gerät zuletzt einen Wartungswert gemeldet hat. Batteriegeräte, die nur bei
+  Änderungen senden, melden sich teils nur alle paar Stunden.
+- **Hinweise** wie *War nicht erreichbar* (`STICKY_UNREACH`), *Konfiguration ausstehend* oder *Sabotage*.
+
+Administratoren kommen per Klick auf das Gerät zur Geräteseite.
+
+<img src="screenshot-gesundheit.png" alt="Geräte-Gesundheit mit Zusammenfassung und Liste nach Dringlichkeit" width="900">
 
 ## Heizen
 

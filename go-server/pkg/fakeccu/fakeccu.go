@@ -30,7 +30,9 @@ import (
 var interfaceNames = []string{"BidCos-RF", "HmIP-RF", "VirtualDevices", "BidCos-Wired"}
 
 type CCU struct {
-	mu sync.Mutex
+	// When the fake started: the time stamp of its maintenance values
+	Started time.Time
+	mu      sync.Mutex
 	// ConfigDir is the fake /etc/config, for the security settings
 	// flag files (sshEnabled, authEnabled, httpsRedirectEnabled)
 	ConfigDir string
@@ -141,6 +143,7 @@ func New(fixture *Fixture) *CCU {
 	}
 	original, _ := json.Marshal(fixture)
 	return &CCU{
+		Started:          time.Now(),
 		fixture:          fixture,
 		original:         original,
 		callbacks:        map[string]map[string]string{},
@@ -244,6 +247,8 @@ func (c *CCU) runScript(body string) (string, error) {
 			return c.getChannels(values["OBJECT_ID"]), nil
 		case "set_datapoint":
 			return c.setDatapoint(values), nil
+		case "get_device_health":
+			return c.getDeviceHealth(), nil
 		case "get_device_problems":
 			return c.getDeviceProblems(), nil
 		case "set_name":
@@ -1326,6 +1331,51 @@ func (c *CCU) getDeviceProblems() string {
 			name = device
 		}
 		fmt.Fprintf(&b, "P\t%s\t%t\t%t\t%s\t%s\t%s\n", device, lowBat, unreach, roomID, roomName, name)
+	}
+	return b.String()
+}
+
+// The values get_device_health.tcl reports, as the fake has them (the time
+// stamp is the fake's start)
+var healthDatapoints = []string{"LOW_BAT", "LOWBAT", "OPERATING_VOLTAGE", "RSSI_DEVICE", "RSSI_PEER", "UNREACH",
+	"STICKY_UNREACH", "CONFIG_PENDING", "UPDATE_PENDING", "DUTY_CYCLE", "SABOTAGE"}
+
+func (c *CCU) getDeviceHealth() string {
+	var b strings.Builder
+	for _, ch := range c.fixture.Channels {
+		if !strings.HasSuffix(ch.Address, ":0") || ch.Interface == "VirtualDevices" {
+			continue
+		}
+		device := deviceAddress(ch.Address)
+		deviceType := ""
+		if data := c.fixture.Interfaces[ch.Interface]; data != nil {
+			for _, d := range data.Devices {
+				if d["ADDRESS"] == device {
+					deviceType, _ = d["TYPE"].(string)
+				}
+			}
+		}
+		roomID, roomName := "", ""
+		if first := c.channelByAddress(ch.Interface, device+":1"); first != nil {
+			for _, room := range c.fixture.Rooms {
+				for _, id := range room.Channels {
+					if id == first.ID && roomID == "" {
+						roomID, roomName = strconv.FormatInt(room.ID, 10), room.Name
+					}
+				}
+			}
+		}
+		var values strings.Builder
+		for _, name := range healthDatapoints {
+			if v, ok := ch.Datapoints[name]; ok {
+				fmt.Fprintf(&values, "%s=%v@%d;", name, v, c.Started.Unix())
+			}
+		}
+		name := c.fixture.DeviceNames[device]
+		if name == "" {
+			name = device
+		}
+		fmt.Fprintf(&b, "H\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", device, deviceType, ch.Interface, roomID, roomName, values.String(), name)
 	}
 	return b.String()
 }
