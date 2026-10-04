@@ -167,8 +167,8 @@ export const SmokeDetectorControl = ({ channel }: { channel: Channel }) => {
 
 const minutesAgo = (since: number) => Math.max(0, Math.round((Date.now() - since) / 60000));
 
-// Motion (MOTION_DETECTOR(_TRANSCEIVER)) and presence detectors
-// (PRESENCE_DETECTOR_TRANSCEIVER): radar waves while something moves, the
+// Motion (BidCos MOTION_DETECTOR, HmIP MOTIONDETECTOR_TRANSCEIVER) and
+// presence detectors (PRESENCEDETECTOR_TRANSCEIVER): radar waves while something moves, the
 // last movement since the app is open, the brightness they measure, and
 // detection on or off where the device allows it.
 export const MotionDetectorControl = ({ channel }: { channel: Channel }) => {
@@ -178,7 +178,9 @@ export const MotionDetectorControl = ({ channel }: { channel: Channel }) => {
   const detected = presence ? dp.PRESENCE_DETECTION_STATE === true : dp.MOTION === true;
   const activeKey = presence ? 'PRESENCE_DETECTION_ACTIVE' : 'MOTION_DETECTION_ACTIVE';
   const active = dp[activeKey];
-  const illumination = typeof dp.ILLUMINATION === 'number' ? dp.ILLUMINATION : typeof dp.BRIGHTNESS === 'number' ? dp.BRIGHTNESS : undefined;
+  // HmIP: CURRENT_ILLUMINATION is the moment's value, ILLUMINATION an average
+  const lux = typeof dp.CURRENT_ILLUMINATION === 'number' ? dp.CURRENT_ILLUMINATION : dp.ILLUMINATION;
+  const illumination = typeof lux === 'number' ? lux : typeof dp.BRIGHTNESS === 'number' ? dp.BRIGHTNESS : undefined;
   const [last, setLast] = useState<number | null>(null);
   const [, tick] = useState(0);
   const was = useRef(detected);
@@ -209,7 +211,7 @@ export const MotionDetectorControl = ({ channel }: { channel: Channel }) => {
           {illumination !== undefined ? (
             <span className="flex items-center gap-1.5 text-muted-foreground">
               <SunDimIcon className="size-4" aria-hidden />
-              {new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 0 }).format(illumination)} {dp.ILLUMINATION !== undefined ? 'lx' : ''}
+              {new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 0 }).format(illumination)} {typeof lux === 'number' ? 'lx' : ''}
             </span>
           ) : (
             <span />
@@ -252,7 +254,7 @@ export const WaterDetectorControl = ({ channel }: { channel: Channel }) => {
 
 // --- Sirens
 
-// HmIP-ASIR (ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER): whether siren or flash
+// HmIP-ASIR (ALARM_SWITCH_VIRTUAL_RECEIVER): whether siren or flash
 // light are on. Choosing tones takes combined parameters; that stays in
 // the WebUI.
 export const SirenControl = ({ channel }: { channel: Channel }) => {
