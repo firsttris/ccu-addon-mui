@@ -80,3 +80,17 @@ func TestNotifierSendsOnlyNews(t *testing.T) {
 		t.Fatal("store not persisted")
 	}
 }
+
+func TestServiceTextsFallBackToTheWebUI(t *testing.T) {
+	cases := []struct{ language, key, want string }{
+		{"de", "LOW_BAT", "Batterie schwach"},
+		{"de", "EMERGENCY_OPERATION", "Verbindungsabbruch zum RBG"},
+		{"en", "EMERGENCY_OPERATION", "Connection failure with room control unit"},
+		{"de", "NO_SUCH_DATAPOINT", "NO_SUCH_DATAPOINT"},
+	}
+	for _, c := range cases {
+		if got := text(c.language, c.key); got != c.want {
+			t.Errorf("text(%q, %q) = %q, want %q", c.language, c.key, got, c.want)
+		}
+	}
+}

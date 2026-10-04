@@ -2,6 +2,7 @@ package push
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -61,13 +62,37 @@ var serviceTexts = map[string]map[string]string{
 		"title": "Service message", "alarm": "Alarm"},
 }
 
+// The texts the WebUI shows for every other service message, by
+// "<DATAPOINT>=TRUE" or "<DATAPOINT>" (stringtable_de.txt, imported by
+// scripts/import-service-texts.mjs)
+//
+//go:embed servicetexts.json
+var webUITextsJSON []byte
+
+var webUITexts = func() map[string]map[string]string {
+	texts := map[string]map[string]string{}
+	if err := json.Unmarshal(webUITextsJSON, &texts); err != nil {
+		panic(err)
+	}
+	return texts
+}()
+
 func text(language, key string) string {
 	texts, ok := serviceTexts[language]
 	if !ok {
+		language = "de"
 		texts = serviceTexts["de"]
 	}
 	if t, ok := texts[key]; ok {
 		return t
+	}
+	for _, k := range []string{key + "=TRUE", key} {
+		if t, ok := webUITexts[k]; ok {
+			if t[language] != "" {
+				return t[language]
+			}
+			return t["de"]
+		}
 	}
 	return key
 }
