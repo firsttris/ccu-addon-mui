@@ -133,7 +133,7 @@ erzeugt und im Pull Request mitgeliefert.
 
 | Workflow | Auslöser | Schritte |
 |---|---|---|
-| `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Typprüfung, Unit-Tests, Build, Go-Build für ARM und `tar.gz` |
+| `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Unit-Tests, Build mit Typprüfung (`vite build && tsc`), Go-Build für ARM und `tar.gz` |
 | `go-unit-tests.yml` | Push und Pull Request auf `main` | `go test ./...` mit Coverage-Bericht als Artefakt |
 | `playwright-e2e.yml` | Push und Pull Request auf `main` | E2E mit Mock inkl. Anmeldung (mit Frontend-Coverage) und E2E gegen den Stack, Berichte als Artefakte |
 | `release.yml` | von Hand | Version erhöhen, bauen, Changelog aus den Commits, Release mit `mui-<version>.tar.gz` |

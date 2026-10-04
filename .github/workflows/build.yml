@@ -37,9 +37,6 @@ jobs:
       - name: Protocol types up to date
         run: npm run generate:protocol && git diff --exit-code src/types/protocol.ts
 
-      - name: Typecheck
-        run: npm run typecheck
-
       - name: Unit tests
         run: npm run test:unit
 
