@@ -134,7 +134,9 @@ export type ServerMessage =
   | DeleteHeatingGroupResponse
   | GetSecurityResponse
   | SetSecurityResponse
-  | ChangeSecurityKeyResponse;
+  | ChangeSecurityKeyResponse
+  | GetNetworkResponse
+  | SetNetworkResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -253,6 +255,8 @@ export interface Protocol {
   getSecurity: GetSecurityCall;
   setSecurity: SetSecurityCall;
   changeSecurityKey: ChangeSecurityKeyCall;
+  getNetwork: GetNetworkCall;
+  setNetwork: SetNetworkCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4107,6 +4111,86 @@ export interface ChangeSecurityKeyRequest {
  */
 export interface ChangeSecurityKeyResponse {
   type: "changeSecurityKey_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetNetworkCall".
+ */
+export interface GetNetworkCall {
+  request: GetNetworkRequest;
+  response: GetNetworkResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetNetworkRequest".
+ */
+export interface GetNetworkRequest {
+  type: "getNetwork";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetNetworkResponse".
+ */
+export interface GetNetworkResponse {
+  type: "getNetwork_response";
+  requestId?: string;
+  config: NetConfig;
+  /**
+   * What eth0 uses right now
+   */
+  current: {
+    ip: string;
+    netmask: string;
+    gateway: string;
+    mac?: string;
+  };
+  tailscale: {
+    available: boolean;
+    enabled: boolean;
+  };
+}
+/**
+ * /etc/config/netconfig
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "NetConfig".
+ */
+export interface NetConfig {
+  dhcp: boolean;
+  hostname: string;
+  ip: string;
+  netmask: string;
+  gateway: string;
+  dns1: string;
+  dns2: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetNetworkCall".
+ */
+export interface SetNetworkCall {
+  request: SetNetworkRequest;
+  response: SetNetworkResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetNetworkRequest".
+ */
+export interface SetNetworkRequest {
+  type: "setNetwork";
+  requestId?: string;
+  config: NetConfig;
+  tailscale?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetNetworkResponse".
+ */
+export interface SetNetworkResponse {
+  type: "setNetwork_response";
   requestId?: string;
   success: boolean;
 }

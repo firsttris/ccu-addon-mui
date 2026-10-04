@@ -343,6 +343,12 @@
     },
     "changeSecurityKey": {
       "$ref": "#/definitions/ChangeSecurityKeyCall"
+    },
+    "getNetwork": {
+      "$ref": "#/definitions/GetNetworkCall"
+    },
+    "setNetwork": {
+      "$ref": "#/definitions/SetNetworkCall"
     }
   },
   "required": [
@@ -458,7 +464,9 @@
     "deleteHeatingGroup",
     "getSecurity",
     "setSecurity",
-    "changeSecurityKey"
+    "changeSecurityKey",
+    "getNetwork",
+    "setNetwork"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3047,6 +3055,12 @@
         },
         {
           "$ref": "#/definitions/ChangeSecurityKeyResponse"
+        },
+        {
+          "$ref": "#/definitions/GetNetworkResponse"
+        },
+        {
+          "$ref": "#/definitions/SetNetworkResponse"
         }
       ]
     },
@@ -9598,6 +9612,196 @@
       "required": [
         "request",
         "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetNetworkRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getNetwork"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetNetworkResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getNetwork_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/NetConfig"
+        },
+        "current": {
+          "type": "object",
+          "description": "What eth0 uses right now",
+          "properties": {
+            "ip": {
+              "type": "string"
+            },
+            "netmask": {
+              "type": "string"
+            },
+            "gateway": {
+              "type": "string"
+            },
+            "mac": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ip",
+            "netmask",
+            "gateway"
+          ],
+          "additionalProperties": false
+        },
+        "tailscale": {
+          "type": "object",
+          "properties": {
+            "available": {
+              "type": "boolean"
+            },
+            "enabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "available",
+            "enabled"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "config",
+        "current",
+        "tailscale"
+      ],
+      "additionalProperties": false
+    },
+    "GetNetworkCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetNetworkRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetNetworkResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetNetworkRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setNetwork"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "config": {
+          "$ref": "#/definitions/NetConfig"
+        },
+        "tailscale": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "config"
+      ],
+      "additionalProperties": false
+    },
+    "SetNetworkResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setNetwork_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetNetworkCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetNetworkRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetNetworkResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "NetConfig": {
+      "type": "object",
+      "description": "/etc/config/netconfig",
+      "properties": {
+        "dhcp": {
+          "type": "boolean"
+        },
+        "hostname": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "netmask": {
+          "type": "string"
+        },
+        "gateway": {
+          "type": "string"
+        },
+        "dns1": {
+          "type": "string"
+        },
+        "dns2": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "dhcp",
+        "hostname",
+        "ip",
+        "netmask",
+        "gateway",
+        "dns1",
+        "dns2"
       ],
       "additionalProperties": false
     }

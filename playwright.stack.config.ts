@@ -35,7 +35,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        `mkdir -p ${stateDir} && cp fixtures/groups.gson ${stateDir}/groups.gson && ` +
+        `mkdir -p ${stateDir} && cp fixtures/groups.gson fixtures/netconfig ${stateDir}/ && ` +
         `cd go-server && go run ./cmd/fakeccu -fixture ../fixtures/demo-ccu.json -groups-file ${stateDir}/groups.gson -config-dir ${stateDir} -rega-port ${fakeCCU.rega} ` +
         `-webui-port ${fakeCCU.webui} -bidcos-port ${fakeCCU.bidcos} -hmip-port ${fakeCCU.hmip} -virtual-port ${fakeCCU.virtual}`,
       port: fakeCCU.webui,
