@@ -52,6 +52,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		RPCPort:            ccu.InterfacePorts["BidCos-RF"],
 		HmIPPort:           ccu.InterfacePorts["HmIP-RF"],
 		VirtualDevicesPort: ccu.InterfacePorts["VirtualDevices"],
+		WiredPort:          ccu.InterfacePorts["BidCos-Wired"],
 		RPCServerPort:      freePort(t),
 		CCUHost:            "127.0.0.1",
 		CallbackHost:       "127.0.0.1",
@@ -604,6 +605,37 @@ func TestStackRenameAndAssignRooms(t *testing.T) {
 	data, _ := os.ReadFile(auditLogs[ccu])
 	if !strings.Contains(string(data), `"action":"rename","target":"LEQ0000001:1","previous":"Wohnzimmer Licht","value":"Deckenlicht"`) {
 		t.Fatalf("rename not audited: %s", data)
+	}
+}
+
+// BidCos-Wired (hs485d) is connected when a Wired gateway is set up: the
+// server registers for its events and searches the bus for new devices,
+// as the WebUI's cp_add_device.cgi (action_wir_search)
+func TestStackWired(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getInterfaces", "requestId": "q1"})
+	interfaces := fmt.Sprint(receive(t, conn, byRequestID("q1"))["interfaces"])
+	if !strings.Contains(interfaces, "BidCos-Wired") {
+		t.Fatalf("Wired not connected: %s", interfaces)
+	}
+	deadline := time.Now().Add(3 * time.Second)
+	for ccu.CallCount("BidCos-Wired init") == 0 && time.Now().Before(deadline) {
+		time.Sleep(20 * time.Millisecond)
+	}
+	if ccu.CallCount("BidCos-Wired init") == 0 {
+		t.Fatal("no init on BidCos-Wired")
+	}
+
+	send(t, conn, message{"type": "searchWiredDevices", "requestId": "q2"})
+	if m := receive(t, conn, byRequestID("q2")); m["success"] != true {
+		t.Fatalf("searchWiredDevices failed: %v", m)
+	}
+	send(t, conn, message{"type": "getInbox", "requestId": "q3"})
+	inbox := fmt.Sprint(receive(t, conn, byRequestID("q3"))["devices"])
+	if !strings.Contains(inbox, "HMW-LC-Sw2-DR") {
+		t.Fatalf("found device not in the inbox: %s", inbox)
 	}
 }
 

@@ -152,6 +152,21 @@ func (c *Client) SetInstallModeWithWhitelist(iface string, seconds int, sgtin, k
 var ErrKeyMismatch = errors.New("the device has another system security key")
 
 // AddDevice pairs a BidCos device by its serial number
+// SearchDevices looks for new devices on the RS485 bus of BidCos-Wired, as
+// the WebUI's cp_add_device.cgi (action_wir_search) asks hs485d; found
+// devices land in the inbox. Returns how many were found.
+func (c *Client) SearchDevices(iface string) (int, error) {
+	var reply interface{}
+	if err := c.call(iface, "searchDevices", []interface{}{}, &reply); err != nil {
+		return 0, err
+	}
+	n, _ := reply.(int64)
+	if i, ok := reply.(int); ok {
+		n = int64(i)
+	}
+	return int(n), nil
+}
+
 func (c *Client) AddDevice(iface, serial string) error {
 	if !addressRegex.MatchString(serial) || strings.Contains(serial, ":") {
 		return ErrInvalidAddress

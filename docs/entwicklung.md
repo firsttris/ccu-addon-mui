@@ -192,6 +192,7 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `REGA_PORT` | `8183` bei `localhost`, sonst `8181` | ReGa |
 | `SYSVAR_INTERVAL` | `5` | Sekunden zwischen zwei Abfragen der Systemvariablen, solange eine App sie zeigt |
 | `RPC_PORT`, `HMIP_PORT`, `VIRTUAL_DEVICES_PORT` | bei `localhost` aus `/etc/config/InterfacesList.xml` (sonst `32001`, `32010`, `39292`), aus dem LAN `2001`, `2010`, `9292` | Funkdienste |
+| `WIRED_PORT` | bei `localhost` aus `InterfacesList.xml` (nur mit Wired-Gateway), sonst `0` (aus) | BidCos-Wired (hs485d), aus dem LAN `2000` |
 | `CCU_WEBUI_URL` | `http://<CCU_HOST>` | WebUI für JSON-RPC und CGI-Seiten |
 | `AUTH_MODE` | `ccu` | `none` schaltet die Anmeldung ab |
 | `AUTH_KEY_FILE`, `SESSIONS_FILE`, `AUDIT_LOG_FILE`, `PUSH_FILE`, `DIAGRAMS_FILE` | unter `/usr/local/etc/config` | Dateien des Add-ons |

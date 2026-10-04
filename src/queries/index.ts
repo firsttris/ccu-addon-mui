@@ -130,9 +130,10 @@ export const usePutParamset = () => {
 };
 
 // Seconds pairing is still on for an interface (0: off), polled while on
-export const useInstallMode = (interfaceName: string, { poll }: { poll: boolean }) => {
+export const useInstallMode = (interfaceName: string, { poll, enabled = true }: { poll: boolean; enabled?: boolean }) => {
   const { request } = useWebSocketActions();
   return useQuery({
+    enabled,
     queryKey: ['installMode', interfaceName],
     queryFn: async () => {
       const response = await request({ type: 'getInstallMode', interfaceName });
@@ -141,6 +142,15 @@ export const useInstallMode = (interfaceName: string, { poll }: { poll: boolean 
     },
     refetchInterval: poll ? 1000 : false,
     retry: false,
+  });
+};
+
+// The connected interfaces; BidCos-Wired only with a Wired gateway
+export const useInterfaces = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['interfaces'],
+    queryFn: async () => (await request({ type: 'getInterfaces' })).interfaces ?? [],
   });
 };
 
@@ -161,6 +171,7 @@ export type PairingAction =
   | { type: 'addDeviceBySerial'; interfaceName: string; address: string }
   | { type: 'setTempKey'; interfaceName: string; key: string }
   | { type: 'acceptDevice'; address: string }
+  | { type: 'searchWiredDevices' }
   | { type: 'deleteDevice'; interfaceName: string; address: string; reset: boolean; force: boolean };
 
 export const usePairingAction = () => {

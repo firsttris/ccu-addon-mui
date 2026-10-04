@@ -60,7 +60,7 @@ anlegt, steht in der [Installation](installation.md#dateien-auf-der-ccu).
 ```
 go-server/
   main.go              Start: Konfiguration, Dienste verdrahten, Shutdown
-  pkg/websocket        WebSocket-Server, Dispatcher für 131 Nachrichtentypen, Rechte, Audit-Aufrufe,
+  pkg/websocket        WebSocket-Server, Dispatcher für 133 Nachrichtentypen, Rechte, Audit-Aufrufe,
                        HTTP-Endpunkte für Backup, Upload und Logs
   pkg/rega             ReGa: 55 HM-Script-Vorlagen (embed), Ausführen, Parsen, Validieren
   pkg/ccurpc           XML-RPC-Client zu BidCos-RF, HmIP-RF, VirtualDevices; Cache für Beschreibungen
@@ -117,6 +117,7 @@ Benutzer und das Systemprotokoll. Der Server schickt ihr HM-Script per `POST /re
 | BidCos-RF (rfd) | 32001 (2001) | Gerätebeschreibungen, Paramsets, Anlernen, Verknüpfungen, LAN-Gateways, Gerätetausch, Log-Level; Events |
 | HmIP-RF (crRFD) | 32010 (2010) | dasselbe für HmIP und HmIP Wired, dazu Anlernen mit KEY/SGTIN und Firmware-Updates; Events |
 | VirtualDevices | 39292 (9292) | Heizgruppen und virtuelle Geräte |
+| BidCos-Wired (hs485d) | 32000 (2000) | wie BidCos-RF für HMW-Geräte am RS485-Bus, dazu die Gerätesuche; nur mit Wired-Gateway, dann trägt `hs485dLoader` es in `InterfacesList.xml` ein |
 
 Die Ports 2001, 2010, 9292 und 8181 sind Weiterleitungen von lighttpd an die Dienste (`webui_remoteapi.conf`),
 je nach Einstellung mit Authentifizierung. Auf der CCU spricht der Server die Dienste direkt an, wie ReGa
@@ -130,11 +131,11 @@ Beschreibung (bekannt, schreibbar, im Bereich) und wandelt JSON-Zahlen in den ri
 
 ### Events
 
-Der Server ist selbst ein XML-RPC-Server auf Port 9099 und meldet sich mit `init` bei rfd, crRFD und
-VirtualDevices an.
+Der Server ist selbst ein XML-RPC-Server auf Port 9099 und meldet sich mit `init` bei rfd und crRFD an, mit
+Wired-Gateway auch bei hs485d.
 Ab dann schickt die CCU jede Wertänderung als `event` (meist gebündelt in `system.multicall`).
 
-- Kommt eine Minute lang nichts, schickt der Server `ping`. Alle drei Dienste antworten darauf mit einem
+- Kommt eine Minute lang nichts, schickt der Server `ping`. Die Dienste antworten darauf mit einem
   `PONG`-Event. Bleibt es 15 Sekunden aus, hat der Dienst die Anmeldung vergessen (z. B. nach einem Neustart),
   und der Server meldet sich neu an. Eine verlorene Anmeldung fällt so nach gut einer Minute auf.
   Schlägt die Anmeldung fehl, versucht er es mit wachsendem Abstand (5 s bis 5 min) weiter.

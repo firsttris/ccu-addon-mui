@@ -11,6 +11,7 @@ const fakeCCU = {
   bidcos: 22001,
   hmip: 22010,
   virtual: 29292,
+  wired: 22000,
 };
 
 // The server's state files, new for every run
@@ -37,7 +38,7 @@ export default defineConfig({
       command:
         `mkdir -p ${stateDir} && cp -r fixtures/groups.gson fixtures/netconfig fixtures/firewall.conf fixtures/rfd.conf fixtures/status ${stateDir}/ && ` +
         `cd go-server && go run ./cmd/fakeccu -fixture ../fixtures/demo-ccu.json -groups-file ${stateDir}/groups.gson -config-dir ${stateDir} -rega-port ${fakeCCU.rega} ` +
-        `-webui-port ${fakeCCU.webui} -bidcos-port ${fakeCCU.bidcos} -hmip-port ${fakeCCU.hmip} -virtual-port ${fakeCCU.virtual}`,
+        `-webui-port ${fakeCCU.webui} -bidcos-port ${fakeCCU.bidcos} -hmip-port ${fakeCCU.hmip} -virtual-port ${fakeCCU.virtual} -wired-port ${fakeCCU.wired}`,
       port: fakeCCU.webui,
       reuseExistingServer: false,
       timeout: 120000,
@@ -53,6 +54,7 @@ export default defineConfig({
         RPC_PORT: String(fakeCCU.bidcos),
         HMIP_PORT: String(fakeCCU.hmip),
         VIRTUAL_DEVICES_PORT: String(fakeCCU.virtual),
+        WIRED_PORT: String(fakeCCU.wired),
         CCU_WEBUI_URL: FAKE_CCU_URL,
         WS_PORT: '28088',
         RPC_SERVER_PORT: '29099',

@@ -1,6 +1,6 @@
 # Geräteunterstützung
 
-Kurz gesagt: **Jedes Gerät, das deine CCU über HmIP, HmIP Wired oder BidCos-RF kennt, lässt sich im
+Kurz gesagt: **Jedes Gerät, das deine CCU über HmIP, HmIP Wired, BidCos-RF oder BidCos-Wired kennt, lässt sich im
 Add-on bedienen und einrichten.** Die häufigen Geräte haben dafür eigene, gestaltete Kacheln. Alle anderen
 bekommen eine Kachel, die das Add-on aus der Gerätebeschreibung der CCU baut.
 
@@ -17,10 +17,12 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
 | HomeMatic IP Wired (HmIPW) | 38 | 38 | 24 | 12 | 2 |
 | BidCos-RF (HM-) | 186 | 168 | 113 | 36 | 19 |
 | BidCos-RF, ältere und OEM-Typen | 41 | 36 | 28 | 3 | 5 |
-| **Summe** | **509** | **465** | **328 (71 %)** | **97 (21 %)** | **40 (9 %)** |
-| BidCos-Wired (HMW-) | 15 | nicht angebunden | | | |
+| BidCos-Wired (HMW-) | 15 | 11 | 6 | 0 | 5 |
+| **Summe** | **524** | **476** | **334 (70 %)** | **97 (20 %)** | **45 (9 %)** |
 | virtuelle Typen (VIR-) | 11 | nicht geprüft | | | |
 
+- **BidCos-Wired** ist angebunden, sobald ein Wired-Gateway (HMW-LGW) eingerichtet ist, aber noch nicht an
+  echter Wired-Hardware getestet.
 - **bedienbar**: Gerätetypen mit Beschreibung und mindestens einem Kanal mit Werten. Nicht mitgezählt sind
   Access Points, Repeater und Funkmodule ohne bedienbaren Kanal sowie Typen, zu denen OpenCCU keine
   Beschreibung mitliefert (z. B. die -644-Dimmer und WS550).
@@ -29,7 +31,7 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
   Hintergrundbeleuchtung eines Wandthermostats oder die Pumpe einer Fußbodenheizung.
 - **nur generisch**: kein Kanal hat eine eigene Kachel. Das Gerät ist trotzdem voll bedienbar.
 
-Zusammen haben **425 von 465 Gerätetypen (91 %)** eine eigene Kachel für ihre Hauptfunktion.
+Zusammen haben **431 von 476 Gerätetypen (91 %)** eine eigene Kachel für ihre Hauptfunktion.
 
 Die Zählung ist reproduzierbar. Die Skripte vergleichen die Gerätebeschreibungen mit
 `src/controls/registry.ts`, gegengeprüft an einem Export einer echten CCU (`fixtures/my-ccu.json`).
@@ -92,22 +94,19 @@ angebundenen Schnittstellen, mit passenden Bedienelementen (siehe [Einrichten](e
 
 Nach Bedeutung:
 
-1. **BidCos-Wired (HMW-, RS485-Bus)**: Die Schnittstelle (`hs485d`, Port 2000) ist nicht angebunden. Die Kanäle
-   erscheinen zwar und lassen sich schalten, weil das über ReGa läuft. Es fehlen aber Live-Events,
-   Einstellungen, Direktverknüpfungen und die Wired-Gerätesuche. HmIP Wired ist davon nicht betroffen.
-2. **Display-Geräte**: HmIP-WGD, HmIPW-WGD und das Display des HmIP-WRCD haben keinen Baukasten für Texte und
+1. **Display-Geräte**: HmIP-WGD, HmIPW-WGD und das Display des HmIP-WRCD haben keinen Baukasten für Texte und
    Symbole; die Werte sind nur generisch bedienbar.
-3. **Bewässerung und Antriebe**: HmIP-WSM, ELV-SH-WSM, HmIP-WSS; Fenster- und Lüftungsantriebe (HmIP-WSC,
+2. **Bewässerung und Antriebe**: HmIP-WSM, ELV-SH-WSM, HmIP-WSS; Fenster- und Lüftungsantriebe (HmIP-WSC,
    Winmatic).
-4. **Spezialsensoren**: Regen, Licht, Neigung, Feinstaub, CO₂, Bodenfeuchte, Abstand, Durchgang, Netzausfall,
+3. **Spezialsensoren**: Regen, Licht, Neigung, Feinstaub, CO₂, Bodenfeuchte, Abstand, Durchgang, Netzausfall,
    Zählersensoren (HM-ES-TX-WM).
-5. **Nebenkanäle**: Pumpe und Direktausgang der Fußbodenheizung, Zusatzkanäle von Türschlössern
+4. **Nebenkanäle**: Pumpe und Direktausgang der Fußbodenheizung, Zusatzkanäle von Türschlössern
    (Zugang, Auto-Relock, Türzustand), Status-LEDs und Hintergrundbeleuchtung, die virtuellen Kanäle der
    BidCos-Dimmer.
-6. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
+5. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
    Profile). Für die übrigen 59 Empfängertypen der WebUI (2065 Profile) geht nur der Expertenmodus mit allen
    Parametern.
-7. **Gerätebilder** der WebUI zeigt das Add-on nicht.
+6. **Gerätebilder** der WebUI zeigt das Add-on nicht.
 
 ## Ein Gerät fehlt oder sieht falsch aus?
 
