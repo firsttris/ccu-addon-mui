@@ -1645,13 +1645,18 @@ test('stellt Geräteeinstellungen mit passenden Bedienelementen ein und übertr�
   await comfort.getByLabel('Komforttemperatur', { exact: true }).press('Enter');
   await expect(comfort.getByLabel('Komforttemperatur', { exact: true })).toHaveValue('30');
 
-  // Percent as a slider, the time of day and weekday as choices
+  // Percent as a slider, the time of day with a time picker, the weekday as a choice
   const boost = device.getByRole('slider', { name: 'Ventilöffnung bei Boost' });
   await expect(boost).toHaveValue('80');
   await boost.focus();
   await boost.press('ArrowRight');
   await expect(device.getByRole('group', { name: 'Ventilöffnung bei Boost' })).toContainText('81 %');
-  await device.getByRole('combobox', { name: 'Entkalkung: Uhrzeit' }).selectOption({ label: '03:30' });
+  // A typed time is rounded to the half hours the device knows
+  const decalcification = device.getByRole('textbox', { name: 'Entkalkung: Uhrzeit' });
+  await expect(decalcification).toHaveAttribute('type', 'time');
+  await decalcification.fill('03:40');
+  await decalcification.blur();
+  await expect(decalcification).toHaveValue('03:30');
   await expect(device.getByRole('combobox', { name: 'Entkalkung: Wochentag' })).toHaveValue('6');
   await expect(device.getByRole('combobox', { name: 'Vorrang des Manuell-Modus' }).locator('option:checked')).toHaveText('Von allen');
 
@@ -1669,7 +1674,7 @@ test('stellt Geräteeinstellungen mit passenden Bedienelementen ein und übertr�
 
   await page.reload();
   await expect(page.getByRole('region', { name: 'Gerät', exact: true }).getByRole('slider', { name: 'Ventilöffnung bei Boost' })).toHaveValue('81');
-  await expect(page.getByRole('region', { name: 'Gerät', exact: true }).getByRole('combobox', { name: 'Entkalkung: Uhrzeit' })).toHaveValue('7');
+  await expect(page.getByRole('region', { name: 'Gerät', exact: true }).getByRole('textbox', { name: 'Entkalkung: Uhrzeit' })).toHaveValue('03:30');
   // Both back to their defaults (as in the fixture), for a second run
   const reloaded = page.getByRole('region', { name: 'Gerät', exact: true });
   await reloaded.getByRole('button', { name: 'Ventilöffnung bei Boost auf Standard zurücksetzen' }).click();

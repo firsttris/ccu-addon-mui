@@ -11,7 +11,7 @@ vi.mock('../../hooks/useWebsocket', async (importOriginal) => ({
   useWebSocketContext: () => ({ authRequired: true, elevated: true }),
 }));
 
-const { Power, RegaVersion } = await import('./SystemSettings');
+const { Clock, Power, RegaVersion } = await import('./SystemSettings');
 
 const renderWithProviders = (ui: React.ReactElement) =>
   renderWithTheme(
@@ -89,5 +89,22 @@ describe('maintenance', () => {
     const { container } = renderWithProviders(<RegaVersion />);
     await waitFor(() => expect(request).toHaveBeenCalled());
     expect(container.textContent).toBe('');
+  });
+
+  it('sets the clock by hand with a date and time picker, as cp_time.cgi', async () => {
+    request.mockReset();
+    request.mockImplementation(async (message: { type: string }) =>
+      message.type === 'getSystemSettings'
+        ? { latitude: 50, longitude: 8, timeZoneOffset: 60, time: '', canPower: true, canSetClock: true }
+        : { success: true },
+    );
+    renderWithProviders(<Clock />);
+    const field = await screen.findByLabelText('Date and time');
+    expect(field.getAttribute('type')).toBe('datetime-local');
+    fireEvent.change(field, { target: { value: '2026-12-24T18:30' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Set clock' }));
+    await waitFor(() =>
+      expect(request).toHaveBeenCalledWith({ type: 'setClock', time: '2026-12-24 18:30:00' }, { queue: false }),
+    );
   });
 });

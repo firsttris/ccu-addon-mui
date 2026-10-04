@@ -1452,5 +1452,7 @@
   "LINK_BEHAVIOUR": "Verhalten",
   "LINKS_CONTROLS": "Dieses Gerät steuert",
   "LINKS_CONTROLLED_BY": "Wird gesteuert von",
-  "LINKS_ALL_ROOMS": "Alle Räume"
+  "LINKS_ALL_ROOMS": "Alle Räume",
+  "SYS_CLOCK_DATE_TIME": "Datum und Uhrzeit",
+  "SYS_CLOCK_SET_MANUAL": "Uhr stellen"
 }

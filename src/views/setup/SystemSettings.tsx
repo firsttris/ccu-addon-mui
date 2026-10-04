@@ -82,7 +82,7 @@ export const formatClock = (date: Date) => {
 // Time zone, time servers and setting the clock by hand, as the WebUI's
 // "Zeit-/Positionseinstellungen" (cp_time.cgi): only what the CCU has files
 // for; the clock only where the add-on runs on the CCU
-const Clock = () => {
+export const Clock = () => {
   const { request } = useWebSocketActions();
   const { elevated } = useWebSocketContext();
   const { showToast } = useToast();
@@ -90,6 +90,8 @@ const Clock = () => {
   const { data } = useSystemSettings();
   const [zone, setZone] = useState('');
   const [servers, setServers] = useState('');
+  // Set by hand: starts at this device's time, to the minute
+  const [clock, setClock] = useState(() => formatClock(new Date()).slice(0, 16).replace(' ', 'T'));
   const [busy, setBusy] = useState(false);
 
   // Each field only when its stored value changes, see Location
@@ -168,6 +170,30 @@ const Clock = () => {
           </label>
           <Button type="submit" variant="outline" disabled={!elevated || busy || servers.trim() === data.timeServers}>
             {m.SYS_TIME_SERVERS_SAVE()}
+          </Button>
+        </form>
+      )}
+      {data.canSetClock && (
+        <form
+          className={row}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (clock) save({ type: 'setClock', time: `${clock.replace('T', ' ')}:00`.slice(0, 19) }, m.SYS_CLOCK_SET());
+          }}
+        >
+          <label className={label}>
+            <span className={caption}>{m.SYS_CLOCK_DATE_TIME()}</span>
+            <Input
+              type="datetime-local"
+              className="h-9 w-56 tabular-nums"
+              aria-label={m.SYS_CLOCK_DATE_TIME()}
+              disabled={!elevated}
+              value={clock}
+              onChange={(e) => setClock(e.target.value)}
+            />
+          </label>
+          <Button type="submit" variant="outline" disabled={!elevated || busy || !clock}>
+            {m.SYS_CLOCK_SET_MANUAL()}
           </Button>
         </form>
       )}
