@@ -79,11 +79,12 @@ export const useParamset = (
   interfaceName: string,
   address: string,
   paramsetKey: 'VALUES' | 'MASTER',
-  { enabled = true }: { enabled?: boolean } = {},
+  { enabled = true, refetchInterval = false }: { enabled?: boolean; refetchInterval?: number | false } = {},
 ) => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['paramset', interfaceName, address, paramsetKey],
+    refetchInterval,
     queryFn: async () =>
       ((await request({ type: 'getParamset', interfaceName, address, paramsetKey })).values ?? {}) as Record<
         string,

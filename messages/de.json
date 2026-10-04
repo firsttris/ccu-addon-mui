@@ -993,5 +993,20 @@
   "PAIR_KEY_TITLE": "Anderer Sicherheitsschlüssel",
   "PAIR_KEY_TEXT": "Das Gerät {serial} konnte nicht angelernt werden. Wahrscheinlich ist ihm ein anderer System-Sicherheitsschlüssel zugeordnet. Geben Sie den zum Gerät gehörenden Schlüssel ein und versuchen Sie es erneut.",
   "PAIR_KEY_LABEL": "System-Sicherheitsschlüssel des Geräts",
-  "PAIR_KEY_RETRY": "Schlüssel setzen und erneut versuchen"
+  "PAIR_KEY_RETRY": "Schlüssel setzen und erneut versuchen",
+  "SETTING_ON": "An",
+  "SETTING_OFF": "Aus",
+  "SETTING_DURATION_NONE": "= aus",
+  "SETTING_COUNT": "Anzahl",
+  "SETTING_UNIT": "Einheit",
+  "SETTING_CHANGED": "geändert",
+  "SETTING_RESET_DEFAULT": "{name} auf Standard zurücksetzen",
+  "SETTINGS_SAVE_BAR": "Einstellungen speichern",
+  "SETTINGS_UNSAVED": "{count} ungespeicherte Änderung(en)",
+  "SETTINGS_NO_CHANGES": "Ändern Sie eine Einstellung, um sie auf das Gerät zu übertragen.",
+  "SETTINGS_SAVE_TRANSFER": "Speichern und übertragen",
+  "SETTINGS_SENDING": "Wird an das Gerät übertragen …",
+  "SETTINGS_TRANSFERRED": "Einstellungen sind im Gerät gespeichert.",
+  "SETTINGS_HANDED_OVER": "Gespeichert. Die Zentrale überträgt die Einstellungen an das Gerät.",
+  "SETTINGS_TRANSFER_HINT": "Die Zentrale überträgt die Einstellungen an das Gerät. Batteriegeräte holen sie erst ab, wenn sie aufwachen (z. B. nach einem Tastendruck am Gerät)."
 }

@@ -993,5 +993,20 @@
   "PAIR_KEY_TITLE": "Different security key",
   "PAIR_KEY_TEXT": "The device {serial} could not be paired. It probably uses a different system security key. Enter the device's key and try again.",
   "PAIR_KEY_LABEL": "System security key of the device",
-  "PAIR_KEY_RETRY": "Set key and try again"
+  "PAIR_KEY_RETRY": "Set key and try again",
+  "SETTING_ON": "On",
+  "SETTING_OFF": "Off",
+  "SETTING_DURATION_NONE": "= off",
+  "SETTING_COUNT": "count",
+  "SETTING_UNIT": "unit",
+  "SETTING_CHANGED": "changed",
+  "SETTING_RESET_DEFAULT": "Reset {name} to default",
+  "SETTINGS_SAVE_BAR": "Save settings",
+  "SETTINGS_UNSAVED": "{count} unsaved change(s)",
+  "SETTINGS_NO_CHANGES": "Change a setting to transfer it to the device.",
+  "SETTINGS_SAVE_TRANSFER": "Save and transfer",
+  "SETTINGS_SENDING": "Transferring to the device …",
+  "SETTINGS_TRANSFERRED": "The settings are stored in the device.",
+  "SETTINGS_HANDED_OVER": "Saved. The central unit transfers the settings to the device.",
+  "SETTINGS_TRANSFER_HINT": "The central unit transfers the settings to the device. Battery devices only fetch them when they wake up (e.g. after pressing a button on the device)."
 }
