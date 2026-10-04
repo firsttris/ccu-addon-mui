@@ -25,9 +25,19 @@ import {
   SoilMoistureControl,
   TiltSensorControl,
 } from './SensorControls';
+import {
+  AkkuControl,
+  FlowMeterControl,
+  ValveControl,
+  WaterFlowControl,
+  WaterPressureControl,
+  WaterSwitchControl,
+  WindowDriveControl,
+  WinmaticControl,
+} from './WaterControls';
 
 // Sections of the dashboard, in the order they are shown
-export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'windows' | 'doors' | 'security' | 'sensors' | 'buttons' | 'inputs' | 'energy' | 'system';
+export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'windows' | 'doors' | 'security' | 'sensors' | 'water' | 'buttons' | 'inputs' | 'energy' | 'system';
 
 // Hand-made controls for common channel types. They refine the generic
 // renderer (GenericControl), which every other type falls back to.
@@ -94,6 +104,10 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   SHUTTER_CONTACT_TRANSCEIVER: channelControl('windows', WindowControl),
   ROTARY_HANDLE_SENSOR: channelControl('windows', WindowControl),
   ROTARY_HANDLE_TRANSCEIVER: channelControl('windows', WindowControl),
+  // Window drives (win_sc_sensor.fn, window.fn) and the Winmatic's battery
+  WINDOW_DRIVE_RECEIVER: channelControl('windows', WindowDriveControl),
+  WINMATIC: channelControl('windows', WinmaticControl),
+  AKKU: channelControl('windows', AkkuControl),
   CLIMATE_TRANSCEIVER: channelControl('sensors', ClimateSensorControl),
   WEATHER_TRANSMIT: channelControl('sensors', ClimateSensorControl),
   WEATHER: channelControl('sensors', ClimateSensorControl),
@@ -106,6 +120,13 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   SENSOR_FOR_CARBON_DIOXIDE: channelControl('sensors', Co2LevelControl),
   TEMP_HUMIDITY_PARTICULATE_MATTER_TRANSMITTER: channelControl('sensors', ParticulateMatterControl),
   SOIL_MOISTURE_TRANSMITTER: channelControl('sensors', SoilMoistureControl),
+  // Irrigation (switch.fn CreateWaterSwitch, flow_meter_transmitter.fn) and
+  // the water safety system HmIP-WSS
+  WATER_SWITCH_VIRTUAL_RECEIVER: channelControl('water', WaterSwitchControl),
+  FLOW_METER_TRANSMITTER: channelControl('water', FlowMeterControl),
+  WATER_FLOW_TRANSMITTER: channelControl('water', WaterFlowControl),
+  WATER_PRESSURE_TRANSMITTER: channelControl('water', WaterPressureControl),
+  VALVE_ACTUATOR_RECEIVER: channelControl('water', ValveControl),
   // Vibration, position and tilt (acceleration_transceiver.fn), mains failure
   ACCELERATION_TRANSCEIVER: channelControl('security', TiltSensorControl),
   POWER_MAINS_TRANSMITTER: channelControl('security', PowerMainsControl),
