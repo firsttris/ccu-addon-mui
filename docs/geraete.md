@@ -15,10 +15,10 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
 |---|---:|---:|---:|---:|---:|
 | HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 221 | 205 | 15 | 1 |
 | HomeMatic IP Wired (HmIPW) | 38 | 36 | 36 | 0 | 0 |
-| BidCos-RF (HM-) | 186 | 168 | 142 | 12 | 14 |
+| BidCos-RF (HM-) | 186 | 168 | 144 | 11 | 13 |
 | BidCos-RF, ältere und OEM-Typen | 41 | 36 | 31 | 1 | 4 |
 | BidCos-Wired (HMW-) | 15 | 11 | 6 | 0 | 5 |
-| **Summe** | **524** | **472** | **420 (89 %)** | **28 (6 %)** | **24 (5 %)** |
+| **Summe** | **524** | **472** | **422 (89 %)** | **27 (6 %)** | **23 (5 %)** |
 | virtuelle Typen (VIR-) | 11 | nicht geprüft | | | |
 
 - **BidCos-Wired** ist angebunden, sobald ein Wired-Gateway (HMW-LGW) eingerichtet ist, aber noch nicht an
@@ -33,7 +33,7 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
   Display eines Wandthermostats.
 - **nur generisch**: kein Kanal hat eine eigene Kachel. Das Gerät ist trotzdem voll bedienbar.
 
-Zusammen haben **448 von 472 Gerätetypen (95 %)** eine eigene Kachel für ihre Hauptfunktion.
+Zusammen haben **449 von 472 Gerätetypen (95 %)** eine eigene Kachel für ihre Hauptfunktion.
 
 Die Zählung ist reproduzierbar. Die Skripte vergleichen die Gerätebeschreibungen mit
 `src/controls/registry.ts`, gegengeprüft an einem Export einer echten CCU (`fixtures/my-ccu.json`).
@@ -49,8 +49,8 @@ Welche Kachel ein Kanal bekommt, entscheidet sein Kanaltyp (`src/controls/regist
 | Thermostat | `HEATING_CLIMATECONTROL_TRANSCEIVER`, `CLIMATECONTROL_RT_TRANSCEIVER`, `THERMALCONTROL_TRANSMIT` | HmIP-eTRV, -WTH, -STHD, -BWTH, HmIPW-STHD, HM-CC-RT-DN, HM-TC-IT-WM-W-EU |
 | Fußbodenheizung | `CLIMATECONTROL_FLOOR_TRANSCEIVER` | HmIP-FALMOT-C12, HmIPW-FALMOT-C12 |
 | Licht und Schalter | `SWITCH_VIRTUAL_RECEIVER`, `SWITCH` | HmIP-PS, -PSM, -BSM, -FSM, -FS6, HmIPW-DRS8, HM-LC-Sw1-FM |
-| Dimmer | `DIMMER_VIRTUAL_RECEIVER`, `DIMMER` | HmIP-PDT, -BDT, -WUA, HmIPW-DRD3, HM-LC-Dim1T |
-| Farblicht | `UNIVERSAL_LIGHT_RECEIVER` | HmIP-RGBW, -LSC, -DRG-DALI |
+| Dimmer | `DIMMER_VIRTUAL_RECEIVER`, `DIMMER`, `DUAL_WHITE_BRIGHTNESS` | HmIP-PDT, -BDT, -WUA, HmIPW-DRD3, HM-LC-Dim1T, HM-LC-DW-WM |
+| Farblicht | `UNIVERSAL_LIGHT_RECEIVER`; bei BidCos `RGBW_COLOR` (Farbe oder Weiß), `RGBW_AUTOMATIC` (Farbprogramme wie Lagerfeuer, TV-Simulation) und `DUAL_WHITE_COLOR` (Mischung der beiden Weiß), wie `rgbw.fn` und `dual_white_controller.fn` | HmIP-RGBW, -LSC, -DRG-DALI, HM-LC-RGBW-WM, HM-LC-DW-WM |
 | Rollladen und Jalousie | `BLIND_VIRTUAL_RECEIVER`, `SHUTTER_VIRTUAL_RECEIVER`, `BLIND`, `JALOUSIE` | HmIP-BROLL, -FROLL, -BBL, -FBL, HmIPW-DRBL4, HM-LC-Bl1-FM, HM-LC-Ja1PBU-FM |
 | Fenster | `SHUTTER_CONTACT`, `ROTARY_HANDLE_SENSOR`, `ROTARY_HANDLE_TRANSCEIVER` | HmIP-SWDO, -SCI, -SRH, HM-Sec-SCo, HM-Sec-RHS |
 | Fensterantrieb | `WINDOW_DRIVE_RECEIVER`: öffnen, schließen, Stopp; `WINMATIC` zusätzlich verriegeln, `AKKU` mit Ladezustand | HmIP-MOD-WD-VK, HM-Sec-Win |

@@ -1401,5 +1401,17 @@
   "PUSH_RULES": "Regeln",
   "PUSH_RULES_OPEN": "Regeln verwalten",
   "LAYOUT_SECTION_UP": "„{name}“ nach oben",
-  "LAYOUT_SECTION_DOWN": "„{name}“ nach unten"
+  "LAYOUT_SECTION_DOWN": "„{name}“ nach unten",
+  "RGBW_WHITE": "Weiß",
+  "RGBW_PROGRAM_OF": "Programm {name}",
+  "RGBW_PROGRAM_NONE": "Kein Programm",
+  "RGBW_PROGRAM_OFF": "Aus",
+  "RGBW_PROGRAM_SLOW": "Langsamer Durchlauf",
+  "RGBW_PROGRAM_NORMAL": "Normaler Durchlauf",
+  "RGBW_PROGRAM_FAST": "Schneller Durchlauf",
+  "RGBW_PROGRAM_FIRE": "Lagerfeuer",
+  "RGBW_PROGRAM_WATERFALL": "Wasserfall",
+  "RGBW_PROGRAM_TV": "TV-Simulation",
+  "DUAL_WHITE_VALUE": "Farbwert {percent} %",
+  "DUAL_WHITE_OF": "Farbwert {name}"
 }

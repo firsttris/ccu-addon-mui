@@ -895,3 +895,19 @@ test('verschiebt beim Anordnen ganze Bereiche, die Kacheln bleiben in ihrem Bere
   await expect(headings.nth(0)).toHaveText(second!);
   await expect(headings.nth(1)).toHaveText(first!);
 });
+
+test('bedient die Farb- und Weißkanäle der BidCos-LED-Controller', async ({ page }) => {
+  await page.goto('/devices');
+  // Color 132 of 0..199 is a hue of 239° (rgbw.fn)
+  await expect(page.getByText('Color 239°')).toBeVisible();
+  await page.getByRole('button', { name: 'White', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Program LED-Band Terrasse Programm' }).selectOption('4');
+  await expect(page.getByText('Color value 30 %')).toBeVisible();
+
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
+    .toEqual(expect.arrayContaining([
+      ['COLOR', 200],
+      ['PROGRAM', 4],
+    ]));
+});

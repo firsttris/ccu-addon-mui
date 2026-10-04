@@ -1401,5 +1401,17 @@
   "PUSH_RULES": "Rules",
   "PUSH_RULES_OPEN": "Manage rules",
   "LAYOUT_SECTION_UP": "Move \"{name}\" up",
-  "LAYOUT_SECTION_DOWN": "Move \"{name}\" down"
+  "LAYOUT_SECTION_DOWN": "Move \"{name}\" down",
+  "RGBW_WHITE": "White",
+  "RGBW_PROGRAM_OF": "Program {name}",
+  "RGBW_PROGRAM_NONE": "No program",
+  "RGBW_PROGRAM_OFF": "Off",
+  "RGBW_PROGRAM_SLOW": "Slow cycle",
+  "RGBW_PROGRAM_NORMAL": "Normal cycle",
+  "RGBW_PROGRAM_FAST": "Fast cycle",
+  "RGBW_PROGRAM_FIRE": "Campfire",
+  "RGBW_PROGRAM_WATERFALL": "Waterfall",
+  "RGBW_PROGRAM_TV": "TV simulation",
+  "DUAL_WHITE_VALUE": "Color value {percent} %",
+  "DUAL_WHITE_OF": "Color value {name}"
 }

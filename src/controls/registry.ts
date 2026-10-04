@@ -9,6 +9,7 @@ import { EnergyMeterControl } from './EnergyMeterControl';
 import { WindowControl } from './WindowControl';
 import { ClimateSensorControl } from './ClimateSensorControl';
 import { DimmerControl } from './DimmerControl';
+import { DualWhiteColorControl, RgbwColorControl, RgbwProgramControl } from './BidcosLightControls';
 import { ColorLightControl } from './ColorLightControl';
 import { ButtonsControl } from './ButtonsControl';
 import { MotionDetectorControl, SirenControl, SmokeDetectorControl, WaterDetectorControl } from './DetectorControls';
@@ -117,6 +118,15 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   BACKLIGHTING_RECEIVER: channelControl('system', DimmerControl),
   OPTICAL_SIGNAL_RECEIVER: channelControl('buttons', DimmerControl),
   UNIVERSAL_LIGHT_RECEIVER: channelControl('lights', ColorLightControl),
+  // BidCos LED controllers (rgbw.fn, dual_white_controller.fn): the
+  // brightness of HM-LC-DW-WM is a dimmer, color and programs of the
+  // HM-LC-RGBW-WM and the white mix have their own tiles
+  DUAL_WHITE_BRIGHTNESS: channelControl('lights', DimmerControl),
+  VIRTUAL_DUAL_WHITE_BRIGHTNESS: channelControl('lights', DimmerControl),
+  DUAL_WHITE_COLOR: channelControl('lights', DualWhiteColorControl),
+  VIRTUAL_DUAL_WHITE_COLOR: channelControl('lights', DualWhiteColorControl),
+  RGBW_COLOR: channelControl('lights', RgbwColorControl),
+  RGBW_AUTOMATIC: channelControl('lights', RgbwProgramControl),
   [ChannelType.KEYMATIC]: channelControl('doors', DoorControl),
   DOOR_LOCK_STATE_TRANSMITTER: channelControl('doors', DoorLockControl),
   DOOR_LOCK_TRANSCEIVER: channelControl('doors', DoorLockControl),
