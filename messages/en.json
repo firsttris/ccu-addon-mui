@@ -662,7 +662,7 @@
   "LAYOUT_ARRANGE": "Arrange",
   "LAYOUT_DONE": "Done",
   "LAYOUT_RESET": "Arrange automatically",
-  "LAYOUT_HINT": "Drag tiles; change the width at the right edge. Applies on all devices.",
+  "LAYOUT_HINT": "Drag tiles within their section; change the width at the right edge. Move sections with the arrows. Applies on all devices.",
   "LAYOUT_SAVED": "Arrangement saved",
   "PUSH_TITLE": "Notifications",
   "PUSH_ALARMS": "Alarms",
@@ -1399,5 +1399,7 @@
   "RULE_HOURS": "{count} h",
   "RULE_HOURS_MINUTES": "{hours} h {minutes} min",
   "PUSH_RULES": "Rules",
-  "PUSH_RULES_OPEN": "Manage rules"
+  "PUSH_RULES_OPEN": "Manage rules",
+  "LAYOUT_SECTION_UP": "Move \"{name}\" up",
+  "LAYOUT_SECTION_DOWN": "Move \"{name}\" down"
 }

@@ -1,8 +1,10 @@
 import type { Layout, LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
 
-// Layout of the dashboard's tiles when arranged by hand: per breakpoint the
-// position and width of each tile; the height follows the tile's content.
-// Stored as JSON on the room, trade or favorite list in the CCU.
+// Layout of the dashboard's tiles when arranged by hand. Every section
+// (lights, heating, ...) is a grid of its own: tiles move within it, and the
+// sections themselves can be reordered. Per breakpoint the position and
+// width of each tile; the height follows the tile's content. Stored as JSON
+// on the room, trade or favorite list in the CCU.
 
 export const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const;
 export const COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 } as const;
@@ -29,9 +31,14 @@ export interface SavedTile {
   w: number;
 }
 
+// One section's tiles per breakpoint
+export type SectionLayout = Partial<Record<BreakpointName, SavedTile[]>>;
+
 export interface SavedLayout {
-  v: 1;
-  layouts: Partial<Record<BreakpointName, SavedTile[]>>;
+  v: 2;
+  // Section keys in the order shown; sections not listed follow
+  order: string[];
+  sections: Record<string, SectionLayout>;
 }
 
 // Grid rows for a tile's height in pixels
@@ -61,7 +68,10 @@ export const parseLayout = (json: string | undefined): SavedLayout | null => {
   if (!json) return null;
   try {
     const parsed = JSON.parse(json);
-    return parsed && parsed.v === 1 && typeof parsed.layouts === 'object' ? (parsed as SavedLayout) : null;
+    // Version 1 put all tiles into one grid: dropped, the sections come back
+    return parsed && parsed.v === 2 && Array.isArray(parsed.order) && parsed.sections && typeof parsed.sections === 'object'
+      ? (parsed as SavedLayout)
+      : null;
   } catch {
     return null;
   }
@@ -71,17 +81,17 @@ export const parseLayout = (json: string | undefined): SavedLayout | null => {
 // tiles appended below, and every height from the measured content
 export const responsiveLayouts = (
   tiles: TileSpec[],
-  saved: SavedLayout | null,
+  saved: SectionLayout | undefined,
   heights: Record<string, number>,
 ): ResponsiveLayouts<BreakpointName> => {
   const keys = new Set(tiles.map((t) => t.key));
   const result = {} as Record<BreakpointName, Layout>;
   for (const bp of BREAKPOINT_NAMES) {
-    const stored = (saved?.layouts[bp] ?? []).filter((t) => keys.has(t.i));
+    const stored = (saved?.[bp] ?? []).filter((t) => keys.has(t.i));
     const placed = new Set(stored.map((t) => t.i));
     const missing = tiles.filter((t) => !placed.has(t.key));
     const appended = defaultLayout(missing, bp).map((t) => ({ ...t, y: t.y + 100000 }));
-    const base = saved?.layouts[bp] ? [...stored, ...appended] : defaultLayout(tiles, bp);
+    const base = saved?.[bp] ? [...stored, ...appended] : defaultLayout(tiles, bp);
     result[bp] = base.map(
       (t): LayoutItem => ({
         i: t.i,
@@ -96,11 +106,31 @@ export const responsiveLayouts = (
 };
 
 // What is stored: position and width (heights come from the content)
-export const toSaved = (layouts: Partial<Record<string, Layout>>): SavedLayout => ({
-  v: 1,
-  layouts: Object.fromEntries(
+export const toSaved = (layouts: Partial<Record<string, Layout>>): SectionLayout =>
+  Object.fromEntries(
     Object.entries(layouts)
       .filter(([bp]) => bp in BREAKPOINTS)
       .map(([bp, layout]) => [bp, (layout ?? []).map(({ i, x, y, w }) => ({ i, x, y, w }))]),
-  ),
-});
+  );
+
+// The sections in the saved order; new ones keep their place after it
+export const orderSections = <T extends { key: string }>(sections: T[], order: string[]): T[] => {
+  const rank = (key: string) => {
+    const i = order.indexOf(key);
+    return i < 0 ? order.length : i;
+  };
+  return sections
+    .map((section, index) => ({ section, index }))
+    .sort((a, b) => rank(a.section.key) - rank(b.section.key) || a.index - b.index)
+    .map(({ section }) => section);
+};
+
+// Moves a section up (-1) or down (+1)
+export const moveSection = (keys: string[], key: string, delta: -1 | 1): string[] => {
+  const from = keys.indexOf(key);
+  const to = from + delta;
+  if (from < 0 || to < 0 || to >= keys.length) return keys;
+  const next = [...keys];
+  [next[from], next[to]] = [next[to], next[from]];
+  return next;
+};

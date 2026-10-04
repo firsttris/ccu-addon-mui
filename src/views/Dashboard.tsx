@@ -1,5 +1,5 @@
 import { PlaceDiagrams } from './diagrams/Diagrams';
-import { ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment as ReactFragment, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import ThermometerIcon from '~icons/lucide/thermometer';
 import LightbulbIcon from '~icons/lucide/lightbulb';
@@ -21,7 +21,9 @@ import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
 import { Button } from '../components/ui/button';
 import { GridDashboard, GridTile } from './grid/GridDashboard';
-import { parseLayout, SavedLayout } from './grid/tileLayout';
+import { moveSection, orderSections, parseLayout, SavedLayout, SectionLayout } from './grid/tileLayout';
+import ChevronUpIcon from '~icons/lucide/chevron-up';
+import ChevronDownIcon from '~icons/lucide/chevron-down';
 
 // --- Tabs of rooms, trades or favorite lists, with a marker that glides
 // to the active one
@@ -235,25 +237,26 @@ const sectionMinPx: Record<SectionId | 'generic', number> = {
   generic: 240,
 };
 
-// Every tile of the sections in order, for arranging them in a grid
-const gridTiles = (channelsByType: [string, Channel[]][]): GridTile[] =>
-  groupIntoSections(channelsByType).flatMap((group) => {
-    const minPx = sectionMinPx[group.section ?? 'generic'];
-    return group.types.flatMap(([type, channels]) => {
-      const override = controlOverrides[type];
-      return override?.per === 'device'
-        ? groupByDevice(channels).map(([deviceAddress, deviceChannels]) => ({
-            key: `d:${deviceAddress}`,
-            minPx,
-            element: <override.component channels={deviceChannels} />,
-          }))
-        : channels.map((channel) => ({
-            key: `c:${channel.address}`,
-            minPx,
-            element: <ControlComponent channel={channel} />,
-          }));
-    });
+// The tiles of a section in order, for arranging them in a grid
+const gridTiles = (group: SectionGroup): GridTile[] => {
+  const minPx = sectionMinPx[group.section ?? 'generic'];
+  return group.types.flatMap(([type, channels]) => {
+    const override = controlOverrides[type];
+    return override?.per === 'device'
+      ? groupByDevice(channels).map(([deviceAddress, deviceChannels]) => ({
+          key: `d:${deviceAddress}`,
+          minPx: sectionMinPx[override.section ?? 'generic'] ?? minPx,
+          channelIds: deviceChannels.map((c) => c.id),
+          element: <override.component channels={deviceChannels} />,
+        }))
+      : channels.map((channel) => ({
+          key: `c:${channel.address}`,
+          minPx: sectionMinPx[override?.section ?? 'generic'] ?? minPx,
+          channelIds: [channel.id],
+          element: <ControlComponent channel={channel} />,
+        }));
   });
+};
 
 const sectionGrids: Record<SectionId | 'generic', string> = {
   climate: '[grid-template-columns:repeat(auto-fill,minmax(232px,1fr))]',
@@ -309,30 +312,91 @@ export const groupIntoSections = (channelsByType: [string, Channel[]][]): Sectio
   );
 };
 
-const Section = ({ group }: { group: SectionGroup }) => {
+// A free arrangement: one section without heading, the tiles in the
+// order of the favorite list
+const FREE = 'free';
+
+interface SectionProps {
+  group: SectionGroup;
+  // While arranging, or once arranged: the tiles in a grid
+  grid: boolean;
+  editing: boolean;
+  layout?: SectionLayout;
+  onLayout: (layout: SectionLayout) => void;
+  // Moving the section, while arranging
+  onMove?: (delta: -1 | 1) => void;
+  first?: boolean;
+  last?: boolean;
+  // Favorite lists: the tiles in this order (channel ids)
+  order?: number[];
+}
+
+const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, order }: SectionProps) => {
   const t = useTranslations();
+  const free = group.key === FREE;
   // Types without a translation (shown by GenericControl) keep the CCU's name
-  const title = group.section ? sectionTitles[group.section]() : t(group.types[0][0] as TranslationKey);
+  const title = group.section ? sectionTitles[group.section]() : free ? '' : t(group.types[0][0] as TranslationKey);
   const id = `section-${group.key.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
   const count = group.types.reduce((sum, [, channels]) => sum + channels.length, 0);
+  const tiles = useMemo(() => {
+    const list = gridTiles(group);
+    if (!order) return list;
+    const rank = (tile: GridTile) => {
+      const ranks = (tile.channelIds ?? []).map((cid) => order.indexOf(cid)).filter((r) => r >= 0);
+      return ranks.length > 0 ? Math.min(...ranks) : order.length;
+    };
+    return list
+      .map((tile, index) => ({ tile, index }))
+      .sort((a, b) => rank(a.tile) - rank(b.tile) || a.index - b.index)
+      .map(({ tile }) => tile);
+  }, [group, order]);
   return (
-    <section aria-labelledby={id} className="flex flex-col gap-3">
-      <div className="flex items-baseline gap-2">
-        <h2 id={id} className="text-[19px] font-semibold tracking-tight">
-          {title}
-        </h2>
-        <span className="text-sm text-muted-foreground">{count}</span>
-      </div>
-      <div className={cn('grid gap-3', sectionGrids[group.section ?? 'generic'])}>
-        {group.types.map(([type, channels]) => {
-          const override = controlOverrides[type];
-          return override?.per === 'device'
-            ? groupByDevice(channels).map(([deviceAddress, deviceChannels]) => (
-                <override.component key={deviceAddress} channels={deviceChannels} />
-              ))
-            : channels.map((channel) => <ControlComponent key={channel.address} channel={channel} />);
-        })}
-      </div>
+    <section
+      aria-labelledby={free ? undefined : id}
+      aria-label={free ? m.FAVORITES() : undefined}
+      className="flex flex-col gap-3"
+    >
+      {!free && (
+        <div className="flex items-baseline gap-2">
+          <h2 id={id} className="text-[19px] font-semibold tracking-tight">
+            {title}
+          </h2>
+          <span className="text-sm text-muted-foreground">{count}</span>
+          {editing && onMove && (
+            <span className="ml-auto flex gap-1 self-center">
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-8"
+                aria-label={m.LAYOUT_SECTION_UP({ name: title })}
+                disabled={first}
+                onClick={() => onMove(-1)}
+              >
+                <ChevronUpIcon />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-8"
+                aria-label={m.LAYOUT_SECTION_DOWN({ name: title })}
+                disabled={last}
+                onClick={() => onMove(1)}
+              >
+                <ChevronDownIcon />
+              </Button>
+            </span>
+          )}
+        </div>
+      )}
+      {grid || free ? (
+        <GridDashboard tiles={tiles} saved={layout} editing={editing} onChange={onLayout} />
+      ) : (
+        <div className={cn('grid gap-3', sectionGrids[group.section ?? 'generic'])}>
+          {tiles.map((tile) => (
+            <ReactFragment key={tile.key}>{tile.element}</ReactFragment>
+          ))}
+        </div>
+      )}
     </section>
   );
 };
@@ -349,9 +413,12 @@ interface DashboardProps {
   extra?: ReactNode;
   // Instead of "no channels" when there is nothing to show
   empty?: ReactNode;
+  // A favorite list: its channels (ids) in order, arranged freely without
+  // sections
+  freeOrder?: number[];
 }
 
-export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, empty }: DashboardProps) => {
+export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, empty, freeOrder }: DashboardProps) => {
   const { userLevel } = useWebSocketContext();
   const { data: layoutJson } = useLayout(layoutId);
   const setLayout = useSetLayout();
@@ -359,7 +426,19 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, em
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<SavedLayout | null>(null);
   const saved = useMemo(() => parseLayout(layoutJson), [layoutJson]);
-  const tiles = useMemo(() => gridTiles(channelsByType), [channelsByType]);
+  const groups = useMemo<SectionGroup[]>(
+    () =>
+      freeOrder
+        ? channelsByType.length > 0
+          ? [{ key: FREE, types: channelsByType }]
+          : []
+        : groupIntoSections(channelsByType),
+    [channelsByType, freeOrder],
+  );
+  const layout = draft ?? saved;
+  const sections = orderSections(groups, layout?.order ?? []);
+  const change = (next: Partial<SavedLayout>) =>
+    setDraft({ v: 2, order: sections.map((g) => g.key), sections: {}, ...layout, ...next });
   const canArrange = layoutId !== undefined && userLevel !== 'guest' && channelsByType.length > 0;
   const store = (layout: string, after: () => void) =>
     setLayout.mutate(
@@ -424,11 +503,31 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, em
           </Button>
         </div>
       )}
-      {saved || editing ? (
-        <GridDashboard tiles={tiles} saved={draft ?? saved} editing={editing} onChange={setDraft} />
-      ) : (
-        groupIntoSections(channelsByType).map((group) => <Section key={group.key} group={group} />)
-      )}
+      {sections.map((group, index) => (
+        <Section
+          key={group.key}
+          group={group}
+          grid={editing || !!layout?.sections[group.key]}
+          editing={editing}
+          layout={layout?.sections[group.key]}
+          onLayout={(sectionLayout) => change({ sections: { ...layout?.sections, [group.key]: sectionLayout } })}
+          onMove={
+            sections.length > 1
+              ? (delta) =>
+                  change({
+                    order: moveSection(
+                      sections.map((g) => g.key),
+                      group.key,
+                      delta,
+                    ),
+                  })
+              : undefined
+          }
+          first={index === 0}
+          last={index === sections.length - 1}
+          order={freeOrder}
+        />
+      ))}
       {isLoading && channelsByType.length === 0 && <TileSkeletonGrid />}
       {layoutId !== undefined && <PlaceDiagrams place={layoutId} />}
       {extra}

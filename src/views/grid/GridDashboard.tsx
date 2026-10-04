@@ -3,10 +3,12 @@ import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import { cn } from '../../lib/utils';
-import { BREAKPOINTS, BreakpointName, COLS, MARGIN, responsiveLayouts, ROW_HEIGHT, SavedLayout, TileSpec, toSaved } from './tileLayout';
+import { BREAKPOINTS, BreakpointName, COLS, MARGIN, responsiveLayouts, ROW_HEIGHT, SectionLayout, TileSpec, toSaved } from './tileLayout';
 
 export interface GridTile extends TileSpec {
   element: ReactNode;
+  // The channels the tile shows, for the order of a favorite list
+  channelIds?: number[];
 }
 
 // Measures a tile's natural height, which sets its height in the grid
@@ -27,8 +29,8 @@ const Measured = ({ id, onHeight, children }: { id: string; onHeight: (id: strin
   );
 };
 
-// The tiles in a grid: arranged as saved, or by dragging them around and
-// changing their width while editing
+// The tiles of one section in a grid: arranged as saved, or by dragging them
+// around and changing their width while editing
 export const GridDashboard = ({
   tiles,
   saved,
@@ -36,13 +38,13 @@ export const GridDashboard = ({
   onChange,
 }: {
   tiles: GridTile[];
-  saved: SavedLayout | null;
+  saved: SectionLayout | undefined;
   editing: boolean;
-  onChange: (layout: SavedLayout) => void;
+  onChange: (layout: SectionLayout) => void;
 }) => {
   const { width, containerRef, mounted } = useContainerWidth();
   const [heights, setHeights] = useState<Record<string, number>>({});
-  const [draft, setDraft] = useState<SavedLayout | null>(saved);
+  const [draft, setDraft] = useState<SectionLayout | undefined>(saved);
   useEffect(() => setDraft(saved), [saved]);
 
   const onHeight = useMemo(
@@ -53,10 +55,7 @@ export const GridDashboard = ({
   const [breakpoint, setBreakpoint] = useState<BreakpointName>('lg');
   // Only what the user moved or resized is kept, for the breakpoint shown
   const commit = (layout: Layout) => {
-    const next: SavedLayout = {
-      v: 1,
-      layouts: { ...(draft?.layouts ?? {}), ...toSaved({ [breakpoint]: layout }).layouts },
-    };
+    const next: SectionLayout = { ...draft, ...toSaved({ [breakpoint]: layout }) };
     setDraft(next);
     onChange(next);
   };
