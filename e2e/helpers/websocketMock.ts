@@ -340,6 +340,25 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
     // In no room or trade: only listed under "all devices"
     const unassignedChannels: AnyPayload[] = [
+      // Inputs of a contact interface: one wired as a contact, one as a
+      // key (no channel mode stored, as after pairing)
+      {
+        id: 621,
+        name: 'Gartentor',
+        address: '0019A0C9B3E2D1:1',
+        interfaceName: 'HmIP-RF',
+        type: 'MULTI_MODE_INPUT_TRANSMITTER',
+        mode: 3,
+        datapoints: { STATE: false, PRESS_SHORT: false, PRESS_LONG: false },
+      },
+      {
+        id: 622,
+        name: 'Klingeltaster',
+        address: '0019A0C9B3E2D2:1',
+        interfaceName: 'HmIP-RF',
+        type: 'MULTI_MODE_INPUT_TRANSMITTER',
+        datapoints: { STATE: false, PRESS_SHORT: false, PRESS_LONG: false },
+      },
       {
         id: 601,
         name: 'Rauchmelder Flur',

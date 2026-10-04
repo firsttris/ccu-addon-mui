@@ -13,11 +13,11 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
 
 | Familie | im Katalog | bedienbar | alle Kanäle mit eigener Kachel | Hauptfunktion mit eigener Kachel | nur generisch |
 |---|---:|---:|---:|---:|---:|
-| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 147 | 55 | 21 |
-| HomeMatic IP Wired (HmIPW) | 38 | 38 | 21 | 13 | 4 |
+| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 163 | 46 | 14 |
+| HomeMatic IP Wired (HmIPW) | 38 | 38 | 24 | 12 | 2 |
 | BidCos-RF (HM-) | 186 | 168 | 113 | 36 | 19 |
 | BidCos-RF, ältere und OEM-Typen | 41 | 36 | 28 | 3 | 5 |
-| **Summe** | **509** | **465** | **309 (66 %)** | **107 (23 %)** | **49 (11 %)** |
+| **Summe** | **509** | **465** | **328 (71 %)** | **97 (21 %)** | **40 (9 %)** |
 | BidCos-Wired (HMW-) | 15 | nicht angebunden | | | |
 | virtuelle Typen (VIR-) | 11 | nicht geprüft | | | |
 
@@ -26,10 +26,10 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
   Beschreibung mitliefert (z. B. die -644-Dimmer und WS550).
 - **alle Kanäle mit eigener Kachel**: Jeder sichtbare Kanal des Geräts hat eine gestaltete Kachel.
 - **Hauptfunktion mit eigener Kachel**: Der Hauptkanal ist gestaltet, ein Nebenkanal generisch, z. B. die
-  Eingänge eines Schaltaktors oder die Hintergrundbeleuchtung eines Wandthermostats.
+  Hintergrundbeleuchtung eines Wandthermostats oder die Pumpe einer Fußbodenheizung.
 - **nur generisch**: kein Kanal hat eine eigene Kachel. Das Gerät ist trotzdem voll bedienbar.
 
-Zusammen haben **416 von 465 Gerätetypen (89 %)** eine eigene Kachel für ihre Hauptfunktion.
+Zusammen haben **425 von 465 Gerätetypen (91 %)** eine eigene Kachel für ihre Hauptfunktion.
 
 Die Zählung ist reproduzierbar. Die Skripte vergleichen die Gerätebeschreibungen mit
 `src/controls/registry.ts`, gegengeprüft an einem Export einer echten CCU (`fixtures/my-ccu.json`).
@@ -58,8 +58,14 @@ Welche Kachel ein Kanal bekommt, entscheidet sein Kanaltyp (`src/controls/regist
 | Zutritt | `ACCESS_TRANSCEIVER` (eine Kachel je Gerät) | HmIP-WKP, -FWI |
 | Klima und Wetter | `CLIMATE_TRANSCEIVER`, `WEATHER_TRANSMIT`, `WEATHER` | HmIP-STHO, -SWO, HM-WDS10-TH-O, HM-WDS100 |
 | Taster | `KEY_TRANSCEIVER`, `KEY`, `VIRTUAL_KEY` (eine Kachel je Gerät) | HmIP-WRC2, -WRC6, -BRC2, HM-PB-2-WM55, Fernbedienungen |
+| Eingang | `MULTI_MODE_INPUT_TRANSMITTER`, je nach Betriebsart Taster, Schalter, Kontakt oder Level | HmIP-FCI1, -FCI6, -DSD-PCB, die Eingänge von HmIP-BSL, -DRSI4, HmIPW-DRI16 |
 | Energiezähler | `ENERGIE_METER_TRANSMITTER`, `POWERMETER` (eine Kachel je Gerät) | HmIP-ESI, HmIP-PSM, HM-ES-PMSw1 |
 | Access Point / Bus | `ACCESSPOINT_GENERIC_RECEIVER` (eine Kachel je Gerät) | HmIPW-DRAP |
+
+Eingänge zeigen, wofür sie in den Einstellungen eingerichtet sind (Betriebsart): Tastendrücke leuchten auf,
+ein Kontakt zeigt offen oder geschlossen, ein Level seinen Wert. Die Betriebsart merkt sich die CCU wie
+bei der WebUI als Metadatum `channelMode`; das Add-on setzt es beim Speichern der Einstellungen mit.
+Bedienen lassen sich Eingänge nicht, auch die WebUI hat dafür kein Bedienelement.
 
 Nicht jeder Kanal erscheint als Kachel. Ausgeblendet werden Wartungskanäle (Batterie, Erreichbarkeit
 stehen an der Kachel selbst), Kanäle ohne Werte, die Rohwerte von Wochenprogrammen und bei HmIP die
@@ -91,19 +97,17 @@ Nach Bedeutung:
    Einstellungen, Direktverknüpfungen und die Wired-Gerätesuche. HmIP Wired ist davon nicht betroffen.
 2. **Display-Geräte**: HmIP-WGD, HmIPW-WGD und das Display des HmIP-WRCD haben keinen Baukasten für Texte und
    Symbole; die Werte sind nur generisch bedienbar.
-3. **Eingänge**: Eingangsmodule (HmIP-FCI1, -FCI6, -MOD-RC8, HmIPW-DRI16, -DRI32) und die Eingänge von
-   Hutschienen- und Unterputzaktoren (`MULTI_MODE_INPUT_TRANSMITTER`, 27 Typen) sind generisch.
-4. **Bewässerung und Antriebe**: HmIP-WSM, ELV-SH-WSM, HmIP-WSS; Fenster- und Lüftungsantriebe (HmIP-WSC,
+3. **Bewässerung und Antriebe**: HmIP-WSM, ELV-SH-WSM, HmIP-WSS; Fenster- und Lüftungsantriebe (HmIP-WSC,
    Winmatic).
-5. **Spezialsensoren**: Regen, Licht, Neigung, Feinstaub, CO₂, Bodenfeuchte, Abstand, Durchgang, Netzausfall,
+4. **Spezialsensoren**: Regen, Licht, Neigung, Feinstaub, CO₂, Bodenfeuchte, Abstand, Durchgang, Netzausfall,
    Zählersensoren (HM-ES-TX-WM).
-6. **Nebenkanäle**: Pumpe und Direktausgang der Fußbodenheizung, Zusatzkanäle von Türschlössern
+5. **Nebenkanäle**: Pumpe und Direktausgang der Fußbodenheizung, Zusatzkanäle von Türschlössern
    (Zugang, Auto-Relock, Türzustand), Status-LEDs und Hintergrundbeleuchtung, die virtuellen Kanäle der
    BidCos-Dimmer.
-7. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
+6. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
    Profile). Für die übrigen 59 Empfängertypen der WebUI (2065 Profile) geht nur der Expertenmodus mit allen
    Parametern.
-8. **Gerätebilder** der WebUI zeigt das Add-on nicht.
+7. **Gerätebilder** der WebUI zeigt das Add-on nicht.
 
 ## Ein Gerät fehlt oder sieht falsch aus?
 

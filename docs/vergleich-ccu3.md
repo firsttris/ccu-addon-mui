@@ -11,7 +11,7 @@ in den Tabellen unten.
 |---|---|
 | Funktionen der WebUI | **56 von 66 vorhanden (85 %)** |
 | Fehlen | 10, davon die meisten Einzeloptionen; der größte Brocken ist BidCos-Wired |
-| Gerätetypen | alle 465 an HmIP, HmIP Wired und BidCos-RF bedienbar, 89 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
+| Gerätetypen | alle 465 an HmIP, HmIP Wired und BidCos-RF bedienbar, 91 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
 
 Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · ❌ fehlt
 

@@ -227,6 +227,8 @@ type DeviceRPC interface {
 	GetParamsetDescription(iface, address, paramsetKey string) (ccurpc.ParamsetDescription, error)
 	GetParamset(iface, address, paramsetKey string) (map[string]interface{}, error)
 	PutParamset(iface, address, paramsetKey string, values map[string]interface{}) error
+	GetDeviceDescription(iface, address string) (ccurpc.DeviceDescription, error)
+	SetMetadata(iface, address, dataID string, value interface{}) error
 	ListDevices(iface string) ([]ccurpc.DeviceDescription, error)
 	InterfaceNames() []string
 	SetInstallMode(iface string, on bool, seconds int) error
@@ -1941,7 +1943,37 @@ func (s *Server) handlePutParamset(client *Client, message []byte) {
 	if err := s.audit.Record(entry); err != nil {
 		logger.Error("Failed to write the audit log:", err)
 	}
+	if mode, ok := values["CHANNEL_OPERATION_MODE"]; ok {
+		s.storeChannelMode(msg.InterfaceName, msg.Address, mode)
+	}
 	s.sendJSON(client, putParamsetResponse{Type: "putParamset_response", RequestID: msg.RequestID, Success: true})
+}
+
+// storeChannelMode remembers what an input channel is wired to after its
+// CHANNEL_OPERATION_MODE was saved: the WebUI stores it as metadata
+// "channelMode" in the interface process (Interface.setMetadata_crRFD,
+// HmIP only) and in ReGa (Interface.setMetadata), where the status pages
+// read it (webui.js, after saving MASTER; functions.fn). Failures are only
+// logged: the setting itself is saved.
+func (s *Server) storeChannelMode(iface, address string, value interface{}) {
+	mode, ok := value.(int)
+	if !ok {
+		return
+	}
+	description, err := s.rpc.GetDeviceDescription(iface, address)
+	if err != nil || description.Type != "MULTI_MODE_INPUT_TRANSMITTER" {
+		return
+	}
+	if iface == "HmIP-RF" {
+		if err := s.rpc.SetMetadata(iface, address, "channelMode", mode); err != nil {
+			logger.Error(fmt.Sprintf("setMetadata channelMode %s: %v", address, err))
+		}
+	}
+	if s.regaClient != nil {
+		if result, err := s.regaClient.SetChannelMode(iface, address, mode); err != nil || result != "OK" {
+			logger.Error(fmt.Sprintf("SetChannelMode %s: %s %v", address, result, err))
+		}
+	}
 }
 
 // formatValue converts a JSON value into the string form expected by

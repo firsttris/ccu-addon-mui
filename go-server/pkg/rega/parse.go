@@ -40,6 +40,12 @@ type Channel struct {
 	// "switch"), stored as ReGa metadata; empty lets the app decide.
 	Tile string `json:"tile,omitempty"`
 
+	// Mode is what an input channel (MULTI_MODE_INPUT_TRANSMITTER) is wired
+	// to, as the WebUI stores it (metadata "channelMode"): 0 off, 1 key,
+	// 2 switch, 3 contact, 4 level, 5 condition (translate.lang.
+	// channelDescription.js); nil when not set, which means key.
+	Mode *int `json:"mode,omitempty"`
+
 	// The WebUI's channel options: Hidden (not visible), ReadOnly (not
 	// usable by non-administrators), Logged (in the system protocol)
 	Hidden   bool `json:"hidden,omitempty"`
@@ -111,10 +117,13 @@ func parseNamedObjects(output string) []NamedObject {
 	return objects
 }
 
+// MaxChannelMode is the highest channel mode of an input channel.
+const MaxChannelMode = 5
+
 // parseChannels parses the output of get_channels.tcl.
 func parseChannels(output string) []Channel {
 	isRecord := func(line string) bool {
-		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t") || strings.HasPrefix(line, "T\t") || strings.HasPrefix(line, "F\t")
+		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t") || strings.HasPrefix(line, "T\t") || strings.HasPrefix(line, "F\t") || strings.HasPrefix(line, "O\t")
 	}
 
 	channels := []Channel{}
@@ -164,6 +173,13 @@ func parseChannels(output string) []Channel {
 			}
 			if fields[1] == TileLight || fields[1] == TileSwitch {
 				channels[len(channels)-1].Tile = fields[1]
+			}
+		case "O":
+			if len(fields) < 2 || len(channels) == 0 {
+				continue
+			}
+			if mode, err := strconv.Atoi(strings.TrimSpace(fields[1])); err == nil && mode >= 0 && mode <= MaxChannelMode {
+				channels[len(channels)-1].Mode = &mode
 			}
 		case "F":
 			if len(fields) < 4 || len(channels) == 0 {

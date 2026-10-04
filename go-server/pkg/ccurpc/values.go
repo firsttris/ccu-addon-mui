@@ -266,6 +266,17 @@ func (c *Client) SetBidcosInterface(iface, address, module string, roaming bool)
 	return c.call(iface, "setBidcosInterface", []interface{}{address, module, roaming}, &reply)
 }
 
+// SetMetadata stores a value with a device or channel in the interface
+// process, as the WebUI's Interface.setMetadata_crRFD does for the channel
+// mode of HmIP input channels.
+func (c *Client) SetMetadata(iface, address, dataID string, value interface{}) error {
+	if !addressRegex.MatchString(address) || !addressRegex.MatchString(dataID) {
+		return ErrInvalidAddress
+	}
+	var reply interface{}
+	return c.call(iface, "setMetadata", []interface{}{address, dataID, value}, &reply)
+}
+
 // ListReplaceableDevices returns the devices a new device can replace
 // (devices only, no channels), as the WebUI's ic_seldevice.cgi asks the
 // interface with listReplaceableDevices. HmIP can't replace devices.

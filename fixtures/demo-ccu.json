@@ -481,13 +481,38 @@
         "PRESS_SHORT": false,
         "PRESS_LONG": false
       }
+    },
+    {
+      "id": 9200,
+      "address": "0019A0C9B3E2D1:0",
+      "type": "MAINTENANCE",
+      "interface": "HmIP-RF",
+      "name": "HmIP-FCI1 0019A0C9B3E2D1:0",
+      "datapoints": {
+        "LOW_BAT": false,
+        "UNREACH": false
+      }
+    },
+    {
+      "id": 9201,
+      "address": "0019A0C9B3E2D1:1",
+      "type": "MULTI_MODE_INPUT_TRANSMITTER",
+      "interface": "HmIP-RF",
+      "name": "Gartentor",
+      "datapoints": {
+        "STATE": false,
+        "PRESS_SHORT": false,
+        "PRESS_LONG": false
+      },
+      "mode": 3
     }
   ],
   "deviceNames": {
     "000A9D89A7AF25": "Wandthermostat Flur",
     "003660C9930AB6": "Fensterkontakt Bad",
     "000855699C4F38": "Taster Esszimmer",
-    "00195F29B04142": "Zirkulationspumpe"
+    "00195F29B04142": "Zirkulationspumpe",
+    "0019A0C9B3E2D1": "Kontakt-Schnittstelle Gartentor"
   },
   "interfaces": {
     "BidCos-RF": {
@@ -4966,6 +4991,49 @@
           ],
           "VERSION": 10,
           "FLAGS": 1
+        },
+        {
+          "ADDRESS": "0019A0C9B3E2D1",
+          "TYPE": "HmIP-FCI1",
+          "CHILDREN": [
+            "0019A0C9B3E2D1:0",
+            "0019A0C9B3E2D1:1"
+          ],
+          "PARAMSETS": [
+            "MASTER",
+            "SERVICE"
+          ],
+          "VERSION": 4,
+          "FIRMWARE": "1.2.4",
+          "FLAGS": 1
+        },
+        {
+          "ADDRESS": "0019A0C9B3E2D1:0",
+          "TYPE": "MAINTENANCE",
+          "PARENT": "0019A0C9B3E2D1",
+          "PARENT_TYPE": "HmIP-FCI1",
+          "INDEX": 0,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES"
+          ],
+          "VERSION": 4,
+          "FLAGS": 3
+        },
+        {
+          "ADDRESS": "0019A0C9B3E2D1:1",
+          "TYPE": "MULTI_MODE_INPUT_TRANSMITTER",
+          "PARENT": "0019A0C9B3E2D1",
+          "PARENT_TYPE": "HmIP-FCI1",
+          "INDEX": 1,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 4,
+          "FLAGS": 1,
+          "LINK_SOURCE_ROLES": "CONDITIONAL_SWITCH REMOTE_CONTROL SWITCH WINDOW_SWITCH"
         }
       ],
       "paramsetDescriptions": {
@@ -6584,6 +6652,84 @@
               "TAB_ORDER": 5
             }
           }
+        },
+        "0019A0C9B3E2D1:1": {
+          "VALUES": {
+            "STATE": {
+              "TYPE": "BOOL",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": false,
+              "MIN": false,
+              "MAX": true,
+              "TAB_ORDER": 0
+            },
+            "PRESS_SHORT": {
+              "TYPE": "ACTION",
+              "OPERATIONS": 4,
+              "FLAGS": 1,
+              "DEFAULT": false,
+              "MIN": false,
+              "MAX": true,
+              "TAB_ORDER": 1
+            },
+            "PRESS_LONG": {
+              "TYPE": "ACTION",
+              "OPERATIONS": 4,
+              "FLAGS": 1,
+              "DEFAULT": false,
+              "MIN": false,
+              "MAX": true,
+              "TAB_ORDER": 2
+            }
+          },
+          "MASTER": {
+            "CHANNEL_OPERATION_MODE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 1,
+              "MIN": 0,
+              "MAX": 3,
+              "VALUE_LIST": [
+                "INACTIVE",
+                "KEY_BEHAVIOR",
+                "SWITCH_BEHAVIOR",
+                "BINARY_BEHAVIOR"
+              ],
+              "TAB_ORDER": 0
+            },
+            "MSG_FOR_POS_A": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 2,
+              "MIN": 0,
+              "MAX": 3,
+              "VALUE_LIST": [
+                "NO_MSG",
+                "CLOSED",
+                "OPEN",
+                "TILTED"
+              ],
+              "TAB_ORDER": 1
+            },
+            "MSG_FOR_POS_B": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 1,
+              "MIN": 0,
+              "MAX": 3,
+              "VALUE_LIST": [
+                "NO_MSG",
+                "CLOSED",
+                "OPEN",
+                "TILTED"
+              ],
+              "TAB_ORDER": 2
+            }
+          }
         }
       },
       "paramsets": {
@@ -6648,6 +6794,13 @@
             "LOW_BAT_LIMIT": 1.1,
             "DST_START_TIME": 120,
             "DST_START_MONTH": 3
+          }
+        },
+        "0019A0C9B3E2D1:1": {
+          "MASTER": {
+            "CHANNEL_OPERATION_MODE": 3,
+            "MSG_FOR_POS_A": 2,
+            "MSG_FOR_POS_B": 1
           }
         }
       },

@@ -61,6 +61,8 @@ type CCU struct {
 
 	// installModeUntil by interface
 	installModeUntil map[string]time.Time
+	// metadata set with setMetadata, by interface and "object/dataID"
+	metadata map[string]map[string]interface{}
 	// Pairing by serial number: devices with a foreign security key (serial
 	// starting with "KEQ") need the temporary key set; the device that
 	// failed last (getKeyMismatchDevice)
@@ -141,6 +143,7 @@ func New(fixture *Fixture) *CCU {
 		InterfacePorts:   map[string]int{},
 		calls:            map[string]int{},
 		installModeUntil: map[string]time.Time{},
+		metadata:         map[string]map[string]interface{}{},
 		regaLogLevel:     2,
 	}
 }
@@ -418,6 +421,14 @@ func (c *CCU) runScript(body string) (string, error) {
 				return "OK\t" + ch.Name, nil
 			}
 			return "NOT_FOUND", nil
+		case "set_channel_mode":
+			ch := c.channelByAddress(values["INTERFACE"], values["ADDRESS"])
+			mode, err := strconv.Atoi(values["MODE"])
+			if ch == nil || err != nil {
+				return "NOT_FOUND", nil
+			}
+			ch.Mode = &mode
+			return "OK", nil
 		case "set_channel_option":
 			id, _ := strconv.ParseInt(values["ID"], 10, 64)
 			ch := c.channelByID(id)
@@ -955,6 +966,9 @@ func (c *CCU) getChannels(objectID string) string {
 		if ch.Tile != "" {
 			fmt.Fprintf(&b, "T\t%s\n", ch.Tile)
 		}
+		if ch.Mode != nil {
+			fmt.Fprintf(&b, "O\t%d\n", *ch.Mode)
+		}
 		if status := c.channelByAddress(ch.Interface, deviceAddress(ch.Address)+":0"); status != nil {
 			for _, dp := range []string{"LOW_BAT", "LOWBAT", "UNREACH"} {
 				if v, ok := status.Datapoints[dp]; ok {
@@ -1370,6 +1384,24 @@ func (c *CCU) Reset() {
 		fixture.Interfaces = map[string]*InterfaceData{}
 	}
 	c.fixture = &fixture
+	c.metadata = map[string]map[string]interface{}{}
+}
+
+// Metadata returns what setMetadata stored for an object, nil if nothing.
+func (c *CCU) Metadata(iface, objectID, dataID string) interface{} {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.metadata[iface][objectID+"/"+dataID]
+}
+
+// ChannelMode returns the ReGa metadata "channelMode" of a channel.
+func (c *CCU) ChannelMode(iface, address string) *int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if ch := c.channelByAddress(iface, address); ch != nil {
+		return ch.Mode
+	}
+	return nil
 }
 
 // --- WebUI login and test control -----------------------------------------
@@ -1781,7 +1813,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 	switch method {
 	case "system.listMethods":
 		return []string{"init", "ping", "listDevices", "getDeviceDescription", "getParamsetDescription", "getParamset",
-			"putParamset", "setValue", "setInstallMode", "getInstallMode", "deleteDevice", "getLinks", "addLink", "removeLink"}, ""
+			"putParamset", "setValue", "setMetadata", "setInstallMode", "getInstallMode", "deleteDevice", "getLinks", "addLink", "removeLink"}, ""
 	case "setInstallMode":
 		on, _ := params[0].(bool)
 		seconds := 60
@@ -1933,6 +1965,12 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 			}
 		}
 		return nil, "Unknown instance"
+	case "setMetadata":
+		if c.metadata[iface] == nil {
+			c.metadata[iface] = map[string]interface{}{}
+		}
+		c.metadata[iface][stringParam(params, 0)+"/"+stringParam(params, 1)] = paramAt(params, 2)
+		return "", ""
 	case "getDeviceDescription":
 		for _, d := range data.Devices {
 			if d["ADDRESS"] == stringParam(params, 0) {

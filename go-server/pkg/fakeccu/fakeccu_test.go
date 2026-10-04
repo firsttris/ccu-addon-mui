@@ -20,7 +20,7 @@ func TestRecognisesAllScripts(t *testing.T) {
 		"NAME": "Neu", "GROUP_ID": "1", "CHANNEL_ID": "2", "ACTION": "Add", "ID": "950",
 		"LIST_ID": "ID_ROOMS", "ENUM_TYPE": "etRoom", "OBJECT_TYPE": "OT_VARDP", "VALUE_TYPE": "4",
 		"SUB_TYPE": "0", "UNIT": "°C", "MIN": "0", "MAX": "40", "FALSE_NAME": "", "TRUE_NAME": "",
-		"VALUE_LIST": "", "INITIAL": "0", "ITEM_ID": "0", "TILE": "light", "DATA": "{}", "CODE": "", "INFO": "", "STEP": "changed", "DESCRIPTION": "", "ACTIVE": "true", "LAYOUT": "", "LATITUDE": "52.52", "FIRST_NAME": "", "LAST_NAME": "", "SHOW_LOGIN": "true", "MAIL": "", "PHONE": "", "SET_PASSWORD": "true", "PASSWORD": "", "LEVEL": "2", "OPTION": "visible", "START": "0", "CHANNEL": "0", "SINCE": "2026-10-03 12:00:00", "COUNT": "50", "LONGITUDE": "13.405", "RENAME": "1", "MEMBERS": "A", "OTHERS": "",
+		"VALUE_LIST": "", "INITIAL": "0", "ITEM_ID": "0", "TILE": "light", "MODE": "3", "DATA": "{}", "CODE": "", "INFO": "", "STEP": "changed", "DESCRIPTION": "", "ACTIVE": "true", "LAYOUT": "", "LATITUDE": "52.52", "FIRST_NAME": "", "LAST_NAME": "", "SHOW_LOGIN": "true", "MAIL": "", "PHONE": "", "SET_PASSWORD": "true", "PASSWORD": "", "LEVEL": "2", "OPTION": "visible", "START": "0", "CHANNEL": "0", "SINCE": "2026-10-03 12:00:00", "COUNT": "50", "LONGITUDE": "13.405", "RENAME": "1", "MEMBERS": "A", "OTHERS": "",
 	}
 	placeholder := regexp.MustCompile(`\{\{([A-Z_]+)\}\}`)
 	for name, template := range rega.Scripts() {

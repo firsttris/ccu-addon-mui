@@ -5,6 +5,7 @@
 !   M <roomIds> <tradeIds>                   comma separated
 !   T <tile>                                 light or switch, if chosen in the add-on
 !   F <visible> <usable> <logged> <aes>      the channel options of the WebUI
+!   O <mode>                                 input channels: off, key, switch, contact …
 ! The JSON is built in Go, so names and values need no escaping here.
 ! OBJECT_ID is a room, trade or favorite list id, or ALL for the channels of
 ! all devices.
@@ -59,6 +60,14 @@ if (parentObject) {
                 ! The tile chosen in the add-on, see set_channel_tile.tcl
                 if (channelObject.MetaData("muiTile") == "light") { WriteLine("T\tlight"); }
                 if (channelObject.MetaData("muiTile") == "switch") { WriteLine("T\tswitch"); }
+
+                ! What an input channel is wired to (0 off, 1 key, 2 switch,
+                ! 3 contact, 4 level, 5 condition), stored by the WebUI as metadata "channelMode"
+                ! (functions.fn); without it the channel is a key
+                if (channelObject.HssType() == "MULTI_MODE_INPUT_TRANSMITTER") {
+                    var channelMode = channelObject.MetaData("channelMode");
+                    if (channelMode != null) { WriteLine("O\t" # channelMode); }
+                }
 
                 ! Visible, usable for non-administrators and logged, as the
                 ! WebUI's Channel.setVisibility/setUsability/setLogging set them

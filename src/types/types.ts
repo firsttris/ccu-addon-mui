@@ -101,6 +101,10 @@ interface BaseChannel {
   // Tile chosen in the setup area (stored in the CCU); unset lets the app
   // decide from the name and trade
   tile?: 'light' | 'switch';
+  // Inputs (MULTI_MODE_INPUT_TRANSMITTER): what they are wired to, the
+  // WebUI's metadata channelMode (0 off, 1 key, 2 switch, 3 contact,
+  // 4 level, 5 condition); unset means key
+  mode?: number;
 }
 
 export interface SwitchVirtualReceiverChannel extends BaseChannel {

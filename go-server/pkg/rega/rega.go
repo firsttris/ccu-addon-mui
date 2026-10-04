@@ -351,6 +351,25 @@ const (
 	TileSwitch = "switch"
 )
 
+// SetChannelMode stores what an input channel is wired to (0 off, 1 key,
+// 2 switch, 3 contact, 4 level, 5 condition) as the channel's metadata "channelMode", as the
+// WebUI does when CHANNEL_OPERATION_MODE is saved. Result is OK or
+// NOT_FOUND.
+func (c *Client) SetChannelMode(iface, address string, mode int) (string, error) {
+	if !safeIdentifierRegex.MatchString(iface) || !safeIdentifierRegex.MatchString(address) {
+		return "", fmt.Errorf("invalid address")
+	}
+	if mode < 0 || mode > MaxChannelMode {
+		return "", fmt.Errorf("invalid channel mode")
+	}
+	script := strings.NewReplacer("{{INTERFACE}}", iface, "{{ADDRESS}}", address, "{{MODE}}", strconv.Itoa(mode)).Replace(setChannelModeScript)
+	output, err := c.Execute(script)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(output), nil
+}
+
 // SetChannelTile stores the tile chosen for a channel ("light", "switch",
 // or "" for the app's own choice). Returns SetOK with the channel's name,
 // or SetNotFound.

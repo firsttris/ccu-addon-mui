@@ -8,10 +8,10 @@ echten Server und eine nachgebaute CCU.
 
 | Ebene | Was echt ist | Was nachgebaut ist | Tests | in der CI |
 |---|---|---|---:|:---:|
-| **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 185 in 27 Dateien | ✅ |
-| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 203 Testfunktionen in 48 Dateien | ✅ |
+| **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 190 in 28 Dateien | ✅ |
+| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 205 Testfunktionen in 48 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests | – | gegen `protocol/schema.json` | ✅ |
-| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 21 + 2 | ✅ |
+| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 22 + 2 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 64 | ✅ |
 | **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 60 | lokal |
 
@@ -28,7 +28,7 @@ flowchart LR
 ## Die Fake-CCU
 
 Herzstück der Tests ist `go-server/pkg/fakeccu`, eine CCU zum Mitnehmen (gut 3.000 Zeilen Go). Sie lädt
-eine **Fixture** (`fixtures/demo-ccu.json`: 3 Räume, 2 Gewerke, 34 Kanäle, Benutzer `Admin`/`secret` und
+eine **Fixture** (`fixtures/demo-ccu.json`: 3 Räume, 2 Gewerke, 36 Kanäle, Benutzer `Admin`/`secret` und
 `Gast`/`gast`, Gerätebeschreibungen und Paramsets für BidCos-RF und HmIP-RF, Systemvariablen, Programme,
 Favoriten, ein Gerät im Posteingang) und startet fünf Server:
 
@@ -73,7 +73,7 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
 
 - **Pakete**: ReGa (Skripte, Parser, Validierung, Programm-Code), XML-RPC-Client und -Server, Anmeldung und
   Tokens, Einstellungen, Diagramme, Push, Audit, Add-ons, Logs …
-- **Integration** (`go-server/integration_test.go`, 55 Tests): startet die Fake-CCU auf freien Ports und den
+- **Integration** (`go-server/integration_test.go`, 56 Tests): startet die Fake-CCU auf freien Ports und den
   **echten** Server mit temporären Dateien, wartet auf die Anmeldung für Events und spricht dann über einen
   WebSocket-Client mit ihm: anmelden, schalten, Events, Rechte, Admin-Token, Paramsets, Anlernen,
   Verknüpfungen, Programme, Backup …
@@ -89,7 +89,7 @@ Die App läuft im Vite-Dev-Server und in echtem Chromium; nur `window.WebSocket`
 ist: Events auslösen, das nächste Schalten scheitern lassen, Alarme setzen, gesendete Nachrichten prüfen.
 
 Abgedeckt sind die Kacheln (Licht, Dimmer, Farblicht, Rollladen, Türschloss nur mit Geste, Fenster, Melder,
-Sirene, Zutritt, Thermostate, Energie), Events und Event-Schübe, Rücknahme bei Fehlern, Batterie und
+Sirene, Zutritt, Eingänge, Thermostate, Energie), Events und Event-Schübe, Rücknahme bei Fehlern, Batterie und
 Erreichbarkeit, Meldungen, Alarme, Favoriten, Startseite, Kacheln anordnen, die generische Kachel und
 *Alle Geräte*. `auth.spec.ts` prüft Anmeldung, Token über einen Neustart hinweg und Abmelden.
 

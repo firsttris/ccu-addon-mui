@@ -105,7 +105,7 @@ Systemvariablen erzeugen keine Events; die App fragt sie ab (`getSysvars`).
 | Bedienen und Anzeigen | `subscribe` | Kanaladressen für Events abonnieren (ersetzt die bisherige Menge) | alle |
 | | `getRooms` | Räume (ReGa) | alle |
 | | `getTrades` | Gewerke (ReGa) | alle |
-| | `getChannels` | Kanäle eines Raums, Gewerks oder einer Favoritenliste oder `all` mit Datenpunkten, Status und Optionen | alle |
+| | `getChannels` | Kanäle eines Raums, Gewerks oder einer Favoritenliste oder `all` mit Datenpunkten, Status und Optionen, bei Eingängen mit Betriebsart (`mode`) | alle |
 | | `setDatapoint` | Datenpunkt per ReGa setzen. Antwort `setDatapoint_response` mit `UNREACH`, `FORBIDDEN`, `NOT_FOUND`, `INVALID_REQUEST`, `CCU_ERROR` | Bed. (A). Kanäle mit Option „bedienbar=aus“ dürfen nur Admins bedienen (`operable`, Cache 30 s) |
 | | `getDeviceProblems` | Geräte mit LOW_BAT oder UNREACH | alle |
 | | `getLayout` | Kachel-Layout einer Ansicht (ReGa-Metadaten `muiLayout`) | alle |

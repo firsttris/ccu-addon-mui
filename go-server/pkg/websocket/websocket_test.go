@@ -508,6 +508,15 @@ func (f *fakeDeviceRPC) ListDevices(iface string) ([]ccurpc.DeviceDescription, e
 
 func (f *fakeDeviceRPC) InterfaceNames() []string { return []string{"HmIP-RF"} }
 
+func (f *fakeDeviceRPC) GetDeviceDescription(iface, address string) (ccurpc.DeviceDescription, error) {
+	return ccurpc.DeviceDescription{Address: address}, nil
+}
+
+func (f *fakeDeviceRPC) SetMetadata(iface, address, dataID string, value interface{}) error {
+	f.calls = append(f.calls, fmt.Sprintf("metadata %s %s %s %v", iface, address, dataID, value))
+	return nil
+}
+
 func (f *fakeDeviceRPC) SetInstallMode(iface string, on bool, seconds int) error { return nil }
 
 func (f *fakeDeviceRPC) GetInstallMode(iface string) (int, error) { return 0, nil }
