@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import SearchIcon from '~icons/lucide/search';
-import { useAllLinks, useChannels, useDevices, useRooms } from '../../queries';
+import { useAllLinks, useChannels, useRooms } from '../../queries';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
@@ -16,13 +16,11 @@ import { m } from '../../paraglide/messages';
 export const AllLinks = () => {
   usePageTitle(m.LINKS());
   const { data: links = [], isLoading } = useAllLinks();
-  const { data: devices = [] } = useDevices();
   const names = useChannelNames();
   const { data: channels = [] } = useChannels({ all: true });
   const { data: rooms = [] } = useRooms();
   const [query, setQuery] = useState('');
   const [room, setRoom] = useState('');
-  const [device, setDevice] = useState('');
 
   const label = (address: string) => `${names.get(address) ?? address} (${address})`;
   const needle = query.trim().toLocaleLowerCase();
@@ -34,15 +32,6 @@ export const AllLinks = () => {
       (needle === '' ||
         `${label(link.sender)} ${label(link.receiver)} ${link.name ?? ''}`.toLocaleLowerCase().includes(needle)),
   );
-  // Devices with channels that can be linked, for a new link
-  const linkableDevices = useMemo(
-    () =>
-      devices
-        .filter((d) => (d.channels ?? []).some((c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length))
-        .sort((a, b) => (a.name ?? a.address).localeCompare(b.name ?? b.address)),
-    [devices],
-  );
-  const chosen = linkableDevices.find((d) => d.address === device);
 
   return (
     <div className="flex flex-col gap-5">
@@ -68,21 +57,7 @@ export const AllLinks = () => {
       )}
 
       <section aria-label={m.ADD_LINK()} className="flex flex-col gap-3">
-        <h2 className="text-[17px] font-semibold">{m.ADD_LINK()}</h2>
-        <label className="grid max-w-[460px] gap-1.5 text-sm text-muted-foreground">
-          {m.DEVICE()}
-          <NativeSelect value={device} onChange={(e) => setDevice(e.target.value)}>
-            <option value="" />
-            {linkableDevices.map((d) => (
-              <option key={`${d.interfaceName}:${d.address}`} value={d.address}>
-                {d.name ?? d.address} ({d.address})
-              </option>
-            ))}
-          </NativeSelect>
-        </label>
-        {chosen && (
-          <AddLinkForm key={chosen.address} interfaceName={chosen.interfaceName} deviceAddress={chosen.address} channels={chosen.channels ?? []} />
-        )}
+        <AddLinkForm />
       </section>
 
     </div>
