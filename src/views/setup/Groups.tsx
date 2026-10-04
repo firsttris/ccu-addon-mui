@@ -3,7 +3,7 @@ import PlusIcon from '~icons/lucide/plus';
 import { useChannels, useConfigChange, useObjectChange, useRooms, useTrades } from '../../queries';
 import ChevronIcon from '~icons/lucide/chevron-right';
 import XIcon from '~icons/lucide/x';
-import { NativeSelect } from '../../components/ui/select';
+import { ChannelPicker } from '../../components/ChannelPicker';
 import { cn } from '../../lib/utils';
 import { useToast } from '../../contexts/ToastContext';
 import { usePageTitle } from '../../contexts/PageTitleContext';
@@ -23,10 +23,9 @@ const GroupMembers = ({ list, group }: { list: List; group: { id: number; name: 
   const { showToast } = useToast();
   const { data: channels = [] } = useChannels({ all: true });
   const change = useConfigChange();
-  const [adding, setAdding] = useState('');
+  const [picking, setPicking] = useState(false);
   const isMember = (channel: (typeof channels)[number]) => (channel[list] ?? []).includes(group.id);
   const members = channels.filter(isMember).sort((a, b) => a.name.localeCompare(b.name));
-  const others = channels.filter((c) => !isMember(c)).sort((a, b) => a.name.localeCompare(b.name));
 
   const set = (channelId: number, member: boolean) =>
     change.mutate(
@@ -59,29 +58,33 @@ const GroupMembers = ({ list, group }: { list: List; group: { id: number; name: 
           ))}
         </ul>
       )}
-      <form
-        className="flex gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (adding) {
-            set(Number(adding), true);
-            setAdding('');
-          }
-        }}
+      <Button
+        type="button"
+        variant="outline"
+        className="h-8 self-start"
+        aria-label={m.GROUP_ADD_CHANNELS_TO({ name: group.name })}
+        onClick={() => setPicking(true)}
       >
-        <NativeSelect className="h-8 min-w-0 flex-1" aria-label={m.GROUP_CHOOSE_CHANNEL()} value={adding} onChange={(e) => setAdding(e.target.value)}>
-          <option value="">{m.GROUP_CHOOSE_CHANNEL()}</option>
-          {others.map((channel) => (
-            <option key={channel.id} value={String(channel.id)}>
-              {channel.name} ({channel.address})
-            </option>
-          ))}
-        </NativeSelect>
-        <Button type="submit" variant="outline" className="h-8" disabled={!adding} aria-label={m.GROUP_ADD_CHANNEL({ name: group.name })}>
-          <PlusIcon />
-          {m.ADD()}
-        </Button>
-      </form>
+        <PlusIcon />
+        {m.GROUP_ADD_CHANNELS()}
+      </Button>
+      {picking && (
+        <ChannelPicker
+          title={m.GROUP_ADD_CHANNELS_TO({ name: group.name })}
+          channels={channels}
+          chosen={new Set(members.map((c) => c.id))}
+          unassigned={{
+            label: list === 'rooms' ? m.GROUP_ONLY_WITHOUT_ROOM() : m.GROUP_ONLY_WITHOUT_TRADE(),
+            test: (c) => (c[list] ?? []).length === 0,
+          }}
+          confirmLabel={m.ADD()}
+          onConfirm={(ids) => {
+            for (const id of ids) set(id, true);
+            setPicking(false);
+          }}
+          onClose={() => setPicking(false)}
+        />
+      )}
     </div>
   );
 };

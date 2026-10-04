@@ -1425,5 +1425,17 @@
   "CHIME_RINGING": "Gongt",
   "CHIME_RING": "Gong",
   "SIGNAL_FLASHING": "Blinkt",
-  "SIGNAL_FLASH": "Blinken"
+  "SIGNAL_FLASH": "Blinken",
+  "PICKER_HINT": "Kanäle suchen und auswählen",
+  "PICKER_SEARCH": "Suchen: Name, Gerät, Typ, Raum, Adresse",
+  "PICKER_DEVICES": "Geräte",
+  "PICKER_NONE": "Nichts gefunden",
+  "PICKER_OTHER": "Ohne Gerätetyp",
+  "PICKER_ALL": "alle",
+  "PICKER_ALL_OF": "Alle Kanäle von {name}",
+  "PICKER_SELECTED": "{count} ausgewählt",
+  "GROUP_ADD_CHANNELS": "Kanäle hinzufügen",
+  "GROUP_ADD_CHANNELS_TO": "Kanäle zu {name} hinzufügen",
+  "GROUP_ONLY_WITHOUT_ROOM": "Nur Kanäle ohne Raum",
+  "GROUP_ONLY_WITHOUT_TRADE": "Nur Kanäle ohne Gewerk"
 }

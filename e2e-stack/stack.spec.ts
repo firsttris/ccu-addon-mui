@@ -1014,8 +1014,17 @@ test('ordnet einem Raum Kanäle zu und entfernt sie', async ({ page }) => {
   await expect(members).toContainText('Küche Rollo');
   await expect(members).not.toContainText('Flur Licht');
 
-  await rooms.getByRole('combobox', { name: 'Kanal wählen' }).selectOption({ label: 'Flur Licht (LEQ0000003:1)' });
-  await rooms.getByRole('button', { name: 'Kanal zu Küche hinzufügen' }).click();
+  // A dialog with the devices and their pictures, a search and check boxes
+  await rooms.getByRole('button', { name: 'Kanäle zu Küche hinzufügen' }).click();
+  const picker = page.getByRole('dialog', { name: 'Kanäle zu Küche hinzufügen' });
+  // Already in the room: checked, not to be chosen again
+  await expect(picker.getByRole('checkbox', { name: /Küche Rollo/ })).toBeDisabled();
+  await picker.getByLabel(/^Suchen/).fill('flur lich');
+  await expect(picker.getByRole('checkbox', { name: /Küche Rollo/ })).toHaveCount(0);
+  await picker.getByRole('checkbox', { name: /^Flur Licht/ }).check();
+  await expect(picker).toContainText('1 ausgewählt');
+  await picker.getByRole('button', { name: 'Hinzufügen' }).click();
+  await expect(picker).toHaveCount(0);
   await expect(members).toContainText('Flur Licht');
   await page.reload();
   await rooms.getByRole('button', { name: 'Kanäle in Küche' }).click();
