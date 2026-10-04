@@ -181,6 +181,21 @@ func (a *Authenticator) Login(username, password, device, source string) (Sessio
 	return session, a.issueToken(session), nil
 }
 
+// AutoLogin starts a session without a password for the user the CCU logs
+// in automatically (the WebUI's UsersDefaultLogin), as index.htm does.
+// Never for administrators: their rights need the password.
+func (a *Authenticator) AutoLogin(username, device string) (Session, string, error) {
+	level := a.lookupLevel(username)
+	if username == "" || (level != LevelUser && level != LevelGuest) {
+		return Session{}, "", ErrInvalidCredentials
+	}
+	session := Session{User: username, Level: level}
+	a.mu.Lock()
+	session.ID = a.startSession(username, device)
+	a.mu.Unlock()
+	return session, a.issueToken(session), nil
+}
+
 // Refresh verifies a token and returns a new one with a fresh lifetime, so
 // a device that is used regularly never has to log in again. Tokens issued
 // before levels were stored get the level looked up now.

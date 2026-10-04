@@ -1,6 +1,8 @@
 ! Creates (ID 0) or changes a CCU user as the WebUI's system.fn::saveUser
 ! does, with its user favorite list for a new one. The password is set
-! (UserBlankPwd) for a new user, or when SET_PASSWORD is true. Writes OK, a
+! (UserBlankPwd) for a new user, or when SET_PASSWORD is true. AUTO_LOGIN
+! makes it the user logged in automatically (system.fn::setAutoLogin), false
+! takes that from it. Writes OK, a
 ! tab and the user id; EXISTS if another user has the name; NOT_FOUND.
 object users = dom.GetObject(ID_USERS);
 object other = users.Get(^{{NAME}}^);
@@ -51,6 +53,13 @@ if (taken) {
                 userFavorite.EnumType(etFavorite);
                 userFavorite.Visible(false);
                 favorites.Add(userFavorite.ID());
+            }
+        }
+        if ({{AUTO_LOGIN}}) {
+            users.UsersDefaultLogin(dwcPC, user.ID());
+        } else {
+            if (users.UsersDefaultLogin(dwcPC) == user.ID()) {
+                users.UsersDefaultLogin(dwcPC, 0);
             }
         }
         Write("OK\t" # user.ID());

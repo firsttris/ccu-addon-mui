@@ -38,6 +38,7 @@ func (s *Server) handleUsers(client *Client, msgType string, message []byte) {
 		Mail      string  `json:"mail"`
 		Phone     string  `json:"phone"`
 		Password  *string `json:"password"`
+		AutoLogin bool    `json:"autoLogin"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -114,7 +115,7 @@ func (s *Server) handleUsers(client *Client, msgType string, message []byte) {
 			}
 			result, id, err := s.regaClient.SaveUser(rega.UserInput{
 				ID: msg.ID, FullName: msg.FullName, Level: level, ShowLogin: msg.ShowLogin,
-				Mail: msg.Mail, Phone: msg.Phone, Password: msg.Password,
+				Mail: msg.Mail, Phone: msg.Phone, Password: msg.Password, AutoLogin: msg.AutoLogin,
 			})
 			createdID = id
 			if err == nil && result == rega.SetOK && current != nil && !own &&

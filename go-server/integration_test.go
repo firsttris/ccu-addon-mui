@@ -2985,3 +2985,61 @@ func TestStackDeviceImages(t *testing.T) {
 		resp.Body.Close()
 	}
 }
+
+func TestStackAutoLogin(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
+	receive(t, conn, byRequestID("e"))
+	dial := func() *websocket.Conn {
+		c, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/", conn.RemoteAddr().String()), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { c.Close() })
+		return c
+	}
+	auth := func(extra message) message {
+		c := dial()
+		m := message{"type": "auth"}
+		for k, v := range extra {
+			m[k] = v
+		}
+		send(t, c, m)
+		return receive(t, c, func(m message) bool { return m["type"] == "auth_response" })
+	}
+	if m := auth(nil); m["success"] == true {
+		t.Fatalf("logged in without an automatic user: %v", m)
+	}
+
+	// A guest logged in automatically (UsersDefaultLogin), as the WebUI's
+	// autoLoginConfig.htm sets it
+	send(t, conn, message{"type": "saveUser", "requestId": "u1", "id": 0, "fullName": "Kiosk", "level": "guest", "password": "", "autoLogin": true})
+	created := receive(t, conn, byRequestID("u1"))
+	if created["success"] != true {
+		t.Fatalf("saveUser failed: %v", created)
+	}
+	send(t, conn, message{"type": "getUsers", "requestId": "u2"})
+	for _, raw := range receive(t, conn, byRequestID("u2"))["users"].([]interface{}) {
+		u := raw.(map[string]interface{})
+		if (u["name"] == "Kiosk") != (u["autoLogin"] == true) {
+			t.Fatalf("autoLogin not listed: %v", u)
+		}
+	}
+	if m := auth(nil); m["success"] != true || m["user"] != "Kiosk" || m["level"] != "guest" || m["token"] == "" {
+		t.Fatalf("not logged in automatically: %v", m)
+	}
+	// Logged out on purpose: the login page
+	if m := auth(message{"noAutoLogin": true}); m["success"] == true {
+		t.Fatalf("logged in automatically after logging out: %v", m)
+	}
+
+	// Made an administrator: never logged in automatically
+	send(t, conn, message{"type": "saveUser", "requestId": "u3", "id": created["id"], "fullName": "Kiosk", "level": "admin", "autoLogin": true})
+	if m := receive(t, conn, byRequestID("u3")); m["success"] != true {
+		t.Fatalf("saveUser failed: %v", m)
+	}
+	if m := auth(nil); m["success"] == true {
+		t.Fatalf("an administrator was logged in automatically: %v", m)
+	}
+}

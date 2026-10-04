@@ -24,6 +24,8 @@ type User struct {
 	Deletable   bool   `json:"deletable"`
 	Mail        string `json:"mail"`
 	Phone       string `json:"phone"`
+	// Logged in automatically, without a password (one user at most)
+	AutoLogin bool `json:"autoLogin"`
 }
 
 // GetUsers lists the CCU users (get_users.tcl).
@@ -37,8 +39,13 @@ func (c *Client) GetUsers() ([]User, error) {
 
 func parseUsers(output string) []User {
 	users := []User{}
+	var autoLogin int64
 	for _, line := range strings.Split(output, "\n") {
 		fields := strings.Split(strings.TrimRight(line, "\r"), "\t")
+		if len(fields) == 2 && fields[0] == "A" {
+			autoLogin, _ = strconv.ParseInt(fields[1], 10, 64)
+			continue
+		}
 		if len(fields) < 11 || fields[0] != "U" {
 			continue
 		}
@@ -52,6 +59,9 @@ func parseUsers(output string) []User {
 			HasPassword: fields[6] == "true", ShowLogin: fields[7] == "true", Deletable: fields[8] == "true",
 			Mail: fields[9], Phone: strings.Join(fields[10:], "\t"),
 		})
+	}
+	for i := range users {
+		users[i].AutoLogin = autoLogin != 0 && users[i].ID == autoLogin
 	}
 	return users
 }
@@ -68,6 +78,8 @@ type UserInput struct {
 	Phone     string
 	// nil keeps the password of an existing user
 	Password *string
+	// Log in automatically as this user (never an administrator)
+	AutoLogin bool
 }
 
 // The WebUI's isPasswordAllowed (webui.js), without the umlauts, which
@@ -126,6 +138,8 @@ func (c *Client) SaveUser(input UserInput) (result string, id int64, err error) 
 		"{{PHONE}}", input.Phone,
 		"{{SET_PASSWORD}}", strconv.FormatBool(setPassword),
 		"{{PASSWORD}}", password,
+		// Administrators are never logged in automatically
+		"{{AUTO_LOGIN}}", strconv.FormatBool(input.AutoLogin && input.Level != 8),
 	).Replace(saveUserScript)
 	output, err := c.Execute(script)
 	if err != nil {

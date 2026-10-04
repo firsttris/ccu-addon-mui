@@ -2739,6 +2739,10 @@
         },
         "adminToken": {
           "type": "string"
+        },
+        "noAutoLogin": {
+          "type": "boolean",
+          "description": "Logged out on purpose: no automatic login"
         }
       },
       "required": [
@@ -6487,6 +6491,10 @@
         "password": {
           "type": "string",
           "description": "only to set it; the WebUI's allowed characters"
+        },
+        "autoLogin": {
+          "type": "boolean",
+          "description": "Log in automatically as this user (ignored for administrators)"
         }
       },
       "required": [
@@ -6605,7 +6613,8 @@
         "showLogin",
         "deletable",
         "mail",
-        "phone"
+        "phone",
+        "autoLogin"
       ],
       "properties": {
         "id": {
@@ -6644,6 +6653,10 @@
         },
         "phone": {
           "type": "string"
+        },
+        "autoLogin": {
+          "type": "boolean",
+          "description": "Logged in automatically without a password (UsersDefaultLogin); one user at most, never an administrator"
         }
       }
     },

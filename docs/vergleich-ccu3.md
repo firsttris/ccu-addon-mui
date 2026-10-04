@@ -67,7 +67,7 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 | Berechtigungsstufen | ✅ | Gast, Benutzer, Administrator, wirksam auch im Add-on |
 | Eigenes Passwort ändern | ✅ | im Menü |
 | Favoriten je Benutzer | ✅ | |
-| Automatisches Anmelden | ❌ | im Add-on bleibt jedes Gerät nach einmaligem Anmelden ohnehin angemeldet |
+| Automatisches Anmelden | ✅ | als Häkchen beim Benutzer (eine Einstellung mit der WebUI), nie für Administratoren |
 | Vereinfachte Verknüpfungskonfiguration ein/aus | ❌ | das Add-on zeigt immer Vorlagen und zusätzlich alle Parameter |
 | Sprache je Benutzer | ✅ | Automatisch, Deutsch oder Englisch im Menü; gespeichert wie `User.setLanguage` in `userprofiles/<Benutzer>.lang`, gilt also auch in der alten WebUI |
 

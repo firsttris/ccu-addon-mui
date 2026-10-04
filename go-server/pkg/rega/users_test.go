@@ -10,6 +10,14 @@ func TestParseUsers(t *testing.T) {
 	if users[1].Mail != "g@x.de" || users[1].Phone != "0123" || !users[1].Deletable || users[1].ShowLogin {
 		t.Fatalf("got %+v", users[1])
 	}
+	if users[0].AutoLogin || users[1].AutoLogin {
+		t.Fatalf("no user is logged in automatically: %+v", users)
+	}
+	// A: the user logged in automatically (UsersDefaultLogin)
+	users = parseUsers("U\t1001\tAdmin\tAdmin\t\t8\ttrue\ttrue\tfalse\t\t\nU\t1002\tGast\tGast\t\t1\tfalse\tfalse\ttrue\t\t\nA\t1002\n")
+	if users[0].AutoLogin || !users[1].AutoLogin {
+		t.Fatalf("got %+v", users)
+	}
 }
 
 func TestUserNames(t *testing.T) {

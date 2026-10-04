@@ -770,6 +770,46 @@ test('legt CCU-Benutzer an, ändert ihre Rechte und löscht sie', async ({ page 
   await expect(row).toHaveCount(0);
 });
 
+test('meldet einen Benutzer automatisch an, Administratoren nie', async ({ page, browser }) => {
+  await login(page);
+  await page.goto('/setup/users');
+  const panel = page.getByRole('region', { name: 'Benutzer' });
+  await panel.getByRole('button', { name: 'Neuer Benutzer' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Neuer Benutzer' });
+  await dialog.getByLabel('Name').fill('Kiosk');
+  // Not offered for administrators
+  await dialog.getByLabel('Berechtigung').selectOption({ label: 'Administrator' });
+  await expect(dialog.getByLabel('Automatisch anmelden')).toHaveCount(0);
+  await dialog.getByLabel('Berechtigung').selectOption({ label: 'Gast' });
+  await dialog.getByLabel('Automatisch anmelden').check();
+  await dialog.getByLabel('Passwort', { exact: true }).fill('kiosk1');
+  await dialog.getByLabel('Passwort wiederholen').fill('kiosk1');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toHaveCount(0);
+  const row = panel.getByRole('row', { name: /Kiosk/ });
+  await expect(row).toContainText('meldet automatisch an');
+
+  try {
+    // Another device opens the app: logged in as the guest, no login page
+    const tablet = await browser.newPage();
+    await tablet.goto('/');
+    await expect(tablet.getByRole('button', { name: 'Menü' })).toBeVisible();
+    await expect(tablet.getByLabel(/Benutzername/)).toHaveCount(0);
+    // Logged out on purpose: the login page, also after a reload
+    await tablet.getByRole('button', { name: 'Menü' }).click();
+    await tablet.getByRole('button', { name: 'Abmelden' }).click();
+    await expect(tablet.getByLabel(/Benutzername/)).toBeVisible();
+    await tablet.reload();
+    await expect(tablet.getByLabel(/Benutzername/)).toBeVisible();
+    await tablet.close();
+  } finally {
+    // The other tests need the login page
+    await row.getByRole('button', { name: 'Löschen Kiosk' }).click();
+    await page.getByRole('dialog', { name: 'Benutzer löschen' }).getByRole('button', { name: 'Löschen' }).click();
+    await expect(row).toHaveCount(0);
+  }
+});
+
 test('blendet Kanäle über die Option „sichtbar“ aus', async ({ page }) => {
   await login(page);
   await page.goto('/device/BidCos-RF/LEQ0000002');

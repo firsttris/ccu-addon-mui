@@ -169,6 +169,12 @@ Die Benutzer der CCU mit Berechtigung (Administrator, Benutzer, Gast): anlegen, 
 Name eines Benutzers geändert, meldet das Add-on ihn auf allen Geräten ab. Das eigene Passwort ändert jeder
 Benutzer im Menü.
 
+**Automatisch anmelden** (Häkchen beim Benutzer, in der Liste markiert): Wer die App öffnet, ist ohne
+Passwort als dieser Benutzer angemeldet, z. B. ein Gast für ein Wandtablet. Es ist dieselbe Einstellung wie
+die automatische Anmeldung der WebUI, deshalb kann es nur einen solchen Benutzer geben. Für Administratoren
+wird das Häkchen nicht angeboten; steht in der WebUI ein Administrator, meldet das Add-on ihn trotzdem nicht
+automatisch an. Nach dem Abmelden erscheint im selben Browser-Tab die Anmeldung.
+
 ## Angemeldete Geräte
 
 Alle Geräte, die im Add-on angemeldet sind, mit Benutzer, Gerät (z. B. „iPad · Safari“) und letzter Nutzung.

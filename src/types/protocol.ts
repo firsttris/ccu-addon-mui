@@ -2711,6 +2711,10 @@ export interface CcuUser {
   deletable: boolean;
   mail: string;
   phone: string;
+  /**
+   * Logged in automatically without a password (UsersDefaultLogin); one user at most, never an administrator
+   */
+  autoLogin: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2743,6 +2747,10 @@ export interface SaveUserRequest {
    * only to set it; the WebUI's allowed characters
    */
   password?: string;
+  /**
+   * Log in automatically as this user (ignored for administrators)
+   */
+  autoLogin?: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -5529,6 +5537,10 @@ export interface AuthRequest {
   type: "auth";
   token?: string;
   adminToken?: string;
+  /**
+   * Logged out on purpose: no automatic login
+   */
+  noAutoLogin?: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

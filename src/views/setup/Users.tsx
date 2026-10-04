@@ -91,10 +91,18 @@ export const Users = () => {
                   {user.name !== displayName(user).replace(/\s/g, '') && (
                     <span className="ml-2 font-mono text-xs text-muted-foreground">{user.name}</span>
                   )}
-                  <span className="block text-xs font-normal text-muted-foreground sm:hidden">{levelLabel(user.level)}</span>
+                  <span className="block text-xs font-normal text-muted-foreground sm:hidden">
+                    {levelLabel(user.level)}
+                    {user.autoLogin && user.level !== 'admin' && ` · ${m.USERS_AUTO_LOGIN_BADGE()}`}
+                  </span>
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <Badge variant={user.level === 'admin' ? 'default' : 'secondary'}>{levelLabel(user.level)}</Badge>
+                  {user.autoLogin && user.level !== 'admin' && (
+                    <Badge variant="outline" className="ml-1.5">
+                      {m.USERS_AUTO_LOGIN_BADGE()}
+                    </Badge>
+                  )}
                 </TableCell>
                 <TableCell className="hidden text-muted-foreground sm:table-cell">
                   {user.hasPassword ? m.USERS_PASSWORD_SET() : m.USERS_NO_PASSWORD()}
@@ -151,6 +159,7 @@ const UserDialog = ({ user, onDone }: { user: CcuUser | null; onDone: () => void
   const [fullName, setFullName] = useState(user ? displayName(user) : '');
   const [level, setLevel] = useState<Level>((user?.level as Level) || 'user');
   const [showLogin, setShowLogin] = useState(user?.showLogin ?? true);
+  const [autoLogin, setAutoLogin] = useState(user?.autoLogin ?? false);
   const [mail, setMail] = useState(user?.mail ?? '');
   const [phone, setPhone] = useState(user?.phone ?? '');
   const [changePassword, setChangePassword] = useState(!user);
@@ -185,6 +194,8 @@ const UserDialog = ({ user, onDone }: { user: CcuUser | null; onDone: () => void
           fullName: fullName.trim(),
           level,
           showLogin,
+          // Never for administrators (the server checks this too)
+          autoLogin: autoLogin && level !== 'admin',
           mail,
           phone,
           ...(changePassword ? { password } : {}),
@@ -268,6 +279,17 @@ const UserDialog = ({ user, onDone }: { user: CcuUser | null; onDone: () => void
           <input type="checkbox" checked={showLogin} onChange={(e) => setShowLogin(e.target.checked)} />
           {m.USERS_SHOW_LOGIN()}
         </label>
+        {/* As the WebUI's automatic login (autoLoginConfig.htm), but not for
+            administrators: their rights need the password */}
+        {level !== 'admin' && (
+          <div className="flex flex-col gap-1">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={autoLogin} onChange={(e) => setAutoLogin(e.target.checked)} />
+              {m.USERS_AUTO_LOGIN()}
+            </label>
+            <span className="text-xs text-muted-foreground">{m.USERS_AUTO_LOGIN_HINT()}</span>
+          </div>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
           <label className={field}>
             <span className={label}>{m.USERS_MAIL()}</span>
