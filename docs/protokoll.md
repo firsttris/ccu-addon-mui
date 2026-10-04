@@ -193,6 +193,7 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | Sicherheit | `getSecurity` | SSH, Auth, HTTPS-Redirect, Session-Timeout, Sicherheitsstufe | Admin |
 | | `setSecurity` | SSH (+Passwort), Auth, HTTPS-Redirect | Admin+T (A)(PW) |
 | | `setSecurityLevel` | LOW/MEDIUM/HIGH über `CCU.setSecurityLevel` | Admin+T (A)(PW) |
+| | `setSnmp` | SNMP an (mit `snmpUser`, `snmpPassword` ab 8 Zeichen) oder aus, über `CCU.setSNMPEnabled`; das Passwort kommt nicht ins Audit-Log | Admin+T (A)(PW) |
 | | `setSessionTimeout` | `rega.conf` | Admin+T (A) |
 | | `changeSecurityKey` | Systemsicherheitsschlüssel ändern | Admin+T (A, ohne Schlüssel)(PW) |
 | | `factoryReset` | Werkseinstellungen (Schlüssel wird vorher geprüft) | Admin+T (A)(PW) |

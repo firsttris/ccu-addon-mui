@@ -103,7 +103,7 @@ Jede Änderung über das Add-on landet in `/usr/local/etc/config/mui-audit.log`,
 - Auch **abgelehnte** Versuche (`FORBIDDEN`, `ELEVATION_REQUIRED`, `UNREACH` …) werden festgehalten.
 - Ab 512 KiB wird die Datei nach `.1` verschoben; es bleiben höchstens etwa 1 MiB.
 - Die Datei liegt in `/usr/local/etc/config` und ist damit Teil des CCU-Backups.
-- **Nie** im Log: Passwörter, das SSH-Passwort, der Sicherheitsschlüssel, temporäre BidCos-Schlüssel, der
+- **Nie** im Log: Passwörter, das SSH-Passwort, das SNMP-Passwort, der Sicherheitsschlüssel, temporäre BidCos-Schlüssel, der
   KEY von HmIP-Geräten und die Schlüssel von LAN-Gateways. Skripte werden nach 200 Zeichen gekürzt.
 
 ## Ohne Anmeldung (`AUTH_MODE=none`)

@@ -1368,6 +1368,43 @@ test('schaltet SSH ein und setzt den Sicherheitsschlüssel', async ({ page }) =>
   await saveWithSession(dialog.getByRole('button', { name: 'Schlüssel setzen' }), dialog, page.getByText('Sicherheitsschlüssel gesetzt'));
 });
 
+test('richtet SNMP ein und schaltet es wieder aus', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Sicherheit' });
+  const save = async () => {
+    const button = panel.getByRole('button', { name: 'SNMP speichern' });
+    await button.click();
+    // The WebUI session may be kept from before: then no password is asked
+    const passwordField = panel.getByLabel('Passwort', { exact: true });
+    const done = page.getByText('Einstellungen gespeichert').last();
+    await expect(done.or(passwordField)).toBeVisible();
+    if (await passwordField.isVisible()) {
+      await passwordField.fill('secret');
+      await button.click();
+    }
+    await expect(done).toBeVisible();
+  };
+
+  await expect(panel.getByRole('switch', { name: /^SNMP/ })).not.toBeChecked();
+  await panel.getByRole('switch', { name: /^SNMP/ }).click();
+  await panel.getByLabel('SNMP-Benutzer').fill('monitor');
+  await panel.getByLabel('SNMP-Passwort', { exact: true }).fill('kurz');
+  await panel.getByLabel('SNMP-Passwort wiederholen').fill('kurz');
+  // At least 8 characters (cp_security.cgi onSNMPSaveBtn)
+  await expect(panel.getByRole('button', { name: 'SNMP speichern' })).toBeDisabled();
+  await panel.getByLabel('SNMP-Passwort', { exact: true }).fill('Snmp-Geheim9');
+  await panel.getByLabel('SNMP-Passwort wiederholen').fill('Snmp-Geheim9');
+  await save();
+  await page.reload();
+  await expect(panel.getByRole('switch', { name: /^SNMP/ })).toBeChecked();
+
+  await panel.getByRole('switch', { name: /^SNMP/ }).click();
+  await save();
+  await page.reload();
+  await expect(panel.getByRole('switch', { name: /^SNMP/ })).not.toBeChecked();
+});
+
 test('stellt eine feste IP-Adresse ein und wieder DHCP', async ({ page }) => {
   await login(page);
   await page.goto('/setup/system');

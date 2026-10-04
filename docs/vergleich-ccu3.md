@@ -9,7 +9,7 @@ in den Tabellen unten.
 
 | | |
 |---|---|
-| Funktionen der WebUI | **60 von 66 vorhanden (91 %)** |
+| Funktionen der WebUI | **61 von 66 vorhanden (92 %)** |
 | Fehlen | 8, meist Einzeloptionen; der größte Brocken sind die Kopplungen (Hue, Lightify) |
 | Gerätetypen | alle 472 an HmIP, HmIP Wired, BidCos-RF und BidCos-Wired bedienbar, 95 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
 
@@ -90,7 +90,7 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 | Werkseinstellungen | ✅ | |
 | Sicherheitsstufe | ✅ | |
 | HTTPS-Zertifikat | ✅ | |
-| SNMP | ❌ | |
+| SNMP | ✅ | SNMPv3-Benutzer mit Passwort (mindestens 8 Zeichen) einrichten oder SNMP ausschalten, wie `CCU.setSNMPEnabled`; die Firewall öffnet bzw. schließt den Dienst mit |
 | Zeit und Position | ✅ | |
 | Netzwerk | ✅ | inkl. Tailscale auf OpenCCU |
 | Firewall | ✅ | |

@@ -38,6 +38,17 @@ func (c *CCU) securityMethod(method string, params map[string]interface{}) strin
 		flag("authEnabled", isTrue("enabled"))
 	case "CCU.setHttpsRedirectEnabled":
 		flag("httpsRedirectEnabled", isTrue("enabled"))
+	case "CCU.setSNMPEnabled":
+		// setSNMPUser.sh writes the config, unsetSNMPUser.sh removes it
+		if c.ConfigDir != "" {
+			_ = os.MkdirAll(filepath.Join(c.ConfigDir, "snmp"), 0o755)
+		}
+		flag("snmp/snmpd-ccu3.conf", isTrue("enabled"))
+		c.SNMPUser = ""
+		if isTrue("enabled") {
+			c.SNMPUser = fmt.Sprint(params["usr"])
+		}
+		return `{"version":"1.1","result":{"msg":"noError"},"error":null}`
 	case "BidCoS_RF.isKeySet":
 		return fmt.Sprintf(`{"version":"1.1","result":%v,"error":null}`, c.SecurityKey != "")
 	case "BidCoS_RF.validateKey":
