@@ -9,6 +9,9 @@
 
 </div>
 
+> The full documentation (German) lives in [`docs/`](../docs/README.md): [architecture](../docs/architektur.md),
+> [WebSocket protocol](../docs/protokoll.md) with all message types, [security](../docs/sicherheit.md) and [tests](../docs/tests.md).
+
 ---
 
 ## ⚡ Why Go?
