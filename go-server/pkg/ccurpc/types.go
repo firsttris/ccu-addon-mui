@@ -20,11 +20,13 @@ type DeviceDescription struct {
 	// HmIP: UP_TO_DATE, NEW_FIRMWARE_AVAILABLE, DELIVER_FIRMWARE_IMAGE,
 	// READY_FOR_UPDATE, DO_UPDATE_PENDING, PERFORMING_UPDATE (LIVE_* for
 	// mains powered devices)
-	FirmwareUpdateState string   `json:"firmwareUpdateState,omitempty"`
-	Flags               int      `json:"flags"`
-	Direction           int      `json:"direction,omitempty"`
-	LinkSource          []string `json:"linkSourceRoles,omitempty"`
-	LinkTarget          []string `json:"linkTargetRoles,omitempty"`
+	FirmwareUpdateState string `json:"firmwareUpdateState,omitempty"`
+	// The device can get a firmware update (UPDATABLE)
+	Updatable  bool     `json:"updatable,omitempty"`
+	Flags      int      `json:"flags"`
+	Direction  int      `json:"direction,omitempty"`
+	LinkSource []string `json:"linkSourceRoles,omitempty"`
+	LinkTarget []string `json:"linkTargetRoles,omitempty"`
 	// BidCos-RF: the radio module (gateway serial) the device is assigned
 	// to, and whether it may change to another (roaming)
 	Interface string `json:"interface,omitempty"`
@@ -124,6 +126,7 @@ func parseDeviceDescription(m map[string]interface{}) DeviceDescription {
 		Firmware:            asString(m["FIRMWARE"]),
 		AvailableFirmware:   availableFirmware(m),
 		FirmwareUpdateState: asString(m["FIRMWARE_UPDATE_STATE"]),
+		Updatable:           asInt(m["UPDATABLE"]) != 0,
 		Flags:               asInt(m["FLAGS"]),
 		Direction:           asInt(m["DIRECTION"]),
 		LinkSource:          roles(m["LINK_SOURCE_ROLES"]),

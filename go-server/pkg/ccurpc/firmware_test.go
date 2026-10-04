@@ -100,3 +100,15 @@ func TestInstallFirmwareRefused(t *testing.T) {
 		t.Fatalf("channel address: got %v", err)
 	}
 }
+
+func TestDutyCycleWithoutBidCos(t *testing.T) {
+	// OpenCCU without BidCos-RF: the HmIP module's duty cycle counts
+	hmip := &scriptedCaller{replies: map[string]interface{}{
+		"getDeviceDescription": deviceReply("HmIP-SWDO"),
+		"listBidcosInterfaces": radioModules(90),
+	}}
+	client := newClient(map[string]caller{"HmIP-RF": hmip})
+	if err := client.InstallFirmware("HmIP-RF", "0008DA8A9F1234"); !errors.Is(err, ErrDutyCycleHigh) {
+		t.Fatalf("got %v", err)
+	}
+}

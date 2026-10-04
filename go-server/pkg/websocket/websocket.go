@@ -224,6 +224,9 @@ type Server struct {
 	// Creates CCU backups; nil without a WebUI to create them
 	backup *backup.Service
 
+	// eQ-3's list of the newest device firmware, kept for a while
+	deviceFirmwareCatalog deviceFirmwareCatalog
+
 	// audit records every change; nil disables it
 	audit *audit.Log
 }
@@ -258,6 +261,7 @@ type DeviceRPC interface {
 	KeyMismatchDevice(iface string, reset bool) (string, error)
 	SetTempKey(iface, key string) error
 	InstallFirmware(iface, address string) error
+	RefreshDeployedDeviceFirmwareList(iface string) error
 	LogLevel(iface string) (int, error)
 	SetLogLevel(iface string, level int) error
 }
@@ -563,7 +567,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSystemInfo(client, requestID)
 	case "getLogging", "setLogging", "downloadLogs":
 		s.handleLogging(client, msgType, message)
-	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "checkCcuFirmware", "installCcuFirmware", "cancelCcuFirmware", "prepareAddonUpload", "installAddon":
+	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "prepareDeviceFirmwareUpload", "checkCcuFirmware", "installCcuFirmware", "cancelCcuFirmware", "prepareAddonUpload", "installAddon":
 		s.handleRestore(client, msgType, message)
 	case "getLanGateways", "setLanGateways", "changeLanGatewayKey", "setBidcosInterface":
 		s.handleLanGateways(client, msgType, message)
@@ -621,6 +625,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleCreateBackup(client, message)
 	case "installFirmware":
 		s.handleInstallFirmware(client, message)
+	case "getDeviceFirmware", "checkDeviceFirmware", "getDeviceFirmwareChangelog", "downloadDeviceFirmware", "addDeviceFirmware", "deleteDeviceFirmware":
+		s.handleDeviceFirmware(client, msgType, message)
 	case "getServiceMessages", "acknowledgeServiceMessage", "getAlarmMessages", "acknowledgeAlarmMessage":
 		s.handleServiceMessages(client, msgType, message)
 	case "createGroup", "renameGroup", "deleteGroup", "createSysvar", "renameSysvar", "deleteSysvar", "editSysvar":

@@ -153,7 +153,14 @@ export type ServerMessage =
   | FactoryResetResponse
   | SetSecurityLevelResponse
   | GetInterfacesResponse
-  | SearchWiredDevicesResponse;
+  | SearchWiredDevicesResponse
+  | GetDeviceFirmwareResponse
+  | CheckDeviceFirmwareResponse
+  | GetDeviceFirmwareChangelogResponse
+  | DownloadDeviceFirmwareResponse
+  | PrepareDeviceFirmwareUploadResponse
+  | AddDeviceFirmwareResponse
+  | DeleteDeviceFirmwareResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -290,6 +297,13 @@ export interface Protocol {
   setSecurityLevel: SetSecurityLevelCall;
   getInterfaces: GetInterfacesCall;
   searchWiredDevices: SearchWiredDevicesCall;
+  getDeviceFirmware: GetDeviceFirmwareCall;
+  checkDeviceFirmware: CheckDeviceFirmwareCall;
+  getDeviceFirmwareChangelog: GetDeviceFirmwareChangelogCall;
+  downloadDeviceFirmware: DownloadDeviceFirmwareCall;
+  prepareDeviceFirmwareUpload: PrepareDeviceFirmwareUploadCall;
+  addDeviceFirmware: AddDeviceFirmwareCall;
+  deleteDeviceFirmware: DeleteDeviceFirmwareCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -717,6 +731,10 @@ export interface Device {
   availableFirmware?: string;
   firmwareUpdateState?: string;
   /**
+   * The device can get a firmware update (UPDATABLE)
+   */
+  updatable?: boolean;
+  /**
    * BidCos-RF: the radio module the device is assigned to
    */
   interface?: string;
@@ -742,6 +760,10 @@ export interface DeviceDescription {
   linkTargetRoles?: string[];
   availableFirmware?: string;
   firmwareUpdateState?: string;
+  /**
+   * The device can get a firmware update (UPDATABLE)
+   */
+  updatable?: boolean;
   /**
    * BidCos-RF: the radio module the device is assigned to
    */
@@ -4767,6 +4789,234 @@ export interface SearchWiredDevicesResponse {
   type: "searchWiredDevices_response";
   requestId?: string;
   success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceFirmwareCall".
+ */
+export interface GetDeviceFirmwareCall {
+  request: GetDeviceFirmwareRequest;
+  response: GetDeviceFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceFirmwareRequest".
+ */
+export interface GetDeviceFirmwareRequest {
+  type: "getDeviceFirmware";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceFirmwareResponse".
+ */
+export interface GetDeviceFirmwareResponse {
+  type: "getDeviceFirmware_response";
+  requestId?: string;
+  success: boolean;
+  files: DeviceFirmwareFile[];
+}
+/**
+ * A device firmware on the CCU (a directory in /etc/config/firmware)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeviceFirmwareFile".
+ */
+export interface DeviceFirmwareFile {
+  id: string;
+  name: string;
+  typeCode: string;
+  version: string;
+  minCcuVersion?: string;
+  changelog: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckDeviceFirmwareCall".
+ */
+export interface CheckDeviceFirmwareCall {
+  request: CheckDeviceFirmwareRequest;
+  response: CheckDeviceFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckDeviceFirmwareRequest".
+ */
+export interface CheckDeviceFirmwareRequest {
+  type: "checkDeviceFirmware";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckDeviceFirmwareResponse".
+ */
+export interface CheckDeviceFirmwareResponse {
+  type: "checkDeviceFirmware_response";
+  requestId?: string;
+  success: boolean;
+  versions: DeviceFirmwareVersion[];
+}
+/**
+ * The newest firmware eQ-3 offers for a device type (type in lower case)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeviceFirmwareVersion".
+ */
+export interface DeviceFirmwareVersion {
+  type: string;
+  version: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceFirmwareChangelogCall".
+ */
+export interface GetDeviceFirmwareChangelogCall {
+  request: GetDeviceFirmwareChangelogRequest;
+  response: GetDeviceFirmwareChangelogResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceFirmwareChangelogRequest".
+ */
+export interface GetDeviceFirmwareChangelogRequest {
+  type: "getDeviceFirmwareChangelog";
+  requestId?: string;
+  id: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceFirmwareChangelogResponse".
+ */
+export interface GetDeviceFirmwareChangelogResponse {
+  type: "getDeviceFirmwareChangelog_response";
+  requestId?: string;
+  success: boolean;
+  changelog: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DownloadDeviceFirmwareCall".
+ */
+export interface DownloadDeviceFirmwareCall {
+  request: DownloadDeviceFirmwareRequest;
+  response: DownloadDeviceFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DownloadDeviceFirmwareRequest".
+ */
+export interface DownloadDeviceFirmwareRequest {
+  type: "downloadDeviceFirmware";
+  requestId?: string;
+  /**
+   * The device type as the CCU names it
+   */
+  deviceType: string;
+  /**
+   * The user's password when the server needs a new WebUI session (PASSWORD_REQUIRED)
+   */
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DownloadDeviceFirmwareResponse".
+ */
+export interface DownloadDeviceFirmwareResponse {
+  type: "downloadDeviceFirmware_response";
+  requestId?: string;
+  success: boolean;
+  files?: DeviceFirmwareFile[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareDeviceFirmwareUploadCall".
+ */
+export interface PrepareDeviceFirmwareUploadCall {
+  request: PrepareDeviceFirmwareUploadRequest;
+  response: PrepareDeviceFirmwareUploadResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareDeviceFirmwareUploadRequest".
+ */
+export interface PrepareDeviceFirmwareUploadRequest {
+  type: "prepareDeviceFirmwareUpload";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareDeviceFirmwareUploadResponse".
+ */
+export interface PrepareDeviceFirmwareUploadResponse {
+  type: "prepareDeviceFirmwareUpload_response";
+  requestId?: string;
+  success: boolean;
+  id: string;
+  url: string;
+  needsKey?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddDeviceFirmwareCall".
+ */
+export interface AddDeviceFirmwareCall {
+  request: AddDeviceFirmwareRequest;
+  response: AddDeviceFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddDeviceFirmwareRequest".
+ */
+export interface AddDeviceFirmwareRequest {
+  type: "addDeviceFirmware";
+  requestId?: string;
+  id: string;
+  fileName?: string;
+  /**
+   * The user's password when the server needs a new WebUI session (PASSWORD_REQUIRED)
+   */
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddDeviceFirmwareResponse".
+ */
+export interface AddDeviceFirmwareResponse {
+  type: "addDeviceFirmware_response";
+  requestId?: string;
+  success: boolean;
+  files?: DeviceFirmwareFile[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteDeviceFirmwareCall".
+ */
+export interface DeleteDeviceFirmwareCall {
+  request: DeleteDeviceFirmwareRequest;
+  response: DeleteDeviceFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteDeviceFirmwareRequest".
+ */
+export interface DeleteDeviceFirmwareRequest {
+  type: "deleteDeviceFirmware";
+  requestId?: string;
+  id: string;
+  /**
+   * The user's password when the server needs a new WebUI session (PASSWORD_REQUIRED)
+   */
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteDeviceFirmwareResponse".
+ */
+export interface DeleteDeviceFirmwareResponse {
+  type: "deleteDeviceFirmware_response";
+  requestId?: string;
+  success: boolean;
+  files?: DeviceFirmwareFile[];
 }
 /**
  * Sent first on every connection

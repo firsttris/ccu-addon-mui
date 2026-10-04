@@ -1733,3 +1733,59 @@ test('setzt die Sicherheitsstufe wie der Sicherheitsassistent', async ({ page })
   await panel.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(panel).toContainText('Benutzerdefiniert');
 });
+
+test('lädt Geräte-Firmware direkt von eQ-3 auf die CCU', async ({ page }) => {
+  await login(page);
+  // The device page names the newer firmware at eQ-3
+  await page.goto('/device/HmIP-RF/000855699C4F38');
+  const devicePanel = page.getByRole('region', { name: 'Firmware' });
+  await expect(devicePanel).toContainText('Bei eQ-3: 1.6.4');
+  await expect(devicePanel.getByRole('button', { name: 'Auf die CCU laden' })).toBeVisible();
+
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Geräte-Firmware' });
+
+  // eQ-3 (the fake update server) has newer firmware for the remote control;
+  // the thermostat's is on the CCU already
+  const updates = panel.getByRole('list', { name: 'Neue Firmware bei eQ-3' });
+  const remote = updates.getByRole('listitem').filter({ hasText: 'HmIP-WRC2' });
+  await expect(remote).toContainText('1 Gerät(e), installiert 1.6.2');
+  await expect(remote).toContainText('1.6.4');
+  await expect(updates.getByRole('listitem').filter({ hasText: 'HM-TC-IT-WM-W-EU' })).toContainText('liegt auf der CCU');
+  await expect(panel.getByRole('list', { name: 'Firmware auf der CCU' })).toContainText('Auf der CCU liegt keine Geräte-Firmware.');
+
+  // The HMServer needs a WebUI session: the password once, if none is kept
+  const download = panel.getByRole('button', { name: 'Auf die CCU laden HmIP-WRC2' });
+  await download.click();
+  const done = page.getByText('Firmware 1.6.4 für HmIP-WRC2 liegt jetzt auf der CCU.');
+  const passwordField = panel.getByLabel('Passwort', { exact: true });
+  await expect(done.or(passwordField)).toBeVisible();
+  if (await passwordField.isVisible()) {
+    await passwordField.fill('secret');
+    await download.click();
+  }
+  await expect(done).toBeVisible();
+
+  const files = panel.getByRole('list', { name: 'Firmware auf der CCU' });
+  const file = files.getByRole('listitem').filter({ hasText: 'HmIP-WRC2' });
+  await expect(file).toContainText('1.6.4');
+  await expect(file).toContainText('ab CCU 3.41.0');
+  await expect(remote).toContainText('liegt auf der CCU');
+
+  await file.getByRole('button', { name: 'Änderungen' }).click();
+  const changelog = page.getByRole('dialog', { name: /Änderungen: HmIP-WRC2 1\.6\.4/ });
+  await expect(changelog.getByLabel('Änderungen')).toContainText('Verbesserte Funkkommunikation');
+  await changelog.getByRole('button', { name: 'OK' }).click();
+
+  // The remote control's page offers the update now
+  await page.goto('/device/HmIP-RF/000855699C4F38');
+  await expect(page.getByRole('region', { name: 'Firmware' }).getByRole('status')).toHaveText(/Firmware 1\.6\.4 liegt auf dem Gerät bereit/);
+
+  await page.goto('/setup/system');
+  await files.getByRole('button', { name: 'Entfernen HmIP-WRC2' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Entfernen' });
+  await expect(dialog).toContainText('Firmware HmIP-WRC2 1.6.4 von der CCU entfernen?');
+  await dialog.getByRole('button', { name: 'Entfernen' }).click();
+  await expect(page.getByText('Firmware HmIP-WRC2 entfernt.')).toBeVisible();
+  await expect(files).toContainText('Auf der CCU liegt keine Geräte-Firmware.');
+});

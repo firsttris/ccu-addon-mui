@@ -95,8 +95,13 @@ func (s *Service) forgetGroupSession(username string) {
 }
 
 func (s *Service) hmserver(path, sessionID string, params interface{}, result interface{}) error {
+	return s.hmserverPage("/pages/jpages/group/"+path, sessionID, params, result)
+}
+
+// hmserverPage posts JSON to an HMServer page and decodes its answer
+func (s *Service) hmserverPage(page, sessionID string, params interface{}, result interface{}) error {
 	body, _ := json.Marshal(params)
-	u := s.webUIURL + "/pages/jpages/group/" + path
+	u := s.webUIURL + page
 	if sessionID != "" {
 		u += "?sid=@" + sessionID + "@"
 	}

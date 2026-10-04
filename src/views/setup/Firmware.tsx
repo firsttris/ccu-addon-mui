@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import DownloadIcon from '~icons/lucide/circle-arrow-down';
-import { useInstallFirmware } from '../../queries';
+import { useDeviceFirmwareCatalog, useInstallFirmware } from '../../queries';
+import { onlineFirmware } from './deviceFirmwareUpdates';
+import { useDownloadDeviceFirmware } from './DeviceFirmware';
 import { useToast } from '../../contexts/ToastContext';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Button } from '../../components/ui/button';
@@ -107,6 +109,10 @@ export const Firmware = ({ device, canEdit }: FirmwareProps) => {
   const { showToast } = useToast();
   const [confirming, setConfirming] = useState(false);
   const action = updateAction(device);
+  // Newer firmware at eQ-3 that the CCU doesn't have yet
+  const { data: catalog } = useDeviceFirmwareCatalog(canEdit);
+  const online = onlineFirmware(device, catalog);
+  const { download, busy, passwordField, blocked } = useDownloadDeviceFirmware();
   // Until when the state is reloaded quickly after starting an update
   const [watchUntil, setWatchUntil] = useState(0);
   const watching = watchUntil > 0;
@@ -140,6 +146,22 @@ export const Firmware = ({ device, canEdit }: FirmwareProps) => {
         )}
       </dl>
       <p role="status">{firmwareStatus(device)}</p>
+      {canEdit && online && !online.onCcu && (
+        <div className="flex flex-wrap items-center gap-3 text-[13px]">
+          <span>{m.DEVFW_ONLINE({ version: online.version })}</span>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-7 w-fit"
+            disabled={busy !== null || blocked}
+            onClick={() => download(device.type, online.version)}
+          >
+            <DownloadIcon />
+            {m.DEVFW_DOWNLOAD()}
+          </Button>
+        </div>
+      )}
+      {passwordField}
       {canEdit && action && (
         <Button
           type="button"

@@ -56,7 +56,7 @@ Ein Klick auf ein Gerät öffnet seine Seite:
 - **Wochenprogramm bearbeiten** bei Thermostaten und HmIP-Aktoren (siehe [Bedienung](bedienung.md#heizen)).
 - **Namen, Räume und Gewerke**: Gerät und Kanäle umbenennen, Kanäle Räumen und Gewerken zuordnen, die
   Optionen der CCU *sichtbar*, *bedienbar (nicht nur Admins)*, *protokolliert* und *gesichert (AES)*.
-- **Firmware**: installierte und verfügbare Version, Update starten wie in der WebUI: HmIP, sobald die Firmware auf dem Gerät liegt (auch bei „wartet auf das Gerät“), BidCos in einem Schritt, Access Points (HAP, DRAP) als Live-Update. Bei zu hohem Duty Cycle sperrt der Server das Update; ist das Gerät nicht erreichbar, sagt die App, dass es mit der Systemtaste geweckt werden muss.
+- **Firmware**: installierte und verfügbare Version, Update starten wie in der WebUI: HmIP, sobald die Firmware auf dem Gerät liegt (auch bei „wartet auf das Gerät“), BidCos in einem Schritt, Access Points (HAP, DRAP) als Live-Update. Hat eQ-3 neuere Firmware, die noch nicht auf der CCU liegt, lädt ein Klick sie dorthin. Bei zu hohem Duty Cycle sperrt der Server das Update; ist das Gerät nicht erreichbar, sagt die App, dass es mit der Systemtaste geweckt werden muss.
 - **Funktionstest**: prüft, ob das Gerät antwortet, wie in der WebUI.
 - **Verlauf**: die protokollierten Werte als kleine Diagramme.
 - **Programme** und **Systemvariablen**, die das Gerät verwenden.
@@ -167,6 +167,7 @@ welches Funkmodul die Zentrale mit welchem BidCos-Gerät spricht, mit *Roaming*.
 | **Firewall** | Richtlinie, Zugriff auf XML-RPC, Script-API und mediola, erlaubte Adressen und Ports |
 | **HTTPS-Zertifikat** | eigenes Zertifikat hochladen (wird geprüft) oder zurück zum Standard |
 | **Zusatzsoftware** | installierte Add-ons mit Version und Updates, öffnen, neu starten, deinstallieren; neues Add-on installieren |
+| **Geräte-Firmware** | welche Geräte bei eQ-3 neuere Firmware haben, mit einem Klick direkt auf die CCU laden (ohne Umweg über den Rechner); Firmware auf der CCU mit Version, Mindestversion der CCU und Änderungen; Datei hochladen (für CCUs ohne Internet), entfernen |
 | **Protokollierung** | Log-Level von HmIP, BidCos und ReGa, Syslog-Server, Logdateien herunterladen |
 | **Backup** | Backup (`.sbk`) erstellen und herunterladen; ein Backup einspielen (hochladen, prüfen, mit Schlüssel falls nötig, Neustart) |
 

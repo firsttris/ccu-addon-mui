@@ -80,6 +80,10 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	cfg.DiagramsDir = filepath.Join(t.TempDir(), "diagrams")
 	cfg.ConfigDir = t.TempDir()
 	ccu.ConfigDir = cfg.ConfigDir
+	// The fake also stands in for eQ-3's update server
+	cfg.DeviceFirmwareServer = cfg.WebUIURL
+	cfg.IDsFile = filepath.Join(t.TempDir(), "ids")
+	_ = os.WriteFile(cfg.IDsFile, []byte("BidCoS-Address=0x1234\nSerialNumber=NEQ1234567\n"), 0o644)
 	cfg.StatusDir = "../fixtures/status"
 	for _, name := range []string{"netconfig", "firewall.conf", "rfd.conf"} {
 		if data, err := os.ReadFile("../fixtures/" + name); err == nil {
@@ -2748,4 +2752,91 @@ func TestStackSecurityLevel(t *testing.T) {
 		t.Fatalf("unknown level: %v", m)
 	}
 	_ = ccu
+}
+
+func TestStackDeviceFirmware(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	base := fmt.Sprintf("http://127.0.0.1:%d", wsPorts[ccu])
+
+	send(t, conn, message{"type": "getDeviceFirmware", "requestId": "d1"})
+	if files := receive(t, conn, byRequestID("d1"))["files"].([]interface{}); len(files) != 0 {
+		t.Fatalf("unexpected firmware: %v", files)
+	}
+
+	// eQ-3's list, by device type as the CCU names it
+	send(t, conn, message{"type": "checkDeviceFirmware", "requestId": "d2"})
+	versions := map[string]string{}
+	for _, raw := range receive(t, conn, byRequestID("d2"))["versions"].([]interface{}) {
+		v := raw.(map[string]interface{})
+		versions[v["type"].(string)] = v["version"].(string)
+	}
+	if versions["hmip-wrc2"] != "1.6.4" || versions["hmip-hap-b1"] != "2.4.0" {
+		t.Fatalf("unexpected versions: %v", versions)
+	}
+
+	// Downloading needs a WebUI session for the HMServer
+	send(t, conn, message{"type": "downloadDeviceFirmware", "requestId": "d3", "deviceType": "HmIP-WRC2"})
+	if m := receive(t, conn, byRequestID("d3")); m["code"] != "PASSWORD_REQUIRED" {
+		t.Fatalf("expected PASSWORD_REQUIRED, got %v", m)
+	}
+	send(t, conn, message{"type": "downloadDeviceFirmware", "requestId": "d4", "deviceType": "HmIP-WRC2", "password": "secret"})
+	m := receive(t, conn, byRequestID("d4"))
+	files, _ := m["files"].([]interface{})
+	if m["success"] != true || len(files) != 1 {
+		t.Fatalf("download failed: %v", m)
+	}
+	file := files[0].(map[string]interface{})
+	if file["name"] != "HmIP-WRC2" || file["version"] != "1.6.4" || file["changelog"] != true || file["minCcuVersion"] != "3.41.0" {
+		t.Fatalf("unexpected firmware: %v", file)
+	}
+	if n := ccu.CallCount("update server /firmware/download"); n != 1 {
+		t.Fatalf("expected one download, got %d", n)
+	}
+	// The interface processes read the directory again: the remote control
+	// gets the update offered
+	send(t, conn, message{"type": "listDevices", "requestId": "d5"})
+	for _, raw := range receive(t, conn, byRequestID("d5"))["devices"].([]interface{}) {
+		if d := raw.(map[string]interface{}); d["address"] == "000855699C4F38" && (d["availableFirmware"] != "1.6.4" || d["firmwareUpdateState"] != "READY_FOR_UPDATE") {
+			t.Fatalf("firmware not offered: %v", d)
+		}
+	}
+
+	send(t, conn, message{"type": "getDeviceFirmwareChangelog", "requestId": "d6", "id": file["id"]})
+	if m := receive(t, conn, byRequestID("d6")); !strings.Contains(fmt.Sprint(m["changelog"]), "1.6.4") {
+		t.Fatalf("unexpected changelog: %v", m)
+	}
+	send(t, conn, message{"type": "getDeviceFirmwareChangelog", "requestId": "d7", "id": "../etc"})
+	if m := receive(t, conn, byRequestID("d7")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+
+	// Uploading a file from the computer: the session is kept now
+	upload := func(content []byte) string {
+		t.Helper()
+		send(t, conn, message{"type": "prepareDeviceFirmwareUpload", "requestId": "p"})
+		prepared := receive(t, conn, byRequestID("p"))
+		resp, err := http.Post(base+prepared["url"].(string), "application/octet-stream", bytes.NewReader(content))
+		if err != nil || resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("upload failed: %v %v", err, resp)
+		}
+		return prepared["id"].(string)
+	}
+	send(t, conn, message{"type": "addDeviceFirmware", "requestId": "d8", "id": upload([]byte("no archive")), "fileName": "x.tgz"})
+	if m := receive(t, conn, byRequestID("d8")); m["code"] != "INVALID_FIRMWARE" {
+		t.Fatalf("expected INVALID_FIRMWARE, got %v", m)
+	}
+	send(t, conn, message{"type": "addDeviceFirmware", "requestId": "d9", "id": upload(fakeccu.FirmwareArchive("HmIP-SWDO", "1.4.0")), "fileName": "hmip-swdo-1.4.0.tgz"})
+	if m := receive(t, conn, byRequestID("d9")); m["success"] != true || len(m["files"].([]interface{})) != 2 {
+		t.Fatalf("upload not added: %v", m)
+	}
+
+	send(t, conn, message{"type": "deleteDeviceFirmware", "requestId": "d10", "id": file["id"]})
+	if m := receive(t, conn, byRequestID("d10")); m["success"] != true || len(m["files"].([]interface{})) != 1 {
+		t.Fatalf("not deleted: %v", m)
+	}
+	send(t, conn, message{"type": "deleteDeviceFirmware", "requestId": "d11", "id": "missing"})
+	if m := receive(t, conn, byRequestID("d11")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
 }

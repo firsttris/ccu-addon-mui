@@ -282,6 +282,8 @@ export interface Device {
   // points the LIVE_ states
   availableFirmware?: string;
   firmwareUpdateState?: string;
+  // The device can get a firmware update (UPDATABLE)
+  updatable?: boolean;
   channels?: DeviceChannel[];
   // BidCos-RF: the radio module serving the device, and whether it may
   // change to another

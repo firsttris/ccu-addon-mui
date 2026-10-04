@@ -73,7 +73,7 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 	}
 	response := restoreResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}
 
-	if msgType == "prepareRestore" || msgType == "prepareCcuFirmware" || msgType == "prepareAddonUpload" {
+	if msgType == "prepareRestore" || msgType == "prepareCcuFirmware" || msgType == "prepareAddonUpload" || msgType == "prepareDeviceFirmwareUpload" {
 		id, err := s.backup.PrepareUpload()
 		if err != nil {
 			finish("CCU_ERROR")

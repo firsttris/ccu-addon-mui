@@ -217,12 +217,16 @@ func replyOK(reply interface{}) bool {
 	return true
 }
 
-// dutyCycleHigh: the CCU's own BidCos radio module (type CCU2) used too
-// much of its transmit time. Without BidCos-RF there is nothing to check.
+// dutyCycleHigh: the CCU's own radio module (type CCU2) used too much of
+// its transmit time. OpenCCU asks HmIP-RF when there is no BidCos-RF
+// (0068-WebUI-Fix-isDutyCycleOK4DevUpdate); without either there is
+// nothing to check.
 func (c *Client) dutyCycleHigh() bool {
 	modules, err := c.ListBidcosInterfaces("BidCos-RF")
 	if err != nil {
-		return false
+		if modules, err = c.ListBidcosInterfaces("HmIP-RF"); err != nil {
+			return false
+		}
 	}
 	for _, module := range modules {
 		if module.Type == "CCU2" {
@@ -230,6 +234,14 @@ func (c *Client) dutyCycleHigh() bool {
 		}
 	}
 	return false
+}
+
+// RefreshDeployedDeviceFirmwareList lets an interface process read the
+// device firmware under /etc/config/firmware again, as the WebUI's device
+// firmware page does after adding or deleting one (AvailableFirmware.ftl)
+func (c *Client) RefreshDeployedDeviceFirmwareList(iface string) error {
+	var reply interface{}
+	return c.call(iface, "refreshDeployedDeviceFirmwareList", nil, &reply)
 }
 
 // CallRaw calls a method and returns the decoded reply as is, e.g. for

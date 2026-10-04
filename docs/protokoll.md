@@ -142,7 +142,7 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | | `rename` | Gerät oder Kanal umbenennen | Admin+T (A) |
 | | `setChannelTile` | Kachel eines Kanals festlegen (`muiTile`: light/switch/leer) | Admin+T (A) |
 | | `setChannelOption` | Kanaloptionen der WebUI (z. B. `usable`, sichtbar, protokolliert) | Admin+T (A) |
-| | `installFirmware` | Geräte-Firmware-Update starten (XML-RPC `installFirmware`) | Admin+T (A) |
+| | `installFirmware` | Geräte-Firmware-Update starten (XML-RPC `installFirmware`, BidCos `updateFirmware`) | Admin+T (A) |
 | | `startComTest`, `pollComTest` | Funktionstest eines Geräts | Admin |
 | Direkte Verknüpfungen | `getLinks` | Links eines Geräts oder Kanals | Admin |
 | | `getAllLinks` | Links aller Interfaces | Admin |
@@ -171,6 +171,10 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | | `testPush` | Testbenachrichtigung senden | alle |
 | System | `getSystemInfo` | Add-on- und Firmware-Version, Funkmodule mit Duty Cycle | Admin |
 | | `checkFirmwareUpdate` | Neueste CCU-Firmware online abfragen | Admin |
+| | `getDeviceFirmware`, `getDeviceFirmwareChangelog` | Geräte-Firmware auf der CCU (`/etc/config/firmware`) und ihre Änderungen | Admin |
+| | `checkDeviceFirmware` | Neueste Geräte-Firmware bei eQ-3 (eine Stunde zwischengespeichert) | Admin |
+| | `downloadDeviceFirmware` | Geräte-Firmware von eQ-3 laden und über den HMServer auf die CCU legen | Admin+T (A) |
+| | `prepareDeviceFirmwareUpload`, `addDeviceFirmware`, `deleteDeviceFirmware` | Firmware-Datei hochladen, entfernen | Admin+T (A) |
 | | `getSystemSettings` | Standort, Zeitzone, Zeitserver, Fähigkeiten (Neustart, Uhr) | Admin |
 | | `setLocation` | Koordinaten (ReGa und `time.conf`) | Admin+T (A) |
 | | `setTimeServers`, `setTimeZone`, `setClock` | Uhr wie `cp_time.cgi` | Admin+T (A) |
