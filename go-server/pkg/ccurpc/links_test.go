@@ -1,6 +1,12 @@
 package ccurpc
 
-import "testing"
+import (
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+)
 
 func TestGetLinksDeduplicatesAndUsesGroupFlag(t *testing.T) {
 	calls := map[string]int{}
@@ -33,5 +39,37 @@ func TestLinkAddressesAreValidated(t *testing.T) {
 	}
 	if _, err := client.GetLinkParamset("HmIP-RF", "A:1", "x</value>"); err != ErrInvalidAddress {
 		t.Errorf("expected ErrInvalidAddress, got %v", err)
+	}
+}
+
+func TestLinkParamsetDescriptionFallsBackToLink(t *testing.T) {
+	keys := []string{}
+	ccu := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		w.Header().Set("Content-Type", "text/xml")
+		if strings.Contains(string(body), "<value>LINK</value>") || strings.Contains(string(body), "<string>LINK</string>") {
+			keys = append(keys, "LINK")
+			_, _ = io.WriteString(w, xmlResponse(`<struct><member><name>SHORT_ON_LEVEL</name><value><struct>
+				<member><name>TYPE</name><value>FLOAT</value></member>
+				<member><name>OPERATIONS</name><value><i4>3</i4></value></member>
+			</struct></value></member></struct>`))
+			return
+		}
+		keys = append(keys, "partner")
+		// The interface refuses the partner as paramset key
+		_, _ = io.WriteString(w, `<?xml version="1.0"?><methodResponse><fault><value><struct>
+			<member><name>faultCode</name><value><i4>-3</i4></value></member>
+			<member><name>faultString</name><value>Unknown paramset</value></member>
+		</struct></value></fault></methodResponse>`)
+	}))
+	defer ccu.Close()
+	client := newTestClient(t, ccu.URL)
+
+	description, err := client.GetLinkParamsetDescription("HmIP-RF", "A:2", "B:1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := description["SHORT_ON_LEVEL"]; !ok || strings.Join(keys, ",") != "partner,LINK" {
+		t.Fatalf("description %+v after %v", description, keys)
 	}
 }

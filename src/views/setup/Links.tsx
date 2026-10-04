@@ -129,8 +129,17 @@ export const LinkParameters = ({ interfaceName, link, receiverType, senderType, 
     };
   }, []);
 
+  // A failed request is said, not swallowed: the button would seem to do nothing
+  const failed = description.error ?? values.error;
+  if (failed) {
+    return (
+      <p role="alert" className="text-sm text-destructive">
+        {m.LINK_PARAMS_FAILED()}: {failed.message}
+      </p>
+    );
+  }
   if (!description.data || !values.data) {
-    return null;
+    return <PanelSkeleton lines={3} />;
   }
   const current = values.data;
   const merged = { ...current, ...draft };

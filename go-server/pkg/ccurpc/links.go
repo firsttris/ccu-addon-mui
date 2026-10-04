@@ -72,9 +72,15 @@ func (c *Client) GetLinkParamsetDescription(iface, address, partner string) (Par
 	if !isChannel(address) || !isChannel(partner) {
 		return nil, ErrInvalidAddress
 	}
+	// With the partner as key, as the WebUI's ic_deviceparameters.cgi asks;
+	// interfaces that refuse it describe every link alike under "LINK"
+	// (ic_setprofiles.cgi)
 	var reply map[string]interface{}
 	if err := c.call(iface, "getParamsetDescription", []interface{}{address, partner}, &reply); err != nil {
-		return nil, err
+		reply = nil
+		if errLink := c.call(iface, "getParamsetDescription", []interface{}{address, "LINK"}, &reply); errLink != nil {
+			return nil, err
+		}
 	}
 	return parseParamsetDescription(reply), nil
 }
