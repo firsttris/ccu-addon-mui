@@ -52,6 +52,7 @@ type Service struct {
 
 	mu        sync.Mutex
 	downloads map[string]*Backup
+	uploads   map[string]*upload
 }
 
 // New creates backups via the WebUI at webUIURL and keeps them in dir.
@@ -62,6 +63,7 @@ func New(webUIURL, dir string) *Service {
 		dir:        dir,
 		now:        time.Now,
 		downloads:  map[string]*Backup{},
+		uploads:    map[string]*upload{},
 	}
 }
 

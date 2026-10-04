@@ -62,7 +62,10 @@ type CCU struct {
 	// Log levels of the logic layer (set_log_level) and the interfaces
 	// (logLevel)
 	regaLogLevel int
-	rpcLogLevels map[string]int
+	// The backup restore through the WebUI (fileupload.ccc, cp_security.cgi)
+	uploadedBackup, checkedBackup, restoredBackup string
+	rebooted                                      bool
+	rpcLogLevels                                  map[string]int
 }
 
 // CallCount returns how often an XML-RPC method was called, e.g.
@@ -1385,6 +1388,10 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		c.handleBackup(w, r)
 		return
 	}
+	if r.URL.Path == "/config/fileupload.ccc" {
+		c.handleFileUpload(w, r)
+		return
+	}
 	var req struct {
 		Method string            `json:"method"`
 		Params map[string]string `json:"params"`
@@ -1418,10 +1425,14 @@ const FakeBackup = "fake CCU backup (usr_local.tar.gz, signature, key_index, fir
 // handleBackup is the WebUI's "create backup" button: with a valid session
 // it sends a .sbk file, otherwise the login page.
 func (c *CCU) handleBackup(w http.ResponseWriter, r *http.Request) {
+	// Like the WebUI, which looks for the session in the raw query
+	if strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") && r.Method == http.MethodPost {
+		c.handleRestoreAction(w, r.FormValue("action"), r.FormValue("key"))
+		return
+	}
 	c.mu.Lock()
 	c.calls["WebUI create_backup"]++
 	c.mu.Unlock()
-	// Like the WebUI, which looks for the session in the raw query
 	if !strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") || r.URL.Query().Get("action") != "create_backup" {
 		w.Header().Set("Content-Type", "text/html")
 		_, _ = io.WriteString(w, "<html><body>Session expired</body></html>")
@@ -1431,6 +1442,93 @@ func (c *CCU) handleBackup(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/x-download")
 	w.Header().Set("Content-Disposition", "attachment;filename=ccu3-webui-2026-10-03.sbk")
 	_, _ = io.WriteString(w, FakeBackup)
+}
+
+// The fake's backups to restore: FakeBackup is fine; with FakeBackupKeyed
+// in it the backup needs the key FakeBackupKey, with FakeBackupNewer it is
+// from a newer firmware
+const (
+	FakeBackupKeyed = "signed with a user key"
+	FakeBackupKey   = "Schluessel1"
+	FakeBackupNewer = "firmware_version 9.9.9"
+)
+
+// handleFileUpload is the WebUI's fileupload.ccc: one file, an admin
+// session, then the action of the page in "url"
+func (c *CCU) handleFileUpload(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=iso-8859-1")
+	query := r.URL.Query()
+	if r.Method != http.MethodPost {
+		_, _ = io.WriteString(w, "ERROR: no POST request")
+		return
+	}
+	if !strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") {
+		_, _ = io.WriteString(w, "ERROR: no valid admin session id")
+		return
+	}
+	if query.Get("action") != "backup_upload" || query.Get("url") != "/config/cp_security.cgi" || r.ContentLength <= 0 {
+		_, _ = io.WriteString(w, "ERROR: missing required URL parameters")
+		return
+	}
+	file, _, err := r.FormFile("backup_file")
+	if err != nil {
+		_, _ = io.WriteString(w, "ERROR: "+err.Error())
+		return
+	}
+	data, _ := io.ReadAll(file)
+	c.mu.Lock()
+	c.uploadedBackup = string(data)
+	c.calls["WebUI backup_upload"]++
+	c.mu.Unlock()
+	_, _ = io.WriteString(w, `<script>dlgPopup.LoadFromFile(url, "action=backup_restore_check");</script>`)
+}
+
+// handleRestoreAction answers cp_security.cgi's restore steps with the
+// WebUI's untranslated ${...} texts
+func (c *CCU) handleRestoreAction(w http.ResponseWriter, action, key string) {
+	w.Header().Set("Content-Type", "text/html; charset=iso-8859-1")
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.calls["WebUI "+action]++
+	backup := c.uploadedBackup
+	keyed := strings.Contains(backup, FakeBackupKeyed)
+	switch action {
+	case "backup_restore_check":
+		c.checkedBackup = ""
+		if !strings.Contains(backup, FakeBackup) {
+			_, _ = io.WriteString(w, `<div class="popupTitle">${dialogSettingsSecurityMessageSysBackupInvalidFileTitle}</div>`)
+			return
+		}
+		c.checkedBackup = backup
+		if keyed {
+			_, _ = io.WriteString(w, `<div id="performUpdateTitle">${dialogSettingsSecurityMessageSysBackupPerformTitle}</div><input type="text" name="key" size="16" id="text_key" type="password">`)
+		} else {
+			_, _ = io.WriteString(w, `<div id="performUpdateTitle">${dialogSettingsSecurityMessageSysBackupPerformTitle}</div><input type=hidden name="key" value=dummy id="text_key"/>`)
+		}
+	case "backup_restore_go":
+		switch {
+		case c.checkedBackup == "":
+			_, _ = io.WriteString(w, `${dialogSettingsSecurityMessageSysBackupErrorTitle}`)
+		case keyed && key != FakeBackupKey:
+			_, _ = io.WriteString(w, `<div class="popupTitle">${dialogSettingsSecurityMessageSysBackupSecurityErrorTitle}</div>${dialogSettingsSecurityMessageSysBackupSecurityError2Content}`)
+		case strings.Contains(backup, FakeBackupNewer):
+			_, _ = io.WriteString(w, `<div class="popupTitle">${dialogSettingsSecurityMessageSysBackupFWUpdateNecessaryTitle}</div>`)
+		default:
+			c.restoredBackup = c.checkedBackup
+			_, _ = io.WriteString(w, `<div class="popupTitle">${dialogSettingsSecurityMessageSysBackupRestartSystemTitle}</div>`)
+		}
+	case "reboot":
+		if c.restoredBackup != "" {
+			c.rebooted = true
+		}
+	}
+}
+
+// RestoredBackup returns the backup restored and whether the CCU rebooted
+func (c *CCU) RestoredBackup() (string, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.restoredBackup, c.rebooted
 }
 
 // --- XML-RPC --------------------------------------------------------------

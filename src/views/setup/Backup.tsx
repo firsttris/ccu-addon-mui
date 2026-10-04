@@ -3,12 +3,12 @@ import ArchiveIcon from '~icons/lucide/archive';
 import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ElevateDialog } from '../../components/ElevateDialog';
-import { WebUILink } from '../../components/WebUILink';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { useToast } from '../../contexts/ToastContext';
 import { defaultLang } from '../../i18n/utils';
 import { Panel } from './Panel';
+import { RestoreBackup, RestoreButton } from './RestoreBackup';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 
@@ -56,6 +56,7 @@ export const Backup = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [last, setLast] = useState<{ fileName: string; size: number } | null>(null);
+  const [restoring, setRestoring] = useState(false);
 
   if (userLevel === '') {
     return (
@@ -100,15 +101,14 @@ export const Backup = () => {
           <ArchiveIcon />
           {m.CREATE_BACKUP()}
         </Button>
+        <RestoreButton onClick={() => (elevated ? setRestoring(true) : setElevating(true))} />
         {last && (
           <span role="status" className="text-sm text-muted-foreground">
             {last.fileName} · {formatSize(last.size)}
           </span>
         )}
       </div>
-      <p className="text-xs">
-        {m.BACKUP_RESTORE_HINT()} <WebUILink />
-      </p>
+      {restoring && <RestoreBackup onCancel={() => setRestoring(false)} />}
 
       {asking && (
         <ConfirmDialog

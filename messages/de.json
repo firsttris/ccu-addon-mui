@@ -299,7 +299,6 @@
   "BACKUP": "Backup",
   "CREATE_BACKUP": "Backup erstellen",
   "BACKUP_HINT": "Sichert alle Geräte, Räume, Programme, Systemvariablen und Passwörter der CCU in eine .sbk-Datei, wie das Backup der WebUI.",
-  "BACKUP_RESTORE_HINT": "Wiederherstellen geht über Einstellungen → Sicherheit in der alten WebUI.",
   "BACKUP_PASSWORD_HINT": "Das Backup enthält alle Passwörter der CCU. Bitte gib dein Passwort noch einmal ein.",
   "BACKUP_PASSWORD_HINT_ADMIN": "Passwort des CCU-Benutzers „Admin“ (leer lassen, wenn die WebUI keins hat).",
   "BACKUP_RUNNING": "Wird erstellt …",
@@ -767,5 +766,19 @@
   "HG_NO_MEMBERS": "Noch keine Mitglieder.",
   "HG_MEMBERS": "Mitglieder von {name}",
   "HG_NONE": "Keine Heizgruppen angelegt.",
-  "HG_EDIT_IN_WEBUI": "Gruppen in der WebUI anlegen und ändern"
+  "HG_EDIT_IN_WEBUI": "Gruppen in der WebUI anlegen und ändern",
+  "RESTORE_TITLE": "Backup einspielen",
+  "RESTORE_HINT": "Ein Backup ersetzt alle Einstellungen, Geräte, Programme und Passwörter der CCU. Danach startet die CCU neu.",
+  "RESTORE_FILE": "Backup-Datei (.sbk)",
+  "RESTORE_CHECK": "Prüfen",
+  "RESTORE_CHECKING": "Wird geprüft …",
+  "RESTORE_CONFIRM": "Das Backup „{name}“ ist gültig. Jetzt einspielen? Alle aktuellen Einstellungen gehen verloren, die CCU startet neu und ist einige Minuten nicht erreichbar.",
+  "RESTORE_KEY": "System-Sicherheitsschlüssel des Backups",
+  "RESTORE_APPLY": "Einspielen und neu starten",
+  "RESTORE_RUNNING": "Wird eingespielt …",
+  "RESTORE_DONE": "Das Backup ist eingespielt, die CCU startet neu. Das dauert einige Minuten; danach diese Seite neu laden.",
+  "RESTORE_INVALID": "Die Datei ist kein Systembackup der CCU.",
+  "RESTORE_WRONG_KEY": "Der Sicherheitsschlüssel passt nicht zum Backup oder zur CCU.",
+  "RESTORE_FIRMWARE_TOO_OLD": "Das Backup stammt von einer neueren Firmware. Bitte zuerst die Firmware der CCU aktualisieren.",
+  "RESTORE_FAILED": "Einspielen fehlgeschlagen"
 }
