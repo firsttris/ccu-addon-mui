@@ -417,6 +417,41 @@ test('zeigt Abstand, Durchgang, Füllstand und Zählersensor', async ({ page }) 
   await expect(meter).toContainText(/18[.,]?342[.,]50 kWh/);
 });
 
+test('beschreibt die Displays von HmIP-WRCD und HM-RC-19', async ({ page }) => {
+  await page.goto('/devices');
+  const last = async () => (await sentSetDatapoints(page)).at(-1);
+
+  // The WGD's tiles are hidden, as in the WebUI
+  await expect(page.getByRole('group', { name: 'Wandtafel Kachel 1' })).toHaveCount(0);
+
+  // WRCD: line 1 with text and an icon, a sound, as one COMBINED_PARAMETER
+  await page
+    .getByRole('group', { name: 'Display Flur' })
+    .getByRole('button', { name: /Display einrichten|Configure display/ })
+    .click();
+  await page.getByLabel(/^(Text): (Zeile|Line) 1$/).fill('Hallo Küche');
+  await page.getByLabel(/^(Symbol|Icon): (Zeile|Line) 1$/).selectOption('10');
+  await expect(page.getByRole('img', { name: /Vorschau|Preview/ })).toContainText('Hallo Küche');
+  await page.getByLabel(/^(Akustisches Signal|Acoustic signal)$/).selectOption('6');
+  await page.getByRole('button', { name: /^(Senden|Send)$/ }).click();
+  await expect.poll(last).toMatchObject({
+    attribute: 'COMBINED_PARAMETER',
+    value: '{DDBC=WHITE,DDTC=BLACK,DDI=10,DDA=CENTER,DDS=Hallo K³che,DDID=1,DDC=true},{R=0,IN=5,ANS=6}',
+  });
+
+  // HM-RC-19: text, a symbol, then SUBMIT
+  const remote = page.getByRole('group', { name: 'Fernbedienung Display' });
+  await remote.getByLabel(/^(Text): Fernbedienung Display$/).fill('21.5');
+  await remote.getByRole('button', { name: /Glocke|Bell/ }).click();
+  await remote.getByRole('button', { name: /^(Senden|Send)$/ }).click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).slice(-3)).toMatchObject([
+    { attribute: 'BACKLIGHT', value: 0 },
+    { attribute: 'BELL', value: true },
+    { attribute: 'SUBMIT', value: true },
+  ]);
+  expect((await sentSetDatapoints(page)).find((s) => s.attribute === 'TEXT')).toMatchObject({ value: '21.5' });
+});
+
 test('zeigt Sensoren mit eigenen Kacheln', async ({ page }) => {
   await page.goto('/devices');
   const emit = (channel: string, datapoint: string, value: unknown) =>

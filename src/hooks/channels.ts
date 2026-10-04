@@ -3,12 +3,22 @@ import { controlOverrides } from '../controls/registry';
 
 export type Value = string | number | boolean;
 
+const WGD_CHANNELS = new Set([
+  'DISPLAY_INPUT_TRANSMITTER',
+  'DISPLAY_LEVEL_INPUT_TRANSMITTER',
+  'DISPLAY_THERMOSTAT_INPUT_TRANSMITTER',
+  'WEATHER_DISPLAY_RECEIVER',
+]);
+
 // Channels that only hold configuration, not a state worth showing
 export const isHiddenChannel = (channel: Channel) =>
   channel.type === 'MAINTENANCE' ||
   channel.type.endsWith('_WEEK_PROFILE') ||
   // The CCU's 50 virtual keys, as long as nobody gave them a name
   (channel.type === 'VIRTUAL_KEY' && /^HM-RCV-50 /.test(channel.name)) ||
+  // The tiles and weather data of the HmIP(W)-WGD, hidden in the WebUI too
+  // (functions.fn): they are set up in the device settings and links
+  WGD_CHANNELS.has(channel.type) ||
   Object.keys(channel.datapoints).length === 0;
 
 // HmIP actuators report their actual state on a *_TRANSMITTER channel and
@@ -46,8 +56,7 @@ export const groupChannelsByType = (channels: Channel[]): [string, Channel[]][] 
     channelsPerType.set(channel.type, [...(channelsPerType.get(channel.type) ?? []), channel]);
   }
   return Array.from(channelsPerType).sort(
-    ([typeA], [typeB]) =>
-      (typeOrder.get(typeA) ?? 999) - (typeOrder.get(typeB) ?? 999) || typeA.localeCompare(typeB),
+    ([typeA], [typeB]) => (typeOrder.get(typeA) ?? 999) - (typeOrder.get(typeB) ?? 999) || typeA.localeCompare(typeB),
   );
 };
 
@@ -56,11 +65,7 @@ export const groupChannelsByType = (channels: Channel[]): [string, Channel[]][] 
 // React.memo can skip all others.
 // With onlyIfCurrent, the value is only set if the datapoint still has that
 // value: a rollback must not overwrite a value an event brought in since.
-export const applyEvent = (
-  channels: Channel[],
-  event: HmEvent,
-  onlyIfCurrent?: { value: Value },
-): Channel[] => {
+export const applyEvent = (channels: Channel[], event: HmEvent, onlyIfCurrent?: { value: Value }): Channel[] => {
   // BidCos devices call it LOWBAT, HmIP devices LOW_BAT
   const statusType = event.datapoint === 'LOWBAT' ? 'LOW_BAT' : event.datapoint;
   const isStatusEvent = statusType === 'LOW_BAT' || statusType === 'UNREACH';
