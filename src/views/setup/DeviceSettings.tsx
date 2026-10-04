@@ -501,7 +501,7 @@ export const DeviceSettings = () => {
         <div
           role="tablist"
           aria-label={m.DEVICE_TABS()}
-          className="flex gap-1 overflow-x-auto border-b"
+          className="flex gap-1 overflow-x-auto overflow-y-hidden shadow-[inset_0_-1px_0_var(--border)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {tabs.map((t) => (
             <button
@@ -511,7 +511,7 @@ export const DeviceSettings = () => {
               aria-selected={tab === t.id}
               onClick={() => openTab(t.id)}
               className={cn(
-                "-mb-px h-10 shrink-0 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors",
+                "h-10 shrink-0 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors",
                 tab === t.id
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground",

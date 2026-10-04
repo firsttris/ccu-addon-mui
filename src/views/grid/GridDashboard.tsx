@@ -11,19 +11,23 @@ export interface GridTile extends TileSpec {
   channelIds?: number[];
 }
 
-// Measures a tile's natural height, which sets its height in the grid
+// Measures a tile's natural height, which sets its height in the grid. The
+// tile is at least as tall as its cell (as the others of its row) and grows
+// with its content; measured while the cells are low (see reset below).
 const Measured = ({ id, onHeight, children }: { id: string; onHeight: (id: string, h: number) => void; children: ReactNode }) => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(() => onHeight(id, el.offsetHeight));
+    const measure = () => onHeight(id, (el.firstElementChild as HTMLElement | null)?.offsetHeight ?? el.offsetHeight);
+    const observer = new ResizeObserver(measure);
     observer.observe(el);
-    onHeight(id, el.offsetHeight);
+    if (el.firstElementChild) observer.observe(el.firstElementChild);
+    measure();
     return () => observer.disconnect();
   }, [id, onHeight]);
   return (
-    <div ref={ref} className="[&>*]:w-full">
+    <div ref={ref} className="h-full [&>*]:min-h-full [&>*]:w-full">
       {children}
     </div>
   );
@@ -36,11 +40,13 @@ export const GridDashboard = ({
   saved,
   editing,
   onChange,
+  equalRows = false,
 }: {
   tiles: GridTile[];
   saved: SectionLayout | undefined;
   editing: boolean;
   onChange: (layout: SectionLayout) => void;
+  equalRows?: boolean;
 }) => {
   const { width, containerRef, mounted } = useContainerWidth();
   const [heights, setHeights] = useState<Record<string, number>>({});
@@ -51,7 +57,11 @@ export const GridDashboard = ({
     () => (id: string, h: number) => setHeights((prev) => (prev[id] === h ? prev : { ...prev, [id]: h })),
     [],
   );
-  const layouts = useMemo(() => responsiveLayouts(tiles, draft, heights), [tiles, draft, heights]);
+  // A tile stretched to its row keeps that height when measured; so after
+  // anything that can make tiles lower (width, arrangement), all are
+  // measured again from low cells
+  useEffect(() => setHeights({}), [width, draft]);
+  const layouts = useMemo(() => responsiveLayouts(tiles, draft, heights, equalRows), [tiles, draft, heights, equalRows]);
   const [breakpoint, setBreakpoint] = useState<BreakpointName>('lg');
   // Only what the user moved or resized is kept, for the breakpoint shown
   const commit = (layout: Layout) => {

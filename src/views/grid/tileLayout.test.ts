@@ -31,6 +31,15 @@ describe('tileLayout', () => {
     expect(lg[1].y).toBeGreaterThan(1000);
   });
 
+  it('makes tiles side by side as tall as the tallest, as the section grids do', () => {
+    // A thermostat whose long name wraps is taller than the other two
+    const heights = { 'c:A:1': 300, 'c:A:2': 300, 'd:B': 330 };
+    const own = responsiveLayouts(tiles, undefined, heights).lg!;
+    expect(own.map((t) => t.h)).toEqual([rowsFor(300), rowsFor(300), rowsFor(330)]);
+    const equal = responsiveLayouts(tiles, undefined, heights, true).lg!;
+    expect(equal.map((t) => t.h)).toEqual([rowsFor(330), rowsFor(330), rowsFor(330)]);
+  });
+
   it('stores positions and widths only, and reads them back', () => {
     const tiles = toSaved({ lg: [{ i: 'd:B', x: 1, y: 2, w: 3, h: 9 }] });
     expect(tiles).toEqual({ lg: [{ i: 'd:B', x: 1, y: 2, w: 3 }] });

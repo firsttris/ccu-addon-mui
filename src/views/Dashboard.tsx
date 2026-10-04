@@ -392,7 +392,14 @@ const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, 
         </div>
       )}
       {grid || free ? (
-        <GridDashboard tiles={tiles} saved={layout} editing={editing} onChange={onLayout} />
+        <GridDashboard
+          tiles={tiles}
+          saved={layout}
+          editing={editing}
+          onChange={onLayout}
+          // As the section's own grid: tiles side by side as tall as the tallest
+          equalRows={!sectionGrids[group.section ?? 'generic'].includes('items-start')}
+        />
       ) : (
         <div className={cn('grid gap-3', sectionGrids[group.section ?? 'generic'])}>
           {tiles.map((tile) => (

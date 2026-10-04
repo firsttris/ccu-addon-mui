@@ -1455,5 +1455,7 @@
   "LINKS_ALL_ROOMS": "Alle Räume",
   "SYS_CLOCK_DATE_TIME": "Datum und Uhrzeit",
   "SYS_CLOCK_SET_MANUAL": "Uhr stellen",
-  "LINK_LONG": "lang"
+  "LINK_LONG": "lang",
+  "TIME_HOUR": "Stunde",
+  "TIME_MINUTE": "Minute"
 }
