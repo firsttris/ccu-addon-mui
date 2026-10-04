@@ -8,10 +8,10 @@ echten Server und eine nachgebaute CCU.
 
 | Ebene | Was echt ist | Was nachgebaut ist | Tests | in der CI |
 |---|---|---|---:|:---:|
-| **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 190 in 28 Dateien | ✅ |
+| **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 196 in 29 Dateien | ✅ |
 | **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 209 Testfunktionen in 48 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests | – | gegen `protocol/schema.json` | ✅ |
-| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 23 + 2 | ✅ |
+| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 24 + 2 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 65 | ✅ |
 | **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 60 | lokal |
 
@@ -89,7 +89,7 @@ Die App läuft im Vite-Dev-Server und in echtem Chromium; nur `window.WebSocket`
 ist: Events auslösen, das nächste Schalten scheitern lassen, Alarme setzen, gesendete Nachrichten prüfen.
 
 Abgedeckt sind die Kacheln (Licht, Dimmer, Farblicht, Rollladen, Türschloss nur mit Geste, Fenster, Melder,
-Sirene, Zutritt, Eingänge, Thermostate, Energie), Events und Event-Schübe, Rücknahme bei Fehlern, Batterie und
+Sirene, Zutritt, Eingänge, Sensoren für Regen, Licht, CO₂, Feinstaub, Boden, Neigung und Netzausfall, Thermostate, Energie), Events und Event-Schübe, Rücknahme bei Fehlern, Batterie und
 Erreichbarkeit, Meldungen, Alarme, Favoriten, Startseite, Kacheln anordnen, die generische Kachel und
 *Alle Geräte*. `auth.spec.ts` prüft Anmeldung, Token über einen Neustart hinweg und Abmelden.
 

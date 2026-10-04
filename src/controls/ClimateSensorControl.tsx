@@ -11,8 +11,8 @@ import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 
-const number = (value: DatapointValue | undefined) => (typeof value === 'number' && Number.isFinite(value) ? value : undefined);
-const format = (value: number, digits = 1) =>
+export const number = (value: DatapointValue | undefined) => (typeof value === 'number' && Number.isFinite(value) ? value : undefined);
+export const format = (value: number, digits = 1) =>
   new Intl.NumberFormat(getLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
 
 // Dew point by the Magnus formula (°C), good to ±0.4 °C between -45 and 60 °C
@@ -85,7 +85,7 @@ const HumidityRing = ({ humidity }: { humidity: number }) => {
   );
 };
 
-const Extra = ({ icon, label, value, active }: { icon: ReactNode; label: string; value: string; active?: boolean }) => (
+export const Extra = ({ icon, label, value, active }: { icon: ReactNode; label: string; value: string; active?: boolean }) => (
   <div className="flex min-w-0 items-center gap-2 rounded-xl bg-muted/50 px-2.5 py-2">
     <span className={cn('shrink-0 [&_svg]:size-4', active ? 'text-sky-500' : 'text-muted-foreground')}>{icon}</span>
     <span className="flex min-w-0 flex-col leading-tight">

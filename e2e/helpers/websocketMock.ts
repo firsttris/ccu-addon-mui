@@ -141,11 +141,11 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         // No own control: shown by GenericControl with its values
         {
           id: 104,
-          name: 'Neigungssensor Garage',
+          name: 'Heizkreispumpe',
           address: '0000DBE9A5C1F3:1',
           interfaceName: 'HmIP-RF',
-          type: 'ACCELERATION_TRANSCEIVER',
-          datapoints: { MOTION: false, MOTION_DETECTION_ACTIVE: true },
+          type: 'CLIMATECONTROL_FLOOR_PUMP_TRANSCEIVER',
+          datapoints: { STATE: true, DEW_POINT_ALARM: false },
         },
       ],
       '2': [
@@ -340,6 +340,63 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
     // In no room or trade: only listed under "all devices"
     const unassignedChannels: AnyPayload[] = [
+      // Sensors with their own tiles
+      {
+        id: 631,
+        name: 'Regensensor',
+        address: '00199D89A1B2C3:1',
+        interfaceName: 'HmIP-RF',
+        type: 'RAIN_DETECTION_TRANSMITTER',
+        datapoints: { RAINING: false, HEATER_STATE: false, ACTUAL_TEMPERATURE: 11.5, ACTUAL_TEMPERATURE_STATUS: 0 },
+      },
+      {
+        id: 632,
+        name: 'Lichtsensor Terrasse',
+        address: '00199D89A1B2C4:1',
+        interfaceName: 'HmIP-RF',
+        type: 'BRIGHTNESS_TRANSMITTER',
+        datapoints: { CURRENT_ILLUMINATION: 5320, CURRENT_ILLUMINATION_STATUS: 0, AVERAGE_ILLUMINATION: 4800, LOWEST_ILLUMINATION: 120, HIGHEST_ILLUMINATION: 9100 },
+      },
+      {
+        id: 633,
+        name: 'CO₂ Arbeitszimmer',
+        address: '00199D89A1B2C5:1',
+        interfaceName: 'HmIP-RF',
+        type: 'CARBON_DIOXIDE_RECEIVER',
+        datapoints: { CONCENTRATION: 820, CONCENTRATION_STATUS: 0 },
+      },
+      {
+        id: 634,
+        name: 'Feinstaub Wohnzimmer',
+        address: '00199D89A1B2C6:1',
+        interfaceName: 'HmIP-RF',
+        type: 'TEMP_HUMIDITY_PARTICULATE_MATTER_TRANSMITTER',
+        datapoints: { MASS_CONCENTRATION_PM_2_5: 7.4, MASS_CONCENTRATION_PM_10: 11.2, ACTUAL_TEMPERATURE: 21.3, HUMIDITY: 46, TYPICAL_PARTICLE_SIZE: 0.62 },
+      },
+      {
+        id: 635,
+        name: 'Beet Bodenfeuchte',
+        address: '00199D89A1B2C7:1',
+        interfaceName: 'HmIP-RF',
+        type: 'SOIL_MOISTURE_TRANSMITTER',
+        datapoints: { SOIL_MOISTURE: 22, SOIL_MOISTURE_STATUS: 0, SOIL_TEMPERATURE: 14.2, SOIL_TEMPERATURE_STATUS: 0 },
+      },
+      {
+        id: 636,
+        name: 'Neigungssensor Garage',
+        address: '00199D89A1B2C8:1',
+        interfaceName: 'HmIP-RF',
+        type: 'ACCELERATION_TRANSCEIVER',
+        datapoints: { MOTION: false },
+      },
+      {
+        id: 637,
+        name: 'Netzausfall Keller',
+        address: '00199D89A1B2C9:1',
+        interfaceName: 'HmIP-RF',
+        type: 'POWER_MAINS_TRANSMITTER',
+        datapoints: { POWER_MAINS_FAILURE: false },
+      },
       // Inputs of a contact interface: one wired as a contact, one as a
       // key (no channel mode stored, as after pairing)
       {
@@ -502,8 +559,8 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         ACCESS_AUTHORIZATION: { type: 'ENUM', operations: 4, flags: 1, tabOrder: 1, min: 0, max: 1, valueList: ['DISABLE', 'ENABLE'] },
       },
       '0000DBE9A5C1F3:1': {
-        MOTION: { type: 'BOOL', operations: 5, flags: 1, tabOrder: 0 },
-        MOTION_DETECTION_ACTIVE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 1 },
+        STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
+        DEW_POINT_ALARM: { type: 'BOOL', operations: 5, flags: 1, tabOrder: 1 },
       },
     };
 
@@ -737,6 +794,13 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
             ? { type: 'paramsetDescription', requestId: message.requestId, address: message.address, paramsetKey: message.paramsetKey, description }
             : { type: 'error', error: 'getParamsetDescription failed: Unknown paramset', requestId: message.requestId },
         );
+        return;
+      }
+
+      // MASTER values: the tilt sensor reports vibration (operation mode 1)
+      if (message.type === 'getParamset') {
+        const values = message.paramsetKey === 'MASTER' && message.address === '00199D89A1B2C8:1' ? { CHANNEL_OPERATION_MODE: 1 } : {};
+        delayedBroadcast({ type: 'paramset', requestId: message.requestId, address: message.address, paramsetKey: message.paramsetKey, values });
         return;
       }
 

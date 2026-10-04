@@ -15,6 +15,16 @@ import { MotionDetectorControl, SirenControl, SmokeDetectorControl, WaterDetecto
 import { GarageDoorControl } from './GarageDoorControl';
 import { AccessControl, AccessPointControl } from './AccessControls';
 import { InputControl } from './InputControl';
+import {
+  BrightnessControl,
+  Co2Control,
+  Co2LevelControl,
+  ParticulateMatterControl,
+  PowerMainsControl,
+  RainSensorControl,
+  SoilMoistureControl,
+  TiltSensorControl,
+} from './SensorControls';
 
 // Sections of the dashboard, in the order they are shown
 export type SectionId = 'climate' | 'floor' | 'lights' | 'blinds' | 'windows' | 'doors' | 'security' | 'sensors' | 'buttons' | 'inputs' | 'energy' | 'system';
@@ -88,6 +98,17 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   WEATHER_TRANSMIT: channelControl('sensors', ClimateSensorControl),
   WEATHER: channelControl('sensors', ClimateSensorControl),
   HEATING_ROOM_TH_TRANSCEIVER: channelControl('sensors', ClimateSensorControl),
+  // Sensors as the WebUI's raindetector_transmitter.fn, brightness_transmitter.fn
+  RAIN_DETECTION_TRANSMITTER: channelControl('sensors', RainSensorControl),
+  BRIGHTNESS_TRANSMITTER: channelControl('sensors', BrightnessControl),
+  LUXMETER: channelControl('sensors', BrightnessControl),
+  CARBON_DIOXIDE_RECEIVER: channelControl('sensors', Co2Control),
+  SENSOR_FOR_CARBON_DIOXIDE: channelControl('sensors', Co2LevelControl),
+  TEMP_HUMIDITY_PARTICULATE_MATTER_TRANSMITTER: channelControl('sensors', ParticulateMatterControl),
+  SOIL_MOISTURE_TRANSMITTER: channelControl('sensors', SoilMoistureControl),
+  // Vibration, position and tilt (acceleration_transceiver.fn), mains failure
+  ACCELERATION_TRANSCEIVER: channelControl('security', TiltSensorControl),
+  POWER_MAINS_TRANSMITTER: channelControl('security', PowerMainsControl),
   [ChannelType.KEY_TRANSCEIVER]: deviceControl('buttons', ButtonsControl),
   KEY: deviceControl('buttons', ButtonsControl),
   VIRTUAL_KEY: deviceControl('buttons', ButtonsControl),

@@ -32,7 +32,7 @@ Alle vier Ansichten sind gleich aufgebaut:
 2. **Übersicht**: Innentemperatur im Schnitt, eingeschaltete Lichter („5 von 6“), offene Fenster mit
    Namen.
 3. **Abschnitte** nach Art: Klima, Fußbodenheizung, Licht & Schalter, Rollläden, Fenster, Türen,
-   Sicherheit, Klima & Wetter, Taster, Energie, System. Was keine eigene Kachel hat, folgt alphabetisch
+   Sicherheit, Klima & Wetter, Taster, Eingänge, Energie, System. Was keine eigene Kachel hat, folgt alphabetisch
    nach Kanaltyp.
 4. **Diagramme**, die als Kachel an diesem Ort hängen.
 
@@ -74,8 +74,14 @@ erreichbar ist. Dann erscheint ein Hinweis.
 | **Wassermelder** | trocken, feucht, Wasser erkannt |
 | **Sirene** | ruhig, akustischer oder optischer Alarm |
 | **Zutritt** | Berechtigungen der Benutzer eines Keypads oder Fingerabdrucklesers |
+| **Erschütterung und Neigung** | je nach Betriebsart des Sensors Erschütterung, Lage oder Neigungswinkel |
+| **Netzausfall** | Netzspannung vorhanden oder Stromausfall |
 | **Klima und Wetter** | Temperatur, Taupunkt, Luftfeuchte mit Bewertung; Wind, Regen, Helligkeit, Sonnenscheindauer |
+| **Regen, Helligkeit** | Regen ja oder nein mit Heizung und Temperatur; Helligkeit mit Durchschnitt, Minimum und Maximum |
+| **CO₂, Feinstaub** | Messwert mit Bewertung (CO₂ nach Umweltbundesamt, Feinstaub nach dem Europäischen Luftqualitätsindex) |
+| **Bodenfeuchte** | Feuchte in Prozent mit Bewertung, Bodentemperatur |
 | **Taster** | kurz antippen oder für einen langen Tastendruck halten |
+| **Eingänge** | je nach Betriebsart: Tastendrücke leuchten auf, Kontakt offen oder geschlossen, Level |
 | **Energiezähler** | Leistung und Zählerstände, Gas mit Durchfluss |
 | **Access Point / DRAP** | Busspannung und Strom der Wired-Busse |
 | **Alle anderen** | generische Kachel aus der Gerätebeschreibung: Schalter, Auswahlfelder, Zahlen, Aktionen |
