@@ -1471,6 +1471,19 @@ test('richtet ein LAN-Gateway ein und ordnet ein Gerät zu', async ({ page }) =>
   await expect(page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first()).toHaveValue('NEQ1234567');
 });
 
+test('sucht Wired-Geräte am RS485-Bus', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/pairing');
+  const pairing = page.getByRole('region', { name: 'Geräte anlernen' });
+
+  // Offered because the fake CCU has a Wired gateway; no pairing mode, a search
+  await pairing.getByLabel('Schnittstelle').selectOption('BidCos-Wired');
+  await expect(pairing.getByRole('button', { name: 'Anlernen starten (60 s)' })).toHaveCount(0);
+  await pairing.getByRole('button', { name: 'Wired-Geräte suchen' }).click();
+  await expect(page.getByText('Suche abgeschlossen. Gefundene Geräte stehen im Posteingang.')).toBeVisible();
+  await expect(pairing.getByRole('list', { name: 'Neue Geräte (Posteingang)' })).toContainText('HMW-LC-Sw2-DR');
+});
+
 test('lernt mit KEY und SGTIN sowie mit Seriennummer und fremdem Schlüssel an', async ({ page }) => {
   await login(page);
   await page.goto('/setup/pairing');

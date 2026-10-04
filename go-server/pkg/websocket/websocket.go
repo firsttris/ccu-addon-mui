@@ -254,6 +254,7 @@ type DeviceRPC interface {
 	SetBidcosInterface(iface, address, module string, roaming bool) error
 	SetInstallModeWithWhitelist(iface string, seconds int, sgtin, key string) error
 	AddDevice(iface, serial string) error
+	SearchDevices(iface string) (int, error)
 	KeyMismatchDevice(iface string, reset bool) (string, error)
 	SetTempKey(iface, key string) error
 	InstallFirmware(iface, address string) error
@@ -614,7 +615,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handlePush(client, msgType, message)
 	case "setGroupMember":
 		s.handleSetGroupMember(client, message)
-	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice", "listReplaceableDevices", "replaceDevice", "addDeviceBySerial", "setTempKey":
+	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice", "listReplaceableDevices", "replaceDevice", "addDeviceBySerial", "setTempKey", "searchWiredDevices", "getInterfaces":
 		s.handlePairing(client, msgType, message)
 	case "createBackup":
 		s.handleCreateBackup(client, message)
@@ -1319,6 +1320,13 @@ func (s *Server) disconnectSession(id string, except *Client) {
 	}
 }
 
+type interfacesResponse struct {
+	Type       string   `json:"type"`
+	RequestID  string   `json:"requestId,omitempty"`
+	Success    bool     `json:"success"`
+	Interfaces []string `json:"interfaces"`
+}
+
 type changeResponse struct {
 	Type      string `json:"type"`
 	RequestID string `json:"requestId,omitempty"`
@@ -1760,6 +1768,15 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 		}
 		s.sendJSON(client, replaceableResponse{Type: "listReplaceableDevices_response", RequestID: msg.RequestID, Devices: devices})
 		return
+	case "getInterfaces":
+		// Which interfaces are connected: BidCos-Wired only with a Wired
+		// gateway (InterfacesList.xml)
+		if client.level != auth.LevelAdmin {
+			s.sendRequestError(client, msg.RequestID, "only administrators may set up devices", "FORBIDDEN")
+			return
+		}
+		s.sendJSON(client, interfacesResponse{Type: "getInterfaces_response", RequestID: msg.RequestID, Success: true, Interfaces: s.rpc.InterfaceNames()})
+		return
 	case "getInstallMode", "getInbox":
 		if client.level != auth.LevelAdmin {
 			s.sendRequestError(client, msg.RequestID, "only administrators may set up devices", "FORBIDDEN")
@@ -1825,6 +1842,12 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 			if errors.Is(err, ccurpc.ErrInvalidAddress) {
 				return nil, "", errors.New("invalid serial number")
 			}
+			return nil, rega.SetOK, err
+		})
+	case "searchWiredDevices":
+		entry.Target = "BidCos-Wired"
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			_, err := s.rpc.SearchDevices("BidCos-Wired")
 			return nil, rega.SetOK, err
 		})
 	case "setTempKey":

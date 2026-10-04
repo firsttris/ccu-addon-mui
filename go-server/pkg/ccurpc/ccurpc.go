@@ -70,11 +70,16 @@ type Interface struct {
 
 // Interfaces returns the interfaces the server talks to.
 func Interfaces(cfg *config.Config) []Interface {
-	return []Interface{
+	interfaces := []Interface{
 		{Name: "BidCos-RF", Port: cfg.RPCPort},
 		{Name: "HmIP-RF", Port: cfg.HmIPPort},
 		{Name: "VirtualDevices", Port: cfg.VirtualDevicesPort, Path: "/groups"},
 	}
+	// hs485d only runs with a Wired gateway (RS485 bus)
+	if cfg.WiredPort > 0 {
+		interfaces = append(interfaces, Interface{Name: "BidCos-Wired", Port: cfg.WiredPort})
+	}
+	return interfaces
 }
 
 func New(cfg *config.Config) (*Client, error) {

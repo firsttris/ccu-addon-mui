@@ -111,6 +111,8 @@
   "PAIRING": "Geräte anlernen",
   "PAIRING_HINT": "Anlernen starten und dann das neue Gerät in den Anlernmodus versetzen (siehe Anleitung des Geräts).",
   "START_PAIRING": "Anlernen starten (60 s)",
+  "WIRED_SEARCH": "Wired-Geräte suchen",
+  "WIRED_SEARCH_DONE": "Suche abgeschlossen. Gefundene Geräte stehen im Posteingang.",
   "STOP_PAIRING": "Beenden",
   "PAIRING_ACTIVE": "Anlernen aktiv",
   "INBOX": "Neue Geräte (Posteingang)",

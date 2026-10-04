@@ -25,6 +25,7 @@ func main() {
 	bidcosPort := flag.Int("bidcos-port", 12001, "BidCos-RF XML-RPC port")
 	hmipPort := flag.Int("hmip-port", 12010, "HmIP-RF XML-RPC port")
 	virtualPort := flag.Int("virtual-port", 19292, "VirtualDevices XML-RPC port")
+	wiredPort := flag.Int("wired-port", 12000, "BidCos-Wired XML-RPC port")
 	groupsFile := flag.String("groups-file", "", "heating groups of the fake HMServer (groups.gson)")
 	configDir := flag.String("config-dir", "", "fake /etc/config for the security settings")
 	flag.Parse()
@@ -36,14 +37,14 @@ func main() {
 	ccu := fakeccu.New(fixture)
 	ccu.GroupsFile = *groupsFile
 	ccu.ConfigDir = *configDir
-	if err := ccu.Start(*host, *regaPort, *webUIPort, *bidcosPort, *hmipPort, *virtualPort); err != nil {
+	if err := ccu.Start(*host, *regaPort, *webUIPort, *bidcosPort, *hmipPort, *virtualPort, *wiredPort); err != nil {
 		log.Fatal(err)
 	}
 	defer ccu.Close()
 
 	fmt.Printf("Fake CCU running. Start the server with:\n\n")
-	fmt.Printf("  CCU_HOST=%s REGA_PORT=%d RPC_PORT=%d HMIP_PORT=%d VIRTUAL_DEVICES_PORT=%d CCU_WEBUI_URL=http://%s:%d\n\n",
-		*host, ccu.RegaPort, ccu.InterfacePorts["BidCos-RF"], ccu.InterfacePorts["HmIP-RF"], ccu.InterfacePorts["VirtualDevices"], *host, ccu.WebUIPort)
+	fmt.Printf("  CCU_HOST=%s REGA_PORT=%d RPC_PORT=%d HMIP_PORT=%d VIRTUAL_DEVICES_PORT=%d WIRED_PORT=%d CCU_WEBUI_URL=http://%s:%d\n\n",
+		*host, ccu.RegaPort, ccu.InterfacePorts["BidCos-RF"], ccu.InterfacePorts["HmIP-RF"], ccu.InterfacePorts["VirtualDevices"], ccu.InterfacePorts["BidCos-Wired"], *host, ccu.WebUIPort)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)

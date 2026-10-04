@@ -533,6 +533,7 @@ func (f *fakeDeviceRPC) SetInstallModeWithWhitelist(iface string, seconds int, s
 	return nil
 }
 func (f *fakeDeviceRPC) AddDevice(iface, serial string) error                       { return nil }
+func (f *fakeDeviceRPC) SearchDevices(iface string) (int, error)                    { return 0, nil }
 func (f *fakeDeviceRPC) KeyMismatchDevice(iface string, reset bool) (string, error) { return "", nil }
 func (f *fakeDeviceRPC) SetTempKey(iface, key string) error                         { return nil }
 

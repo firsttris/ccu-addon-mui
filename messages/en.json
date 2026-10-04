@@ -111,6 +111,8 @@
   "PAIRING": "Pair devices",
   "PAIRING_HINT": "Start pairing, then put the new device into pairing mode (see its manual).",
   "START_PAIRING": "Start pairing (60 s)",
+  "WIRED_SEARCH": "Search Wired devices",
+  "WIRED_SEARCH_DONE": "Search finished. Devices found are in the inbox.",
   "STOP_PAIRING": "Stop",
   "PAIRING_ACTIVE": "Pairing active",
   "INBOX": "New devices",

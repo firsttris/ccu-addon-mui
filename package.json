@@ -10,7 +10,7 @@
     "dev": "concurrently --kill-others --names server,frontend --prefix-colors blue,green \"npm run start:server\" \"npm run start:fe\"",
     "export:ccu": "cd go-server && if [ -f .env ]; then set -a; . ./.env; set +a; fi && go run ./cmd/ccu-export",
     "start:fakeccu": "cd go-server && go run ./cmd/fakeccu -fixture ../fixtures/demo-ccu.json",
-    "start:server:fake": "cd go-server && CCU_HOST=127.0.0.1 REGA_PORT=18181 RPC_PORT=12001 HMIP_PORT=12010 VIRTUAL_DEVICES_PORT=19292 CCU_WEBUI_URL=http://127.0.0.1:18080 AUTH_KEY_FILE=../.fake-ccu-auth.key go run .",
+    "start:server:fake": "cd go-server && CCU_HOST=127.0.0.1 REGA_PORT=18181 RPC_PORT=12001 HMIP_PORT=12010 VIRTUAL_DEVICES_PORT=19292 WIRED_PORT=12000 CCU_WEBUI_URL=http://127.0.0.1:18080 AUTH_KEY_FILE=../.fake-ccu-auth.key go run .",
     "dev:fake": "concurrently --kill-others --names ccu,server,frontend --prefix-colors yellow,blue,green \"npm run start:fakeccu\" \"npm run start:server:fake\" \"npm run start:fe\"",
     "build": "vite build && tsc",
     "preview": "vite preview",

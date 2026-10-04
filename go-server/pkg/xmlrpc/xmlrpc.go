@@ -167,6 +167,9 @@ func (s *Server) Start(ctx context.Context) error {
 
 	s.startRegistration(ctx, "BidCos-RF", s.cfg.RPCPort)
 	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort)
+	if s.cfg.WiredPort > 0 {
+		s.startRegistration(ctx, "BidCos-Wired", s.cfg.WiredPort)
+	}
 
 	logger.Info("✅ RPC Server started and listening for callbacks from CCU")
 	logger.Info(fmt.Sprintf("   CCU will send events to: %s", s.callbackURL()))

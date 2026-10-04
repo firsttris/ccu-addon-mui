@@ -1,7 +1,7 @@
 # API: WebSocket-Protokoll
 
 App und Server sprechen über eine WebSocket-Verbindung mit JSON-Nachrichten. Dieses Dokument beschreibt
-die Regeln und listet alle 131 Nachrichtentypen. Maßgeblich ist das Schema `protocol/schema.json`; daraus
+die Regeln und listet alle 133 Nachrichtentypen. Maßgeblich ist das Schema `protocol/schema.json`; daraus
 entstehen die Typen der App, und die Go-Tests prüfen jede Nachricht des Servers dagegen.
 
 ## Verbindung
@@ -158,6 +158,8 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | | `replaceDevice` | Gerät ersetzen (nicht für HmIP) | Admin+T (A) |
 | | `addDeviceBySerial` | BidCos-RF-Gerät per Seriennummer anlernen (`KEY_MISMATCH`) | Admin+T (A) |
 | | `setTempKey` | Temporären BidCos-Schlüssel setzen | Admin+T (A, ohne Schlüssel) |
+| | `searchWiredDevices` | RS485-Bus von BidCos-Wired nach neuen Geräten durchsuchen (landen im Posteingang) | Admin+T (A) |
+| | `getInterfaces` | Angebundene Schnittstellen; BidCos-Wired nur mit Wired-Gateway | Admin |
 | Heizungsgruppen | `getHeatingGroups` | Gruppen aus `groups.gson` | Admin |
 | | `getHeatingGroupMembers` | Passende Mitglieder (HMServer) | Admin |
 | | `saveHeatingGroup`, `deleteHeatingGroup` | Gruppe speichern oder löschen (HMServer und ReGa) | Admin+T (A)(PW) |

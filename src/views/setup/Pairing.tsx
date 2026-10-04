@@ -1,7 +1,7 @@
 import { Panel } from "./Panel";
 import { ReactNode, useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useInbox, useInstallMode, usePairingAction } from "../../queries";
+import { useInbox, useInstallMode, useInterfaces, usePairingAction } from "../../queries";
 import { useToast } from "../../contexts/ToastContext";
 import { DialogButton } from "../../components/ConfirmDialog";
 import { m } from "../../paraglide/messages";
@@ -17,7 +17,9 @@ const Row = ({ children }: { children: ReactNode }) => (
   <div className="flex flex-wrap items-center gap-2">{children}</div>
 );
 
-const INTERFACES = ["HmIP-RF", "BidCos-RF"];
+// BidCos-Wired (RS485 bus) only with a Wired gateway; it has no pairing
+// mode, the bus is searched instead (cp_add_device.cgi action_wir_search)
+const INTERFACES = ["HmIP-RF", "BidCos-RF", "BidCos-Wired"];
 const PAIRING_SECONDS = 60;
 
 // The SGTIN and KEY from an HmIP device's label (cp_add_device.cgi:
@@ -158,8 +160,11 @@ export const Pairing = () => {
   const { showToast } = useToast();
   const [interfaceName, setInterfaceName] = useState(INTERFACES[0]);
   const [started, setStarted] = useState(false);
+  const { data: connected = [] } = useInterfaces();
+  const interfaces = INTERFACES.filter((name) => name !== "BidCos-Wired" || connected.includes(name));
+  const wired = interfaceName === "BidCos-Wired";
   const { data: { seconds, keyMismatch } = { seconds: 0 }, dataUpdatedAt } =
-    useInstallMode(interfaceName, { poll: started });
+    useInstallMode(interfaceName, { poll: started, enabled: !wired });
   const active = seconds > 0;
   const { data: inbox = [] } = useInbox({ poll: started && active });
   const action = usePairingAction();
@@ -226,11 +231,20 @@ export const Pairing = () => {
           value={interfaceName}
           onChange={(e) => setInterfaceName(e.target.value)}
         >
-          {INTERFACES.map((name) => (
+          {interfaces.map((name) => (
             <option key={name}>{name}</option>
           ))}
         </NativeSelect>
-        {active ? (
+        {wired ? (
+          <DialogButton
+            type="button"
+            primary
+            disabled={action.isPending}
+            onClick={() => run({ type: "searchWiredDevices" }, m.WIRED_SEARCH_DONE())}
+          >
+            {m.WIRED_SEARCH()}
+          </DialogButton>
+        ) : active ? (
           <>
             <span
               role="status"

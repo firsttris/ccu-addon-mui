@@ -151,7 +151,9 @@ export type ServerMessage =
   | DeleteCertificateResponse
   | SetSessionTimeoutResponse
   | FactoryResetResponse
-  | SetSecurityLevelResponse;
+  | SetSecurityLevelResponse
+  | GetInterfacesResponse
+  | SearchWiredDevicesResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -286,6 +288,8 @@ export interface Protocol {
   setSessionTimeout: SetSessionTimeoutCall;
   factoryReset: FactoryResetCall;
   setSecurityLevel: SetSecurityLevelCall;
+  getInterfaces: GetInterfacesCall;
+  searchWiredDevices: SearchWiredDevicesCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4706,6 +4710,61 @@ export interface SetSecurityLevelRequest {
  */
 export interface SetSecurityLevelResponse {
   type: "setSecurityLevel_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetInterfacesCall".
+ */
+export interface GetInterfacesCall {
+  request: GetInterfacesRequest;
+  response: GetInterfacesResponse;
+}
+/**
+ * The connected interfaces (BidCos-RF, HmIP-RF, VirtualDevices; BidCos-Wired only with a Wired gateway). Administrators
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetInterfacesRequest".
+ */
+export interface GetInterfacesRequest {
+  type: "getInterfaces";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetInterfacesResponse".
+ */
+export interface GetInterfacesResponse {
+  type: "getInterfaces_response";
+  requestId?: string;
+  success: boolean;
+  interfaces: string[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SearchWiredDevicesCall".
+ */
+export interface SearchWiredDevicesCall {
+  request: SearchWiredDevicesRequest;
+  response: SearchWiredDevicesResponse;
+}
+/**
+ * Searches the RS485 bus of BidCos-Wired for new devices (hs485d searchDevices, as cp_add_device.cgi action_wir_search); they land in the inbox. Admin with admin token
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SearchWiredDevicesRequest".
+ */
+export interface SearchWiredDevicesRequest {
+  type: "searchWiredDevices";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SearchWiredDevicesResponse".
+ */
+export interface SearchWiredDevicesResponse {
+  type: "searchWiredDevices_response";
   requestId?: string;
   success: boolean;
 }

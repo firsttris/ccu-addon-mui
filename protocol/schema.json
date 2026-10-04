@@ -391,6 +391,12 @@
     },
     "setSecurityLevel": {
       "$ref": "#/definitions/SetSecurityLevelCall"
+    },
+    "getInterfaces": {
+      "$ref": "#/definitions/GetInterfacesCall"
+    },
+    "searchWiredDevices": {
+      "$ref": "#/definitions/SearchWiredDevicesCall"
     }
   },
   "required": [
@@ -522,7 +528,9 @@
     "deleteCertificate",
     "setSessionTimeout",
     "factoryReset",
-    "setSecurityLevel"
+    "setSecurityLevel",
+    "getInterfaces",
+    "searchWiredDevices"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3215,6 +3223,12 @@
         },
         {
           "$ref": "#/definitions/SetSecurityLevelResponse"
+        },
+        {
+          "$ref": "#/definitions/GetInterfacesResponse"
+        },
+        {
+          "$ref": "#/definitions/SearchWiredDevicesResponse"
         }
       ]
     },
@@ -11020,6 +11034,119 @@
         },
         "response": {
           "$ref": "#/definitions/SetSecurityLevelResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetInterfacesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getInterfaces"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "description": "The connected interfaces (BidCos-RF, HmIP-RF, VirtualDevices; BidCos-Wired only with a Wired gateway). Administrators"
+    },
+    "GetInterfacesResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getInterfaces_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "interfaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "interfaces"
+      ],
+      "additionalProperties": false
+    },
+    "GetInterfacesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetInterfacesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetInterfacesResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SearchWiredDevicesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "searchWiredDevices"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "description": "Searches the RS485 bus of BidCos-Wired for new devices (hs485d searchDevices, as cp_add_device.cgi action_wir_search); they land in the inbox. Admin with admin token"
+    },
+    "SearchWiredDevicesResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "searchWiredDevices_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SearchWiredDevicesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SearchWiredDevicesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SearchWiredDevicesResponse"
         }
       },
       "required": [

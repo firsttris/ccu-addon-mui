@@ -9,10 +9,10 @@ echten Server und eine nachgebaute CCU.
 | Ebene | Was echt ist | Was nachgebaut ist | Tests | in der CI |
 |---|---|---|---:|:---:|
 | **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 190 in 28 Dateien | ✅ |
-| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 208 Testfunktionen in 48 Dateien | ✅ |
+| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 209 Testfunktionen in 48 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests | – | gegen `protocol/schema.json` | ✅ |
 | **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 23 + 2 | ✅ |
-| **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 64 | ✅ |
+| **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 65 | ✅ |
 | **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 60 | lokal |
 
 Zusammen über 470 Tests, dazu 60 Screenshot-Vergleiche.
@@ -35,7 +35,7 @@ Favoriten, ein Gerät im Posteingang) und startet fünf Server:
 - **ReGa**: erkennt jedes Skript des Servers an seiner Vorlage, denn sie macht aus jeder der 55 Vorlagen
   einen regulären Ausdruck, liest die eingesetzten Werte heraus und antwortet wie `rega.exe`. Einen
   HM-Script-Interpreter braucht es dafür nicht.
-- **XML-RPC** für BidCos-RF, HmIP-RF und VirtualDevices: Gerätebeschreibungen, Paramsets, Anlernen,
+- **XML-RPC** für BidCos-RF, HmIP-RF, VirtualDevices und BidCos-Wired: Gerätebeschreibungen, Paramsets, Anlernen,
   Verknüpfungen, Firmware, Gerätetausch … Änderungen schickt sie wie die echte CCU als Events an die
   angemeldeten Callbacks. Nach einem `putParamset` steht `CONFIG_PENDING` drei Sekunden auf `true`.
 - **WebUI**: `Session.login`, die Admin-Aufrufe per JSON-RPC, die CGI-Seiten für Backup, Restore, Firmware,
@@ -73,7 +73,7 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
 
 - **Pakete**: ReGa (Skripte, Parser, Validierung, Programm-Code), XML-RPC-Client und -Server, Anmeldung und
   Tokens, Einstellungen, Diagramme, Push, Audit, Add-ons, Logs …
-- **Integration** (`go-server/integration_test.go`, 57 Tests): startet die Fake-CCU auf freien Ports und den
+- **Integration** (`go-server/integration_test.go`, 58 Tests): startet die Fake-CCU auf freien Ports und den
   **echten** Server mit temporären Dateien, wartet auf die Anmeldung für Events und spricht dann über einen
   WebSocket-Client mit ihm: anmelden, schalten, Events, Rechte, Admin-Token, Paramsets, Anlernen,
   Verknüpfungen, Programme, Backup …
@@ -105,11 +105,11 @@ temporären Verzeichnis) und Vite. Jeder Test setzt die Fake-CCU zurück, meldet
 und bedient die App wie ein Mensch. Die Kette ist echt: Browser → Vite-Proxy → Go-Server → Fake-CCU und die
 Events zurück.
 
-Die 64 Tests decken praktisch jede Funktion von *Einrichten* ab, zum Beispiel:
+Die 65 Tests decken praktisch jede Funktion von *Einrichten* ab, zum Beispiel:
 
 - Licht schalten und Live-Events von einem anderen „Gerät“, Geräteprobleme, Dimmer
 - Geräteeinstellungen mit Vorschau und Übertragungsstatus, Gastrechte, abgelaufenes Admin-Token
-- Umbenennen, Räume und Gewerke, Anlernen, Posteingang, Löschen, Anlernen mit KEY/SGTIN
+- Umbenennen, Räume und Gewerke, Anlernen, Posteingang, Löschen, Anlernen mit KEY/SGTIN, Wired-Gerätesuche
 - Systemvariablen, Programm-Editor, Skript testen, *Als neues Programm speichern*
 - Direktverknüpfungen mit Vorlage und mit allen Parametern
 - Wochenprogramme für Thermostat und Schaltaktor, Heizgruppen

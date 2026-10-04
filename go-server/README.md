@@ -8,7 +8,7 @@ Die ausführliche Doku steht in [`docs/`](../docs/README.md):
 | | |
 |---|---|
 | [Architektur](../docs/architektur.md) | Aufbau, Pakete, Schnittstellen der CCU, Abläufe, Entscheidungen |
-| [WebSocket-Protokoll](../docs/protokoll.md) | Nachrichtenhülle, Anmeldung, Events, alle 131 Nachrichtentypen, Fehlercodes |
+| [WebSocket-Protokoll](../docs/protokoll.md) | Nachrichtenhülle, Anmeldung, Events, alle 133 Nachrichtentypen, Fehlercodes |
 | [Sicherheit](../docs/sicherheit.md) | Tokens, Rechte, Audit-Log |
 | [Tests](../docs/tests.md) | Fake-CCU, Integrationstests, Protokoll-Vertrag |
 | [Entwicklung](../docs/entwicklung.md) | Umgebungen, neue Nachricht, Umgebungsvariablen |

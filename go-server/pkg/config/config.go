@@ -18,13 +18,15 @@ type Config struct {
 	// VirtualDevicesPort is the interface of heating groups and other
 	// virtual devices
 	VirtualDevicesPort int
-	RPCServerPort      int
-	CCUHost            string
-	CCUUser            string
-	CCUPass            string
-	Debug              bool
-	CallbackHost       string
-	RegaPort           int
+	// WiredPort is hs485d (BidCos-Wired); 0 when no Wired gateway is set up
+	WiredPort     int
+	RPCServerPort int
+	CCUHost       string
+	CCUUser       string
+	CCUPass       string
+	Debug         bool
+	CallbackHost  string
+	RegaPort      int
 	// SysvarInterval: how often the system variables are read while an app
 	// shows them (they send no events)
 	SysvarInterval time.Duration
@@ -78,13 +80,16 @@ func Load() *Config {
 	// 2010, 9292, 8181), which may require authentication. On the CCU the
 	// add-on talks to the services directly on their own ports, as ReGa
 	// does (InterfacesList.xml, webui_remoteapi.conf).
-	regaPort, rpcPort, hmipPort, virtualDevicesPort := 8181, 2001, 2010, 9292
+	regaPort, rpcPort, hmipPort, virtualDevicesPort, wiredPort := 8181, 2001, 2010, 9292, 0
 	if ccuHost == "localhost" {
 		regaPort = 8183
 		ports := localInterfacePorts(interfacesListFile)
 		rpcPort = portOr(ports["BidCos-RF"], 32001)
 		hmipPort = portOr(ports["HmIP-RF"], 32010)
 		virtualDevicesPort = portOr(ports["VirtualDevices"], 39292)
+		// hs485dLoader lists BidCos-Wired only while a Wired gateway is set
+		// up (hs485dLoader.cpp updateInterfacesXML)
+		wiredPort = ports["BidCos-Wired"]
 	}
 
 	return &Config{
@@ -95,6 +100,7 @@ func Load() *Config {
 		RPCPort:            getEnvInt("RPC_PORT", rpcPort),
 		HmIPPort:           getEnvInt("HMIP_PORT", hmipPort),
 		VirtualDevicesPort: getEnvInt("VIRTUAL_DEVICES_PORT", virtualDevicesPort),
+		WiredPort:          getEnvInt("WIRED_PORT", wiredPort),
 		RPCServerPort:      getEnvInt("RPC_SERVER_PORT", 9099),
 		CCUHost:            ccuHost,
 		CCUUser:            getEnv("CCU_USER", ""),

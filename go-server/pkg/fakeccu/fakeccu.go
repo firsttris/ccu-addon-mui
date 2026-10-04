@@ -26,7 +26,7 @@ import (
 )
 
 // Interface names and the order their ports are assigned in
-var interfaceNames = []string{"BidCos-RF", "HmIP-RF", "VirtualDevices"}
+var interfaceNames = []string{"BidCos-RF", "HmIP-RF", "VirtualDevices", "BidCos-Wired"}
 
 type CCU struct {
 	mu sync.Mutex
@@ -1985,6 +1985,14 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		}
 		c.metadata[iface][stringParam(params, 0)+"/"+stringParam(params, 1)] = paramAt(params, 2)
 		return "", ""
+	case "searchDevices":
+		// hs485d looks for new devices on the RS485 bus; they land in the
+		// inbox (cp_add_device.cgi action_wir_search)
+		if iface != "BidCos-Wired" {
+			return nil, "Unknown method"
+		}
+		c.addInboxDevice(iface, fmt.Sprintf("LEQ%07d", 9100000+len(c.fixture.Inbox)), "HMW-LC-Sw2-DR")
+		return 1, ""
 	case "getDeviceDescription":
 		for _, d := range data.Devices {
 			if d["ADDRESS"] == stringParam(params, 0) {

@@ -9,9 +9,9 @@ in den Tabellen unten.
 
 | | |
 |---|---|
-| Funktionen der WebUI | **56 von 66 vorhanden (85 %)** |
-| Fehlen | 10, davon die meisten Einzeloptionen; der größte Brocken ist BidCos-Wired |
-| Gerätetypen | alle 465 an HmIP, HmIP Wired und BidCos-RF bedienbar, 91 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
+| Funktionen der WebUI | **58 von 66 vorhanden (88 %)** |
+| Fehlen | 8, meist Einzeloptionen; der größte Brocken sind die Kopplungen (Hue, Lightify) |
+| Gerätetypen | alle 476 an HmIP, HmIP Wired, BidCos-RF und BidCos-Wired bedienbar, 91 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
 
 Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · ❌ fehlt
 
@@ -57,7 +57,7 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 | Geräte-Firmware | ✅ | Übersicht, Update starten (HmIP) |
 | Wochenprogramme und Heizprofile | ➕ | Zeitleiste mit Kopieren, statt Tabelle mit Uhrzeitfeldern |
 | Gruppen (Heizgruppen) | ✅ | anlegen, ändern, löschen |
-| Wired-Gerätesuche (BidCos-Wired) | ❌ | BidCos-Wired ist nicht angebunden |
+| Wired-Gerätesuche (BidCos-Wired) | ✅ | wie in der WebUI, gefundene Geräte landen im Posteingang |
 
 ## Benutzer
 
@@ -109,7 +109,7 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 | HomeMatic IP Wired | ✅ | über den DRAP, wie in der WebUI |
 | BidCos-RF | ✅ | inkl. LAN-Gateways |
 | Virtuelle Geräte und Gruppen | ✅ | Heizgruppen |
-| BidCos-Wired (RS485) | ❌ | Kanäle schaltbar über ReGa, aber ohne Events, Einstellungen und Verknüpfungen |
+| BidCos-Wired (RS485) | ✅ | angebunden, sobald ein Wired-Gateway eingerichtet ist; noch nicht an echter Wired-Hardware getestet |
 
 ## Rechnung
 
@@ -117,11 +117,11 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 |---|---:|---:|
 | Status und Bedienung | 10 | 10 |
 | Programme und Verknüpfungen | 6 | 6 |
-| Geräte | 12 | 13 |
+| Geräte | 13 | 13 |
 | Benutzer | 4 | 7 |
 | Systemsteuerung | 20 | 25 |
-| Schnittstellen | 4 | 5 |
-| **Summe** | **56** | **66** |
+| Schnittstellen | 5 | 5 |
+| **Summe** | **58** | **66** |
 
 Nicht mitgezählt sind die Display-Einstellungen (gibt es nur auf CCU1/CCU2) und das versteckte
 Entwicklerwerkzeug *devconfig*.
