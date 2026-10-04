@@ -65,6 +65,8 @@ type Program struct {
 	Visible bool   `json:"visible"`
 	// ReadOnly: users other than administrators may not run it
 	ReadOnly bool `json:"readOnly,omitempty"`
+	// Internal: a system-internal program
+	Internal bool `json:"internal,omitempty"`
 	// Runs counts how often the program was run (not part of ReGa)
 	Runs        int    `json:"runs,omitempty"`
 	Description string `json:"description,omitempty"`

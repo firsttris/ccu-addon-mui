@@ -6637,6 +6637,13 @@
       "name": "Urlaub",
       "active": false,
       "visible": true
+    },
+    {
+      "id": 1203,
+      "name": "Systemintern: Tastensperre",
+      "active": true,
+      "visible": true,
+      "internal": true
     }
   ],
   "favorites": [
