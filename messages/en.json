@@ -1452,5 +1452,7 @@
   "LINK_BEHAVIOUR": "Behaviour",
   "LINKS_CONTROLS": "This device controls",
   "LINKS_CONTROLLED_BY": "Controlled by",
-  "LINKS_ALL_ROOMS": "All rooms"
+  "LINKS_ALL_ROOMS": "All rooms",
+  "SYS_CLOCK_DATE_TIME": "Date and time",
+  "SYS_CLOCK_SET_MANUAL": "Set clock"
 }

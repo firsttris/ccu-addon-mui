@@ -346,26 +346,18 @@ const SingleControl = ({
     case "timeOfDay": {
       const step = timeOfDayStep(name, parameter)!;
       const max = parameter.max as number;
-      // DST times in quarter hours, decalcification in half hours
+      // DST times in quarter hours, decalcification in half hours (the
+      // value then counts half hours)
       const minuteStep = step === 30 ? 30 : max === 1425 ? 15 : 1;
-      const count = step === 30 ? max + 1 : Math.floor(max / minuteStep) + 1;
+      const factor = step === 30 ? 30 : 1;
       return (
-        <NativeSelect
-          className="h-9 w-28 tabular-nums"
-          aria-label={label}
-          value={num ?? ""}
-          onChange={(event) => onSet(name, Number(event.target.value))}
-        >
-          {Array.from({ length: count }, (_, i) => {
-            const raw = step === 30 ? i : i * minuteStep;
-            const minutes = step === 30 ? i * 30 : raw;
-            return (
-              <option key={raw} value={raw}>
-                {formatTimeOfDay(minutes)}
-              </option>
-            );
-          })}
-        </NativeSelect>
+        <TimeOfDayInput
+          label={label}
+          minutes={num === undefined ? undefined : num * factor}
+          step={minuteStep}
+          max={max * factor}
+          onChange={(minutes) => onSet(name, minutes / factor)}
+        />
       );
     }
     case "month":
@@ -722,5 +714,63 @@ export const SettingsView = ({
         );
       })}
     </div>
+  );
+};
+
+// A time of day with the system's time picker. The device knows only full
+// steps (15 or 30 minutes), so a typed time is rounded when leaving the field.
+const TimeOfDayInput = ({
+  label,
+  minutes,
+  step,
+  max,
+  onChange,
+}: {
+  label: string;
+  minutes?: number;
+  step: number;
+  max: number;
+  onChange: (minutes: number) => void;
+}) => {
+  const current = minutes === undefined ? "" : formatTimeOfDay(minutes);
+  const [draft, setDraft] = useState(current);
+  useEffect(() => setDraft(current), [current]);
+  const parse = (text: string) => {
+    const match = /^(\d{1,2}):(\d{2})/.exec(text);
+    if (!match) return undefined;
+    const total = Number(match[1]) * 60 + Number(match[2]);
+    return Math.min(Math.round(total / step) * step, max);
+  };
+  const commit = (text: string) => {
+    const next = parse(text);
+    if (next === undefined) {
+      setDraft(current);
+    } else if (next !== minutes) {
+      onChange(next);
+    } else {
+      setDraft(current);
+    }
+  };
+  return (
+    <Input
+      type="time"
+      step={step * 60}
+      className="h-9 w-32 tabular-nums"
+      aria-label={label}
+      value={draft}
+      onChange={(event) => {
+        setDraft(event.target.value);
+        // Picked in the system picker: a full step, take it at once
+        const next = parse(event.target.value);
+        if (
+          next !== undefined &&
+          formatTimeOfDay(next) === event.target.value &&
+          next !== minutes
+        ) {
+          onChange(next);
+        }
+      }}
+      onBlur={(event) => commit(event.target.value)}
+    />
   );
 };
