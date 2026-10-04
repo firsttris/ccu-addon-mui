@@ -33,9 +33,22 @@ Geräteliste, Posteingang und Geräteseite zeigen die Zeichnungen der Geräte au
 im dunklen Modus hell gezeichnet). Zeigst du auf der Geräteseite auf einen Kanal, markiert das Bild,
 wo er am Gerät sitzt, z. B. welche Taste eines Wandtasters. Geräte ohne Zeichnung bekommen ein Symbol.
 
-Ein Klick auf ein Gerät öffnet seine Seite:
+Ein Klick auf ein Gerät öffnet seine Seite. Sie hat die Reiter *Kanäle*, *Direktverknüpfungen*,
+*Programme*, *Verlauf* und *Wartung*.
 
 <img src="screenshot-geraet.png" alt="Geräteseite eines Wandthermostats" width="900">
+
+**Kanäle** zeigt eine Karte für das Gerät und je eine für jeden Kanal. Alles, was zu einem Kanal gehört,
+steht in seiner Karte: Name, Typ und Adresse, Räume und Gewerke als Chips (mit × entfernen, mit
+*+ Raum* / *+ Gewerk* hinzufügen), bei Schaltaktoren die Kachel, die Optionen der CCU *sichtbar*,
+*bedienbar (nicht nur Admins)*, *protokolliert* und *gesichert (AES)* und darunter seine Einstellungen. Die
+Karte *Gerät* enthält den Gerätenamen und die geräteweiten Einstellungen. Selten gebrauchte Kanäle (der 2.
+und 3. virtuelle Kanal eines HmIP-Aktors, Kanäle ohne Zustand und Einstellungen) stehen eingeklappt unter
+*Weitere Kanäle*. Auf breiten Bildschirmen bleibt links das Gerätebild stehen, darunter eine Liste zum
+Springen zu den Kanälen.
+
+Name, Räume, Gewerke, Kachel und Optionen werden sofort gespeichert. Einstellungen (die mit *nach dem
+Übertragen* markiert sind) sammelt die Leiste unten, bis du sie überträgst:
 
 - **Einstellungen** von Gerät und Kanälen (die MASTER-Parameter), in Gruppen mit verständlichen Namen:
   *Bedienung & Anzeige*, *Heizen*, *Schalten & Fahren*, *Funk & System*, *Weitere Einstellungen*.
@@ -58,16 +71,19 @@ Ein Klick auf ein Gerät öffnet seine Seite:
   (batteriebetriebene Geräte holen Einstellungen erst beim nächsten Aufwachen, die CCU meldet dann
   `CONFIG_PENDING`), *übertragen*.
 - **Wochenprogramm bearbeiten** bei Thermostaten und HmIP-Aktoren (siehe [Bedienung](bedienung.md#heizen)).
-- **Namen, Räume und Gewerke**: Gerät und Kanäle umbenennen, Kanäle Räumen und Gewerken zuordnen, die
-  Optionen der CCU *sichtbar*, *bedienbar (nicht nur Admins)*, *protokolliert* und *gesichert (AES)*.
-- **Firmware**: installierte und verfügbare Version, Update starten wie in der WebUI: HmIP, sobald die Firmware auf dem Gerät liegt (auch bei „wartet auf das Gerät“), BidCos in einem Schritt, Access Points (HAP, DRAP) als Live-Update. Hat eQ-3 neuere Firmware, die noch nicht auf der CCU liegt, lädt ein Klick sie dorthin. Bei zu hohem Duty Cycle sperrt der Server das Update; ist das Gerät nicht erreichbar, sagt die App, dass es mit der Systemtaste geweckt werden muss.
-- **Funktionstest**: prüft, ob das Gerät antwortet, wie in der WebUI.
-- **Verlauf**: die protokollierten Werte als kleine Diagramme.
-- **Programme** und **Systemvariablen**, die das Gerät verwenden.
+
+Die anderen Reiter:
+
 - **Direktverknüpfungen** des Geräts.
-- **Gerät löschen** (mit oder ohne Zurücksetzen auf Werkseinstellungen) und **Gerät ersetzen** (BidCos):
-  Ein neues Gerät übernimmt Verknüpfungen, Programme und Einstellungen eines alten.
-- *In alter WebUI öffnen* führt zur Seite des Geräts in der WebUI, falls doch einmal etwas fehlt.
+- **Programme** und **Systemvariablen**, die das Gerät verwenden.
+- **Verlauf**: die protokollierten Werte als kleine Diagramme.
+- **Wartung**:
+  - **Firmware**: installierte und verfügbare Version, Update starten wie in der WebUI: HmIP, sobald die Firmware auf dem Gerät liegt (auch bei „wartet auf das Gerät“), BidCos in einem Schritt, Access Points (HAP, DRAP) als Live-Update. Hat eQ-3 neuere Firmware, die noch nicht auf der CCU liegt, lädt ein Klick sie dorthin. Bei zu hohem Duty Cycle sperrt der Server das Update; ist das Gerät nicht erreichbar, sagt die App, dass es mit der Systemtaste geweckt werden muss.
+  - **Funktionstest**: prüft, ob das Gerät antwortet, wie in der WebUI.
+
+Im Kopf der Seite stehen **Gerät löschen** (mit oder ohne Zurücksetzen auf Werkseinstellungen) und *In alter
+WebUI öffnen*, das zur Seite des Geräts in der WebUI führt, falls doch einmal etwas fehlt. **Gerät
+ersetzen** (BidCos): Ein neues Gerät übernimmt Verknüpfungen, Programme und Einstellungen eines alten.
 
 ## Geräte anlernen
 

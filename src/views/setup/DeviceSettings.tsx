@@ -5,7 +5,12 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearch,
+} from "@tanstack/react-router";
 import { DeviceImage } from "../../components/DeviceImage";
 import { useQueries } from "@tanstack/react-query";
 import {
@@ -37,7 +42,13 @@ import { usePageTitle } from "../../contexts/PageTitleContext";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { useChannelNames } from "./channelNames";
-import { NamesAndRooms } from "./NamesAndRooms";
+import { ChannelMeta, NameField, useRename } from "./ChannelMeta";
+import { useChannels } from "../../queries";
+import { isHiddenChannel } from "../../hooks/channels";
+import { humanize } from "../../controls/generic/parameters";
+import { cn } from "../../lib/utils";
+import InfoIcon from "~icons/lucide/info";
+import ChevronRightIcon from "~icons/lucide/chevron-right";
 import { GroupedSettings } from "./GroupedSettings";
 import { WeekProfileSheet } from "../../controls/ThermostatControl/profile/WeekProfileSheet";
 import {
@@ -53,6 +64,15 @@ import { DeviceSysvars, useDeviceSysvars } from "./DeviceSysvars";
 import { Firmware } from "./Firmware";
 import { PanelSkeleton } from "../../components/ui/skeleton";
 import { m } from "../../paraglide/messages";
+
+export const DEVICE_TABS = [
+  "channels",
+  "links",
+  "programs",
+  "history",
+  "maintenance",
+] as const;
+export type DeviceTab = (typeof DEVICE_TABS)[number];
 
 const Section = (props: HTMLAttributes<HTMLElement>) => <Panel {...props} />;
 
@@ -74,6 +94,7 @@ export const DeviceSettings = () => {
   const { interfaceName, address } = useParams({
     from: "/device/$interfaceName/$address",
   });
+  const search = useSearch({ from: "/device/$interfaceName/$address" });
   const t = useTranslations();
   const { showToast } = useToast();
   const { request } = useWebSocketActions();
@@ -277,6 +298,160 @@ export const DeviceSettings = () => {
   const title = names.get(address) ?? address;
   usePageTitle(title);
 
+  const typeLabel = (type: string) => {
+    const label = t(type as TranslationKey);
+    return label === type ? humanize(type) : label;
+  };
+  const rename = useRename();
+  const { data: allChannels } = useChannels({ all: true });
+  const regaOf = new Map(
+    (allChannels ?? [])
+      .filter((c) => c.address.startsWith(`${address}:`))
+      .map((c) => [c.address, c]),
+  );
+  const sectionOf = new Map(sections.map((s) => [s.address, s]));
+  // One card per channel; channel 0 (maintenance) belongs to the device card
+  const cards = [
+    ...new Map(
+      [
+        ...[...regaOf.values()].map((c) => ({
+          address: c.address,
+          type: c.type,
+          index: Number(c.address.split(":")[1]),
+        })),
+        // The interface's description wins: it knows every channel
+        ...(device?.channels ?? []),
+      ].map((c) => [c.address, c]),
+    ).values(),
+  ]
+    .filter((c) => c.index > 0)
+    .sort((a, b) => a.index - b.index)
+    .map((channel, i, all) => {
+      const rega = regaOf.get(channel.address);
+      const section = sectionOf.get(channel.address);
+      // The 2nd and 3rd virtual channel of an HmIP actuator are rarely
+      // needed, as are channels without state and settings
+      const secondary =
+        channel.type.endsWith("_VIRTUAL_RECEIVER") &&
+        all[i - 1]?.type === channel.type;
+      return {
+        channel,
+        rega,
+        section,
+        label: names.get(channel.address) ?? rega?.name ?? channel.address,
+        folded: secondary || (!section && (!rega || isHiddenChannel(rega))),
+      };
+    });
+  const deviceSections = [address, `${address}:0`]
+    .map((a) => sectionOf.get(a))
+    .filter((s) => s !== undefined);
+
+  const hasLinks = (device?.channels ?? []).some(
+    (c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length,
+  );
+  const tabs = [
+    { id: "channels" as const, label: m.DEVICE_TAB_CHANNELS(), shown: true },
+    { id: "links" as const, label: m.LINKS(), shown: canEdit && hasLinks },
+    { id: "programs" as const, label: m.PROGRAMS(), shown: true },
+    { id: "history" as const, label: m.DEVHIST(), shown: !!device },
+    {
+      id: "maintenance" as const,
+      label: m.DEVICE_TAB_MAINTENANCE(),
+      shown: !!device,
+    },
+  ].filter((tab) => tab.shown);
+  const tab = tabs.some((t) => t.id === search.tab)
+    ? (search.tab as DeviceTab)
+    : "channels";
+  const openTab = (id: DeviceTab) =>
+    navigate({
+      to: "/device/$interfaceName/$address",
+      params: { interfaceName, address },
+      search: id === "channels" ? {} : { tab: id },
+      replace: true,
+    });
+
+  // The settings of one address: collected and transferred together
+  const settings = (
+    s: { address: string; description: ParamsetDescription; current: Values },
+    label: string,
+  ) => {
+    const draft = drafts[s.address] ?? {};
+    return (
+      <div className="flex flex-col gap-3 border-t pt-4">
+        <h3 className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+          {m.DEVICE_SETTINGS_HEADING()}
+          {canEdit && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/10 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:text-sky-300">
+              <SendIcon className="size-3" />
+              {m.DEVICE_SETTINGS_TRANSFER()}
+            </span>
+          )}
+        </h3>
+        <GroupedSettings
+          label={`${label} ${s.address}`}
+          description={s.description}
+          values={{ ...s.current, ...draft }}
+          changed={new Set(Object.keys(draft))}
+          readOnly={!canEdit}
+          onSet={(name, value) => setDraft(s.address, s.current, name, value)}
+          onEditWeekProfile={() => setScheduleAddress(s.address)}
+        />
+      </div>
+    );
+  };
+  const point = (channelAddress?: string) => ({
+    onPointerEnter: () => setActiveChannel(channelAddress?.split(":")[1]),
+    onPointerLeave: () => setActiveChannel(undefined),
+    onFocus: () => setActiveChannel(channelAddress?.split(":")[1]),
+  });
+  const card = (c: (typeof cards)[number]) => (
+    <Section
+      key={c.channel.address}
+      id={`channel-${c.channel.index}`}
+      aria-label={c.label}
+      className="scroll-mt-24"
+      {...point(c.channel.address)}
+    >
+      <header className="flex items-start gap-3">
+        <span className="mt-1.5 grid size-6 shrink-0 place-items-center rounded-full bg-muted font-mono text-xs text-muted-foreground">
+          {c.channel.index}
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          {canEdit && c.rega ? (
+            <NameField
+              label={`${m.NAME()} ${c.channel.address}`}
+              name={c.rega.name}
+              onRename={(name) => rename(c.channel.address, name)}
+            />
+          ) : (
+            <h2 className="truncate">{c.label}</h2>
+          )}
+          <span className="text-xs text-muted-foreground">
+            {typeLabel(c.channel.type)} ·{" "}
+            <span className="font-mono">{c.channel.address}</span>
+          </span>
+        </div>
+      </header>
+      {c.rega && <ChannelMeta channel={c.rega} canEdit={canEdit} />}
+      {c.section && settings(c.section, c.label)}
+    </Section>
+  );
+  const shownCards = cards.filter((c) => !c.folded);
+  const foldedCards = cards.filter((c) => c.folded);
+  const jumpTargets = [
+    { id: "device-card", index: "", label: m.DEVICE_SETTINGS() },
+    ...shownCards.map((c) => ({
+      id: `channel-${c.channel.index}`,
+      index: String(c.channel.index),
+      label: c.label,
+    })),
+  ];
+  const jump = (id: string) =>
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+
   return (
     <>
       <div className="flex flex-col gap-3">
@@ -291,9 +466,9 @@ export const DeviceSettings = () => {
           <div className="flex min-w-0 items-center gap-4">
             <DeviceImage
               type={device?.type}
-              size={120}
+              size={96}
               channel={activeChannel}
-              className="max-sm:hidden"
+              className={cn("max-sm:hidden", tab === "channels" && "xl:hidden")}
             />
             <div className="flex min-w-0 flex-col gap-2">
               <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
@@ -323,171 +498,234 @@ export const DeviceSettings = () => {
             </Button>
           )}
         </div>
+        <div
+          role="tablist"
+          aria-label={m.DEVICE_TABS()}
+          className="flex gap-1 overflow-x-auto border-b"
+        >
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => openTab(t.id)}
+              className={cn(
+                "-mb-px h-10 shrink-0 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors",
+                tab === t.id
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
       {configPending && transfer === "none" && (
         <Notice role="status">{m.CONFIG_PENDING()}</Notice>
       )}
 
-      <div className="grid items-start gap-5 xl:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-5">
-          {sections.map((s) => {
-            const draft = drafts[s.address] ?? {};
-            // Device-wide settings: on the device (BidCos) or its channel 0 (HmIP)
-            const label =
-              s.address === address ||
-              (s.address === `${address}:0` &&
-                [undefined, s.address].includes(names.get(s.address)))
-                ? m.DEVICE_SETTINGS()
-                : (names.get(s.address) ?? s.address);
-            return (
-              <Section
-                key={s.address}
-                aria-label={label}
-                onPointerEnter={() => setActiveChannel(s.address.split(":")[1])}
-                onPointerLeave={() => setActiveChannel(undefined)}
-                onFocus={() => setActiveChannel(s.address.split(":")[1])}
-              >
-                <h2 className="flex items-baseline justify-between gap-2">
-                  <span className="truncate">{label}</span>
-                  {label !== s.address && (
-                    <span className="shrink-0 font-mono text-xs font-normal text-muted-foreground">
-                      {s.address}
-                    </span>
-                  )}
-                </h2>
-                <GroupedSettings
-                  label={`${label} ${s.address}`}
-                  description={s.description}
-                  values={{ ...s.current, ...draft }}
-                  changed={new Set(Object.keys(draft))}
-                  readOnly={!canEdit}
-                  onSet={(name, value) =>
-                    setDraft(s.address, s.current, name, value)
-                  }
-                  onEditWeekProfile={() => setScheduleAddress(s.address)}
-                />
-              </Section>
-            );
-          })}
-          {loading && (
-            <PanelSkeleton
-              lines={6}
-              className="rounded-xl border bg-card p-5"
+      {tab === "channels" && (
+        <div
+          role="tabpanel"
+          aria-label={m.DEVICE_TAB_CHANNELS()}
+          className="grid items-start gap-5 xl:grid-cols-[200px_minmax(0,1fr)]"
+        >
+          <aside className="flex flex-col gap-4 max-xl:hidden xl:sticky xl:top-[81px]">
+            <DeviceImage
+              type={device?.type}
+              size={200}
+              channel={activeChannel}
             />
-          )}
-          {!loading && sections.length === 0 && (
-            <p className="text-sm text-muted-foreground">{m.NO_SETTINGS()}</p>
-          )}
-        </div>
-        <div className="flex min-w-0 flex-col gap-5">
-          {device && (
-            <Section aria-label={m.FIRMWARE()}>
-              <h2>{m.FIRMWARE()}</h2>
-              <Firmware device={device} canEdit={canEdit} />
+            {jumpTargets.length > 2 && (
+              <nav aria-label={m.DEVICE_JUMP()}>
+                <ul className="flex flex-col gap-0.5">
+                  {jumpTargets.map((target) => (
+                    <li key={target.id}>
+                      <button
+                        type="button"
+                        onClick={() => jump(target.id)}
+                        onPointerEnter={() =>
+                          setActiveChannel(target.index || undefined)
+                        }
+                        onPointerLeave={() => setActiveChannel(undefined)}
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground",
+                          target.index !== "" &&
+                            activeChannel === target.index &&
+                            "bg-accent text-foreground",
+                        )}
+                      >
+                        <span className="w-4 shrink-0 text-right font-mono text-[11px]">
+                          {target.index}
+                        </span>
+                        <span className="truncate">{target.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            )}
+          </aside>
+          <div className="flex min-w-0 flex-col gap-5">
+            {canEdit && (
+              <p className="flex items-start gap-2 text-xs text-muted-foreground">
+                <InfoIcon className="mt-px size-3.5 shrink-0" />
+                {m.DEVICE_SAVE_HINT()}
+              </p>
+            )}
+            <Section
+              id="device-card"
+              aria-label={m.DEVICE_SETTINGS()}
+              className="scroll-mt-24"
+              {...point(undefined)}
+            >
+              <h2>{m.DEVICE_SETTINGS()}</h2>
+              {canEdit && (
+                <NameField
+                  label={`${m.NAME()} ${address}`}
+                  name={title}
+                  onRename={(name) => rename(address, name)}
+                />
+              )}
+              {deviceSections.map((s) => (
+                <div key={s.address}>{settings(s, m.DEVICE_SETTINGS())}</div>
+              ))}
             </Section>
-          )}
-          {canEdit && (
-            <Section aria-label={m.NAMES_AND_ROOMS()}>
-              <h2>{m.NAMES_AND_ROOMS()}</h2>
-              <NamesAndRooms
-                deviceAddress={address}
-                deviceName={title}
-                onPointChannel={(a) => setActiveChannel(a?.split(":")[1])}
+            {shownCards.map(card)}
+            {loading && (
+              <PanelSkeleton
+                lines={6}
+                className="rounded-xl border bg-card p-5"
               />
-            </Section>
-          )}
-          {userLevel === "admin" && device && (
+            )}
+            {foldedCards.length > 0 && (
+              <details className="group rounded-xl border">
+                <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                  <ChevronRightIcon className="size-4 text-muted-foreground transition-transform group-open:rotate-90" />
+                  {m.DEVICE_MORE_CHANNELS({ count: foldedCards.length })}
+                </summary>
+                <div className="flex flex-col gap-5 border-t p-4">
+                  {foldedCards.map(card)}
+                </div>
+              </details>
+            )}
+          </div>
+        </div>
+      )}
+      {tab === "links" && device && (
+        <div role="tabpanel" aria-label={m.LINKS()}>
+          <Section aria-label={m.LINKS()}>
+            <h2>{m.LINKS()}</h2>
+            <Links
+              interfaceName={interfaceName}
+              deviceAddress={address}
+              channels={device.channels ?? []}
+            />
+          </Section>
+        </div>
+      )}
+      {tab === "programs" && (
+        <div
+          role="tabpanel"
+          aria-label={m.PROGRAMS()}
+          className="grid items-start gap-5 xl:grid-cols-2"
+        >
+          <Section aria-label={m.PROGRAMS()}>
+            <h2>{m.PROGRAMS()}</h2>
+            <DevicePrograms address={address} />
+          </Section>
+          {device && <DeviceSysvarsSection address={address} />}
+        </div>
+      )}
+      {tab === "history" && (
+        <div role="tabpanel" aria-label={m.DEVHIST()}>
+          <Section aria-label={m.DEVHIST()}>
+            <h2>{m.DEVHIST()}</h2>
+            <DeviceHistory address={address} />
+          </Section>
+        </div>
+      )}
+      {tab === "maintenance" && device && (
+        <div
+          role="tabpanel"
+          aria-label={m.DEVICE_TAB_MAINTENANCE()}
+          className="grid items-start gap-5 xl:grid-cols-2"
+        >
+          <Section aria-label={m.FIRMWARE()}>
+            <h2>{m.FIRMWARE()}</h2>
+            <Firmware device={device} canEdit={canEdit} />
+          </Section>
+          {userLevel === "admin" && (
             <Section aria-label={m.COMTEST()}>
               <h2>{m.COMTEST()}</h2>
               <ComTest address={address} />
             </Section>
           )}
-          {device && <DeviceSysvarsSection address={address} />}
-          {device && (
-            <Section aria-label={m.DEVHIST()}>
-              <h2>{m.DEVHIST()}</h2>
-              <DeviceHistory address={address} />
-            </Section>
-          )}
-          <Section aria-label={m.PROGRAMS()}>
-            <h2>{m.PROGRAMS()}</h2>
-            <DevicePrograms address={address} />
-          </Section>
-          {canEdit &&
-            device &&
-            (device.channels ?? []).some(
-              (c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length,
-            ) && (
-              <Section aria-label={m.LINKS()}>
-                <h2>{m.LINKS()}</h2>
-                <Links
-                  interfaceName={interfaceName}
-                  deviceAddress={address}
-                  channels={device.channels ?? []}
-                />
-              </Section>
-            )}
-        </div>
-      </div>
-
-      {canEdit && sections.length > 0 && (
-        <div
-          role="region"
-          aria-label={m.SETTINGS_SAVE_BAR()}
-          className={`sticky bottom-4 z-10 flex flex-wrap items-center justify-end gap-2 rounded-xl border p-3 shadow-lg backdrop-blur-md transition-colors ${changes.length > 0 ? "border-blue-500/40 bg-blue-50/90 dark:bg-blue-950/60" : "bg-background/85"}`}
-        >
-          <span
-            role="status"
-            className="mr-auto flex items-center gap-2 text-sm"
-          >
-            {changes.length > 0 ? (
-              <>
-                <span className="size-2 rounded-full bg-blue-600" />
-                {m.SETTINGS_UNSAVED({ count: changes.length })}
-              </>
-            ) : transfer === "sending" ? (
-              <>
-                <SendIcon className="size-4 animate-pulse text-sky-600" />
-                {m.SETTINGS_SENDING()}
-              </>
-            ) : transfer === "pending" ? (
-              <>
-                <SendIcon className="size-4 animate-pulse text-amber-600" />
-                {m.CONFIG_PENDING()}
-              </>
-            ) : transfer === "done" ? (
-              <>
-                <CheckIcon className="size-4 text-green-600" />
-                {m.SETTINGS_TRANSFERRED()}
-              </>
-            ) : transfer === "handedOver" ? (
-              <>
-                <CheckIcon className="size-4 text-green-600" />
-                {m.SETTINGS_HANDED_OVER()}
-              </>
-            ) : (
-              <span className="text-muted-foreground">
-                {m.SETTINGS_NO_CHANGES()}
-              </span>
-            )}
-          </span>
-          {changes.length > 0 && (
-            <DialogButton type="button" onClick={() => setDrafts({})}>
-              {m.RESET()}
-            </DialogButton>
-          )}
-          <DialogButton
-            type="button"
-            primary
-            disabled={changes.length === 0}
-            onClick={() => setConfirming(true)}
-          >
-            <SendIcon />
-            {m.SETTINGS_SAVE_TRANSFER()}{" "}
-            {changes.length > 0 ? `(${changes.length})` : ""}
-          </DialogButton>
         </div>
       )}
+
+      {canEdit &&
+        sections.length > 0 &&
+        (tab === "channels" || changes.length > 0) && (
+          <div
+            role="region"
+            aria-label={m.SETTINGS_SAVE_BAR()}
+            className={`sticky bottom-4 z-10 flex flex-wrap items-center justify-end gap-2 rounded-xl border p-3 shadow-lg backdrop-blur-md transition-colors ${changes.length > 0 ? "border-blue-500/40 bg-blue-50/90 dark:bg-blue-950/60" : "bg-background/85"}`}
+          >
+            <span
+              role="status"
+              className="mr-auto flex items-center gap-2 text-sm"
+            >
+              {changes.length > 0 ? (
+                <>
+                  <span className="size-2 rounded-full bg-blue-600" />
+                  {m.SETTINGS_UNSAVED({ count: changes.length })}
+                </>
+              ) : transfer === "sending" ? (
+                <>
+                  <SendIcon className="size-4 animate-pulse text-sky-600" />
+                  {m.SETTINGS_SENDING()}
+                </>
+              ) : transfer === "pending" ? (
+                <>
+                  <SendIcon className="size-4 animate-pulse text-amber-600" />
+                  {m.CONFIG_PENDING()}
+                </>
+              ) : transfer === "done" ? (
+                <>
+                  <CheckIcon className="size-4 text-green-600" />
+                  {m.SETTINGS_TRANSFERRED()}
+                </>
+              ) : transfer === "handedOver" ? (
+                <>
+                  <CheckIcon className="size-4 text-green-600" />
+                  {m.SETTINGS_HANDED_OVER()}
+                </>
+              ) : (
+                <span className="text-muted-foreground">
+                  {m.SETTINGS_NO_CHANGES()}
+                </span>
+              )}
+            </span>
+            {changes.length > 0 && (
+              <DialogButton type="button" onClick={() => setDrafts({})}>
+                {m.RESET()}
+              </DialogButton>
+            )}
+            <DialogButton
+              type="button"
+              primary
+              disabled={changes.length === 0}
+              onClick={() => setConfirming(true)}
+            >
+              <SendIcon />
+              {m.SETTINGS_SAVE_TRANSFER()}{" "}
+              {changes.length > 0 ? `(${changes.length})` : ""}
+            </DialogButton>
+          </div>
+        )}
 
       {deleting && (
         <ConfirmDialog
