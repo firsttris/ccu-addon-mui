@@ -234,6 +234,8 @@ export interface Sysvar {
   valueList?: string[];
   // The info text (DPInfo)
   description?: string;
+  // The channel it belongs to
+  channel?: number;
 }
 
 export interface Program {

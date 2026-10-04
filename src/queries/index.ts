@@ -540,6 +540,7 @@ export type ObjectChange =
       id: number;
       kind: Sysvar['kind'];
       description?: string;
+      channel?: number;
       unit?: string;
       min?: number;
       max?: number;

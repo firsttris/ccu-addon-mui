@@ -751,5 +751,7 @@
   "SYS_TIME_SERVERS_SAVE": "Zeitserver übernehmen",
   "SYS_CLOCK_FROM_BROWSER": "Uhrzeit dieses Geräts übernehmen",
   "SYS_CLOCK_SET": "Uhrzeit gestellt",
-  "SYS_CLOCK_HINT": "Wie die Zeit-/Positionseinstellungen der WebUI. Mit Zeitserver stellt sich die CCU selbst; von Hand nur ohne Internet nötig."
+  "SYS_CLOCK_HINT": "Wie die Zeit-/Positionseinstellungen der WebUI. Mit Zeitserver stellt sich die CCU selbst; von Hand nur ohne Internet nötig.",
+  "SYSVAR_CHANNEL": "Kanalzuordnung",
+  "SYSVAR_NO_CHANNEL": "keine"
 }

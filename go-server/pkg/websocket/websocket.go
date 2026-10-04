@@ -1426,8 +1426,9 @@ func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 		ID        int64  `json:"id"`
 		Name      string `json:"name"`
 		rega.NewSysvar
-		// editSysvar: the info text
+		// editSysvar: the info text and the channel (0: none)
 		Description string `json:"description"`
+		Channel     int64  `json:"channel"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -1472,7 +1473,7 @@ func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 		sysvar := msg.NewSysvar
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: sysvar},
 			func() (interface{}, string, error) {
-				result, err := s.regaClient.EditSysvar(msg.ID, sysvar, msg.Description)
+				result, err := s.regaClient.EditSysvar(msg.ID, sysvar, msg.Description, msg.Channel)
 				return nil, result, err
 			})
 	case "renameSysvar":
