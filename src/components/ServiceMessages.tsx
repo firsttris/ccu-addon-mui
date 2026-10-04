@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
 import RadioIcon from '~icons/lucide/radio-tower';
 import BatteryLowIcon from '~icons/lucide/battery-low';
 import RefreshIcon from '~icons/lucide/refresh-cw';
@@ -19,27 +20,53 @@ import { WebUILink } from './WebUILink';
 
 type Severity = 'error' | 'warning' | 'info';
 
-// How a message reads and looks; unknown types keep the CCU's name
-export const describeServiceMessage = (message: Pick<ServiceMessage, 'type' | 'value'>) => {
-  const type = message.type === 'LOWBAT' ? 'LOW_BAT' : message.type;
-  const known: Record<string, [() => string, Severity, React.ReactNode]> = {
-    UNREACH: [m.SM_UNREACH, 'error', <RadioIcon />],
-    STICKY_UNREACH: [m.SM_STICKY_UNREACH, 'warning', <RadioIcon />],
-    LOW_BAT: [m.SM_LOW_BAT, 'warning', <BatteryLowIcon />],
-    CONFIG_PENDING: [m.SM_CONFIG_PENDING, 'info', <RefreshIcon />],
-    UPDATE_PENDING: [m.SM_UPDATE_PENDING, 'info', <DownloadIcon />],
-    DEVICE_IN_BOOTLOADER: [m.SM_DEVICE_IN_BOOTLOADER, 'info', <DownloadIcon />],
-    SABOTAGE: [m.SM_SABOTAGE, 'error', <ShieldAlertIcon />],
-    STICKY_SABOTAGE: [m.SM_STICKY_SABOTAGE, 'warning', <ShieldAlertIcon />],
-    DUTY_CYCLE: [m.SM_DUTY_CYCLE, 'warning', <RadioIcon />],
-    ERROR_OVERHEAT: [m.SM_ERROR_OVERHEAT, 'error', <TriangleAlertIcon />],
-    ERROR_OVERLOAD: [m.SM_ERROR_OVERLOAD, 'error', <TriangleAlertIcon />],
-    ERROR_REDUCED: [m.SM_ERROR_REDUCED, 'warning', <TriangleAlertIcon />],
-  };
+// The WebUI's text of a message by "<DATAPOINT>=TRUE" or "<DATAPOINT>"
+// (stringtable_de.txt, imported by scripts/import-service-texts.mjs)
+export type ServiceTexts = Record<string, { de: string; en?: string }>;
+
+const known: Record<string, [() => string, Severity, React.ReactNode]> = {
+  UNREACH: [m.SM_UNREACH, 'error', <RadioIcon />],
+  STICKY_UNREACH: [m.SM_STICKY_UNREACH, 'warning', <RadioIcon />],
+  LOW_BAT: [m.SM_LOW_BAT, 'warning', <BatteryLowIcon />],
+  CONFIG_PENDING: [m.SM_CONFIG_PENDING, 'info', <RefreshIcon />],
+  UPDATE_PENDING: [m.SM_UPDATE_PENDING, 'info', <DownloadIcon />],
+  DEVICE_IN_BOOTLOADER: [m.SM_DEVICE_IN_BOOTLOADER, 'info', <DownloadIcon />],
+  SABOTAGE: [m.SM_SABOTAGE, 'error', <ShieldAlertIcon />],
+  STICKY_SABOTAGE: [m.SM_STICKY_SABOTAGE, 'warning', <ShieldAlertIcon />],
+  DUTY_CYCLE: [m.SM_DUTY_CYCLE, 'warning', <RadioIcon />],
+  ERROR_OVERHEAT: [m.SM_ERROR_OVERHEAT, 'error', <TriangleAlertIcon />],
+  ERROR_OVERLOAD: [m.SM_ERROR_OVERLOAD, 'error', <TriangleAlertIcon />],
+  ERROR_REDUCED: [m.SM_ERROR_REDUCED, 'warning', <TriangleAlertIcon />],
+};
+
+const normalize = (type: string) => (type === 'LOWBAT' ? 'LOW_BAT' : type);
+
+// Loaded only when a message has none of our own texts
+export const useServiceTexts = (messages: Pick<ServiceMessage, 'type'>[]) => {
+  const needed = messages.some((message) => {
+    const type = normalize(message.type);
+    return !known[type] && type !== 'ERROR_CODE';
+  });
+  return useQuery({
+    queryKey: ['serviceTexts'],
+    queryFn: async () => (await import('./serviceMessages/texts.json')).default as ServiceTexts,
+    staleTime: Infinity,
+    enabled: needed,
+  }).data;
+};
+
+// How a message reads and looks; other types read as in the WebUI, or
+// keep the CCU's name
+export const describeServiceMessage = (message: Pick<ServiceMessage, 'type' | 'value'>, texts?: ServiceTexts) => {
+  const type = normalize(message.type);
   if (type === 'ERROR_CODE') {
     return { label: m.SM_ERROR_CODE({ value: message.value ?? '' }), severity: 'error' as Severity, icon: <TriangleAlertIcon /> };
   }
-  const [label, severity, icon] = known[type] ?? [() => type, 'warning', <TriangleAlertIcon />];
+  const webUIText = () => {
+    const text = texts?.[`${type}=TRUE`] ?? texts?.[type];
+    return (getLocale() === 'en' && text?.en) || text?.de || type;
+  };
+  const [label, severity, icon] = known[type] ?? [webUIText, 'warning', <TriangleAlertIcon />];
   return { label: label(), severity, icon };
 };
 
@@ -74,6 +101,7 @@ export const ServiceMessagesSheet = ({ open, onOpenChange }: { open: boolean; on
   const { showToast } = useToast();
   const acknowledge = useAcknowledgeServiceMessage();
   const canAcknowledge = userLevel !== 'guest';
+  const texts = useServiceTexts(messages);
 
   const acknowledgeAll = async () => {
     try {
@@ -131,17 +159,17 @@ export const ServiceMessagesSheet = ({ open, onOpenChange }: { open: boolean; on
                     </div>
                     <ul className="flex flex-col gap-1.5">
                       {deviceMessages.map((message) => {
-                        const { label, severity, icon } = describeServiceMessage(message);
+                        const { label, severity, icon } = describeServiceMessage(message, texts);
                         return (
                           <li key={message.id} className="flex items-center gap-2">
                             <span
                               className={cn(
-                                'inline-flex min-w-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium [&_svg]:size-3 [&_svg]:shrink-0',
+                                'inline-flex min-w-0 items-center gap-1.5 rounded-xl px-2 py-0.5 text-xs leading-snug font-medium [&_svg]:size-3 [&_svg]:shrink-0',
                                 severityClass[severity],
                               )}
                             >
                               {icon}
-                              <span className="truncate">{label}</span>
+                              <span className="break-words">{label}</span>
                             </span>
                             <span className="text-xs text-muted-foreground tabular-nums">{formatTimestamp(message.timestamp)}</span>
                             {canAcknowledge && (

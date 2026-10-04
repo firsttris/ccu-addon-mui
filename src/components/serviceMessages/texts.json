@@ -1,0 +1,4020 @@
+{
+ "_LOCK_STATE_REASON=MOTOR_AUTO_RELOCK_STATE": {
+  "de": "Antriebsart: Manuell, von innen",
+  "en": "Drive type: manual, from inside"
+ },
+ "_LOCK_STATE_REASON=MOTOR_AUTO_RELOCK_TIMER": {
+  "de": "Antriebsart: Manuell, von außen",
+  "en": "Drive type: manual, from outside"
+ },
+ "_LOCK_STATE_REASON=MOTOR_INTERNAL_KEY": {
+  "de": "Antriebsart: Motorisch, nach Open, ACKed (kein neues Open-Ereignis)",
+  "en": "Drive type: motorised, after open, ACKed (no new open event)"
+ },
+ "_LOCK_STATE_REASON=MOTOR_INTERNAL_PROFILE": {
+  "de": "Antriebsart: Motorisch nach Open",
+  "en": "Drive type: motorized after open"
+ },
+ "_LOCK_TEACH_IN_STATE=ERROR_END_STOP_DRIVE_LOCK_BEFORE_NEUTRAL_POSITION": {
+  "de": "Anlernfahrt Fehler: Endanschlag lock vor Neutralstellung Verriegelt",
+  "en": "calibration drive error: end stop lock before neutral position locked"
+ },
+ "_LOCK_TEACH_IN_STATE=ERROR_END_STOP_DRIVE_UNLOCK_BEFORE_NEUTRAL_POSITION": {
+  "de": "Anlernfahrt Fehler: Endanschlag open vor Neutralstellung Entriegelt",
+  "en": "calibration drive error: end stop open before neutral position unlocked"
+ },
+ "_LOCK_TEACH_IN_STATE=ERROR_NEUTRAL_POSITION_INCOMPLETE_TURNS": {
+  "de": "Neutralstellungen Fehler: keine ganzzahligen Umdrehungen zwischen Ver- und Entriegelt",
+  "en": "Neutral position error: no integer turns between locked and unlocked"
+ },
+ "_LOCK_TEACH_IN_STATE=NEUTRAL_POSITION_BOTH_SET": {
+  "de": "beide Neutralstellungen vorgemerkt, bereit für Anlernfahrt",
+  "en": "Both neutral positions marked, ready for calibration drive"
+ },
+ "_LOCK_TEACH_IN_STATE=NEUTRAL_POSITION_LOCKED_SET": {
+  "de": "Neutralstellung Verriegelt vorgemerkt",
+  "en": "Neutal position locked marked"
+ },
+ "_LOCK_TEACH_IN_STATE=NEUTRAL_POSITION_UNLOCKED_SET": {
+  "de": "Neutralstellung Entriegelt vorgemerkt",
+  "en": "Neutal position unlocked marked"
+ },
+ "120Min": {
+  "de": "120 Minuten",
+  "en": "120 minutes"
+ },
+ "15Min": {
+  "de": "15 Minuten",
+  "en": "15 minutes"
+ },
+ "30Min": {
+  "de": "30 Minuten",
+  "en": "30 minutes"
+ },
+ "60Min": {
+  "de": "60 Minuten",
+  "en": "60 minutes"
+ },
+ "ABSOLUTE_ANGLE_STATUS=NORMAL": {
+  "de": "Status: Normal"
+ },
+ "ABSOLUTE_ANGLE_STATUS=UNKNOWN": {
+  "de": "Status: unbekannt"
+ },
+ "ACCELERATION_TRANSCEIVER": {
+  "de": "Erschütterungs-/Beschleunigungssensor",
+  "en": "Vibration/Acceleration Sensor"
+ },
+ "ACCESS_RECEIVER": {
+  "de": "Türschlossantrieb",
+  "en": "Door lock drive"
+ },
+ "ACCESS_TRANSCEIVER": {
+  "de": "Zugriffsberechtigung",
+  "en": "Access authorisation"
+ },
+ "ACOUSTIC_ALARM_ACTIVE=TRUE": {
+  "de": "Akustisches Signal aktiviert",
+  "en": "Acoustic signal activated"
+ },
+ "ACOUSTIC_ALARM_SELECTION=DELAYED_EXTERNALLY_ARMED": {
+  "de": "Verzögert extern scharf",
+  "en": "Absence mode delayed"
+ },
+ "ACOUSTIC_ALARM_SELECTION=DELAYED_INTERNALLY_ARMED": {
+  "de": "Verzögert intern scharf",
+  "en": "Presence mode delayed"
+ },
+ "ACOUSTIC_ALARM_SELECTION=DISABLE_ACOUSTIC_SIGNAL": {
+  "de": "Kein akustisches Signal",
+  "en": "No acoustic signal"
+ },
+ "ACOUSTIC_ALARM_SELECTION=DISARMED": {
+  "de": "Unscharf",
+  "en": "Protection deactivated"
+ },
+ "ACOUSTIC_ALARM_SELECTION=ERROR": {
+  "de": "Fehler",
+  "en": "Error"
+ },
+ "ACOUSTIC_ALARM_SELECTION=EVENT": {
+  "de": "Alarm Ereignis",
+  "en": "Alarm event"
+ },
+ "ACOUSTIC_ALARM_SELECTION=EXTERNALLY_ARMED": {
+  "de": "Extern scharf",
+  "en": "Absence mode"
+ },
+ "ACOUSTIC_ALARM_SELECTION=FREQUENCY_ALTERNATING_LOW_HIGH": {
+  "de": "Frequenz tief/hoch",
+  "en": "Frequency low/high"
+ },
+ "ACOUSTIC_ALARM_SELECTION=FREQUENCY_ALTERNATING_LOW_MID_HIGH": {
+  "de": "Frequenz tief/mittel/hoch",
+  "en": "Frequency low/average/high"
+ },
+ "ACOUSTIC_ALARM_SELECTION=FREQUENCY_FALLING": {
+  "de": "Frequenz fallend",
+  "en": "Frequency dropping"
+ },
+ "ACOUSTIC_ALARM_SELECTION=FREQUENCY_HIGHON_LONGOFF": {
+  "de": "Frequenz hoch ein, lang aus",
+  "en": "Frequency high on, long off"
+ },
+ "ACOUSTIC_ALARM_SELECTION=FREQUENCY_HIGHON_OFF": {
+  "de": "Frequenz hoch ein/aus",
+  "en": "Frequency high on/off"
+ },
+ "ACOUSTIC_ALARM_SELECTION=FREQUENCY_LOWON_LONGOFF_HIGHON_LONGOFF": {
+  "de": "Frequenz tief ein - lang aus, hoch ein - lang aus",
+  "en": "Frequency low on - long off, high on - long off"
+ },
+ "ACOUSTIC_ALARM_SELECTION=FREQUENCY_LOWON_OFF_HIGHON_OFF": {
+  "de": "Frequenz tief ein/aus, hoch ein/aus",
+  "en": "Frequency low on/off, high on/off"
+ },
+ "ACOUSTIC_ALARM_SELECTION=FREQUENCY_RISING": {
+  "de": "Frequenz steigend",
+  "en": "Frequency increasing"
+ },
+ "ACOUSTIC_ALARM_SELECTION=FREQUENCY_RISING_AND_FALLING": {
+  "de": "Frequenz steigend/fallend",
+  "en": "Frequency increasing/dropping"
+ },
+ "ACOUSTIC_ALARM_SELECTION=INTERNALLY_ARMED": {
+  "de": "Intern scharf",
+  "en": "Presence mode"
+ },
+ "ACOUSTIC_ALARM_SELECTION=LOW_BATTERY": {
+  "de": "Batterie leer",
+  "en": "Battery empty"
+ },
+ "ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER": {
+  "de": "MP3-Player",
+  "en": "MP3-Player"
+ },
+ "ACTIVITY_STATE=DOWN": {
+  "de": "Rampe herunter",
+  "en": "Ramp down"
+ },
+ "ACTIVITY_STATE=STABLE": {
+  "de": "Zustand stabil",
+  "en": "Status stable"
+ },
+ "ACTIVITY_STATE=UNKNOWN": {
+  "de": "Aktivität unbekannt",
+  "en": "Activity unknown"
+ },
+ "ACTIVITY_STATE=UP": {
+  "de": "Rampe hoch",
+  "en": "Ramp up"
+ },
+ "ACTOR_SECURITY": {
+  "de": "Fenster Lüftungssperre",
+  "en": "Window ventilation lock"
+ },
+ "ACTOR_WINDOW": {
+  "de": "Fenster Antrieb",
+  "en": "Window actuator"
+ },
+ "ACTUAL_HUMIDITY": {
+  "de": "Rel. Luftfeuchte",
+  "en": "Relative humidity"
+ },
+ "ACTUAL_TEMPERATURE": {
+  "de": "Ist-Temperatur",
+  "en": "Actual temperature"
+ },
+ "ACTUAL_TEMPERATURE_STATUS=0": {
+  "de": "Wert Ist-Temperatur: Normal",
+  "en": "Value Actual temperature: Normal"
+ },
+ "ACTUAL_TEMPERATURE_STATUS=1": {
+  "de": "Wert Ist-Temperatur: unbekannt",
+  "en": "Value Actual temperature: unknown"
+ },
+ "ACTUAL_TEMPERATURE_STATUS=2": {
+  "de": "Wert Ist-Temperatur: Überlauf",
+  "en": "Value Actual temperature: Overflow"
+ },
+ "ACTUAL_TEMPERATURE_STATUS=3": {
+  "de": "Wert Ist-Temperatur: Unterlauf",
+  "en": "Value Actual temperature: Underflow"
+ },
+ "ACTUAL_TEMPERATURE_STATUS=NORMAL": {
+  "de": "Wert Ist-Temperatur: Normal",
+  "en": "Value Actual temperature: Normal"
+ },
+ "ACTUAL_TEMPERATURE_STATUS=OVERFLOW": {
+  "de": "Wert Ist-Temperatur: Überlauf",
+  "en": "Value Actual temperature: Overflow"
+ },
+ "ACTUAL_TEMPERATURE_STATUS=UNDERFLOW": {
+  "de": "Wert Ist-Temperatur: Unterlauf",
+  "en": "Value Actual temperature: Underflow"
+ },
+ "ACTUAL_TEMPERATURE_STATUS=UNKNOWN": {
+  "de": "Wert Ist-Temperatur: unbekannt",
+  "en": "Value Actual temperature: unknown"
+ },
+ "AIR_PRESSURE": {
+  "de": "Luftdruck",
+  "en": "Barometric pressure"
+ },
+ "AIR_PRESSURE_STATUS=NORMAL": {
+  "de": "Wert Luftdruck: Normal",
+  "en": "Value Air pressure: Normal"
+ },
+ "AIR_PRESSURE_STATUS=OVERFLOW": {
+  "de": "Wert Luftdruck: Überlauf",
+  "en": "Value Air pressure: Overflow"
+ },
+ "AIR_PRESSURE_STATUS=UNKNOWN": {
+  "de": "Wert Luftdruck: unbekannt",
+  "en": "Value Air pressure: unknown"
+ },
+ "ALARM_SWITCH_VIRTUAL_RECEIVER": {
+  "de": "Alarmsirene",
+  "en": "Alarm siren"
+ },
+ "ALARMACTUATOR": {
+  "de": "Funk-Sirenen-Blitz-Ansteuerung",
+  "en": "Wireless Siren/Flash Actuator"
+ },
+ "ALARMTIME_MAX": {
+  "de": "Max. Alarmdauer",
+  "en": "Max. alarm duration"
+ },
+ "ALL_LEDS": {
+  "de": "Alle Kanäle einstellen",
+  "en": "Set all channels"
+ },
+ "ANALOG_INPUT": {
+  "de": "Analog",
+  "en": "Analog"
+ },
+ "ANALOG_OUTPUT": {
+  "de": "Analog",
+  "en": "Analog"
+ },
+ "ANALOG_OUTPUT_TRANSCEIVER": {
+  "de": "Analoger Ausgang",
+  "en": "Analogue output"
+ },
+ "ARMING": {
+  "de": "Alarmsirene (Scharfschaltkanal)",
+  "en": "Alarm siren (arm channel)"
+ },
+ "ARMSTATE=ALARM_BLOCKED": {
+  "de": "Alarm blockiert",
+  "en": "Alarm blocked"
+ },
+ "ARMSTATE=ALLSENS_ARMED": {
+  "de": "Alle Sensoren scharf, (extern scharf)",
+  "en": "All sensors armed, (absence mode)"
+ },
+ "ARMSTATE=DISARMED": {
+  "de": "Unscharf",
+  "en": "Protection deactivated"
+ },
+ "ARMSTATE=EXTSENS_ARMED": {
+  "de": "Außensensoren scharf, (intern scharf)",
+  "en": "Outdoor sensors armed, (presence mode)"
+ },
+ "ARR_TIMEOUT": {
+  "de": "Bidirektionaler Kommunikationstimeout",
+  "en": "Time-out for bidirectional communication"
+ },
+ "ATC_ADAPTION_INTERVAL": {
+  "de": "Intervall für Temperaturkompensation der Sensoren",
+  "en": "Interval for temperature compensation of the sensors"
+ },
+ "ATC_MODE": {
+  "de": "Temperaturkompensation der Sensoren",
+  "en": "Temperature compensation of the sensors"
+ },
+ "ATC_OFF": {
+  "de": "Aus",
+  "en": "Off"
+ },
+ "ATC_ON": {
+  "de": "Ein",
+  "en": "On"
+ },
+ "AUTO_HYDRAULIC_ADJUSTMENT": {
+  "de": "Hydraulischer Ventilabgleich",
+  "en": "Hydraulic valve adjustment"
+ },
+ "AUTO_MODE": {
+  "de": "Auto-Modus",
+  "en": "Auto mode"
+ },
+ "AUTO_RELOCK_TRANSCEIVER": {
+  "de": "Auto-Relock",
+  "en": "Auto-Relock"
+ },
+ "AVERAGE_ILLUMINATION": {
+  "de": "Durchschnittliche Helligkeit",
+  "en": "Average level of brightness"
+ },
+ "AVERAGE_ILLUMINATION_STATUS=0": {
+  "de": "Wert Durchschnittliche Helligkeit: Normal",
+  "en": "Value Average level of brightness: Normal"
+ },
+ "AVERAGE_ILLUMINATION_STATUS=1": {
+  "de": "Wert Durchschnittliche Helligkeit: unbekannt",
+  "en": "Value Average level of brightness: unknown"
+ },
+ "AVERAGE_ILLUMINATION_STATUS=2": {
+  "de": "Wert Durchschnittliche Helligkeit: Überlauf",
+  "en": "Value Average level of brightness: Overflow"
+ },
+ "AVERAGE_ILLUMINATION_STATUS=NORMAL": {
+  "de": "Wert Durchschnittliche Helligkeit: Normal",
+  "en": "Value Average level of brightness: Normal"
+ },
+ "AVERAGE_ILLUMINATION_STATUS=OVERFLOW": {
+  "de": "Wert Durchschnittliche Helligkeit: Überlauf",
+  "en": "Value Average level of brightness: Overflow"
+ },
+ "AVERAGE_ILLUMINATION_STATUS=UNKNOWN": {
+  "de": "Wert Durchschnittliche Helligkeit: unbekannt",
+  "en": "Value Average level of brightness: unknown"
+ },
+ "BACKLIGHT_AT_CHARGE": {
+  "de": "Beleuchtung bei Betrieb in Ladeschale",
+  "en": "Back light while device is in charging station"
+ },
+ "BACKLIGHT_AT_KEYSTROKE": {
+  "de": "Beleuchtung bei Tastenbetätigung",
+  "en": "Back light at button press"
+ },
+ "BACKLIGHT_AT_MOTION": {
+  "de": "Beleuchtung bei Bewegung/Erschütterung",
+  "en": "Back light at movement/vibration"
+ },
+ "BACKLIGHT_ON_TIME": {
+  "de": "Beleuchtungsdauer",
+  "en": "Lighting duration"
+ },
+ "BAT_DEFECT_LIMIT": {
+  "de": "Batterie-Defekt-Schwelle",
+  "en": "Defect battery threshold"
+ },
+ "BATTERY_POWERED": {
+  "de": "Batteriebetrieb",
+  "en": "Battery operation"
+ },
+ "BATTERY_STATE": {
+  "de": "Batteriestatus",
+  "en": "Battery status"
+ },
+ "BLIND": {
+  "de": "Rollladenaktor",
+  "en": "Blind actuator"
+ },
+ "BLIND_VIRTUAL_RECEIVER": {
+  "de": "Jalousieaktor",
+  "en": "Blind actuator"
+ },
+ "BLOCKING_PERIOD_UNIT": {
+  "de": "Einheit des Zeitraums",
+  "en": "Time interval unit"
+ },
+ "BLOCKING_PERIOD_UNIT=100MS": {
+  "de": "100 ms",
+  "en": "100 ms"
+ },
+ "BLOCKING_PERIOD_UNIT=H": {
+  "de": "Stunden",
+  "en": "Hours"
+ },
+ "BLOCKING_PERIOD_UNIT=M": {
+  "de": "Minuten",
+  "en": "Minutes"
+ },
+ "BLOCKING_PERIOD_UNIT=S": {
+  "de": "Sekunden",
+  "en": "Seconds"
+ },
+ "BLOCKING_PERIOD_VALUE": {
+  "de": "Wert des Zeitraums",
+  "en": "Time interval value"
+ },
+ "BOOST_MODE": {
+  "de": "Boost-Funktion",
+  "en": "Boost function"
+ },
+ "BOOST_MODE=TRUE": {
+  "de": "Boostmode EIN",
+  "en": "Boost mode ON"
+ },
+ "BOOST_STATE": {
+  "de": "Boost-Status",
+  "en": "Boost state"
+ },
+ "BOOST_TIME": {
+  "de": "Boost-Dauer",
+  "en": "Boost duration"
+ },
+ "BOOTED=TRUE": {
+  "de": "Gerät aktuell neu gestartet: Ja",
+  "en": "en* Gerät aktuell neu gestartet: Ja"
+ },
+ "BRIGHTNESS": {
+  "de": "Helligkeit",
+  "en": "Brightness"
+ },
+ "BRIGHTNESS_FILTER": {
+  "de": "Helligkeitsfilter",
+  "en": "Brightness filter"
+ },
+ "BURST_LIMIT_WARNING": {
+  "de": "Burst-Limit",
+  "en": "Burst-limit"
+ },
+ "BURST_LIMIT_WARNING=TRUE": {
+  "de": "Burst-Limit erreicht",
+  "en": "Burst-limit reached"
+ },
+ "BURST_RX": {
+  "de": "Wake-On-Radio",
+  "en": "Wake on radio"
+ },
+ "BUTTON_LOCK": {
+  "de": "Lokale Bediensperre",
+  "en": "Local operating lock"
+ },
+ "BUTTON_RESPONSE_WITHOUT_BACKLIGHT": {
+  "de": "Sofortige Reaktion auf Tastendruck ohne vorherige Hintergrundbeleuchtung",
+  "en": "Immediate reaction to keypress without previous display backlight"
+ },
+ "CAPACITIVE_FILLING_LEVEL_SENSOR": {
+  "de": "Kapazitiver Füllstandsmesser",
+  "en": "Wireless Capacitive Filling Level Sensor"
+ },
+ "CAPTURE_WITHIN_INTERVAL": {
+  "de": "Innerhalb des Sendeabstandes erkannte Bewegung senden:",
+  "en": "Send detected motion within transmission interval:"
+ },
+ "CARRIER_SENSE_LEVEL": {
+  "de": "Carrier Sense",
+  "en": "Carrier Sense"
+ },
+ "CHANGE_OVER=TRUE": {
+  "de": "Betriebsart Change Over aktiv",
+  "en": "Operating mode change over active"
+ },
+ "CHARACTERISTIC_BASETYPE": {
+  "de": "Farbmischverhalten",
+  "en": "Colour mixing behaviour"
+ },
+ "CHARACTERISTIC_COLOURASSIGNMENT": {
+  "de": "Farbzuweisung",
+  "en": "Colour allocation"
+ },
+ "CHARACTERISTIC_CROSSFADE": {
+  "de": "Crossfade",
+  "en": "Crossfade"
+ },
+ "CHARACTERISTIC_DIM2HOT": {
+  "de": "Dim2Hot",
+  "en": "Dim2Hot"
+ },
+ "CHARACTERISTIC_DIM2WARM": {
+  "de": "Dim2Warm",
+  "en": "Dim2Warm"
+ },
+ "CHARACTERISTIC_HALF_CONSTANT": {
+  "de": "halbe/konstante Leistung",
+  "en": "half/constant power"
+ },
+ "CHARACTERISTIC_LEVELLIMIT": {
+  "de": "Pegelbegrenzung",
+  "en": "Level limitation"
+ },
+ "CHARACTERISTIC_LINEAR": {
+  "de": "linear",
+  "en": "linear"
+ },
+ "CHARACTERISTIC_LINSQUARETYPE": {
+  "de": "Ausgangskennlinie",
+  "en": "Output characteristic"
+ },
+ "CHARACTERISTIC_LOW_IS_COLD": {
+  "de": "niedrig ist kaltweiß",
+  "en": "low is cold white"
+ },
+ "CHARACTERISTIC_LOW_IS_WARM": {
+  "de": "niedrig ist warmweiß",
+  "en": "low is warm white"
+ },
+ "CHARACTERISTIC_MAXIMUM": {
+  "de": "maximale Leistung",
+  "en": "maximum power"
+ },
+ "CHARACTERISTIC_SQUARE": {
+  "de": "quadratisch",
+  "en": "square"
+ },
+ "CLIMATECONTROL_DEHUMIDIFIER_TRANSMITER": {
+  "de": "Sensor Luftfeuchte",
+  "en": "Sensor humidity"
+ },
+ "CLIMATECONTROL_FLOOR_DIRECT_TRANSMITTER": {
+  "de": "Raumthermostat",
+  "en": "Room thermostat"
+ },
+ "CLIMATECONTROL_FLOOR_PUMP_TRANSCEIVER": {
+  "de": "Fussbodenheizung/Pumpensteuerung",
+  "en": "Floor heating/Pump control"
+ },
+ "CLIMATECONTROL_FLOOR_TRANSCEIVER": {
+  "de": "Fussbodenheizung",
+  "en": "Floor heating"
+ },
+ "CLIMATECONTROL_FLOOR_TRANSMITTER": {
+  "de": "Raumthermostat",
+  "en": "Room thermostat"
+ },
+ "CLIMATECONTROL_HEAT_DEMAND_BOILER_TRANSMITTER": {
+  "de": "Kanal Heizbedarf",
+  "en": "Channel heating demand"
+ },
+ "CLIMATECONTROL_HEAT_DEMAND_PUMP_TRANSMITTER": {
+  "de": "Kanal Heizbedarf",
+  "en": "Channel heating demand"
+ },
+ "CLIMATECONTROL_HEAT_DEMAND_TRANSMITER": {
+  "de": "Kanal Heizbedarf",
+  "en": "Channel heating demand"
+ },
+ "CLIMATECONTROL_INPUT_RECEIVER": {
+  "de": "Kanal Heizen/Kühlen",
+  "en": "Channel heating/cooling"
+ },
+ "CLIMATECONTROL_INPUT_TRANSMITTER": {
+  "de": "Kanal Eingangsstatus",
+  "en": "Input channel"
+ },
+ "CLIMATECONTROL_RECEIVER": {
+  "de": "Heizungsthermostat (Empfänger Wandthermostat)",
+  "en": "Radiator Thermostat (Receiver wall mounted thermostat)"
+ },
+ "CLIMATECONTROL_REGULATOR": {
+  "de": "Heizkörperthermostat",
+  "en": "Radiator thermostat"
+ },
+ "CLIMATECONTROL_RT_RECEIVER": {
+  "de": "Heizungsthermostat (Empfänger)",
+  "en": "Radiator Thermostat (Receiver)"
+ },
+ "CLIMATECONTROL_RT_TRANSCEIVER": {
+  "de": "Heizungsthermostat (Sender)",
+  "en": "Radiator Thermostat (Sender)"
+ },
+ "CLIMATECONTROL_VENT_DRIVE": {
+  "de": "Funk-Heizkörperthermostat",
+  "en": "Wireless Radiator Thermostat"
+ },
+ "COLOR_BEHAVIOUR_STATUS=NORMAL": {
+  "de": "Status Verhalten: Normal",
+  "en": "Status response: Normal"
+ },
+ "COLOR_BEHAVIOUR_STATUS=UNKNOWN": {
+  "de": "Status Verhalten: unbekannt",
+  "en": "Status response: unknown"
+ },
+ "COLOR_BEHAVIOUR=DO_NOT_CARE": {
+  "de": "Verhalten ignorieren",
+  "en": "Ignore response"
+ },
+ "COLOR_BEHAVIOUR=OLD_VALUE": {
+  "de": "Verhalten beibehalten",
+  "en": "Retain response"
+ },
+ "COLOR_STATUS=NORMAL": {
+  "de": "Farbstatus normal",
+  "en": "Colour mode normal"
+ },
+ "COLOR_STATUS=UNKNOWN": {
+  "de": "Farbstatus unbekannt",
+  "en": "Colour mode unknown"
+ },
+ "COLOR_TEMPERATURE": {
+  "de": "Farbtemperatur",
+  "en": "Colour temperature"
+ },
+ "COLOR=BLACK": {
+  "de": "Farbe Aus",
+  "en": "Color off"
+ },
+ "COLOR=BLUE": {
+  "de": "Blau",
+  "en": "Blue"
+ },
+ "COLOR=DO_NOT_CARE": {
+  "de": "Farbwert ignorieren",
+  "en": "Ignore colour value"
+ },
+ "COLOR=GREEN": {
+  "de": "Grün",
+  "en": "Green"
+ },
+ "COLOR=LEVEL": {
+  "de": "Helligkeit",
+  "en": "Brightness"
+ },
+ "COLOR=OLD_VALUE": {
+  "de": "Farbwert beibehalten",
+  "en": "Retain colour value"
+ },
+ "COLOR=PURPLE": {
+  "de": "Violett",
+  "en": "Purple"
+ },
+ "COLOR=RED": {
+  "de": "Rot",
+  "en": "Red"
+ },
+ "COLOR=TURQUOISE": {
+  "de": "Türkis",
+  "en": "Turquoise"
+ },
+ "COLOR=WHITE": {
+  "de": "Weiss",
+  "en": "White"
+ },
+ "COLOR=YELLOW": {
+  "de": "Gelb",
+  "en": "Yellow"
+ },
+ "COMBINED_PARAMETER": {
+  "de": "Kanalaktion",
+  "en": "Channel action"
+ },
+ "COMFORT_MODE": {
+  "de": "Comfort-Temperatur",
+  "en": "Comfort temperature"
+ },
+ "COMMUNICATION_REPORTING": {
+  "de": "Kommunikations-Fehlermeldung",
+  "en": "Communication error message"
+ },
+ "COMMUNICATION_REPORTING=TRUE": {
+  "de": "Kommunikations-Fehlermeldung",
+  "en": "Communication error message"
+ },
+ "COMPATIBILITY_MODE": {
+  "de": "Kompatibilitätsmodus",
+  "en": "Compatibility mode"
+ },
+ "CONCENTRATION_STATUS=0": {
+  "de": "Status CO2-Konzentration: Normal",
+  "en": "CO2 concentration status: Normal"
+ },
+ "CONCENTRATION_STATUS=1": {
+  "de": "Status CO2-Konzentration: unbekannt",
+  "en": "CO2 concentration status: unknown"
+ },
+ "CONCENTRATION_STATUS=2": {
+  "de": "Status CO2-Konzentration: Überlauf",
+  "en": "CO2 concentration status: Overflow"
+ },
+ "CONCENTRATION_STATUS=NORMAL": {
+  "de": "Status CO2-Konzentration: Normal",
+  "en": "CO2 concentration status: Normal"
+ },
+ "CONCENTRATION_STATUS=OVERFLOW": {
+  "de": "Status CO2-Konzentration: Überlauf",
+  "en": "CO2 concentration status: Overflow"
+ },
+ "CONCENTRATION_STATUS=UNKNOWN": {
+  "de": "Status CO2-Konzentration: unbekannt",
+  "en": "CO2 concentration status: unknown"
+ },
+ "COND_SWITCH_TRANSMITTER": {
+  "de": "Sender Entscheidungswert",
+  "en": "Transmitter decision value"
+ },
+ "COND_SWITCH_TRANSMITTER_BRIGHTNESS": {
+  "de": "Helligkeitssensor",
+  "en": "Brightness sensor"
+ },
+ "COND_SWITCH_TRANSMITTER_HUMIDITY": {
+  "de": "Luftfreuchtesensor",
+  "en": "Humidity sensor"
+ },
+ "COND_SWITCH_TRANSMITTER_PARTICULATE_MATTER": {
+  "de": "Feinstaubsensor",
+  "en": "Fine dust sensor"
+ },
+ "COND_SWITCH_TRANSMITTER_RAIN_DROP": {
+  "de": "Regensensor",
+  "en": "Rain sensor"
+ },
+ "COND_SWITCH_TRANSMITTER_RAIN_QUANTITY": {
+  "de": "Sensor Regenmenge",
+  "en": "Sensor rainfall volume"
+ },
+ "COND_SWITCH_TRANSMITTER_TEMPERATURE": {
+  "de": "Temperatursensor",
+  "en": "Temperature sensor"
+ },
+ "COND_SWITCH_TRANSMITTER_WIND_DIRECTION": {
+  "de": "Windrichtungssensor",
+  "en": "Wind direction sensor"
+ },
+ "COND_SWITCH_TRANSMITTER_WIND_SPEED": {
+  "de": "Windgeschwindigkeitssensor",
+  "en": "Wind velocity sensor"
+ },
+ "COND_TX_THRESHOLD_HI": {
+  "de": "Oberer Grenzwert für bedingtes Senden",
+  "en": "Upper limit for conditional transmitting"
+ },
+ "COND_TX_THRESHOLD_LO": {
+  "de": "Unterer Grenzwert für bedingtes Senden",
+  "en": "Lower limit for conditional transmitting"
+ },
+ "CONDITION_CURRENT": {
+  "de": "Strom-Sensor",
+  "en": "Current sensor"
+ },
+ "CONDITION_FREQUENCY": {
+  "de": "Frequenz-Sensor",
+  "en": "Frequency sensor"
+ },
+ "CONDITION_POWER": {
+  "de": "Leistungs-Sensor",
+  "en": "Power sensor"
+ },
+ "CONDITION_VOLTAGE": {
+  "de": "Spannungs-Sensor",
+  "en": "Voltage sensor"
+ },
+ "CONF_BUTTON_TIME": {
+  "de": "Für die eingestellte Zeit nach Spannungszufuhr dient der lange Gerätetastendruck zur Konfiguration, danach zur Bedienung.",
+  "en": "For the set time after power supply, the long button press enables configuration. Afterwards, it serves for operation."
+ },
+ "CONF_BUTTON_TIME=PERMANENT": {
+  "de": "dauerhaft",
+  "en": "permanent"
+ },
+ "CONFIG_PENDING=TRUE": {
+  "de": "Konfigurationsdaten zur Übertragung: Ja",
+  "en": "Configuration data is ready for transmission"
+ },
+ "CONTROL_MODE=AUTO-MODE": {
+  "de": "Auto-Modus",
+  "en": "Auto mode"
+ },
+ "CONTROL_MODE=BOOST-MODE": {
+  "de": "Boost-Funktion",
+  "en": "Boost function"
+ },
+ "CONTROL_MODE=MANU-MODE": {
+  "de": "Manu-Modus",
+  "en": "Manu mode"
+ },
+ "CONTROL_MODE=PARTY-MODE": {
+  "de": "Urlaubs-Modus",
+  "en": "Holiday mode"
+ },
+ "CURRENT": {
+  "de": "Strom",
+  "en": "Current"
+ },
+ "CURRENT_ILLUMINATION": {
+  "de": "Ungefilterte, aktuelle Helligkeit",
+  "en": "Unfiltered, current level of brightness"
+ },
+ "CURRENT_ILLUMINATION_STATUS=0": {
+  "de": "Wert Ungefilterte, aktuelle Helligkeit: Normal",
+  "en": "Value Unfiltered, current level of brightness: Normal"
+ },
+ "CURRENT_ILLUMINATION_STATUS=1": {
+  "de": "Wert Ungefilterte, aktuelle Helligkeit: unbekannt",
+  "en": "Value Unfiltered, current level of brightness: unknown"
+ },
+ "CURRENT_ILLUMINATION_STATUS=2": {
+  "de": "Wert Ungefilterte, aktuelle Helligkeit: Überlauf",
+  "en": "Value Unfiltered, current level of brightness: Overflow"
+ },
+ "CURRENT_ILLUMINATION_STATUS=NORMAL": {
+  "de": "Wert Ungefilterte, aktuelle Helligkeit: Normal",
+  "en": "Value Unfiltered, current level of brightness: Normal"
+ },
+ "CURRENT_ILLUMINATION_STATUS=OVERFLOW": {
+  "de": "Wert Ungefilterte, aktuelle Helligkeit: Überlauf",
+  "en": "Value Unfiltered, current level of brightness: Overflow"
+ },
+ "CURRENT_ILLUMINATION_STATUS=UNKNOWN": {
+  "de": "Wert Ungefilterte, aktuelle Helligkeit: unbekannt",
+  "en": "Value Unfiltered, current level of brightness: unknown"
+ },
+ "CURRENT_PASSAGE_DIRECTION=TRUE": {
+  "de": "Erkannter Durchgang: Ja",
+  "en": "Passage detected: Yes"
+ },
+ "CURRENT_STATUS=0": {
+  "de": "Wert Strom: Normal",
+  "en": "Value Current: Normal"
+ },
+ "CURRENT_STATUS=1": {
+  "de": "Wert Strom: Überlauf",
+  "en": "Value Current: Overflow"
+ },
+ "CURRENT_STATUS=2": {
+  "de": "Wert Strom: Unterlauf",
+  "en": "Value Current: Underflow"
+ },
+ "CURRENT_STATUS=3": {
+  "de": "Wert Strom: unbekannt",
+  "en": "Value Current: unknown"
+ },
+ "CURRENT_STATUS=NORMAL": {
+  "de": "Wert Strom: Normal",
+  "en": "Value Current: Normal"
+ },
+ "CURRENT_STATUS=OVERFLOW": {
+  "de": "Wert Strom: Überlauf",
+  "en": "Value Current: Overflow"
+ },
+ "CURRENT_STATUS=UNDERFLOW": {
+  "de": "Wert Strom: Unterlauf",
+  "en": "Value Current: Underflow"
+ },
+ "CURRENT_STATUS=UNKNOWN": {
+  "de": "Wert Strom: unbekannt",
+  "en": "Value Current: unknown"
+ },
+ "CURRENTDETECTION_BEHAVIOR": {
+  "de": "Verhalten",
+  "en": "Response"
+ },
+ "CURRENTDETECTION_BEHAVIOR=\"CURRENTDETECTION_ACTIVE\"": {
+  "de": "Wechselschaltung",
+  "en": "Two-way circuit"
+ },
+ "CURRENTDETECTION_BEHAVIOR=\"CURRENTDETECTION_INACTIVE_VALUE_OUTPUT_1\"": {
+  "de": "Ausgang 1 aktiv",
+  "en": "Output 1 active"
+ },
+ "CURRENTDETECTION_BEHAVIOR=\"CURRENTDETECTION_INACTIVE_VALUE_OUTPUT_2\"": {
+  "de": "Ausgang 2 aktiv",
+  "en": "Output 2 active"
+ },
+ "CYCLIC_INFO_MSG": {
+  "de": "Zyklische Statusmeldung",
+  "en": "Cyclically status message"
+ },
+ "CYCLIC_INFO_MSG_DIS": {
+  "de": "Anzahl der auszulassenden Statusmeldungen",
+  "en": "Number of messages that are left out"
+ },
+ "CYCLIC_INFO_MSG_DIS_UNCHANGED": {
+  "de": "Anzahl der auszulassenden, unveränderten Statusmeldungen",
+  "en": "Number of unchanged status messages that are left out"
+ },
+ "CYCLIC_INFO_MSG_OVERDUE_THRESHOLD": {
+  "de": "Anzahl der verpassten Statusmeldungen, bis 'unreach' geflaggt wird",
+  "en": "Number of missed status messages until 'unreach' is flagged"
+ },
+ "CYCLIC_INFO_MSG_PAUSE": {
+  "de": "Intervall für zyklische Statusmeldung",
+  "en": "Interval for cyclically status messages"
+ },
+ "DATE_TIME_UNKNOWN=TRUE": {
+  "de": "Korrekte Zeit nicht bekannt",
+  "en": "Correct time unknown"
+ },
+ "DAYLIGHT_SAVINGS_TIME": {
+  "de": "Automatisches Umstellen von Sommer- auf Winterzeit",
+  "en": "Automatic changeover from summer time to winter time"
+ },
+ "DECISION_VALUE": {
+  "de": "Entscheidungswert",
+  "en": "Decision value"
+ },
+ "DEV_RPT_CNT_MAX": {
+  "de": "max. Repeaterstufe",
+  "en": "max. repeater level"
+ },
+ "DEVICE_IN_BOOTLOADER": {
+  "de": "Das Gerät befindet sich im Bootloader",
+  "en": "The device is in bootloader."
+ },
+ "DEVICE_LED_MODE": {
+  "de": "Geräte-LED",
+  "en": "Device LED"
+ },
+ "DEVICE_LED_MODE=OFF": {
+  "de": "aus",
+  "en": "off"
+ },
+ "DEVICE_LED_MODE=ON": {
+  "de": "ein",
+  "en": "on"
+ },
+ "DEW_POINT_ALARM=TRUE": {
+  "de": "Taupunkt-Alarm",
+  "en": "Dew point alarm"
+ },
+ "DIGITAL_INPUT": {
+  "de": "Digital",
+  "en": "Digital"
+ },
+ "DIGITAL_OUTPUT": {
+  "de": "Digital",
+  "en": "Digital"
+ },
+ "DIMMER": {
+  "de": "Dimmaktor",
+  "en": "Dimming actuator"
+ },
+ "DIMMER_VIRTUAL_RECEIVER": {
+  "de": "Dimmaktor",
+  "en": "Dimming actuator"
+ },
+ "DIRT_LEVEL": {
+  "de": "Verschmutzungsgrad des Sensors",
+  "en": "Degree of sensor contamination"
+ },
+ "DISABLE_ACOUSTIC_CHANNELSTATE": {
+  "de": "Summer deaktivieren",
+  "en": "Deactivate buzzer"
+ },
+ "DISABLE_ACOUSTIC_SENDSTATE": {
+  "de": "Akustische Bestätigung des Tastendrucks deaktivieren",
+  "en": "Deactivate acoustic confirmation of button press"
+ },
+ "DISPLAY_BACKLIGHT_MODE": {
+  "de": "Displayhinterleuchtungsmodus",
+  "en": "Display back light mode"
+ },
+ "DISPLAY_BACKLIGHT_MODE=AUTO": {
+  "de": "automatisch",
+  "en": "automatic"
+ },
+ "DISPLAY_BACKLIGHT_MODE=OFF": {
+  "de": "aus",
+  "en": "off"
+ },
+ "DISPLAY_BACKLIGHT_MODE=ON": {
+  "de": "ein",
+  "en": "on"
+ },
+ "DISPLAY_BACKLIGHT_TIME": {
+  "de": "Displayhinterleuchtungszeit",
+  "en": "Display back light time"
+ },
+ "DISPLAY_BRIGHTNESS": {
+  "de": "Anzeigehelligkeit",
+  "en": "Display brightness"
+ },
+ "DISPLAY_CONTRAST": {
+  "de": "Displaykontrast",
+  "en": "Display contrast"
+ },
+ "DISPLAY_DATA_STRING": {
+  "de": "Display Text",
+  "en": "Display text"
+ },
+ "DISPLAY_ENERGYOPTIONS": {
+  "de": "Die Anzeige schaltet sich aus nach",
+  "en": "The display will be switched off after"
+ },
+ "DISPLAY_INPUT_TRANSMITTER": {
+  "de": "Glasdisplay",
+  "en": "Glass Display"
+ },
+ "DISPLAY_INVERTING": {
+  "de": "Displayinvertierung",
+  "en": "Display inverting"
+ },
+ "DISPLAY_LEVEL_INPUT_TRANSMITTER": {
+  "de": "Glasdisplay",
+  "en": "Glass Display"
+ },
+ "DISPLAY_THERMOSTAT_INPUT_TRANSMITTER": {
+  "de": "Glasdisplay",
+  "en": "Glass Display"
+ },
+ "DISPLAY_UPDATE_REQUEST_0=TRUE": {
+  "de": "Display Update Request 0: Ja",
+  "en": "Display Update Request 0: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_01=TRUE": {
+  "de": "Display Update Request 1: Ja",
+  "en": "Display Update Request 1: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_03=TRUE": {
+  "de": "Display Update Request 3: Ja",
+  "en": "Display Update Request 3: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_05=TRUE": {
+  "de": "Display Update Request 5: Ja",
+  "en": "Display Update Request 5: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_07=TRUE": {
+  "de": "Display Update Request 7: Ja",
+  "en": "Display Update Request 7: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_09=TRUE": {
+  "de": "Display Update Request 9: Ja",
+  "en": "Display Update Request 9: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_11=TRUE": {
+  "de": "Display Update Request 11: Ja",
+  "en": "Display Update Request 11: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_13=TRUE": {
+  "de": "Display Update Request 13: Ja",
+  "en": "Display Update Request 13: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_15=TRUE": {
+  "de": "Display Update Request 15: Ja",
+  "en": "Display Update Request 15: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_17=TRUE": {
+  "de": "Display Update Request 17: Ja",
+  "en": "Display Update Request 17: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_19=TRUE": {
+  "de": "Display Update Request 19: Ja",
+  "en": "Display Update Request 19: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_21=TRUE": {
+  "de": "Display Update Request 21: Ja",
+  "en": "Display Update Request 21: Yes"
+ },
+ "DISPLAY_UPDATE_REQUEST_23=TRUE": {
+  "de": "Display Update Request 23: Ja",
+  "en": "Display Update Request 23: Yes"
+ },
+ "DISTANCE": {
+  "de": "Distanz",
+  "en": "Distance"
+ },
+ "DOOR_COMMAND=CLOSE": {
+  "de": "Tor schließen",
+  "en": "Closing the garage door"
+ },
+ "DOOR_COMMAND=NOP": {
+  "de": "keine Aktion",
+  "en": "No action"
+ },
+ "DOOR_COMMAND=OPEN": {
+  "de": "Tor öffnen",
+  "en": "Opening the garage door"
+ },
+ "DOOR_COMMAND=PARTIAL_OPEN": {
+  "de": "Stellung Lüftungsposition",
+  "en": "Ventilation position"
+ },
+ "DOOR_COMMAND=STOP": {
+  "de": "Fahrt stoppen",
+  "en": "Stop movement"
+ },
+ "DOOR_LOCK_STATE_TRANSCEIVER": {
+  "de": "Türschlosssensor",
+  "en": "Door Lock Sensor"
+ },
+ "DOOR_LOCK_TRANSCEIVER": {
+  "de": "Türschlossantrieb",
+  "en": "Door lock drive"
+ },
+ "DOOR_RECEIVER": {
+  "de": "Toröffner",
+  "en": "Door-/garage door opener"
+ },
+ "DOOR_STATE=CLOSED": {
+  "de": "Stellung geschlossen",
+  "en": "Position closed"
+ },
+ "DOOR_STATE=OPEN": {
+  "de": "Stellung geöffnet",
+  "en": "Position opened"
+ },
+ "DOOR_STATE=POSITION_UNKNOWN": {
+  "de": "Stellung unbekannt",
+  "en": "Position unknown"
+ },
+ "DOOR_STATE=VENTILATION_POSITION": {
+  "de": "Lüftungsposition",
+  "en": "Ventilation position"
+ },
+ "DUAL_WHITE_BRIGHTNESS": {
+  "de": "Dual-White-Controller (Dimmer)",
+  "en": "Dual White Controller (dimmer)"
+ },
+ "DUAL_WHITE_COLOR": {
+  "de": "Dual-White-Controller (Farbe)",
+  "en": "Dual White Controller (colour)"
+ },
+ "DURATION_UNIT": {
+  "de": "Einheit Zeitdauer",
+  "en": "Unit duration"
+ },
+ "DURATION_UNIT=10MS": {
+  "de": "Einheit Zeitdauer: 10 ms",
+  "en": "Unit duration: 10 ms"
+ },
+ "DURATION_UNIT=D": {
+  "de": "Einheit Zeitdauer: Tage",
+  "en": "Unit duration: Days"
+ },
+ "DURATION_UNIT=H": {
+  "de": "Einheit Zeitdauer: Stunden",
+  "en": "Unit duration: Hours"
+ },
+ "DURATION_UNIT=M": {
+  "de": "Einheit Zeitdauer: Minuten",
+  "en": "Unit duration: Minutes"
+ },
+ "DURATION_UNIT=S": {
+  "de": "Einheit Zeitdauer: Sekunden",
+  "en": "Unit duration: Seconds"
+ },
+ "DURATION_VALUE": {
+  "de": "Wert Zeitdauer",
+  "en": "Value duration"
+ },
+ "DUTY_CYCLE_LEVEL": {
+  "de": "Duty Cycle",
+  "en": "Duty cycle"
+ },
+ "DUTY_CYCLE=TRUE": {
+  "de": "Dutycycle erreicht",
+  "en": "Duty cycle reached"
+ },
+ "DUTYCYCLE_LIMIT": {
+  "de": "Duty Cyle Limit, bis zu dem noch Datentelegramme gesendet werden",
+  "en": "Duty cycle limit for sending data telegrams"
+ },
+ "EMERGENCY_OPERATION=TRUE": {
+  "de": "Verbindungsabbruch zum RBG",
+  "en": "Connection failure with room control unit"
+ },
+ "ENABLE_ROUTING": {
+  "de": "Routing aktiv",
+  "en": "Routing active"
+ },
+ "ERROR": {
+  "de": "Fehler",
+  "en": "Error"
+ },
+ "ERROR_BAD_RECHARGEABLE_BATTERY_HEALTH": {
+  "de": "Akkuzustand: nicht OK",
+  "en": "Battery status: Not OK"
+ },
+ "ERROR_BAD_RECHARGEABLE_BATTERY_HEALTH=TRUE": {
+  "de": "Akkuzustand: nicht OK",
+  "en": "Battery status: Not OK"
+ },
+ "ERROR_BATTERY=TRUE": {
+  "de": "Batterie OK",
+  "en": "Battery OK"
+ },
+ "ERROR_BUS_CONFIG_MISMATCH": {
+  "de": "Die tatsächliche Bustopologie entspricht nicht der konfigurierten Bustopologie.",
+  "en": "The actual Bus topology is different to the configured Bus topology."
+ },
+ "ERROR_BUS_CONFIG_MISMATCH=TRUE": {
+  "de": "Die tatsächliche Bustopologie entspricht nicht der konfigurierten Bustopologie.",
+  "en": "The actual Bus topology is different to the configured Bus topology."
+ },
+ "ERROR_CODE": {
+  "de": "Fehlercode",
+  "en": "Error code"
+ },
+ "ERROR_COMMUNICATION_PARTICULATE_MATTER_SENSOR": {
+  "de": "Fehler Kommunikation Feinstaubsensor",
+  "en": "Fine dust sensor communication error"
+ },
+ "ERROR_COMMUNICATION_PARTICULATE_MATTER_SENSOR=TRUE": {
+  "de": "Kommunikation Feinstaubsensor: gestört",
+  "en": "Fine dust sensor communication: failed"
+ },
+ "ERROR_COMMUNICATION_SENSOR": {
+  "de": "Keine oder unvollständige Daten vom Zähler",
+  "en": "Data from the meter non-existent or incomplete"
+ },
+ "ERROR_COMMUNICATION_SENSOR=TRUE": {
+  "de": "Kommunikation Sensor: gestört",
+  "en": "Sensor communication: Failure"
+ },
+ "ERROR_COMMUNICATION_TEMP_AND_HUMIDITY_SENSOR": {
+  "de": "Fehler Kommunikation Temp.-Luftfeuchtesensor",
+  "en": "Temperature/Humidity sensor communication error"
+ },
+ "ERROR_COMMUNICATION_TEMP_AND_HUMIDITY_SENSOR=TRUE": {
+  "de": "Kommunikation Temp.-Luftfeuchtesensor: gestört",
+  "en": "Temperature/Humidity sensor communication: failed"
+ },
+ "ERROR_COPROCESSOR": {
+  "de": "Der Kanal ist nicht erreichbar. Bitte prüfen Sie die Spannungsversorgung des Kanals oder deaktivieren Sie diesen in der WebUI.",
+  "en": "The channel is not accessible. Please check the power supply of the channel or deactivate it in the WebUI."
+ },
+ "ERROR_COPROCESSOR=TRUE": {
+  "de": "Fehler CoProcessor: Ja",
+  "en": "Error CoProcessor: Yes"
+ },
+ "ERROR_DALI_BUS": {
+  "de": "Fehler DALI-Bus",
+  "en": "Error DALI-Bus"
+ },
+ "ERROR_DALI_BUS=TRUE": {
+  "de": "Fehler DALI-Bus: Ja",
+  "en": "Error DALI-Bus"
+ },
+ "ERROR_DEGRADED_CHAMBER": {
+  "de": "Verschmutzte Rauchkammer",
+  "en": "Polluted smoke chamber"
+ },
+ "ERROR_FROST_PROTECTION": {
+  "de": "Frostschutz-Fehlfunktion",
+  "en": "Frost protection malfunction"
+ },
+ "ERROR_FROST_PROTECTION=TRUE": {
+  "de": "Frostschutz-Fehlfunktion: Ja",
+  "en": "Frost protection malfunction: Yes"
+ },
+ "ERROR_JAMMED": {
+  "de": "Schließmechanismus blockiert",
+  "en": "Locking mechanism blocked"
+ },
+ "ERROR_JAMMED=TRUE": {
+  "de": "Schließmechanismus blockiert: Ja",
+  "en": "Locking mechanism blocked: Yes"
+ },
+ "ERROR_LOAD_TOO_LOW": {
+  "de": "LoadTooLow",
+  "en": "Load too low"
+ },
+ "ERROR_LOAD_TOO_LOW=TRUE": {
+  "de": "LoadTooLow: Ja",
+  "en": "Load too low: Yes"
+ },
+ "ERROR_MAX_WATER_FLOW": {
+  "de": "Spitzendurchfluss überschritten. Bitte auf Leckage prüfen.",
+  "en": "Peak flow rate exceeded. Check it for leaks."
+ },
+ "ERROR_MAX_WATER_FLOW_DURATION": {
+  "de": "Wasserdurchflusszeit überschritten. Bitte auf Leckage prüfen.",
+  "en": "Water flow time exceeded. Check it for leaks."
+ },
+ "ERROR_NO_END_STOP_LOCK": {
+  "de": "NoEndStopLock",
+  "en": "No end stop lock"
+ },
+ "ERROR_NO_END_STOP_LOCK=TRUE": {
+  "de": "NoEndStopLock: Ja",
+  "en": "No end stop lock: Yes"
+ },
+ "ERROR_NO_END_STOP_UNLOCK": {
+  "de": "NoEndStopUnLock",
+  "en": "No end stop unLock"
+ },
+ "ERROR_NO_END_STOP_UNLOCK=TRUE": {
+  "de": "NoEndStopUnLock: Ja",
+  "en": "No end stop unLock: Yes"
+ },
+ "ERROR_NON_FLAT_POSITIONING": {
+  "de": "Fehler Lageerkennung",
+  "en": "Error position detection"
+ },
+ "ERROR_NON_FLAT_POSITIONING=TRUE": {
+  "de": "Winkel Lageerkennung überschritten: Ja",
+  "en": "Angle for position detection exceeded: Yes"
+ },
+ "ERROR_OBSTACLE=TRUE": {
+  "de": "Hindernis erkannt",
+  "en": "Obstacle detected"
+ },
+ "ERROR_OVERHEAT": {
+  "de": "Überhitzung: Ja",
+  "en": "Overheat: Yes"
+ },
+ "ERROR_OVERHEAT=TRUE": {
+  "de": "Überhitzung: Ja",
+  "en": "Overheat: Yes"
+ },
+ "ERROR_OVERLOAD": {
+  "de": "Stromüberlastung: Ja",
+  "en": "Current overload: Yes"
+ },
+ "ERROR_OVERLOAD=TRUE": {
+  "de": "Stromüberlastung: Ja",
+  "en": "Current overload: Yes"
+ },
+ "ERROR_PARTICULATE_MATTER_MEASUREMENT=TRUE": {
+  "de": "Messung Feinstaubsensor: gestört",
+  "en": "Fine dust sensor measurement: failed"
+ },
+ "ERROR_POWER_FAILURE": {
+  "de": "Spannungsversorgung fehlerhaft",
+  "en": "Power supply error"
+ },
+ "ERROR_POWER_FAILURE=TRUE": {
+  "de": "Spannungsversorgung fehlerhaft",
+  "en": "Power supply error"
+ },
+ "ERROR_POWER_SHORT_CIRCUIT_BUS_1": {
+  "de": "Ein Kurzschluss zwischen den Stromleitungen von Bus 1 wurde festgestellt.",
+  "en": "A short circuit between the power lines of Bus 1 was detected."
+ },
+ "ERROR_POWER_SHORT_CIRCUIT_BUS_1=TRUE": {
+  "de": "Ein Kurzschluss zwischen den Stromleitungen von Bus 1 wurde festgestellt.",
+  "en": "A short circuit between the power lines of Bus 1 was detected."
+ },
+ "ERROR_POWER_SHORT_CIRCUIT_BUS_2": {
+  "de": "Ein Kurzschluss zwischen den Stromleitungen von Bus 2 wurde festgestellt.",
+  "en": "A short circuit between the power lines of Bus 2 was detected."
+ },
+ "ERROR_POWER_SHORT_CIRCUIT_BUS_2=TRUE": {
+  "de": "Ein Kurzschluss zwischen den Stromleitungen von Bus 2 wurde festgestellt.",
+  "en": "A short circuit between the power lines of Bus 2 was detected."
+ },
+ "ERROR_POWER=NO_ERROR": {
+  "de": "Netzspannung OK",
+  "en": "Power supply voltage OK"
+ },
+ "ERROR_POWER=POWER_FAILURE": {
+  "de": "Netzspannung fehlt",
+  "en": "Power supply voltage not available"
+ },
+ "ERROR_POWER=TRUE": {
+  "de": "Netzspannung OK",
+  "en": "Power supply voltage OK"
+ },
+ "ERROR_REDUCED=TRUE": {
+  "de": "reduzierte Leistung",
+  "en": "reduced power"
+ },
+ "ERROR_RESTART_NEEDED": {
+  "de": "Es ist ein Neutstart des Gerätes nötig.",
+  "en": "The device must be restarted."
+ },
+ "ERROR_RESTART_NEEDED=TRUE": {
+  "de": "Neustart nötig: Ja",
+  "en": "Restart necessary: Yes"
+ },
+ "ERROR_SABOTAGE=NO_ERROR": {
+  "de": "Sabotagekontakt OK",
+  "en": "Sabotage contact OK"
+ },
+ "ERROR_SABOTAGE=SABOTAGE": {
+  "de": "Sabotage",
+  "en": "Sabotage"
+ },
+ "ERROR_SABOTAGE=TRUE": {
+  "de": "Sabotage OK",
+  "en": "Sabotage OK"
+ },
+ "ERROR_SHORT_CIRCUIT_DATA_LINE_BUS_1": {
+  "de": "Ein Kurzschluss zwischen der 24V-Leitung und der Datenleitung A und/oder B von Bus 1 wurde festgestellt.",
+  "en": "A short circuit between 24V line and the Data line A and/or B of Bus 1 was detected."
+ },
+ "ERROR_SHORT_CIRCUIT_DATA_LINE_BUS_1=TRUE": {
+  "de": "Ein Kurzschluss zwischen der 24V-Leitung und der Datenleitung A und/oder B von Bus 1 wurde festgestellt.",
+  "en": "A short circuit between 24V line and the Data line A and/or B of Bus 1 was detected."
+ },
+ "ERROR_SHORT_CIRCUIT_DATA_LINE_BUS_2": {
+  "de": "Ein Kurzschluss zwischen der 24V-Leitung und der Datenleitung A und/oder B von Bus 2 wurde festgestellt.",
+  "en": "A short circuit between 24V line and the Data line A and/or B of Bus 2 was detected."
+ },
+ "ERROR_SHORT_CIRCUIT_DATA_LINE_BUS_2=TRUE": {
+  "de": "Ein Kurzschluss zwischen der 24V-Leitung und der Datenleitung A und/oder B von Bus 2 wurde festgestellt.",
+  "en": "A short circuit between 24V line and the Data line A and/or B of Bus 2 was detected."
+ },
+ "ERROR_TEMP_OR_HUMIDITY_MEASUREMENT=TRUE": {
+  "de": "Messung Temp.-Luftfeuchte: gestört",
+  "en": "Temperature/Humidity measurement: failed"
+ },
+ "ERROR_TEMP_SENSOR": {
+  "de": "Fehler Temperatursensor",
+  "en": "Error temperature sensor"
+ },
+ "ERROR_TEMP_SENSOR_2": {
+  "de": "Fehler Temperatursensor 2",
+  "en": "Error temperature sensor 2"
+ },
+ "ERROR_TEMP_SENSOR_2=TRUE": {
+  "de": "Temperatursensor 2 nicht Ok",
+  "en": "Temperature sensor 2 not ok"
+ },
+ "ERROR_TEMP_SENSOR=TRUE": {
+  "de": "Temperatursensor nicht Ok",
+  "en": "Temperature sensor not ok"
+ },
+ "ERROR_UNDERVOLTAGE": {
+  "de": "Betriebsspannung nicht OK",
+  "en": "Operating voltage not OK"
+ },
+ "ERROR_UNDERVOLTAGE=TRUE": {
+  "de": "Betriebsspannung nicht OK",
+  "en": "Operating voltage not OK"
+ },
+ "ERROR_UPDATE": {
+  "de": "Fehler Geräte Update: Ja",
+  "en": "Error device update: Yes"
+ },
+ "ERROR_UPDATE=TRUE": {
+  "de": "Fehler Geräte Update: Ja",
+  "en": "Error device update: Yes"
+ },
+ "ERROR_VALVE_FAILURE": {
+  "de": "Ventil-Fehlfunktion",
+  "en": "Valve malfunction"
+ },
+ "ERROR_VALVE_FAILURE=TRUE": {
+  "de": "Ventil-Fehlfunktion: Ja",
+  "en": "Valve malfunction: Yes"
+ },
+ "ERROR_WATER_FAILURE": {
+  "de": "Problem Wasserdurchfluss",
+  "en": "Water flow problem"
+ },
+ "ERROR_WATER_FAILURE=TRUE": {
+  "de": "Problem Wasserdurchfluss: Ja",
+  "en": "Water flow problem: Yes"
+ },
+ "ERROR_WIND_COMMUNICATION=TRUE": {
+  "de": "Sensor Windrichtung: Kommunikationsfehler",
+  "en": "Sensor wind directionCommunication error"
+ },
+ "ERROR_WIND_NORTH=TRUE": {
+  "de": "Sensor Windrichtung: Nord nicht kalibriert",
+  "en": "Sensor wind directionNorth direction not calibrated"
+ },
+ "ERROR=NO_ERROR": {
+  "de": "Kein Fehler",
+  "en": "No error"
+ },
+ "EVENT_DELAY_UNIT": {
+  "de": "Einheit der Eventverzögerung",
+  "en": "Unit of event delay"
+ },
+ "EVENT_DELAY_UNIT=100MS": {
+  "de": "100 ms",
+  "en": "100 ms"
+ },
+ "EVENT_DELAY_UNIT=H": {
+  "de": "Stunden",
+  "en": "Hours"
+ },
+ "EVENT_DELAY_UNIT=M": {
+  "de": "Minuten",
+  "en": "Minutes"
+ },
+ "EVENT_DELAY_UNIT=S": {
+  "de": "Sekunden",
+  "en": "Seconds"
+ },
+ "EVENT_DELAY_VALUE": {
+  "de": "Wert Eventverzögerung",
+  "en": "Value event delay"
+ },
+ "EVENT_DELAYTIME": {
+  "de": "Meldeverzögerung",
+  "en": "Message delay"
+ },
+ "EVENT_FILTER_NUMBER": {
+  "de": "Empfindlichkeit",
+  "en": "Sensitivity"
+ },
+ "EVENT_FILTER_PERIOD": {
+  "de": "Filterzeitraum",
+  "en": "Filter period"
+ },
+ "EVENT_RANDOMTIME_UNIT": {
+  "de": "Einheit des Zufallsanteils",
+  "en": "Unit of random part"
+ },
+ "EVENT_RANDOMTIME_UNIT=100MS": {
+  "de": "100 ms",
+  "en": "100 ms"
+ },
+ "EVENT_RANDOMTIME_UNIT=H": {
+  "de": "Stunden",
+  "en": "Hours"
+ },
+ "EVENT_RANDOMTIME_UNIT=M": {
+  "de": "Minuten",
+  "en": "Minutes"
+ },
+ "EVENT_RANDOMTIME_UNIT=S": {
+  "de": "Sekunden",
+  "en": "Seconds"
+ },
+ "EVENT_RANDOMTIME_VALUE": {
+  "de": "Statusmeldungen Zufallsanteil",
+  "en": "Status messages random part"
+ },
+ "EXPECT_AES": {
+  "de": "AES-Verschlüsselung",
+  "en": "AES encryption"
+ },
+ "EXTERNAL_CLOCK=TRUE": {
+  "de": "Modus Energiespar-Temperatur aktiv",
+  "en": "Energy-saving temperature mode active"
+ },
+ "FREQUENCY": {
+  "de": "Frequenz",
+  "en": "Frequency"
+ },
+ "FREQUENCY_ALTERNATING_LOW_HIGH": {
+  "de": "Frequenz tief/hoch",
+  "en": "Frequency low/high"
+ },
+ "FREQUENCY_ALTERNATING_LOW_MID_HIGH": {
+  "de": "Frequenz tief/mittel/hoch",
+  "en": "Frequency low/average/high"
+ },
+ "FREQUENCY_FALLING": {
+  "de": "Frequenz fallend",
+  "en": "Frequency dropping"
+ },
+ "FREQUENCY_HIGHON_LONGOFF": {
+  "de": "Frequenz hoch ein, lang aus",
+  "en": "Frequency high on, long off"
+ },
+ "FREQUENCY_HIGHON_OFF": {
+  "de": "Frequenz hoch ein/aus",
+  "en": "Frequency high on/off"
+ },
+ "FREQUENCY_INPUT": {
+  "de": "Analog",
+  "en": "Analog"
+ },
+ "FREQUENCY_LOWON_LONGOFF_HIGHON_LONGOFF": {
+  "de": "Frequenz tief ein - lang aus, hoch ein - lang aus",
+  "en": "Frequency low on - long off, high on - long off"
+ },
+ "FREQUENCY_LOWON_OFF_HIGHON_OFF": {
+  "de": "Frequenz tief ein/aus, hoch ein/aus",
+  "en": "Frequency low on/off, high on/off"
+ },
+ "FREQUENCY_RISING": {
+  "de": "Frequenz steigend",
+  "en": "Frequency increasing"
+ },
+ "FREQUENCY_RISING_AND_FALLING": {
+  "de": "Frequenz steigend/fallend",
+  "en": "Frequency increasing/dropping"
+ },
+ "FREQUENCY_STATUS=0": {
+  "de": "Wert Frequenz: Normal",
+  "en": "Value Frequency: Normal"
+ },
+ "FREQUENCY_STATUS=1": {
+  "de": "Wert Frequenz: unbekannt",
+  "en": "Value Frequency: unknown"
+ },
+ "FREQUENCY_STATUS=2": {
+  "de": "Wert Frequenz: Überlauf",
+  "en": "Value Frequency: Overflow"
+ },
+ "FREQUENCY_STATUS=3": {
+  "de": "Wert Frequenz: Unterlauf",
+  "en": "Value Frequency: Underflow"
+ },
+ "FREQUENCY_STATUS=4": {
+  "de": "Wert Frequenz: Fehler",
+  "en": "Value Frequency: Error"
+ },
+ "FREQUENCY_STATUS=ERROR": {
+  "de": "Wert Frequenz: Fehler",
+  "en": "Value Frequency: Error"
+ },
+ "FREQUENCY_STATUS=NORMAL": {
+  "de": "Wert Frequenz: Normal",
+  "en": "Value Frequency: Normal"
+ },
+ "FREQUENCY_STATUS=OVERFLOW": {
+  "de": "Wert Frequenz: Überlauf",
+  "en": "Value Frequency: Overflow"
+ },
+ "FREQUENCY_STATUS=UNDERFLOW": {
+  "de": "Wert Frequenz: Unterlauf",
+  "en": "Value Frequency: Underflow"
+ },
+ "FREQUENCY_STATUS=UNKNOWN": {
+  "de": "Wert Frequenz: unbekannt",
+  "en": "Value Frequency: unknown"
+ },
+ "FROST_PROTECTION_TEMPERATURE": {
+  "de": "Frostschutztemperatur",
+  "en": "Frost protection temperature"
+ },
+ "FROST_PROTECTION=TRUE": {
+  "de": "Frostschutz aktiv",
+  "en": "Frost protection active"
+ },
+ "FUSE_DELAY": {
+  "de": "Trägheit Überstromerkennung",
+  "en": "Inertia overcurrent detection"
+ },
+ "GENERIC_INPUT_TRANSMITER": {
+  "de": "Eingangskanal",
+  "en": "Input channel"
+ },
+ "GLOBAL_BUTTON_LOCK": {
+  "de": "Globale Bediensperre",
+  "en": "Global operating lock"
+ },
+ "HEATER_STATE=TRUE": {
+  "de": "Heizung Ein",
+  "en": "Heating On"
+ },
+ "HEATING_CLIMATECONTROL_CL_RECEIVER": {
+  "de": "Empfänger Thermostat",
+  "en": "Receiver thermostat"
+ },
+ "HEATING_CLIMATECONTROL_CL_TRANSMITTER": {
+  "de": "Sender Thermostat",
+  "en": "Transmitter thermostat"
+ },
+ "HEATING_CLIMATECONTROL_RECEIVER": {
+  "de": "Empfänger Thermostat",
+  "en": "Receiver thermostat"
+ },
+ "HEATING_CLIMATECONTROL_SWITCH_TRANSMITTER": {
+  "de": "Sender Thermostat",
+  "en": "Transmitter thermostat"
+ },
+ "HEATING_CLIMATECONTROL_TRANSCEIVER": {
+  "de": "Sender Thermostat",
+  "en": "Transmitter thermostat"
+ },
+ "HEATING_COOLING=0": {
+  "de": "Heizen",
+  "en": "Heating"
+ },
+ "HEATING_COOLING=1": {
+  "de": "Kühlen",
+  "en": "Cooling"
+ },
+ "HEATING_COOLING=COOLING": {
+  "de": "Kühlen",
+  "en": "Cooling"
+ },
+ "HEATING_COOLING=HEATING": {
+  "de": "Heizen",
+  "en": "Heating"
+ },
+ "HEATING_KEY_RECEIVER": {
+  "de": "Empfänger Thermostat",
+  "en": "Receiver thermostat"
+ },
+ "HEATING_ROOM_TH_RECEIVER": {
+  "de": "Empfänger Thermostat",
+  "en": "Receiver thermostat"
+ },
+ "HEATING_ROOM_TH_TRANSCEIVER": {
+  "de": "Sender Thermostat",
+  "en": "Transmitter thermostat"
+ },
+ "HEATING_SHUTTER_CONTACT_RECEIVER": {
+  "de": "Empfänger Thermostat",
+  "en": "Receiver thermostat"
+ },
+ "HEIGHT": {
+  "de": "Höhe",
+  "en": "Height"
+ },
+ "HIGHEST_ILLUMINATION": {
+  "de": "Maximale Helligkeit",
+  "en": "Maximum level of brightness"
+ },
+ "HIGHEST_ILLUMINATION_STATUS=0": {
+  "de": "Wert Maximale Helligkeit: Normal",
+  "en": "Value Maximum level of brightness: Normal"
+ },
+ "HIGHEST_ILLUMINATION_STATUS=1": {
+  "de": "Wert Maximale Helligkeit: unbekannt",
+  "en": "Value Maximum level of brightness: unknown"
+ },
+ "HIGHEST_ILLUMINATION_STATUS=2": {
+  "de": "Wert Maximale Helligkeit: Überlauf",
+  "en": "Value Maximum level of brightness: Overflow"
+ },
+ "HIGHEST_ILLUMINATION_STATUS=NORMAL": {
+  "de": "Wert Maximale Helligkeit: Normal",
+  "en": "Value Maximum level of brightness: Normal"
+ },
+ "HIGHEST_ILLUMINATION_STATUS=OVERFLOW": {
+  "de": "Wert Maximale Helligkeit: Überlauf",
+  "en": "Value Maximum level of brightness: Overflow"
+ },
+ "HIGHEST_ILLUMINATION_STATUS=UNKNOWN": {
+  "de": "Wert Maximale Helligkeit: unbekannt",
+  "en": "Value Maximum level of brightness: unknown"
+ },
+ "HUE": {
+  "de": "Hue",
+  "en": "Hue"
+ },
+ "HUMIDITY": {
+  "de": "Rel. Luftfeuchte",
+  "en": "Relative humidity"
+ },
+ "HUMIDITY_ALARM=TRUE": {
+  "de": "Luftfeuchte überschritten",
+  "en": "Humidity exceeded"
+ },
+ "HUMIDITY_LIMITER=TRUE": {
+  "de": "Betriebsart Feuchtigkeitsbegrenzung aktiv",
+  "en": "Operating mode humidity limit active"
+ },
+ "HUMIDITY_STATUS=0": {
+  "de": "Wert Rel. Luftfeuchte: Normal",
+  "en": "Value Relative humidity: Normal"
+ },
+ "HUMIDITY_STATUS=1": {
+  "de": "Wert Rel. Luftfeuchte: unbekannt",
+  "en": "Value Relative humidity: unknown"
+ },
+ "HUMIDITY_STATUS=2": {
+  "de": "Wert Rel. Luftfeuchte: Überlauf",
+  "en": "Value Relative humidity: Overflow"
+ },
+ "HUMIDITY_STATUS=3": {
+  "de": "Wert Rel. Luftfeuchte: Unterlauf",
+  "en": "Value Relative humidity: Underflow"
+ },
+ "HUMIDITY_STATUS=NORMAL": {
+  "de": "Wert Rel. Luftfeuchte: Normal",
+  "en": "Value Relative humidity: Normal"
+ },
+ "HUMIDITY_STATUS=OVERFLOW": {
+  "de": "Wert Rel. Luftfeuchte: Überlauf",
+  "en": "Value Relative humidity: Overflow"
+ },
+ "HUMIDITY_STATUS=UNDERFLOW": {
+  "de": "Wert Rel. Luftfeuchte: Unterlauf",
+  "en": "Value Relative humidity: Underflow"
+ },
+ "HUMIDITY_STATUS=UNKNOWN": {
+  "de": "Wert Rel. Luftfeuchte: unbekannt",
+  "en": "Value Relative humidity: unknown"
+ },
+ "IDENTIFICATION_MODE_KEY_VISUAL=TRUE": {
+  "de": "Beleuchtung Systemtaste: EIN",
+  "en": "Lighting system button: ON"
+ },
+ "IDENTIFICATION_MODE_LCD_BACKLIGHT=TRUE": {
+  "de": "Beleuchtung Display: EIN",
+  "en": "Lighting Display: ON"
+ },
+ "IDENTIFY_DURATION": {
+  "de": "Dauer der Beleuchtung",
+  "en": "Duration of lighting"
+ },
+ "IDENTIFY_TARGET_LEVEL": {
+  "de": "Helligkeitswert der Beleuchtung",
+  "en": "Brightness value of lighting"
+ },
+ "ILLUMINATION": {
+  "de": "Helligkeit",
+  "en": "Brightness"
+ },
+ "ILLUMINATION_STATUS=0": {
+  "de": "Wert Helligkeit: Normal",
+  "en": "Value Brightness: Normal"
+ },
+ "ILLUMINATION_STATUS=1": {
+  "de": "Wert Helligkeit: unbekannt",
+  "en": "Value Brightness: unknown"
+ },
+ "ILLUMINATION_STATUS=2": {
+  "de": "Wert Helligkeit: Überlauf",
+  "en": "Value Brightness: Overflow"
+ },
+ "ILLUMINATION_STATUS=NORMAL": {
+  "de": "Wert Helligkeit: Normal",
+  "en": "Value Brightness: Normal"
+ },
+ "ILLUMINATION_STATUS=OVERFLOW": {
+  "de": "Wert Helligkeit: Überlauf",
+  "en": "Value Brightness: Overflow"
+ },
+ "ILLUMINATION_STATUS=UNKNOWN": {
+  "de": "Wert Helligkeit: unbekannt",
+  "en": "Value Brightness: unknown"
+ },
+ "INHIBIT": {
+  "de": "Sperrung",
+  "en": "Lock"
+ },
+ "INHIBIT=TRUE": {
+  "de": "Sperrung aktiv",
+  "en": "Lock active"
+ },
+ "INPUT_OUTPUT": {
+  "de": "IO-Interface",
+  "en": "IO interface"
+ },
+ "IP_ADDRESS": {
+  "de": "IP-Adresse",
+  "en": "IP address"
+ },
+ "JALOUSIE": {
+  "de": "Jalousieaktor",
+  "en": "Jalousie actuator"
+ },
+ "KEY": {
+  "de": "Taster",
+  "en": "Button"
+ },
+ "KEY_TRANSCEIVER": {
+  "de": "Taster",
+  "en": "Push button"
+ },
+ "KEYMATIC": {
+  "de": "KeyMatic",
+  "en": "KeyMatic"
+ },
+ "KEYPRESS_SIGNAL": {
+  "de": "Tastenton",
+  "en": "Button sound"
+ },
+ "LANGUAGE": {
+  "de": "Sprache",
+  "en": "Language"
+ },
+ "LANGUAGE=ENGLISH": {
+  "de": "Englisch",
+  "en": "English"
+ },
+ "LANGUAGE=GERMAN": {
+  "de": "Deutsch",
+  "en": "German"
+ },
+ "LAST_LOCK_DRIVE_LOAD": {
+  "de": "Schlosslast der letzten Schließfahrt",
+  "en": "Pre-load of the last closing movement"
+ },
+ "LAST_PASSAGE_DIRECTION=TRUE": {
+  "de": "Letzter erkannter Durchgang: Ja",
+  "en": "Last passage detected: Yes"
+ },
+ "LED_DISABLE_CHANNELSTATE": {
+  "de": "Geräte-LED deaktivieren",
+  "en": "Deactivate device LED"
+ },
+ "LED_DISABLE_LED_DISABLE_SENDSTATE": {
+  "de": "Visuelle Bestätigung des Tastendrucks deaktivieren",
+  "en": "Deactivate visual confirmation of button press"
+ },
+ "LED_ONTIME": {
+  "de": "LED-Leuchtzeit (gn/rt)",
+  "en": "LED on time (gn/rd)"
+ },
+ "LED_SLEEP_MODE=OFF": {
+  "de": "Anzeige aus dem Ruhezustand holen",
+  "en": "Wake up display from standby mode"
+ },
+ "LED_SLEEP_MODE=ON": {
+  "de": "Anzeige in Ruhezustand bringen",
+  "en": "Bring system to standby mode"
+ },
+ "LED_STATUS=GREEN": {
+  "de": "Anzeige grün",
+  "en": "Display green"
+ },
+ "LED_STATUS=OFF": {
+  "de": "Anzeige aus",
+  "en": "Display off"
+ },
+ "LED_STATUS=ORANGE": {
+  "de": "Anzeige orange",
+  "en": "Display orange"
+ },
+ "LED_STATUS=RED": {
+  "de": "Anzeige rot",
+  "en": "Display red"
+ },
+ "LEVEL": {
+  "de": "Wert",
+  "en": "Value"
+ },
+ "LEVEL_COMMAND_TRANSMITTER_CO2": {
+  "de": "Entscheidungswert CO2",
+  "en": "Condition CO2"
+ },
+ "LEVEL_COMMAND_TRANSMITTER_HUMIDITY": {
+  "de": "Entscheidungswert Feuchtigkeit",
+  "en": "Condition humidity"
+ },
+ "LEVEL_COMMAND_TRANSMITTER_TEMPERATURE": {
+  "de": "Entscheidungswert Temperatur",
+  "en": "Condition temperature"
+ },
+ "LEVEL_REAL": {
+  "de": "Wert",
+  "en": "Value"
+ },
+ "LEVEL_STATUS=0": {
+  "de": "Wert Status Level: Normal",
+  "en": "Value Status Level: Normal"
+ },
+ "LEVEL_STATUS=1": {
+  "de": "Wert Status Level: unbekannt",
+  "en": "Value Status Level: unknown"
+ },
+ "LEVEL_STATUS=2": {
+  "de": "Wert Status Level: Überlauf",
+  "en": "Value Status Level: Overflow"
+ },
+ "LEVEL_STATUS=3": {
+  "de": "Wert Status Level: Unterlauf",
+  "en": "Value Status Level: Underflow"
+ },
+ "LEVEL_STATUS=4": {
+  "de": "Wert Status Level: Fehler",
+  "en": "Value Status Level: Error"
+ },
+ "LEVEL_STATUS=ERROR": {
+  "de": "Wert Status Level: Fehler",
+  "en": "Value Status Level: Error"
+ },
+ "LEVEL_STATUS=NORMAL": {
+  "de": "Wert Status Level: Normal",
+  "en": "Value Status Level: Normal"
+ },
+ "LEVEL_STATUS=OVERFLOW": {
+  "de": "Wert Status Level: Überlauf",
+  "en": "Value Status Level: Overflow"
+ },
+ "LEVEL_STATUS=UNDERFLOW": {
+  "de": "Wert Status Level: Unterlauf",
+  "en": "Value Status Level: Underflow"
+ },
+ "LEVEL_STATUS=UNKNOWN": {
+  "de": "Wert Status Level: unbekannt",
+  "en": "Value Status Level: unknown"
+ },
+ "LIVE_MODE_RX": {
+  "de": "Live Mode",
+  "en": "Live mode"
+ },
+ "LOCAL_RESET_DISABLE": {
+  "de": "Reset per Gerätetaste sperren",
+  "en": "Lock reset via device button"
+ },
+ "LOCAL_RESET_DISABLED": {
+  "de": "Reset per Gerätetaste sperren",
+  "en": "Lock reset via device button"
+ },
+ "LOCK_STATE": {
+  "de": "Schlosszustand",
+  "en": "Lock status"
+ },
+ "LOCK_STATE_REASON": {
+  "de": "Antriebsart",
+  "en": "Drive type"
+ },
+ "LOCK_STATE_REASON=MANUAL": {
+  "de": "Antriebsart: Manuell",
+  "en": "Drive type: manual"
+ },
+ "LOCK_STATE_REASON=MANUAL_INSIDE": {
+  "de": "Antriebsart: Manuell, von innen",
+  "en": "Drive type: manual, from inside"
+ },
+ "LOCK_STATE_REASON=MANUAL_OUTSIDE": {
+  "de": "Antriebsart: Manuell, von außen",
+  "en": "Drive type: manual, from outside"
+ },
+ "LOCK_STATE_REASON=MOTOR": {
+  "de": "Antriebsart: Motorisch",
+  "en": "Drive type: motorised"
+ },
+ "LOCK_STATE_REASON=MOTOR_AFTER_OPEN": {
+  "de": "Antriebsart: Motorisch nach Open",
+  "en": "Drive type: motorized after open"
+ },
+ "LOCK_STATE_REASON=MOTOR_AFTER_OPEN_ACKED": {
+  "de": "Antriebsart: Motorisch, nach Open, ACKed (kein neues Open-Ereignis)",
+  "en": "Drive type: motorised, after open, ACKed (no new open event)"
+ },
+ "LOCK_STATE_REASON=UNKNOWN": {
+  "de": "Antriebsart: unbekannt",
+  "en": "Drive type: unknown"
+ },
+ "LOCK_STATE=INVALID": {
+  "de": "Schlosszustand: ungültig",
+  "en": "Lock status: invalid"
+ },
+ "LOCK_STATE=LOCKED": {
+  "de": "Schlosszustand: verriegelt",
+  "en": "Lock status: locked"
+ },
+ "LOCK_STATE=UNKNOWN": {
+  "de": "Schlosszustand: unbekannt",
+  "en": "Lock status: unknown"
+ },
+ "LOCK_STATE=UNLOCKED": {
+  "de": "Schlosszustand: entriegelt",
+  "en": "Lock status: unlocked"
+ },
+ "LOCK_TEACH_IN_STATE": {
+  "de": "Status Anlernprozess Türschloss",
+  "en": "Status pairing process door lock"
+ },
+ "LOCK_TEACH_IN_STATE=ERROR_NEUTRAL_POSITION_LESS_ONE_TURN": {
+  "de": "Neutralstellungen Fehler: weniger als 1 Umdrehung zwischen Ver- und Entriegelt",
+  "en": "Neutral position erorr: less than 1 turn between locked and unlocked"
+ },
+ "LOCK_TEACH_IN_STATE=ERROR_TEACH_IN_DRIVE_BATTERY_LOW": {
+  "de": "Batterien zu schwach",
+  "en": "Low batteries"
+ },
+ "LOCK_TEACH_IN_STATE=ERROR_TEACH_IN_DRIVE_CANCELED": {
+  "de": "Abbruch durch anderes Kommando / Ereignis",
+  "en": "Cancellation by another command/event"
+ },
+ "LOCK_TEACH_IN_STATE=TEACH_IN_DRIVE_RUNNING": {
+  "de": "Anlernfahrt läuft",
+  "en": "Calibration drive ongoing"
+ },
+ "LOCK_TEACH_IN_STATE=TEACH_IN_ERROR": {
+  "de": "Anlernprozess Türschloss Fehler: sonstige",
+  "en": "Error pairing process door lock: other"
+ },
+ "LOCK_TEACH_IN_STATE=TEACH_IN_INACTIVE": {
+  "de": "nicht aktiv",
+  "en": "not active"
+ },
+ "LOCK_TEACH_IN_STATE=TEACH_IN_SUCCESSFUL": {
+  "de": "Anlernprozess Türschloss erfolgreich abgeschlossen.",
+  "en": "Pairing process door lock successfully completed"
+ },
+ "LOGGING": {
+  "de": "Logging",
+  "en": "Logging"
+ },
+ "LOGGING_TIME": {
+  "de": "Zeit nach der Logging-Meldung verschickt wird",
+  "en": "Duration after logging message is send"
+ },
+ "LOGGING=OFF": {
+  "de": "deaktiviert",
+  "en": "deactivated"
+ },
+ "LOGGING=ON": {
+  "de": "aktiviert",
+  "en": "activated"
+ },
+ "LOGGING=TRUE": {
+  "de": "aktiviert",
+  "en": "activated"
+ },
+ "LOGIC_AND": {
+  "de": "AND (niedriger Pegel hat Priorität)",
+  "en": "AND (lower level has priority)"
+ },
+ "LOGIC_ANDINVERS": {
+  "de": "AND_INVERS (AND mit vorheriger Invertierung des Kanal-Pegels)",
+  "en": "AND_INVERS (AND with previous inverting of channel level)"
+ },
+ "LOGIC_COMBINATION": {
+  "de": "Verknüpfungsregel",
+  "en": "Connection rule"
+ },
+ "LOGIC_INACTIVE": {
+  "de": "Kanal inaktiv",
+  "en": "Channel inactive"
+ },
+ "LOGIC_INVERSMINUS": {
+  "de": "INVERS_MINUS (wie MINUS, aber mit anschließender Invertierung des Pegels)",
+  "en": "INVERS_MINUS (equal to MINUS, but with subsequent inverting of level)"
+ },
+ "LOGIC_INVERSMUL": {
+  "de": "INVERS_MULTI (wie MULTI, aber mit anschließender Invertierung des Pegels)",
+  "en": "INVERS_MULTI (equal to MULTI, but with subsequent inverting of level)"
+ },
+ "LOGIC_INVERSPLUS": {
+  "de": "INVERS_PLUS (wie PLUS, aber mit anschließender Invertierung des Pegels)",
+  "en": "INVERS_PLUS (equal to PLUS, but with subsequent inverting of level)"
+ },
+ "LOGIC_MINUS": {
+  "de": "MINUS (Pegel-Subtraktion, Minimum = 0%)",
+  "en": "MINUS (level subtraction, minimum = 0%)"
+ },
+ "LOGIC_MINUSINVERS": {
+  "de": "MINUS_INVERS (MINUS mit vorheriger Invertierung des Pegels)",
+  "en": "MINUS_INVERS (MINUS with previous inverting of level)"
+ },
+ "LOGIC_MUL": {
+  "de": "MULTI (Pegel-Multiplikation Maximum = 100%)",
+  "en": "MULTI (level multiplication, maximum = 100%)"
+ },
+ "LOGIC_MULINVERS": {
+  "de": "MULTI_INVERS (MULTI mit vorheriger Invertierung des Pegels)",
+  "en": "MULTI_INVERS (MULTI with previous inverting of level)"
+ },
+ "LOGIC_NAND": {
+  "de": "NAND (wie AND, aber mit anschließender Invertierung des Pegels)",
+  "en": "NAND (equal to AND, but with subsequent inverting of level)"
+ },
+ "LOGIC_NOR": {
+  "de": "NOR (wie OR, aber mit anschließender Invertierung des Pegels)",
+  "en": "NOR (equal to OR, but with subsequent inverting of level)"
+ },
+ "LOGIC_OR": {
+  "de": "OR (höherer Pegel hat Priorität)",
+  "en": "OR (higher level has priority)"
+ },
+ "LOGIC_ORINVERS": {
+  "de": "OR_INVERS (OR mit vorheriger Invertierung des Kanal-Pegels)",
+  "en": "OR_INVERS (OR with previous inverting of channel level)"
+ },
+ "LOGIC_PLUS": {
+  "de": "PLUS (Pegel-Addition, Maximum = 100%)",
+  "en": "PLUS (level addition, maximum = 100%)"
+ },
+ "LOGIC_PLUSINVERS": {
+  "de": "PLUS_INVERS (PLUS mit vorheriger Invertierung des Pegels)",
+  "en": "PLUS_INVERS (PLUS with previous inverting of level)"
+ },
+ "LOGIC_XOR": {
+  "de": "XOR (wie OR, aber wenn beide Pegel > 0, dann ist das Ergebnis 0)",
+  "en": "XOR (equal to OR, but if both levels > 0. the result is 0)"
+ },
+ "LOW_BAT_LIMIT": {
+  "de": "Low-Bat.-Schwelle",
+  "en": "Low. bat. threshold"
+ },
+ "LOW_BAT=TRUE": {
+  "de": "Batterie leer",
+  "en": "Battery empty"
+ },
+ "LOWBAT_REPORTING": {
+  "de": "Fehlermeldung 'LowBat'",
+  "en": "Low battery error message"
+ },
+ "LOWBAT_REPORTING=TRUE": {
+  "de": "Fehlermeldung 'LowBat'",
+  "en": "Low battery error message"
+ },
+ "LOWBAT_SIGNAL": {
+  "de": "Low-Bat.-Signal",
+  "en": "Low bat. signal"
+ },
+ "LOWBAT=TRUE": {
+  "de": "Batterie leer",
+  "en": "Battery empty"
+ },
+ "LOWERING_MODE": {
+  "de": "Eco-Temperatur",
+  "en": "Reduction temperature"
+ },
+ "LOWEST_ILLUMINATION": {
+  "de": "Minimale Helligkeit",
+  "en": "Minimum level of brightness"
+ },
+ "LOWEST_ILLUMINATION_STATUS=0": {
+  "de": "Wert Minimale Helligkeit: Normal",
+  "en": "Value Minimum level of brightness: Normal"
+ },
+ "LOWEST_ILLUMINATION_STATUS=1": {
+  "de": "Wert Minimale Helligkeit: unbekannt",
+  "en": "Value Minimum level of brightness: unknown"
+ },
+ "LOWEST_ILLUMINATION_STATUS=2": {
+  "de": "Wert Minimale Helligkeit: Überlauf",
+  "en": "Value Minimum level of brightness: Overflow"
+ },
+ "LOWEST_ILLUMINATION_STATUS=NORMAL": {
+  "de": "Wert Minimale Helligkeit: Normal",
+  "en": "Value Minimum level of brightness: Normal"
+ },
+ "LOWEST_ILLUMINATION_STATUS=OVERFLOW": {
+  "de": "Wert Minimale Helligkeit: Überlauf",
+  "en": "Value Minimum level of brightness: Overflow"
+ },
+ "LOWEST_ILLUMINATION_STATUS=UNKNOWN": {
+  "de": "Wert Minimale Helligkeit: unbekannt",
+  "en": "Value Minimum level of brightness: unknown"
+ },
+ "LUX": {
+  "de": "Helligkeit",
+  "en": "Brightness"
+ },
+ "MAINS_POWERED": {
+  "de": "Netzbetrieb",
+  "en": "Mains operation"
+ },
+ "MANU_MODE": {
+  "de": "Manu-Modus",
+  "en": "Manu mode"
+ },
+ "MANUAL_SELF_CALIBRATION_BOTTOM_POS_SET=TRUE": {
+  "de": "Untere Endlage gesetzt: Ja",
+  "en": "en* Untere Endlage gesetzt: Ja"
+ },
+ "MANUAL_SELF_CALIBRATION_TOP_POS_SET=TRUE": {
+  "de": "Obere Endlage gesetzt: Ja",
+  "en": "en* Obere Endlage gesetzt: Ja"
+ },
+ "MASS_CONCENTRATION_PM_1": {
+  "de": "Massenkonzentration PM1.0",
+  "en": "Mass concentration PM1.0"
+ },
+ "MASS_CONCENTRATION_PM_1_24H_AVERAGE": {
+  "de": "Massenkonzentration PM1.0 24h Durchschnitt",
+  "en": "Mass concentration PM1.0 24h Average"
+ },
+ "MASS_CONCENTRATION_PM_1_24H_AVERAGE_STATUS=NORMAL": {
+  "de": "Massenkonzentration PM1.0 24h Durchschnitt Status Normal",
+  "en": "Mass concentration PM1.0 24h Average Status Normal"
+ },
+ "MASS_CONCENTRATION_PM_1_24H_AVERAGE_STATUS=OVERFLOW": {
+  "de": "Massenkonzentration PM1.0 24h Durchschnitt Status Überlauf",
+  "en": "Mass concentration PM1.0 24h Average Status Overflow"
+ },
+ "MASS_CONCENTRATION_PM_1_24H_AVERAGE_STATUS=UNKNOWN": {
+  "de": "Massenkonzentration PM1.0 24h Durchschnitt Status unbekannt",
+  "en": "Mass concentration PM1.0 24h Average Status unknown"
+ },
+ "MASS_CONCENTRATION_PM_1_STATUS=NORMAL": {
+  "de": "Massenkonzentration PM1.0 Status Normal",
+  "en": "Mass concentration PM1.0 Status Normal"
+ },
+ "MASS_CONCENTRATION_PM_1_STATUS=OVERFLOW": {
+  "de": "Massenkonzentration PM1.0 Status Überlauf",
+  "en": "Mass concentration PM1.0 Status Overflow"
+ },
+ "MASS_CONCENTRATION_PM_1_STATUS=UNKNOWN": {
+  "de": "Massenkonzentration PM1.0 Status unbekannt",
+  "en": "Mass concentration PM1.0 Status unknown"
+ },
+ "MASS_CONCENTRATION_PM_10": {
+  "de": "Massenkonzentration PM10",
+  "en": "Mass concentration PM10"
+ },
+ "MASS_CONCENTRATION_PM_10_24H_AVERAGE": {
+  "de": "Massenkonzentration PM10 24h Durchschnitt",
+  "en": "Mass concentration PM10 24h Average"
+ },
+ "MASS_CONCENTRATION_PM_10_24H_AVERAGE_STATUS=NORMAL": {
+  "de": "Massenkonzentration PM10 24h Durchschnitt Status Normal",
+  "en": "Mass concentration PM10 24h Average Status Normal"
+ },
+ "MASS_CONCENTRATION_PM_10_24H_AVERAGE_STATUS=OVERFLOW": {
+  "de": "Massenkonzentration PM10 24h Durchschnitt Status Überlauf",
+  "en": "Mass concentration PM10 24h Average Status Overflow"
+ },
+ "MASS_CONCENTRATION_PM_10_24H_AVERAGE_STATUS=UNKNOWN": {
+  "de": "Massenkonzentration PM10 24h Durchschnitt Status unbekannt",
+  "en": "Mass concentration PM10 24h Average Status unknown"
+ },
+ "MASS_CONCENTRATION_PM_10_STATUS=NORMAL": {
+  "de": "Massenkonzentration PM10 Status Normal",
+  "en": "Mass concentration PM10 Status Normal"
+ },
+ "MASS_CONCENTRATION_PM_10_STATUS=OVERFLOW": {
+  "de": "Massenkonzentration PM10 Status Überlauf",
+  "en": "Mass concentration PM10 Status Overflow"
+ },
+ "MASS_CONCENTRATION_PM_10_STATUS=UNKNOWN": {
+  "de": "Massenkonzentration PM10 Status unbekannt",
+  "en": "Mass concentration PM10 Status unknown"
+ },
+ "MASS_CONCENTRATION_PM_2_5": {
+  "de": "Massenkonzentration PM2.5",
+  "en": "Mass concentration PM2.5"
+ },
+ "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE": {
+  "de": "Massenkonzentration PM2.5 24h Durchschnitt",
+  "en": "Mass concentration PM2.5 24h Average"
+ },
+ "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE_STATUS=NORMAL": {
+  "de": "Massenkonzentration PM2.5 24h Durchschnitt Status Normal",
+  "en": "Mass concentration PM2.5 24h Average Status Normal"
+ },
+ "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE_STATUS=OVERFLOW": {
+  "de": "Massenkonzentration PM2.5 24h Durchschnitt Status Überlauf",
+  "en": "Mass concentration PM2.5 24h Average Status Overflow"
+ },
+ "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE_STATUS=UNKNOWN": {
+  "de": "Massenkonzentration PM2.5 24h Durchschnitt Status unbekannt",
+  "en": "Mass concentration PM2.5 24h Average Status unknown"
+ },
+ "MASS_CONCENTRATION_PM_2_5_STATUS=NORMAL": {
+  "de": "Massenkonzentration PM2.5 Status Normal",
+  "en": "Mass concentration PM2.5 Status Normal"
+ },
+ "MASS_CONCENTRATION_PM_2_5_STATUS=OVERFLOW": {
+  "de": "Massenkonzentration PM2.5 Status Überlauf",
+  "en": "Mass concentration PM2.5 Status Overflow"
+ },
+ "MASS_CONCENTRATION_PM_2_5_STATUS=UNKNOWN": {
+  "de": "Massenkonzentration PM2.5 Status unbekannt",
+  "en": "Mass concentration PM2.5 Status unknown"
+ },
+ "MEASURED_VALUE": {
+  "de": "Messwert",
+  "en": "measured value"
+ },
+ "MEASURED_VALUE_STATUS=ERROR": {
+  "de": "Messwert: Fehler",
+  "en": "measured value: Error"
+ },
+ "MEASURED_VALUE_STATUS=NORMAL": {
+  "de": "Messwert: Normal",
+  "en": "measured value: Normal"
+ },
+ "MEASURED_VALUE_STATUS=OVERFLOW": {
+  "de": "Messwert: Überlauf",
+  "en": "measured value: Overflow"
+ },
+ "MEASURED_VALUE_STATUS=UNDERFLOW": {
+  "de": "Messwert: Unterlauf",
+  "en": "measured value: Underflow"
+ },
+ "MEASURED_VALUE_STATUS=UNKNOWN": {
+  "de": "Messwert: unbekannt",
+  "en": "measured value: unknown"
+ },
+ "MIN_MAX_VALUE_NOT_RELEVANT_FOR_MANU_MODE": {
+  "de": "Ignoriere min./max. Temperatur im Manu-Mode",
+  "en": "Ignore min./max. temperature in manu mode"
+ },
+ "minutes": {
+  "de": "min",
+  "en": "min"
+ },
+ "MIOB_DIN_CONFIG": {
+  "de": "Betriebsart digitaler Eingang",
+  "en": "Digital input operating mode"
+ },
+ "MOD_EM8BIT_TRANSMITTER": {
+  "de": "8-Bit-Sender",
+  "en": "8-bit transmitter"
+ },
+ "MOISTURE_DETECTED=TRUE": {
+  "de": "Feuchtigkeit erkannt: Ja",
+  "en": "Humidity detected: Yes"
+ },
+ "MOTION_ACTIVE_TIME": {
+  "de": "Zeit, nach der erkannte Bewegung zurückgesetzt wird",
+  "en": "Time after which the detected movement is reset"
+ },
+ "MOTION_DETECTION_ACTIVE=TRUE": {
+  "de": "Bewegungsmelder aktiv",
+  "en": "Motion detector active"
+ },
+ "MOTION_DETECTOR": {
+  "de": "Bewegungsmelder",
+  "en": "Motion detector"
+ },
+ "MOTION=TRUE": {
+  "de": "Bewegung erkannt",
+  "en": "motion detected"
+ },
+ "MOTIONDETECTOR_TRANSCEIVER": {
+  "de": "Bewegungsmelder",
+  "en": "Motion detector"
+ },
+ "MULTI_MODE_INPUT_TRANSMITTER": {
+  "de": "Eingangsmodul",
+  "en": "Input Module"
+ },
+ "MULTICAST_ROUTER_MODULE_ENABLED": {
+  "de": "MultiCast-Routing",
+  "en": "MultiCast Routing"
+ },
+ "NOT_USED": {
+  "de": "Nicht benutzt",
+  "en": "Unused"
+ },
+ "NUMBER_CONCENTRATION_PM_1": {
+  "de": "Mengenkonzentration PM1.0",
+  "en": "Quantity concentration PM1.0"
+ },
+ "NUMBER_CONCENTRATION_PM_1_STATUS=NORMAL": {
+  "de": "Mengenkonzentration PM1.0 Status Normal",
+  "en": "Quantity concentration PM1.0 Status Normal"
+ },
+ "NUMBER_CONCENTRATION_PM_1_STATUS=OVERFLOW": {
+  "de": "Mengenkonzentration PM1.0 Status Überlauf",
+  "en": "Quantity concentration PM1.0 Status Overflow"
+ },
+ "NUMBER_CONCENTRATION_PM_1_STATUS=UNKNOWN": {
+  "de": "Mengenkonzentration PM1.0 Status unbekannt",
+  "en": "Quantity concentration PM1.0 Status unknown"
+ },
+ "NUMBER_CONCENTRATION_PM_10": {
+  "de": "Mengenkonzentration PM10",
+  "en": "Quantity concentration PM10"
+ },
+ "NUMBER_CONCENTRATION_PM_10_STATUS=NORMAL": {
+  "de": "Mengenkonzentration PM10 Status Normal",
+  "en": "Quantity concentration PM10 Status Normal"
+ },
+ "NUMBER_CONCENTRATION_PM_10_STATUS=OVERFLOW": {
+  "de": "Mengenkonzentration PM10 Status Überlauf",
+  "en": "Quantity concentration PM10 Status Overflow"
+ },
+ "NUMBER_CONCENTRATION_PM_10_STATUS=UNKNOWN": {
+  "de": "Mengenkonzentration PM10 Status unbekannt",
+  "en": "Quantity concentration PM10 Status unknown"
+ },
+ "NUMBER_CONCENTRATION_PM_2_5": {
+  "de": "Mengenkonzentration PM2.5",
+  "en": "Quantity concentration PM2.5"
+ },
+ "NUMBER_CONCENTRATION_PM_2_5_STATUS=NORMAL": {
+  "de": "Mengenkonzentration PM2.5 Status Normal",
+  "en": "Quantity concentration PM2.5 Status Normal"
+ },
+ "NUMBER_CONCENTRATION_PM_2_5_STATUS=OVERFLOW": {
+  "de": "Mengenkonzentration PM2.5 Status Überlauf",
+  "en": "Quantity concentration PM2.5 Status Overflow"
+ },
+ "NUMBER_CONCENTRATION_PM_2_5_STATUS=UNKNOWN": {
+  "de": "Mengenkonzentration PM2.5 Status unbekannt",
+  "en": "Quantity concentration PM2.5 Status unknown"
+ },
+ "OLD_LEVEL": {
+  "de": "Letzter Dimmwert",
+  "en": "Last dimming value"
+ },
+ "ON_TIME": {
+  "de": "Einschaltdauer",
+  "en": "Switch-on time"
+ },
+ "OPERATING_VOLTAGE": {
+  "de": "Betriebsspannung in V",
+  "en": "Operating voltage in V"
+ },
+ "OPERATING_VOLTAGE_STATUS": {
+  "de": "Status Betriebsspannung",
+  "en": "State operation voltage"
+ },
+ "OPERATING_VOLTAGE_STATUS=0": {
+  "de": "Status Betriebsspannung: Normal",
+  "en": "State operation voltage: Normal"
+ },
+ "OPERATING_VOLTAGE_STATUS=1": {
+  "de": "Status Betriebsspannung: unbekannt",
+  "en": "State operation voltage: unknown"
+ },
+ "OPERATING_VOLTAGE_STATUS=2": {
+  "de": "Status Betriebsspannung: Überlauf",
+  "en": "State operation voltage: Overflow"
+ },
+ "OPERATING_VOLTAGE_STATUS=3": {
+  "de": "Status Betriebsspannung: Extern",
+  "en": "State operation voltage: External"
+ },
+ "OPERATING_VOLTAGE_STATUS=EXTERNAL": {
+  "de": "Wert Status Betriebsspannung: Extern",
+  "en": "Value State operation voltage: External"
+ },
+ "OPERATING_VOLTAGE_STATUS=NORMAL": {
+  "de": "Status Betriebsspannung: Normal",
+  "en": "State operation voltage: Normal"
+ },
+ "OPERATING_VOLTAGE_STATUS=OVERFLOW": {
+  "de": "Status Betriebsspannung: Überlauf",
+  "en": "State operation voltage: Overflow"
+ },
+ "OPERATING_VOLTAGE_STATUS=UNKNOWN": {
+  "de": "Status Betriebsspannung: unbekannt",
+  "en": "State operation voltage: unknown"
+ },
+ "OPTICAL_ALARM_ACTIVE=TRUE": {
+  "de": "Optisches Signal aktiviert",
+  "en": "Visual signal activated"
+ },
+ "OPTICAL_ALARM_SELECTION=BLINKING_ALTERNATELY_REPEATING": {
+  "de": "Abwechselndes langsames Blinken",
+  "en": "Alternating slow flashing"
+ },
+ "OPTICAL_ALARM_SELECTION=BLINKING_BOTH_REPEATING": {
+  "de": "Gleichzeitiges langsames Blinken",
+  "en": "Simultaneous slow flashing"
+ },
+ "OPTICAL_ALARM_SELECTION=CONFIRMATION_SIGNAL_0": {
+  "de": "Bestätigungssignal 0 - lang lang",
+  "en": "Confirmation signal 0 - long long"
+ },
+ "OPTICAL_ALARM_SELECTION=CONFIRMATION_SIGNAL_1": {
+  "de": "Bestätigungssignal 1 - lang kurz",
+  "en": "Confirmation signal 1 - long short"
+ },
+ "OPTICAL_ALARM_SELECTION=CONFIRMATION_SIGNAL_2": {
+  "de": "Bestätigungssignal 2 - lang kurz kurz",
+  "en": "Confirmation signal 2 - long short short"
+ },
+ "OPTICAL_ALARM_SELECTION=DISABLE_OPTICAL_SIGNAL": {
+  "de": "Kein optisches Signal",
+  "en": "No optical signal"
+ },
+ "OPTICAL_ALARM_SELECTION=DOUBLE_FLASHING_REPEATING": {
+  "de": "Gleichzeitiges schnelles Blinken",
+  "en": "Simultaneous fast flashing"
+ },
+ "OPTICAL_ALARM_SELECTION=FLASHING_BOTH_REPEATING": {
+  "de": "Gleichzeitiges kurzes Blinken",
+  "en": "Simultaneous short flashing"
+ },
+ "OVERTEMP_LEVEL": {
+  "de": "Abschaltschwelle Übertemperatur",
+  "en": "Switch-off threshold for over temperature"
+ },
+ "PARAM_SELECT": {
+  "de": "Sensorauswahl Wettertelegramm",
+  "en": "Selected sensors weather telegram"
+ },
+ "PARAM_SELECT=INACTIVE": {
+  "de": "Keine Übertragung",
+  "en": "No transmission"
+ },
+ "PARAM_SELECT=T1": {
+  "de": "Temperatur Sensor 1",
+  "en": "Temperature sensor 1"
+ },
+ "PARAM_SELECT=T1-T2": {
+  "de": "Differenz-Temperatur Sensor 1 - Sensor 2",
+  "en": "Difference temperature sensor 1 - sensor 2"
+ },
+ "PARAM_SELECT=T2": {
+  "de": "Temperatur Sensor 2",
+  "en": "Temperature sensor 2"
+ },
+ "PARAM_SELECT=T2-T1": {
+  "de": "Differenz-Temperatur Sensor 2 - Sensor 1",
+  "en": "Difference temperature sensor 2 - sensor 1"
+ },
+ "PARTY_MODE_SUBMIT": {
+  "de": "Urlaubsmodus",
+  "en": "Holiday mode"
+ },
+ "PARTY_SET_POINT_TEMPERATURE": {
+  "de": "Party/Urlaub-Temperatur",
+  "en": "Party/holiday temperature"
+ },
+ "PARTY_START_DAY": {
+  "de": "Urlaub-Start-Tag",
+  "en": "Holiday start day"
+ },
+ "PARTY_START_MONTH": {
+  "de": "Urlaub-Start-Monat",
+  "en": "Holiday start month"
+ },
+ "PARTY_START_TIME": {
+  "de": "Urlaub-Start-Uhrzeit",
+  "en": "Holiday start time"
+ },
+ "PARTY_START_YEAR": {
+  "de": "Urlaub-Start-Jahr",
+  "en": "Holiday start year"
+ },
+ "PARTY_STOP_DAY": {
+  "de": "Urlaub-Ende-Tag",
+  "en": "Holiday end day"
+ },
+ "PARTY_STOP_MONTH": {
+  "de": "Urlaub-Ende-Monat",
+  "en": "Holiday end month"
+ },
+ "PARTY_STOP_TIME": {
+  "de": "Urlaub-Ende-Uhrzeit",
+  "en": "Holiday end time"
+ },
+ "PARTY_STOP_YEAR": {
+  "de": "Urlaub-Ende-Jahr",
+  "en": "Holiday end year"
+ },
+ "PARTY_TEMPERATURE": {
+  "de": "Urlaub-Temperatur",
+  "en": "Holiday temperature"
+ },
+ "PARTY_TIME_END": {
+  "de": "Party/Urlaub-Endzeit",
+  "en": "Party/holiday end time"
+ },
+ "PARTY_TIME_START": {
+  "de": "Party/Urlaub-Startzeit",
+  "en": "Party/holiday start time"
+ },
+ "PASSAGE_COUNTER_OVERFLOW=TRUE": {
+  "de": "Durchgangszähler Überlauf: Ja",
+  "en": "Passage counter overrun: Yes"
+ },
+ "PASSAGE_COUNTER_VALUE": {
+  "de": "Anzahl der Durchgänge",
+  "en": "Number of passages"
+ },
+ "PASSAGE_DETECTOR_COUNTER_TRANSMITTER": {
+  "de": "Durchgangszähler",
+  "en": "Passage sensor"
+ },
+ "PASSAGE_DETECTOR_DIRECTION_TRANSMITTER": {
+  "de": "Richtungserkennung",
+  "en": "Direction recognition"
+ },
+ "PEER_NEEDS_BURST": {
+  "de": "Burstsignal erforderlich",
+  "en": "Burst signal necessary"
+ },
+ "PERMISSION_STATE=TRUE": {
+  "de": "Kanal berechtigt",
+  "en": "Channel authorised"
+ },
+ "PIR_OPERATION_MODE": {
+  "de": "Normal / Eco Modus",
+  "en": "Normal / eco mode"
+ },
+ "PIR_OPERATION_MODE_ECO": {
+  "de": "Eco",
+  "en": "Eco"
+ },
+ "PIR_OPERATION_MODE_NORMAL": {
+  "de": "Normal",
+  "en": "Normal"
+ },
+ "PIR_OPERATION_MODE_OFF": {
+  "de": "Aus",
+  "en": "Off"
+ },
+ "PIR_SENSITIVITY": {
+  "de": "Sensorempfindlichkeit",
+  "en": "Sensor sensitivity"
+ },
+ "POSITION_SAVE_TIME": {
+  "de": "Position Übernahmezeit",
+  "en": "Position saving time"
+ },
+ "POWER_MAINS_FAILURE=TRUE": {
+  "de": "Stromausfall: Ja",
+  "en": "Power failure: Yes"
+ },
+ "POWER_SUPPLY": {
+  "de": "Spannungsversorgung",
+  "en": "Power supply"
+ },
+ "POWERUP_ACTION": {
+  "de": "Aktion bei Spannungszufuhr",
+  "en": "Activity on power supply"
+ },
+ "POWERUP_JUMPTARGET": {
+  "de": "Aktion bei Spannungszufuhr",
+  "en": "Activity on power supply"
+ },
+ "POWERUP_OFF": {
+  "de": "keine",
+  "en": "none"
+ },
+ "POWERUP_OFFDELAY_VALUE": {
+  "de": "Wert der Ausschaltverzögerung",
+  "en": "Value switch off delay"
+ },
+ "POWERUP_OFFTIME_UNIT": {
+  "de": "Einheit der Ausschaltdauer",
+  "en": "Unit of switch-off time"
+ },
+ "POWERUP_ON": {
+  "de": "kurzen Tastendruck simulieren",
+  "en": "simulate short button press"
+ },
+ "POWERUP_ONDELAY_UNIT": {
+  "de": "Einheit der Einschaltverzögerung",
+  "en": "Unit of switch on delay"
+ },
+ "POWERUP_ONDELAY_UNIT=10M": {
+  "de": "10 Minuten",
+  "en": "10 minutes"
+ },
+ "POWERUP_ONDELAY_UNIT=10S": {
+  "de": "10 Sekunden",
+  "en": "10 seconds"
+ },
+ "POWERUP_ONDELAY_UNIT=1M": {
+  "de": "1 Minute",
+  "en": "1 minute"
+ },
+ "POWERUP_ONDELAY_UNIT=1S": {
+  "de": "1 Sekunde",
+  "en": "1 second"
+ },
+ "POWERUP_ONDELAY_UNIT=5M": {
+  "de": "5 Minuten",
+  "en": "5 minutes"
+ },
+ "POWERUP_ONDELAY_UNIT=5S": {
+  "de": "5 Sekunden",
+  "en": "5 seconds"
+ },
+ "POWERUP_ONDELAY_VALUE": {
+  "de": "Wert Einschaltverzögerung",
+  "en": "Value switch on delay"
+ },
+ "POWERUP_ONTIME_UNIT": {
+  "de": "Einheit der Einschaltdauer",
+  "en": "Unit of switch-on time"
+ },
+ "POWERUP_ONTIME_UNIT=10M": {
+  "de": "10 Minuten",
+  "en": "10 minutes"
+ },
+ "POWERUP_ONTIME_UNIT=10S": {
+  "de": "10 Sekunden",
+  "en": "10 seconds"
+ },
+ "POWERUP_ONTIME_UNIT=1M": {
+  "de": "1 Minute",
+  "en": "1 minute"
+ },
+ "POWERUP_ONTIME_UNIT=1S": {
+  "de": "1 Sekunde",
+  "en": "1 second"
+ },
+ "POWERUP_ONTIME_UNIT=5M": {
+  "de": "5 Minuten",
+  "en": "5 minutes"
+ },
+ "POWERUP_ONTIME_UNIT=5S": {
+  "de": "5 Sekunden",
+  "en": "5 seconds"
+ },
+ "POWERUP_ONTIME_UNIT=H": {
+  "de": "Stunden",
+  "en": "Hours"
+ },
+ "POWERUP_ONTIME_VALUE": {
+  "de": "Wert Einschaltdauer",
+  "en": "Value switch-on time"
+ },
+ "PRESENCE_DETECTION_ACTIVE=TRUE": {
+  "de": "Präsenzdetector aktiv",
+  "en": "Presence detector active"
+ },
+ "PRESENCE_DETECTION_STATE=TRUE": {
+  "de": "Präsenz erkannt",
+  "en": "Presence detected"
+ },
+ "PRESENCEDETECTOR_TRANSCEIVER": {
+  "de": "Präsenzmelder",
+  "en": "Presence Sensor"
+ },
+ "PRESS_LONG": {
+  "de": "Tastendruck lang",
+  "en": "Button press long"
+ },
+ "PRESS_LONG_RELEASE": {
+  "de": "Stopp langer Tastendruck",
+  "en": "Stop long key press"
+ },
+ "PRESS_LONG_RELEASE=TRUE": {
+  "de": "Stopp langer Tastendruck",
+  "en": "Stop long key press"
+ },
+ "PRESS_LONG_START": {
+  "de": "Start langer Tastendruck",
+  "en": "Start long key press"
+ },
+ "PRESS_LONG_START=TRUE": {
+  "de": "Start langer Tastendruck",
+  "en": "Start long key press"
+ },
+ "PRESS_LONG=TRUE": {
+  "de": "Tastendruck lang",
+  "en": "Button press long"
+ },
+ "PRESS_SHORT": {
+  "de": "Tastendruck kurz",
+  "en": "Button press short"
+ },
+ "PRESS_SHORT=TRUE": {
+  "de": "Tastendruck kurz",
+  "en": "Button press short"
+ },
+ "PROCESS=NOT_STABLE": {
+  "de": "Gerät aktiv",
+  "en": "Device active"
+ },
+ "PROCESS=STABLE": {
+  "de": "Gerät nicht aktiv",
+  "en": "Device not active"
+ },
+ "PULSE_SENSOR": {
+  "de": "Puls-Sensor",
+  "en": "Pulse sensor"
+ },
+ "RADIATOR_THERMOSTAT": {
+  "de": "Heizkörperthermostat",
+  "en": "Radiator Thermostat"
+ },
+ "RAIN_COUNTER": {
+  "de": "Regenmenge",
+  "en": "Rainfall"
+ },
+ "RAIN_COUNTER_OVERFLOW=TRUE": {
+  "de": "Regenzähler Überlauf: Ja",
+  "en": "Overrun rainfall counter: Yes"
+ },
+ "RAIN_COUNTER_STATUS=0": {
+  "de": "Wert Regenmenge: Normal",
+  "en": "Value Rainfall: Normal"
+ },
+ "RAIN_COUNTER_STATUS=1": {
+  "de": "Wert Regenmenge: unbekannt",
+  "en": "Value Rainfall: unknown"
+ },
+ "RAIN_COUNTER_STATUS=NORMAL": {
+  "de": "Wert Regenmenge: Normal",
+  "en": "Value Rainfall: Normal"
+ },
+ "RAIN_COUNTER_STATUS=UNKNOWN": {
+  "de": "Wert Regenmenge: unbekannt",
+  "en": "Value Rainfall: unknown"
+ },
+ "RAIN_DETECTION_TRANSMITTER": {
+  "de": "Regensensor",
+  "en": "Rain sensor"
+ },
+ "RAINDETECTOR": {
+  "de": "Regensensor",
+  "en": "Rain sensor"
+ },
+ "RAINING": {
+  "de": "Regen",
+  "en": "Rain"
+ },
+ "RAINING=TRUE": {
+  "de": "Aktuell Regen",
+  "en": "currently raining"
+ },
+ "RAMP_STOP": {
+  "de": "Stop Dimmrampe",
+  "en": "Stop dimming ramp"
+ },
+ "RAMP_TIME": {
+  "de": "Dimmzeit",
+  "en": "Dimming time"
+ },
+ "RAMP_TIME_UNIT": {
+  "de": "Einheit Rampenzeit",
+  "en": "Unit ramp time"
+ },
+ "RAMP_TIME_UNIT=10MS": {
+  "de": "Einheit Rampenzeit: 10 ms",
+  "en": "Unit ramp time: ms"
+ },
+ "RAMP_TIME_UNIT=D": {
+  "de": "Einheit Rampenzeit: Tage",
+  "en": "Unit ramp time: Days"
+ },
+ "RAMP_TIME_UNIT=H": {
+  "de": "Einheit Rampenzeit: Stunden",
+  "en": "Unit ramp time: Hours"
+ },
+ "RAMP_TIME_UNIT=M": {
+  "de": "Einheit Rampenzeit: Minuten",
+  "en": "Unit ramp time: Minutes"
+ },
+ "RAMP_TIME_UNIT=S": {
+  "de": "Einheit Rampenzeit: Sekunden",
+  "en": "Unit ramp time: Seconds"
+ },
+ "RAMP_TIME_VALUE": {
+  "de": "Wert Rampenzeit",
+  "en": "Value ramp time"
+ },
+ "REDUCE_LEVEL": {
+  "de": "Reduzierpegel Übertemperatur",
+  "en": "Reducing level over temperature"
+ },
+ "REDUCE_TEMP_LEVEL": {
+  "de": "Reduzierschwelle Übertemperatur",
+  "en": "Reducing threshold over temperature"
+ },
+ "REFERENCE_RUNNING_TIME_BOTTOM_TOP_UNIT": {
+  "de": "Einheit der Fahrzeit",
+  "en": "Unit movement time"
+ },
+ "REFERENCE_RUNNING_TIME_BOTTOM_TOP_VALUE": {
+  "de": "Wert der Fahrzeit",
+  "en": "Value movement time"
+ },
+ "REFERENCE_RUNNING_TIME_SLATS_UNIT": {
+  "de": "Einheit der Lamellenverstellzeit",
+  "en": "Unit slat adjustment time"
+ },
+ "REFERENCE_RUNNING_TIME_SLATS_VALUE": {
+  "de": "Wert der Lamellenverstellzeit",
+  "en": "Value slat adjustment time"
+ },
+ "REFERENCE_RUNNING_TIME_TOP_BOTTOM_UNIT": {
+  "de": "Einheit der Fahrzeit",
+  "en": "Unit movement time"
+ },
+ "REFERENCE_RUNNING_TIME_TOP_BOTTOM_VALUE": {
+  "de": "Wert der Fahrzeit",
+  "en": "Value movement time"
+ },
+ "REMOTECONTROL_RECEIVER": {
+  "de": "Heizungsthermostat (Empfänger Fernbedienung)",
+  "en": "Radiator Thermostat (Receiver remote control)"
+ },
+ "REPEATED_LONG_PRESS_TIMEOUT_UNIT": {
+  "de": "Einheit für den Timeout",
+  "en": "Unit for time-out"
+ },
+ "REPEATED_LONG_PRESS_TIMEOUT_UNIT=100ms": {
+  "de": "100 ms",
+  "en": "100 ms"
+ },
+ "REPEATED_LONG_PRESS_TIMEOUT_UNIT=H": {
+  "de": "Stunden",
+  "en": "Hours"
+ },
+ "REPEATED_LONG_PRESS_TIMEOUT_UNIT=M": {
+  "de": "Minuten",
+  "en": "Minutes"
+ },
+ "REPEATED_LONG_PRESS_TIMEOUT_UNIT=S": {
+  "de": "Sekunden",
+  "en": "Seconds"
+ },
+ "REPEATED_LONG_PRESS_TIMEOUT_VALUE": {
+  "de": "Wert für den Timeout",
+  "en": "Value for time-out"
+ },
+ "RESET_MOTION": {
+  "de": "Reset Status",
+  "en": "Reset status"
+ },
+ "RESET_PRESENCE": {
+  "de": "Reset Status",
+  "en": "Reset status"
+ },
+ "RESTART_BUTTONPRESS": {
+  "de": "kurzen Tastendruck simulieren",
+  "en": "simulate short button press"
+ },
+ "RESTART_BUTTONPRESS_IF_WAS_ON": {
+  "de": "kurzen Tastendruck simulieren, falls zuvor eingeschaltet war",
+  "en": "simulate short button press, if switched on before"
+ },
+ "RESTART_LAST": {
+  "de": "alten Zustand herstellen",
+  "en": "restore previous status"
+ },
+ "RESTART_OFF": {
+  "de": "keine",
+  "en": "none"
+ },
+ "RGB": {
+  "de": "Farbwert",
+  "en": "Color value"
+ },
+ "RGBW": {
+  "de": "Farbwert",
+  "en": "Color value"
+ },
+ "RGBW_AUTOMATIC": {
+  "de": "RGBW-Controller Programm",
+  "en": "RGBW controller program"
+ },
+ "RGBW_COLOR": {
+  "de": "RGBW-Controller Farbe",
+  "en": "RGBW controller color"
+ },
+ "ROTARY_CONTROL_TRANSCEIVER": {
+  "de": "Drehtaster",
+  "en": "Rotary Button"
+ },
+ "ROTARY_HANDLE_SENSOR": {
+  "de": "Fenster-Drehgriffkontakt",
+  "en": "Window twist-handle contact"
+ },
+ "ROTARY_HANDLE_TRANSCEIVER": {
+  "de": "Fenster-Drehgriffkontakt",
+  "en": "Window twist-handle contact"
+ },
+ "ROUTER_MODULE_ENABLED": {
+  "de": "Gerät dient als Router",
+  "en": "Device serves as router"
+ },
+ "RS485_IDLE_TIME": {
+  "de": "Bus-Ruhezeit bei Serviceeingriff",
+  "en": "Bus idle time after service access"
+ },
+ "RSSI_DEVICE": {
+  "de": "RSSI Gerät",
+  "en": "RSSI device"
+ },
+ "RSSI_PEER": {
+  "de": "RSSI Partner",
+  "en": "RSSI peer"
+ },
+ "SABOTAGE_MSG": {
+  "de": "Sabotagemeldung",
+  "en": "Sabotage message"
+ },
+ "SABOTAGE=TRUE": {
+  "de": "Sabotage wurde ausgelöst",
+  "en": "Sabotage has been triggered"
+ },
+ "SATURATION": {
+  "de": "Sättigung",
+  "en": "Saturation"
+ },
+ "SECTION": {
+  "de": "Profilabschnitt:",
+  "en": "Profile section:"
+ },
+ "SECTION_STATUS=NORMAL": {
+  "de": "Status Sektion: Normal",
+  "en": "Status Section: Normal"
+ },
+ "SECTION_STATUS=UNKNOWN": {
+  "de": "Status Sektion: Unbekannt",
+  "en": "Status Section: Unknown"
+ },
+ "SELF_CALIBRATION_RESULT=TRUE": {
+  "de": "Kalibrierfahrt erfolgreich",
+  "en": "Teach-in procedure successful"
+ },
+ "SELF_CALIBRATION=START": {
+  "de": "Starte Kalibrierfahrt",
+  "en": "Start calibration run"
+ },
+ "SELF_CALIBRATION=STOP": {
+  "de": "Beende Kalibrierfahrt",
+  "en": "End calibration run"
+ },
+ "SENSOR_ERROR=TRUE": {
+  "de": "Sensor gestört",
+  "en": "Sensor disturbed"
+ },
+ "SENSOR_FOR_CARBON_DIOXIDE": {
+  "de": "Luftgütesensor",
+  "en": "Air quality sensor"
+ },
+ "SENSOR_SENSITIVITY": {
+  "de": "Sensorempfindlichkeit",
+  "en": "Sensor sensitivity"
+ },
+ "SENSOR_WINDOW": {
+  "de": "Fenster Zustandserkennung",
+  "en": "Window state detection"
+ },
+ "SENSOR=TRUE": {
+  "de": "offen",
+  "en": "open"
+ },
+ "SERVO_VIRTUAL_RECEIVER": {
+  "de": "Servo Steuerung",
+  "en": "Servo Control"
+ },
+ "SET_TEMPERATURE": {
+  "de": "Soll-Temperatur",
+  "en": "Setpoint temperature"
+ },
+ "SHUTTER_CONTACT": {
+  "de": "Schließerkontakt",
+  "en": "Shutter contact"
+ },
+ "SHUTTER_CONTACT_HMIP": {
+  "de": "Schließerkontakt",
+  "en": "Shutter contact"
+ },
+ "SHUTTER_VIRTUAL_RECEIVER": {
+  "de": "Rollladenaktor",
+  "en": "Shutter actuator"
+ },
+ "SIGNAL": {
+  "de": "Bestätigungston",
+  "en": "Confirmation signal"
+ },
+ "SIGNAL_CHIME": {
+  "de": "Signalaktor (akustisch)",
+  "en": "Signal actuator (acoustically)"
+ },
+ "SIGNAL_LED": {
+  "de": "Signalaktor (optisch)",
+  "en": "Signal actuator (visual)"
+ },
+ "SIGNAL_TONE": {
+  "de": "Klang Bestätigungston",
+  "en": "Sound confirmation signal"
+ },
+ "SIGNAL_TONE=HIGH": {
+  "de": "hoch",
+  "en": "high"
+ },
+ "SIGNAL_TONE=LOW": {
+  "de": "tief",
+  "en": "low"
+ },
+ "SIGNAL_TONE=MID": {
+  "de": "mittel",
+  "en": "mid"
+ },
+ "SIGNAL_TONE=VERY_HIGH": {
+  "de": "sehr hoch",
+  "en": "very high"
+ },
+ "SIMPLE_SWITCH_RECEIVER": {
+  "de": "Schaltaktor",
+  "en": "Switch actor"
+ },
+ "SMOKE_DETECTOR_ALARM_STATUS=IDLE_OFF": {
+  "de": "Ruhezustand",
+  "en": "Standby"
+ },
+ "SMOKE_DETECTOR_ALARM_STATUS=INTRUSION_ALARM": {
+  "de": "Einbruch-Alarm",
+  "en": "Burglar alarm"
+ },
+ "SMOKE_DETECTOR_ALARM_STATUS=PRIMARY_ALARM": {
+  "de": "lokaler Alarm",
+  "en": "Local alarm"
+ },
+ "SMOKE_DETECTOR_ALARM_STATUS=SECONDARY_ALARM": {
+  "de": "fremdausgelöster Alarm",
+  "en": "Alarm triggered by other device"
+ },
+ "SMOKE_DETECTOR_COMMAND=COMMUNICATION_TEST": {
+  "de": "Kommunikationstest",
+  "en": "Communication test"
+ },
+ "SMOKE_DETECTOR_COMMAND=COMMUNICATION_TEST_REPEATED": {
+  "de": "Kommunikationstest (weitergeleitet)",
+  "en": "Communication test (forwarded)"
+ },
+ "SMOKE_DETECTOR_COMMAND=INTRUSION_ALARM": {
+  "de": "Einbruch-Alarm ein",
+  "en": "Burglar alarm"
+ },
+ "SMOKE_DETECTOR_COMMAND=INTRUSION_ALARM_OFF": {
+  "de": "Einbruch-Alarm aus",
+  "en": "Burglar alarm deactivated"
+ },
+ "SMOKE_DETECTOR_COMMAND=SMOKE_TEST": {
+  "de": "Rauchtest",
+  "en": "Smoke test"
+ },
+ "SMOKE_DETECTOR_EVENT=ALARM_OFF": {
+  "de": "Alarm aus",
+  "en": "Alarm deactivated"
+ },
+ "SMOKE_DETECTOR_EVENT=ALARM_OFF_REPEATED": {
+  "de": "Alarm aus (weitergeleitet)",
+  "en": "Alarm deactivated (forwarded)"
+ },
+ "SMOKE_DETECTOR_EVENT=INTRUSION_ALARM": {
+  "de": "Einbruch Alarm",
+  "en": "Burglar alarm"
+ },
+ "SMOKE_DETECTOR_EVENT=INTRUSION_ALARM_REPEATED": {
+  "de": "Einbruch-Alarm (weitergeleitet)",
+  "en": "Burglar alarm (forwarded)"
+ },
+ "SMOKE_DETECTOR_EVENT=LOW_BAT": {
+  "de": "schwache Batterie",
+  "en": "Weak battery"
+ },
+ "SMOKE_DETECTOR_EVENT=LOW_BAT_REPEATED": {
+  "de": "schwache Batterie (weitergeleitet)",
+  "en": "Weak battery (forwarded)"
+ },
+ "SMOKE_DETECTOR_EVENT=PRIMARY_ALARM": {
+  "de": "lokaler Alarm",
+  "en": "Local alarm"
+ },
+ "SMOKE_DETECTOR_EVENT=SECONDARY_ALARM": {
+  "de": "fremdausgelöster Alarm",
+  "en": "Alarm triggered by other device"
+ },
+ "SMOKE_DETECTOR_TEAM": {
+  "de": "Rauchmelder",
+  "en": "Smoke detector"
+ },
+ "SMOKE_DETECTOR_TEAM_V2": {
+  "de": "Rauchmelder",
+  "en": "Smoke detector"
+ },
+ "SMOKE_DETECTOR_TEST_RESULT=COMMUNICATION_TEST_OK": {
+  "de": "Kommunikationstest ok",
+  "en": "Communication test passed"
+ },
+ "SMOKE_DETECTOR_TEST_RESULT=COMMUNICATION_TEST_SENT": {
+  "de": "Kommunikationstest gesendet",
+  "en": "Communication test send"
+ },
+ "SMOKE_DETECTOR_TEST_RESULT=NONE": {
+  "de": "Kein Systemtest",
+  "en": "No system test"
+ },
+ "SMOKE_DETECTOR_TEST_RESULT=SMOKE_TEST_FAILED": {
+  "de": "Systemtest fehlerhaft",
+  "en": "System test failed"
+ },
+ "SMOKE_DETECTOR_TEST_RESULT=SMOKE_TEST_OK": {
+  "de": "Systemtest ok",
+  "en": "System test passed"
+ },
+ "SMOKE_LEVEL": {
+  "de": "Erkannte Rauchgasentwicklung",
+  "en": "Smoke gas detected"
+ },
+ "SOFTONOFF": {
+  "de": "Soft On/Off",
+  "en": "Soft On/Off"
+ },
+ "SOIL_MOISTURE": {
+  "de": "Bodenfeuchte",
+  "en": "Soil moisture"
+ },
+ "SOIL_MOISTURE_RAW_VALUE": {
+  "de": "Rohwert Bodenfeuchte",
+  "en": "Raw value soil moisture"
+ },
+ "SOIL_MOISTURE_RAW_VALUE_STATUS": {
+  "de": "Rohwert Bodenfeuchte",
+  "en": "Raw value soil moisture"
+ },
+ "SOIL_MOISTURE_RAW_VALUE_STATUS=NORMAL": {
+  "de": "Wert Rohwert Bodenfeuchte: Normal",
+  "en": "Value Raw value soil moisture: Normal"
+ },
+ "SOIL_MOISTURE_RAW_VALUE_STATUS=OVERFLOW": {
+  "de": "Wert Rohwert Bodenfeuchte: Überlauf",
+  "en": "Value Raw value soil moisture: Overflow"
+ },
+ "SOIL_MOISTURE_RAW_VALUE_STATUS=UNDERFLOW": {
+  "de": "Wert Rohwert Bodenfeuchte: Unterlauf",
+  "en": "Value Raw value soil moisture: Underflow"
+ },
+ "SOIL_MOISTURE_RAW_VALUE_STATUS=UNKNOWN": {
+  "de": "Wert Rohwert Bodenfeuchte: unbekannt",
+  "en": "Value Raw value soil moisture: unknown"
+ },
+ "SOIL_MOISTURE_STATUS": {
+  "de": "Bodenfeuchte",
+  "en": "Soil moisture"
+ },
+ "SOIL_MOISTURE_STATUS=NORMAL": {
+  "de": "Wert Bodenfeuchte: Normal",
+  "en": "Value Soil moisture: Normal"
+ },
+ "SOIL_MOISTURE_STATUS=OVERFLOW": {
+  "de": "Wert Bodenfeuchte: Überlauf",
+  "en": "Value Soil moisture: Overflow"
+ },
+ "SOIL_MOISTURE_STATUS=UNDERFLOW": {
+  "de": "Wert Bodenfeuchte: Unterlauf",
+  "en": "Value Soil moisture: Underflow"
+ },
+ "SOIL_MOISTURE_STATUS=UNKNOWN": {
+  "de": "Wert Bodenfeuchte: unbekannt",
+  "en": "Value Soil moisture: unknown"
+ },
+ "SOIL_TEMPERATURE": {
+  "de": "Bodentemperatur",
+  "en": "Soil temperature"
+ },
+ "SOIL_TEMPERATURE_STATUS": {
+  "de": "Bodentemperatur",
+  "en": "Soil temperature"
+ },
+ "SOIL_TEMPERATURE_STATUS=NORMAL": {
+  "de": "Wert Bodentemperatur: Normal",
+  "en": "Value Soil temperature: Normal"
+ },
+ "SOIL_TEMPERATURE_STATUS=OVERFLOW": {
+  "de": "Wert Bodentemperatur: Überlauf",
+  "en": "Value Soil temperature: Overflow"
+ },
+ "SOIL_TEMPERATURE_STATUS=UNDERFLOW": {
+  "de": "Wert Bodentemperatur: Unterlauf",
+  "en": "Value Soil temperature: Underflow"
+ },
+ "SOIL_TEMPERATURE_STATUS=UNKNOWN": {
+  "de": "Wert Bodentemperatur: unbekannt",
+  "en": "Value Soil temperature: unknown"
+ },
+ "SOUND_ID": {
+  "de": "Alarmsignal",
+  "en": "Alarm signal"
+ },
+ "SOUND_LONG": {
+  "de": "Lang",
+  "en": "Long"
+ },
+ "SOUND_LONG_LONG": {
+  "de": "Lang / Lang",
+  "en": "Long / Long"
+ },
+ "SOUND_LONG_SHORT": {
+  "de": "Lang / Kurz",
+  "en": "Long / Short"
+ },
+ "SOUND_LONG_SHORT_SHORT": {
+  "de": "Lang / Kurz / Kurz",
+  "en": "Long / Short / Short"
+ },
+ "SOUND_NO_SOUND": {
+  "de": "Kein Ton",
+  "en": "No signal"
+ },
+ "SOUND_SHORT": {
+  "de": "Kurz",
+  "en": "Short"
+ },
+ "SOUND_SHORT_SHORT": {
+  "de": "Kurz / Kurz",
+  "en": "Short / Short"
+ },
+ "SOUNDFILE=DO_NOT_CARE": {
+  "de": "Mit dem aktuellen Titel fortfahren",
+  "en": "Proceed with current title"
+ },
+ "SOUNDFILE=INTERNAL_SOUNDFILE": {
+  "de": "Interner Gerätesound",
+  "en": "Internal device sound"
+ },
+ "SOUNDFILE=OLD_VALUE": {
+  "de": "Zuletzt gespielter Titel",
+  "en": "Title last played"
+ },
+ "SOUNDFILE=RANDOM_SOUNDFILE": {
+  "de": "Zufallswiedergabe",
+  "en": "Shuffle"
+ },
+ "SPEED_MULTIPLIER": {
+  "de": "Faktor PWM-Frequenz",
+  "en": "Factor PWM frequency"
+ },
+ "STANDBY_TIME": {
+  "de": "Zeit bis zum Standby-Modus",
+  "en": "Time until standby mode"
+ },
+ "STATE_RESET_RECEIVER": {
+  "de": "Unterdrückung Bewegungserkennung",
+  "en": "Suppression of motion detection"
+ },
+ "STATE=TRUE": {
+  "de": "Schaltzustand: Ein",
+  "en": "Switching status: On"
+ },
+ "STATUS_INDICATOR": {
+  "de": "Statusanzeige",
+  "en": "Status display"
+ },
+ "STATUS_MESSAGE_TEXT_ALIGNMENT_LEFT_ALIGNED": {
+  "de": "Statusmeldung linksbündig darstellen",
+  "en": "Range status message left"
+ },
+ "STATUSINFO_MINDELAY": {
+  "de": "Statusmeldungen Mindestverzögerung",
+  "en": "Status messages minimum delay time"
+ },
+ "STATUSINFO_RANDOM": {
+  "de": "Statusmeldungen Zufallsanteil",
+  "en": "Status messages random part"
+ },
+ "STORM_LOWER_THRESHOLD": {
+  "de": "Windalarm-Ausschaltschwelle",
+  "en": "Wind alert off threshold"
+ },
+ "STORM_UPPER_THRESHOLD": {
+  "de": "Windalarm-Einschaltschwelle",
+  "en": "Wind alert on threshold"
+ },
+ "SUBMIT": {
+  "de": "Kanalaktion",
+  "en": "Channel action"
+ },
+ "SUNSHINE_THRESHOLD": {
+  "de": "Sonnenscheinschwelle",
+  "en": "Sunshine threshold"
+ },
+ "SUNSHINE_THRESHOLD_OVERRUN": {
+  "de": "Sonnenschein",
+  "en": "Sunshine"
+ },
+ "SUNSHINE_THRESHOLD_OVERRUN=TRUE": {
+  "de": "aktuell Sonnenschein",
+  "en": "currently sunshine"
+ },
+ "SUNSHINEDURATION": {
+  "de": "Sonnenscheindauer",
+  "en": "Sunshine duration"
+ },
+ "SUNSHINEDURATION_OVERFLOW=TRUE": {
+  "de": "Zähler Sonnenschein Überlauf: Ja",
+  "en": "Overrun counter sunshine: Yes"
+ },
+ "SWITCH": {
+  "de": "Schaltaktor",
+  "en": "Switch actuator"
+ },
+ "SWITCH_ACTUATOR": {
+  "de": "Schaltaktor",
+  "en": "Switch actuator"
+ },
+ "SWITCH_INTERFACE": {
+  "de": "Schalter-Interface",
+  "en": "Switch interface"
+ },
+ "SWITCH_PANIC": {
+  "de": "Alarmsirene (Panikkanal)",
+  "en": "Alarm siren (panic channel)"
+ },
+ "SWITCH_SENSOR": {
+  "de": "Alarmsirene",
+  "en": "Alarm siren"
+ },
+ "SWITCH_TRANSMIT": {
+  "de": "Zweipunktregler Wandthermostat",
+  "en": "Two-position controller wall mounted thermostat"
+ },
+ "SWITCH_VIRTUAL_RECEIVER": {
+  "de": "Schaltaktor",
+  "en": "Switch actuator"
+ },
+ "TACTILE_SWITCH=TRUE": {
+  "de": "Betriebsart Taster aktiv",
+  "en": "Operating mode push-button active"
+ },
+ "TEMPERATURE": {
+  "de": "Temperatur",
+  "en": "Temperature"
+ },
+ "TEMPERATURE_LIMITER=TRUE": {
+  "de": "Betriebsart Temperaturbegrenzung aktiv",
+  "en": "Operating mode temperature limit active"
+ },
+ "TEMPERATURE_OFFSET": {
+  "de": "Temperatur-Offset",
+  "en": "Temperature offset"
+ },
+ "TEMPERATURE_OUT_OF_RANGE=TRUE": {
+  "de": "Umgebungstemperatur unzulässing",
+  "en": "Ambient temperature invalid"
+ },
+ "THERMALCONTROL_TRANSMIT": {
+  "de": "Temperatursensor Wandthermostat",
+  "en": "Temperature sensor room thermostat"
+ },
+ "TILT_SENSOR": {
+  "de": "Neigungssensor",
+  "en": "Tilt sensor"
+ },
+ "TIME_OF_OPERATION": {
+  "de": "Betriebszeit",
+  "en": "Time of operation"
+ },
+ "TIME_OF_OPERATION_STATUS=0": {
+  "de": "Wert Betriebszeit: Normal",
+  "en": "Value Time of operation: Normal"
+ },
+ "TIME_OF_OPERATION_STATUS=1": {
+  "de": "Wert Betriebszeit: unbekannt",
+  "en": "Value Time of operation: unknown"
+ },
+ "TIME_OF_OPERATION_STATUS=2": {
+  "de": "Wert Betriebszeit: Überlauf",
+  "en": "Value Time of operation: Overflow"
+ },
+ "TIME_OF_OPERATION_STATUS=NORMAL": {
+  "de": "Wert Betriebszeit: Normal",
+  "en": "Value Time of operation: Normal"
+ },
+ "TIME_OF_OPERATION_STATUS=OVERFLOW": {
+  "de": "Wert Betriebszeit: Überlauf",
+  "en": "Value Time of operation: Overflow"
+ },
+ "TIME_OF_OPERATION_STATUS=UNKNOWN": {
+  "de": "Wert Betriebszeit: unbekannt",
+  "en": "Value Time of operation: unknown"
+ },
+ "TRANSMIT_DEV_TRY_MAX": {
+  "de": "Max. Sendeversuche",
+  "en": "Max. number of transmission attempts"
+ },
+ "TRANSMIT_TRY_MAX": {
+  "de": "Max. Sendeversuche",
+  "en": "Max. number of transmission attempts"
+ },
+ "TX_MINDELAY": {
+  "de": "Mindestsendeabstand",
+  "en": "Minimum transmission interval"
+ },
+ "TX_MINDELAY_UNIT": {
+  "de": "Einheit des Mindestsendeabstandes",
+  "en": "Unit of minimum transmission interval"
+ },
+ "TX_MINDELAY_UNIT=100MS": {
+  "de": "100 ms",
+  "en": "100 ms"
+ },
+ "TX_MINDELAY_UNIT=H": {
+  "de": "Stunden",
+  "en": "Hours"
+ },
+ "TX_MINDELAY_UNIT=M": {
+  "de": "Minuten",
+  "en": "Minutes"
+ },
+ "TX_MINDELAY_UNIT=S": {
+  "de": "Sekunden",
+  "en": "Seconds"
+ },
+ "TX_MINDELAY_VALUE": {
+  "de": "Wert Mindestsendeabstand",
+  "en": "Value minimum transmission interval"
+ },
+ "TX_THRESHOLD_PERCENT": {
+  "de": "Nötige Änderung in % für erneute Statusmitteilung",
+  "en": "Necessary change in % for state report"
+ },
+ "TX_THRESHOLD_POWER": {
+  "de": "TX Differenz Leistung",
+  "en": "TX Difference Power"
+ },
+ "TYPICAL_PARTICLE_SIZE": {
+  "de": "Typische Partikelgröße",
+  "en": "Typical particle size"
+ },
+ "TYPICAL_PARTICLE_SIZE_STATUS=NORMAL": {
+  "de": "Typische Partikelgröße Status Normal",
+  "en": "Typical particle size Status Normal"
+ },
+ "TYPICAL_PARTICLE_SIZE_STATUS=OVERFLOW": {
+  "de": "Typische Partikelgröße Status Überlauf",
+  "en": "Typical particle size Status Overflow"
+ },
+ "TYPICAL_PARTICLE_SIZE_STATUS=UNKNOWN": {
+  "de": "Typische Partikelgröße Status unbekannt",
+  "en": "Typical particle size Status unknown"
+ },
+ "UNIVERSAL_LIGHT_RECEIVER": {
+  "de": "LED Controller",
+  "en": "LED Controller"
+ },
+ "UNREACH=TRUE": {
+  "de": "Gerätekommunikation gestört",
+  "en": "Device communication disturbed"
+ },
+ "UPDATE_PENDING": {
+  "de": "Ein Firmware-Update steht zur Übertragung an.",
+  "en": "Firmware update ready for transmission."
+ },
+ "UPDATE_PENDING=TRUE": {
+  "de": "Es steht ein Firmware-Update zur Übertragung an.",
+  "en": "Firmware update ready for transmission."
+ },
+ "USER_COLOR": {
+  "de": "Kanalaktion",
+  "en": "Channel action"
+ },
+ "USER_PROGRAM": {
+  "de": "Kanalaktion",
+  "en": "Channel action"
+ },
+ "VALUE_8BIT": {
+  "de": "Wert",
+  "en": "Value"
+ },
+ "VALVE_MAXIMUM_POSITION": {
+  "de": "maximale Ventilöffnungsposition",
+  "en": "maximum valve opening position"
+ },
+ "VALVE_STATE": {
+  "de": "Ventilposition",
+  "en": "Valve position"
+ },
+ "VALVE_STATE_ADJUSTMENT_TOO_BIG": {
+  "de": "Ventilstellbereich zu groß",
+  "en": "Valve positioning range too large"
+ },
+ "VALVE_STATE_ADJUSTMENT_TOO_BIG=TRUE": {
+  "de": "Ventilstellbereich zu groß: Ja",
+  "en": "Valve positioning range too large: Yes"
+ },
+ "VALVE_STATE_ADJUSTMENT_TOO_SMALL": {
+  "de": "Ventilstellbereich zu klein",
+  "en": "Valve positioning range too small"
+ },
+ "VALVE_STATE_ADJUSTMENT_TOO_SMALL=TRUE": {
+  "de": "Ventilstellbereich zu klein: Ja",
+  "en": "Valve positioning range too small: Yes"
+ },
+ "VALVE_STATE_ERROR_POSITION": {
+  "de": "Ventil in Fehlerposition",
+  "en": "Valve in error position"
+ },
+ "VALVE_STATE_ERROR_POSITION=TRUE": {
+  "de": "Ventil in Fehlerposition: Ja",
+  "en": "Valve in error position: Yes"
+ },
+ "VALVE_STATE_TOO_TIGHT": {
+  "de": "Ventil schwergängig / Ventil klemmt",
+  "en": "Valve sluggish/blocked"
+ },
+ "VALVE_STATE_TOO_TIGHT=TRUE": {
+  "de": "Ventil schwergängig / Ventil klemmt: Ja",
+  "en": "Valve sluggish/blocked: Yes"
+ },
+ "VALVE_STATE=ADAPTION_DONE": {
+  "de": "Adaptionsfahrt durchgeführt",
+  "en": "Adaption run performed"
+ },
+ "VALVE_STATE=ADAPTION_IN_PROGRESS": {
+  "de": "Adaptionsfahrt aktiv",
+  "en": "Adaption run active"
+ },
+ "VALVE_STATE=ADJUSTMENT_TOO_BIG": {
+  "de": "Ventilstellbereich zu groß",
+  "en": "Valve positioning range too large"
+ },
+ "VALVE_STATE=ADJUSTMENT_TOO_SMALL": {
+  "de": "Ventilstellbereich zu klein",
+  "en": "Valve positioning range too small"
+ },
+ "VALVE_STATE=ERROR_POSITION": {
+  "de": "Ventil in Fehlerposition",
+  "en": "Valve in error position"
+ },
+ "VALVE_STATE=RUN_TO_START": {
+  "de": "Ventil fährt in Ausgangsposition (Ventil fährt ganz auf)",
+  "en": "Valve reverses to the initial position (valve is opened entirely)"
+ },
+ "VALVE_STATE=STATE_NOT_AVAILABLE": {
+  "de": "Ventilstatus unbekannt",
+  "en": "Valve status unknown"
+ },
+ "VALVE_STATE=TOO_TIGHT": {
+  "de": "Ventil schwergängig / Ventil klemmt",
+  "en": "Valve sluggish/blocked"
+ },
+ "VALVE_STATE=WAIT_FOR_ADAPTION": {
+  "de": "Warte auf Adaptionsfahrt",
+  "en": "Waiting for adaption run"
+ },
+ "VENT_CLOSED": {
+  "de": "Ventil schließen",
+  "en": "Close valve"
+ },
+ "VENT_OPEN": {
+  "de": "Ventil öffnen",
+  "en": "Open valve"
+ },
+ "VIRTUAL_DIMMER": {
+  "de": "Dimmaktor",
+  "en": "Dimming actuator"
+ },
+ "VIRTUAL_KEY": {
+  "de": "Virtuelle Fernbedienung",
+  "en": "Virtual remote control"
+ },
+ "VOLTAGE": {
+  "de": "Spannung",
+  "en": "Voltage"
+ },
+ "VOLTAGE_0": {
+  "de": "Wert (relativ) für die Steuerspannung bei 0%",
+  "en": "Value (relative) for control voltage at 0%"
+ },
+ "VOLTAGE_100": {
+  "de": "Wert (relativ) für die Steuerspannung bei 100%",
+  "en": "Value (relative) for control voltage at 100%"
+ },
+ "VOLTAGE_STATUS=0": {
+  "de": "Wert Spannung: Normal",
+  "en": "Value Voltage: Normal"
+ },
+ "VOLTAGE_STATUS=1": {
+  "de": "Wert Spannung: Überlauf",
+  "en": "Value Voltage: Overflow"
+ },
+ "VOLTAGE_STATUS=2": {
+  "de": "Wert Spannung: Unterlauf",
+  "en": "Value Voltage: Underflow"
+ },
+ "VOLTAGE_STATUS=3": {
+  "de": "Wert Spannung: unbekannt",
+  "en": "Value Voltage: unknown"
+ },
+ "VOLTAGE_STATUS=NORMAL": {
+  "de": "Wert Spannung: Normal",
+  "en": "Value Voltage: Normal"
+ },
+ "VOLTAGE_STATUS=OVERFLOW": {
+  "de": "Wert Spannung: Überlauf",
+  "en": "Value Voltage: Overflow"
+ },
+ "VOLTAGE_STATUS=UNDERFLOW": {
+  "de": "Wert Spannung: Unterlauf",
+  "en": "Value Voltage: Underflow"
+ },
+ "VOLTAGE_STATUS=UNKNOWN": {
+  "de": "Wert Spannung: unbekannt",
+  "en": "Value Voltage: unknown"
+ },
+ "VOLUME_0": {
+  "de": "{stringTableVolume0}",
+  "en": "{stringTableVolume0}"
+ },
+ "VOLUME_10": {
+  "de": "{stringTableVolume1}",
+  "en": "{stringTableVolume1}"
+ },
+ "VOLUME_100$": {
+  "de": "{stringTableVolume10}",
+  "en": "{stringTableVolume10}"
+ },
+ "VOLUME_20": {
+  "de": "{stringTableVolume2}",
+  "en": "{stringTableVolume2}"
+ },
+ "VOLUME_30": {
+  "de": "{stringTableVolume3}",
+  "en": "{stringTableVolume3}"
+ },
+ "VOLUME_40": {
+  "de": "{stringTableVolume4}",
+  "en": "{stringTableVolume4}"
+ },
+ "VOLUME_50": {
+  "de": "{stringTableVolume5}",
+  "en": "{stringTableVolume5}"
+ },
+ "VOLUME_60": {
+  "de": "{stringTableVolume6}",
+  "en": "{stringTableVolume6}"
+ },
+ "VOLUME_70": {
+  "de": "{stringTableVolume7}",
+  "en": "{stringTableVolume7}"
+ },
+ "VOLUME_80": {
+  "de": "{stringTableVolume8}",
+  "en": "{stringTableVolume8}"
+ },
+ "VOLUME_90": {
+  "de": "{stringTableVolume9}",
+  "en": "{stringTableVolume9}"
+ },
+ "WAKEUP_BEHAVIOUR": {
+  "de": "Sofortige Reaktion auf Tastendruck ohne vorherige Kanalauswahl",
+  "en": "Immediate reaction to keypress without choosing a channel"
+ },
+ "WAKEUP_BEHAVIOUR_STATUS_MSG_CONFIRMATION": {
+  "de": "Tastendruckauswertung Statusmeldung",
+  "en": "Button press evaluation status message"
+ },
+ "WAKEUP_BEHAVIOUR_STATUS_MSG_RESISTANCE": {
+  "de": "Statusmeldung nur per CCU löschbar",
+  "en": "Status message can be deleted only via CCU"
+ },
+ "WAKEUP_BEHAVIOUR_STATUS_SIGNALIZATION_CONFIRMATION": {
+  "de": "Tastendruckauswertung Signalisierung",
+  "en": "Button press evaluation signalling"
+ },
+ "WAKEUP_DEFAULT_CHANNEL": {
+  "de": "Initialer Kanal bei Aktivierung",
+  "en": "Initial channel when activating"
+ },
+ "WALLMOUNTED_THERMOSTAT": {
+  "de": "Wandthermostat",
+  "en": "Wall Thermostat"
+ },
+ "WATER_DETECTION_TRANSMITTER": {
+  "de": "Wassersensor",
+  "en": "Water sensor"
+ },
+ "WATER_FLOW": {
+  "de": "Momentaner Durchfluss",
+  "en": "Current flow"
+ },
+ "WATER_FLOW_STATUS=NORMAL": {
+  "de": "Wert Status momentaner Durchfluss: Normal",
+  "en": "Value Status current flow: Normal"
+ },
+ "WATER_FLOW_STATUS=OVERFLOW": {
+  "de": "Wert Status momentaner Durchfluss: Überlauf",
+  "en": "Value Status current flow: Overflow"
+ },
+ "WATER_FLOW_STATUS=UNDERFLOW": {
+  "de": "Wert Status momentaner Durchfluss: Unterlauf",
+  "en": "Value Status current flow: Underflow"
+ },
+ "WATER_FLOW_STATUS=UNKNOWN": {
+  "de": "Wert Status momentaner Durchfluss: unbekannt",
+  "en": "Value Status current flow: unknown"
+ },
+ "WATER_VOLUME": {
+  "de": "Gesamt-Wassermenge",
+  "en": "Total water volume"
+ },
+ "WATER_VOLUME_OVERFLOW=TRUE": {
+  "de": "Zähler-Überlauf: Ja",
+  "en": "Counter overflow: Yes"
+ },
+ "WATER_VOLUME_SINCE_OPEN": {
+  "de": "Wassermenge seit Öffnung",
+  "en": "Water volume since opening"
+ },
+ "WATER_VOLUME_SINCE_OPEN_OVERFLOW=TRUE": {
+  "de": "Zähler-Überlauf seit Öffnung: Ja",
+  "en": "Counter overflow since opening: yes"
+ },
+ "WATERDETECTIONSENSOR": {
+  "de": "Wasserdetektor",
+  "en": "Water detector"
+ },
+ "WATERLEVEL_DETECTED=TRUE": {
+  "de": "Wasserstand erkannt: Ja",
+  "en": "Water level detected: Yes"
+ },
+ "WEATHER": {
+  "de": "Wettersensor",
+  "en": "Weather sensor"
+ },
+ "WEATHER_RECEIVER": {
+  "de": "Heizungsthermostat (Empfänger Wetterdaten)",
+  "en": "Radiator Thermostat (Receiver weather data)"
+ },
+ "WEEK_PROGRAM_CHANNEL_LOCKS": {
+  "de": "Kanäle im Auto-Modus",
+  "en": "Channels in auto mode"
+ },
+ "WEEK_PROGRAM_TARGET_CHANNEL_LOCK=AUTO_MODE_WITH_RESET": {
+  "de": "Wochenprogramm: Auto mit Reset (Reset ohne Funktion)",
+  "en": "week program: Auto with reset (reset without function)"
+ },
+ "WEEK_PROGRAM_TARGET_CHANNEL_LOCK=AUTO_MODE_WITHOUT_RESET": {
+  "de": "Wochenprogramm: Auto ohne Reset",
+  "en": "week program: Auto without reset"
+ },
+ "WEEK_PROGRAM_TARGET_CHANNEL_LOCK=MANU_MODE": {
+  "de": "Wochenprogramm: Manuell",
+  "en": "week program: Manually"
+ },
+ "WEEK_PROGRAM_TARGET_CHANNEL_LOCKS": {
+  "de": "Kanäle für Modus Wochenprogramm (binär)",
+  "en": "Channels for mode week program (binary)"
+ },
+ "WHITE": {
+  "de": "Farbtemperatur",
+  "en": "Colour temperature"
+ },
+ "WIND_DIR": {
+  "de": "Windrichtung",
+  "en": "Wind direction"
+ },
+ "WIND_DIR_RANGE": {
+  "de": "Windrichtung Schwankungsbreite",
+  "en": "Wind direction fluctuation range"
+ },
+ "WIND_DIR_RANGE_STATUS=0": {
+  "de": "Wert Windrichtung Schwankungsbreite: Normal",
+  "en": "Value Wind direction fluctuation range: Normal"
+ },
+ "WIND_DIR_RANGE_STATUS=1": {
+  "de": "Wert Windrichtung Schwankungsbreite: unbekannt",
+  "en": "Value Wind direction fluctuation range: unknown"
+ },
+ "WIND_DIR_RANGE_STATUS=2": {
+  "de": "Wert Windrichtung Schwankungsbreite: Überlauf",
+  "en": "Value Wind direction fluctuation range: Overflow"
+ },
+ "WIND_DIR_RANGE_STATUS=NORMAL": {
+  "de": "Wert Windrichtung Schwankungsbreite: Normal",
+  "en": "Value Wind direction fluctuation range: Normal"
+ },
+ "WIND_DIR_RANGE_STATUS=OVERFLOW": {
+  "de": "Wert Windrichtung Schwankungsbreite: Überlauf",
+  "en": "Value Wind direction fluctuation range: Overflow"
+ },
+ "WIND_DIR_RANGE_STATUS=UNKNOWN": {
+  "de": "Wert Windrichtung Schwankungsbreite: unbekannt",
+  "en": "Value Wind direction fluctuation range: unknown"
+ },
+ "WIND_DIR_STATUS=0": {
+  "de": "Wert Windrichtung: Normal",
+  "en": "Value Wind direction: Normal"
+ },
+ "WIND_DIR_STATUS=1": {
+  "de": "Wert Windrichtung: unbekannt",
+  "en": "Value Wind direction: unknown"
+ },
+ "WIND_DIR_STATUS=NORMAL": {
+  "de": "Wert Windrichtung: Normal",
+  "en": "Value Wind direction: Normal"
+ },
+ "WIND_DIR_STATUS=UNKNOWN": {
+  "de": "Wert Windrichtung: unbekannt",
+  "en": "Value Wind direction: unknown"
+ },
+ "WIND_DIRECTION": {
+  "de": "Windrichtung",
+  "en": "Wind direction"
+ },
+ "WIND_DIRECTION_RANGE": {
+  "de": "Windrichtung Schwankungsbreite",
+  "en": "Wind direction fluctuation range"
+ },
+ "WIND_SPEED": {
+  "de": "Windgeschwindigkeit",
+  "en": "Wind velocity"
+ },
+ "WIND_SPEED_RESULT_SOURCE": {
+  "de": "Art des Windgeschwindigkeitswertes",
+  "en": "Type of wind velocity value"
+ },
+ "WIND_SPEED_RESULT_SOURCE=AVERAGE_VALUE": {
+  "de": "Mittelwert",
+  "en": "Average"
+ },
+ "WIND_SPEED_RESULT_SOURCE=MAX_VALUE": {
+  "de": "Maximalwert",
+  "en": "Maximum value"
+ },
+ "WIND_SPEED_STATUS=0": {
+  "de": "Wert Windgeschwindigkeit: Normal",
+  "en": "Value Wind velocity: Normal"
+ },
+ "WIND_SPEED_STATUS=1": {
+  "de": "Wert Windgeschwindigkeit: unbekannt",
+  "en": "Value Wind velocity: unknown"
+ },
+ "WIND_SPEED_STATUS=2": {
+  "de": "Wert Windgeschwindigkeit: Überlauf",
+  "en": "Value Wind velocity: Overflow"
+ },
+ "WIND_SPEED_STATUS=NORMAL": {
+  "de": "Wert Windgeschwindigkeit: Normal",
+  "en": "Value Wind velocity: Normal"
+ },
+ "WIND_SPEED_STATUS=OVERFLOW": {
+  "de": "Wert Windgeschwindigkeit: Überlauf",
+  "en": "Value Wind velocity: Overflow"
+ },
+ "WIND_SPEED_STATUS=UNKNOWN": {
+  "de": "Wert Windgeschwindigkeit: unbekannt",
+  "en": "Value Wind velocity: unknown"
+ },
+ "WIND_THRESHOLD_OVERRUN=TRUE": {
+  "de": "Windschwelle überschritten",
+  "en": "Wind threshold exceeded"
+ },
+ "WINDOW_DRIVE_RECEIVER": {
+  "de": "HmIP-MOD-WD-VK",
+  "en": "HmIP-MOD-WD-VK"
+ },
+ "WINDOW_OPEN_REPORTING": {
+  "de": "Fenster-Auf-Meldung",
+  "en": "Message window open"
+ },
+ "WINDOW_OPEN_REPORTING=TRUE": {
+  "de": "Fenster-Auf-Meldung",
+  "en": "Message window open"
+ },
+ "WINDOW_STATE": {
+  "de": "Fensterstatus",
+  "en": "Window status"
+ },
+ "WINDOW_SWITCH_RECEIVER": {
+  "de": "Heizkörperthermostat",
+  "en": "Radiator thermostat"
+ },
+ "WINMATIC": {
+  "de": "Fenster-Kippantrieb",
+  "en": "Window tilt actuator"
+ },
+ "WP_OPTIONS=NOP": {
+  "de": "Wochenprogramm ignorieren",
+  "en": "Ignore week program"
+ },
+ "WP_OPTIONS=OFF": {
+  "de": "Wochenprogramm aktivieren",
+  "en": "Activate week program"
+ },
+ "WP_OPTIONS=ON": {
+  "de": "Wochenprogramm deaktivieren",
+  "en": "Deactivate week program"
+ },
+ "WS_CS": {
+  "de": "Wetterstation",
+  "en": "Weather data center"
+ },
+ "WS_TH": {
+  "de": "Wetterstation",
+  "en": "Weather data center"
+ }
+}

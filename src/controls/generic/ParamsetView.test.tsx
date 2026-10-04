@@ -63,7 +63,9 @@ describe.each(fixtures)('descriptions in %s', (_, fixture) => {
     renderWithTheme(<ParamsetView label={label} description={description} values={values} onSet={() => {}} />);
     const list = screen.getByLabelText(label);
     expect(within(list).queryAllByRole('term')).toHaveLength(shownParameters(description).length);
-  });
+    // The virtual keys' MASTER paramset has over 1000 parameters, which
+    // takes about 5 s in jsdom on the CI runners
+  }, 30_000);
 });
 
 const description: ParamsetDescription = {
