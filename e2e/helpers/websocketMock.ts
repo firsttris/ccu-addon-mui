@@ -35,6 +35,24 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       { address: '003660C9930AB6', name: 'Fensterkontakt Bad', lowBat: true, unreach: false },
     ];
 
+    // The health page: maintenance values relative to now, so the page
+    // reads the same whenever the test runs
+    const ago = (seconds: number) => Math.floor(Date.now() / 1000) - seconds;
+    const health = (values: Record<string, [unknown, number]>) =>
+      Object.fromEntries(Object.entries(values).map(([k, [value, age]]) => [k, { value, time: ago(age) }]));
+    const deviceHealth = [
+      { address: '000A9D89A7AF25', name: 'Wandthermostat Flur', type: 'HmIP-WTH-2', interfaceName: 'HmIP-RF', roomId: 1, roomName: 'Wohnzimmer',
+        values: health({ LOW_BAT: [false, 7200], OPERATING_VOLTAGE: [2.4, 7200], RSSI_DEVICE: [-88, 7200], RSSI_PEER: [-86, 7200], UNREACH: [true, 1800] }), lowBatLimit: 2.2 },
+      { address: '003660C9930AB6', name: 'Fensterkontakt Bad', type: 'HmIP-SWDO', interfaceName: 'HmIP-RF', roomName: 'Bad',
+        values: health({ LOW_BAT: [true, 600], OPERATING_VOLTAGE: [1.0, 600], RSSI_DEVICE: [-71, 600], RSSI_PEER: [-69, 600], UNREACH: [false, 600] }), lowBatLimit: 1.1 },
+      { address: '00151BE9A1C2D3', name: 'Bewegungsmelder Flur', type: 'HmIP-SMI', interfaceName: 'HmIP-RF', roomName: 'Flur',
+        values: health({ LOW_BAT: [false, 300], OPERATING_VOLTAGE: [2.3, 300], RSSI_DEVICE: [-91, 300], RSSI_PEER: [-93, 300], UNREACH: [false, 300], CONFIG_PENDING: [true, 300] }), lowBatLimit: 2.2 },
+      { address: '000855699C4F38', name: 'Taster Esszimmer', type: 'HmIP-WRC2', interfaceName: 'HmIP-RF', roomName: 'Esszimmer',
+        values: health({ LOW_BAT: [false, 86400 * 2], OPERATING_VOLTAGE: [2.8, 86400 * 2], RSSI_DEVICE: [-78, 86400 * 2], RSSI_PEER: [-75, 86400 * 2], UNREACH: [false, 86400 * 2] }), lowBatLimit: 2.2 },
+      { address: 'LEQ0000001', name: 'Schaltaktor Keller', type: 'HM-LC-Sw1-FM', interfaceName: 'BidCos-RF', roomName: 'Keller',
+        values: health({ RSSI_DEVICE: [-65, 60], RSSI_PEER: [-63, 60], UNREACH: [false, 60], STICKY_UNREACH: [false, 60] }) },
+    ];
+
     // Alarm messages: none unless a test sets them (__wsMock.setAlarms)
     let alarms: AnyPayload[] = [];
 
@@ -935,6 +953,11 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
       if (message.type === 'getDeviceProblems') {
         delayedBroadcast({ type: 'deviceProblems', devices: deviceProblems, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'getDeviceHealth') {
+        delayedBroadcast({ type: 'getDeviceHealth_response', devices: deviceHealth, requestId: message.requestId });
         return;
       }
 

@@ -24,6 +24,8 @@ import {
 
 // Battery and reachability problems are not pushed by the server
 const DEVICE_PROBLEMS_REFRESH_MS = 5 * 60 * 1000;
+// The health page: batteries, radio and reachability of all devices
+const DEVICE_HEALTH_REFRESH_MS = 60 * 1000;
 // Also reloaded when a device reports a change of its status
 const SERVICE_MESSAGES_REFRESH_MS = 60 * 1000;
 const SET_DATAPOINT_TIMEOUT_MS = 15000;
@@ -52,6 +54,15 @@ export const useDeviceProblems = () => {
     queryKey: ['deviceProblems'],
     queryFn: async () => (await request({ type: 'getDeviceProblems' })).devices ?? [],
     refetchInterval: DEVICE_PROBLEMS_REFRESH_MS,
+  });
+};
+
+export const useDeviceHealth = () => {
+  const { request } = useWebSocketActions();
+  return useQuery({
+    queryKey: ['deviceHealth'],
+    queryFn: async () => (await request({ type: 'getDeviceHealth' }, { timeoutMs: 30000 })).devices ?? [],
+    refetchInterval: DEVICE_HEALTH_REFRESH_MS,
   });
 };
 

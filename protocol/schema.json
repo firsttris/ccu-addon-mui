@@ -404,6 +404,9 @@
     "setUserLanguage": {
       "$ref": "#/definitions/SetUserLanguageCall"
     },
+    "getDeviceHealth": {
+      "$ref": "#/definitions/GetDeviceHealthCall"
+    },
     "getInterfaces": {
       "$ref": "#/definitions/GetInterfacesCall"
     },
@@ -569,6 +572,7 @@
     "setSnmp",
     "getUserLanguage",
     "setUserLanguage",
+    "getDeviceHealth",
     "getInterfaces",
     "searchWiredDevices",
     "getDeviceFirmware",
@@ -3291,6 +3295,9 @@
         },
         {
           "$ref": "#/definitions/SetUserLanguageResponse"
+        },
+        {
+          "$ref": "#/definitions/GetDeviceHealthResponse"
         },
         {
           "$ref": "#/definitions/GetInterfacesResponse"
@@ -11416,6 +11423,125 @@
         },
         "response": {
           "$ref": "#/definitions/SetUserLanguageResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "HealthValue": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": [
+            "boolean",
+            "number",
+            "string",
+            "null"
+          ]
+        },
+        "time": {
+          "type": "integer",
+          "description": "Unix seconds the value was last set"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "DeviceHealth": {
+      "type": "object",
+      "description": "what a device's maintenance channel reports (get_device_health.tcl)",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "roomId": {
+          "type": "integer"
+        },
+        "roomName": {
+          "type": "string"
+        },
+        "values": {
+          "type": "object",
+          "description": "LOW_BAT, OPERATING_VOLTAGE, RSSI_DEVICE, RSSI_PEER, UNREACH, STICKY_UNREACH, CONFIG_PENDING, UPDATE_PENDING, DUTY_CYCLE, SABOTAGE when the device has them",
+          "additionalProperties": {
+            "$ref": "#/definitions/HealthValue"
+          }
+        },
+        "lowBatLimit": {
+          "type": "number",
+          "description": "HmIP: the voltage at which the device reports LOW_BAT (MASTER LOW_BAT_LIMIT)"
+        }
+      },
+      "required": [
+        "address",
+        "name",
+        "type",
+        "interfaceName",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceHealthRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDeviceHealth"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceHealthResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDeviceHealth_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeviceHealth"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "devices"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceHealthCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetDeviceHealthRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetDeviceHealthResponse"
         }
       },
       "required": [

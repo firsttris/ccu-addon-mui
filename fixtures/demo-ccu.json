@@ -66,7 +66,9 @@
       "name": "Wohnzimmer Licht:0",
       "datapoints": {
         "UNREACH": false,
-        "LOWBAT": false
+        "LOWBAT": false,
+        "RSSI_DEVICE": -65,
+        "RSSI_PEER": -63
       }
     },
     {
@@ -92,7 +94,10 @@
         "UNREACH": false,
         "STICKY_UNREACH": true,
         "LOW_BAT": false,
-        "CONFIG_PENDING": false
+        "CONFIG_PENDING": false,
+        "OPERATING_VOLTAGE": 1.4,
+        "RSSI_DEVICE": -62,
+        "RSSI_PEER": -60
       }
     },
     {
@@ -260,7 +265,10 @@
       "name": "Wandthermostat Flur:0",
       "datapoints": {
         "UNREACH": true,
-        "LOW_BAT": false
+        "LOW_BAT": false,
+        "OPERATING_VOLTAGE": 2.4,
+        "RSSI_DEVICE": -88,
+        "RSSI_PEER": -86
       }
     },
     {
@@ -285,7 +293,10 @@
       "name": "Fensterkontakt Bad:0",
       "datapoints": {
         "UNREACH": false,
-        "LOW_BAT": true
+        "LOW_BAT": true,
+        "OPERATING_VOLTAGE": 1.0,
+        "RSSI_DEVICE": -71,
+        "RSSI_PEER": -69
       }
     },
     {
@@ -306,7 +317,10 @@
       "name": "Dimmer Esstisch:0",
       "datapoints": {
         "UNREACH": false,
-        "LOW_BAT": false
+        "LOW_BAT": false,
+        "OPERATING_VOLTAGE": 2.3,
+        "RSSI_DEVICE": -91,
+        "RSSI_PEER": -93
       }
     },
     {
@@ -354,7 +368,10 @@
       "name": "Taster Esszimmer:0",
       "datapoints": {
         "UNREACH": false,
-        "LOW_BAT": false
+        "LOW_BAT": false,
+        "OPERATING_VOLTAGE": 2.8,
+        "RSSI_DEVICE": -78,
+        "RSSI_PEER": -75
       }
     },
     {
@@ -387,7 +404,9 @@
       "name": "HmIP-WHS2 00195F29B04142:0",
       "datapoints": {
         "UNREACH": false,
-        "LOW_BAT": false
+        "LOW_BAT": false,
+        "RSSI_DEVICE": -55,
+        "RSSI_PEER": -54
       }
     },
     {
@@ -6813,6 +6832,26 @@
             "CHANNEL_OPERATION_MODE": 3,
             "MSG_FOR_POS_A": 2,
             "MSG_FOR_POS_B": 1
+          }
+        },
+        "000A9D89A7AF25:0": {
+          "MASTER": {
+            "LOW_BAT_LIMIT": 2.2
+          }
+        },
+        "003660C9930AB6:0": {
+          "MASTER": {
+            "LOW_BAT_LIMIT": 1.1
+          }
+        },
+        "00151BE9A1C2D3:0": {
+          "MASTER": {
+            "LOW_BAT_LIMIT": 2.2
+          }
+        },
+        "000855699C4F38:0": {
+          "MASTER": {
+            "LOW_BAT_LIMIT": 2.2
           }
         }
       },

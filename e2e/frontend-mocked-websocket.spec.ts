@@ -809,3 +809,27 @@ test('zeigt die Anzahl der Geräte mit Problemen im Header', async ({ page }) =>
   await badge.click();
   await expect(page.getByRole('dialog').getByRole('list', { name: /^(Notices|Meldungen)$/ })).toBeVisible();
 });
+
+test('zeigt die Geräte-Gesundheit nach Dringlichkeit', async ({ page }) => {
+  await page.goto('/room/1');
+  await page.getByRole('button', { name: /^(Menu|Menü)$/ }).click();
+  await page.getByRole('button', { name: /^(Device health|Geräte-Gesundheit)$/ }).click();
+  await expect(page).toHaveURL(/\/health$/);
+
+  const summary = page.getByRole('list', { name: 'Summary' });
+  await expect(summary.getByRole('listitem', { name: 'Unreachable: 1' })).toBeVisible();
+  await expect(summary.getByRole('listitem', { name: 'Battery empty: 1' })).toBeVisible();
+  await expect(summary.getByRole('listitem', { name: 'Battery low soon: 2' })).toBeVisible();
+  await expect(summary.getByRole('listitem', { name: 'Poor signal: 2' })).toBeVisible();
+
+  // Devices needing attention, the unreachable one first
+  const devices = page.getByRole('list', { name: 'Devices' });
+  await expect(devices.getByRole('listitem')).toHaveCount(3);
+  await expect(devices.getByRole('listitem').first()).toHaveAccessibleName('Wandthermostat Flur');
+  await expect(devices.getByRole('listitem', { name: 'Fensterkontakt Bad' }).getByLabel('Battery: Battery empty, 1.00 V')).toBeVisible();
+  await expect(devices.getByText('Configuration pending')).toBeVisible();
+
+  await page.getByRole('button', { name: 'All (5)' }).click();
+  await expect(devices.getByRole('listitem')).toHaveCount(5);
+  await expect(devices.getByRole('listitem', { name: 'Taster Esszimmer' }).getByText('Last seen 2 days ago')).toBeVisible();
+});
