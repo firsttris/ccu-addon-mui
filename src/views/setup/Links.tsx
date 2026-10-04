@@ -23,6 +23,7 @@ import { getLocale } from '../../paraglide/runtime';
 import { useChannelNames } from './channelNames';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
+import { LinkList } from './LinkList';
 import { NativeSelect } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
 
@@ -396,86 +397,20 @@ export const AddLinkForm = ({ interfaceName, deviceAddress, channels }: LinksPro
   );
 };
 
-// Direct links of a device: list, parameters, add and remove
+// Direct links of a device: what it controls and what controls it, add
+// and remove
 export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) => {
-  const t = useTranslations();
-  const { showToast } = useToast();
   const { data: links = [], isPending: linksLoading } = useLinks(interfaceName, deviceAddress);
-  const { data: devices = [] } = useDevices();
-  const names = useChannelNames();
-  const action = useLinkAction();
-  const [open, setOpen] = useState<string | null>(null);
-  const [removing, setRemoving] = useState<Link | null>(null);
-  const label = (address: string) => `${names.get(address) ?? address} (${address})`;
-  const channelInfo = useLinkChannelInfo();
+  const withInterface = useMemo(() => links.map((link) => ({ ...link, interfaceName })), [links, interfaceName]);
 
   return (
     <>
-      {linksLoading ? (
-        <PanelSkeleton lines={2} />
-      ) : links.length === 0 ? (
+      {!linksLoading && links.length === 0 ? (
         <p>{m.NO_LINKS()}</p>
       ) : (
-        <ul
-          aria-label={m.LINKS()}
-          className="flex flex-col divide-y rounded-lg border [&>li]:flex [&>li]:flex-col [&>li]:gap-3 [&>li]:p-3"
-        >
-          {links.map((link) => {
-            const key = `${link.sender}>${link.receiver}`;
-            return (
-              <li key={key}>
-                <Row>
-                  <span className="min-w-[200px] flex-1 text-sm">
-                    {label(link.sender)} → {label(link.receiver)}
-                    {link.name ? ` · ${link.name}` : ''}
-                  </span>
-                  <DialogButton type="button" onClick={() => setOpen(open === key ? null : key)} aria-expanded={open === key}>
-                    {m.LINK_PARAMETERS()}
-                  </DialogButton>
-                  <DialogButton type="button" onClick={() => setRemoving(link)}>
-                    {m.REMOVE()}
-                  </DialogButton>
-                </Row>
-                {open === key && (
-                  <LinkParameters
-                    interfaceName={interfaceName}
-                    link={link}
-                    receiverType={channelInfo.get(link.receiver)?.channel.type}
-                    senderType={channelInfo.get(link.sender)?.channel.type}
-                    senderDeviceType={channelInfo.get(link.sender)?.deviceType}
-                  />
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <LinkList links={withInterface} isLoading={linksLoading} device={deviceAddress} />
       )}
-
       <AddLinkForm interfaceName={interfaceName} deviceAddress={deviceAddress} channels={channels} />
-
-      {removing && (
-        <ConfirmDialog
-          title={m.REMOVE_LINK()}
-          confirmLabel={m.REMOVE()}
-          busy={action.isPending}
-          onCancel={() => setRemoving(null)}
-          onConfirm={() =>
-            action.mutate(
-              { type: 'removeLink', interfaceName, sender: removing.sender, receiver: removing.receiver },
-              {
-                onSuccess: () => showToast(m.LINK_REMOVED(), 'info'),
-                onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
-                onSettled: () => setRemoving(null),
-              },
-            )
-          }
-        >
-          <p>{m.REMOVE_LINK_CONFIRM()}</p>
-          <p>
-            {label(removing.sender)} → {label(removing.receiver)}
-          </p>
-        </ConfirmDialog>
-      )}
     </>
   );
 };

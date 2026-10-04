@@ -343,7 +343,7 @@ export const useAllLinks = () => {
 };
 
 // Parameters of a link on the receiver's side
-export const useLinkParamset = (interfaceName: string, receiver: string, sender: string) => {
+export const useLinkParamset = (interfaceName: string, receiver: string, sender: string, enabled = true) => {
   const { request } = useWebSocketActions();
   const description = useQuery({
     queryKey: ['linkParamsetDescription', interfaceName, receiver, sender],
@@ -352,6 +352,7 @@ export const useLinkParamset = (interfaceName: string, receiver: string, sender:
         .description ?? {}) as ParamsetDescription,
     staleTime: Infinity,
     retry: false,
+    enabled,
   });
   const values = useQuery({
     queryKey: ['linkParamset', interfaceName, receiver, sender],
@@ -359,6 +360,7 @@ export const useLinkParamset = (interfaceName: string, receiver: string, sender:
       ((await request({ type: 'getLinkParamset', interfaceName, address: receiver, partner: sender })).values ??
         {}) as Record<string, DatapointValue>,
     retry: false,
+    enabled,
   });
   return { description, values };
 };

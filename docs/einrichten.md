@@ -105,7 +105,12 @@ Sonderfälle wie in der WebUI:
 ## Direktverknüpfungen
 
 Direktverknüpfungen schalten Geräte ohne die CCU, z. B. ein Taster einen Dimmer. *Direktverknüpfungen*
-listet alle Verknüpfungen der CCU, durchsuchbar. Jede Geräteseite zeigt die eigenen.
+zeigt alle Verknüpfungen der CCU als „wer steuert wen“: gruppiert nach dem sendenden Gerät, jede Zeile
+Sender → Empfänger mit Gerätebild (der Kanal markiert), Kanalname, Raum und Adresse. Darunter steht in
+Worten, was die Verknüpfung tut, also die Vorlage, zu der ihre Werte passen (z. B. *Verhalten: Dimmer –
+ein/aus & heller/dunkler*, sonst *Eigene Einstellungen*), und ihr Name. Suche und Raumfilter grenzen die
+Liste ein. Auf der Geräteseite (Reiter *Direktverknüpfungen*) steht getrennt, was das Gerät steuert und
+wovon es gesteuert wird.
 
 <img src="screenshot-verknuepfung.png" alt="Direktverknüpfung Taster zu Dimmer mit der Vorlage Dimmer ein/aus und heller/dunkler" width="900">
 

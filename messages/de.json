@@ -1447,5 +1447,10 @@
   "DEVICE_MORE_CHANNELS": "Weitere Kanäle ({count})",
   "DEVICE_SAVE_HINT": "Name, Räume, Gewerke und Optionen werden sofort gespeichert. Einstellungen sammeln sich unten und wirken erst nach „Speichern und übertragen“.",
   "DEVICE_SETTINGS_HEADING": "Einstellungen",
-  "DEVICE_SETTINGS_TRANSFER": "nach dem Übertragen"
+  "DEVICE_SETTINGS_TRANSFER": "nach dem Übertragen",
+  "LINK_CONTROLS": "steuert",
+  "LINK_BEHAVIOUR": "Verhalten",
+  "LINKS_CONTROLS": "Dieses Gerät steuert",
+  "LINKS_CONTROLLED_BY": "Wird gesteuert von",
+  "LINKS_ALL_ROOMS": "Alle Räume"
 }

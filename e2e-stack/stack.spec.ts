@@ -318,6 +318,8 @@ test('stellt eine Direktverknüpfung über eine Vorlage der WebUI ein', async ({
   await expect(dialog).toContainText('Vorlage: Dimmer - ein/aus & heller/dunkler → Treppenhauslicht');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+  // The list says in words what the link does now
+  await expect(item).toContainText('Verhalten: Treppenhauslicht');
 
   // Stored in the device: recognised again after a reload
   await page.reload();
@@ -333,7 +335,12 @@ test('legt Direktverknüpfungen an, ändert ihre Parameter und löscht sie', asy
   const section = page.getByRole('region', { name: 'Direktverknüpfungen' });
   const list = section.getByRole('list', { name: 'Direktverknüpfungen' });
   await expect(list.getByRole('listitem')).toHaveCount(1);
-  await expect(list).toContainText('Taster Esszimmer oben (000855699C4F38:1) → Dimmer Esstisch (00151BE9A1C2D3:4) · Esstisch an');
+  // Who controls whom, and what the link does in words (its profile)
+  const first = list.getByRole('listitem');
+  await expect(first).toContainText('Taster Esszimmer oben000855699C4F38:1');
+  await expect(first).toContainText('Dimmer Esstisch00151BE9A1C2D3:4');
+  await expect(first).toContainText('Verhalten: Dimmer - ein/aus & heller/dunkler');
+  await expect(first).toContainText('„Esstisch an“');
 
   // Lower button to the dimmer: only fitting partners are offered
   const form = section.getByRole('form', { name: 'Verknüpfung anlegen' });
