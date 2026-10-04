@@ -102,7 +102,11 @@ listet alle Verknüpfungen der CCU, durchsuchbar. Jede Geräteseite zeigt die ei
 
 ## Räume und Gewerke
 
-Räume und Gewerke anlegen, umbenennen, löschen und Kanäle zuordnen, aufklappbar je Raum oder Gewerk.
+Räume und Gewerke anlegen, umbenennen, löschen und Kanäle zuordnen, aufklappbar je Raum oder Gewerk. *Kanäle hinzufügen*
+öffnet eine Auswahl mit den Geräten und ihren Bildern, nach Gerätetyp sortiert. Die Suche findet Name,
+Gerät, Typ, Raum und Adresse, auch mit Tippfehlern oder Abkürzungen („wzlicht“ für „Wohnzimmer Licht“).
+Mehrere Kanäle oder ein ganzes Gerät lassen sich auf einmal anhaken; *Nur Kanäle ohne Raum* zeigt, was
+noch fehlt.
 Einzelne Kanäle lassen sich auch auf ihrer Geräteseite zuordnen.
 
 ## Heizgruppen

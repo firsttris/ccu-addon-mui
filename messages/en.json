@@ -1425,5 +1425,17 @@
   "CHIME_RINGING": "Ringing",
   "CHIME_RING": "Ring",
   "SIGNAL_FLASHING": "Flashing",
-  "SIGNAL_FLASH": "Flash"
+  "SIGNAL_FLASH": "Flash",
+  "PICKER_HINT": "Search and choose channels",
+  "PICKER_SEARCH": "Search: name, device, type, room, address",
+  "PICKER_DEVICES": "Devices",
+  "PICKER_NONE": "Nothing found",
+  "PICKER_OTHER": "Without device type",
+  "PICKER_ALL": "all",
+  "PICKER_ALL_OF": "All channels of {name}",
+  "PICKER_SELECTED": "{count} selected",
+  "GROUP_ADD_CHANNELS": "Add channels",
+  "GROUP_ADD_CHANNELS_TO": "Add channels to {name}",
+  "GROUP_ONLY_WITHOUT_ROOM": "Only channels without a room",
+  "GROUP_ONLY_WITHOUT_TRADE": "Only channels without a trade"
 }
