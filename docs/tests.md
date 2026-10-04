@@ -9,9 +9,9 @@ echten Server und eine nachgebaute CCU.
 | Ebene | Was echt ist | Was nachgebaut ist | Tests | in der CI |
 |---|---|---|---:|:---:|
 | **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 190 in 28 Dateien | ✅ |
-| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 207 Testfunktionen in 48 Dateien | ✅ |
+| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 208 Testfunktionen in 48 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests | – | gegen `protocol/schema.json` | ✅ |
-| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 22 + 2 | ✅ |
+| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 23 + 2 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 64 | ✅ |
 | **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 60 | lokal |
 
@@ -73,7 +73,7 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
 
 - **Pakete**: ReGa (Skripte, Parser, Validierung, Programm-Code), XML-RPC-Client und -Server, Anmeldung und
   Tokens, Einstellungen, Diagramme, Push, Audit, Add-ons, Logs …
-- **Integration** (`go-server/integration_test.go`, 56 Tests): startet die Fake-CCU auf freien Ports und den
+- **Integration** (`go-server/integration_test.go`, 57 Tests): startet die Fake-CCU auf freien Ports und den
   **echten** Server mit temporären Dateien, wartet auf die Anmeldung für Events und spricht dann über einen
   WebSocket-Client mit ihm: anmelden, schalten, Events, Rechte, Admin-Token, Paramsets, Anlernen,
   Verknüpfungen, Programme, Backup …

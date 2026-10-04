@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 type Config struct {
@@ -24,6 +25,9 @@ type Config struct {
 	Debug              bool
 	CallbackHost       string
 	RegaPort           int
+	// SysvarInterval: how often the system variables are read while an app
+	// shows them (they send no events)
+	SysvarInterval time.Duration
 
 	// AuthMode is "ccu" (log in with a CCU WebUI user) or "none".
 	AuthMode string
@@ -98,6 +102,7 @@ func Load() *Config {
 		Debug:              getEnv("DEBUG", "false") == "true",
 		CallbackHost:       getEnv("CALLBACK_HOST", "127.0.0.1"),
 		RegaPort:           getEnvInt("REGA_PORT", regaPort),
+		SysvarInterval:     time.Duration(getEnvInt("SYSVAR_INTERVAL", 5)) * time.Second,
 		AuthMode:           getEnv("AUTH_MODE", "ccu"),
 		WebUIURL:           getEnv("CCU_WEBUI_URL", "http://"+ccuHost),
 		AuthKeyFile:        getEnv("AUTH_KEY_FILE", defaultAuthKeyFile()),

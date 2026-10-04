@@ -37,7 +37,8 @@ interface Response {
     | 'setDatapoint_response'
     | 'deviceProblems'
     | 'paramsetDescription'
-    | 'paramset';
+    | 'paramset'
+    | 'sysvars';
   error?: string;
   code?: string;
   rooms?: Room[];
@@ -200,6 +201,10 @@ export const useWebsocket = () => {
       switch (response.type) {
         case 'auth_response':
           handleAuthResponse(response);
+          return;
+        // System variables changed (the server reads them for all apps)
+        case 'sysvars':
+          queryClient.setQueryData(['sysvars'], response.sysvars);
           return;
         case 'error':
           if (response.code === 'AUTH_REQUIRED') {

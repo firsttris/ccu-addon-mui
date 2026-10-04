@@ -190,6 +190,7 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `RPC_SERVER_PORT` | `9099` | Port des Event-Servers |
 | `WS_PORT`, `WS_BIND_HOST` | `8088`, `127.0.0.1` | WebSocket-Server |
 | `REGA_PORT` | `8183` bei `localhost`, sonst `8181` | ReGa |
+| `SYSVAR_INTERVAL` | `5` | Sekunden zwischen zwei Abfragen der Systemvariablen, solange eine App sie zeigt |
 | `RPC_PORT`, `HMIP_PORT`, `VIRTUAL_DEVICES_PORT` | bei `localhost` aus `/etc/config/InterfacesList.xml` (sonst `32001`, `32010`, `39292`), aus dem LAN `2001`, `2010`, `9292` | Funkdienste |
 | `CCU_WEBUI_URL` | `http://<CCU_HOST>` | WebUI für JSON-RPC und CGI-Seiten |
 | `AUTH_MODE` | `ccu` | `none` schaltet die Anmeldung ab |

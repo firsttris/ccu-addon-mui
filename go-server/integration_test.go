@@ -56,6 +56,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		CCUHost:            "127.0.0.1",
 		CallbackHost:       "127.0.0.1",
 		RegaPort:           ccu.RegaPort,
+		SysvarInterval:     50 * time.Millisecond,
 		AuthMode:           authMode,
 		WebUIURL:           fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort),
 		AuthKeyFile:        filepath.Join(t.TempDir(), "key"),
@@ -652,6 +653,35 @@ func TestStackPairingInboxAndDelete(t *testing.T) {
 	send(t, conn, message{"type": "setInstallMode", "requestId": "q8", "interfaceName": "HmIP-RF", "on": true, "seconds": 60})
 	if m := receive(t, conn, byRequestID("q8")); m["code"] != "FORBIDDEN" {
 		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}
+
+// System variables send no events: the server reads them for the
+// connections that loaded them and sends them when they change
+func TestStackSysvarChangesArePushed(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getSysvars", "requestId": "q1"})
+	receive(t, conn, byRequestID("q1"))
+
+	// A program changes the outside temperature
+	if !ccu.SetSysvar(951, 21.5) {
+		t.Fatal("sysvar 951 missing")
+	}
+	m := receive(t, conn, func(m message) bool {
+		if m["type"] != "sysvars" {
+			return false
+		}
+		for _, raw := range m["sysvars"].([]interface{}) {
+			if sv := raw.(map[string]interface{}); sv["id"] == 951.0 && sv["value"] == 21.5 {
+				return true
+			}
+		}
+		return false
+	})
+	if len(m["sysvars"].([]interface{})) != 7 {
+		t.Fatalf("expected the whole list, got %v", m["sysvars"])
 	}
 }
 

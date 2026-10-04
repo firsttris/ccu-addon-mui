@@ -1387,6 +1387,20 @@ func (c *CCU) Reset() {
 	c.metadata = map[string]map[string]interface{}{}
 }
 
+// SetSysvar changes a system variable inside the CCU, as a program would
+// (no event: system variables send none). Reports whether it exists.
+func (c *CCU) SetSysvar(id int64, value interface{}) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for i := range c.fixture.Sysvars {
+		if sv := &c.fixture.Sysvars[i]; sv.ID == id {
+			sv.Value = value
+			return true
+		}
+	}
+	return false
+}
+
 // Metadata returns what setMetadata stored for an object, nil if nothing.
 func (c *CCU) Metadata(iface, objectID, dataID string) interface{} {
 	c.mu.Lock()

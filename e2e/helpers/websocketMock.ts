@@ -843,6 +843,12 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       setAlarms: (next: AnyPayload[]) => {
         alarms = next;
       },
+      // A system variable changed in the CCU: the server sends the list
+      setSysvar: (id: number, value: unknown) => {
+        const sysvar = sysvars.find((sv) => sv.id === id);
+        if (sysvar) (sysvar as { value: unknown }).value = value;
+        broadcast({ type: 'sysvars', sysvars });
+      },
     };
   }, { requireLogin: options.requireLogin === true, validToken: VALID_TOKEN });
 };

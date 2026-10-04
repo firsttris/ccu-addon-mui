@@ -2793,6 +2793,27 @@
       "additionalProperties": false,
       "description": "A value reported by the CCU for a subscribed channel"
     },
+    "SysvarsMessage": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "sysvars"
+        },
+        "sysvars": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Sysvar"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "sysvars"
+      ],
+      "additionalProperties": false,
+      "description": "Sent unasked to connections that loaded the system variables (getSysvars) when they changed; the whole list. System variables send no events, the server reads them every few seconds"
+    },
     "ServerMessage": {
       "description": "Every message the server sends",
       "anyOf": [
@@ -2804,6 +2825,9 @@
         },
         {
           "$ref": "#/definitions/EventMessage"
+        },
+        {
+          "$ref": "#/definitions/SysvarsMessage"
         },
         {
           "$ref": "#/definitions/GetRoomsResponse"

@@ -105,6 +105,9 @@ type Client struct {
 	// sessionID is the logged-in device (auth.SessionInfo) the connection
 	// belongs to; read from other goroutines when a device is logged out
 	sessionID string
+	// sysvars: the connection gets the system variables when they change
+	// (sysvars.go)
+	sysvars bool
 
 	// device describes the browser, from the User-Agent
 	device string
@@ -198,11 +201,14 @@ type Server struct {
 	diagrams *diagrams.Store
 	recorder *diagrams.Recorder
 	// The WebUI's general settings and where the diagram values are
-	settings        *settings.Service
-	diagramsDir     string
-	regaClient      *rega.Client
-	clients         map[*Client]bool
-	clientsMu       sync.RWMutex
+	settings    *settings.Service
+	diagramsDir string
+	regaClient  *rega.Client
+	clients     map[*Client]bool
+	clientsMu   sync.RWMutex
+	// The system variables last sent to the connections (sysvars.go)
+	lastSysvars     []byte
+	sysvarsMu       sync.Mutex
 	subscriptionMgr *subscriptions.Manager
 	httpServer      *http.Server
 	// Push notifications, if enabled
@@ -830,6 +836,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	session, token, err := s.auth.Refresh(msg.Token, client.device)
 	if err != nil {
 		client.authenticated = false
+		client.watchSysvars(false)
 		s.sendJSON(client, authResponse{Type: "auth_response", AuthRequired: true, Code: "LOGIN_REQUIRED"})
 		return
 	}
@@ -1277,6 +1284,7 @@ func (s *Server) handleSessions(client *Client, msgType string, message []byte) 
 		if id := client.SessionID(); id != "" {
 			s.auth.Revoke(id)
 		}
+		client.watchSysvars(false)
 		s.sendJSON(client, sessionsResponse{Type: "logout_response", RequestID: msg.RequestID, Success: true})
 	case "listSessions":
 		if code, errorMsg := configureError(client); code != "" {
@@ -1611,6 +1619,7 @@ func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
 			s.sendRequestError(client, msg.RequestID, "getSysvars failed: "+err.Error(), "CCU_ERROR")
 			return
 		}
+		client.watchSysvars(true)
 		respond(logicResponse{Sysvars: sysvars})
 		return
 	case "getPrograms":

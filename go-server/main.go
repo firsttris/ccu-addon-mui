@@ -121,6 +121,13 @@ func run(ctx context.Context, cfg *config.Config) error {
 		go wsServer.RunSysvarRecording(ctx, time.Minute)
 	}
 
+	// System variables send no events: read once for all apps that show them
+	sysvarInterval := cfg.SysvarInterval
+	if sysvarInterval <= 0 {
+		sysvarInterval = 5 * time.Second
+	}
+	go wsServer.RunSysvarWatch(ctx, sysvarInterval)
+
 	rpcServer := xmlrpc.NewServer(cfg, func(event *types.CCUEvent) {
 		wsServer.RecordEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
 		wsServer.BroadcastToClients(event)
