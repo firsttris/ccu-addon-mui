@@ -538,7 +538,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleSystemInfo(client, requestID)
 	case "getLogging", "setLogging", "downloadLogs":
 		s.handleLogging(client, msgType, message)
-	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "checkCcuFirmware", "installCcuFirmware", "cancelCcuFirmware":
+	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "checkCcuFirmware", "installCcuFirmware", "cancelCcuFirmware", "prepareAddonUpload", "installAddon":
 		s.handleRestore(client, msgType, message)
 	case "getHeatingGroups":
 		s.handleHeatingGroups(client, requestID)

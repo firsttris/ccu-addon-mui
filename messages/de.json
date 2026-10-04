@@ -676,7 +676,7 @@
   "ADDONS_RESTARTED": "{name} wird neu gestartet",
   "ADDONS_UNINSTALLED": "{name} wurde deinstalliert",
   "ADDONS_NONE": "Keine Zusatzsoftware installiert.",
-  "ADDONS_HINT": "Installieren und Aktualisieren geht über Einstellungen → Systemsteuerung → Zusatzsoftware in der alten WebUI.",
+  "ADDONS_HINT": "Zum Aktualisieren die neue Version der Zusatzsoftware einfach erneut installieren.",
   "ADDONS_RESTART_CONFIRM": "{name} wird neu gestartet und ist dabei kurz nicht verfügbar.",
   "ADDONS_RESTART_SELF": "Diese App wird neu gestartet. Die Verbindung bricht kurz ab und baut sich dann von selbst wieder auf.",
   "ADDONS_UNINSTALL_CONFIRM": "{name} wird von der CCU entfernt. Seine Einstellungen können dabei verloren gehen.",
@@ -794,5 +794,14 @@
   "CCUFW_STARTING": "Wird gestartet …",
   "CCUFW_DONE": "Die CCU startet neu und installiert die Firmware. Das dauert einige Minuten; danach diese Seite neu laden.",
   "CCUFW_INVALID": "Die Datei ist keine Firmware für diese CCU.",
-  "CCUFW_FAILED": "Firmware-Update fehlgeschlagen"
+  "CCUFW_FAILED": "Firmware-Update fehlgeschlagen",
+  "ADDON_INSTALL": "Zusatzsoftware installieren",
+  "ADDON_INSTALL_HINT": "Eine Zusatzsoftware (.tar.gz) installieren oder aktualisieren. Sie läuft mit vollen Rechten auf der CCU – nur Dateien aus vertrauenswürdiger Quelle verwenden.",
+  "ADDON_FILE": "Datei (.tar.gz)",
+  "ADDON_INSTALL_GO": "Installieren",
+  "ADDON_INSTALLING": "Wird installiert …",
+  "ADDON_INSTALL_WAIT": "Die Installation kann einige Minuten dauern.",
+  "ADDON_INSTALLED": "Die Zusatzsoftware ist installiert.",
+  "ADDON_INSTALLED_REBOOT": "Die Zusatzsoftware ist installiert. Die CCU startet zum Abschluss neu; danach diese Seite neu laden.",
+  "ADDON_INSTALL_FAILED": "Installation fehlgeschlagen"
 }

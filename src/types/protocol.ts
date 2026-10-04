@@ -120,7 +120,9 @@ export type ServerMessage =
   | PrepareCcuFirmwareResponse
   | CheckCcuFirmwareResponse
   | InstallCcuFirmwareResponse
-  | CancelCcuFirmwareResponse;
+  | CancelCcuFirmwareResponse
+  | PrepareAddonUploadResponse
+  | InstallAddonResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -225,6 +227,8 @@ export interface Protocol {
   checkCcuFirmware: CheckCcuFirmwareCall;
   installCcuFirmware: InstallCcuFirmwareCall;
   cancelCcuFirmware: CancelCcuFirmwareCall;
+  prepareAddonUpload: PrepareAddonUploadCall;
+  installAddon: InstallAddonCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3559,6 +3563,63 @@ export interface CancelCcuFirmwareResponse {
   requestId?: string;
   success: boolean;
   needsKey?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareAddonUploadCall".
+ */
+export interface PrepareAddonUploadCall {
+  request: PrepareAddonUploadRequest;
+  response: PrepareAddonUploadResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareAddonUploadRequest".
+ */
+export interface PrepareAddonUploadRequest {
+  type: "prepareAddonUpload";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareAddonUploadResponse".
+ */
+export interface PrepareAddonUploadResponse {
+  type: "prepareAddonUpload_response";
+  requestId?: string;
+  success: boolean;
+  id: string;
+  url: string;
+  needsKey?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallAddonCall".
+ */
+export interface InstallAddonCall {
+  request: InstallAddonRequest;
+  response: InstallAddonResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallAddonRequest".
+ */
+export interface InstallAddonRequest {
+  type: "installAddon";
+  requestId?: string;
+  id: string;
+  password: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallAddonResponse".
+ */
+export interface InstallAddonResponse {
+  type: "installAddon_response";
+  requestId?: string;
+  success: boolean;
+  needsKey?: boolean;
+  reboot?: boolean;
 }
 /**
  * Sent first on every connection

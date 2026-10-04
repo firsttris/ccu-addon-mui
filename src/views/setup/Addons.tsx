@@ -11,6 +11,8 @@ import { useToast } from '../../contexts/ToastContext';
 import { getLocale } from '../../paraglide/runtime';
 import { m } from '../../paraglide/messages';
 import { Panel } from './Panel';
+import { AddonInstall } from './AddonInstall';
+import UploadIcon from '~icons/lucide/upload';
 import type { Addon } from '../../types/protocol';
 
 type Operation = 'restart' | 'uninstall';
@@ -20,8 +22,8 @@ export const addonUrl = (configUrl: string) =>
   /^https?:\/\//.test(configUrl) ? configUrl : `${WEBUI_URL.replace(/\/$/, '')}/${configUrl.replace(/^\//, '')}`;
 
 // The installed add-ons, as the WebUI's Zusatzsoftware dialog
-// (cp_software.cgi): version, newest version, settings, restart, uninstall.
-// Installing stays in the WebUI.
+// (cp_software.cgi): version, newest version, settings, restart, uninstall,
+// and installing or updating one from a file.
 export const Addons = () => {
   const { request } = useWebSocketActions();
   const { userLevel, elevated } = useWebSocketContext();
@@ -29,6 +31,7 @@ export const Addons = () => {
   const queryClient = useQueryClient();
   const [asking, setAsking] = useState<{ addon: Addon; operation: Operation } | null>(null);
   const [latest, setLatest] = useState<Record<string, string>>({});
+  const [installing, setInstalling] = useState(false);
   const { data: addons, isPending } = useQuery({
     queryKey: ['addons'],
     queryFn: async () => (await request({ type: 'getAddons', language: getLocale() === 'en' ? 'en' : 'de' })).addons,
@@ -123,7 +126,14 @@ export const Addons = () => {
           <li className="px-3 py-6 text-center text-sm text-muted-foreground">{m.ADDONS_NONE()}</li>
         )}
       </ul>
+      <div>
+        <Button variant="outline" disabled={!elevated} onClick={() => setInstalling(true)}>
+          <UploadIcon />
+          {m.ADDON_INSTALL()}
+        </Button>
+      </div>
       <p className="text-xs">{m.ADDONS_HINT()}</p>
+      {installing && <AddonInstall onClose={() => setInstalling(false)} />}
       {asking && (
         <ConfirmDialog
           title={asking.operation === 'restart' ? m.ADDONS_RESTART() : m.ADDONS_UNINSTALL()}

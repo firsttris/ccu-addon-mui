@@ -27,6 +27,8 @@ type restoreResponse struct {
 	NeedsKey bool `json:"needsKey"`
 	// checkCcuFirmware: the update's licence text, if it has one
 	Eula string `json:"eula,omitempty"`
+	// installAddon: the CCU reboots to finish the installation
+	Reboot bool `json:"reboot,omitempty"`
 }
 
 func (s *Server) serveRestoreUpload(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +36,8 @@ func (s *Server) serveRestoreUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleRestore restores a backup, or installs a firmware file
-// (prepareCcuFirmware, checkCcuFirmware, installCcuFirmware, cancelCcuFirmware), with
+// (prepareCcuFirmware, checkCcuFirmware, installCcuFirmware,
+// cancelCcuFirmware) or an add-on (prepareAddonUpload, installAddon), with
 // the WebUI's own steps
 // (cp_security.cgi): the browser uploads the .sbk once (prepareRestore),
 // the WebUI checks it (checkRestore: needs a security key?) and applies it,
@@ -70,7 +73,7 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 	}
 	response := restoreResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}
 
-	if msgType == "prepareRestore" || msgType == "prepareCcuFirmware" {
+	if msgType == "prepareRestore" || msgType == "prepareCcuFirmware" || msgType == "prepareAddonUpload" {
 		id, err := s.backup.PrepareUpload()
 		if err != nil {
 			finish("CCU_ERROR")
@@ -104,6 +107,8 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		err = s.backup.InstallFirmware(username, msg.Password)
 	case "cancelCcuFirmware":
 		err = s.backup.CancelFirmware(username, msg.Password)
+	case "installAddon":
+		response.Reboot, err = s.backup.InstallAddon(msg.ID, username, msg.Password)
 	}
 	if err != nil {
 		code := "CCU_ERROR"
@@ -117,6 +122,8 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 			code = "INVALID_BACKUP"
 		case errors.Is(err, backup.ErrInvalidFirmware):
 			code = "INVALID_FIRMWARE"
+		case errors.Is(err, backup.ErrAddonFailed):
+			code = "ADDON_FAILED"
 		case errors.Is(err, backup.ErrWrongKey):
 			code = "WRONG_KEY"
 		case errors.Is(err, backup.ErrFirmwareTooOld):
@@ -133,6 +140,8 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		logger.Info(fmt.Sprintf("💾 Backup restored by %q, the CCU reboots", username))
 	case "installCcuFirmware":
 		logger.Info(fmt.Sprintf("⬆️ Firmware update started by %q, the CCU reboots", username))
+	case "installAddon":
+		logger.Info(fmt.Sprintf("📦 Add-on installed by %q (reboot: %t)", username, response.Reboot))
 	}
 	finish(rega.SetOK)
 	s.sendJSON(client, response)

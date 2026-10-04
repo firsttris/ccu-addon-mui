@@ -66,8 +66,11 @@ type CCU struct {
 	tempUpload, uploadedBackup, checkedBackup, restoredBackup string
 	// The firmware update through the WebUI (cp_maintenance.cgi)
 	stagedFirmware, installedFirmware string
-	rebooted                          bool
-	rpcLogLevels                      map[string]int
+	// Add-ons installed through the WebUI (cp_software.cgi)
+	newAddon        string
+	installedAddons []string
+	rebooted        bool
+	rpcLogLevels    map[string]int
 }
 
 // CallCount returns how often an XML-RPC method was called, e.g.
@@ -1394,6 +1397,10 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		c.handleFileUpload(w, r)
 		return
 	}
+	if r.URL.Path == "/config/cp_software.cgi" && r.Method == http.MethodPost {
+		c.handleSoftware(w, r)
+		return
+	}
 	if r.URL.Path == "/config/cp_maintenance.cgi" {
 		c.handleMaintenance(w, r)
 		return
@@ -1487,9 +1494,10 @@ func (c *CCU) handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	valid := (query.Get("action") == "backup_upload" && query.Get("url") == "/config/cp_security.cgi") ||
-		(query.Get("action") == "firmware_upload" && query.Get("url") == "/config/cp_maintenance.cgi")
+		(query.Get("action") == "firmware_upload" && query.Get("url") == "/config/cp_maintenance.cgi") ||
+		(query.Get("action") == "image_upload" && query.Get("url") == "/config/cp_software.cgi")
 	field := "backup_file"
-	if query.Get("action") == "firmware_upload" {
+	if query.Get("action") != "backup_upload" {
 		field = "firmware_file"
 	}
 	if !valid || r.ContentLength <= 0 {
@@ -1598,6 +1606,53 @@ func (c *CCU) handleMaintenance(w http.ResponseWriter, r *http.Request) {
 	case "firmware_update_cancel":
 		c.stagedFirmware = ""
 	}
+}
+
+// The fake's add-ons: FakeAddon installs without reboot, with
+// FakeAddonReboot in it the CCU reboots, anything else fails
+const (
+	FakeAddon       = "fake CCU add-on"
+	FakeAddonReboot = "needs a reboot"
+)
+
+// handleSoftware answers cp_software.cgi's install steps; install_go as
+// /bin/install_addon's exit status decides
+func (c *CCU) handleSoftware(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=iso-8859-1")
+	if !strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") {
+		_, _ = io.WriteString(w, "<html><body>Session expired</body></html>")
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	switch r.FormValue("action") {
+	case "image_upload":
+		if r.FormValue("filename") == fakeTempFile {
+			c.newAddon, c.tempUpload = c.tempUpload, ""
+		}
+		_, _ = io.WriteString(w, `<script>dlgPopup.LoadFromFile(url, "action=install_confirm");</script>`)
+	case "install_go":
+		addon := c.newAddon
+		c.newAddon = ""
+		switch {
+		case !strings.Contains(addon, FakeAddon):
+			_, _ = io.WriteString(w, `<div class="popupTitle">Error (2)</div>${dialogSettingsExtraSoftwareHintPerformInstallationFailure}`)
+		case strings.Contains(addon, FakeAddonReboot):
+			c.installedAddons = append(c.installedAddons, addon)
+			c.rebooted = true
+			_, _ = io.WriteString(w, `<div class="popupTitle">${dialogSettingsExtraSoftwareHintPerformInstallationTitle}</div>${dialogSettingsExtraSoftwareHintPerformInstallationContent}`)
+		default:
+			c.installedAddons = append(c.installedAddons, addon)
+			_, _ = io.WriteString(w, `<div class="popupTitle">${dialogSettingsExtraSoftwareHintPerformInstallationTitle}</div>${dialogSettingsExtraSoftwareHintPerformInstallationContentNoReboot}`)
+		}
+	}
+}
+
+// InstalledAddons returns the add-on files installed
+func (c *CCU) InstalledAddons() []string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return append([]string(nil), c.installedAddons...)
 }
 
 // InstalledFirmware returns the firmware file the CCU rebooted to install
