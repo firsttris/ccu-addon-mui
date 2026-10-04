@@ -319,6 +319,12 @@
     },
     "deleteDiagram": {
       "$ref": "#/definitions/DeleteDiagramCall"
+    },
+    "getGeneralSettings": {
+      "$ref": "#/definitions/GetGeneralSettingsCall"
+    },
+    "setGeneralSettings": {
+      "$ref": "#/definitions/SetGeneralSettingsCall"
     }
   },
   "required": [
@@ -426,7 +432,9 @@
     "getDiagrams",
     "getDiagramData",
     "saveDiagram",
-    "deleteDiagram"
+    "deleteDiagram",
+    "getGeneralSettings",
+    "setGeneralSettings"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2991,6 +2999,12 @@
         },
         {
           "$ref": "#/definitions/DeleteDiagramResponse"
+        },
+        {
+          "$ref": "#/definitions/GetGeneralSettingsResponse"
+        },
+        {
+          "$ref": "#/definitions/SetGeneralSettingsResponse"
         }
       ]
     },
@@ -8551,6 +8565,9 @@
           "items": {
             "$ref": "#/definitions/Diagram"
           }
+        },
+        "energyPrice": {
+          "$ref": "#/definitions/EnergyPrice"
         }
       },
       "required": [
@@ -8890,6 +8907,213 @@
         "address",
         "datapoint",
         "points"
+      ],
+      "additionalProperties": false
+    },
+    "GetGeneralSettingsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getGeneralSettings"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetGeneralSettingsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getGeneralSettings_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "energyPrice": {
+          "$ref": "#/definitions/EnergyPrice"
+        },
+        "infoLed": {
+          "$ref": "#/definitions/InfoLed"
+        },
+        "hideStickyUnreach": {
+          "type": "boolean"
+        },
+        "betaFirmware": {
+          "type": "boolean"
+        },
+        "currencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "storage": {
+          "$ref": "#/definitions/StorageInfo"
+        }
+      },
+      "required": [
+        "type",
+        "energyPrice",
+        "infoLed",
+        "hideStickyUnreach",
+        "betaFirmware",
+        "currencies",
+        "storage"
+      ],
+      "additionalProperties": false
+    },
+    "GetGeneralSettingsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetGeneralSettingsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetGeneralSettingsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetGeneralSettingsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setGeneralSettings"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "energyPrice": {
+          "$ref": "#/definitions/EnergyPrice"
+        },
+        "infoLed": {
+          "$ref": "#/definitions/InfoLed"
+        },
+        "hideStickyUnreach": {
+          "type": "boolean"
+        },
+        "betaFirmware": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "energyPrice"
+      ],
+      "additionalProperties": false
+    },
+    "SetGeneralSettingsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setGeneralSettings_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetGeneralSettingsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetGeneralSettingsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetGeneralSettingsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "EnergyPrice": {
+      "type": "object",
+      "description": "Prices of electricity and gas per kWh (/etc/config/energyPrice)",
+      "properties": {
+        "currency": {
+          "type": "string"
+        },
+        "electricity": {
+          "type": "number"
+        },
+        "gas": {
+          "type": "number"
+        },
+        "gasHeatingValue": {
+          "type": "number"
+        },
+        "gasConditionNumber": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "currency",
+        "electricity",
+        "gas",
+        "gasHeatingValue",
+        "gasConditionNumber"
+      ],
+      "additionalProperties": false
+    },
+    "InfoLed": {
+      "type": "object",
+      "description": "Whether the CCU3's info LED shows service messages and alarms",
+      "properties": {
+        "service": {
+          "type": "boolean"
+        },
+        "alarm": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "service",
+        "alarm"
+      ],
+      "additionalProperties": false
+    },
+    "StorageInfo": {
+      "type": "object",
+      "description": "Bytes the recorded diagram values take and of their file system",
+      "properties": {
+        "used": {
+          "type": "number"
+        },
+        "free": {
+          "type": "number"
+        },
+        "total": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "used",
+        "free",
+        "total"
       ],
       "additionalProperties": false
     }

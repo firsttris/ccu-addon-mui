@@ -28,6 +28,7 @@ import (
 	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
+	"ccu-addon-mui-server/pkg/settings"
 	"ccu-addon-mui-server/pkg/subscriptions"
 	"ccu-addon-mui-server/pkg/types"
 )
@@ -192,8 +193,11 @@ type Server struct {
 	addons   *addons.Service
 	logs     *logs.Service
 	// The diagrams and the recorder of their values
-	diagrams        *diagrams.Store
-	recorder        *diagrams.Recorder
+	diagrams *diagrams.Store
+	recorder *diagrams.Recorder
+	// The WebUI's general settings and where the diagram values are
+	settings        *settings.Service
+	diagramsDir     string
 	regaClient      *rega.Client
 	clients         map[*Client]bool
 	clientsMu       sync.RWMutex
@@ -544,6 +548,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleLogging(client, msgType, message)
 	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "checkCcuFirmware", "installCcuFirmware", "cancelCcuFirmware", "prepareAddonUpload", "installAddon":
 		s.handleRestore(client, msgType, message)
+	case "getGeneralSettings", "setGeneralSettings":
+		s.handleGeneralSettings(client, msgType, message)
 	case "getDiagrams", "getDiagramData", "saveDiagram", "deleteDiagram":
 		s.handleDiagrams(client, msgType, message)
 	case "getHeatingGroups":
@@ -1356,7 +1362,7 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 			s.sendRequestError(client, msg.RequestID, "getServiceMessages failed: "+err.Error(), "CCU_ERROR")
 			return
 		}
-		s.sendJSON(client, serviceMessagesResponse{Type: "getServiceMessages_response", RequestID: msg.RequestID, Messages: messages})
+		s.sendJSON(client, serviceMessagesResponse{Type: "getServiceMessages_response", RequestID: msg.RequestID, Messages: s.hideStickyUnreach(messages)})
 		return
 	case "getAlarmMessages":
 		alarms, err := s.regaClient.GetAlarmMessages()

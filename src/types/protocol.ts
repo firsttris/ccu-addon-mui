@@ -126,7 +126,9 @@ export type ServerMessage =
   | GetDiagramsResponse
   | GetDiagramDataResponse
   | SaveDiagramResponse
-  | DeleteDiagramResponse;
+  | DeleteDiagramResponse
+  | GetGeneralSettingsResponse
+  | SetGeneralSettingsResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -237,6 +239,8 @@ export interface Protocol {
   getDiagramData: GetDiagramDataCall;
   saveDiagram: SaveDiagramCall;
   deleteDiagram: DeleteDiagramCall;
+  getGeneralSettings: GetGeneralSettingsCall;
+  setGeneralSettings: SetGeneralSettingsCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3653,6 +3657,7 @@ export interface GetDiagramsResponse {
   type: "getDiagrams_response";
   requestId?: string;
   diagrams: Diagram[];
+  energyPrice?: EnergyPrice;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3689,6 +3694,19 @@ export interface DiagramSeries {
    */
   aggregate?: "" | "avg" | "min" | "max" | "delta";
   axis?: "" | "left" | "right";
+}
+/**
+ * Prices of electricity and gas per kWh (/etc/config/energyPrice)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "EnergyPrice".
+ */
+export interface EnergyPrice {
+  currency: string;
+  electricity: number;
+  gas: number;
+  gasHeatingValue: number;
+  gasConditionNumber: number;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3790,6 +3808,86 @@ export interface DeleteDiagramRequest {
  */
 export interface DeleteDiagramResponse {
   type: "deleteDiagram_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetGeneralSettingsCall".
+ */
+export interface GetGeneralSettingsCall {
+  request: GetGeneralSettingsRequest;
+  response: GetGeneralSettingsResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetGeneralSettingsRequest".
+ */
+export interface GetGeneralSettingsRequest {
+  type: "getGeneralSettings";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetGeneralSettingsResponse".
+ */
+export interface GetGeneralSettingsResponse {
+  type: "getGeneralSettings_response";
+  requestId?: string;
+  energyPrice: EnergyPrice;
+  infoLed: InfoLed;
+  hideStickyUnreach: boolean;
+  betaFirmware: boolean;
+  currencies: string[];
+  storage: StorageInfo;
+}
+/**
+ * Whether the CCU3's info LED shows service messages and alarms
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InfoLed".
+ */
+export interface InfoLed {
+  service: boolean;
+  alarm: boolean;
+}
+/**
+ * Bytes the recorded diagram values take and of their file system
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "StorageInfo".
+ */
+export interface StorageInfo {
+  used: number;
+  free: number;
+  total: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetGeneralSettingsCall".
+ */
+export interface SetGeneralSettingsCall {
+  request: SetGeneralSettingsRequest;
+  response: SetGeneralSettingsResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetGeneralSettingsRequest".
+ */
+export interface SetGeneralSettingsRequest {
+  type: "setGeneralSettings";
+  requestId?: string;
+  energyPrice: EnergyPrice;
+  infoLed?: InfoLed;
+  hideStickyUnreach?: boolean;
+  betaFirmware?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetGeneralSettingsResponse".
+ */
+export interface SetGeneralSettingsResponse {
+  type: "setGeneralSettings_response";
   requestId?: string;
   success: boolean;
 }

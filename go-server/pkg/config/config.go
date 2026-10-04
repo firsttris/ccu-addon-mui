@@ -48,6 +48,9 @@ type Config struct {
 	TZFile        string
 	// The heating groups the HMServer keeps (groups.gson)
 	GroupsFile string
+	// ConfigDir holds the WebUI's general settings (energyPrice,
+	// hss_led_info.conf, hideStickyUnreach, fieldTestActive)
+	ConfigDir string
 	// DiagramsFile keeps the diagrams, DiagramsDir their recorded values
 	DiagramsFile string
 	DiagramsDir  string
@@ -96,6 +99,7 @@ func Load() *Config {
 		NTPClientFile:      getEnv("NTP_CLIENT_FILE", "/etc/config/ntpclient"),
 		TZFile:             getEnv("TZ_FILE", "/etc/config/TZ"),
 		GroupsFile:         getEnv("GROUPS_FILE", "/etc/config/groups.gson"),
+		ConfigDir:          getEnv("CCU_CONFIG_DIR", "/etc/config"),
 		DiagramsFile:       getEnv("DIAGRAMS_FILE", defaultConfigFile("mui-diagrams.json")),
 		DiagramsDir:        getEnv("DIAGRAMS_DIR", defaultDataDir("mui-diagrams")),
 		BackupDir:          getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),

@@ -12,6 +12,7 @@ import (
 	"ccu-addon-mui-server/pkg/diagrams"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/rega"
+	"ccu-addon-mui-server/pkg/settings"
 )
 
 // SetDiagrams enables the diagrams
@@ -71,6 +72,8 @@ type diagramsResponse struct {
 	Type      string             `json:"type"`
 	RequestID string             `json:"requestId,omitempty"`
 	Diagrams  []diagrams.Diagram `json:"diagrams"`
+	// For the costs of consumption (the WebUI's energy prices)
+	EnergyPrice *settings.EnergyPrice `json:"energyPrice,omitempty"`
 }
 
 type diagramResponse struct {
@@ -118,7 +121,13 @@ func (s *Server) handleDiagrams(client *Client, msgType string, message []byte) 
 	}
 	switch msgType {
 	case "getDiagrams":
-		s.sendJSON(client, diagramsResponse{Type: "getDiagrams_response", RequestID: msg.RequestID, Diagrams: s.diagrams.List()})
+		response := diagramsResponse{Type: "getDiagrams_response", RequestID: msg.RequestID, Diagrams: s.diagrams.List()}
+		if s.settings != nil {
+			if price, err := s.settings.EnergyPrice(); err == nil && (price.Electricity > 0 || price.Gas > 0) {
+				response.EnergyPrice = &price
+			}
+		}
+		s.sendJSON(client, response)
 	case "getDiagramData":
 		if msg.To <= msg.From || msg.To-msg.From > 20*366*24*3600*1000 || len(msg.Series) == 0 || len(msg.Series) > diagrams.MaxSeries {
 			s.sendRequestError(client, msg.RequestID, "invalid range", "INVALID_VALUE")
