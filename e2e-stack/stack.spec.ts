@@ -971,6 +971,26 @@ test('ordnet eine Systemvariable einem Kanal zu und zeigt sie beim Gerät', asyn
   await expect(page.getByRole('region', { name: 'Systemvariablen' })).toHaveCount(0);
 });
 
+test('ordnet einem Raum Kanäle zu und entfernt sie', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/groups');
+  const rooms = page.getByRole('region', { name: 'Räume' });
+  await rooms.getByRole('button', { name: 'Kanäle in Küche' }).click();
+  const members = rooms.getByRole('list', { name: 'Kanäle in Küche' });
+  await expect(members).toContainText('Küche Rollo');
+  await expect(members).not.toContainText('Flur Licht');
+
+  await rooms.getByRole('combobox', { name: 'Kanal wählen' }).selectOption({ label: 'Flur Licht (LEQ0000003:1)' });
+  await rooms.getByRole('button', { name: 'Kanal zu Küche hinzufügen' }).click();
+  await expect(members).toContainText('Flur Licht');
+  await page.reload();
+  await rooms.getByRole('button', { name: 'Kanäle in Küche' }).click();
+  await expect(members).toContainText('Flur Licht');
+
+  await members.getByRole('button', { name: 'Flur Licht entfernen' }).click();
+  await expect(members).not.toContainText('Flur Licht');
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {

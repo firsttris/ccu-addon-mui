@@ -753,5 +753,10 @@
   "SYS_CLOCK_SET": "Clock set",
   "SYS_CLOCK_HINT": "As the WebUI's time and position settings. With time servers the CCU sets its clock itself; by hand only without internet.",
   "SYSVAR_CHANNEL": "Channel",
-  "SYSVAR_NO_CHANNEL": "none"
+  "SYSVAR_NO_CHANNEL": "none",
+  "GROUP_CHANNELS": "Channels in {name}",
+  "GROUP_NO_CHANNELS": "No channels yet.",
+  "GROUP_REMOVE_CHANNEL": "Remove {name}",
+  "GROUP_ADD_CHANNEL": "Add a channel to {name}",
+  "GROUP_CHOOSE_CHANNEL": "Choose a channel …"
 }
