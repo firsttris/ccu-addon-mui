@@ -735,6 +735,11 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       { id: 612, name: 'LED-Band Terrasse Programm', address: 'LEQ0000040:3', interfaceName: 'BidCos-RF', type: 'RGBW_AUTOMATIC', datapoints: { PROGRAM: 0 } },
       { id: 613, name: 'Deckenlicht Büro', address: 'LEQ0000041:1', interfaceName: 'BidCos-RF', type: 'DUAL_WHITE_BRIGHTNESS', datapoints: { LEVEL: 0.5 } },
       { id: 614, name: 'Deckenlicht Büro Weiß', address: 'LEQ0000041:2', interfaceName: 'BidCos-RF', type: 'DUAL_WHITE_COLOR', datapoints: { LEVEL: 0.3 } },
+      // Chimes (acoustic_signal.fn, HM-OU-CFM)
+      { id: 620, name: 'MP3-Gong Flur', address: '00185D89A1B2C9:2', interfaceName: 'HmIP-RF', type: 'ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER', datapoints: { LEVEL: 0, SOUNDFILE: 0 } },
+      { id: 621, name: 'MP3-Gong Flur Status', address: '00185D89A1B2C9:1', interfaceName: 'HmIP-RF', type: 'ACOUSTIC_SIGNAL_TRANSMITTER', datapoints: { LEVEL: 0, SOUNDFILE: 0 } },
+      { id: 622, name: 'Funkgong Diele', address: 'LEQ0000042:2', interfaceName: 'BidCos-RF', type: 'SIGNAL_CHIME', datapoints: { STATE: false, WORKING: false } },
+      { id: 623, name: 'Funkgong Diele Licht', address: 'LEQ0000042:1', interfaceName: 'BidCos-RF', type: 'SIGNAL_LED', datapoints: { STATE: false, WORKING: false } },
       {
         id: 602,
         name: 'Wetterstation Garten',

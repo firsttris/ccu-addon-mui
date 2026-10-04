@@ -13,12 +13,12 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
 
 | Familie | im Katalog | bedienbar | alle Kanäle mit eigener Kachel | Hauptfunktion mit eigener Kachel | nur generisch |
 |---|---:|---:|---:|---:|---:|
-| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 221 | 205 | 15 | 1 |
+| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 221 | 206 | 14 | 1 |
 | HomeMatic IP Wired (HmIPW) | 38 | 36 | 36 | 0 | 0 |
-| BidCos-RF (HM-) | 186 | 168 | 144 | 11 | 13 |
+| BidCos-RF (HM-) | 186 | 168 | 148 | 11 | 9 |
 | BidCos-RF, ältere und OEM-Typen | 41 | 36 | 31 | 1 | 4 |
 | BidCos-Wired (HMW-) | 15 | 11 | 6 | 0 | 5 |
-| **Summe** | **524** | **472** | **422 (89 %)** | **27 (6 %)** | **23 (5 %)** |
+| **Summe** | **524** | **472** | **427 (90 %)** | **26 (6 %)** | **19 (4 %)** |
 | virtuelle Typen (VIR-) | 11 | nicht geprüft | | | |
 
 - **BidCos-Wired** ist angebunden, sobald ein Wired-Gateway (HMW-LGW) eingerichtet ist, aber noch nicht an
@@ -33,7 +33,7 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
   Display eines Wandthermostats.
 - **nur generisch**: kein Kanal hat eine eigene Kachel. Das Gerät ist trotzdem voll bedienbar.
 
-Zusammen haben **449 von 472 Gerätetypen (95 %)** eine eigene Kachel für ihre Hauptfunktion.
+Zusammen haben **453 von 472 Gerätetypen (96 %)** eine eigene Kachel für ihre Hauptfunktion.
 
 Die Zählung ist reproduzierbar. Die Skripte vergleichen die Gerätebeschreibungen mit
 `src/controls/registry.ts`, gegengeprüft an einem Export einer echten CCU (`fixtures/my-ccu.json`).
@@ -60,6 +60,7 @@ Welche Kachel ein Kanal bekommt, entscheidet sein Kanaltyp (`src/controls/regist
 | Bewegung und Präsenz | `MOTION_DETECTOR`, `MOTIONDETECTOR_TRANSCEIVER`, `MOTIONDETECTOR_VIRTUAL_TRANSCEIVER`, `PRESENCEDETECTOR_TRANSCEIVER` | HmIP-SMI, -SMO, -SPI, HmIPW-SMI55, HM-Sen-MDIR-O |
 | Wassermelder | `WATER_DETECTION_TRANSMITTER`, `WATERDETECTIONSENSOR` | HmIP-SWD, HM-Sec-WDS |
 | Sirene | `ALARM_SWITCH_VIRTUAL_RECEIVER` | HmIP-ASIR, -ASIR-2, -ASIR-O |
+| Gong und MP3 | `ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER`: Ton (Systemton oder Datei 1–252), Lautstärke, abspielen und stoppen wie `acoustic_signal.fn`; `SIGNAL_CHIME`, `SIGNAL_LED`: Gong und Blitzlicht auslösen (Melodien und Blinkmuster werden in Programmen gewählt) | HmIP-MP3P, HM-OU-CFM-Pl, -CFM-TW, -CF-Pl, -CM-PCB |
 | Zutritt | `ACCESS_TRANSCEIVER` (eine Kachel je Gerät) | HmIP-WKP, -FWI |
 | Klima und Wetter | `CLIMATE_TRANSCEIVER`, `WEATHER_TRANSMIT`, `WEATHER` | HmIP-STHO, -SWO, HM-WDS10-TH-O, HM-WDS100 |
 | Regen | `RAIN_DETECTION_TRANSMITTER`: Regen, Heizung, Temperatur | HmIP-SRD |
@@ -110,6 +111,35 @@ Nach Bedeutung:
    Profile). Für die übrigen 59 Empfängertypen der WebUI (2065 Profile) geht nur der Expertenmodus mit allen
    Parametern.
 2. **Gerätebilder** der WebUI zeigt das Add-on nicht.
+3. **Ohne eigene Kachel** sind noch diese Gerätetypen (Stand: Zählung oben). Sie sind trotzdem voll
+   bedienbar, über die generische Kachel.
+
+   *Nur generisch (19):*
+
+   | Gerätetyp | Kanaltyp |
+   |---|---|
+   | HM-SwI-3-FM und OEM-Varianten | `SWITCH_INTERFACE` |
+   | HM-CC-VD und OEM-Variante | `CLIMATECONTROL_VENT_DRIVE` |
+   | HM-Sec-Sir-WM | `ARMING`, `SWITCH_PANIC`, `SWITCH_SENSOR` |
+   | HM-Sen-RD-O | `RAINDETECTOR`, `RAINDETECTOR_HEAT` |
+   | HM-Sec-TiS, HM-Sec-SFA-SM, HM-Sen-EP, HM-LC-DDC1-PCB, HM-Dis-TD-T | je ein eigener Kanaltyp |
+   | HmIP-STE2-PCB | `COND_SWITCH_TRANSMITTER_TEMPERATURE` |
+   | HMW-IO-12-FM, -IO-4-FM, -IO-12-Sw14-DR, -Sen-SC-12-FM/-DR | Ein- und Ausgänge (BidCos-Wired) |
+   | 263 149/263 150 (OEM) | `ACTOR_SECURITY`, `ACTOR_WINDOW`, `SENSOR_WINDOW` |
+
+   *Hauptfunktion mit eigener Kachel, ein Nebenkanal generisch (26):*
+
+   | Gerätetyp | generischer Nebenkanal |
+   |---|---|
+   | HM-ES-PMSw1 (8 Varianten) | Schwellwerte `CONDITION_POWER/CURRENT/VOLTAGE/FREQUENCY` |
+   | HmIP-SWO-B, -SWO-PL, -SWO-PR, HmIP-SFD | Schwellwert `COND_SWITCH_TRANSMITTER_TEMPERATURE` |
+   | HM-CC-TC und OEM-Variante | `CLIMATECONTROL_REGULATOR` |
+   | HmIP-FDC, -FLC | `SWITCH_TRANSCEIVER` |
+   | HmIP-MOD-TM, -MOD-HO | `SIMPLE_SWITCH_RECEIVER` |
+   | HmIP-ASIR, -ASIR-B1 | Statuskanal `SWITCH_TRANSMITTER` |
+   | HmIP-WRCR | Drehregler `ROTARY_CONTROL_TRANSCEIVER` |
+   | HmIP-MIOB, -MIO16-PCB | analoge Ein- und Ausgänge |
+   | HM-TC-IT-WM-W-EU, HM-MOD-EM-8Bit, ELV-SH-BM-S | je ein Nebenkanal |
 
 ## Ein Gerät fehlt oder sieht falsch aus?
 

@@ -1413,5 +1413,17 @@
   "RGBW_PROGRAM_WATERFALL": "Wasserfall",
   "RGBW_PROGRAM_TV": "TV-Simulation",
   "DUAL_WHITE_VALUE": "Farbwert {percent} %",
-  "DUAL_WHITE_OF": "Farbwert {name}"
+  "DUAL_WHITE_OF": "Farbwert {name}",
+  "SECTION_SIGNALS": "Gong & Signale",
+  "SOUND_SYSTEM": "Systemton",
+  "SOUND_FILE": "Datei {number}",
+  "SOUND_PLAYING": "Spielt {sound} · {percent} %",
+  "SOUND_OF": "Ton {name}",
+  "VOLUME_OF": "Lautstärke {name}",
+  "SOUND_PLAY": "Abspielen",
+  "SOUND_STOP": "Stopp",
+  "CHIME_RINGING": "Gongt",
+  "CHIME_RING": "Gong",
+  "SIGNAL_FLASHING": "Blinkt",
+  "SIGNAL_FLASH": "Blinken"
 }
