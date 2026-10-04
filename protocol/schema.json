@@ -382,6 +382,9 @@
     },
     "deleteCertificate": {
       "$ref": "#/definitions/DeleteCertificateCall"
+    },
+    "setSessionTimeout": {
+      "$ref": "#/definitions/SetSessionTimeoutCall"
     }
   },
   "required": [
@@ -510,7 +513,8 @@
     "setTempKey",
     "getCertificate",
     "uploadCertificate",
-    "deleteCertificate"
+    "deleteCertificate",
+    "setSessionTimeout"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3164,6 +3168,9 @@
         },
         {
           "$ref": "#/definitions/DeleteCertificateResponse"
+        },
+        {
+          "$ref": "#/definitions/SetSessionTimeoutResponse"
         }
       ]
     },
@@ -9561,13 +9568,18 @@
         },
         "httpsRedirect": {
           "type": "boolean"
+        },
+        "sessionTimeout": {
+          "type": "integer",
+          "description": "Seconds until an idle WebUI session ends (rega.conf)"
         }
       },
       "required": [
         "type",
         "ssh",
         "auth",
-        "httpsRedirect"
+        "httpsRedirect",
+        "sessionTimeout"
       ],
       "additionalProperties": false
     },
@@ -10778,6 +10790,64 @@
       },
       "required": [
         "exists"
+      ],
+      "additionalProperties": false
+    },
+    "SetSessionTimeoutRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setSessionTimeout"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "seconds": {
+          "type": "integer",
+          "minimum": 180,
+          "maximum": 600
+        }
+      },
+      "required": [
+        "type",
+        "seconds"
+      ],
+      "additionalProperties": false
+    },
+    "SetSessionTimeoutResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setSessionTimeout_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetSessionTimeoutCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetSessionTimeoutRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetSessionTimeoutResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
       ],
       "additionalProperties": false
     }

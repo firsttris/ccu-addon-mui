@@ -147,7 +147,8 @@ export type ServerMessage =
   | SetTempKeyResponse
   | GetCertificateResponse
   | UploadCertificateResponse
-  | DeleteCertificateResponse;
+  | DeleteCertificateResponse
+  | SetSessionTimeoutResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -279,6 +280,7 @@ export interface Protocol {
   getCertificate: GetCertificateCall;
   uploadCertificate: UploadCertificateCall;
   deleteCertificate: DeleteCertificateCall;
+  setSessionTimeout: SetSessionTimeoutCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4094,6 +4096,10 @@ export interface GetSecurityResponse {
    */
   auth: boolean;
   httpsRedirect: boolean;
+  /**
+   * Seconds until an idle WebUI session ends (rega.conf)
+   */
+  sessionTimeout: number;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4607,6 +4613,32 @@ export interface DeleteCertificateRequest {
  */
 export interface DeleteCertificateResponse {
   type: "deleteCertificate_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSessionTimeoutCall".
+ */
+export interface SetSessionTimeoutCall {
+  request: SetSessionTimeoutRequest;
+  response: SetSessionTimeoutResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSessionTimeoutRequest".
+ */
+export interface SetSessionTimeoutRequest {
+  type: "setSessionTimeout";
+  requestId?: string;
+  seconds: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetSessionTimeoutResponse".
+ */
+export interface SetSessionTimeoutResponse {
+  type: "setSessionTimeout_response";
   requestId?: string;
   success: boolean;
 }

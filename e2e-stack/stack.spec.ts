@@ -1326,14 +1326,14 @@ test('schaltet SSH ein und setzt den Sicherheitsschlüssel', async ({ page }) =>
   await panel.getByLabel('SSH-Zugang').click();
   await panel.getByLabel('Neues SSH-Passwort').fill('geheim123');
   await panel.getByLabel('Passwort wiederholen').fill('geheim12');
-  await expect(panel.getByRole('button', { name: 'Speichern' })).toBeDisabled();
+  await expect(panel.getByRole('button', { name: 'Speichern', exact: true })).toBeDisabled();
   await panel.getByLabel('Passwort wiederholen').fill('geheim123');
-  await saveWithSession(panel.getByRole('button', { name: 'Speichern' }), panel, page.getByText('Einstellungen gespeichert'));
+  await saveWithSession(panel.getByRole('button', { name: 'Speichern', exact: true }), panel, page.getByText('Einstellungen gespeichert'));
   await page.reload();
   const reloaded = page.getByRole('region', { name: 'Sicherheit' });
   await expect(reloaded.getByLabel('SSH-Zugang')).toBeChecked();
   await reloaded.getByLabel('SSH-Zugang').click();
-  await reloaded.getByRole('button', { name: 'Speichern' }).click();
+  await reloaded.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(reloaded.getByLabel('SSH-Zugang')).not.toBeChecked();
 
   await reloaded.getByLabel('Neuer Schlüssel').fill('ab');
@@ -1607,4 +1607,23 @@ test('lädt ein eigenes HTTPS-Zertifikat hoch und löscht es wieder', async ({ p
   await page.getByRole('dialog', { name: 'Eigenes Zertifikat löschen' }).getByRole('button', { name: 'Eigenes Zertifikat löschen' }).click();
   await expect(page.getByText('Zertifikat gelöscht')).toBeVisible();
   await expect(panel).toContainText('automatisch erzeugtes Zertifikat');
+});
+
+test('stellt den Sitzungs-Timeout der WebUI ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Sicherheit' });
+  const seconds = panel.getByLabel('Sekunden (180–600)');
+  await expect(seconds).toHaveValue('300');
+  await seconds.fill('90');
+  await expect(panel).toContainText('zwischen 180 und 600 Sekunden');
+  await seconds.fill('420');
+  await panel.getByRole('button', { name: 'Timeout speichern' }).click();
+  await expect(page.getByText('beim nächsten Neustart').first()).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Sicherheit' }).getByLabel('Sekunden (180–600)')).toHaveValue('420');
+  // Back as before, for a second run
+  await page.getByRole('region', { name: 'Sicherheit' }).getByLabel('Sekunden (180–600)').fill('300');
+  await page.getByRole('region', { name: 'Sicherheit' }).getByRole('button', { name: 'Timeout speichern' }).click();
+  await expect(page.getByText('beim nächsten Neustart').first()).toBeVisible();
 });

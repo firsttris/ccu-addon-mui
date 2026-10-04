@@ -2319,8 +2319,20 @@ func TestStackSecurity(t *testing.T) {
 	loginAs(t, conn, "Admin", "secret")
 
 	send(t, conn, message{"type": "getSecurity", "requestId": "s1"})
-	if m := receive(t, conn, byRequestID("s1")); m["ssh"] != false || m["auth"] != false || m["httpsRedirect"] != false {
+	if m := receive(t, conn, byRequestID("s1")); m["ssh"] != false || m["auth"] != false || m["httpsRedirect"] != false || m["sessionTimeout"] != 300.0 {
 		t.Fatalf("security: %v", m)
+	}
+	// The session timeout is written to rega.conf (no WebUI session needed)
+	send(t, conn, message{"type": "setSessionTimeout", "requestId": "t1", "seconds": 100})
+	if m := receive(t, conn, byRequestID("t1")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("too short: %v", m)
+	}
+	send(t, conn, message{"type": "setSessionTimeout", "requestId": "t2", "seconds": 420})
+	if m := receive(t, conn, byRequestID("t2")); m["success"] != true {
+		t.Fatalf("timeout: %v", m)
+	}
+	if data, _ := os.ReadFile(filepath.Join(ccu.ConfigDir, "rega.conf")); !strings.Contains(string(data), "SessionTimeout=420") {
+		t.Fatalf("rega.conf: %s", data)
 	}
 	change := message{"type": "setSecurity", "requestId": "s2", "ssh": true, "sshPassword": "geheim123", "auth": true, "httpsRedirect": false}
 	send(t, conn, change)
