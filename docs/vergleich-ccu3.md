@@ -9,7 +9,7 @@ in den Tabellen unten.
 
 | | |
 |---|---|
-| Funktionen der WebUI | **61 von 66 vorhanden (92 %)** |
+| Funktionen der WebUI | **62 von 66 vorhanden (94 %)** |
 | Fehlen | 8, meist Einzeloptionen; der größte Brocken sind die Kopplungen (Hue, Lightify) |
 | Gerätetypen | alle 472 an HmIP, HmIP Wired, BidCos-RF und BidCos-Wired bedienbar, 95 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
 
@@ -69,7 +69,7 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 | Favoriten je Benutzer | ✅ | |
 | Automatisches Anmelden | ❌ | im Add-on bleibt jedes Gerät nach einmaligem Anmelden ohnehin angemeldet |
 | Vereinfachte Verknüpfungskonfiguration ein/aus | ❌ | das Add-on zeigt immer Vorlagen und zusätzlich alle Parameter |
-| Sprache je Benutzer | ❌ | das Add-on folgt der Sprache des Browsers |
+| Sprache je Benutzer | ✅ | Automatisch, Deutsch oder Englisch im Menü; gespeichert wie `User.setLanguage` in `userprofiles/<Benutzer>.lang`, gilt also auch in der alten WebUI |
 
 ## Systemsteuerung
 

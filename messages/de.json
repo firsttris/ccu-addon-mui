@@ -1313,5 +1313,9 @@
   "SEC_SNMP_PASSWORD": "SNMP-Passwort",
   "SEC_SNMP_REPEAT": "SNMP-Passwort wiederholen",
   "SEC_SNMP_RULES": "Benutzername aus Buchstaben, Ziffern, . _ -; Passwort mindestens 8 Zeichen, ohne Anführungszeichen und Backslash.",
-  "SEC_SNMP_SAVE": "SNMP speichern"
+  "SEC_SNMP_SAVE": "SNMP speichern",
+  "LANGUAGE": "Sprache",
+  "LANGUAGE_AUTO": "Automatisch",
+  "LANGUAGE_HINT_USER": "Gilt für Ihren CCU-Benutzer auf allen Geräten und in der alten WebUI; Automatisch folgt dem Browser.",
+  "LANGUAGE_HINT_DEVICE": "Gilt für dieses Gerät; Automatisch folgt dem Browser."
 }

@@ -398,6 +398,12 @@
     "setSnmp": {
       "$ref": "#/definitions/SetSnmpCall"
     },
+    "getUserLanguage": {
+      "$ref": "#/definitions/GetUserLanguageCall"
+    },
+    "setUserLanguage": {
+      "$ref": "#/definitions/SetUserLanguageCall"
+    },
     "getInterfaces": {
       "$ref": "#/definitions/GetInterfacesCall"
     },
@@ -561,6 +567,8 @@
     "factoryReset",
     "setSecurityLevel",
     "setSnmp",
+    "getUserLanguage",
+    "setUserLanguage",
     "getInterfaces",
     "searchWiredDevices",
     "getDeviceFirmware",
@@ -3277,6 +3285,12 @@
         },
         {
           "$ref": "#/definitions/SetSnmpResponse"
+        },
+        {
+          "$ref": "#/definitions/GetUserLanguageResponse"
+        },
+        {
+          "$ref": "#/definitions/SetUserLanguageResponse"
         },
         {
           "$ref": "#/definitions/GetInterfacesResponse"
@@ -11267,6 +11281,126 @@
         },
         "response": {
           "$ref": "#/definitions/SetSnmpResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetUserLanguageRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getUserLanguage"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetUserLanguageResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getUserLanguage_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "language": {
+          "type": "integer",
+          "enum": [
+            0,
+            1,
+            2
+          ],
+          "description": "0 automatic (the browser's), 1 German, 2 English (/etc/config/userprofiles/<user>.lang)"
+        }
+      },
+      "required": [
+        "type",
+        "language"
+      ],
+      "additionalProperties": false
+    },
+    "GetUserLanguageCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetUserLanguageRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetUserLanguageResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetUserLanguageRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setUserLanguage"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "language": {
+          "type": "integer",
+          "enum": [
+            0,
+            1,
+            2
+          ],
+          "description": "0 automatic (the browser's), 1 German, 2 English (/etc/config/userprofiles/<user>.lang)"
+        }
+      },
+      "required": [
+        "type",
+        "language"
+      ],
+      "additionalProperties": false
+    },
+    "SetUserLanguageResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setUserLanguage_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetUserLanguageCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetUserLanguageRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetUserLanguageResponse"
         }
       },
       "required": [

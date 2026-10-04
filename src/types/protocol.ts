@@ -154,6 +154,8 @@ export type ServerMessage =
   | FactoryResetResponse
   | SetSecurityLevelResponse
   | SetSnmpResponse
+  | GetUserLanguageResponse
+  | SetUserLanguageResponse
   | GetInterfacesResponse
   | SearchWiredDevicesResponse
   | GetDeviceFirmwareResponse
@@ -300,6 +302,8 @@ export interface Protocol {
   factoryReset: FactoryResetCall;
   setSecurityLevel: SetSecurityLevelCall;
   setSnmp: SetSnmpCall;
+  getUserLanguage: GetUserLanguageCall;
+  setUserLanguage: SetUserLanguageCall;
   getInterfaces: GetInterfacesCall;
   searchWiredDevices: SearchWiredDevicesCall;
   getDeviceFirmware: GetDeviceFirmwareCall;
@@ -4825,6 +4829,63 @@ export interface SetSnmpRequest {
  */
 export interface SetSnmpResponse {
   type: "setSnmp_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetUserLanguageCall".
+ */
+export interface GetUserLanguageCall {
+  request: GetUserLanguageRequest;
+  response: GetUserLanguageResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetUserLanguageRequest".
+ */
+export interface GetUserLanguageRequest {
+  type: "getUserLanguage";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetUserLanguageResponse".
+ */
+export interface GetUserLanguageResponse {
+  type: "getUserLanguage_response";
+  requestId?: string;
+  /**
+   * 0 automatic (the browser's), 1 German, 2 English (/etc/config/userprofiles/<user>.lang)
+   */
+  language: 0 | 1 | 2;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetUserLanguageCall".
+ */
+export interface SetUserLanguageCall {
+  request: SetUserLanguageRequest;
+  response: SetUserLanguageResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetUserLanguageRequest".
+ */
+export interface SetUserLanguageRequest {
+  type: "setUserLanguage";
+  requestId?: string;
+  /**
+   * 0 automatic (the browser's), 1 German, 2 English (/etc/config/userprofiles/<user>.lang)
+   */
+  language: 0 | 1 | 2;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetUserLanguageResponse".
+ */
+export interface SetUserLanguageResponse {
+  type: "setUserLanguage_response";
   requestId?: string;
   success: boolean;
 }
