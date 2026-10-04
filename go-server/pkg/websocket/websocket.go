@@ -1119,12 +1119,6 @@ type listDevicesResponse struct {
 // handleListDevices lists the devices of all interfaces. An interface that
 // doesn't answer (e.g. no VirtualDevices) is left out.
 func (s *Server) handleListDevices(client *Client, requestID string) {
-	// The device list belongs to the setup area, like Settings > Devices in
-	// the WebUI (mainmenu/admin.js only)
-	if client.level != auth.LevelAdmin {
-		s.sendRequestError(client, requestID, "only administrators may list the devices", "FORBIDDEN")
-		return
-	}
 	if s.rpc == nil {
 		s.sendRequestError(client, requestID, "listDevices is not available", "NOT_AVAILABLE")
 		return

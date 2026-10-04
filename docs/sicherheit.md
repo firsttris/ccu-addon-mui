@@ -66,10 +66,10 @@ Dazu kommen die Regeln der CCU:
 - Programme ohne *bedienbar* starten nur Administratoren.
 - Favoritenlisten sieht nur, wer sie in der CCU sehen darf.
 - Niemand kann sich selbst löschen oder die eigene Stufe ändern.
-- Ansehen dürfen alle Stufen dasselbe wie in der WebUI (`mainmenu/user.js`: Status und Bedienung,
-  Systemprotokoll, Diagramme). Die Geräteliste von *Einrichten* sehen nur Administratoren, und Paramsets
-  lassen sich nur als `VALUES` oder `MASTER` lesen; die Parameter von Direktverknüpfungen
-  (`getLinkParamset`) bleiben Administratoren vorbehalten.
+- Ansehen dürfen alle Stufen, was die WebUI ihnen zeigt (`mainmenu/user.js`: Status und Bedienung,
+  Systemprotokoll, Diagramme), dazu die Geräteeinstellungen schreibgeschützt. Paramsets lassen sich nur als
+  `VALUES` oder `MASTER` lesen; die Parameter von Direktverknüpfungen (`getLinkParamset`) bleiben
+  Administratoren vorbehalten.
 
 Aktionen, die die CCU nur in der WebUI anbietet (Backup, Firewall, Sicherheitsstufe …), laufen über eine
 WebUI-Sitzung des Benutzers. Die hält der Server nach der ersten Passworteingabe im Speicher.

@@ -612,16 +612,6 @@ func TestParamsetRequests(t *testing.T) {
 	}
 }
 
-func TestListDevicesOnlyForAdministrators(t *testing.T) {
-	s := NewServer(nil, nil)
-	s.SetDeviceRPC(&fakeDeviceRPC{})
-	for _, level := range []string{auth.LevelGuest, auth.LevelUser} {
-		client := &Client{send: make(chan []byte, 1), level: level}
-		s.handleMessage(client, []byte(`{"type":"listDevices","requestId":"q1"}`))
-		assertErrorMessageContains(t, <-client.send, "only administrators")
-	}
-}
-
 func TestPutParamsetOnlyForAdministrators(t *testing.T) {
 	s := NewServer(nil, nil)
 	rpc := &fakeDeviceRPC{}
