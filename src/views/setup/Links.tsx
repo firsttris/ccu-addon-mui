@@ -10,6 +10,7 @@ import {
   decodeHmipTime,
   detectProfile,
   encodeHmipTime,
+  linkParameterNames,
   loadProfileTable,
   PERMANENT,
   ProfileField,
@@ -85,6 +86,31 @@ const ProfileFieldRow = ({
       </FieldRow>
     );
   }
+  // Choices the WebUI names (e.g. the kind of heating), by value
+  if (field.options) {
+    const current = Number(values[first] ?? 0);
+    const choices = Object.entries(field.options).sort(([a], [b]) => Number(a) - Number(b));
+    return (
+      <FieldRow label={label}>
+        <NativeSelect
+          className="w-auto max-w-xs"
+          aria-label={label}
+          value={current}
+          onChange={(event) => {
+            const next = Number(event.target.value);
+            setAll(parameter.type === 'BOOL' ? next === 1 : next);
+          }}
+        >
+          {!choices.some(([value]) => Number(value) === current) && <option value={current}>{current}</option>}
+          {choices.map(([value, text]) => (
+            <option key={value} value={value}>
+              {text[lang] || text.de}
+            </option>
+          ))}
+        </NativeSelect>
+      </FieldRow>
+    );
+  }
   return (
     <FieldRow label={label}>
       <ParameterValue name={first} label={label} parameter={parameter} value={values[first]} onSet={(_, value) => setAll(value)} />
@@ -123,12 +149,13 @@ export const LinkParameters = ({ interfaceName, link, receiverType, senderType, 
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
+    if (!receiverType) return;
     let active = true;
-    loadProfileTable().then((loaded) => active && setTable(loaded));
+    loadProfileTable(receiverType).then((loaded) => active && setTable(loaded));
     return () => {
       active = false;
     };
-  }, []);
+  }, [receiverType]);
 
   // A failed request is said, not swallowed: the button would seem to do nothing
   const failed = description.error ?? values.error;
@@ -168,6 +195,7 @@ export const LinkParameters = ({ interfaceName, link, receiverType, senderType, 
       return out;
     });
 
+  const readable = linkParameterNames(profiles, lang, (key) => t(key as TranslationKey), m.LINK_LONG());
   const shownFields = profile?.fields ?? [];
   const longFields = shownFields.filter((f) => f.params[0].startsWith('LONG_'));
   const shortFields = shownFields.filter((f) => !f.params[0].startsWith('LONG_'));
@@ -220,6 +248,8 @@ export const LinkParameters = ({ interfaceName, link, receiverType, senderType, 
               values={merged}
               changed={new Set(Object.keys(draft))}
               onSet={(name, value) => setValues({ [name]: value })}
+              nameOf={readable.nameOf}
+              optionOf={readable.optionOf}
             />
           </div>
         </details>

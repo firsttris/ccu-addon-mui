@@ -1,5 +1,6 @@
 // Imports the direct link profiles ("easymodes") of the CCU's WebUI from an
-// OpenCCU-Base checkout into src/controls/links/linkProfiles.json:
+// OpenCCU-Base checkout into src/controls/links/profiles/<RECEIVER_TYPE>.json
+// (one file per receiver type, loaded only when a link needs it):
 //
 //   node scripts/import-link-profiles.mjs /path/to/OpenCCU-Base
 //
@@ -9,20 +10,13 @@
 //   values ({1 3 5}, the first is written) or a range ({7 range 0 - 7})
 // - set_htmlParams: per profile (one block per "incr prn") the settings
 //   the WebUI shows: getTimeSelector (HmIP time base/factor pairs) and
-//   get_ComboBox options A|B (one field setting all named parameters)
-// and the texts from its localization/<lang>/ files.
+//   get_ComboBox options A|B (one field setting all named parameters),
+//   with the texts of its choices (set options(n) "${key}")
+// and the texts from its localization/<lang>/ files (and the WebUI's
+// translate.lang.option.js for choices).
 import fs from 'node:fs';
 import path from 'node:path';
 
-const RECEIVERS = [
-  'SWITCH_VIRTUAL_RECEIVER',
-  'DIMMER_VIRTUAL_RECEIVER',
-  'BLIND_VIRTUAL_RECEIVER',
-  'SHUTTER_VIRTUAL_RECEIVER',
-  'SWITCH',
-  'DIMMER',
-  'BLIND',
-];
 const LANGS = ['de', 'en'];
 
 const base = process.argv[2];
@@ -31,6 +25,12 @@ if (!base) {
   process.exit(1);
 }
 const easymodes = path.join(base, 'www/config/easymodes');
+// Every receiver type with its own directory of <SENDER_TYPE>.tcl files
+const RECEIVERS = fs
+  .readdirSync(easymodes, { withFileTypes: true })
+  .filter((d) => d.isDirectory() && /^[A-Z][A-Z0-9_()]+$/.test(d.name) && d.name !== 'MASTER_LANG')
+  .map((d) => d.name)
+  .sort();
 
 // "a" : "b", lines of the localization files
 const readTexts = (file) => {
@@ -96,11 +96,19 @@ const parseFile = (receiver, file) => {
     for (const m of block.matchAll(/getTimeSelector\s+(\w+)\s+ps\s+PROFILE_\$prn\s+(\w+)\s+\$prn\s+\$special_input_id\s+(\w+)/g)) {
       add({ kind: 'time', params: [m[3]], label: m[1] });
     }
-    for (const m of block.matchAll(/get_ComboBox options ([\w|]+)/g)) {
+    for (const m of block.matchAll(/get_ComboBox options (\$param|[\w|]+)/g)) {
       // The label is the last <td>${KEY}</td> written before the box
       const before = block.slice(0, m.index);
+      // "$param": the parameter set last (set param NAME)
+      const params = m[1] === '$param' ? [...before.matchAll(/set param (\w+)/g)].pop()?.[1] : m[1];
+      if (!params) continue;
       const label = [...before.matchAll(/<td>\\?\$\{(\w+)\}<\/td>/g)].pop()?.[1];
-      add({ kind: 'value', params: m[1].split('|'), label });
+      // Its choices: set since the last array_clear options
+      const since = before.slice(before.lastIndexOf('array_clear options'));
+      const options = Object.fromEntries(
+        [...since.matchAll(/set options\((\d+)\)\s+"\\?\$\{(\w+)\}"/g)].map((o) => [o[1], o[2]]),
+      );
+      add({ kind: 'value', params: params.split('|'), label, ...(Object.keys(options).length ? { options } : {}) });
     }
     if (shown.length) fields[n] = shown;
   });
@@ -109,6 +117,7 @@ const parseFile = (receiver, file) => {
     LANGS.map((lang) => [
       lang,
       {
+        ...readTexts(path.join(base, 'www/webui/js/lang', lang, 'translate.lang.option.js')),
         ...readTexts(path.join(easymodes, 'etc/localization', lang, 'PNAME.txt')),
         ...readTexts(path.join(easymodes, 'etc/localization', lang, 'GENERIC.txt')),
         ...readTexts(path.join(easymodes, receiver, 'localization', lang, 'GENERIC.txt')),
@@ -127,9 +136,19 @@ const parseFile = (receiver, file) => {
       name: Object.fromEntries(LANGS.map((lang) => [lang, text(lang, names[n]) ?? names[n]])),
       description: Object.fromEntries(LANGS.map((lang) => [lang, text(lang, `description_${n}`) ?? ''])),
       values: values[n],
-      fields: (fields[n] ?? []).map(({ label, ...field }) => ({
+      fields: (fields[n] ?? []).map(({ label, options, ...field }) => ({
         ...field,
         label: Object.fromEntries(LANGS.map((lang) => [lang, (label && text(lang, label)) || ''])),
+        ...(options
+          ? {
+              options: Object.fromEntries(
+                Object.entries(options).map(([value, key]) => [
+                  value,
+                  Object.fromEntries(LANGS.map((lang) => [lang, text(lang, key) ?? key])),
+                ]),
+              ),
+            }
+          : {}),
       })),
       ...(lists[n] ?? {}),
     }));
@@ -145,12 +164,17 @@ for (const receiver of RECEIVERS) {
     .sort()
     .map((f) => parseFile(receiver, path.join(dir, f)))
     .filter(Boolean);
-  result[receiver] = Object.fromEntries(entries);
+  if (entries.length) result[receiver] = Object.fromEntries(entries);
 }
 
-const out = path.join(path.dirname(new URL(import.meta.url).pathname), '../src/controls/links/linkProfiles.json');
-fs.writeFileSync(out, JSON.stringify(result) + '\n');
+const outDir = path.join(path.dirname(new URL(import.meta.url).pathname), '../src/controls/links/profiles');
+fs.rmSync(outDir, { recursive: true, force: true });
+fs.mkdirSync(outDir, { recursive: true });
+let total = 0;
 for (const [receiver, senders] of Object.entries(result)) {
+  const file = path.join(outDir, `${receiver}.json`);
+  fs.writeFileSync(file, JSON.stringify(senders) + '\n');
+  total += fs.statSync(file).size;
   console.log(receiver, Object.keys(senders).length, 'senders');
 }
-console.log('written', out, fs.statSync(out).size, 'bytes');
+console.log('written', Object.keys(result).length, 'files to', outDir, total, 'bytes');

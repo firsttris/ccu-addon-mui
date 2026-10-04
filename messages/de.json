@@ -1454,5 +1454,6 @@
   "LINKS_CONTROLLED_BY": "Wird gesteuert von",
   "LINKS_ALL_ROOMS": "Alle Räume",
   "SYS_CLOCK_DATE_TIME": "Datum und Uhrzeit",
-  "SYS_CLOCK_SET_MANUAL": "Uhr stellen"
+  "SYS_CLOCK_SET_MANUAL": "Uhr stellen",
+  "LINK_LONG": "lang"
 }

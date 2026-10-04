@@ -76,6 +76,8 @@ interface ParameterProps {
   value: DatapointValue | undefined;
   onSet: (name: string, value: string | number | boolean) => void;
   readOnly?: boolean;
+  // Readable name of a choice of an ENUM
+  optionOf?: (name: string, index: number, option: string) => string;
 }
 
 const NumberParameter = ({ name, label, parameter, value, onSet }: ParameterProps) => {
@@ -152,13 +154,21 @@ export const ParameterValue = (props: ParameterProps) => {
           >
             {options.map((option, index) => (
               <option key={option} value={index}>
-                {option}
+                {props.optionOf ? props.optionOf(name, index, option) : option}
               </option>
             ))}
           </NativeSelect>
         );
       }
-      return <>{typeof value === 'number' ? options[value] ?? value : value ?? '–'}</>;
+      return (
+        <>
+          {typeof value === 'number' && options[value] !== undefined
+            ? props.optionOf
+              ? props.optionOf(name, value, options[value])
+              : options[value]
+            : (value ?? '–')}
+        </>
+      );
     }
     case 'FLOAT':
     case 'INTEGER':
@@ -191,11 +201,26 @@ interface ParamsetViewProps {
   changed?: Set<string>;
   // Readable names (device settings) instead of the technical ones
   readable?: boolean;
+  // Own readable names and choices (link parameters)
+  nameOf?: (name: string) => string;
+  optionOf?: (name: string, index: number, option: string) => string;
 }
 
-export const ParamsetView = ({ label, description, values, onSet, readOnly, changed, readable }: ParamsetViewProps) => {
+export const ParamsetView = ({
+  label,
+  description,
+  values,
+  onSet,
+  readOnly,
+  changed,
+  readable,
+  nameOf: ownNameOf,
+  optionOf,
+}: ParamsetViewProps) => {
   const t = useTranslations();
-  const nameOf = (name: string) => (readable ? parameterLabel(name) : t(name as TranslationKey));
+  const named = readable || !!ownNameOf;
+  const nameOf = (name: string) =>
+    ownNameOf ? ownNameOf(name) : readable ? parameterLabel(name) : t(name as TranslationKey);
   return (
     <dl aria-label={label} className="m-0 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 text-[13px]">
       {shownParameters(description).map(([name, parameter]) => (
@@ -204,17 +229,18 @@ export const ParamsetView = ({ label, description, values, onSet, readOnly, chan
             className={`flex min-w-0 items-center gap-1.5 text-muted-foreground ${changed?.has(name) ? 'font-semibold text-foreground' : ''}`}
             title={name}
           >
-            <span className={readable ? 'min-w-0' : 'truncate'}>{nameOf(name)}</span>
+            <span className={named ? 'min-w-0' : 'truncate'}>{nameOf(name)}</span>
             {changed?.has(name) && <span aria-label="•" className="size-1.5 shrink-0 rounded-full bg-blue-600" />}
           </dt>
           <dd className="m-0 flex items-center justify-end text-right tabular-nums">
             <ParameterValue
               name={name}
-              label={readable ? nameOf(name) : name}
+              label={named ? nameOf(name) : name}
               parameter={parameter}
               value={values[name]}
               onSet={onSet}
               readOnly={readOnly}
+              optionOf={optionOf}
             />
           </dd>
         </div>

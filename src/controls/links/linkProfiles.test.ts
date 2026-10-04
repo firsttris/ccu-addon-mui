@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { ParamsetDescription } from '../../types/types';
-import { decodeHmipTime, detectProfile, encodeHmipTime, LinkProfile, PERMANENT, profilesFor, profileValues } from './linkProfiles';
-import table from './linkProfiles.json';
+import {
+  decodeHmipTime,
+  detectProfile,
+  encodeHmipTime,
+  LinkProfile,
+  linkParameterNames,
+  PERMANENT,
+  profilesFor,
+  profileValues,
+} from './linkProfiles';
+import floorHeating from './profiles/CLIMATECONTROL_FLOOR_TRANSCEIVER.json';
+import switchReceiver from './profiles/SWITCH_VIRTUAL_RECEIVER.json';
 
 const profile = (id: number, values: LinkProfile['values'], extra: Partial<LinkProfile> = {}): LinkProfile => ({
   id,
@@ -52,8 +62,29 @@ describe('linkProfiles', () => {
   });
 
   it('has the imported profiles of the WebUI', () => {
-    const switchKey = (table as unknown as Record<string, Record<string, LinkProfile[]>>).SWITCH_VIRTUAL_RECEIVER.KEY_TRANSCEIVER;
+    const switchKey = (switchReceiver as unknown as Record<string, LinkProfile[]>).KEY_TRANSCEIVER;
     expect(switchKey.map((p) => p.name.de)).toEqual(['Schalter ein', 'Schalter aus', 'Schalter ein / aus']);
     expect(switchKey[0].fields.map((f) => f.params[0])).toContain('SHORT_ON_TIME');
   });
 });
+
+describe('linkParameterNames', () => {
+  // The floor heating link of a wall thermostat (HmIP-WTH) and a floor
+  // heating actuator (HmIP-FAL), as CLIMATECONTROL_FLOOR_TRANSMITTER.tcl
+  const profiles = (floorHeating as unknown as Record<string, LinkProfile[]>).CLIMATECONTROL_FLOOR_TRANSMITTER;
+  const names = linkParameterNames(profiles, 'de', (key) => key, 'lang');
+
+  it('names parameters and choices as the WebUI profile does', () => {
+    expect(names.nameOf('SHORT_FLOOR_HEATING_MODE')).toBe('Art/Typ der Anlage');
+    expect(names.optionOf('SHORT_FLOOR_HEATING_MODE', 2, 'RADIATOR')).toBe('Radiator');
+    expect(names.nameOf('SHORT_HEATING_DISABLE')).toBe('Im Heiz-Modus');
+    expect(names.optionOf('SHORT_HEATING_DISABLE', 1, 'DISABLE')).toBe('aktiv');
+  });
+
+  it('falls back to the catalog and readable enum values, marking long presses', () => {
+    expect(names.nameOf('LONG_HUMIDITY_LIMIT_VALUE')).toBe('Luftfeuchtigkeitswert für die Ansteuerung eines externen Luftentfeuchters (lang)');
+    expect(names.nameOf('SHORT_ON_TIME')).toBe('On time');
+    expect(names.optionOf('SHORT_ON_TIME_MODE', 0, 'ABSOLUTE')).toBe('Absolute');
+  });
+});
+
