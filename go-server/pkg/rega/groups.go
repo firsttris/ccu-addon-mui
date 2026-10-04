@@ -223,7 +223,10 @@ func (c *Client) DeleteSysvar(id int64) (result, previous string, err error) {
 // names of true and false, range or value list as its kind has them. The
 // kind is the variable's (sv.Kind only picks the checks). Returns SetOK or
 // SetNotFound.
-func (c *Client) EditSysvar(id int64, sv NewSysvar, description string) (string, error) {
+func (c *Client) EditSysvar(id int64, sv NewSysvar, description string, channel int64) (string, error) {
+	if channel < 0 {
+		return "", fmt.Errorf("invalid channel")
+	}
 	for _, text := range []string{sv.Unit, sv.FalseName, sv.TrueName} {
 		if err := validateText(text); err != nil {
 			return "", err
@@ -261,6 +264,7 @@ func (c *Client) EditSysvar(id int64, sv NewSysvar, description string) (string,
 	script := strings.NewReplacer(
 		"{{ID}}", strconv.FormatInt(id, 10),
 		"{{INFO}}", description,
+		"{{CHANNEL}}", strconv.FormatInt(channel, 10),
 		"{{UNIT}}", sv.Unit,
 		"{{MIN}}", strconv.FormatFloat(minValue, 'f', -1, 64),
 		"{{MAX}}", strconv.FormatFloat(maxValue, 'f', -1, 64),

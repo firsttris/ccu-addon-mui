@@ -90,12 +90,9 @@ const Clock = () => {
   const [servers, setServers] = useState('');
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (data) {
-      setZone(data.timeZone ?? '');
-      setServers(data.timeServers ?? '');
-    }
-  }, [data]);
+  // Each field only when its stored value changes, see Location
+  useEffect(() => setZone(data?.timeZone ?? ''), [data?.timeZone]);
+  useEffect(() => setServers(data?.timeServers ?? ''), [data?.timeServers]);
 
   if (!data || (data.timeServers === undefined && !data.timeZones && !data.canSetClock)) {
     return null;
@@ -189,12 +186,14 @@ const Location = () => {
   const [longitude, setLongitude] = useState('');
   const [busy, setBusy] = useState(false);
 
+  // Only when the stored values change: refetching (every minute, after
+  // saving another card) must not overwrite what is being typed
   useEffect(() => {
-    if (data) {
-      setLatitude(String(data.latitude));
-      setLongitude(String(data.longitude));
-    }
-  }, [data]);
+    if (data) setLatitude(String(data.latitude));
+  }, [data?.latitude]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (data) setLongitude(String(data.longitude));
+  }, [data?.longitude]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isError) {
     return null;

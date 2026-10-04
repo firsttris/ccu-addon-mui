@@ -6,6 +6,7 @@
 !   L <value list, ";" separated>
 !   X <value>
 !   I <description, %-encoded (% \t \r \n)>
+!   C <channel id, 0 without>
 string svId;
 foreach (svId, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()) {
     object sv = dom.GetObject(svId);
@@ -21,4 +22,10 @@ foreach (svId, dom.GetObject(ID_SYSTEM_VARIABLES).EnumUsedIDs()) {
     info = info.Replace("\r", "%0D");
     info = info.Replace("\n", "%0A");
     WriteLine("I\t" # info);
+    integer channel = 0;
+    if (sv.Channel() != ID_ERROR) {
+        object ch = dom.GetObject(sv.Channel());
+        if (ch) { channel = ch.ID(); }
+    }
+    WriteLine("C\t" # channel);
 }

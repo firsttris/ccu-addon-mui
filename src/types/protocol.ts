@@ -1144,6 +1144,10 @@ export interface Sysvar {
    * The info text (DPInfo)
    */
   description?: string;
+  /**
+   * The channel the variable belongs to
+   */
+  channel?: number;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3202,6 +3206,10 @@ export interface EditSysvarRequest {
   valueList?: string[];
   id: number;
   description?: string;
+  /**
+   * 0: none
+   */
+  channel?: number;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

@@ -27,6 +27,7 @@ import { Links } from './Links';
 import { DevicePrograms } from './DevicePrograms';
 import { ComTest } from './ComTest';
 import { DeviceHistory } from './DeviceHistory';
+import { DeviceSysvars, useDeviceSysvars } from './DeviceSysvars';
 import { Firmware } from './Firmware';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
@@ -260,6 +261,7 @@ export const DeviceSettings = () => {
               <ComTest address={address} />
             </Section>
           )}
+          {device && <DeviceSysvarsSection address={address} />}
           {device && (
             <Section aria-label={m.DEVHIST()}>
               <h2>{m.DEVHIST()}</h2>
@@ -368,5 +370,19 @@ export const DeviceSettings = () => {
         </ConfirmDialog>
       )}
     </>
+  );
+};
+
+// Only with variables assigned to the device's channels
+const DeviceSysvarsSection = ({ address }: { address: string }) => {
+  const { assigned, names } = useDeviceSysvars(address);
+  if (assigned.length === 0) {
+    return null;
+  }
+  return (
+    <Section aria-label={m.SYSVARS()}>
+      <h2>{m.SYSVARS()}</h2>
+      <DeviceSysvars assigned={assigned} names={names} />
+    </Section>
   );
 };

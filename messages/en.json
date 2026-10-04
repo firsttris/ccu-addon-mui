@@ -751,5 +751,7 @@
   "SYS_TIME_SERVERS_SAVE": "Apply time servers",
   "SYS_CLOCK_FROM_BROWSER": "Use this device's time",
   "SYS_CLOCK_SET": "Clock set",
-  "SYS_CLOCK_HINT": "As the WebUI's time and position settings. With time servers the CCU sets its clock itself; by hand only without internet."
+  "SYS_CLOCK_HINT": "As the WebUI's time and position settings. With time servers the CCU sets its clock itself; by hand only without internet.",
+  "SYSVAR_CHANNEL": "Channel",
+  "SYSVAR_NO_CHANNEL": "none"
 }

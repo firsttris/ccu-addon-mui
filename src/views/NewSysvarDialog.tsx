@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useObjectChange } from '../queries';
+import { useChannelList, useObjectChange } from '../queries';
 import { useToast } from '../contexts/ToastContext';
 import { Sysvar } from '../types/types';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -39,6 +39,8 @@ export const NewSysvarDialog = ({ sysvar, onClose }: { sysvar?: Sysvar; onClose:
   const [falseName, setFalseName] = useState(sysvar?.falseName ?? '');
   const [values, setValues] = useState(sysvar?.valueList?.join('\n') ?? '');
   const [description, setDescription] = useState(sysvar?.description ?? '');
+  const [channel, setChannel] = useState(sysvar?.channel ?? 0);
+  const { data: channels = [] } = useChannelList({ enabled: !!sysvar });
 
   const valueList = values
     .split('\n')
@@ -61,7 +63,7 @@ export const NewSysvarDialog = ({ sysvar, onClose }: { sysvar?: Sysvar; onClose:
   const create = () =>
     change.mutate(
       sysvar
-        ? { type: 'editSysvar', id: sysvar.id, description: description.trim(), ...settings }
+        ? { type: 'editSysvar', id: sysvar.id, description: description.trim(), channel, ...settings }
         : { type: 'createSysvar', name: name.trim(), ...settings },
       {
         onSuccess: () => {
@@ -132,6 +134,21 @@ export const NewSysvarDialog = ({ sysvar, onClose }: { sysvar?: Sysvar; onClose:
               onChange={(e) => setValues(e.target.value)}
               className="rounded-md border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
             />
+          </Field>
+        )}
+        {sysvar && (
+          <Field label={m.SYSVAR_CHANNEL()}>
+            <NativeSelect value={String(channel)} onChange={(e) => setChannel(Number(e.target.value))}>
+              <option value="0">{m.SYSVAR_NO_CHANNEL()}</option>
+              {channel !== 0 && !channels.some((c) => c.id === channel) && <option value={String(channel)}>{channel}</option>}
+              {[...channels]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((c) => (
+                  <option key={c.id} value={String(c.id)}>
+                    {c.name}
+                  </option>
+                ))}
+            </NativeSelect>
           </Field>
         )}
         {sysvar && (

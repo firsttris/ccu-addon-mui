@@ -834,6 +834,10 @@
         "description": {
           "type": "string",
           "description": "The info text (DPInfo)"
+        },
+        "channel": {
+          "type": "integer",
+          "description": "The channel the variable belongs to"
         }
       },
       "required": [
@@ -7516,6 +7520,10 @@
         },
         "description": {
           "type": "string"
+        },
+        "channel": {
+          "type": "integer",
+          "description": "0: none"
         }
       },
       "required": [

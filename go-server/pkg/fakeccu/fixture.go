@@ -49,6 +49,8 @@ type Sysvar struct {
 	Value     interface{} `json:"value"`
 	// Description is the info text (DPInfo)
 	Description string `json:"description,omitempty"`
+	// Channel is the id of the channel it belongs to
+	Channel int64 `json:"channel,omitempty"`
 	// Alarm variables: how often and when last triggered; an alarm with a
 	// counter is an alarm message until acknowledged
 	AlarmCounter int    `json:"alarmCounter,omitempty"`

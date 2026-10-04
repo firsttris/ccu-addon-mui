@@ -945,6 +945,32 @@ test('stellt Zeitzone und Zeitserver ein', async ({ page }) => {
   await expect(panel.getByRole('button', { name: 'Zeitserver übernehmen' })).toBeDisabled();
 });
 
+test('ordnet eine Systemvariable einem Kanal zu und zeigt sie beim Gerät', async ({ page }) => {
+  await login(page);
+  await page.goto('/sysvars');
+  const list = page.getByRole('list', { name: 'Systemvariablen' });
+  await list.getByRole('button', { name: 'Anwesenheit bearbeiten' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Anwesenheit bearbeiten' });
+  await dialog.getByLabel('Kanalzuordnung').selectOption({ label: 'Wohnzimmer Thermostat' });
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await page.goto('/device/BidCos-RF/LEQ0000004');
+  const section = page.getByRole('region', { name: 'Systemvariablen' });
+  await expect(section.getByRole('listitem')).toContainText('Anwesenheit');
+  await expect(section.getByRole('listitem')).toContainText('Wohnzimmer Thermostat');
+  await expect(section.getByRole('switch', { name: 'Anwesenheit' })).toBeVisible();
+
+  await page.goto('/sysvars');
+  await list.getByRole('button', { name: 'Anwesenheit bearbeiten' }).click();
+  await dialog.getByLabel('Kanalzuordnung').selectOption({ label: 'keine' });
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.goto('/device/BidCos-RF/LEQ0000004');
+  await expect(page.getByRole('region', { name: 'Programme' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Systemvariablen' })).toHaveCount(0);
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {

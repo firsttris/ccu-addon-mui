@@ -304,6 +304,14 @@ func (c *CCU) runScript(body string) (string, error) {
 			for i := range c.fixture.Sysvars {
 				if sv := &c.fixture.Sysvars[i]; strconv.FormatInt(sv.ID, 10) == values["ID"] {
 					sv.Description, sv.Unit = values["INFO"], values["UNIT"]
+					sv.Channel = 0
+					if channel, _ := strconv.ParseInt(values["CHANNEL"], 10, 64); channel != 0 {
+						for _, ch := range c.fixture.Channels {
+							if ch.ID == channel {
+								sv.Channel = channel
+							}
+						}
+					}
 					switch {
 					case sv.ValueType == 2:
 						sv.FalseName, sv.TrueName = values["FALSE_NAME"], values["TRUE_NAME"]
@@ -957,6 +965,7 @@ func (c *CCU) getSysvars() string {
 		fmt.Fprintf(&b, "L\t%s\n", sv.ValueList)
 		fmt.Fprintf(&b, "X\t%s\n", formatValue(sv.Value))
 		fmt.Fprintf(&b, "I\t%s\n", strings.NewReplacer("%", "%25", "\t", "%09", "\r", "%0D", "\n", "%0A").Replace(sv.Description))
+		fmt.Fprintf(&b, "C\t%d\n", sv.Channel)
 	}
 	return b.String()
 }

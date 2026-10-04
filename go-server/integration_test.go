@@ -1816,6 +1816,18 @@ func TestStackEditSysvar(t *testing.T) {
 			t.Fatalf("expected INVALID_VALUE for %v, got %v", bad, m)
 		}
 	}
+	// Assigned to a channel, then to none again
+	edit("e6", message{"id": 953, "kind": "string", "channel": 401})
+	if sv := sysvar(953); sv["channel"] != 401.0 {
+		t.Fatalf("channel not assigned: %v", sv)
+	}
+	edit("e7", message{"id": 953, "kind": "string", "channel": 0})
+	if sv := sysvar(953); sv["channel"] != nil {
+		t.Fatalf("channel not removed: %v", sv)
+	}
+	if m := edit("e8", message{"id": 953, "kind": "string", "channel": -1}); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
 	if m := edit("e5", message{"id": 4242, "kind": "string"}); m["code"] != "NOT_FOUND" {
 		t.Fatalf("expected NOT_FOUND, got %v", m)
 	}
