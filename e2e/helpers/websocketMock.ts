@@ -141,11 +141,11 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         // No own control: shown by GenericControl with its values
         {
           id: 104,
-          name: 'Heizkreispumpe',
-          address: '0000DBE9A5C1F3:1',
-          interfaceName: 'HmIP-RF',
-          type: 'CLIMATECONTROL_FLOOR_PUMP_TRANSCEIVER',
-          datapoints: { STATE: true, DEW_POINT_ALARM: false },
+          name: 'Leistungsschwelle Waschmaschine',
+          address: 'LEQ0000020:3',
+          interfaceName: 'BidCos-RF',
+          type: 'CONDITION_POWER',
+          datapoints: { DECISION_VALUE: false },
         },
       ],
       '2': [
@@ -340,6 +340,64 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
     // In no room or trade: only listed under "all devices"
     const unassignedChannels: AnyPayload[] = [
+      // Side channels: floor heating pump, door lock drive HmIP-DLP (door
+      // state, auto relock, two users), lock sensor HmIP-DLS, status LED
+      {
+        id: 651,
+        name: 'Fußbodenheizung Pumpe',
+        address: '00309D89A1B2C1:1',
+        interfaceName: 'HmIP-RF',
+        type: 'CLIMATECONTROL_FLOOR_PUMP_TRANSCEIVER',
+        datapoints: { STATE: true, DEW_POINT_ALARM: false, EMERGENCY_OPERATION: false, FROST_PROTECTION: false, HUMIDITY_LIMITER: true, EXTERNAL_CLOCK: false },
+      },
+      {
+        id: 652,
+        name: 'Haustür Zustand',
+        address: '00319D89A1B2C1:3',
+        interfaceName: 'HmIP-RF',
+        type: 'DOOR_STATE_TRANSCEIVER',
+        datapoints: { STATE: 0, STATE_STATUS: 0, CALIBRATE_DOOR_STATE: null },
+      },
+      {
+        id: 653,
+        name: 'Haustür Auto-Relock',
+        address: '00319D89A1B2C1:13',
+        interfaceName: 'HmIP-RF',
+        type: 'AUTO_RELOCK_TRANSCEIVER',
+        datapoints: { AUTO_RELOCK_STATE: true, PROCESS: 0 },
+      },
+      {
+        id: 654,
+        name: 'Haustür Anna',
+        address: '00319D89A1B2C1:4',
+        interfaceName: 'HmIP-RF',
+        type: 'PERMISSION_TRANSCEIVER',
+        datapoints: { PERMISSION_STATE: true },
+      },
+      {
+        id: 655,
+        name: 'Haustür Ben',
+        address: '00319D89A1B2C1:5',
+        interfaceName: 'HmIP-RF',
+        type: 'PERMISSION_TRANSCEIVER',
+        datapoints: { PERMISSION_STATE: false },
+      },
+      {
+        id: 656,
+        name: 'Riegelkontakt Keller',
+        address: '00329D89A1B2C1:1',
+        interfaceName: 'HmIP-RF',
+        type: 'DOOR_LOCK_STATE_TRANSCEIVER',
+        datapoints: { LOCK_STATE: 1 },
+      },
+      {
+        id: 657,
+        name: 'Status-LED Flur',
+        address: '00339D89A1B2C1:12',
+        interfaceName: 'HmIP-RF',
+        type: 'OPTICAL_SIGNAL_RECEIVER',
+        datapoints: { LEVEL: 1, COLOR: 2, COLOR_BEHAVIOUR: 3 },
+      },
       // Irrigation, its water meter and window drives
       {
         id: 641,
@@ -591,6 +649,18 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
         ACCESS_AUTHORIZATION: { type: 'ENUM', operations: 4, flags: 1, tabOrder: 1, min: 0, max: 1, valueList: ['DISABLE', 'ENABLE'] },
       },
+      '00309D89A1B2C1:1': {
+        STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
+      },
+      '00319D89A1B2C1:13': {
+        AUTO_RELOCK_STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
+      },
+      '00319D89A1B2C1:4': {
+        PERMISSION_STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
+      },
+      '00319D89A1B2C1:5': {
+        PERMISSION_STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
+      },
       '00299D89A1B2C1:3': {
         STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
         ON_TIME: { type: 'FLOAT', operations: 2, flags: 1, tabOrder: 1, min: 0, max: 8580000, unit: 's' },
@@ -599,9 +669,8 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         WATER_FLOW: { type: 'FLOAT', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 10000, unit: 'l/h' },
         WATER_VOLUME: { type: 'FLOAT', operations: 5, flags: 1, tabOrder: 1, min: 0, max: 1000000, unit: 'l' },
       },
-      '0000DBE9A5C1F3:1': {
-        STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
-        DEW_POINT_ALARM: { type: 'BOOL', operations: 5, flags: 1, tabOrder: 1 },
+      'LEQ0000020:3': {
+        DECISION_VALUE: { type: 'BOOL', operations: 5, flags: 1, tabOrder: 0 },
       },
     };
 
