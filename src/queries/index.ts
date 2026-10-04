@@ -189,15 +189,14 @@ export const useInstallFirmware = () => {
   });
 };
 
-// ReGa doesn't send events for system variables: reload now and then
-const SYSVARS_REFRESH_MS = 10000;
-
+// ReGa sends no events for system variables. After getSysvars the server
+// reads them for all apps and sends a 'sysvars' message when they change
+// (useWebsocket puts it into this query).
 export const useSysvars = () => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['sysvars'],
     queryFn: async () => ((await request({ type: 'getSysvars' })).sysvars ?? []) as Sysvar[],
-    refetchInterval: SYSVARS_REFRESH_MS,
   });
 };
 

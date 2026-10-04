@@ -22,6 +22,7 @@ export type ServerMessage =
   | AuthResponse
   | ErrorResponse
   | EventMessage
+  | SysvarsMessage
   | GetRoomsResponse
   | GetTradesResponse
   | GetChannelsResponse
@@ -4777,4 +4778,14 @@ export interface Event {
  */
 export interface EventMessage {
   event: Event;
+}
+/**
+ * Sent unasked to connections that loaded the system variables (getSysvars) when they changed; the whole list. System variables send no events, the server reads them every few seconds
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SysvarsMessage".
+ */
+export interface SysvarsMessage {
+  type: "sysvars";
+  sysvars: Sysvar[];
 }

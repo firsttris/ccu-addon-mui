@@ -213,8 +213,11 @@ flowchart TB
   `CONFIG_PENDING` …), lädt sie zusätzlich Servicemeldungen und Geräteprobleme neu.
 - **Schalten** ist optimistisch: Die Kachel zeigt den neuen Zustand sofort. Lehnt die CCU ab, nimmt die App
   ihn zurück, aber nur, wenn inzwischen kein Event einen neueren Wert gebracht hat.
-- **Was die CCU nicht meldet**, fragt die App ab: Systemvariablen alle 10 s, Alarme alle 15 s,
-  Servicemeldungen jede Minute, Geräteprobleme alle 5 Minuten.
+- **Systemvariablen** melden keine Events. Der Server liest sie alle 5 s, einmal für alle Apps, die sie
+  zeigen, und schickt die Liste nur bei einer Änderung (`sysvars`). Vorher fragte jede App selbst alle 10 s;
+  ReGa arbeitet Skripte nacheinander ab, mit mehreren Tablets bremste das WebUI und Programme.
+- **Was die CCU sonst nicht meldet**, fragt die App ab: Alarme alle 15 s, Servicemeldungen jede Minute,
+  Geräteprobleme alle 5 Minuten.
 
 ### Kacheln
 

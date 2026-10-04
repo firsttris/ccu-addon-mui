@@ -78,7 +78,10 @@ Format und Prüfung der Tokens stehen in [Sicherheit](sicherheit.md).
 Verbindung Events bekommt. Jede Verbindung hat ihr eigenes Abo, mehrere Tabs stören sich nicht. Die App
 schickt das Abo nach jedem Neuverbinden erneut. Events für andere Kanäle bekommt die Verbindung nicht.
 
-Systemvariablen erzeugen keine Events; die App fragt sie ab (`getSysvars`).
+Systemvariablen erzeugen keine Events. Hat eine Verbindung sie mit `getSysvars` geladen, liest der Server
+sie für alle solchen Verbindungen gemeinsam alle 5 Sekunden und schickt bei einer Änderung unaufgefordert
+die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wie die Antwort auf
+`getSysvars`). Nach dem Abmelden endet das.
 
 ## Rechte
 

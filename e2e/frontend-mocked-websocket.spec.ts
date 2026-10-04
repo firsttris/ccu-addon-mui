@@ -461,6 +461,18 @@ test('zeigt Favoritenlisten und bearbeitet sie', async ({ page }) => {
   expect(sent).toEqual(['runProgram', 'removeFavoriteItem', 'addFavoriteItem', 'createFavorite', 'deleteFavorite']);
 });
 
+test('zeigt Änderungen an Systemvariablen, die der Server meldet', async ({ page }) => {
+  await page.goto('/favorite/1300');
+  const logic = page.getByRole('list', { name: /Systemvariablen|System variables/ });
+  await expect(logic).toContainText(/anwesend/);
+
+  // A program in the CCU changes it: no reload, the server sends the list
+  await page.evaluate(() =>
+    (window as Window & { __wsMock?: { setSysvar: (id: number, value: unknown) => void } }).__wsMock?.setSysvar(950, false),
+  );
+  await expect(logic).toContainText(/abwesend/);
+});
+
 test('öffnet als Startseite die zuletzt gezeigte Ansicht oder die Favoriten', async ({ page }) => {
   // The view shown last: a room, then a favorite list
   await page.goto('/room/2');
