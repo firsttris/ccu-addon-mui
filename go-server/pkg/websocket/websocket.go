@@ -841,6 +841,8 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	var msg struct {
 		Token      string `json:"token"`
 		AdminToken string `json:"adminToken"`
+		// Logged out on purpose: show the login, not the automatic one
+		NoAutoLogin bool `json:"noAutoLogin"`
 	}
 	_ = json.Unmarshal(message, &msg)
 
@@ -853,6 +855,16 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	}
 
 	session, token, err := s.auth.Refresh(msg.Token, client.device)
+	if err != nil && !msg.NoAutoLogin {
+		// The user the CCU logs in automatically, if one is set (not an
+		// administrator, see AutoLogin)
+		if user := s.autoLoginUser(); user != "" {
+			session, token, err = s.auth.AutoLogin(user, client.device)
+			if err == nil {
+				logger.Info(fmt.Sprintf("🔓 User %q logged in automatically", user))
+			}
+		}
+	}
 	if err != nil {
 		client.authenticated = false
 		client.watchSysvars(false)
@@ -871,6 +883,24 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 		Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level,
 		Token: token, Elevated: client.elevated(),
 	})
+}
+
+// autoLoginUser is the user the CCU logs in automatically, "" for none or
+// an administrator
+func (s *Server) autoLoginUser() string {
+	if s.regaClient == nil {
+		return ""
+	}
+	users, err := s.regaClient.GetUsers()
+	if err != nil {
+		return ""
+	}
+	for _, u := range users {
+		if u.AutoLogin && u.Level != levelToCCU[auth.LevelAdmin] {
+			return u.Name
+		}
+	}
+	return ""
 }
 
 // handleLogin verifies CCU credentials and returns a token for the client

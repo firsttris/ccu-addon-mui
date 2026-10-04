@@ -115,6 +115,26 @@ const readToken = (key = TOKEN_STORAGE_KEY) => {
   }
 };
 
+// Logged out on purpose in this tab: the login page, not the automatic
+// login (as the WebUI's logout.htm with NoAutoLogin); a new tab logs in
+// automatically again
+const LOGGED_OUT_KEY = 'mui-logged-out';
+const loggedOut = () => {
+  try {
+    return sessionStorage.getItem(LOGGED_OUT_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+const setLoggedOut = (value: boolean) => {
+  try {
+    if (value) sessionStorage.setItem(LOGGED_OUT_KEY, '1');
+    else sessionStorage.removeItem(LOGGED_OUT_KEY);
+  } catch {
+    // Storage not available: logging out works, the automatic login returns
+  }
+};
+
 const writeToken = (token: string | null, key = TOKEN_STORAGE_KEY) => {
   try {
     if (token) {
@@ -342,6 +362,7 @@ export const useWebsocket = () => {
           type: 'auth',
           token: readToken() ?? undefined,
           adminToken: readToken(ADMIN_TOKEN_STORAGE_KEY) ?? undefined,
+          noAutoLogin: loggedOut() || undefined,
         }),
         false,
       );
@@ -353,6 +374,7 @@ export const useWebsocket = () => {
   const login = useCallback(
     (username: string, password: string) => {
       setLoginError(null);
+      setLoggedOut(false);
       sendMessage(JSON.stringify({ type: 'login', username, password }), false);
     },
     [sendMessage],
@@ -376,6 +398,8 @@ export const useWebsocket = () => {
     await request({ type: 'logout' }, { queue: false, timeoutMs: 3000 }).catch(() => {});
     writeToken(null);
     writeToken(null, ADMIN_TOKEN_STORAGE_KEY);
+    // Show the login instead of logging in automatically again
+    setLoggedOut(true);
     setElevated(false);
     readyRef.current = false;
     setAuthState('loginRequired');

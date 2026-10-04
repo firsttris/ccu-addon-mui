@@ -2,7 +2,9 @@
 ! (pages/tabs/admin/userAdministration.htm): a line per user with U, id,
 ! name, first name, last name, level (1 guest, 2 user, 8 admin), whether a
 ! password is set, whether it is shown on the login page, whether it may
-! be deleted, mail and phone, tab-separated.
+! be deleted, mail and phone, tab-separated; then A and the id of the user
+! logged in automatically (UsersDefaultLogin(dwcPC), as the WebUI's
+! autoLoginConfig.htm and index.htm read it), 0 for none.
 object users = dom.GetObject(ID_USERS);
 string id;
 foreach (id, users.EnumEnabledVisibleIDs()) {
@@ -15,3 +17,4 @@ foreach (id, users.EnumEnabledVisibleIDs()) {
         Write("\t" # user.UserMailAddress() # "\t" # user.UserPhoneNumber() # "\n");
     }
 }
+Write("A\t" # users.UsersDefaultLogin(dwcPC) # "\n");

@@ -1457,5 +1457,8 @@
   "SYS_CLOCK_SET_MANUAL": "Set clock",
   "LINK_LONG": "long",
   "TIME_HOUR": "Hour",
-  "TIME_MINUTE": "Minute"
+  "TIME_MINUTE": "Minute",
+  "USERS_AUTO_LOGIN": "Log in automatically",
+  "USERS_AUTO_LOGIN_BADGE": "logs in automatically",
+  "USERS_AUTO_LOGIN_HINT": "Whoever opens the app is logged in as this user without a password. Only one user can be; after logging out, the login appears."
 }

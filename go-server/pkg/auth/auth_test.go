@@ -298,3 +298,28 @@ func TestAdminTokens(t *testing.T) {
 		t.Fatalf("expected ErrInvalidCredentials, got %v", err)
 	}
 }
+
+func TestAutoLoginOnlyForUsersAndGuests(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	a := newTestAuthenticator(t, ccu.URL)
+	levels := map[string]string{"Kiosk": LevelGuest, "Familie": LevelUser, "Admin": LevelAdmin}
+	a.SetLevelFunc(func(username string) (string, error) { return levels[username], nil })
+
+	for _, user := range []string{"Kiosk", "Familie"} {
+		session, token, err := a.AutoLogin(user, "tablet")
+		if err != nil || session.User != user || session.Level != levels[user] {
+			t.Fatalf("AutoLogin(%s) = %+v, %v", user, session, err)
+		}
+		if verified, err := a.Verify(token); err != nil || verified.Scope != ScopeOperate {
+			t.Fatalf("Verify = %+v, %v", verified, err)
+		}
+	}
+	// Administrators and unknown users need the password
+	for _, user := range []string{"Admin", "Unbekannt", ""} {
+		if _, _, err := a.AutoLogin(user, "tablet"); err == nil {
+			t.Errorf("AutoLogin(%q) succeeded", user)
+		}
+	}
+}

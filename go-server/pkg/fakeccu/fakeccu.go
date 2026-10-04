@@ -75,7 +75,9 @@ type CCU struct {
 	// starting with "KEQ") need the temporary key set; the device that
 	// failed last (getKeyMismatchDevice)
 	tempKey, keyMismatch string
-	factoryResetDone     bool
+	// The user logged in automatically (UsersDefaultLogin), 0 for none
+	autoLoginUser    int64
+	factoryResetDone bool
 	// The last HmIP whitelist (setInstallModeWithWhitelist)
 	Whitelist []map[string]interface{}
 	// Time modules created by save_program, for their ids
@@ -580,6 +582,7 @@ func (c *CCU) runScript(body string) (string, error) {
 				fmt.Fprintf(&b, "U\t%d\t%s\t%s\t%s\t%d\t%t\t%t\t%t\t%s\t%s\n",
 					u.ID, u.Name, u.FirstName, u.LastName, u.Level, u.Password != "", u.ShowLogin, u.Name != "Admin", u.Mail, u.Phone)
 			}
+			fmt.Fprintf(&b, "A\t%d\n", c.autoLoginUser)
 			return b.String(), nil
 		case "start_com_test", "poll_com_test":
 			// Reachable devices answer at once, unreachable ones never
@@ -860,6 +863,11 @@ func (c *CCU) saveUser(values map[string]string) string {
 	u.Level, _ = strconv.Atoi(values["LEVEL"])
 	u.ShowLogin = values["SHOW_LOGIN"] == "true"
 	u.Mail, u.Phone = values["MAIL"], values["PHONE"]
+	if values["AUTO_LOGIN"] == "true" {
+		c.autoLoginUser = u.ID
+	} else if c.autoLoginUser == u.ID {
+		c.autoLoginUser = 0
+	}
 	c.fixture.Users = users
 	return fmt.Sprintf("OK\t%d", u.ID)
 }
