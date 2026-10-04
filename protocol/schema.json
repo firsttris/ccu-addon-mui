@@ -325,6 +325,15 @@
     },
     "setGeneralSettings": {
       "$ref": "#/definitions/SetGeneralSettingsCall"
+    },
+    "getHeatingGroupMembers": {
+      "$ref": "#/definitions/GetHeatingGroupMembersCall"
+    },
+    "saveHeatingGroup": {
+      "$ref": "#/definitions/SaveHeatingGroupCall"
+    },
+    "deleteHeatingGroup": {
+      "$ref": "#/definitions/DeleteHeatingGroupCall"
     }
   },
   "required": [
@@ -434,7 +443,10 @@
     "saveDiagram",
     "deleteDiagram",
     "getGeneralSettings",
-    "setGeneralSettings"
+    "setGeneralSettings",
+    "getHeatingGroupMembers",
+    "saveHeatingGroup",
+    "deleteHeatingGroup"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3005,6 +3017,15 @@
         },
         {
           "$ref": "#/definitions/SetGeneralSettingsResponse"
+        },
+        {
+          "$ref": "#/definitions/GetHeatingGroupMembersResponse"
+        },
+        {
+          "$ref": "#/definitions/SaveHeatingGroupResponse"
+        },
+        {
+          "$ref": "#/definitions/DeleteHeatingGroupResponse"
         }
       ]
     },
@@ -9114,6 +9135,256 @@
         "used",
         "free",
         "total"
+      ],
+      "additionalProperties": false
+    },
+    "GetHeatingGroupMembersRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getHeatingGroupMembers"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "groupType": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "groupType"
+      ],
+      "additionalProperties": false
+    },
+    "GetHeatingGroupMembersResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getHeatingGroupMembers_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "members": {
+          "type": "object",
+          "properties": {
+            "assignable": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HeatingGroupCandidate"
+              }
+            },
+            "leftover": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HeatingGroupCandidate"
+              }
+            }
+          },
+          "required": [
+            "assignable",
+            "leftover"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "members"
+      ],
+      "additionalProperties": false
+    },
+    "GetHeatingGroupMembersCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetHeatingGroupMembersRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetHeatingGroupMembersResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SaveHeatingGroupRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "saveHeatingGroup"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "group": {
+          "$ref": "#/definitions/HeatingGroupChange"
+        },
+        "password": {
+          "type": "string",
+          "description": "For a new WebUI session, when the last answer was PASSWORD_REQUIRED"
+        }
+      },
+      "required": [
+        "type",
+        "group"
+      ],
+      "additionalProperties": false
+    },
+    "SaveHeatingGroupResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "saveHeatingGroup_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "SaveHeatingGroupCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SaveHeatingGroupRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SaveHeatingGroupResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteHeatingGroupRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteHeatingGroup"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteHeatingGroupResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteHeatingGroup_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteHeatingGroupCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DeleteHeatingGroupRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DeleteHeatingGroupResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "HeatingGroupCandidate": {
+      "type": "object",
+      "description": "A channel a heating group may contain",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The channel address"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "HeatingGroupChange": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "0 for a new group"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "hmip.heating.group",
+            "HomeMatic.heating"
+          ]
+        },
+        "forbidSingleOperation": {
+          "type": "boolean"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type"
       ],
       "additionalProperties": false
     }

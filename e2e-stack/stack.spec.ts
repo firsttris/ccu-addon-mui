@@ -1254,3 +1254,48 @@ test('stellt Energiepreise und Info-LED in den allgemeinen Einstellungen ein', a
   await expect(reloaded.getByLabel('Info-LED bei Servicemeldungen')).not.toBeChecked();
   await expect(reloaded.getByLabel('Info-LED bei Alarmen')).toBeChecked();
 });
+
+test('legt Heizgruppen an, verschiebt ein Thermostat und löscht sie wieder', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/heating-groups');
+  const list = page.getByRole('list', { name: 'Heizgruppen' });
+  const editGroup = async (name: string) => {
+    await list.getByRole('listitem', { name }).getByRole('button', { name: `Heizgruppe „${name}“ bearbeiten` }).click();
+    return page.getByRole('dialog', { name: `Heizgruppe „${name}“ bearbeiten` });
+  };
+
+  await page.getByRole('button', { name: 'Neue Heizgruppe' }).click();
+  const create = page.getByRole('dialog', { name: 'Neue Heizgruppe' });
+  await create.getByLabel('Name').fill('Bad');
+  await expect(create).toContainText('Schon in einer anderen Gruppe: Wandthermostat Flur');
+  await create.getByRole('button', { name: 'Speichern' }).click();
+  // The CCU's group administration needs a WebUI session once
+  await create.getByLabel('Passwort').fill('secret');
+  await create.getByRole('button', { name: 'Speichern' }).click();
+  await expect(create).toHaveCount(0);
+  await expect(list.getByRole('listitem', { name: 'Bad' })).toContainText('Noch keine Mitglieder');
+
+  // The thermostat leaves its group, then joins the new one: no password now
+  const flur = await editGroup('Heizung Flur');
+  await flur.getByRole('button', { name: 'Wandthermostat Flur entfernen' }).click();
+  await flur.getByRole('button', { name: 'Speichern' }).click();
+  await expect(flur).toHaveCount(0);
+  const bad = await editGroup('Bad');
+  await bad.getByRole('button', { name: 'Wandthermostat Flur hinzufügen' }).click();
+  await bad.getByLabel('Einzelbedienung gesperrt').click();
+  await bad.getByRole('button', { name: 'Speichern' }).click();
+  await expect(bad).toHaveCount(0);
+  const badItem = list.getByRole('listitem', { name: 'Bad' });
+  await expect(badItem.getByRole('list', { name: 'Mitglieder von Bad' })).toContainText('Wandthermostat Flur');
+  await expect(badItem).toContainText('Einzelbedienung gesperrt');
+
+  await badItem.getByRole('button', { name: 'Heizgruppe löschen' }).click();
+  await page.getByRole('dialog', { name: 'Heizgruppe löschen' }).getByRole('button', { name: 'Löschen' }).click();
+  await expect(list.getByRole('listitem', { name: 'Bad' })).toHaveCount(0);
+
+  // Back as before, for a second run
+  const back = await editGroup('Heizung Flur');
+  await back.getByRole('button', { name: 'Wandthermostat Flur hinzufügen' }).click();
+  await back.getByRole('button', { name: 'Speichern' }).click();
+  await expect(list.getByRole('list', { name: 'Mitglieder von Heizung Flur' })).toContainText('Wandthermostat Flur');
+});

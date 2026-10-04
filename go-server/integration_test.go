@@ -68,7 +68,12 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	}
 	cfg.SyslogConfig, cfg.LogDir = logFiles(t)
 	cfg.TimeConfFile, cfg.NTPClientFile, cfg.TZFile = clockFiles(t)
-	cfg.GroupsFile = "../fixtures/groups.gson"
+	// A copy the fake HMServer may change
+	cfg.GroupsFile = filepath.Join(t.TempDir(), "groups.gson")
+	if data, err := os.ReadFile("../fixtures/groups.gson"); err == nil {
+		_ = os.WriteFile(cfg.GroupsFile, data, 0o644)
+	}
+	ccu.GroupsFile = cfg.GroupsFile
 	cfg.DiagramsFile = filepath.Join(t.TempDir(), "diagrams.json")
 	cfg.DiagramsDir = filepath.Join(t.TempDir(), "diagrams")
 	cfg.ConfigDir = t.TempDir()
@@ -2222,5 +2227,81 @@ func TestStackGeneralSettings(t *testing.T) {
 	send(t, conn, message{"type": "setGeneralSettings", "requestId": "g7", "energyPrice": map[string]interface{}{"currency": "USD"}})
 	if m := receive(t, conn, byRequestID("g7")); m["code"] != "INVALID_VALUE" {
 		t.Errorf("invalid currency: %v", m)
+	}
+}
+
+func TestStackEditHeatingGroups(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getHeatingGroupMembers", "requestId": "h1", "groupType": "hmip.heating.group"})
+	members := receive(t, conn, byRequestID("h1"))["members"].(map[string]interface{})
+	if len(members["assignable"].([]interface{})) != 0 || members["leftover"].([]interface{})[0].(map[string]interface{})["id"] != "000A9D89A7AF25:1" {
+		t.Fatalf("members: %v", members)
+	}
+
+	group := map[string]interface{}{"id": 0, "name": "Bad & Küche", "type": "hmip.heating.group", "forbidSingleOperation": false, "members": []string{}}
+	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h2", "group": group})
+	if m := receive(t, conn, byRequestID("h2")); m["code"] != "PASSWORD_REQUIRED" {
+		t.Fatalf("without password: %v", m)
+	}
+	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h3", "group": group, "password": "falsch"})
+	if m := receive(t, conn, byRequestID("h3")); m["code"] != "INVALID_CREDENTIALS" {
+		t.Fatalf("wrong password: %v", m)
+	}
+	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h4", "group": group, "password": "secret"})
+	saved := receive(t, conn, byRequestID("h4"))
+	if saved["success"] != true || saved["id"] != 3.0 {
+		t.Fatalf("save: %v", saved)
+	}
+	// The virtual device is named and leaves the inbox
+	waitFor := func(what string, ok func() bool) {
+		deadline := time.Now().Add(5 * time.Second)
+		for !ok() {
+			if time.Now().After(deadline) {
+				t.Fatal(what)
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+	waitFor("group device not named", func() bool { return ccu.DeviceName("INT0000003") == "Bad & Küche INT0000003" })
+
+	// The session is kept: no password for the next changes. The
+	// thermostat moves from group 1 to the new one.
+	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h5", "group": map[string]interface{}{"id": 1, "name": "Heizung Flur", "type": "hmip.heating.group", "members": []string{}}})
+	if m := receive(t, conn, byRequestID("h5")); m["success"] != true {
+		t.Fatalf("change: %v", m)
+	}
+	waitFor("member not released", func() bool { return ccu.InHeatingGroup()["000A9D89A7AF25"] == "false" })
+	group["id"] = 3
+	group["members"] = []string{"000A9D89A7AF25:1"}
+	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h6", "group": group})
+	if m := receive(t, conn, byRequestID("h6")); m["success"] != true {
+		t.Fatalf("add member: %v", m)
+	}
+	waitFor("member not marked", func() bool { return ccu.InHeatingGroup()["000A9D89A7AF25"] == "true" })
+
+	send(t, conn, message{"type": "getHeatingGroups", "requestId": "h7"})
+	groups := receive(t, conn, byRequestID("h7"))["groups"].([]interface{})
+	if len(groups) != 3 {
+		t.Fatalf("groups: %v", groups)
+	}
+	third := groups[2].(map[string]interface{})
+	if third["name"] != "Bad & Küche" || len(third["members"].([]interface{})) != 1 || len(groups[0].(map[string]interface{})["members"].([]interface{})) != 0 {
+		t.Errorf("after changes: %v", groups)
+	}
+
+	send(t, conn, message{"type": "deleteHeatingGroup", "requestId": "h8", "id": 3})
+	if m := receive(t, conn, byRequestID("h8")); m["success"] != true {
+		t.Fatalf("delete: %v", m)
+	}
+	waitFor("member not released after delete", func() bool { return ccu.InHeatingGroup()["000A9D89A7AF25"] == "false" })
+	send(t, conn, message{"type": "deleteHeatingGroup", "requestId": "h9", "id": 3})
+	if m := receive(t, conn, byRequestID("h9")); m["code"] != "NOT_FOUND" {
+		t.Errorf("delete twice: %v", m)
+	}
+	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h10", "group": map[string]interface{}{"id": 0, "name": "", "type": "hmip.heating.group"}})
+	if m := receive(t, conn, byRequestID("h10")); m["code"] != "INVALID_VALUE" {
+		t.Errorf("no name: %v", m)
 	}
 }

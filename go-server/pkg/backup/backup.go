@@ -45,6 +45,10 @@ type Backup struct {
 }
 
 type Service struct {
+	// WebUI sessions for the heating groups, per user
+	groupSessions     *groupSessions
+	groupSessionsOnce sync.Once
+
 	webUIURL   string
 	httpClient *http.Client
 	dir        string
