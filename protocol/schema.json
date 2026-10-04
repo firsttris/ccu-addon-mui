@@ -277,6 +277,9 @@
     },
     "setClock": {
       "$ref": "#/definitions/SetClockCall"
+    },
+    "getHeatingGroups": {
+      "$ref": "#/definitions/GetHeatingGroupsCall"
     }
   },
   "required": [
@@ -370,7 +373,8 @@
     "editSysvar",
     "setTimeServers",
     "setTimeZone",
-    "setClock"
+    "setClock",
+    "getHeatingGroups"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2893,6 +2897,9 @@
         },
         {
           "$ref": "#/definitions/SetClockResponse"
+        },
+        {
+          "$ref": "#/definitions/GetHeatingGroupsResponse"
         }
       ]
     },
@@ -7734,6 +7741,114 @@
         },
         "response": {
           "$ref": "#/definitions/SetClockResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "HeatingGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "typeLabel": {
+          "type": "string"
+        },
+        "deviceAddress": {
+          "type": "string"
+        },
+        "deviceName": {
+          "type": "string"
+        },
+        "forbidSingleOperation": {
+          "type": "boolean"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "address",
+              "type"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type",
+        "forbidSingleOperation",
+        "members"
+      ]
+    },
+    "GetHeatingGroupsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getHeatingGroups"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetHeatingGroupsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getHeatingGroups_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HeatingGroup"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "groups"
+      ],
+      "additionalProperties": false
+    },
+    "GetHeatingGroupsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetHeatingGroupsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetHeatingGroupsResponse"
         }
       },
       "required": [

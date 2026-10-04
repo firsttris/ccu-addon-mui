@@ -46,6 +46,8 @@ type Config struct {
 	TimeConfFile  string
 	NTPClientFile string
 	TZFile        string
+	// The heating groups the HMServer keeps (groups.gson)
+	GroupsFile string
 	// AuditLogFile records every change made through the add-on; empty
 	// disables it.
 	AuditLogFile string
@@ -90,6 +92,7 @@ func Load() *Config {
 		TimeConfFile:       getEnv("TIME_CONF_FILE", "/etc/config/time.conf"),
 		NTPClientFile:      getEnv("NTP_CLIENT_FILE", "/etc/config/ntpclient"),
 		TZFile:             getEnv("TZ_FILE", "/etc/config/TZ"),
+		GroupsFile:         getEnv("GROUPS_FILE", "/etc/config/groups.gson"),
 		BackupDir:          getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
 	}
 }
