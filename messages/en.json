@@ -676,7 +676,7 @@
   "ADDONS_RESTARTED": "{name} is restarting",
   "ADDONS_UNINSTALLED": "{name} was uninstalled",
   "ADDONS_NONE": "No add-ons installed.",
-  "ADDONS_HINT": "Installing and updating is done under Settings → Control panel → Additional software in the old WebUI.",
+  "ADDONS_HINT": "To update an add-on, simply install its new version.",
   "ADDONS_RESTART_CONFIRM": "{name} restarts and is briefly unavailable.",
   "ADDONS_RESTART_SELF": "This app restarts. The connection drops briefly and then comes back by itself.",
   "ADDONS_UNINSTALL_CONFIRM": "{name} is removed from the CCU. Its settings may be lost.",
@@ -794,5 +794,14 @@
   "CCUFW_STARTING": "Starting …",
   "CCUFW_DONE": "The CCU restarts and installs the firmware. This takes a few minutes; reload this page afterwards.",
   "CCUFW_INVALID": "The file is no firmware for this CCU.",
-  "CCUFW_FAILED": "Firmware update failed"
+  "CCUFW_FAILED": "Firmware update failed",
+  "ADDON_INSTALL": "Install add-on",
+  "ADDON_INSTALL_HINT": "Install or update an add-on (.tar.gz). It runs with full rights on the CCU – only use files from a trusted source.",
+  "ADDON_FILE": "File (.tar.gz)",
+  "ADDON_INSTALL_GO": "Install",
+  "ADDON_INSTALLING": "Installing …",
+  "ADDON_INSTALL_WAIT": "Installing may take a few minutes.",
+  "ADDON_INSTALLED": "The add-on is installed.",
+  "ADDON_INSTALLED_REBOOT": "The add-on is installed. The CCU restarts to finish; reload this page afterwards.",
+  "ADDON_INSTALL_FAILED": "Installation failed"
 }

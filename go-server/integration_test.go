@@ -2028,3 +2028,34 @@ func TestStackCcuFirmware(t *testing.T) {
 		t.Fatalf("firmware not installed: %v %q", m, ccu.InstalledFirmware())
 	}
 }
+
+func TestStackInstallAddon(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	base := fmt.Sprintf("http://127.0.0.1:%d", wsPorts[ccu])
+
+	install := func(content string) message {
+		t.Helper()
+		send(t, conn, message{"type": "prepareAddonUpload", "requestId": "p"})
+		prepared := receive(t, conn, byRequestID("p"))
+		resp, err := http.Post(base+prepared["url"].(string), "application/octet-stream", strings.NewReader(content))
+		if err != nil || resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("upload failed: %v %v", err, resp)
+		}
+		send(t, conn, message{"type": "installAddon", "requestId": "i", "id": prepared["id"], "password": "secret"})
+		return receive(t, conn, byRequestID("i"))
+	}
+
+	if m := install("not an add-on"); m["code"] != "ADDON_FAILED" || !strings.Contains(m["error"].(string), "Error (2)") {
+		t.Fatalf("expected ADDON_FAILED, got %v", m)
+	}
+	if m := install(fakeccu.FakeAddon); m["success"] != true || m["reboot"] != nil {
+		t.Fatalf("installAddon failed: %v", m)
+	}
+	if m := install(fakeccu.FakeAddon + " " + fakeccu.FakeAddonReboot); m["success"] != true || m["reboot"] != true {
+		t.Fatalf("expected a reboot, got %v", m)
+	}
+	if got := ccu.InstalledAddons(); len(got) != 2 {
+		t.Fatalf("unexpected installed add-ons: %v", got)
+	}
+}

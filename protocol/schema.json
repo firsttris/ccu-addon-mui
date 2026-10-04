@@ -301,6 +301,12 @@
     },
     "cancelCcuFirmware": {
       "$ref": "#/definitions/CancelCcuFirmwareCall"
+    },
+    "prepareAddonUpload": {
+      "$ref": "#/definitions/PrepareAddonUploadCall"
+    },
+    "installAddon": {
+      "$ref": "#/definitions/InstallAddonCall"
     }
   },
   "required": [
@@ -402,7 +408,9 @@
     "prepareCcuFirmware",
     "checkCcuFirmware",
     "installCcuFirmware",
-    "cancelCcuFirmware"
+    "cancelCcuFirmware",
+    "prepareAddonUpload",
+    "installAddon"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2949,6 +2957,12 @@
         },
         {
           "$ref": "#/definitions/CancelCcuFirmwareResponse"
+        },
+        {
+          "$ref": "#/definitions/PrepareAddonUploadResponse"
+        },
+        {
+          "$ref": "#/definitions/InstallAddonResponse"
         }
       ]
     },
@@ -8341,6 +8355,135 @@
         },
         "response": {
           "$ref": "#/definitions/CancelCcuFirmwareResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareAddonUploadRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "prepareAddonUpload"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareAddonUploadResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "prepareAddonUpload_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "needsKey": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "id",
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareAddonUploadCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/PrepareAddonUploadRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/PrepareAddonUploadResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "InstallAddonRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "installAddon"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "InstallAddonResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "installAddon_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "needsKey": {
+          "type": "boolean"
+        },
+        "reboot": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "InstallAddonCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/InstallAddonRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/InstallAddonResponse"
         }
       },
       "required": [

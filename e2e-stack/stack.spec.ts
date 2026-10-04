@@ -1061,6 +1061,21 @@ test('spielt eine CCU-Firmware mit Lizenzbedingungen ein', async ({ page }) => {
   await expect(dialog.getByRole('status')).toContainText('installiert die Firmware');
 });
 
+test('installiert eine Zusatzsoftware aus einer Datei', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  await page.getByRole('region', { name: 'Zusatzsoftware' }).getByRole('button', { name: 'Zusatzsoftware installieren' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Zusatzsoftware installieren' });
+  await dialog.getByLabel('Datei (.tar.gz)').setInputFiles({ name: 'kaputt.tar.gz', mimeType: 'application/gzip', buffer: Buffer.from('broken') });
+  await dialog.getByLabel('Passwort').fill('secret');
+  await dialog.getByRole('button', { name: 'Installieren' }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Error (2)');
+
+  await dialog.getByLabel('Datei (.tar.gz)').setInputFiles({ name: 'cuxd.tar.gz', mimeType: 'application/gzip', buffer: Buffer.from('fake CCU add-on needs a reboot') });
+  await dialog.getByRole('button', { name: 'Installieren' }).click();
+  await expect(dialog.getByRole('status')).toContainText('startet zum Abschluss neu');
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {
