@@ -1447,5 +1447,10 @@
   "DEVICE_MORE_CHANNELS": "More channels ({count})",
   "DEVICE_SAVE_HINT": "Name, rooms, trades and options are saved right away. Settings are collected below and only take effect after “Save and transfer”.",
   "DEVICE_SETTINGS_HEADING": "Settings",
-  "DEVICE_SETTINGS_TRANSFER": "after transfer"
+  "DEVICE_SETTINGS_TRANSFER": "after transfer",
+  "LINK_CONTROLS": "controls",
+  "LINK_BEHAVIOUR": "Behaviour",
+  "LINKS_CONTROLS": "This device controls",
+  "LINKS_CONTROLLED_BY": "Controlled by",
+  "LINKS_ALL_ROOMS": "All rooms"
 }
