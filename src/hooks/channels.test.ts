@@ -29,7 +29,7 @@ describe('isHiddenChannel', () => {
 describe('groupChannelsByType', () => {
   it('puts types with a control first, then the others alphabetically', () => {
     const groups = groupChannelsByType([
-      channel('SIGNAL_CHIME', 'A:1'),
+      channel('TILT_SENSOR', 'A:1'),
       channel('SWITCH_VIRTUAL_RECEIVER', 'B:1'),
       channel('CONDITION_POWER', 'C:1'),
       channel('HEATING_CLIMATECONTROL_TRANSCEIVER', 'D:1'),
@@ -40,7 +40,7 @@ describe('groupChannelsByType', () => {
       ['HEATING_CLIMATECONTROL_TRANSCEIVER', ['D:1']],
       ['SWITCH_VIRTUAL_RECEIVER', ['B:1', 'E:1']],
       ['CONDITION_POWER', ['C:1']],
-      ['SIGNAL_CHIME', ['A:1']],
+      ['TILT_SENSOR', ['A:1']],
     ]);
   });
 });

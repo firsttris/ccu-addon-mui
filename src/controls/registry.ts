@@ -10,6 +10,7 @@ import { WindowControl } from './WindowControl';
 import { ClimateSensorControl } from './ClimateSensorControl';
 import { DimmerControl } from './DimmerControl';
 import { DualWhiteColorControl, RgbwColorControl, RgbwProgramControl } from './BidcosLightControls';
+import { AcousticSignalControl, SignalControl } from './SoundControls';
 import { ColorLightControl } from './ColorLightControl';
 import { ButtonsControl } from './ButtonsControl';
 import { MotionDetectorControl, SirenControl, SmokeDetectorControl, WaterDetectorControl } from './DetectorControls';
@@ -56,6 +57,7 @@ export type SectionId =
   | 'windows'
   | 'doors'
   | 'security'
+  | 'signals'
   | 'sensors'
   | 'water'
   | 'drives'
@@ -149,6 +151,11 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   WATERDETECTIONSENSOR: channelControl('security', WaterDetectorControl),
   // HmIP-ASIR alarm sirens (the WebUI's alarmsirene.fn)
   ALARM_SWITCH_VIRTUAL_RECEIVER: channelControl('security', SirenControl),
+  // MP3 player HmIP-MP3P (acoustic_signal.fn) and the BidCos chimes with
+  // flash light HM-OU-CFM, -CF-Pl, -CM-PCB
+  ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER: channelControl('signals', AcousticSignalControl),
+  SIGNAL_CHIME: channelControl('signals', SignalControl),
+  SIGNAL_LED: channelControl('signals', SignalControl),
   [ChannelType.ENERGIE_METER_TRANSMITTER]: deviceControl('energy', EnergyMeterControl),
   // BidCos metering plugs (HM-ES-PMSw1): POWER and ENERGY_COUNTER as well
   POWERMETER: deviceControl('energy', EnergyMeterControl),

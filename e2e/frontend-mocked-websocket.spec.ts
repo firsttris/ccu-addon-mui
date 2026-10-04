@@ -911,3 +911,21 @@ test('bedient die Farb- und Weißkanäle der BidCos-LED-Controller', async ({ pa
       ['PROGRAM', 4],
     ]));
 });
+
+test('spielt Töne auf MP3-Gong und Funkgong', async ({ page }) => {
+  await page.goto('/devices');
+  const section = page.getByRole('region', { name: /Chimes & signals/ });
+  // The status channel of the MP3 player only repeats the receiver
+  await expect(section.getByText('MP3-Gong Flur Status')).toHaveCount(0);
+  await section.getByRole('combobox', { name: 'Sound MP3-Gong Flur' }).selectOption('3');
+  await section.getByRole('button', { name: 'Play' }).click();
+  await section.getByRole('button', { name: 'Ring' }).click();
+
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
+    .toEqual(expect.arrayContaining([
+      ['SOUNDFILE', 3],
+      ['LEVEL', 1],
+      ['STATE', true],
+    ]));
+});
