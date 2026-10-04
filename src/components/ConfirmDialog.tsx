@@ -12,6 +12,8 @@ interface ConfirmDialogProps {
   title: string;
   children: ReactNode;
   confirmLabel: string;
+  // Instead of "Cancel", e.g. "Restart later"
+  cancelLabel?: string;
   busy?: boolean;
   destructive?: boolean;
   onConfirm: () => void;
@@ -19,7 +21,16 @@ interface ConfirmDialogProps {
 }
 
 // A modal question; Escape or a click outside cancels.
-export const ConfirmDialog = ({ title, children, confirmLabel, busy, destructive, onConfirm, onCancel }: ConfirmDialogProps) => (
+export const ConfirmDialog = ({
+  title,
+  children,
+  confirmLabel,
+  cancelLabel,
+  busy,
+  destructive,
+  onConfirm,
+  onCancel,
+}: ConfirmDialogProps) => (
   <Dialog open onOpenChange={(open) => !open && onCancel()}>
     <DialogContent aria-label={title} className="max-h-[calc(100vh-32px)] overflow-y-auto">
       <DialogHeader>
@@ -29,7 +40,7 @@ export const ConfirmDialog = ({ title, children, confirmLabel, busy, destructive
       <div className="text-sm">{children}</div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} autoFocus>
-          {m.CANCEL()}
+          {cancelLabel ?? m.CANCEL()}
         </Button>
         <Button type="button" variant={destructive ? 'destructive' : 'default'} disabled={busy} onClick={onConfirm}>
           {confirmLabel}

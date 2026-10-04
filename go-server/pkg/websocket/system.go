@@ -3,6 +3,7 @@ package websocket
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -112,6 +113,33 @@ var powerCommands = map[string][][]string{
 
 var safeModeFile = "/etc/config/safemode"
 
+// The logic layer ReGaHss starts as (S70ReGaHss): /etc/config/ReGaHssVersion
+// picks /bin/ReGaHss.normal ("Kompatibilitätsmodus") or
+// /bin/ReGaHss.community ("Standard"). The eQ-3 firmware ships both and
+// its maintenance page chooses (cp_maintenance.cgi, User.getReGaVersion,
+// User.setReGaVersion); OpenCCU ships one ReGaHss and removed the choice
+// (patch 0008-WebUI-Disable-ReGa).
+var (
+	regaVersionFile = "/etc/config/ReGaHssVersion"
+	regaBinaries    = map[string]string{"NORMAL": "/bin/ReGaHss.normal", "COMMUNITY": "/bin/ReGaHss.community"}
+)
+
+// regaVersion reads the choice as getregaversion.tcl (none or LEGACY:
+// COMMUNITY); "" where the CCU has not both binaries
+func regaVersion() string {
+	for _, binary := range regaBinaries {
+		if _, err := os.Stat(binary); err != nil {
+			return ""
+		}
+	}
+	data, _ := os.ReadFile(regaVersionFile)
+	version := strings.TrimSpace(strings.SplitN(string(data), "\n", 2)[0])
+	if _, ok := regaBinaries[version]; !ok {
+		return "COMMUNITY"
+	}
+	return version
+}
+
 // powerAvailable: the add-on runs on the CCU itself, which only the
 // firmware's VERSION file and the commands tell.
 var powerAvailable = func() bool {
@@ -178,6 +206,8 @@ type systemSettingsResponse struct {
 	TimeZones []string `json:"timeZones,omitempty"`
 	// Whether the clock can be set by hand (on the CCU)
 	CanSetClock bool `json:"canSetClock"`
+	// The chosen logic layer, where the CCU has both (regaVersion)
+	RegaVersion string `json:"regaVersion,omitempty"`
 }
 
 // handleSystemSettings reads the location and clock, sets the location
@@ -193,6 +223,8 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 		Servers  string `json:"servers"`
 		TimeZone string `json:"timeZone"`
 		Time     string `json:"time"`
+		// setRegaVersion
+		Version string `json:"version"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -220,6 +252,7 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 		if servers, ok := readTimeServers(); ok {
 			response.TimeServers = &servers
 		}
+		response.RegaVersion = regaVersion()
 		s.sendJSON(client, response)
 	case "setLocation":
 		if msg.Latitude == nil || msg.Longitude == nil {
@@ -294,6 +327,19 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 				}
 				afterClockChange([]string{"/sbin/hwclock", "-wu"}, []string{"SetInterfaceClock", rfdAddress()})
 				return nil, rega.SetOK, nil
+			})
+	case "setRegaVersion":
+		s.configure(client, msg.RequestID, audit.Entry{Action: "setRegaVersion", Target: "system", Value: msg.Version},
+			func() (interface{}, string, error) {
+				previous := regaVersion()
+				if previous == "" {
+					return nil, "NOT_SUPPORTED", nil
+				}
+				if msg.Version != "NORMAL" && msg.Version != "COMMUNITY" {
+					return nil, "", fmt.Errorf("invalid version %q", msg.Version)
+				}
+				// setregaversion.tcl: echo $ReGaVersion > /etc/config/ReGaHssVersion
+				return previous, rega.SetOK, os.WriteFile(regaVersionFile, []byte(msg.Version+"\n"), 0o644)
 			})
 	case "powerAction":
 		if _, ok := powerCommands[msg.Action]; !ok {

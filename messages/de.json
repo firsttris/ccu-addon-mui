@@ -1298,5 +1298,13 @@
   "DISPLAY_RC19_STATUS": "Bis zu 5 Zeichen mit Symbolen",
   "SYS_SAFE_MODE": "Neustart im abgesicherten Modus",
   "SYS_SAFE_MODE_CONFIRM": "Die Zentrale startet einmalig im abgesicherten Modus: Installierte Zusatzsoftware wird nicht gestartet, auch dieses Add-on nicht. Erreichbar bleibt die alte WebUI; ein normaler Neustart beendet den Modus. Veränderte Einstellungen werden vorher gespeichert.",
-  "SYS_SAFE_MODE_STARTING": "Die Zentrale startet im abgesicherten Modus. Dieses Add-on ist bis zum nächsten normalen Neustart nicht erreichbar."
+  "SYS_SAFE_MODE_STARTING": "Die Zentrale startet im abgesicherten Modus. Dieses Add-on ist bis zum nächsten normalen Neustart nicht erreichbar.",
+  "SYS_REGA": "Logikschicht",
+  "SYS_REGA_VERSION": "Version der Logikschicht",
+  "SYS_REGA_COMMUNITY": "Standard",
+  "SYS_REGA_NORMAL": "Kompatibilitätsmodus",
+  "SYS_REGA_HINT": "Welche Version der Logikschicht (ReGaHss) die CCU verwendet. Wechseln Sie zum Kompatibilitätsmodus, wenn ältere Skripte Probleme machen.",
+  "SYS_REGA_RESTART": "Damit die Änderung der Logikschicht-Version wirksam wird, muss die CCU neu gestartet werden.",
+  "SYS_REGA_RESTART_NOW": "Jetzt neu starten",
+  "SYS_REGA_RESTART_LATER": "Später neu starten"
 }

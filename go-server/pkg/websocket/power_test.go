@@ -65,3 +65,52 @@ func TestPowerActionSafeMode(t *testing.T) {
 		t.Fatalf("expected INVALID_REQUEST, got %v", m)
 	}
 }
+
+// The logic layer as the eQ-3 firmware chooses it (User.getReGaVersion,
+// User.setReGaVersion), only where both ReGaHss binaries are there
+func TestRegaVersion(t *testing.T) {
+	dir := t.TempDir()
+	previousFile, previousBinaries := regaVersionFile, regaBinaries
+	defer func() { regaVersionFile, regaBinaries = previousFile, previousBinaries }()
+	regaVersionFile = filepath.Join(dir, "ReGaHssVersion")
+	regaBinaries = map[string]string{"NORMAL": filepath.Join(dir, "ReGaHss.normal"), "COMMUNITY": filepath.Join(dir, "ReGaHss.community")}
+
+	s := NewServer(nil, nil)
+	client := &Client{send: make(chan []byte, 1), level: auth.LevelAdmin, user: "Admin", elevatedUntil: time.Now().Add(time.Hour)}
+	set := func(version string) map[string]interface{} {
+		data, _ := json.Marshal(map[string]string{"type": "setRegaVersion", "requestId": "r", "version": version})
+		s.handleMessage(client, data)
+		var answer map[string]interface{}
+		_ = json.Unmarshal(<-client.send, &answer)
+		return answer
+	}
+
+	// OpenCCU: one ReGaHss, no choice
+	if v := regaVersion(); v != "" {
+		t.Fatalf("expected no choice without the binaries, got %q", v)
+	}
+	if m := set("NORMAL"); m["code"] != "NOT_SUPPORTED" {
+		t.Fatalf("expected NOT_SUPPORTED, got %v", m)
+	}
+
+	for _, binary := range regaBinaries {
+		_ = os.WriteFile(binary, nil, 0o755)
+	}
+	// No file, or the old LEGACY: COMMUNITY (getregaversion.tcl)
+	if v := regaVersion(); v != "COMMUNITY" {
+		t.Fatalf("default = %q", v)
+	}
+	_ = os.WriteFile(regaVersionFile, []byte("LEGACY\n"), 0o644)
+	if v := regaVersion(); v != "COMMUNITY" {
+		t.Fatalf("LEGACY = %q", v)
+	}
+	if m := set("NORMAL"); m["success"] != true {
+		t.Fatalf("set failed: %v", m)
+	}
+	if data, _ := os.ReadFile(regaVersionFile); string(data) != "NORMAL\n" || regaVersion() != "NORMAL" {
+		t.Fatalf("file = %q", data)
+	}
+	if m := set("DEBUG"); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+}

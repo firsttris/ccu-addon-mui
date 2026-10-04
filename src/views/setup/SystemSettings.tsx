@@ -68,6 +68,7 @@ export const SystemSettings = () => {
       <Location />
       <Clock />
       <Power />
+      <RegaVersion />
     </>
   );
 };
@@ -378,6 +379,95 @@ export const Power = () => {
           onCancel={() => setAsking(null)}
         >
           {labels[asking].confirm()}
+        </ConfirmDialog>
+      )}
+    </Panel>
+  );
+};
+
+// The logic layer, where the CCU has both (the eQ-3 firmware's maintenance
+// page: User.getReGaVersion, User.setReGaVersion, then the question
+// whether to restart now, dialogRestart2ChanceReGaVersion)
+type RegaVersionValue = 'NORMAL' | 'COMMUNITY';
+
+export const RegaVersion = () => {
+  const { request } = useWebSocketActions();
+  const { elevated } = useWebSocketContext();
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
+  const { data } = useSystemSettings();
+  const [version, setVersion] = useState<RegaVersionValue | undefined>(undefined);
+  const [busy, setBusy] = useState(false);
+  const [askRestart, setAskRestart] = useState(false);
+
+  if (!data?.regaVersion) {
+    return null;
+  }
+  const chosen = version ?? data.regaVersion;
+
+  const save = async () => {
+    setBusy(true);
+    try {
+      await request({ type: 'setRegaVersion', version: chosen });
+      await queryClient.invalidateQueries({ queryKey: ['systemSettings'] });
+      setAskRestart(true);
+    } catch (error) {
+      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const restart = async () => {
+    setBusy(true);
+    try {
+      await request({ type: 'powerAction', action: 'reboot' }, { queue: false });
+      showToast(m.SYS_REBOOTING(), 'info');
+      setAskRestart(false);
+    } catch (error) {
+      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Panel aria-label={m.SYS_REGA()}>
+      <h2>{m.SYS_REGA()}</h2>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-muted-foreground">{m.SYS_REGA_VERSION()}</span>
+          <NativeSelect
+            className="w-60"
+            aria-label={m.SYS_REGA_VERSION()}
+            disabled={!elevated}
+            value={chosen}
+            onChange={(e) => setVersion(e.target.value as RegaVersionValue)}
+          >
+            <option value="COMMUNITY">{m.SYS_REGA_COMMUNITY()}</option>
+            <option value="NORMAL">{m.SYS_REGA_NORMAL()}</option>
+          </NativeSelect>
+        </label>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={!elevated || busy || chosen === data.regaVersion}
+          onClick={save}
+        >
+          {m.SAVE()}
+        </Button>
+      </div>
+      <p className="text-xs">{m.SYS_REGA_HINT()}</p>
+      {askRestart && (
+        <ConfirmDialog
+          title={m.SYS_REBOOT()}
+          confirmLabel={m.SYS_REGA_RESTART_NOW()}
+          cancelLabel={m.SYS_REGA_RESTART_LATER()}
+          busy={busy}
+          onConfirm={restart}
+          onCancel={() => setAskRestart(false)}
+        >
+          {m.SYS_REGA_RESTART()}
         </ConfirmDialog>
       )}
     </Panel>
