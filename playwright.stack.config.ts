@@ -42,7 +42,7 @@ export default defineConfig({
       timeout: 120000,
     },
     {
-      command: `mkdir -p ${stateDir} && cp fixtures/syslog ${stateDir}/syslog && cd go-server && go run .`,
+      command: `mkdir -p ${stateDir} && cp fixtures/syslog ${stateDir}/syslog && cp fixtures/time.conf fixtures/ntpclient ${stateDir}/ && cd go-server && go run .`,
       port: 28088,
       reuseExistingServer: false,
       timeout: 120000,
@@ -62,6 +62,9 @@ export default defineConfig({
         ADDONS_DIR: path.resolve('fixtures/addons'),
         SYSLOG_CONFIG: path.join(stateDir, 'syslog'),
         LOG_DIR: path.resolve('fixtures/log'),
+        TIME_CONF_FILE: path.join(stateDir, 'time.conf'),
+        NTP_CLIENT_FILE: path.join(stateDir, 'ntpclient'),
+        TZ_FILE: path.join(stateDir, 'TZ'),
       },
     },
     {

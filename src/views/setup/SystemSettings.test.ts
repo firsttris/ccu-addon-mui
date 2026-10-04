@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatOffset, parseCoordinate } from './SystemSettings';
+import { formatClock, formatOffset, parseCoordinate } from './SystemSettings';
 
 describe('SystemSettings', () => {
   it('formats the time zone offset', () => {
@@ -15,5 +15,11 @@ describe('SystemSettings', () => {
     expect(parseCoordinate('91', 90)).toBeNull();
     expect(parseCoordinate('', 90)).toBeNull();
     expect(parseCoordinate('abc', 90)).toBeNull();
+  });
+});
+
+describe('formatClock', () => {
+  it('writes the local time as the CCU takes it', () => {
+    expect(formatClock(new Date(2026, 9, 4, 7, 5, 9))).toBe('2026-10-04 07:05:09');
   });
 });

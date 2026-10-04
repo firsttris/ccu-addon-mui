@@ -298,6 +298,8 @@ func (c *CCU) runScript(body string) (string, error) {
 				Value: parseRegaValue(strings.Trim(values["INITIAL"], `"`)),
 			})
 			return fmt.Sprintf("OK\t%d", id), nil
+		case "clock_step":
+			return "OK", nil
 		case "edit_sysvar":
 			for i := range c.fixture.Sysvars {
 				if sv := &c.fixture.Sysvars[i]; strconv.FormatInt(sv.ID, 10) == values["ID"] {

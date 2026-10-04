@@ -743,5 +743,13 @@
   "LOGIC_OPERATE": "bedienbar",
   "LOGIC_HIDDEN": "unsichtbar",
   "DESCRIPTION": "Beschreibung",
-  "EDIT_SYSVAR": "{name} bearbeiten"
+  "EDIT_SYSVAR": "{name} bearbeiten",
+  "SYS_CLOCK": "Zeitzone und Zeitserver",
+  "SYS_TIME_ZONE": "Zeitzone",
+  "SYS_TIME_ZONE_SAVE": "Zeitzone übernehmen",
+  "SYS_TIME_SERVERS": "Zeitserver (NTP, durch Leerzeichen getrennt)",
+  "SYS_TIME_SERVERS_SAVE": "Zeitserver übernehmen",
+  "SYS_CLOCK_FROM_BROWSER": "Uhrzeit dieses Geräts übernehmen",
+  "SYS_CLOCK_SET": "Uhrzeit gestellt",
+  "SYS_CLOCK_HINT": "Wie die Zeit-/Positionseinstellungen der WebUI. Mit Zeitserver stellt sich die CCU selbst; von Hand nur ohne Internet nötig."
 }

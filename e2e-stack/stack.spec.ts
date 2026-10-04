@@ -919,6 +919,32 @@ test('bearbeitet die Einstellungen einer Systemvariablen', async ({ page }) => {
   await expect(item).not.toContainText('Nordseite');
 });
 
+test('stellt Zeitzone und Zeitserver ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Zeitzone und Zeitserver' });
+  await expect(panel.getByLabel('Zeitzone')).toHaveValue('CET/CEST');
+  await expect(panel.getByLabel(/Zeitserver/)).toHaveValue('pool.ntp.org');
+  // The fake CCU is no CCU: its clock is not set from here
+  await expect(panel.getByRole('button', { name: 'Uhrzeit dieses Geräts übernehmen' })).toHaveCount(0);
+
+  await panel.getByLabel('Zeitzone').selectOption('GMT/BST');
+  await panel.getByRole('button', { name: 'Zeitzone übernehmen' }).click();
+  await expect(page.getByText('Einstellungen gespeichert').first()).toBeVisible();
+  await panel.getByLabel(/Zeitserver/).fill('ptbtime1.ptb.de fritz.box');
+  await panel.getByRole('button', { name: 'Zeitserver übernehmen' }).click();
+  await page.reload();
+  await expect(panel.getByLabel('Zeitzone')).toHaveValue('GMT/BST');
+  await expect(panel.getByLabel(/Zeitserver/)).toHaveValue('ptbtime1.ptb.de fritz.box');
+  await expect(page.getByRole('region', { name: 'Standort und Uhrzeit' })).toContainText('GMT/BST');
+
+  await panel.getByLabel('Zeitzone').selectOption('CET/CEST');
+  await panel.getByRole('button', { name: 'Zeitzone übernehmen' }).click();
+  await panel.getByLabel(/Zeitserver/).fill('pool.ntp.org');
+  await panel.getByRole('button', { name: 'Zeitserver übernehmen' }).click();
+  await expect(panel.getByRole('button', { name: 'Zeitserver übernehmen' })).toBeDisabled();
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {

@@ -268,6 +268,15 @@
     },
     "editSysvar": {
       "$ref": "#/definitions/EditSysvarCall"
+    },
+    "setTimeServers": {
+      "$ref": "#/definitions/SetTimeServersCall"
+    },
+    "setTimeZone": {
+      "$ref": "#/definitions/SetTimeZoneCall"
+    },
+    "setClock": {
+      "$ref": "#/definitions/SetClockCall"
     }
   },
   "required": [
@@ -358,7 +367,10 @@
     "downloadLogs",
     "runScript",
     "setLogicOption",
-    "editSysvar"
+    "editSysvar",
+    "setTimeServers",
+    "setTimeZone",
+    "setClock"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2864,6 +2876,15 @@
         },
         {
           "$ref": "#/definitions/EditSysvarResponse"
+        },
+        {
+          "$ref": "#/definitions/SetTimeServersResponse"
+        },
+        {
+          "$ref": "#/definitions/SetTimeZoneResponse"
+        },
+        {
+          "$ref": "#/definitions/SetClockResponse"
         }
       ]
     },
@@ -5704,6 +5725,20 @@
         "canPower": {
           "type": "boolean",
           "description": "whether reboot and shutdown work (the add-on runs on the CCU)"
+        },
+        "timeServers": {
+          "type": "string",
+          "description": "The time servers (ntpclient), if the file is there"
+        },
+        "timeZones": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The time zones to choose from, if time.conf is there"
+        },
+        "canSetClock": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -5712,7 +5747,8 @@
         "longitude",
         "timeZoneOffset",
         "time",
-        "canPower"
+        "canPower",
+        "canSetClock"
       ],
       "additionalProperties": false
     },
@@ -7517,6 +7553,175 @@
         },
         "response": {
           "$ref": "#/definitions/EditSysvarResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetTimeServersRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setTimeServers"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "servers": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "servers"
+      ],
+      "additionalProperties": false
+    },
+    "SetTimeServersResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setTimeServers_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetTimeServersCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetTimeServersRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetTimeServersResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetTimeZoneRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setTimeZone"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "timeZone": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "timeZone"
+      ],
+      "additionalProperties": false
+    },
+    "SetTimeZoneResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setTimeZone_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetTimeZoneCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetTimeZoneRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetTimeZoneResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetClockRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setClock"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string",
+          "description": "YYYY-MM-DD hh:mm:ss"
+        }
+      },
+      "required": [
+        "type",
+        "time"
+      ],
+      "additionalProperties": false
+    },
+    "SetClockResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setClock_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetClockCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetClockRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetClockResponse"
         }
       },
       "required": [

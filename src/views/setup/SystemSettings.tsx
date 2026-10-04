@@ -4,6 +4,8 @@ import MapPinIcon from '~icons/lucide/map-pin';
 import LocateIcon from '~icons/lucide/locate-fixed';
 import RotateCwIcon from '~icons/lucide/rotate-cw';
 import PowerIcon from '~icons/lucide/power';
+import ClockIcon from '~icons/lucide/clock';
+import { NativeSelect } from '../../components/ui/select';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { WebUILink } from '../../components/WebUILink';
@@ -63,8 +65,117 @@ export const SystemSettings = () => {
   return (
     <>
       <Location />
+      <Clock />
       <Power />
     </>
+  );
+};
+
+// "2026-10-04 12:30:00" for the CCU from a date (local time)
+export const formatClock = (date: Date) => {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
+
+// Time zone, time servers and setting the clock by hand, as the WebUI's
+// "Zeit-/Positionseinstellungen" (cp_time.cgi): only what the CCU has files
+// for; the clock only where the add-on runs on the CCU
+const Clock = () => {
+  const { request } = useWebSocketActions();
+  const { elevated } = useWebSocketContext();
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
+  const { data } = useSystemSettings();
+  const [zone, setZone] = useState('');
+  const [servers, setServers] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (data) {
+      setZone(data.timeZone ?? '');
+      setServers(data.timeServers ?? '');
+    }
+  }, [data]);
+
+  if (!data || (data.timeServers === undefined && !data.timeZones && !data.canSetClock)) {
+    return null;
+  }
+
+  const save = async (message: Parameters<typeof request>[0], success = m.SAVED()) => {
+    setBusy(true);
+    try {
+      await request(message, { queue: false });
+      await queryClient.invalidateQueries({ queryKey: ['systemSettings'] });
+      showToast(success, 'info');
+    } catch (error) {
+      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const row = 'flex flex-wrap items-end gap-3';
+  const label = 'flex flex-col gap-1';
+  const caption = 'text-xs text-muted-foreground';
+  return (
+    <Panel aria-label={m.SYS_CLOCK()}>
+      <h2>{m.SYS_CLOCK()}</h2>
+      {data.timeZones && (
+        <div className={row}>
+          <label className={label}>
+            <span className={caption}>{m.SYS_TIME_ZONE()}</span>
+            <NativeSelect className="w-60" aria-label={m.SYS_TIME_ZONE()} disabled={!elevated} value={zone} onChange={(e) => setZone(e.target.value)}>
+              {!data.timeZones.includes(zone) && <option value={zone}>{zone || '–'}</option>}
+              {data.timeZones.map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz}
+                </option>
+              ))}
+            </NativeSelect>
+          </label>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!elevated || busy || zone === (data.timeZone ?? '') || !data.timeZones.includes(zone)}
+            onClick={() => save({ type: 'setTimeZone', timeZone: zone })}
+          >
+            {m.SYS_TIME_ZONE_SAVE()}
+          </Button>
+        </div>
+      )}
+      {data.timeServers !== undefined && (
+        <form
+          className={row}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (!busy && servers.trim() !== data.timeServers) save({ type: 'setTimeServers', servers });
+          }}
+        >
+          <label className={label}>
+            <span className={caption}>{m.SYS_TIME_SERVERS()}</span>
+            <Input
+              className="h-9 w-72"
+              aria-label={m.SYS_TIME_SERVERS()}
+              disabled={!elevated}
+              value={servers}
+              onChange={(e) => setServers(e.target.value)}
+            />
+          </label>
+          <Button type="submit" variant="outline" disabled={!elevated || busy || servers.trim() === data.timeServers}>
+            {m.SYS_TIME_SERVERS_SAVE()}
+          </Button>
+        </form>
+      )}
+      {data.canSetClock && (
+        <div className={row}>
+          <Button type="button" variant="outline" disabled={!elevated || busy} onClick={() => save({ type: 'setClock', time: formatClock(new Date()) }, m.SYS_CLOCK_SET())}>
+            <ClockIcon />
+            {m.SYS_CLOCK_FROM_BROWSER()}
+          </Button>
+        </div>
+      )}
+      <p className="text-xs">{m.SYS_CLOCK_HINT()}</p>
+    </Panel>
   );
 };
 

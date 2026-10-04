@@ -109,7 +109,10 @@ export type ServerMessage =
   | DownloadLogsResponse
   | RunScriptResponse
   | SetLogicOptionResponse
-  | EditSysvarResponse;
+  | EditSysvarResponse
+  | SetTimeServersResponse
+  | SetTimeZoneResponse
+  | SetClockResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -203,6 +206,9 @@ export interface Protocol {
   runScript: RunScriptCall;
   setLogicOption: SetLogicOptionCall;
   editSysvar: EditSysvarCall;
+  setTimeServers: SetTimeServersCall;
+  setTimeZone: SetTimeZoneCall;
+  setClock: SetClockCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2375,6 +2381,15 @@ export interface GetSystemSettingsResponse {
    * whether reboot and shutdown work (the add-on runs on the CCU)
    */
   canPower: boolean;
+  /**
+   * The time servers (ntpclient), if the file is there
+   */
+  timeServers?: string;
+  /**
+   * The time zones to choose from, if time.conf is there
+   */
+  timeZones?: string[];
+  canSetClock: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3194,6 +3209,87 @@ export interface EditSysvarRequest {
  */
 export interface EditSysvarResponse {
   type: "editSysvar_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetTimeServersCall".
+ */
+export interface SetTimeServersCall {
+  request: SetTimeServersRequest;
+  response: SetTimeServersResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetTimeServersRequest".
+ */
+export interface SetTimeServersRequest {
+  type: "setTimeServers";
+  requestId?: string;
+  servers: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetTimeServersResponse".
+ */
+export interface SetTimeServersResponse {
+  type: "setTimeServers_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetTimeZoneCall".
+ */
+export interface SetTimeZoneCall {
+  request: SetTimeZoneRequest;
+  response: SetTimeZoneResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetTimeZoneRequest".
+ */
+export interface SetTimeZoneRequest {
+  type: "setTimeZone";
+  requestId?: string;
+  timeZone: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetTimeZoneResponse".
+ */
+export interface SetTimeZoneResponse {
+  type: "setTimeZone_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetClockCall".
+ */
+export interface SetClockCall {
+  request: SetClockRequest;
+  response: SetClockResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetClockRequest".
+ */
+export interface SetClockRequest {
+  type: "setClock";
+  requestId?: string;
+  /**
+   * YYYY-MM-DD hh:mm:ss
+   */
+  time: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetClockResponse".
+ */
+export interface SetClockResponse {
+  type: "setClock_response";
   requestId?: string;
   success: boolean;
 }
