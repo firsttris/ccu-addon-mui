@@ -349,6 +349,12 @@
     },
     "setNetwork": {
       "$ref": "#/definitions/SetNetworkCall"
+    },
+    "getFirewall": {
+      "$ref": "#/definitions/GetFirewallCall"
+    },
+    "setFirewall": {
+      "$ref": "#/definitions/SetFirewallCall"
     }
   },
   "required": [
@@ -466,7 +472,9 @@
     "setSecurity",
     "changeSecurityKey",
     "getNetwork",
-    "setNetwork"
+    "setNetwork",
+    "getFirewall",
+    "setFirewall"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3061,6 +3069,12 @@
         },
         {
           "$ref": "#/definitions/SetNetworkResponse"
+        },
+        {
+          "$ref": "#/definitions/GetFirewallResponse"
+        },
+        {
+          "$ref": "#/definitions/SetFirewallResponse"
         }
       ]
     },
@@ -9802,6 +9816,183 @@
         "gateway",
         "dns1",
         "dns2"
+      ],
+      "additionalProperties": false
+    },
+    "GetFirewallRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getFirewall"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetFirewallResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getFirewall_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "firewall": {
+          "$ref": "#/definitions/Firewall"
+        }
+      },
+      "required": [
+        "type",
+        "firewall"
+      ],
+      "additionalProperties": false
+    },
+    "GetFirewallCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetFirewallRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetFirewallResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetFirewallRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setFirewall"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "firewall": {
+          "$ref": "#/definitions/Firewall"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "firewall"
+      ],
+      "additionalProperties": false
+    },
+    "SetFirewallResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setFirewall_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetFirewallCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetFirewallRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetFirewallResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "Firewall": {
+      "type": "object",
+      "description": "The CCU's firewall (firewall.conf, libfirewall.tcl)",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "MOST_OPEN",
+            "RESTRICTIVE"
+          ]
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FirewallService"
+          }
+        },
+        "ips": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "userPorts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "mode",
+        "services",
+        "ips",
+        "userPorts"
+      ],
+      "additionalProperties": false
+    },
+    "FirewallService": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "access": {
+          "type": "string",
+          "enum": [
+            "full",
+            "restricted",
+            "none"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "ports",
+        "access"
       ],
       "additionalProperties": false
     }
