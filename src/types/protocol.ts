@@ -116,7 +116,11 @@ export type ServerMessage =
   | GetHeatingGroupsResponse
   | PrepareRestoreResponse
   | CheckRestoreResponse
-  | RestoreBackupResponse;
+  | RestoreBackupResponse
+  | PrepareCcuFirmwareResponse
+  | CheckCcuFirmwareResponse
+  | InstallCcuFirmwareResponse
+  | CancelCcuFirmwareResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -217,6 +221,10 @@ export interface Protocol {
   prepareRestore: PrepareRestoreCall;
   checkRestore: CheckRestoreCall;
   restoreBackup: RestoreBackupCall;
+  prepareCcuFirmware: PrepareCcuFirmwareCall;
+  checkCcuFirmware: CheckCcuFirmwareCall;
+  installCcuFirmware: InstallCcuFirmwareCall;
+  cancelCcuFirmware: CancelCcuFirmwareCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3436,6 +3444,118 @@ export interface RestoreBackupRequest {
  */
 export interface RestoreBackupResponse {
   type: "restoreBackup_response";
+  requestId?: string;
+  success: boolean;
+  needsKey?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareCcuFirmwareCall".
+ */
+export interface PrepareCcuFirmwareCall {
+  request: PrepareCcuFirmwareRequest;
+  response: PrepareCcuFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareCcuFirmwareRequest".
+ */
+export interface PrepareCcuFirmwareRequest {
+  type: "prepareCcuFirmware";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "PrepareCcuFirmwareResponse".
+ */
+export interface PrepareCcuFirmwareResponse {
+  type: "prepareCcuFirmware_response";
+  requestId?: string;
+  success: boolean;
+  id: string;
+  url: string;
+  needsKey?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckCcuFirmwareCall".
+ */
+export interface CheckCcuFirmwareCall {
+  request: CheckCcuFirmwareRequest;
+  response: CheckCcuFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckCcuFirmwareRequest".
+ */
+export interface CheckCcuFirmwareRequest {
+  type: "checkCcuFirmware";
+  requestId?: string;
+  id: string;
+  password: string;
+  language?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckCcuFirmwareResponse".
+ */
+export interface CheckCcuFirmwareResponse {
+  type: "checkCcuFirmware_response";
+  requestId?: string;
+  success: boolean;
+  needsKey?: boolean;
+  eula?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallCcuFirmwareCall".
+ */
+export interface InstallCcuFirmwareCall {
+  request: InstallCcuFirmwareRequest;
+  response: InstallCcuFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallCcuFirmwareRequest".
+ */
+export interface InstallCcuFirmwareRequest {
+  type: "installCcuFirmware";
+  requestId?: string;
+  password: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallCcuFirmwareResponse".
+ */
+export interface InstallCcuFirmwareResponse {
+  type: "installCcuFirmware_response";
+  requestId?: string;
+  success: boolean;
+  needsKey?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CancelCcuFirmwareCall".
+ */
+export interface CancelCcuFirmwareCall {
+  request: CancelCcuFirmwareRequest;
+  response: CancelCcuFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CancelCcuFirmwareRequest".
+ */
+export interface CancelCcuFirmwareRequest {
+  type: "cancelCcuFirmware";
+  requestId?: string;
+  password: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CancelCcuFirmwareResponse".
+ */
+export interface CancelCcuFirmwareResponse {
+  type: "cancelCcuFirmware_response";
   requestId?: string;
   success: boolean;
   needsKey?: boolean;

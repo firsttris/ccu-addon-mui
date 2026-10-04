@@ -25,13 +25,17 @@ type restoreResponse struct {
 	URL string `json:"url,omitempty"`
 	// checkRestore: the backup needs the system security key
 	NeedsKey bool `json:"needsKey"`
+	// checkCcuFirmware: the update's licence text, if it has one
+	Eula string `json:"eula,omitempty"`
 }
 
 func (s *Server) serveRestoreUpload(w http.ResponseWriter, r *http.Request) {
 	s.backup.ServeUpload(w, r)
 }
 
-// handleRestore restores a backup with the WebUI's own steps
+// handleRestore restores a backup, or installs a firmware file
+// (prepareCcuFirmware, checkCcuFirmware, installCcuFirmware, cancelCcuFirmware), with
+// the WebUI's own steps
 // (cp_security.cgi): the browser uploads the .sbk once (prepareRestore),
 // the WebUI checks it (checkRestore: needs a security key?) and applies it,
 // then the CCU reboots (restoreBackup). It replaces every setting of the
@@ -42,6 +46,7 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		ID        string `json:"id"`
 		Password  string `json:"password"`
 		Key       string `json:"key"`
+		Language  string `json:"language"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_MESSAGE")
@@ -65,7 +70,7 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 	}
 	response := restoreResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}
 
-	if msgType == "prepareRestore" {
+	if msgType == "prepareRestore" || msgType == "prepareCcuFirmware" {
 		id, err := s.backup.PrepareUpload()
 		if err != nil {
 			finish("CCU_ERROR")
@@ -88,10 +93,17 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		return
 	}
 	var err error
-	if msgType == "checkRestore" {
+	switch msgType {
+	case "checkRestore":
 		response.NeedsKey, err = s.backup.CheckRestore(msg.ID, username, msg.Password)
-	} else {
+	case "restoreBackup":
 		err = s.backup.Restore(msg.ID, username, msg.Password, msg.Key)
+	case "checkCcuFirmware":
+		response.Eula, err = s.backup.CheckFirmware(msg.ID, username, msg.Password, msg.Language)
+	case "installCcuFirmware":
+		err = s.backup.InstallFirmware(username, msg.Password)
+	case "cancelCcuFirmware":
+		err = s.backup.CancelFirmware(username, msg.Password)
 	}
 	if err != nil {
 		code := "CCU_ERROR"
@@ -103,6 +115,8 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 			}
 		case errors.Is(err, backup.ErrInvalidBackup):
 			code = "INVALID_BACKUP"
+		case errors.Is(err, backup.ErrInvalidFirmware):
+			code = "INVALID_FIRMWARE"
 		case errors.Is(err, backup.ErrWrongKey):
 			code = "WRONG_KEY"
 		case errors.Is(err, backup.ErrFirmwareTooOld):
@@ -114,8 +128,11 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), code)
 		return
 	}
-	if msgType == "restoreBackup" {
+	switch msgType {
+	case "restoreBackup":
 		logger.Info(fmt.Sprintf("💾 Backup restored by %q, the CCU reboots", username))
+	case "installCcuFirmware":
+		logger.Info(fmt.Sprintf("⬆️ Firmware update started by %q, the CCU reboots", username))
 	}
 	finish(rega.SetOK)
 	s.sendJSON(client, response)

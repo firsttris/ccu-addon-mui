@@ -41,7 +41,7 @@ const uploadLifetime = 30 * time.Minute
 const maxBackupSize = 1 << 30
 
 // Where fileupload.ccc stored the upload (mktemp -p /usr/local/tmp)
-var uploadedFileRegex = regexp.MustCompile(`action=backup_upload&filename=(/usr/local/tmp/[A-Za-z0-9._-]+)'`)
+var uploadedFileRegex = regexp.MustCompile(`action=([a-z_]+)&filename=(/usr/local/tmp/[A-Za-z0-9._-]+)'`)
 
 // The texts the WebUI's answers carry, untranslated (${...} keys)
 const (
@@ -212,6 +212,28 @@ func (s *Service) Restore(id, username, password, key string) error {
 }
 
 func (s *Service) uploadAndCheck(sessionID, path string) (string, error) {
+	filename, err := s.fileUpload(sessionID, path, "backup_file", "backup_upload", "/config/cp_security.cgi")
+	if err != nil {
+		return "", err
+	}
+	if _, err := s.securityAction(sessionID, url.Values{"action": {"backup_upload"}, "filename": {filename}}); err != nil {
+		return "", err
+	}
+	page, err := s.securityAction(sessionID, url.Values{"action": {"backup_restore_check"}})
+	if err != nil {
+		return "", err
+	}
+	if strings.Contains(page, markInvalidFile) {
+		return "", ErrInvalidBackup
+	}
+	return page, nil
+}
+
+// fileUpload sends a file through the WebUI's fileupload.ccc and returns
+// where it stored it: its page goes on with LoadFromFile(url,
+// 'action=<action>&filename=/usr/local/tmp/tmp.XXXXXX'), which the caller
+// then posts to the page in url.
+func (s *Service) fileUpload(sessionID, path, field, action, page string) (string, error) {
 	if !sessionIDRegex.MatchString(sessionID) {
 		return "", fmt.Errorf("unexpected WebUI session id %q", sessionID)
 	}
@@ -226,15 +248,15 @@ func (s *Service) uploadAndCheck(sessionID, path string) (string, error) {
 	}
 	// fileupload.ccc reads one part (boundary, disposition, type, blank
 	// line) and takes its size from CONTENT_LENGTH: the body is streamed
-	// from the file with its exact length, a backup may not fit into the
+	// from the file with its exact length, a file may not fit into the
 	// CCU's memory twice
 	var head bytes.Buffer
 	form := multipart.NewWriter(&head)
-	if _, err := form.CreateFormFile("backup_file", filepath.Base(path)); err != nil {
+	if _, err := form.CreateFormFile(field, filepath.Base(path)); err != nil {
 		return "", err
 	}
 	tail := "\r\n--" + form.Boundary() + "--\r\n"
-	target := s.webUIURL + "/config/fileupload.ccc?sid=@" + sessionID + "@&action=backup_upload&url=/config/cp_security.cgi"
+	target := s.webUIURL + "/config/fileupload.ccc?sid=@" + sessionID + "@&action=" + action + "&url=" + page
 	req, err := http.NewRequest(http.MethodPost, target, io.MultiReader(&head, file, strings.NewReader(tail)))
 	if err != nil {
 		return "", err
@@ -248,41 +270,34 @@ func (s *Service) uploadAndCheck(sessionID, path string) (string, error) {
 	answer, _ := io.ReadAll(io.LimitReader(resp.Body, 64*1024))
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusOK || strings.HasPrefix(string(answer), "ERROR") {
-		return "", fmt.Errorf("the CCU did not take the backup: %s", strings.TrimSpace(string(answer)))
+		return "", fmt.Errorf("the CCU did not take the file: %s", strings.TrimSpace(string(answer)))
 	}
-	// fileupload.ccc's page goes on with LoadFromFile(url,
-	// 'action=backup_upload&filename=/usr/local/tmp/tmp.XXXXXX')
 	match := uploadedFileRegex.FindStringSubmatch(string(answer))
-	if match == nil {
+	if match == nil || match[1] != action {
 		return "", fmt.Errorf("unexpected answer from fileupload.ccc")
 	}
-	if _, err := s.securityAction(sessionID, url.Values{"action": {"backup_upload"}, "filename": {match[1]}}); err != nil {
-		return "", err
-	}
-	page, err := s.securityAction(sessionID, url.Values{"action": {"backup_restore_check"}})
-	if err != nil {
-		return "", err
-	}
-	if strings.Contains(page, markInvalidFile) {
-		return "", ErrInvalidBackup
-	}
-	return page, nil
+	return match[2], nil
 }
 
 // securityAction posts an action to cp_security.cgi and returns its page
 func (s *Service) securityAction(sessionID string, form url.Values) (string, error) {
-	resp, err := s.httpClient.Post(s.webUIURL+"/config/cp_security.cgi?sid=@"+sessionID+"@",
+	return s.pageAction(sessionID, "/config/cp_security.cgi", form)
+}
+
+// pageAction posts an action to a WebUI page and returns what it answers
+func (s *Service) pageAction(sessionID, page string, form url.Values) (string, error) {
+	resp, err := s.httpClient.Post(s.webUIURL+page+"?sid=@"+sessionID+"@",
 		"application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
 	if err != nil {
 		return "", fmt.Errorf("CCU not reachable: %w", err)
 	}
 	defer resp.Body.Close()
-	page, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	answer, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
 		return "", err
 	}
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("CCU returned status %d", resp.StatusCode)
 	}
-	return string(page), nil
+	return string(answer), nil
 }

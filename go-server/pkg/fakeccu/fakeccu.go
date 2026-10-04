@@ -64,8 +64,10 @@ type CCU struct {
 	regaLogLevel int
 	// The backup restore through the WebUI (fileupload.ccc, cp_security.cgi)
 	tempUpload, uploadedBackup, checkedBackup, restoredBackup string
-	rebooted                                                  bool
-	rpcLogLevels                                              map[string]int
+	// The firmware update through the WebUI (cp_maintenance.cgi)
+	stagedFirmware, installedFirmware string
+	rebooted                          bool
+	rpcLogLevels                      map[string]int
 }
 
 // CallCount returns how often an XML-RPC method was called, e.g.
@@ -1392,6 +1394,21 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		c.handleFileUpload(w, r)
 		return
 	}
+	if r.URL.Path == "/config/cp_maintenance.cgi" {
+		c.handleMaintenance(w, r)
+		return
+	}
+	if r.URL.Path == "/EULA.de" || r.URL.Path == "/EULA.en" {
+		c.mu.Lock()
+		staged := c.stagedFirmware
+		c.mu.Unlock()
+		if !strings.Contains(staged, FakeFirmwareEula) {
+			http.NotFound(w, r)
+			return
+		}
+		_, _ = io.WriteString(w, "Lizenzbedingungen der Fake-Firmware")
+		return
+	}
 	var req struct {
 		Method string            `json:"method"`
 		Params map[string]string `json:"params"`
@@ -1469,11 +1486,17 @@ func (c *CCU) handleFileUpload(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, "ERROR: no valid admin session id")
 		return
 	}
-	if query.Get("action") != "backup_upload" || query.Get("url") != "/config/cp_security.cgi" || r.ContentLength <= 0 {
+	valid := (query.Get("action") == "backup_upload" && query.Get("url") == "/config/cp_security.cgi") ||
+		(query.Get("action") == "firmware_upload" && query.Get("url") == "/config/cp_maintenance.cgi")
+	field := "backup_file"
+	if query.Get("action") == "firmware_upload" {
+		field = "firmware_file"
+	}
+	if !valid || r.ContentLength <= 0 {
 		_, _ = io.WriteString(w, "ERROR: missing required URL parameters")
 		return
 	}
-	file, _, err := r.FormFile("backup_file")
+	file, _, err := r.FormFile(field)
 	if err != nil {
 		_, _ = io.WriteString(w, "ERROR: "+err.Error())
 		return
@@ -1536,6 +1559,52 @@ func (c *CCU) handleRestoreAction(w http.ResponseWriter, action, key, filename s
 			c.rebooted = true
 		}
 	}
+}
+
+// The fake's firmware files: with FakeFirmware in it a file is a firmware
+// update, with FakeFirmwareEula also it has a licence text
+const (
+	FakeFirmware     = "fake CCU firmware update"
+	FakeFirmwareEula = "with EULA"
+)
+
+// handleMaintenance answers cp_maintenance.cgi's firmware update steps
+func (c *CCU) handleMaintenance(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=iso-8859-1")
+	if !strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") || r.Method != http.MethodPost {
+		_, _ = io.WriteString(w, "<html><body>Session expired</body></html>")
+		return
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	action := r.FormValue("action")
+	c.calls["WebUI "+action]++
+	switch action {
+	case "firmware_upload":
+		// action_firmware_upload checks the file and links it as
+		// /usr/local/.firmwareUpdate
+		next := "firmware_update_invalid"
+		if r.FormValue("filename") == fakeTempFile && strings.Contains(c.tempUpload, FakeFirmware) {
+			c.stagedFirmware = c.tempUpload
+			next = "askCreateBackup"
+		}
+		c.tempUpload = ""
+		_, _ = fmt.Fprintf(w, `<script>dlgPopup.LoadFromFile(url, "action=%s");</script>`, next)
+	case "update_start":
+		if c.stagedFirmware != "" {
+			c.installedFirmware, c.stagedFirmware = c.stagedFirmware, ""
+			c.rebooted = true
+		}
+	case "firmware_update_cancel":
+		c.stagedFirmware = ""
+	}
+}
+
+// InstalledFirmware returns the firmware file the CCU rebooted to install
+func (c *CCU) InstalledFirmware() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.installedFirmware
 }
 
 // RestoredBackup returns the backup restored and whether the CCU rebooted

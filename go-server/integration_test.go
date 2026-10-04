@@ -1977,3 +1977,54 @@ func TestStackRestoreBackup(t *testing.T) {
 		t.Fatalf("expected no key, got %v", m)
 	}
 }
+
+func TestStackCcuFirmware(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	base := fmt.Sprintf("http://127.0.0.1:%d", wsPorts[ccu])
+
+	upload := func(content string) string {
+		t.Helper()
+		send(t, conn, message{"type": "prepareCcuFirmware", "requestId": "p"})
+		prepared := receive(t, conn, byRequestID("p"))
+		resp, err := http.Post(base+prepared["url"].(string), "application/octet-stream", strings.NewReader(content))
+		if err != nil || resp.StatusCode != http.StatusNoContent {
+			t.Fatalf("upload failed: %v %v", err, resp)
+		}
+		return prepared["id"].(string)
+	}
+	call := func(m message) message {
+		t.Helper()
+		m["requestId"] = "r"
+		send(t, conn, m)
+		return receive(t, conn, byRequestID("r"))
+	}
+
+	if m := call(message{"type": "checkCcuFirmware", "id": upload("holiday photos"), "password": "secret"}); m["code"] != "INVALID_FIRMWARE" {
+		t.Fatalf("expected INVALID_FIRMWARE, got %v", m)
+	}
+	// Checked, then cancelled: nothing installed
+	if m := call(message{"type": "checkCcuFirmware", "id": upload(fakeccu.FakeFirmware), "password": "secret"}); m["success"] != true || m["eula"] != nil {
+		t.Fatalf("checkCcuFirmware failed: %v", m)
+	}
+	call(message{"type": "cancelCcuFirmware", "password": "secret"})
+	if m := call(message{"type": "installCcuFirmware", "password": "secret"}); m["success"] != true || ccu.InstalledFirmware() != "" {
+		t.Fatalf("a cancelled update must not be installed: %v %q", m, ccu.InstalledFirmware())
+	}
+	// With a licence text, installed
+	firmware := fakeccu.FakeFirmware + " " + fakeccu.FakeFirmwareEula
+	id := upload(firmware)
+	if m := call(message{"type": "checkCcuFirmware", "id": id, "password": "secret", "language": "de"}); m["eula"] != "Lizenzbedingungen der Fake-Firmware" {
+		t.Fatalf("expected the licence text, got %v", m)
+	}
+	// The CCU has the file now
+	if m := call(message{"type": "checkCcuFirmware", "id": id, "password": "secret"}); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+	if m := call(message{"type": "installCcuFirmware", "password": "falsch"}); m["code"] != "INVALID_CREDENTIALS" {
+		t.Fatalf("expected INVALID_CREDENTIALS, got %v", m)
+	}
+	if m := call(message{"type": "installCcuFirmware", "password": "secret"}); m["success"] != true || ccu.InstalledFirmware() != firmware {
+		t.Fatalf("firmware not installed: %v %q", m, ccu.InstalledFirmware())
+	}
+}

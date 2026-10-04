@@ -289,6 +289,18 @@
     },
     "restoreBackup": {
       "$ref": "#/definitions/RestoreBackupCall"
+    },
+    "prepareCcuFirmware": {
+      "$ref": "#/definitions/PrepareCcuFirmwareCall"
+    },
+    "checkCcuFirmware": {
+      "$ref": "#/definitions/CheckCcuFirmwareCall"
+    },
+    "installCcuFirmware": {
+      "$ref": "#/definitions/InstallCcuFirmwareCall"
+    },
+    "cancelCcuFirmware": {
+      "$ref": "#/definitions/CancelCcuFirmwareCall"
     }
   },
   "required": [
@@ -386,7 +398,11 @@
     "getHeatingGroups",
     "prepareRestore",
     "checkRestore",
-    "restoreBackup"
+    "restoreBackup",
+    "prepareCcuFirmware",
+    "checkCcuFirmware",
+    "installCcuFirmware",
+    "cancelCcuFirmware"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2921,6 +2937,18 @@
         },
         {
           "$ref": "#/definitions/RestoreBackupResponse"
+        },
+        {
+          "$ref": "#/definitions/PrepareCcuFirmwareResponse"
+        },
+        {
+          "$ref": "#/definitions/CheckCcuFirmwareResponse"
+        },
+        {
+          "$ref": "#/definitions/InstallCcuFirmwareResponse"
+        },
+        {
+          "$ref": "#/definitions/CancelCcuFirmwareResponse"
         }
       ]
     },
@@ -8063,6 +8091,256 @@
         },
         "response": {
           "$ref": "#/definitions/RestoreBackupResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareCcuFirmwareRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "prepareCcuFirmware"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareCcuFirmwareResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "prepareCcuFirmware_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "needsKey": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "id",
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "PrepareCcuFirmwareCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/PrepareCcuFirmwareRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/PrepareCcuFirmwareResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CheckCcuFirmwareRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "checkCcuFirmware"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "CheckCcuFirmwareResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "checkCcuFirmware_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "needsKey": {
+          "type": "boolean"
+        },
+        "eula": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "CheckCcuFirmwareCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/CheckCcuFirmwareRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/CheckCcuFirmwareResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "InstallCcuFirmwareRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "installCcuFirmware"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "InstallCcuFirmwareResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "installCcuFirmware_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "needsKey": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "InstallCcuFirmwareCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/InstallCcuFirmwareRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/InstallCcuFirmwareResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CancelCcuFirmwareRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "cancelCcuFirmware"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "CancelCcuFirmwareResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "cancelCcuFirmware_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "needsKey": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "CancelCcuFirmwareCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/CancelCcuFirmwareRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/CancelCcuFirmwareResponse"
         }
       },
       "required": [
