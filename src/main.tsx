@@ -1,3 +1,5 @@
+// First: the language chosen for the user applies before any text is made
+import './i18n/language';
 // import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';

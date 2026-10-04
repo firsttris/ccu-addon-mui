@@ -15,6 +15,7 @@ import SlidersIcon from '~icons/lucide/sliders-horizontal';
 import LogOutIcon from '~icons/lucide/log-out';
 import KeyIcon from '~icons/lucide/key-round';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
+import { LanguageChoice, useUserLanguageSync } from './LanguageChoice';
 import { useTheme } from '../contexts/ThemeContext';
 import { EffectsLevel, useEffects } from '../contexts/EffectsContext';
 import { usePageTitleValue } from '../contexts/PageTitleContext';
@@ -182,6 +183,7 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
               </div>
               <span className="text-xs text-muted-foreground">{m.EFFECTS_HINT()}</span>
             </div>
+            <LanguageChoice />
             <StartPageChoice />
           </NavSection>
           <NavSection title={m.PUSH_TITLE()}>
@@ -256,6 +258,7 @@ const StartPageChoice = () => {
 };
 
 export const Header: React.FC = () => {
+  useUserLanguageSync();
   const title = usePageTitleValue();
   const effects = useEffects();
   const [menuOpen, setMenuOpen] = useState(false);

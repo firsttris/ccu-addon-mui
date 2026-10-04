@@ -1405,6 +1405,27 @@ test('richtet SNMP ein und schaltet es wieder aus', async ({ page }) => {
   await expect(panel.getByRole('switch', { name: /^SNMP/ })).not.toBeChecked();
 });
 
+test('stellt die Sprache des Benutzers um, wie User.setLanguage', async ({ page }) => {
+  await login(page);
+  await page.getByRole('button', { name: 'Menü' }).click();
+  const german = page.getByRole('radiogroup', { name: 'Sprache' });
+  await expect(german.getByRole('radio', { name: 'Automatisch' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByText('Gilt für Ihren CCU-Benutzer')).toBeVisible();
+  // The app reloads in English
+  await german.getByRole('radio', { name: 'English' }).click();
+  await page.getByRole('button', { name: 'Menu' }).click();
+  const english = page.getByRole('radiogroup', { name: 'Language' });
+  await expect(english.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true');
+  // A device that has not seen the choice: it comes from the CCU after the login
+  await page.evaluate(() => localStorage.removeItem('mui-language'));
+  await page.reload();
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await expect(english.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true');
+  // Back to the browser's language, for the other tests
+  await english.getByRole('radio', { name: 'Automatic' }).click();
+  await expect(page.getByRole('button', { name: 'Menü' })).toBeVisible();
+});
+
 test('stellt eine feste IP-Adresse ein und wieder DHCP', async ({ page }) => {
   await login(page);
   await page.goto('/setup/system');

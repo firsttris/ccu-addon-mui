@@ -18,7 +18,7 @@ ab, erscheint nach zwei Sekunden ein roter Balken, und die App verbindet sich vo
 |---|---|
 | Navigation | Räume, Gewerke |
 | Ansichten | Favoriten, Alle Geräte, Systemvariablen, Programme, Diagramme, Einrichten |
-| Darstellung | Dunkles Design, Effekte (Aus, Dezent, Kräftig), Startseite (zuletzt geöffnet oder Favoriten) |
+| Darstellung | Dunkles Design, Effekte (Aus, Dezent, Kräftig), Sprache (je Benutzer), Startseite (zuletzt geöffnet oder Favoriten) |
 | Konto | Benachrichtigungen (Push), Passwort ändern, Abmelden |
 
 **Startseite**: die zuletzt geöffnete Ansicht, auf Wunsch immer die Favoriten. Gibt es noch keine Räume,
@@ -187,4 +187,6 @@ Administratoren können sie umbenennen.
 - **Dunkles Design**: folgt der Systemeinstellung, bis du es im Menü umstellst. Gilt pro Gerät.
 - **Effekte**: Leuchten und Animationen (z. B. die leuchtende Lampe, die Radarwellen des Bewegungsmelders)
   in drei Stufen. *Aus* schont schwache Tablets.
-- **Sprache**: Deutsch oder Englisch, nach der Sprache des Browsers.
+- **Sprache**: *Automatisch* (nach der Sprache des Browsers), Deutsch oder Englisch. Mit Anmeldung gilt die Wahl für
+  den CCU-Benutzer auf allen Geräten und auch in der alten WebUI (wie dort unter *Benutzerverwaltung*), ohne
+  Anmeldung für dieses Gerät.

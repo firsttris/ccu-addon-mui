@@ -591,6 +591,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleRunScript(client, message)
 	case "checkFirmwareUpdate":
 		s.handleFirmwareUpdate(client, requestID)
+	case "getUserLanguage", "setUserLanguage":
+		s.handleUserLanguage(client, msgType, message)
 	case "changePassword":
 		s.handleChangePassword(client, message)
 	case "getUsers", "saveUser", "deleteUser":

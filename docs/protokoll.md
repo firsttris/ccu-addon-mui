@@ -104,6 +104,7 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | | `logout` | Eigene Session widerrufen | alle |
 | | `listSessions` | Angemeldete Geräte auflisten | Admin+T |
 | | `revokeSession` | Gerät abmelden, Verbindungen schließen | Admin+T (A) |
+| | `getUserLanguage`, `setUserLanguage` | Sprache des angemeldeten Benutzers (0 automatisch, 1 Deutsch, 2 Englisch) in `userprofiles/<Benutzer>.lang`, wie `User.getLanguage`/`User.setLanguage` | Bed. (A) |
 | | `changePassword` | Eigenes Passwort ändern (`set_user_password.tcl`), andere Sessions widerrufen | Bed. (A), nur `AUTH_MODE=ccu` |
 | Bedienen und Anzeigen | `subscribe` | Kanaladressen für Events abonnieren (ersetzt die bisherige Menge) | alle |
 | | `getRooms` | Räume (ReGa) | alle |
