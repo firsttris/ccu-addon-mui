@@ -1460,5 +1460,7 @@
   "TIME_MINUTE": "Minute",
   "USERS_AUTO_LOGIN": "Automatisch anmelden",
   "USERS_AUTO_LOGIN_BADGE": "meldet automatisch an",
-  "USERS_AUTO_LOGIN_HINT": "Wer die App öffnet, ist ohne Passwort als dieser Benutzer angemeldet. Nur ein Benutzer kann das sein; nach dem Abmelden erscheint die Anmeldung."
+  "USERS_AUTO_LOGIN_HINT": "Wer die App öffnet, ist ohne Passwort als dieser Benutzer angemeldet. Nur ein Benutzer kann das sein; nach dem Abmelden erscheint die Anmeldung.",
+  "PICKER_CHOOSE_ONE": "Einen Kanal antippen",
+  "PICKER_CHOOSE_CHANNEL": "Kanal wählen …"
 }

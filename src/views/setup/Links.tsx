@@ -1,8 +1,9 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { useDevices, useLinkAction, useLinkParamset, useLinks } from '../../queries';
+import { useChannels, useDevices, useLinkAction, useLinkParamset, useLinks } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../../i18n/utils';
-import { DatapointValue, DeviceChannel, Link, ParamsetDescription } from '../../types/types';
+import { Channel, DatapointValue, DeviceChannel, Link, ParamsetDescription } from '../../types/types';
+import { ChannelField } from '../../components/ChannelField';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import { formatParameterValue, ParameterValue, ParamsetView, shownParameters } from '../../controls/generic/ParamsetView';
 import {
@@ -333,6 +334,25 @@ export const AddLinkForm = ({ interfaceName, deviceAddress, channels }: LinksPro
   const [linkName, setLinkName] = useState('');
   const ownChannel = linkable.find((c) => c.address === own);
 
+  // The channels as the channel dialog shows them (names, rooms from ReGa)
+  const { data: regaChannels = [] } = useChannels({ all: true });
+  const asChannels = useMemo(() => {
+    const byAddress = new Map(regaChannels.map((c) => [c.address, c]));
+    return (list: DeviceChannel[]) =>
+      list.map(
+        (c, i) =>
+          byAddress.get(c.address) ??
+          ({
+            id: -(i + 1),
+            address: c.address,
+            name: names.get(c.address) ?? c.address,
+            type: c.type,
+            interfaceName,
+            datapoints: {},
+          } as unknown as Channel),
+      );
+  }, [regaChannels, names, interfaceName]);
+
   // Channels of other devices on the same interface that fit the chosen one
   const partners = useMemo(() => {
     if (!ownChannel) return [];
@@ -346,6 +366,9 @@ export const AddLinkForm = ({ interfaceName, deviceAddress, channels }: LinksPro
       );
   }, [devices, interfaceName, deviceAddress, ownChannel]);
 
+
+  const ownChannels = useMemo(() => asChannels(linkable), [asChannels, linkable]);
+  const partnerChannels = useMemo(() => asChannels(partners), [asChannels, partners]);
 
   const add = () => {
     const partnerChannel = partners.find((c) => c.address === partner);
@@ -383,34 +406,30 @@ export const AddLinkForm = ({ interfaceName, deviceAddress, channels }: LinksPro
           }}
         >
           <strong className="text-sm">{m.ADD_LINK()}</strong>
-          <label>
+          <div className="grid gap-1.5 text-sm text-muted-foreground">
             {m.LINK_OWN_CHANNEL()}
-            <NativeSelect
-              value={own}
-              onChange={(e) => {
-                setOwn(e.target.value);
+            <ChannelField
+              label={m.LINK_OWN_CHANNEL()}
+              channels={ownChannels}
+              value={ownChannels.find((c) => c.address === own)?.id}
+              includeHidden
+              onChange={(id) => {
+                setOwn(ownChannels.find((c) => c.id === id)?.address ?? '');
                 setPartner('');
               }}
-            >
-              <option value="" />
-              {linkable.map((c) => (
-                <option key={c.address} value={c.address}>
-                  {label(c.address)}
-                </option>
-              ))}
-            </NativeSelect>
-          </label>
-          <label>
+            />
+          </div>
+          <div className="grid gap-1.5 text-sm text-muted-foreground">
             {m.LINK_PARTNER()}
-            <NativeSelect value={partner} disabled={!ownChannel} onChange={(e) => setPartner(e.target.value)}>
-              <option value="" />
-              {partners.map((c) => (
-                <option key={c.address} value={c.address}>
-                  {label(c.address)}
-                </option>
-              ))}
-            </NativeSelect>
-          </label>
+            <ChannelField
+              label={m.LINK_PARTNER()}
+              channels={partnerChannels}
+              value={partnerChannels.find((c) => c.address === partner)?.id}
+              disabled={!ownChannel}
+              includeHidden
+              onChange={(id) => setPartner(partnerChannels.find((c) => c.id === id)?.address ?? '')}
+            />
+          </div>
           <label>
             {m.LINK_NAME()}
             <Input value={linkName} onChange={(e) => setLinkName(e.target.value)} />

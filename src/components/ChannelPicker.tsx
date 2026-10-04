@@ -22,9 +22,13 @@ interface ChannelPickerProps {
   chosen: Set<number>;
   // "Only without room" and the like; unset hides the filter
   unassigned?: { label: string; test: (channel: Channel) => boolean };
-  confirmLabel: string;
+  confirmLabel?: string;
   onConfirm: (ids: number[]) => void;
   onClose: () => void;
+  // One channel: a click chooses it and closes the dialog
+  single?: boolean;
+  // Also channels without state (keys and the like), e.g. for programs
+  includeHidden?: boolean;
 }
 
 interface DeviceGroup {
@@ -36,9 +40,10 @@ interface DeviceGroup {
 
 const deviceOf = (channel: Channel) => channel.address.split(':')[0];
 
-// Choosing channels in a dialog: the devices with their pictures, sorted by
-// device type, a search over name, device, type, room and address, and
-// check boxes to take several at once
+// Choosing channels in a dialog: the devices with their pictures (the
+// channel pointed at marked), sorted by device type, a search over name,
+// device, type, room and address, and check boxes to take several at once,
+// or (single) one with a click
 export const ChannelPicker = ({
   title,
   channels,
@@ -47,6 +52,8 @@ export const ChannelPicker = ({
   confirmLabel,
   onConfirm,
   onClose,
+  single = false,
+  includeHidden = false,
 }: ChannelPickerProps) => {
   const t = useTranslations();
   // The channel type in words; types without a translation made readable
@@ -65,7 +72,7 @@ export const ChannelPicker = ({
     const roomNames = new Map(rooms.map((r) => [r.id, r.name]));
     const byDevice = new Map<string, DeviceGroup & { score: number }>();
     for (const channel of channels) {
-      if (isHiddenChannel(channel)) continue;
+      if (!includeHidden && isHiddenChannel(channel)) continue;
       if (onlyUnassigned && unassigned && !unassigned.test(channel) && !chosen.has(channel.id)) continue;
       const address = deviceOf(channel);
       const device = deviceInfo.get(address);
@@ -99,7 +106,9 @@ export const ChannelPicker = ({
         a.type.localeCompare(b.type) ||
         a.name.localeCompare(b.name),
     );
-  }, [channels, devices, rooms, query, onlyUnassigned, unassigned, chosen, t]);
+  }, [channels, devices, rooms, query, onlyUnassigned, unassigned, chosen, t, includeHidden]);
+  // The channel pointed at, marked in its device's picture
+  const [pointed, setPointed] = useState<string | undefined>();
 
   const toggle = (ids: number[], on: boolean) =>
     setSelected((prev) => {
@@ -155,11 +164,15 @@ export const ChannelPicker = ({
                   </div>
                 )}
                 <div className="flex gap-3 border-b py-3 last:border-b-0">
-                  <DeviceImage type={group.type} size={56} />
+                  <DeviceImage
+                    type={group.type}
+                    size={56}
+                    channel={pointed?.startsWith(`${group.address}:`) ? pointed.split(':')[1] : undefined}
+                  />
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <label className="flex items-center gap-2">
                       <span className="min-w-0 flex-1 truncate font-medium">{group.name}</span>
-                      {group.channels.length > 1 && open.length > 0 && (
+                      {!single && group.channels.length > 1 && open.length > 0 && (
                         <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
                           {m.PICKER_ALL()}
                           <input
@@ -179,8 +192,46 @@ export const ChannelPicker = ({
                     <ul className="mt-1 flex flex-col">
                       {group.channels.map((channel) => {
                         const already = chosen.has(channel.id);
+                        const point = {
+                          onPointerEnter: () => setPointed(channel.address),
+                          onPointerLeave: () => setPointed(undefined),
+                        };
+                        if (single) {
+                          return (
+                            <li key={channel.id}>
+                              <button
+                                type="button"
+                                aria-pressed={already}
+                                onClick={() => onConfirm([channel.id])}
+                                onFocus={() => setPointed(channel.address)}
+                                {...point}
+                                className={cn(
+                                  'flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent',
+                                  already && 'bg-primary/10 font-medium',
+                                )}
+                              >
+                                <span
+                                  aria-hidden
+                                  className={cn(
+                                    'grid size-4 shrink-0 place-items-center rounded-full border',
+                                    already && 'border-primary',
+                                  )}
+                                >
+                                  {already && <span className="size-2 rounded-full bg-primary" />}
+                                </span>
+                                <span className="min-w-0 flex-1 truncate">{channel.name}</span>
+                                <span className="shrink-0 text-xs text-muted-foreground">
+                                  {typeLabel(channel.type)}
+                                </span>
+                                <span className="hidden shrink-0 font-mono text-xs text-muted-foreground sm:inline">
+                                  :{channel.address.split(':')[1]}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        }
                         return (
-                          <li key={channel.id}>
+                          <li key={channel.id} {...point}>
                             <label
                               className={cn(
                                 'flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-sm hover:bg-accent',
@@ -211,14 +262,18 @@ export const ChannelPicker = ({
           })}
         </div>
         <DialogFooter className="items-center gap-2 sm:justify-between">
-          <span className="text-sm text-muted-foreground">{m.PICKER_SELECTED({ count: selected.size })}</span>
+          <span className="text-sm text-muted-foreground">
+            {single ? m.PICKER_CHOOSE_ONE() : m.PICKER_SELECTED({ count: selected.size })}
+          </span>
           <span className="flex gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
               {m.CANCEL()}
             </Button>
-            <Button type="button" disabled={selected.size === 0} onClick={() => onConfirm(Array.from(selected))}>
-              {confirmLabel}
-            </Button>
+            {!single && (
+              <Button type="button" disabled={selected.size === 0} onClick={() => onConfirm(Array.from(selected))}>
+                {confirmLabel}
+              </Button>
+            )}
           </span>
         </DialogFooter>
       </DialogContent>

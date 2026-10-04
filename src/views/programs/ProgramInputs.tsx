@@ -1,7 +1,8 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { useChannelList, useParamsetDescription, useRooms, useSysvars } from '../../queries';
+import { useChannelList, useParamsetDescription, useSysvars } from '../../queries';
 import { Operation, ParameterDescription, ParameterFlag, ParamsetDescription, Sysvar } from '../../types/types';
 import { NativeSelect } from '../../components/ui/select';
+import { ChannelField } from '../../components/ChannelField';
 import { Input } from '../../components/ui/input';
 import { TranslationKey, useTranslations } from '../../i18n/utils';
 import { m } from '../../paraglide/messages';
@@ -19,31 +20,14 @@ export const Field = ({ label, children }: { label: string; children: ReactNode 
 
 const selectClass = 'h-9 min-w-0 max-w-full md:text-[13px]';
 
-// Channels of all devices, by name, with their room
+// A channel of any device, chosen in the channel dialog (pictures, search)
 export const ChannelSelect = ({ value, onChange, label }: { value: number; onChange: (id: number) => void; label: string }) => {
   const { data: channels = [] } = useChannelList();
-  const { data: rooms = [] } = useRooms();
-  const options = useMemo(() => {
-    const roomNames = new Map(rooms.map((r) => [r.id, r.name]));
-    return channels
-      .map((c) => ({
-        id: c.id,
-        label: [c.name, (c.rooms ?? []).map((id) => roomNames.get(id)).filter(Boolean).join(', ')].filter(Boolean).join(' · '),
-      }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [channels, rooms]);
   return (
-    <Field label={label}>
-      <NativeSelect className={selectClass} aria-label={label} value={value || ''} onChange={(e) => onChange(Number(e.target.value))}>
-        <option value="">{m.PRG_CHOOSE()}</option>
-        {options.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.label}
-          </option>
-        ))}
-        {value > 0 && !options.some((o) => o.id === value) && <option value={value}>#{value}</option>}
-      </NativeSelect>
-    </Field>
+    <div className="flex min-w-0 flex-col gap-1 text-xs">
+      <span className="text-muted-foreground">{label}</span>
+      <ChannelField label={label} value={value} channels={channels} onChange={onChange} includeHidden />
+    </div>
   );
 };
 
