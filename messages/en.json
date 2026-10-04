@@ -758,5 +758,6 @@
   "GROUP_NO_CHANNELS": "No channels yet.",
   "GROUP_REMOVE_CHANNEL": "Remove {name}",
   "GROUP_ADD_CHANNEL": "Add a channel to {name}",
-  "GROUP_CHOOSE_CHANNEL": "Choose a channel …"
+  "GROUP_CHOOSE_CHANNEL": "Choose a channel …",
+  "PRG_SHOW_INTERNAL": "Show system-internal programs ({count})"
 }

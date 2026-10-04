@@ -242,7 +242,7 @@ func (c *CCU) runScript(body string) (string, error) {
 		case "get_programs":
 			var b strings.Builder
 			for _, p := range c.fixture.Programs {
-				fmt.Fprintf(&b, "P\t%d\t%t\t%t\t%t\t%s\n", p.ID, p.Active, p.Visible, !p.ReadOnly, p.Name)
+				fmt.Fprintf(&b, "P\t%d\t%t\t%t\t%t\t%t\t%s\n", p.ID, p.Active, p.Visible, !p.ReadOnly, p.Internal, p.Name)
 			}
 			return b.String(), nil
 		case "program_action":

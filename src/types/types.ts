@@ -245,6 +245,8 @@ export interface Program {
   visible: boolean;
   // Users other than administrators may run it ("bedienbar")
   operate: boolean;
+  // A system-internal program, listed on request as in the WebUI
+  internal?: boolean;
 }
 
 // A paired device waiting in the CCU's inbox

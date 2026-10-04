@@ -1188,6 +1188,10 @@ export interface Program {
    * Users other than administrators may run it ("bedienbar")
    */
   operate: boolean;
+  /**
+   * A system-internal program (the WebUI lists them on request)
+   */
+  internal?: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

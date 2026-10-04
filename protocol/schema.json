@@ -867,6 +867,10 @@
         "operate": {
           "type": "boolean",
           "description": "Users other than administrators may run it (\"bedienbar\")"
+        },
+        "internal": {
+          "type": "boolean",
+          "description": "A system-internal program (the WebUI lists them on request)"
         }
       },
       "required": [

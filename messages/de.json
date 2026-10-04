@@ -758,5 +758,6 @@
   "GROUP_NO_CHANNELS": "Noch keine Kanäle.",
   "GROUP_REMOVE_CHANNEL": "{name} entfernen",
   "GROUP_ADD_CHANNEL": "Kanal zu {name} hinzufügen",
-  "GROUP_CHOOSE_CHANNEL": "Kanal wählen …"
+  "GROUP_CHOOSE_CHANNEL": "Kanal wählen …",
+  "PRG_SHOW_INTERNAL": "Systeminterne Programme anzeigen ({count})"
 }

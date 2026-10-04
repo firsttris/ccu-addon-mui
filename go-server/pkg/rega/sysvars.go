@@ -158,6 +158,8 @@ type Program struct {
 	Visible bool   `json:"visible"`
 	// Operate: users other than administrators may run it ("bedienbar")
 	Operate bool `json:"operate"`
+	// Internal: a system-internal program (the WebUI lists them on request)
+	Internal bool `json:"internal,omitempty"`
 }
 
 // GetPrograms returns all programs.
@@ -169,7 +171,7 @@ func (c *Client) GetPrograms() ([]Program, error) {
 	isRecord := func(line string) bool { return strings.HasPrefix(line, "P\t") }
 	programs := []Program{}
 	for _, fields := range splitRecords(output, isRecord) {
-		if len(fields) < 6 {
+		if len(fields) < 7 {
 			continue
 		}
 		id, err := strconv.ParseInt(fields[1], 10, 64)
@@ -177,7 +179,8 @@ func (c *Client) GetPrograms() ([]Program, error) {
 			continue
 		}
 		programs = append(programs, Program{
-			ID: id, Active: fields[2] == "true", Visible: fields[3] == "true", Operate: fields[4] == "true", Name: rejoin(fields, 5),
+			ID: id, Active: fields[2] == "true", Visible: fields[3] == "true", Operate: fields[4] == "true",
+			Internal: fields[5] == "true", Name: rejoin(fields, 6),
 		})
 	}
 	return programs, nil

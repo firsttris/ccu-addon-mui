@@ -274,6 +274,8 @@ export const Programs = () => {
   const action = useLogicAction();
   const canConfigure = userLevel === 'admin' && elevated;
   const [testing, setTesting] = useState(false);
+  const [showInternal, setShowInternal] = useState(false);
+  const internalCount = programs.filter((p) => p.internal).length;
   usePageTitle(m.PROGRAMS());
 
   const run = (variables: Parameters<typeof action.mutate>[0], success?: string) =>
@@ -299,9 +301,15 @@ export const Programs = () => {
         </div>
       )}
       {testing && <ScriptTestDialog onDone={() => setTesting(false)} />}
+      {userLevel === 'admin' && internalCount > 0 && (
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          <input type="checkbox" checked={showInternal} onChange={(e) => setShowInternal(e.target.checked)} />
+          {m.PRG_SHOW_INTERNAL({ count: internalCount })}
+        </label>
+      )}
       <List aria-label={m.PROGRAMS()} loading={loading}>
         {programs
-          .filter((p) => p.visible || userLevel === 'admin')
+          .filter((p) => (p.visible || userLevel === 'admin') && (!p.internal || showInternal))
           .map((program) => (
             <Item key={program.id}>
               <Name>

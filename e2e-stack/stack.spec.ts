@@ -991,6 +991,16 @@ test('ordnet einem Raum Kanäle zu und entfernt sie', async ({ page }) => {
   await expect(members).not.toContainText('Flur Licht');
 });
 
+test('blendet systeminterne Programme nur auf Wunsch ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/programs');
+  const list = page.getByRole('list', { name: 'Programme' });
+  await expect(list).toContainText('Alles aus');
+  await expect(list).not.toContainText('Tastensperre');
+  await page.getByLabel('Systeminterne Programme anzeigen (1)').check();
+  await expect(list).toContainText('Systemintern: Tastensperre');
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {

@@ -622,7 +622,8 @@ func TestStackSysvarsAndPrograms(t *testing.T) {
 	}
 
 	send(t, conn, message{"type": "getPrograms", "requestId": "q5"})
-	if programs := receive(t, conn, byRequestID("q5"))["programs"].([]interface{}); len(programs) != 3 {
+	programs := receive(t, conn, byRequestID("q5"))["programs"].([]interface{})
+	if len(programs) != 4 || programs[3].(map[string]interface{})["internal"] != true || programs[0].(map[string]interface{})["internal"] != nil {
 		t.Fatalf("unexpected programs: %v", programs)
 	}
 	send(t, conn, message{"type": "runProgram", "requestId": "q6", "id": 1200})
