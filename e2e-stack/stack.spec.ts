@@ -1172,3 +1172,41 @@ test('stellt den Übertragungsmodus von BidCos-Kanälen ein', async ({ page }) =
   await expect(page.getByRole('group', { name: 'Optionen 0000DBE9A5C1F2:1' })).toBeVisible();
   await expect(page.getByLabel('gesichert (AES)')).toHaveCount(0);
 });
+
+test('legt ein Diagramm an, zeigt die aufgezeichneten Werte und löscht es', async ({ page }) => {
+  await login(page);
+  await page.goto('/diagrams');
+  await page.getByRole('button', { name: 'Neues Diagramm' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Neues Diagramm' });
+  await dialog.getByLabel('Name').fill('Klima');
+  await dialog.getByLabel('Standardzeitraum').selectOption('week');
+  const search = dialog.getByRole('searchbox', { name: 'Datenquelle hinzufügen' });
+  await search.fill('Wohnzimmer Thermostat');
+  await dialog.getByRole('button', { name: 'Wohnzimmer Thermostat · Temperatur hinzufügen' }).click();
+  await search.fill('Außen');
+  await dialog.getByRole('button', { name: 'Außentemperatur hinzufügen' }).click();
+  await dialog.getByLabel('Bezeichnung Außentemperatur').fill('Draußen');
+  await expect(dialog.getByRole('list', { name: 'Datenquellen' }).getByRole('listitem')).toHaveCount(2);
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  // The current values are recorded right away
+  const card = page.getByRole('region', { name: 'Klima' });
+  await expect(card.getByRole('img', { name: 'Klima' })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Wohnzimmer Thermostat · Temperatur ein- oder ausblenden' })).toContainText('21,5 °C');
+  await expect(card.getByRole('button', { name: 'Draußen ein- oder ausblenden' })).toContainText('12,5 °C');
+  await expect(card.getByRole('button', { name: 'Woche' })).toHaveAttribute('aria-pressed', 'true');
+
+  // Hiding a series and choosing another period
+  await card.getByRole('button', { name: 'Draußen ein- oder ausblenden' }).click();
+  await expect(card.getByRole('button', { name: 'Draußen ein- oder ausblenden' })).toHaveAttribute('aria-pressed', 'false');
+  await card.getByRole('button', { name: '24 h' }).click();
+  await expect(card.getByRole('button', { name: '24 h' })).toHaveAttribute('aria-pressed', 'true');
+  await card.getByRole('button', { name: 'Früher' }).click();
+  await expect(card.getByRole('button', { name: 'Später' })).toBeEnabled();
+
+  await card.getByRole('button', { name: 'Diagramm löschen' }).click();
+  await page.getByRole('dialog', { name: 'Diagramm löschen' }).getByRole('button', { name: 'Löschen' }).click();
+  await expect(card).toHaveCount(0);
+  await expect(page.getByText('Noch keine Diagramme.')).toBeVisible();
+});

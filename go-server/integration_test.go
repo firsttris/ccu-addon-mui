@@ -69,6 +69,8 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	cfg.SyslogConfig, cfg.LogDir = logFiles(t)
 	cfg.TimeConfFile, cfg.NTPClientFile, cfg.TZFile = clockFiles(t)
 	cfg.GroupsFile = "../fixtures/groups.gson"
+	cfg.DiagramsFile = filepath.Join(t.TempDir(), "diagrams.json")
+	cfg.DiagramsDir = filepath.Join(t.TempDir(), "diagrams")
 	auditLogs[ccu] = cfg.AuditLogFile
 	wsPorts[ccu] = cfg.WSPort
 
@@ -2057,5 +2059,95 @@ func TestStackInstallAddon(t *testing.T) {
 	}
 	if got := ccu.InstalledAddons(); len(got) != 2 {
 		t.Fatalf("unexpected installed add-ons: %v", got)
+	}
+}
+
+func TestStackDiagrams(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getDiagrams", "requestId": "d1"})
+	if m := receive(t, conn, byRequestID("d1")); len(m["diagrams"].([]interface{})) != 0 {
+		t.Fatalf("diagrams: %v", m)
+	}
+	// The thermostat's channel is logged: its system protocol fills the
+	// diagram from the start
+	send(t, conn, message{"type": "setChannelOption", "requestId": "d2", "id": 401, "option": "logged", "value": true})
+	receive(t, conn, byRequestID("d2"))
+
+	diagram := map[string]interface{}{"name": "Wohnzimmer", "period": "week", "series": []interface{}{
+		map[string]interface{}{"address": "LEQ0000004:1", "datapoint": "ACTUAL_TEMPERATURE", "color": "#ef4444", "unit": "°C"},
+		map[string]interface{}{"address": "sysvar", "datapoint": "951"},
+	}}
+	send(t, conn, message{"type": "saveDiagram", "requestId": "d3", "diagram": diagram})
+	saved := receive(t, conn, byRequestID("d3"))
+	if saved["success"] != true {
+		t.Fatalf("save: %v", saved)
+	}
+	id := saved["diagram"].(map[string]interface{})["id"].(string)
+
+	query := func(requestID string, from, to time.Time) []interface{} {
+		send(t, conn, message{"type": "getDiagramData", "requestId": requestID, "from": from.UnixMilli(), "to": to.UnixMilli(), "buckets": 500,
+			"series": []interface{}{map[string]interface{}{"address": "LEQ0000004:1", "datapoint": "ACTUAL_TEMPERATURE"}, map[string]interface{}{"address": "sysvar", "datapoint": "951"}}})
+		return receive(t, conn, byRequestID(requestID))["series"].([]interface{})
+	}
+	points := func(series interface{}) []interface{} {
+		return series.(map[string]interface{})["points"].([]interface{})
+	}
+	now := time.Now()
+	// The 24 hourly values of the fake system protocol (2026-10-03) and the
+	// current value
+	series := query("d4", time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), now.Add(time.Hour))
+	if n := len(points(series[0])); n != 25 {
+		t.Errorf("temperature points: %d %v", n, series[0])
+	}
+	// The system variable's current value
+	if p := points(series[1]); len(p) != 1 || p[0].([]interface{})[1] != 12.5 {
+		t.Errorf("sysvar points: %v", p)
+	}
+
+	// New values arrive as events
+	if err := ccu.SetValue("BidCos-RF", "LEQ0000004:1", "ACTUAL_TEMPERATURE", 23.5); err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		p := points(query("d5", now.Add(-time.Hour), time.Now().Add(time.Hour))[0])
+		if last := p[len(p)-1].([]interface{}); last[3] == 23.5 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("event not recorded: %v", p)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	// Changing needs administrators with the password entered
+	guest, _, err := websocket.DefaultDialer.Dial(fmt.Sprintf("ws://%s/", conn.RemoteAddr().String()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer guest.Close()
+	loginAs(t, guest, "Gast", "gast")
+	send(t, guest, message{"type": "deleteDiagram", "requestId": "g1", "id": id})
+	if m := receive(t, guest, byRequestID("g1")); m["code"] != "FORBIDDEN" {
+		t.Errorf("guest deleted: %v", m)
+	}
+	send(t, guest, message{"type": "getDiagrams", "requestId": "g2"})
+	if m := receive(t, guest, byRequestID("g2")); len(m["diagrams"].([]interface{})) != 1 {
+		t.Errorf("guest sees: %v", m)
+	}
+
+	send(t, conn, message{"type": "saveDiagram", "requestId": "d6", "diagram": map[string]interface{}{"name": "", "series": []interface{}{}}})
+	if m := receive(t, conn, byRequestID("d6")); m["code"] != "INVALID_VALUE" {
+		t.Errorf("invalid saved: %v", m)
+	}
+	send(t, conn, message{"type": "deleteDiagram", "requestId": "d7", "id": id})
+	if m := receive(t, conn, byRequestID("d7")); m["success"] != true {
+		t.Errorf("delete: %v", m)
+	}
+	send(t, conn, message{"type": "deleteDiagram", "requestId": "d8", "id": id})
+	if m := receive(t, conn, byRequestID("d8")); m["code"] != "NOT_FOUND" {
+		t.Errorf("delete twice: %v", m)
 	}
 }

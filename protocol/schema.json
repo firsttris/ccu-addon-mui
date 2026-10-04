@@ -307,6 +307,18 @@
     },
     "installAddon": {
       "$ref": "#/definitions/InstallAddonCall"
+    },
+    "getDiagrams": {
+      "$ref": "#/definitions/GetDiagramsCall"
+    },
+    "getDiagramData": {
+      "$ref": "#/definitions/GetDiagramDataCall"
+    },
+    "saveDiagram": {
+      "$ref": "#/definitions/SaveDiagramCall"
+    },
+    "deleteDiagram": {
+      "$ref": "#/definitions/DeleteDiagramCall"
     }
   },
   "required": [
@@ -410,7 +422,11 @@
     "installCcuFirmware",
     "cancelCcuFirmware",
     "prepareAddonUpload",
-    "installAddon"
+    "installAddon",
+    "getDiagrams",
+    "getDiagramData",
+    "saveDiagram",
+    "deleteDiagram"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2963,6 +2979,18 @@
         },
         {
           "$ref": "#/definitions/InstallAddonResponse"
+        },
+        {
+          "$ref": "#/definitions/GetDiagramsResponse"
+        },
+        {
+          "$ref": "#/definitions/GetDiagramDataResponse"
+        },
+        {
+          "$ref": "#/definitions/SaveDiagramResponse"
+        },
+        {
+          "$ref": "#/definitions/DeleteDiagramResponse"
         }
       ]
     },
@@ -8489,6 +8517,341 @@
       "required": [
         "request",
         "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetDiagramsRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDiagrams"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetDiagramsResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDiagrams_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "diagrams": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Diagram"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "diagrams"
+      ],
+      "additionalProperties": false
+    },
+    "GetDiagramsCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetDiagramsRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetDiagramsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "GetDiagramDataRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDiagramData"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "series": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DiagramSeries"
+          }
+        },
+        "from": {
+          "type": "number",
+          "description": "Start (Unix ms)"
+        },
+        "to": {
+          "type": "number",
+          "description": "End (Unix ms)"
+        },
+        "buckets": {
+          "type": "integer",
+          "description": "The most points per series"
+        }
+      },
+      "required": [
+        "type",
+        "series",
+        "from",
+        "to"
+      ],
+      "additionalProperties": false
+    },
+    "GetDiagramDataResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDiagramData_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "series": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DiagramSeriesData"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "series"
+      ],
+      "additionalProperties": false
+    },
+    "GetDiagramDataCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetDiagramDataRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetDiagramDataResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SaveDiagramRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "saveDiagram"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "diagram": {
+          "$ref": "#/definitions/Diagram"
+        }
+      },
+      "required": [
+        "type",
+        "diagram"
+      ],
+      "additionalProperties": false
+    },
+    "SaveDiagramResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "saveDiagram_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "diagram": {
+          "$ref": "#/definitions/Diagram"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "diagram"
+      ],
+      "additionalProperties": false
+    },
+    "SaveDiagramCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SaveDiagramRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SaveDiagramResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteDiagramRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteDiagram"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteDiagramResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "deleteDiagram_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DeleteDiagramCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DeleteDiagramRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DeleteDiagramResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DiagramSeries": {
+      "type": "object",
+      "description": "A line of a diagram: a channel's datapoint, or a system variable (address \"sysvar\", datapoint its id)",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "datapoint": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "address",
+        "datapoint"
+      ],
+      "additionalProperties": false
+    },
+    "Diagram": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "series": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DiagramSeries"
+          }
+        },
+        "period": {
+          "type": "string",
+          "enum": [
+            "",
+            "day",
+            "week",
+            "month",
+            "year"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "series"
+      ],
+      "additionalProperties": false
+    },
+    "DiagramSeriesData": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "datapoint": {
+          "type": "string"
+        },
+        "points": {
+          "type": "array",
+          "description": "[time (ms), average, minimum, maximum] per interval",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        }
+      },
+      "required": [
+        "address",
+        "datapoint",
+        "points"
       ],
       "additionalProperties": false
     }

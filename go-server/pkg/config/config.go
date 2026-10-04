@@ -48,6 +48,9 @@ type Config struct {
 	TZFile        string
 	// The heating groups the HMServer keeps (groups.gson)
 	GroupsFile string
+	// DiagramsFile keeps the diagrams, DiagramsDir their recorded values
+	DiagramsFile string
+	DiagramsDir  string
 	// AuditLogFile records every change made through the add-on; empty
 	// disables it.
 	AuditLogFile string
@@ -93,6 +96,8 @@ func Load() *Config {
 		NTPClientFile:      getEnv("NTP_CLIENT_FILE", "/etc/config/ntpclient"),
 		TZFile:             getEnv("TZ_FILE", "/etc/config/TZ"),
 		GroupsFile:         getEnv("GROUPS_FILE", "/etc/config/groups.gson"),
+		DiagramsFile:       getEnv("DIAGRAMS_FILE", defaultConfigFile("mui-diagrams.json")),
+		DiagramsDir:        getEnv("DIAGRAMS_DIR", defaultDataDir("mui-diagrams")),
 		BackupDir:          getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
 	}
 }
@@ -108,6 +113,17 @@ func defaultConfigFile(name string) string {
 	const ccuConfigDir = "/usr/local/etc/config"
 	if info, err := os.Stat(ccuConfigDir); err == nil && info.IsDir() {
 		return ccuConfigDir + "/" + name
+	}
+	return name
+}
+
+// defaultDataDir is on the CCU's user partition (/usr/local, the SD card or
+// flash), next to the config directory, or in the working directory when
+// running locally.
+func defaultDataDir(name string) string {
+	const ccuDataDir = "/usr/local"
+	if info, err := os.Stat("/usr/local/etc/config"); err == nil && info.IsDir() {
+		return ccuDataDir + "/" + name
 	}
 	return name
 }

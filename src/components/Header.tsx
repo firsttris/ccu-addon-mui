@@ -9,6 +9,7 @@ import { PushSettings } from './PushSettings';
 import StarIcon from '~icons/lucide/star';
 import ListIcon from '~icons/lucide/list';
 import BracesIcon from '~icons/lucide/braces';
+import ChartIcon from '~icons/lucide/chart-line';
 import PlayIcon from '~icons/lucide/play';
 import SlidersIcon from '~icons/lucide/sliders-horizontal';
 import LogOutIcon from '~icons/lucide/log-out';
@@ -135,6 +136,9 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
             </NavLink>
             <NavLink icon={<PlayIcon />} onClick={() => go(() => navigate({ to: '/programs' }))}>
               {m.PROGRAMS()}
+            </NavLink>
+            <NavLink icon={<ChartIcon />} onClick={() => go(() => navigate({ to: '/diagrams' }))}>
+              {m.DIAGRAMS()}
             </NavLink>
             {userLevel === 'admin' && (
               <NavLink icon={<SlidersIcon />} onClick={() => go(() => navigate({ to: '/setup' }))}>

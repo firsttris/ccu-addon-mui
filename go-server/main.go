@@ -15,10 +15,12 @@ import (
 	"ccu-addon-mui-server/pkg/backup"
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
+	"ccu-addon-mui-server/pkg/diagrams"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
+	"ccu-addon-mui-server/pkg/types"
 	"ccu-addon-mui-server/pkg/websocket"
 	"ccu-addon-mui-server/pkg/xmlrpc"
 )
@@ -106,7 +108,20 @@ func run(ctx context.Context, cfg *config.Config) error {
 		go notifier.Run(ctx, 30*time.Second)
 	}
 
-	rpcServer := xmlrpc.NewServer(cfg, wsServer.BroadcastToClients)
+	// Diagrams record the values of their datapoints
+	if store, err := diagrams.OpenStore(cfg.DiagramsFile); err != nil {
+		logger.Error("Diagrams disabled:", err)
+	} else {
+		recorder := diagrams.NewRecorder(cfg.DiagramsDir)
+		wsServer.SetDiagrams(store, recorder)
+		go recorder.Run(ctx, 5*time.Minute, func(err error) { logger.Error("Failed to write diagram values:", err) })
+		go wsServer.RunSysvarRecording(ctx, time.Minute)
+	}
+
+	rpcServer := xmlrpc.NewServer(cfg, func(event *types.CCUEvent) {
+		wsServer.RecordEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
+		wsServer.BroadcastToClients(event)
+	})
 	// Descriptions change with new firmware or re-pairing
 	rpcServer.SetDeviceChangeHandler(func(interfaceName, address string) {
 		deviceAddress, _, _ := strings.Cut(address, ":")

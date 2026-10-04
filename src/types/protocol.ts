@@ -122,7 +122,11 @@ export type ServerMessage =
   | InstallCcuFirmwareResponse
   | CancelCcuFirmwareResponse
   | PrepareAddonUploadResponse
-  | InstallAddonResponse;
+  | InstallAddonResponse
+  | GetDiagramsResponse
+  | GetDiagramDataResponse
+  | SaveDiagramResponse
+  | DeleteDiagramResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -229,6 +233,10 @@ export interface Protocol {
   cancelCcuFirmware: CancelCcuFirmwareCall;
   prepareAddonUpload: PrepareAddonUploadCall;
   installAddon: InstallAddonCall;
+  getDiagrams: GetDiagramsCall;
+  getDiagramData: GetDiagramDataCall;
+  saveDiagram: SaveDiagramCall;
+  deleteDiagram: DeleteDiagramCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3620,6 +3628,157 @@ export interface InstallAddonResponse {
   success: boolean;
   needsKey?: boolean;
   reboot?: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDiagramsCall".
+ */
+export interface GetDiagramsCall {
+  request: GetDiagramsRequest;
+  response: GetDiagramsResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDiagramsRequest".
+ */
+export interface GetDiagramsRequest {
+  type: "getDiagrams";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDiagramsResponse".
+ */
+export interface GetDiagramsResponse {
+  type: "getDiagrams_response";
+  requestId?: string;
+  diagrams: Diagram[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "Diagram".
+ */
+export interface Diagram {
+  id: string;
+  name: string;
+  series: DiagramSeries[];
+  period?: "" | "day" | "week" | "month" | "year";
+}
+/**
+ * A line of a diagram: a channel's datapoint, or a system variable (address "sysvar", datapoint its id)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DiagramSeries".
+ */
+export interface DiagramSeries {
+  address: string;
+  datapoint: string;
+  label?: string;
+  color?: string;
+  unit?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDiagramDataCall".
+ */
+export interface GetDiagramDataCall {
+  request: GetDiagramDataRequest;
+  response: GetDiagramDataResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDiagramDataRequest".
+ */
+export interface GetDiagramDataRequest {
+  type: "getDiagramData";
+  requestId?: string;
+  series: DiagramSeries[];
+  /**
+   * Start (Unix ms)
+   */
+  from: number;
+  /**
+   * End (Unix ms)
+   */
+  to: number;
+  /**
+   * The most points per series
+   */
+  buckets?: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDiagramDataResponse".
+ */
+export interface GetDiagramDataResponse {
+  type: "getDiagramData_response";
+  requestId?: string;
+  series: DiagramSeriesData[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DiagramSeriesData".
+ */
+export interface DiagramSeriesData {
+  address: string;
+  datapoint: string;
+  /**
+   * [time (ms), average, minimum, maximum] per interval
+   */
+  points: [number, number, number, number][];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveDiagramCall".
+ */
+export interface SaveDiagramCall {
+  request: SaveDiagramRequest;
+  response: SaveDiagramResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveDiagramRequest".
+ */
+export interface SaveDiagramRequest {
+  type: "saveDiagram";
+  requestId?: string;
+  diagram: Diagram;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveDiagramResponse".
+ */
+export interface SaveDiagramResponse {
+  type: "saveDiagram_response";
+  requestId?: string;
+  success: boolean;
+  diagram: Diagram;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteDiagramCall".
+ */
+export interface DeleteDiagramCall {
+  request: DeleteDiagramRequest;
+  response: DeleteDiagramResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteDiagramRequest".
+ */
+export interface DeleteDiagramRequest {
+  type: "deleteDiagram";
+  requestId?: string;
+  id: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteDiagramResponse".
+ */
+export interface DeleteDiagramResponse {
+  type: "deleteDiagram_response";
+  requestId?: string;
+  success: boolean;
 }
 /**
  * Sent first on every connection

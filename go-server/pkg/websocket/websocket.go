@@ -23,6 +23,7 @@ import (
 	"ccu-addon-mui-server/pkg/backup"
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
+	"ccu-addon-mui-server/pkg/diagrams"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
@@ -187,9 +188,12 @@ func (c *Client) setDeviceID(deviceID string) {
 type Server struct {
 	cfg *config.Config
 	// Channels non-administrators may not operate
-	readOnly        readOnlyChannels
-	addons          *addons.Service
-	logs            *logs.Service
+	readOnly readOnlyChannels
+	addons   *addons.Service
+	logs     *logs.Service
+	// The diagrams and the recorder of their values
+	diagrams        *diagrams.Store
+	recorder        *diagrams.Recorder
 	regaClient      *rega.Client
 	clients         map[*Client]bool
 	clientsMu       sync.RWMutex
@@ -540,6 +544,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleLogging(client, msgType, message)
 	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "checkCcuFirmware", "installCcuFirmware", "cancelCcuFirmware", "prepareAddonUpload", "installAddon":
 		s.handleRestore(client, msgType, message)
+	case "getDiagrams", "getDiagramData", "saveDiagram", "deleteDiagram":
+		s.handleDiagrams(client, msgType, message)
 	case "getHeatingGroups":
 		s.handleHeatingGroups(client, requestID)
 	case "runScript":
