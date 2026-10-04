@@ -741,5 +741,7 @@
   "SCRIPT_HINT": "The script really runs on the CCU and can change anything. Its syntax is checked first.",
   "LOGIC_VISIBLE": "visible",
   "LOGIC_OPERATE": "operable",
-  "LOGIC_HIDDEN": "hidden"
+  "LOGIC_HIDDEN": "hidden",
+  "DESCRIPTION": "Description",
+  "EDIT_SYSVAR": "Edit {name}"
 }

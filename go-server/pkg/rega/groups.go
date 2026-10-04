@@ -218,3 +218,64 @@ func (c *Client) DeleteSysvar(id int64) (result, previous string, err error) {
 	}
 	return resultWithValue(output)
 }
+
+// EditSysvar changes a system variable's settings: description, unit,
+// names of true and false, range or value list as its kind has them. The
+// kind is the variable's (sv.Kind only picks the checks). Returns SetOK or
+// SetNotFound.
+func (c *Client) EditSysvar(id int64, sv NewSysvar, description string) (string, error) {
+	for _, text := range []string{sv.Unit, sv.FalseName, sv.TrueName} {
+		if err := validateText(text); err != nil {
+			return "", err
+		}
+	}
+	if len(description) > 1000 || strings.Contains(description, "^") {
+		return "", fmt.Errorf("invalid description")
+	}
+	for _, option := range sv.ValueList {
+		if err := validateName(option); err != nil || strings.Contains(option, ";") {
+			return "", fmt.Errorf("invalid value list")
+		}
+	}
+	minValue, maxValue := -65535.0, 65535.0
+	if sv.Min != nil {
+		minValue = *sv.Min
+	}
+	if sv.Max != nil {
+		maxValue = *sv.Max
+	}
+	switch sv.Kind {
+	case "number":
+		if minValue >= maxValue {
+			return "", fmt.Errorf("invalid range")
+		}
+	case "enum":
+		if len(sv.ValueList) == 0 {
+			return "", fmt.Errorf("invalid value list")
+		}
+		minValue, maxValue = 0, float64(len(sv.ValueList)-1)
+	case "bool", "alarm", "string":
+	default:
+		return "", fmt.Errorf("invalid kind")
+	}
+	script := strings.NewReplacer(
+		"{{ID}}", strconv.FormatInt(id, 10),
+		"{{INFO}}", description,
+		"{{UNIT}}", sv.Unit,
+		"{{MIN}}", strconv.FormatFloat(minValue, 'f', -1, 64),
+		"{{MAX}}", strconv.FormatFloat(maxValue, 'f', -1, 64),
+		"{{FALSE_NAME}}", sv.FalseName,
+		"{{TRUE_NAME}}", sv.TrueName,
+		"{{VALUE_LIST}}", strings.Join(sv.ValueList, ";"),
+	).Replace(editSysvarScript)
+	output, err := c.Execute(script)
+	if err != nil {
+		return "", err
+	}
+	switch result := strings.TrimSpace(output); result {
+	case SetOK, SetNotFound:
+		return result, nil
+	default:
+		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
+	}
+}

@@ -108,7 +108,8 @@ export type ServerMessage =
   | SetLoggingResponse
   | DownloadLogsResponse
   | RunScriptResponse
-  | SetLogicOptionResponse;
+  | SetLogicOptionResponse
+  | EditSysvarResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -201,6 +202,7 @@ export interface Protocol {
   downloadLogs: DownloadLogsCall;
   runScript: RunScriptCall;
   setLogicOption: SetLogicOptionCall;
+  editSysvar: EditSysvarCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1132,6 +1134,10 @@ export interface Sysvar {
   falseName?: string;
   trueName?: string;
   valueList?: string[];
+  /**
+   * The info text (DPInfo)
+   */
+  description?: string;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3154,6 +3160,40 @@ export interface SetLogicOptionRequest {
  */
 export interface SetLogicOptionResponse {
   type: "setLogicOption_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "EditSysvarCall".
+ */
+export interface EditSysvarCall {
+  request: EditSysvarRequest;
+  response: EditSysvarResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "EditSysvarRequest".
+ */
+export interface EditSysvarRequest {
+  type: "editSysvar";
+  requestId?: string;
+  kind: "bool" | "alarm" | "number" | "enum" | "string";
+  unit?: string;
+  min?: number;
+  max?: number;
+  falseName?: string;
+  trueName?: string;
+  valueList?: string[];
+  id: number;
+  description?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "EditSysvarResponse".
+ */
+export interface EditSysvarResponse {
+  type: "editSysvar_response";
   requestId?: string;
   success: boolean;
 }

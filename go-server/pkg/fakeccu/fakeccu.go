@@ -298,6 +298,31 @@ func (c *CCU) runScript(body string) (string, error) {
 				Value: parseRegaValue(strings.Trim(values["INITIAL"], `"`)),
 			})
 			return fmt.Sprintf("OK\t%d", id), nil
+		case "edit_sysvar":
+			for i := range c.fixture.Sysvars {
+				if sv := &c.fixture.Sysvars[i]; strconv.FormatInt(sv.ID, 10) == values["ID"] {
+					sv.Description, sv.Unit = values["INFO"], values["UNIT"]
+					switch {
+					case sv.ValueType == 2:
+						sv.FalseName, sv.TrueName = values["FALSE_NAME"], values["TRUE_NAME"]
+					case sv.SubType == 0:
+						sv.Min, sv.Max = values["MIN"], values["MAX"]
+						low, _ := strconv.ParseFloat(values["MIN"], 64)
+						high, _ := strconv.ParseFloat(values["MAX"], 64)
+						if v, ok := sv.Value.(float64); ok {
+							sv.Value = math.Min(math.Max(v, low), high)
+						}
+					case sv.SubType == 29:
+						sv.ValueList = values["VALUE_LIST"]
+						high, _ := strconv.ParseFloat(values["MAX"], 64)
+						if v, ok := sv.Value.(float64); ok && v > high {
+							sv.Value = 0.0
+						}
+					}
+					return "OK", nil
+				}
+			}
+			return "NOT_FOUND", nil
 		case "rename_sysvar", "delete_sysvar":
 			for i, sv := range c.fixture.Sysvars {
 				if strconv.FormatInt(sv.ID, 10) == values["ID"] {
@@ -929,6 +954,7 @@ func (c *CCU) getSysvars() string {
 		fmt.Fprintf(&b, "B\t%s\t%s\n", sv.FalseName, sv.TrueName)
 		fmt.Fprintf(&b, "L\t%s\n", sv.ValueList)
 		fmt.Fprintf(&b, "X\t%s\n", formatValue(sv.Value))
+		fmt.Fprintf(&b, "I\t%s\n", strings.NewReplacer("%", "%25", "\t", "%09", "\r", "%0D", "\n", "%0A").Replace(sv.Description))
 	}
 	return b.String()
 }

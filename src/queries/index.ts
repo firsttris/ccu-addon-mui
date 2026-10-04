@@ -535,6 +535,18 @@ export type ObjectChange =
       trueName?: string;
       valueList?: string[];
     }
+  | {
+      type: 'editSysvar';
+      id: number;
+      kind: Sysvar['kind'];
+      description?: string;
+      unit?: string;
+      min?: number;
+      max?: number;
+      falseName?: string;
+      trueName?: string;
+      valueList?: string[];
+    }
   | { type: 'renameSysvar'; id: number; name: string }
   | { type: 'deleteSysvar'; id: number };
 

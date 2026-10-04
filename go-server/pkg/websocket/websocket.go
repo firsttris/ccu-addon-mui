@@ -577,7 +577,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleInstallFirmware(client, message)
 	case "getServiceMessages", "acknowledgeServiceMessage", "getAlarmMessages", "acknowledgeAlarmMessage":
 		s.handleServiceMessages(client, msgType, message)
-	case "createGroup", "renameGroup", "deleteGroup", "createSysvar", "renameSysvar", "deleteSysvar":
+	case "createGroup", "renameGroup", "deleteGroup", "createSysvar", "renameSysvar", "deleteSysvar", "editSysvar":
 		s.handleObjects(client, msgType, message)
 	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive", "setLogicOption":
 		s.handleLogic(client, msgType, message)
@@ -1426,6 +1426,8 @@ func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 		ID        int64  `json:"id"`
 		Name      string `json:"name"`
 		rega.NewSysvar
+		// editSysvar: the info text
+		Description string `json:"description"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -1466,6 +1468,13 @@ func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 				created = id
 				return nil, result, err
 			}, &created)
+	case "editSysvar":
+		sysvar := msg.NewSysvar
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: sysvar},
+			func() (interface{}, string, error) {
+				result, err := s.regaClient.EditSysvar(msg.ID, sysvar, msg.Description)
+				return nil, result, err
+			})
 	case "renameSysvar":
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Name},
 			func() (interface{}, string, error) {

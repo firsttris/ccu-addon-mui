@@ -895,6 +895,30 @@ test('stellt Programme und Systemvariablen sichtbar und bedienbar ein', async ({
   await expect(sysvar.getByText('unsichtbar')).toHaveCount(0);
 });
 
+test('bearbeitet die Einstellungen einer Systemvariablen', async ({ page }) => {
+  await login(page);
+  await page.goto('/sysvars');
+  const list = page.getByRole('list', { name: 'Systemvariablen' });
+  await list.getByRole('button', { name: 'Außentemperatur bearbeiten' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Außentemperatur bearbeiten' });
+  await expect(dialog.getByLabel('Minimum')).toHaveValue('-50');
+  await dialog.getByLabel('Einheit').fill('K');
+  await dialog.getByLabel('Beschreibung').fill('Fühler an der Nordseite');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(dialog).toHaveCount(0);
+  const item = list.getByRole('listitem').filter({ hasText: 'Außentemperatur' });
+  await expect(item).toContainText('Fühler an der Nordseite');
+  await expect(item).toContainText('K');
+
+  await page.reload();
+  await list.getByRole('button', { name: 'Außentemperatur bearbeiten' }).click();
+  await expect(dialog.getByLabel('Einheit')).toHaveValue('K');
+  await dialog.getByLabel('Einheit').fill('°C');
+  await dialog.getByLabel('Beschreibung').fill('');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(item).not.toContainText('Nordseite');
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {

@@ -1751,3 +1751,60 @@ func TestStackLogicOptions(t *testing.T) {
 		t.Fatalf("expected INVALID_VALUE, got %v", m)
 	}
 }
+
+func TestStackEditSysvar(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	sysvar := func(id float64) map[string]interface{} {
+		send(t, conn, message{"type": "getSysvars", "requestId": "g"})
+		for _, sv := range receive(t, conn, byRequestID("g"))["sysvars"].([]interface{}) {
+			if sv := sv.(map[string]interface{}); sv["id"] == id {
+				return sv
+			}
+		}
+		t.Fatalf("sysvar %v missing", id)
+		return nil
+	}
+	edit := func(id string, m message) message {
+		m["type"], m["requestId"] = "editSysvar", id
+		send(t, conn, m)
+		return receive(t, conn, byRequestID(id))
+	}
+
+	// A number: the value is clamped to the new range
+	if m := edit("e1", message{"id": 951, "kind": "number", "unit": "K", "min": 0, "max": 10, "description": "Fühler\tNord\nim Garten"}); m["success"] != true {
+		t.Fatalf("editSysvar failed: %v", m)
+	}
+	if sv := sysvar(951); sv["unit"] != "K" || sv["min"] != 0.0 || sv["max"] != 10.0 || sv["value"] != 10.0 || sv["description"] != "Fühler\tNord\nim Garten" || sv["name"] != "Außentemperatur" {
+		t.Fatalf("number not edited: %v", sv)
+	}
+	// A value list: a value past its end starts over
+	edit("e2", message{"id": 952, "kind": "enum", "valueList": []string{"Aus", "An"}})
+	if sv := sysvar(952); len(sv["valueList"].([]interface{})) != 2 || sv["value"] != 1.0 {
+		t.Fatalf("enum not edited: %v", sv)
+	}
+	edit("e3", message{"id": 952, "kind": "enum", "valueList": []string{"Aus"}})
+	if sv := sysvar(952); sv["value"] != 0.0 {
+		t.Fatalf("value past the list must start over: %v", sv)
+	}
+	// Presence (binary): the names of its states
+	edit("e4", message{"id": 950, "kind": "bool", "falseName": "weg", "trueName": "da"})
+	if sv := sysvar(950); sv["falseName"] != "weg" || sv["trueName"] != "da" {
+		t.Fatalf("bool not edited: %v", sv)
+	}
+
+	for _, bad := range []message{
+		{"id": 951, "kind": "number", "min": 5, "max": 5},
+		{"id": 952, "kind": "enum"},
+		{"id": 950, "kind": "bool", "description": "a^b"},
+		{"id": 950, "kind": "bool", "trueName": "x\"y"},
+	} {
+		if m := edit("bad", bad); m["code"] != "INVALID_VALUE" {
+			t.Fatalf("expected INVALID_VALUE for %v, got %v", bad, m)
+		}
+	}
+	if m := edit("e5", message{"id": 4242, "kind": "string"}); m["code"] != "NOT_FOUND" {
+		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}

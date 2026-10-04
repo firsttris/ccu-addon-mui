@@ -20,6 +20,8 @@ type Sysvar struct {
 	ID      int64  `json:"id"`
 	Name    string `json:"name"`
 	Visible bool   `json:"visible"`
+	// Description is the variable's info text (DPInfo)
+	Description string `json:"description,omitempty"`
 	// Kind is "bool", "alarm", "number", "enum" or "string"
 	Kind  string      `json:"kind"`
 	Unit  string      `json:"unit,omitempty"`
@@ -57,7 +59,7 @@ func parseFloatPtr(s string) *float64 {
 // parseSysvars parses the output of get_sysvars.tcl.
 func parseSysvars(output string) []Sysvar {
 	isRecord := func(line string) bool {
-		return len(line) >= 2 && line[1] == '\t' && strings.ContainsRune("VTRBLX", rune(line[0]))
+		return len(line) >= 2 && line[1] == '\t' && strings.ContainsRune("VTRBLXI", rune(line[0]))
 	}
 	sysvars := []Sysvar{}
 	var valueType, subType string
@@ -96,6 +98,8 @@ func parseSysvars(output string) []Sysvar {
 			if sv.Kind == "enum" {
 				sv.ValueList = strings.Split(rejoin(fields, 1), ";")
 			}
+		case "I":
+			sv.Description = decodeText(rejoin(fields, 1))
 		case "X":
 			raw := rejoin(fields, 1)
 			switch sv.Kind {

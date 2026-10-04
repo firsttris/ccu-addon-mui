@@ -265,6 +265,9 @@
     },
     "setLogicOption": {
       "$ref": "#/definitions/SetLogicOptionCall"
+    },
+    "editSysvar": {
+      "$ref": "#/definitions/EditSysvarCall"
     }
   },
   "required": [
@@ -354,7 +357,8 @@
     "setLogging",
     "downloadLogs",
     "runScript",
-    "setLogicOption"
+    "setLogicOption",
+    "editSysvar"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -814,6 +818,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "description": {
+          "type": "string",
+          "description": "The info text (DPInfo)"
         }
       },
       "required": [
@@ -2853,6 +2861,9 @@
         },
         {
           "$ref": "#/definitions/SetLogicOptionResponse"
+        },
+        {
+          "$ref": "#/definitions/EditSysvarResponse"
         }
       ]
     },
@@ -7416,6 +7427,96 @@
         },
         "response": {
           "$ref": "#/definitions/SetLogicOptionResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "EditSysvarRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "editSysvar"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "bool",
+            "alarm",
+            "number",
+            "enum",
+            "string"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "falseName": {
+          "type": "string"
+        },
+        "trueName": {
+          "type": "string"
+        },
+        "valueList": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "EditSysvarResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "editSysvar_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "EditSysvarCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/EditSysvarRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/EditSysvarResponse"
         }
       },
       "required": [
