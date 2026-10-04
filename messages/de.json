@@ -982,5 +982,16 @@
   "LGW_NONE": "Keine LAN-Gateways eingerichtet.",
   "LGW_UNSAVED": "Nicht übernommene Änderungen.",
   "LGW_APPLY": "Übernehmen",
-  "LGW_BUILTIN": "Zentrale"
+  "LGW_BUILTIN": "Zentrale",
+  "PAIR_LOCAL": "Anlernen ohne Internetzugang (mit KEY und SGTIN)",
+  "PAIR_LOCAL_HINT": "Nur dieses Gerät wird angelernt, mit dem Schlüssel vom Aufkleber des Geräts statt vom Keyserver. Bindestriche dürfen mit eingegeben werden.",
+  "PAIR_LOCAL_START": "Lokal anlernen",
+  "PAIR_SERIAL": "Seriennummer",
+  "PAIR_SERIAL_START": "Mit Seriennummer anlernen",
+  "PAIR_SERIAL_DONE": "Gerät {serial} angelernt – es steht im Posteingang.",
+  "PAIR_SERIAL_FAILED": "Anlernen mit Seriennummer {serial} fehlgeschlagen",
+  "PAIR_KEY_TITLE": "Anderer Sicherheitsschlüssel",
+  "PAIR_KEY_TEXT": "Das Gerät {serial} konnte nicht angelernt werden. Wahrscheinlich ist ihm ein anderer System-Sicherheitsschlüssel zugeordnet. Geben Sie den zum Gerät gehörenden Schlüssel ein und versuchen Sie es erneut.",
+  "PAIR_KEY_LABEL": "System-Sicherheitsschlüssel des Geräts",
+  "PAIR_KEY_RETRY": "Schlüssel setzen und erneut versuchen"
 }

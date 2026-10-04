@@ -520,6 +520,13 @@ func (f *fakeDeviceRPC) ReplaceDevice(iface, oldAddress, newAddress string) erro
 
 func (f *fakeDeviceRPC) Forget(iface, deviceAddress string) {}
 
+func (f *fakeDeviceRPC) SetInstallModeWithWhitelist(iface string, seconds int, sgtin, key string) error {
+	return nil
+}
+func (f *fakeDeviceRPC) AddDevice(iface, serial string) error                       { return nil }
+func (f *fakeDeviceRPC) KeyMismatchDevice(iface string, reset bool) (string, error) { return "", nil }
+func (f *fakeDeviceRPC) SetTempKey(iface, key string) error                         { return nil }
+
 func (f *fakeDeviceRPC) SetBidcosInterface(iface, address, module string, roaming bool) error {
 	return nil
 }

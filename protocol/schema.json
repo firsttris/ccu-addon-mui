@@ -367,6 +367,12 @@
     },
     "setBidcosInterface": {
       "$ref": "#/definitions/SetBidcosInterfaceCall"
+    },
+    "addDeviceBySerial": {
+      "$ref": "#/definitions/AddDeviceBySerialCall"
+    },
+    "setTempKey": {
+      "$ref": "#/definitions/SetTempKeyCall"
     }
   },
   "required": [
@@ -490,7 +496,9 @@
     "getLanGateways",
     "setLanGateways",
     "changeLanGatewayKey",
-    "setBidcosInterface"
+    "setBidcosInterface",
+    "addDeviceBySerial",
+    "setTempKey"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -1754,6 +1762,14 @@
         },
         "seconds": {
           "type": "integer"
+        },
+        "sgtin": {
+          "type": "string",
+          "description": "HmIP: pair only this device, with its local key, without the key server"
+        },
+        "key": {
+          "type": "string",
+          "description": "The device key from the label (base32 or 32 hex digits)"
         }
       },
       "required": [
@@ -2264,6 +2280,10 @@
         },
         "seconds": {
           "type": "integer"
+        },
+        "keyMismatch": {
+          "type": "string",
+          "description": "BidCos-RF: a device that failed to pair for another system security key"
         }
       },
       "required": [
@@ -3117,6 +3137,12 @@
         },
         {
           "$ref": "#/definitions/SetBidcosInterfaceResponse"
+        },
+        {
+          "$ref": "#/definitions/AddDeviceBySerialResponse"
+        },
+        {
+          "$ref": "#/definitions/SetTempKeyResponse"
         }
       ]
     },
@@ -10411,6 +10437,126 @@
         "connected",
         "default",
         "dutyCycle"
+      ],
+      "additionalProperties": false
+    },
+    "AddDeviceBySerialRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "addDeviceBySerial"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "address"
+      ],
+      "additionalProperties": false
+    },
+    "AddDeviceBySerialResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "addDeviceBySerial_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "AddDeviceBySerialCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/AddDeviceBySerialRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/AddDeviceBySerialResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetTempKeyRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setTempKey"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "interfaceName": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "interfaceName",
+        "key"
+      ],
+      "additionalProperties": false
+    },
+    "SetTempKeyResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setTempKey_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetTempKeyCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetTempKeyRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetTempKeyResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
       ],
       "additionalProperties": false
     }

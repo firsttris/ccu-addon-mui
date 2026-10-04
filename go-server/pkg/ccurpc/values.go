@@ -1,9 +1,12 @@
 package ccurpc
 
 import (
+	"errors"
 	"fmt"
 	"math"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -130,6 +133,67 @@ func (c *Client) SetInstallMode(iface string, on bool, seconds int) error {
 	}
 	var reply interface{}
 	return c.call(iface, "setInstallMode", []interface{}{on, seconds, 1}, &reply)
+}
+
+// SetInstallModeWithWhitelist starts HmIP pairing for one device with its
+// local key, without the key server (setinstallmodehmip.tcl, installMode
+// LOCAL); sgtin and key are checked with HmIPWhitelistEntry
+func (c *Client) SetInstallModeWithWhitelist(iface string, seconds int, sgtin, key string) error {
+	if seconds < 1 || seconds > 300 {
+		return fmt.Errorf("invalid duration")
+	}
+	entry := map[string]interface{}{"ADDRESS": sgtin, "KEY": key, "KEY_MODE": "LOCAL"}
+	var reply interface{}
+	return c.call(iface, "setInstallModeWithWhitelist", []interface{}{true, seconds, []interface{}{entry}}, &reply)
+}
+
+// ErrKeyMismatch means the device uses another system security key
+// (addDevice fails with fault -7, cp_add_device.cgi action_rf_serial)
+var ErrKeyMismatch = errors.New("the device has another system security key")
+
+// AddDevice pairs a BidCos device by its serial number
+func (c *Client) AddDevice(iface, serial string) error {
+	if !addressRegex.MatchString(serial) || strings.Contains(serial, ":") {
+		return ErrInvalidAddress
+	}
+	var reply interface{}
+	err := c.call(iface, "addDevice", []interface{}{serial}, &reply)
+	if faultCode(err) == -7 {
+		return ErrKeyMismatch
+	}
+	return err
+}
+
+var faultRegex = regexp.MustCompile(`Fault\((-?\d+)\)`)
+
+// faultCode is the code of an XML-RPC fault; kolo/xmlrpc hands it over as
+// net/rpc's ServerError text "Fault(code): message"
+func faultCode(err error) int {
+	if err == nil {
+		return 0
+	}
+	if m := faultRegex.FindStringSubmatch(err.Error()); m != nil {
+		code, _ := strconv.Atoi(m[1])
+		return code
+	}
+	return 0
+}
+
+// KeyMismatchDevice is the device that failed to pair in install mode for
+// another security key ("" if none); reset clears it (getKeyMismatchDevice)
+func (c *Client) KeyMismatchDevice(iface string, reset bool) (string, error) {
+	var reply interface{}
+	if err := c.call(iface, "getKeyMismatchDevice", []interface{}{reset}, &reply); err != nil {
+		return "", err
+	}
+	return asString(reply), nil
+}
+
+// SetTempKey sets a temporary system security key for pairing a device
+// with another key (action_set_temp_key)
+func (c *Client) SetTempKey(iface, key string) error {
+	var reply interface{}
+	return c.call(iface, "setTempKey", []interface{}{key}, &reply)
 }
 
 // GetInstallMode returns the seconds pairing is still on (0: off).

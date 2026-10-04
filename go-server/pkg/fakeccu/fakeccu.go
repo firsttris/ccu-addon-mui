@@ -61,6 +61,12 @@ type CCU struct {
 
 	// installModeUntil by interface
 	installModeUntil map[string]time.Time
+	// Pairing by serial number: devices with a foreign security key (serial
+	// starting with "KEQ") need the temporary key set; the device that
+	// failed last (getKeyMismatchDevice)
+	tempKey, keyMismatch string
+	// The last HmIP whitelist (setInstallModeWithWhitelist)
+	Whitelist []map[string]interface{}
 	// Time modules created by save_program, for their ids
 	timeModules int
 	// Tile layouts by room, trade or favorite list id (ReGa metadata)
@@ -1036,6 +1042,11 @@ func (c *CCU) getInbox() string {
 func (c *CCU) AddInboxDevice(iface, address, deviceType string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.addInboxDevice(iface, address, deviceType)
+}
+
+// addInboxDevice is AddInboxDevice with c.mu held
+func (c *CCU) addInboxDevice(iface, address, deviceType string) {
 	data := c.fixture.Interfaces[iface]
 	if data == nil {
 		data = &InterfaceData{}
@@ -1718,7 +1729,14 @@ func (c *CCU) handleXMLRPC(iface string, w http.ResponseWriter, r *http.Request)
 	result, fault := c.call(iface, method, params)
 	w.Header().Set("Content-Type", "text/xml")
 	if fault != "" {
-		_, _ = io.WriteString(w, encodeFault(-1, fault))
+		// "-7:text" sends fault code -7
+		code := -1
+		if prefix, text, ok := strings.Cut(fault, ":"); ok {
+			if n, err := strconv.Atoi(prefix); err == nil {
+				code, fault = n, text
+			}
+		}
+		_, _ = io.WriteString(w, encodeFault(code, fault))
 		return
 	}
 	_, _ = io.WriteString(w, encodeResponse(result))
@@ -1766,6 +1784,44 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		} else {
 			delete(c.installModeUntil, iface)
 		}
+		return "", ""
+	case "setInstallModeWithWhitelist":
+		seconds, _ := paramAt(params, 1).(int)
+		c.installModeUntil[iface] = time.Now().Add(time.Duration(seconds) * time.Second)
+		c.Whitelist = nil
+		list, _ := paramAt(params, 2).([]interface{})
+		for _, item := range list {
+			if entry, ok := item.(map[string]interface{}); ok {
+				c.Whitelist = append(c.Whitelist, entry)
+				// The device answers at once: into the inbox, its address
+				// from the SGTIN
+				if sgtin := fmt.Sprint(entry["ADDRESS"]); len(sgtin) == 24 {
+					c.addInboxDevice(iface, sgtin[10:], "HmIP-PSM")
+				}
+			}
+		}
+		return "", ""
+	case "addDevice":
+		serial := stringParam(params, 0)
+		if strings.HasPrefix(serial, "KEQ") && c.tempKey == "" {
+			c.keyMismatch = serial
+			return nil, "-7:key mismatch"
+		}
+		if strings.HasPrefix(serial, "KEQ") {
+			// The temporary key served this device
+			c.tempKey = ""
+		}
+		c.addInboxDevice(iface, serial, "HM-LC-Sw1-FM")
+		c.calls["addDevice"]++
+		return map[string]interface{}{"ADDRESS": serial, "TYPE": "HM-LC-Sw1-FM"}, ""
+	case "getKeyMismatchDevice":
+		serial := c.keyMismatch
+		if b, _ := paramAt(params, 0).(bool); b {
+			c.keyMismatch = ""
+		}
+		return serial, ""
+	case "setTempKey":
+		c.tempKey = stringParam(params, 0)
 		return "", ""
 	case "getInstallMode":
 		remaining := time.Until(c.installModeUntil[iface])

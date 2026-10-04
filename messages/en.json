@@ -982,5 +982,16 @@
   "LGW_NONE": "No LAN gateways set up.",
   "LGW_UNSAVED": "Changes not applied yet.",
   "LGW_APPLY": "Apply",
-  "LGW_BUILTIN": "Central unit"
+  "LGW_BUILTIN": "Central unit",
+  "PAIR_LOCAL": "Pair without internet access (with KEY and SGTIN)",
+  "PAIR_LOCAL_HINT": "Only this device is paired, with the key from its label instead of the key server. Dashes may be entered.",
+  "PAIR_LOCAL_START": "Pair locally",
+  "PAIR_SERIAL": "Serial number",
+  "PAIR_SERIAL_START": "Pair by serial number",
+  "PAIR_SERIAL_DONE": "Device {serial} paired – it is in the inbox.",
+  "PAIR_SERIAL_FAILED": "Pairing by serial number {serial} failed",
+  "PAIR_KEY_TITLE": "Different security key",
+  "PAIR_KEY_TEXT": "The device {serial} could not be paired. It probably uses a different system security key. Enter the device's key and try again.",
+  "PAIR_KEY_LABEL": "System security key of the device",
+  "PAIR_KEY_RETRY": "Set key and try again"
 }
