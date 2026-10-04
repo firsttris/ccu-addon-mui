@@ -1465,7 +1465,7 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":501,"message":"invalid credentials"}}`)
 	case "Session.logout":
 		_, _ = io.WriteString(w, `{"version":"1.1","result":true,"error":null}`)
-	case "CCU.setSSH", "CCU.setSSHPassword", "CCU.restartSSHDaemon", "CCU.setAuthEnabled", "CCU.setHttpsRedirectEnabled", "User.restartLighttpd":
+	case "CCU.setSSH", "CCU.setSSHPassword", "CCU.restartSSHDaemon", "CCU.setAuthEnabled", "CCU.setHttpsRedirectEnabled", "User.restartLighttpd", "User.existsCertificate":
 		if req.Params["_session_id_"] != "fakeSession1" {
 			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
 			return

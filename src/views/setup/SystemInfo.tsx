@@ -9,6 +9,7 @@ import { GeneralSettings } from './GeneralSettings';
 import { Security } from './Security';
 import { Network } from './Network';
 import { Firewall } from './Firewall';
+import { Certificate } from './Certificate';
 import { useSystemInfo } from '../../queries';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Badge } from '../../components/ui/badge';
@@ -76,6 +77,7 @@ export const SystemInfo = () => (
     <Network />
     <Security />
     <Firewall />
+    <Certificate />
     <Addons />
     <Logging />
     <Backup />
