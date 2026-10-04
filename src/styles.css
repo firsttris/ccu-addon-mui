@@ -112,6 +112,14 @@ html body[data-scroll-locked] {
   [role='button']:not(:disabled) {
     cursor: pointer;
   }
+  /* The options of a native <select> open in a list the browser draws.
+     Some (Chrome on Windows, Firefox) take the select's light text in the
+     dark theme but keep a white list, so give the list its colors. */
+  select option,
+  select optgroup {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
+  }
 }
 
 /* Effects (Effects context): glows and animations come and go with the
