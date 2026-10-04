@@ -454,12 +454,13 @@ test('installiert ein bereitliegendes Firmware-Update', async ({ page }) => {
   await login(page);
   await page.goto('/setup');
 
-  // Only the window contact has newer firmware
-  await page.getByRole('button', { name: /Nur mit Update \(1\)/ }).click();
+  // The window contact (HmIP) and two BidCos devices have newer firmware
+  await page.getByRole('button', { name: /Nur mit Update \(3\)/ }).click();
   const table = page.getByRole('table', { name: 'Geräte' });
-  await expect(table.getByRole('row')).toHaveCount(2);
-  await expect(table.getByRole('row').nth(1)).toContainText('1.0.121.2.6');
-  await table.getByRole('link').first().click();
+  await expect(table.getByRole('row')).toHaveCount(4);
+  const windowContact = table.getByRole('row').filter({ hasText: '0008DA8A9F1234' });
+  await expect(windowContact).toContainText('1.0.121.2.6');
+  await windowContact.getByRole('link').first().click();
 
   const firmware = page.getByRole('region', { name: 'Firmware' });
   await expect(firmware.getByRole('status')).toHaveText(/Firmware 1\.2\.6 liegt auf dem Gerät bereit/);
@@ -470,6 +471,27 @@ test('installiert ein bereitliegendes Firmware-Update', async ({ page }) => {
   await expect(firmware.getByRole('status')).toHaveText('Die Firmware ist aktuell.');
   await expect(firmware.getByRole('button', { name: 'Update installieren' })).toHaveCount(0);
   await expect(firmware.getByRole('definition').first()).toHaveText('1.2.6');
+});
+
+test('aktualisiert BidCos-Geräte mit updateFirmware', async ({ page }) => {
+  await login(page);
+
+  // A sleeping device has to be woken with its key
+  await page.goto('/device/BidCos-RF/LEQ0000004');
+  const firmware = page.getByRole('region', { name: 'Firmware' });
+  await expect(firmware.getByRole('status')).toHaveText(/Firmware 1\.5 liegt auf der CCU bereit/);
+  await firmware.getByRole('button', { name: 'Update installieren' }).click();
+  await page.getByRole('dialog', { name: 'Firmware-Update' }).getByRole('button', { name: 'Update installieren' }).click();
+  await expect(page.getByText(/Das Gerät ist nicht erreichbar/)).toBeVisible();
+  await expect(firmware.getByRole('definition').first()).toHaveText('1.4');
+
+  await page.goto('/device/BidCos-RF/LEQ0000001');
+  await expect(firmware.getByRole('status')).toHaveText(/Firmware 2\.11 liegt auf der CCU bereit/);
+  await firmware.getByRole('button', { name: 'Update installieren' }).click();
+  await page.getByRole('dialog', { name: 'Firmware-Update' }).getByRole('button', { name: 'Update installieren' }).click();
+  await expect(page.getByText('Update gestartet')).toBeVisible();
+  await expect(firmware.getByRole('status')).toHaveText('Die CCU hat keine neuere Firmware für dieses Gerät.');
+  await expect(firmware.getByRole('definition').first()).toHaveText('2.11');
 });
 
 test('erstellt ein Backup und lädt es herunter', async ({ page }) => {

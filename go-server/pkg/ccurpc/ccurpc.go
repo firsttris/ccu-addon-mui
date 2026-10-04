@@ -6,6 +6,7 @@ package ccurpc
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -142,21 +143,93 @@ func validate(address, paramsetKey string) error {
 	return nil
 }
 
-// InstallFirmware starts the update of a HomeMatic IP device whose new
-// firmware has been delivered (FIRMWARE_UPDATE_STATE READY_FOR_UPDATE).
+// Errors of a device firmware update, as ic_ifacecmd.cgi (cmd_firmware_update)
+// tells them apart
+var (
+	// ErrDeviceUnreachable: the device did not answer (fault -1, or -10
+	// "Transmission Pending" for BidCos); it has to be in radio range and,
+	// if it sleeps, woken with its system key (fwUpdatePressSystemKey)
+	ErrDeviceUnreachable = errors.New("the device is not reachable")
+	// ErrDutyCycleHigh: the CCU's radio module used 80 % or more of its
+	// transmit time (isDutyCycleOK4DevUpdate in webui.js)
+	ErrDutyCycleHigh = errors.New("the duty cycle of the CCU is too high")
+)
+
+// dutyCycleWarningLevel is where the WebUI refuses device updates
+// (dcWarningLevel in isDutyCycleOK4DevUpdate)
+const dutyCycleWarningLevel = 80
+
+// isHmIPInterface: HomeMatic IP devices update with installFirmware, the
+// others with updateFirmware (cmd_firmware_update)
+func isHmIPInterface(iface string) bool {
+	return iface == "HmIP-RF" || iface == "HmIP-Wired"
+}
+
+// InstallFirmware starts the update of a device to the firmware the CCU
+// has for it, as the WebUI's update button does (FirmwareUpdate in
+// webui.js, cmd_firmware_update in ic_ifacecmd.cgi): HomeMatic IP devices
+// with installFirmware once it is delivered (READY_FOR_UPDATE,
+// DO_UPDATE_PENDING, LIVE_NEW_FIRMWARE_AVAILABLE), BidCos devices with
+// updateFirmware, which transfers and installs it in one go. Over radio it
+// first checks the CCU's duty cycle; wired HmIP devices skip that.
 func (c *Client) InstallFirmware(iface, address string) error {
-	if !addressRegex.MatchString(address) {
+	if !addressRegex.MatchString(address) || strings.Contains(address, ":") {
 		return ErrInvalidAddress
 	}
-	var reply interface{}
-	if err := c.call(iface, "installFirmware", []interface{}{address}, &reply); err != nil {
+	device, err := c.GetDeviceDescription(iface, address)
+	if err != nil {
 		return err
 	}
-	if ok, isBool := reply.(bool); isBool && !ok {
+	if !strings.HasPrefix(device.Type, "HmIPW-") && c.dutyCycleHigh() {
+		return ErrDutyCycleHigh
+	}
+	method := "updateFirmware"
+	if isHmIPInterface(iface) {
+		method = "installFirmware"
+	}
+	var reply interface{}
+	err = c.call(iface, method, []interface{}{address}, &reply)
+	if code := faultCode(err); code == -1 || code == -10 {
+		return ErrDeviceUnreachable
+	}
+	if err != nil {
+		return err
+	}
+	if !replyOK(reply) {
 		return fmt.Errorf("the CCU did not start the update")
 	}
 	c.Forget(iface, address)
 	return nil
+}
+
+// replyOK: installFirmware answers a bool, updateFirmware one per device
+func replyOK(reply interface{}) bool {
+	switch v := reply.(type) {
+	case bool:
+		return v
+	case []interface{}:
+		for _, item := range v {
+			if ok, isBool := item.(bool); isBool && !ok {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// dutyCycleHigh: the CCU's own BidCos radio module (type CCU2) used too
+// much of its transmit time. Without BidCos-RF there is nothing to check.
+func (c *Client) dutyCycleHigh() bool {
+	modules, err := c.ListBidcosInterfaces("BidCos-RF")
+	if err != nil {
+		return false
+	}
+	for _, module := range modules {
+		if module.Type == "CCU2" {
+			return module.DutyCycle >= dutyCycleWarningLevel
+		}
+	}
+	return false
 }
 
 // CallRaw calls a method and returns the decoded reply as is, e.g. for

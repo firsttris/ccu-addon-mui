@@ -241,6 +241,8 @@ type RadioInterface struct {
 	Description string `json:"description,omitempty"`
 	Connected   bool   `json:"connected"`
 	Default     bool   `json:"default"`
+	// Type: "CCU2" for the CCU's own module (only used here)
+	Type string `json:"-"`
 	// DutyCycle is the share of the allowed transmit time used in the last
 	// hour, in percent; at 100 % the module stops sending.
 	DutyCycle int `json:"dutyCycle"`
@@ -265,6 +267,7 @@ func (c *Client) ListBidcosInterfaces(iface string) ([]RadioInterface, error) {
 			Description: asString(m["DESCRIPTION"]),
 			Connected:   connected,
 			Default:     isDefault,
+			Type:        asString(m["TYPE"]),
 			DutyCycle:   asInt(m["DUTY_CYCLE"]),
 		})
 	}

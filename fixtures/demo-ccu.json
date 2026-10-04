@@ -529,7 +529,9 @@
           ],
           "VERSION": 26,
           "FIRMWARE": "2.8",
-          "FLAGS": 1
+          "FLAGS": 1,
+          "AVAILABLE_FIRMWARE": "2.11",
+          "RX_MODE": 1
         },
         {
           "ADDRESS": "LEQ0000001:1",
@@ -558,7 +560,9 @@
           ],
           "VERSION": 13,
           "FIRMWARE": "1.4",
-          "FLAGS": 1
+          "FLAGS": 1,
+          "AVAILABLE_FIRMWARE": "1.5",
+          "RX_MODE": 28
         },
         {
           "ADDRESS": "LEQ0000004:1",
@@ -4355,7 +4359,8 @@
           "DESCRIPTION": "",
           "CONNECTED": true,
           "DEFAULT": true,
-          "DUTY_CYCLE": 12
+          "DUTY_CYCLE": 12,
+          "TYPE": "CCU2"
         }
       ],
       "paramsets": {
