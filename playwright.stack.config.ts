@@ -66,6 +66,8 @@ export default defineConfig({
         NTP_CLIENT_FILE: path.join(stateDir, 'ntpclient'),
         TZ_FILE: path.join(stateDir, 'TZ'),
         GROUPS_FILE: path.resolve('fixtures/groups.gson'),
+        DIAGRAMS_FILE: path.join(stateDir, 'diagrams.json'),
+        DIAGRAMS_DIR: path.join(stateDir, 'diagrams'),
       },
     },
     {

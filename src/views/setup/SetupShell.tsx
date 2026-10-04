@@ -13,6 +13,7 @@ import HistoryIcon from '~icons/lucide/history';
 import KeyboardIcon from '~icons/lucide/keyboard';
 import ShieldIcon from '~icons/lucide/shield-check';
 import FlameIcon from '~icons/lucide/flame';
+import ChartIcon from '~icons/lucide/chart-line';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useInbox } from '../../queries';
 import { ElevateDialog } from '../../components/ElevateDialog';
@@ -142,6 +143,10 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
             <Link to="/history" className={navLink}>
               <HistoryIcon />
               {m.HIST_TITLE()}
+            </Link>
+            <Link to="/diagrams" className={navLink}>
+              <ChartIcon />
+              {m.DIAGRAMS()}
             </Link>
           </NavGroup>
         </nav>
