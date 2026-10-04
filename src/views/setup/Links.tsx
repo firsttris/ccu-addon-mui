@@ -322,14 +322,25 @@ export const useLinkChannelInfo = () => {
 };
 
 // Linking a channel of a device with a fitting channel of another one
-export const AddLinkForm = ({ interfaceName, deviceAddress, channels }: LinksProps) => {
+// Without a device (the overview): any linkable channel of any device, the
+// device and interface follow from it
+export const AddLinkForm = ({
+  interfaceName: deviceInterface,
+  deviceAddress: device,
+  channels,
+}: Partial<LinksProps>) => {
   const { showToast } = useToast();
   const { data: devices = [] } = useDevices();
   const names = useChannelNames();
   const action = useLinkAction();
   const label = (address: string) => `${names.get(address) ?? address} (${address})`;
-  const linkable = channels.filter((c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length);
+  const anyDevice = device === undefined;
+  const linkable = (anyDevice ? devices.flatMap((d) => d.channels ?? []) : (channels ?? [])).filter(
+    (c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length,
+  );
   const [own, setOwn] = useState('');
+  const deviceAddress = device ?? own.split(':')[0];
+  const interfaceName = deviceInterface ?? devices.find((d) => d.address === deviceAddress)?.interfaceName ?? '';
   const [partner, setPartner] = useState('');
   const [linkName, setLinkName] = useState('');
   const ownChannel = linkable.find((c) => c.address === own);
@@ -407,9 +418,9 @@ export const AddLinkForm = ({ interfaceName, deviceAddress, channels }: LinksPro
         >
           <strong className="text-sm">{m.ADD_LINK()}</strong>
           <div className="grid gap-1.5 text-sm text-muted-foreground">
-            {m.LINK_OWN_CHANNEL()}
+            {anyDevice ? m.LINK_CHANNEL() : m.LINK_OWN_CHANNEL()}
             <ChannelField
-              label={m.LINK_OWN_CHANNEL()}
+              label={anyDevice ? m.LINK_CHANNEL() : m.LINK_OWN_CHANNEL()}
               channels={ownChannels}
               value={ownChannels.find((c) => c.address === own)?.id}
               includeHidden

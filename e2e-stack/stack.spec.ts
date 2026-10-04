@@ -702,10 +702,12 @@ test('listet alle Direktverknüpfungen in Einrichten und legt neue an', async ({
 
   // A new one from the overview: the lower button to the dimmer
   const add = page.getByRole('region', { name: 'Verknüpfung anlegen' });
-  await add.getByLabel('Gerät').selectOption({ label: 'Taster Esszimmer (000855699C4F38)' });
+  // No device first: any channel, found in the dialog by its name
   const form = add.getByRole('form', { name: 'Verknüpfung anlegen' });
-  await form.getByRole('button', { name: 'Kanal dieses Geräts' }).click();
-  await page.getByRole('dialog', { name: 'Kanal dieses Geräts' }).getByRole('button', { name: /:2$/ }).click();
+  await form.getByRole('button', { name: 'Kanal (Auslöser oder Empfänger)' }).click();
+  const channels = page.getByRole('dialog', { name: 'Kanal (Auslöser oder Empfänger)' });
+  await channels.getByLabel('Suchen: Name, Gerät, Typ, Raum, Adresse').fill('esszimmer unten');
+  await channels.getByRole('button', { name: /^Taster Esszimmer unten.*:2$/ }).click();
   await form.getByRole('button', { name: 'Partner' }).click();
   await page.getByRole('dialog', { name: 'Partner' }).getByRole('button', { name: /:4$/ }).click();
   await form.getByLabel('Name der Verknüpfung').fill('Übersicht-Test');
