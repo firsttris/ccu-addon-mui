@@ -130,6 +130,7 @@ func Scripts() map[string]string {
 		"check_script":                checkScriptScript,
 		"set_logic_option":            setLogicOptionScript,
 		"edit_sysvar":                 editSysvarScript,
+		"clock_step":                  clockStepScript,
 		"set_log_level":               setLogLevelScript,
 		"set_user_password":           setUserPasswordScript,
 		"get_device_programs":         getDeviceProgramsScript,
@@ -195,6 +196,9 @@ var clearHistoryScript string
 
 //go:embed scripts/check_script.tcl
 var checkScriptScript string
+
+//go:embed scripts/clock_step.tcl
+var clockStepScript string
 
 //go:embed scripts/edit_sysvar.tcl
 var editSysvarScript string

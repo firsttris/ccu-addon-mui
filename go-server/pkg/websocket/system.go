@@ -166,6 +166,12 @@ type systemSettingsResponse struct {
 	City     string `json:"city,omitempty"`
 	// Whether reboot and shutdown work (the add-on runs on the CCU)
 	CanPower bool `json:"canPower"`
+	// The time servers (ntpclient), if the file is there
+	TimeServers *string `json:"timeServers,omitempty"`
+	// The time zones to choose from, if time.conf is there
+	TimeZones []string `json:"timeZones,omitempty"`
+	// Whether the clock can be set by hand (on the CCU)
+	CanSetClock bool `json:"canSetClock"`
 }
 
 // handleSystemSettings reads the location and clock, sets the location
@@ -177,6 +183,10 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 		Latitude  *float64 `json:"latitude"`
 		Longitude *float64 `json:"longitude"`
 		Action    string   `json:"action"`
+		// setTimeServers, setTimeZone, setClock ("2026-10-04 12:30:00")
+		Servers  string `json:"servers"`
+		TimeZone string `json:"timeZone"`
+		Time     string `json:"time"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -193,9 +203,16 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 			s.sendRequestError(client, msg.RequestID, "getSystemSettings failed: "+err.Error(), "CCU_ERROR")
 			return
 		}
-		response := systemSettingsResponse{Type: "getSystemSettings_response", RequestID: msg.RequestID, SystemSettings: settings, CanPower: powerAvailable()}
+		response := systemSettingsResponse{
+			Type: "getSystemSettings_response", RequestID: msg.RequestID, SystemSettings: settings,
+			CanPower: powerAvailable(), CanSetClock: clockAvailable(),
+		}
 		if conf := readTimeConf(); conf != nil {
 			response.TimeZone, response.City = conf["TIMEZONE"], conf["CITY"]
+			response.TimeZones = timeZoneList()
+		}
+		if servers, ok := readTimeServers(); ok {
+			response.TimeServers = &servers
 		}
 		s.sendJSON(client, response)
 	case "setLocation":
@@ -217,6 +234,60 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 					}
 				}
 				return previous, result, err
+			})
+	case "setTimeServers":
+		// cp_time.cgi action_apply_timeserver
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.Servers},
+			func() (interface{}, string, error) {
+				previous, ok := readTimeServers()
+				if !ok {
+					return nil, "NOT_SUPPORTED", nil
+				}
+				if err := writeTimeServers(msg.Servers); err != nil {
+					return nil, "", err
+				}
+				afterClockChange([]string{"setclock", "noloop"}, []string{"SetInterfaceClock", rfdAddress()})
+				return previous, rega.SetOK, nil
+			})
+	case "setTimeZone":
+		// cp_time.cgi action_apply_position: time.conf, TZ, updateTZ.sh
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.TimeZone},
+			func() (interface{}, string, error) {
+				conf := readTimeConf()
+				if conf == nil {
+					return nil, "NOT_SUPPORTED", nil
+				}
+				if err := writeTimeZone(msg.TimeZone); err != nil {
+					return nil, "", err
+				}
+				afterClockChange([]string{"/bin/updateTZ.sh"}, []string{"/sbin/hwclock", "-wu"}, []string{"SetInterfaceClock", rfdAddress()})
+				if err := s.regaClient.ClockStep("changed"); err != nil {
+					logger.Error("Failed to tell ReGa about the new time zone:", err)
+				}
+				return conf["TIMEZONE"], rega.SetOK, nil
+			})
+	case "setClock":
+		// cp_time.cgi action_apply_time
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.Time},
+			func() (interface{}, string, error) {
+				t, err := parseClock(msg.Time)
+				if err != nil {
+					return nil, "", err
+				}
+				if !clockAvailable() {
+					return nil, "NOT_SUPPORTED", nil
+				}
+				if err := s.regaClient.ClockStep("setting"); err != nil {
+					return nil, "", err
+				}
+				if err := runClock("date", "-s", t.Format("200601021504.05")); err != nil {
+					return nil, "", err
+				}
+				if err := s.regaClient.ClockStep("changed"); err != nil {
+					return nil, "", err
+				}
+				afterClockChange([]string{"/sbin/hwclock", "-wu"}, []string{"SetInterfaceClock", rfdAddress()})
+				return nil, rega.SetOK, nil
 			})
 	case "powerAction":
 		if _, ok := powerCommands[msg.Action]; !ok {

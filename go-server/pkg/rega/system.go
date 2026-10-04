@@ -83,3 +83,19 @@ func (c *Client) SaveSystem() (string, error) {
 	result, _, err := resultWithValue(output)
 	return result, err
 }
+
+// ClockStep tells ReGa the clock is set by hand: "setting" before, "changed"
+// after (cp_time.cgi, action_apply_time)
+func (c *Client) ClockStep(step string) error {
+	if step != "setting" && step != "changed" {
+		return fmt.Errorf("invalid step")
+	}
+	output, err := c.Execute(strings.ReplaceAll(clockStepScript, "{{STEP}}", step))
+	if err != nil {
+		return err
+	}
+	if strings.TrimSpace(output) != SetOK {
+		return fmt.Errorf("unexpected response from ReGa: %q", output)
+	}
+	return nil
+}

@@ -743,5 +743,13 @@
   "LOGIC_OPERATE": "operable",
   "LOGIC_HIDDEN": "hidden",
   "DESCRIPTION": "Description",
-  "EDIT_SYSVAR": "Edit {name}"
+  "EDIT_SYSVAR": "Edit {name}",
+  "SYS_CLOCK": "Time zone and time servers",
+  "SYS_TIME_ZONE": "Time zone",
+  "SYS_TIME_ZONE_SAVE": "Apply time zone",
+  "SYS_TIME_SERVERS": "Time servers (NTP, separated by blanks)",
+  "SYS_TIME_SERVERS_SAVE": "Apply time servers",
+  "SYS_CLOCK_FROM_BROWSER": "Use this device's time",
+  "SYS_CLOCK_SET": "Clock set",
+  "SYS_CLOCK_HINT": "As the WebUI's time and position settings. With time servers the CCU sets its clock itself; by hand only without internet."
 }

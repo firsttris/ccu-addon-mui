@@ -92,6 +92,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 	// The add-ons; this one's rc.d script is "mui" (addon_installer/rc.d)
 	wsServer.SetAddons(addons.New(cfg.AddonsDir, "mui", cfg.WebUIURL))
 	wsServer.SetLogs(logs.New(cfg.SyslogConfig, cfg.LogDir))
+	websocket.SetClockFiles(cfg.TimeConfFile, cfg.NTPClientFile, cfg.TZFile)
 
 	// Push notifications about new alarms and service messages
 	if store, err := push.OpenStore(cfg.PushFile); err != nil {

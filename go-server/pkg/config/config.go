@@ -42,6 +42,10 @@ type Config struct {
 	// (the WebUI's Zentralen-Wartung)
 	SyslogConfig string
 	LogDir       string
+	// The clock's files (the WebUI's cp_time.cgi)
+	TimeConfFile  string
+	NTPClientFile string
+	TZFile        string
 	// AuditLogFile records every change made through the add-on; empty
 	// disables it.
 	AuditLogFile string
@@ -83,6 +87,9 @@ func Load() *Config {
 		AddonsDir:          getEnv("ADDONS_DIR", "/etc/config/rc.d"),
 		SyslogConfig:       getEnv("SYSLOG_CONFIG", "/etc/config/syslog"),
 		LogDir:             getEnv("LOG_DIR", "/var/log"),
+		TimeConfFile:       getEnv("TIME_CONF_FILE", "/etc/config/time.conf"),
+		NTPClientFile:      getEnv("NTP_CLIENT_FILE", "/etc/config/ntpclient"),
+		TZFile:             getEnv("TZ_FILE", "/etc/config/TZ"),
 		BackupDir:          getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
 	}
 }

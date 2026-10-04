@@ -67,6 +67,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		AddonsDir:          addonsDir(t),
 	}
 	cfg.SyslogConfig, cfg.LogDir = logFiles(t)
+	cfg.TimeConfFile, cfg.NTPClientFile, cfg.TZFile = clockFiles(t)
 	auditLogs[ccu] = cfg.AuditLogFile
 	wsPorts[ccu] = cfg.WSPort
 
@@ -109,6 +110,17 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 
 // auditLogs remembers the audit log file of each started stack
 var auditLogs = map[*fakeccu.CCU]string{}
+
+// clockFiles are time.conf and ntpclient as the CCU writes them, and where
+// TZ goes
+func clockFiles(t *testing.T) (string, string, string) {
+	dir := t.TempDir()
+	timeConf := filepath.Join(dir, "time.conf")
+	_ = os.WriteFile(timeConf, []byte("COUNTRY=Deutschland\nCITY='Berlin'\nLATITUDE=52.52\nLONGITUDE=13.405\nTIMEZONE=CET/CEST\n"), 0o644)
+	ntp := filepath.Join(dir, "ntpclient")
+	_ = os.WriteFile(ntp, []byte("NTPSERVERS='pool.ntp.org'\n"), 0o644)
+	return timeConf, ntp, filepath.Join(dir, "TZ")
+}
 
 // wsPorts remembers the WebSocket port of each started stack
 var wsPorts = map[*fakeccu.CCU]int{}
@@ -1806,5 +1818,51 @@ func TestStackEditSysvar(t *testing.T) {
 	}
 	if m := edit("e5", message{"id": 4242, "kind": "string"}); m["code"] != "NOT_FOUND" {
 		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}
+
+func TestStackClock(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	settings := func(id string) message {
+		send(t, conn, message{"type": "getSystemSettings", "requestId": id})
+		return receive(t, conn, byRequestID(id))
+	}
+	m := settings("g1")
+	if m["timeServers"] != "pool.ntp.org" || m["timeZone"] != "CET/CEST" || m["canSetClock"] != false {
+		t.Fatalf("unexpected clock settings: %v", m)
+	}
+	if zones, _ := m["timeZones"].([]interface{}); len(zones) < 28 {
+		t.Fatalf("expected the WebUI's time zones, got %v", m["timeZones"])
+	}
+
+	send(t, conn, message{"type": "setTimeServers", "requestId": "n1", "servers": " ptbtime1.ptb.de   fritz.box "})
+	if r := receive(t, conn, byRequestID("n1")); r["success"] != true {
+		t.Fatalf("setTimeServers failed: %v", r)
+	}
+	send(t, conn, message{"type": "setTimeZone", "requestId": "z1", "timeZone": "GMT/BST"})
+	if r := receive(t, conn, byRequestID("z1")); r["success"] != true {
+		t.Fatalf("setTimeZone failed: %v", r)
+	}
+	if m := settings("g2"); m["timeServers"] != "ptbtime1.ptb.de fritz.box" || m["timeZone"] != "GMT/BST" || m["city"] != "Berlin" {
+		t.Fatalf("clock settings not saved: %v", m)
+	}
+
+	for _, bad := range []message{
+		{"type": "setTimeServers", "servers": "a';rm -rf /"},
+		{"type": "setTimeZone", "timeZone": "Mars/Olympus"},
+		{"type": "setClock", "time": "gestern"},
+	} {
+		bad["requestId"] = "bad"
+		send(t, conn, bad)
+		if r := receive(t, conn, byRequestID("bad")); r["code"] != "INVALID_VALUE" {
+			t.Fatalf("expected INVALID_VALUE for %v, got %v", bad, r)
+		}
+	}
+	// Not on a CCU: the clock is not set by hand
+	send(t, conn, message{"type": "setClock", "requestId": "c1", "time": "2026-10-04 12:30:00"})
+	if r := receive(t, conn, byRequestID("c1")); r["code"] != "NOT_SUPPORTED" {
+		t.Fatalf("expected NOT_SUPPORTED, got %v", r)
 	}
 }
