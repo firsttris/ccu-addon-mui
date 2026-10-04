@@ -160,8 +160,8 @@ behält. Wer alles entfernen will, löscht sie per SSH.
 das Log ansehen (`/var/log/mui-websocket-server.log`).
 
 **Werte ändern sich nicht live**: Der Server meldet sich bei den Funkdiensten der CCU für Events an und
-prüft die Verbindung jede Minute. Nach einem Neustart der Funkdienste dauert es bis zu 6 Minuten, bis er
-sich neu anmeldet. Ein Neustart des Add-ons geht schneller.
+prüft die Verbindung nach einer Minute ohne Events. Nach einem Neustart der Funkdienste meldet er sich nach
+gut einer Minute von selbst neu an.
 
 **„Zu viele Versuche“ bei der Anmeldung**: Nach 5 falschen Passwörtern in einer Minute ist die Anmeldung
 für diesen Benutzer auf diesem Gerät eine Minute gesperrt. Andere Geräte und Benutzer betrifft das nicht.

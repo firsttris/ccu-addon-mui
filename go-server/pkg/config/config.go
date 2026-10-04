@@ -1,9 +1,11 @@
 package config
 
 import (
+	"encoding/xml"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 )
 
@@ -68,9 +70,17 @@ type Config struct {
 func Load() *Config {
 	ccuHost := getEnv("CCU_HOST", "localhost")
 
-	regaPort := 8181
+	// From the LAN the services are reached through lighttpd's ports (2001,
+	// 2010, 9292, 8181), which may require authentication. On the CCU the
+	// add-on talks to the services directly on their own ports, as ReGa
+	// does (InterfacesList.xml, webui_remoteapi.conf).
+	regaPort, rpcPort, hmipPort, virtualDevicesPort := 8181, 2001, 2010, 9292
 	if ccuHost == "localhost" {
 		regaPort = 8183
+		ports := localInterfacePorts(interfacesListFile)
+		rpcPort = portOr(ports["BidCos-RF"], 32001)
+		hmipPort = portOr(ports["HmIP-RF"], 32010)
+		virtualDevicesPort = portOr(ports["VirtualDevices"], 39292)
 	}
 
 	return &Config{
@@ -78,9 +88,9 @@ func Load() *Config {
 		// Only lighttpd (or the Vite dev proxy) needs to reach the
 		// WebSocket server; it must not be reachable directly from the LAN.
 		WSBindHost:         getEnv("WS_BIND_HOST", "127.0.0.1"),
-		RPCPort:            getEnvInt("RPC_PORT", 2001),
-		HmIPPort:           getEnvInt("HMIP_PORT", 2010),
-		VirtualDevicesPort: getEnvInt("VIRTUAL_DEVICES_PORT", 9292),
+		RPCPort:            getEnvInt("RPC_PORT", rpcPort),
+		HmIPPort:           getEnvInt("HMIP_PORT", hmipPort),
+		VirtualDevicesPort: getEnvInt("VIRTUAL_DEVICES_PORT", virtualDevicesPort),
 		RPCServerPort:      getEnvInt("RPC_SERVER_PORT", 9099),
 		CCUHost:            ccuHost,
 		CCUUser:            getEnv("CCU_USER", ""),
@@ -108,6 +118,48 @@ func Load() *Config {
 		DiagramsDir:        getEnv("DIAGRAMS_DIR", defaultDataDir("mui-diagrams")),
 		BackupDir:          getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
 	}
+}
+
+// interfacesListFile lists the interface processes and where ReGa reaches
+// them, e.g. xmlrpc_bin://127.0.0.1:32001 for BidCos-RF.
+var interfacesListFile = "/etc/config/InterfacesList.xml"
+
+var urlPortRegex = regexp.MustCompile(`^[a-z_]+://[^/:]+:(\d+)`)
+
+// localInterfacePorts reads the ports of the interface processes by name
+// from InterfacesList.xml; empty if the file is missing (not on a CCU).
+func localInterfacePorts(path string) map[string]int {
+	ports := map[string]int{}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ports
+	}
+	var list struct {
+		IPC []struct {
+			Name string `xml:"name"`
+			URL  string `xml:"url"`
+		} `xml:"ipc"`
+	}
+	if err := xml.Unmarshal(data, &list); err != nil {
+		log.Printf("Ignoring %s: %v", path, err)
+		return ports
+	}
+	for _, ipc := range list.IPC {
+		// url.Parse rejects the scheme xmlrpc_bin
+		if m := urlPortRegex.FindStringSubmatch(ipc.URL); m != nil {
+			if port, err := strconv.Atoi(m[1]); err == nil {
+				ports[ipc.Name] = port
+			}
+		}
+	}
+	return ports
+}
+
+func portOr(port, fallback int) int {
+	if port > 0 {
+		return port
+	}
+	return fallback
 }
 
 // defaultAuthKeyFile uses the CCU's persistent config directory (kept across

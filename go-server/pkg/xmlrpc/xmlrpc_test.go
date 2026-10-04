@@ -155,6 +155,8 @@ type fakeCCU struct {
 	mu        sync.Mutex
 	calls     []string
 	failInits int
+	// onPing, if set, answers a ping like the CCU (with a PONG event)
+	onPing func(interfaceID string)
 }
 
 func (f *fakeCCU) handler(w http.ResponseWriter, r *http.Request) {
@@ -173,6 +175,9 @@ func (f *fakeCCU) handler(w http.ResponseWriter, r *http.Request) {
 	if fail {
 		http.Error(w, "not ready", http.StatusServiceUnavailable)
 		return
+	}
+	if call.MethodName == "ping" && f.onPing != nil && len(call.Params.Param) > 0 && call.Params.Param[0].Value.String != nil {
+		go f.onPing(*call.Params.Param[0].Value.String)
 	}
 	_, _ = io.WriteString(w, `<?xml version="1.0"?><methodResponse><params><param><value><string></string></value></param></params></methodResponse>`)
 }
@@ -234,16 +239,38 @@ func TestRegistrationPingsAndReinitsWhenCCUGoesQuiet(t *testing.T) {
 
 	s := newTestServer(ts.URL)
 	s.pingAfter = 30 * time.Millisecond
-	s.reinitAfter = 80 * time.Millisecond
+	s.pongTimeout = 20 * time.Millisecond
+	s.reinitAfter = time.Hour
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort)
 
-	// The fake CCU never sends callbacks, so the server has to ping and
-	// then register again.
+	// The fake CCU never sends callbacks, so the server has to ping and,
+	// without a PONG, register again (long before reinitAfter).
 	waitFor(t, "ping", func() bool { return ccu.count("ping") >= 1 })
 	waitFor(t, "re-init", func() bool { return ccu.count("init") >= 2 })
+}
+
+func TestRegistrationKeptWhenPingIsAnswered(t *testing.T) {
+	ccu := &fakeCCU{}
+	ts := httptest.NewServer(http.HandlerFunc(ccu.handler))
+	defer ts.Close()
+
+	s := newTestServer(ts.URL)
+	s.pingAfter = 30 * time.Millisecond
+	s.pongTimeout = 40 * time.Millisecond
+	s.reinitAfter = time.Hour
+	ccu.onPing = func(id string) { s.dispatchEvent([]interface{}{id, "CENTRAL", "PONG", id}) }
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort)
+
+	waitFor(t, "several pings", func() bool { return ccu.count("ping") >= 3 })
+	if n := ccu.count("init"); n != 1 {
+		t.Fatalf("expected no re-init while pings are answered, got %d init calls", n)
+	}
 }
 
 func TestRegistrationStaysQuietWhileEventsArrive(t *testing.T) {

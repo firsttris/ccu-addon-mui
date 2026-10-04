@@ -15,9 +15,9 @@ flowchart LR
     L["lighttpd<br/>:80 / :443"]
     S["ccu-addon-mui-server<br/>Go, 127.0.0.1:8088"]
     R["ReGa<br/>rega.exe"]
-    RF["rfd<br/>BidCos-RF :2001"]
-    IP["crRFD / HMIPServer<br/>HmIP-RF :2010"]
-    V["VirtualDevices<br/>:9292"]
+    RF["rfd<br/>BidCos-RF :32001"]
+    IP["crRFD / HMIPServer<br/>HmIP-RF :32010"]
+    V["VirtualDevices<br/>:39292"]
     W["WebUI<br/>JSON-RPC, CGIs"]
   end
   App -- "HTTPS: App-Dateien<br/>/addons/mui" --> L
@@ -112,11 +112,16 @@ Benutzer und das Systemprotokoll. Der Server schickt ihr HM-Script per `POST /re
 
 ### XML-RPC zu den Funkdiensten
 
-| Dienst | Port | wofür |
+| Dienst | Port auf der CCU (aus dem LAN) | wofür |
 |---|---|---|
-| BidCos-RF (rfd) | 2001 | Gerätebeschreibungen, Paramsets, Anlernen, Verknüpfungen, LAN-Gateways, Gerätetausch, Log-Level; Events |
-| HmIP-RF (crRFD) | 2010 | dasselbe für HmIP und HmIP Wired, dazu Anlernen mit KEY/SGTIN und Firmware-Updates; Events |
-| VirtualDevices | 9292 | Heizgruppen und virtuelle Geräte |
+| BidCos-RF (rfd) | 32001 (2001) | Gerätebeschreibungen, Paramsets, Anlernen, Verknüpfungen, LAN-Gateways, Gerätetausch, Log-Level; Events |
+| HmIP-RF (crRFD) | 32010 (2010) | dasselbe für HmIP und HmIP Wired, dazu Anlernen mit KEY/SGTIN und Firmware-Updates; Events |
+| VirtualDevices | 39292 (9292) | Heizgruppen und virtuelle Geräte |
+
+Die Ports 2001, 2010, 9292 und 8181 sind Weiterleitungen von lighttpd an die Dienste (`webui_remoteapi.conf`),
+je nach Einstellung mit Authentifizierung. Auf der CCU spricht der Server die Dienste direkt an, wie ReGa
+selbst: Die Ports liest er aus `/etc/config/InterfacesList.xml`, ReGa erreicht er auf 8183. Das spart den
+Umweg und funktioniert unabhängig von lighttpd und der Authentifizierung der Fernzugriffs-Ports.
 
 Gerätebeschreibungen und Paramset-Beschreibungen ändern sich nur mit der Firmware. Der Server cacht sie je
 Schnittstelle, Gerätetyp, Kanaltyp, Firmware und Paramset und verwirft den Cache, wenn die CCU
@@ -125,10 +130,13 @@ Beschreibung (bekannt, schreibbar, im Bereich) und wandelt JSON-Zahlen in den ri
 
 ### Events
 
-Der Server ist selbst ein XML-RPC-Server auf Port 9099 und meldet sich mit `init` bei rfd und crRFD an.
+Der Server ist selbst ein XML-RPC-Server auf Port 9099 und meldet sich mit `init` bei rfd, crRFD und
+VirtualDevices an.
 Ab dann schickt die CCU jede Wertänderung als `event` (meist gebündelt in `system.multicall`).
 
-- Kommt drei Minuten lang nichts, schickt der Server `ping`; nach sechs Minuten Stille meldet er sich neu an.
+- Kommt eine Minute lang nichts, schickt der Server `ping`. Alle drei Dienste antworten darauf mit einem
+  `PONG`-Event. Bleibt es 15 Sekunden aus, hat der Dienst die Anmeldung vergessen (z. B. nach einem Neustart),
+  und der Server meldet sich neu an. Eine verlorene Anmeldung fällt so nach gut einer Minute auf.
   Schlägt die Anmeldung fehl, versucht er es mit wachsendem Abstand (5 s bis 5 min) weiter.
 - Jedes Event geht an die Diagramm-Aufzeichnung und an alle Verbindungen, die den Kanal abonniert haben.
 - Die Reihenfolge bleibt erhalten, weil der Handler synchron arbeitet.

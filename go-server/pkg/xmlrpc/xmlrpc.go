@@ -39,11 +39,15 @@ const maxRequestBodySize = 8 << 20
 
 // Timings for keeping the CCU registration alive. The CCU silently drops
 // registrations (e.g. when rfd or the HmIP server restarts), so an interface
-// that has been quiet is pinged, and re-initialised if even that stays
-// unanswered.
+// that has been quiet for a minute is pinged. rfd, the HmIP server and the
+// virtual devices all answer with a PONG event to the callback
+// (HMIPServer.jar AccessPointUtil.sendPong, VirtualDeviceHandlerRega); if
+// none arrives within pongTimeout, the server registers again. A lost
+// registration is noticed after about 75 seconds instead of minutes.
 const (
-	defaultCheckInterval  = 1 * time.Minute
-	defaultPingAfter      = 3 * time.Minute
+	defaultCheckInterval  = 5 * time.Second
+	defaultPingAfter      = 1 * time.Minute
+	defaultPongTimeout    = 15 * time.Second
 	defaultReinitAfter    = 6 * time.Minute
 	defaultInitialBackoff = 5 * time.Second
 	defaultMaxBackoff     = 5 * time.Minute
@@ -64,6 +68,7 @@ type Server struct {
 
 	checkInterval  time.Duration
 	pingAfter      time.Duration
+	pongTimeout    time.Duration
 	reinitAfter    time.Duration
 	initialBackoff time.Duration
 	maxBackoff     time.Duration
@@ -123,6 +128,7 @@ func NewServer(cfg *config.Config, eventHandler EventHandler) *Server {
 
 		checkInterval:  defaultCheckInterval,
 		pingAfter:      defaultPingAfter,
+		pongTimeout:    defaultPongTimeout,
 		reinitAfter:    defaultReinitAfter,
 		initialBackoff: defaultInitialBackoff,
 		maxBackoff:     defaultMaxBackoff,
@@ -274,16 +280,22 @@ func (s *Server) maintainRegistration(ctx context.Context, client *xmlrpc.Client
 	interfaceID := interfaceIDFor(interfaceName)
 	registered := false
 	backoff := s.initialBackoff
+	var pinged time.Time // when the unanswered ping was sent, zero if none
 
 	for {
 		wait := s.checkInterval
 
 		idle := s.idleTime(interfaceID)
+		// Any callback since the ping (the PONG or an event) answers it
+		if !pinged.IsZero() && idle < time.Since(pinged) {
+			pinged = time.Time{}
+		}
 		switch {
-		case !registered || idle >= s.reinitAfter:
+		case !registered || idle >= s.reinitAfter || (!pinged.IsZero() && time.Since(pinged) >= s.pongTimeout):
 			if registered {
 				logger.Info(fmt.Sprintf("🔄 No callbacks from %s for %s, re-registering", interfaceName, idle.Round(time.Second)))
 			}
+			pinged = time.Time{}
 			if err := s.initInterface(client, interfaceName, port); err != nil {
 				registered = false
 				wait = backoff
@@ -293,12 +305,16 @@ func (s *Server) maintainRegistration(ctx context.Context, client *xmlrpc.Client
 				backoff = s.initialBackoff
 				s.markSeen(interfaceID)
 			}
-		case idle >= s.pingAfter:
-			// The CCU answers a ping with a PONG event to our callback,
-			// which resets the idle time if the registration is still alive.
+		case pinged.IsZero() && idle >= s.pingAfter:
+			// Taken before the call: the PONG may arrive before it returns
+			sent := time.Now()
 			var result interface{}
 			if err := client.Call("ping", []interface{}{interfaceID}, &result); err != nil {
+				// Not reachable (e.g. restarting): register again, with backoff
 				logger.Debugf("Ping to %s failed: %v", interfaceName, err)
+				registered = false
+			} else {
+				pinged = sent
 			}
 		}
 
