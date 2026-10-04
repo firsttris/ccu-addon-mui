@@ -75,6 +75,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		SessionsFile:       filepath.Join(t.TempDir(), "sessions.json"),
 		BackupDir:          filepath.Join(t.TempDir(), "backups"),
 		PushFile:           filepath.Join(t.TempDir(), "push.json"),
+		RulesFile:          filepath.Join(t.TempDir(), "rules.json"),
 		PushSubject:        "mailto:test@example.com",
 		AddonsDir:          addonsDir(t),
 	}
@@ -2910,5 +2911,44 @@ func TestStackDeviceFirmware(t *testing.T) {
 	send(t, conn, message{"type": "deleteDeviceFirmware", "requestId": "d11", "id": "missing"})
 	if m := receive(t, conn, byRequestID("d11")); m["code"] != "NOT_FOUND" {
 		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+}
+
+// Notification rules: administrators save and delete them, everyone reads
+// them; invalid rules are refused
+func TestStackRules(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	rule := map[string]interface{}{"name": "Fenster Bad offen", "enabled": true, "minutes": 15, "message": "Fenster Bad ist seit 15 Minuten offen",
+		"conditions": []interface{}{map[string]interface{}{
+			"channelId": 1301, "interfaceName": "HmIP-RF", "address": "003660C9930AB6:1", "datapoint": "STATE", "op": "ne", "value": 0,
+		}}}
+	send(t, conn, message{"type": "saveRule", "requestId": "r1", "rule": rule})
+	saved := receive(t, conn, byRequestID("r1"))
+	if saved["success"] != true {
+		t.Fatalf("save: %v", saved)
+	}
+	id := saved["rule"].(map[string]interface{})["id"].(string)
+
+	send(t, conn, message{"type": "getRules", "requestId": "r2"})
+	list := receive(t, conn, byRequestID("r2"))["rules"].([]interface{})
+	if len(list) != 1 || list[0].(map[string]interface{})["id"] != id {
+		t.Fatalf("rules: %v", list)
+	}
+
+	rule["from"] = "22:00"
+	send(t, conn, message{"type": "saveRule", "requestId": "r3", "rule": rule})
+	if m := receive(t, conn, byRequestID("r3")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("time window without end: %v", m)
+	}
+
+	send(t, conn, message{"type": "deleteRule", "requestId": "r4", "id": id})
+	if m := receive(t, conn, byRequestID("r4")); m["success"] != true {
+		t.Fatalf("delete: %v", m)
+	}
+	send(t, conn, message{"type": "deleteRule", "requestId": "r5", "id": id})
+	if m := receive(t, conn, byRequestID("r5")); m["code"] != "NOT_FOUND" {
+		t.Fatalf("delete twice: %v", m)
 	}
 }

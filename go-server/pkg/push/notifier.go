@@ -165,6 +165,17 @@ func (n *Notifier) deliver(entry Entry, notification Notification) {
 	}
 }
 
+// NotifyRule tells the devices that receive rules that a rule's conditions
+// hold.
+func (n *Notifier) NotifyRule(id, name, message string) {
+	notification := Notification{Title: name, Body: message, Tag: "rule-" + id, URL: "./"}
+	for _, entry := range n.store.All() {
+		if entry.Rules {
+			n.deliver(entry, notification)
+		}
+	}
+}
+
 // Test sends a test notification to one subscription.
 func (n *Notifier) Test(endpoint, title, body string) error {
 	entry, ok := n.store.Get(endpoint)

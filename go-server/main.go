@@ -20,6 +20,7 @@ import (
 	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
+	"ccu-addon-mui-server/pkg/rules"
 	"ccu-addon-mui-server/pkg/settings"
 	"ccu-addon-mui-server/pkg/types"
 	"ccu-addon-mui-server/pkg/websocket"
@@ -101,6 +102,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 	wsServer.SetSettings(settings.New(cfg.ConfigDir), cfg.DiagramsDir)
 
 	// Push notifications about new alarms and service messages
+	var ruleEngine *rules.Engine
 	if store, err := push.OpenStore(cfg.PushFile); err != nil {
 		logger.Error("Push notifications disabled:", err)
 	} else if vapid, err := store.VAPID(cfg.PushSubject); err != nil {
@@ -109,6 +111,18 @@ func run(ctx context.Context, cfg *config.Config) error {
 		notifier := push.NewNotifier(store, vapid, regaClient)
 		wsServer.SetPush(store, notifier)
 		go notifier.Run(ctx, 30*time.Second)
+
+		// Notification rules: states of devices, checked on every event
+		if ruleStore, err := rules.OpenStore(cfg.RulesFile); err != nil {
+			logger.Error("Notification rules disabled:", err)
+		} else {
+			ruleEngine = rules.NewEngine(ruleStore, deviceRPC, func(r rules.Rule) {
+				logger.Info("🔔 Rule \"" + r.Name + "\" notifies")
+				notifier.NotifyRule(r.ID, r.Name, r.Text())
+			})
+			wsServer.SetRules(ruleStore, ruleEngine)
+			go ruleEngine.Run(ctx, 30*time.Second)
+		}
 	}
 
 	// Diagrams record the values of their datapoints
@@ -130,6 +144,9 @@ func run(ctx context.Context, cfg *config.Config) error {
 
 	rpcServer := xmlrpc.NewServer(cfg, func(event *types.CCUEvent) {
 		wsServer.RecordEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
+		if ruleEngine != nil {
+			ruleEngine.OnEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
+		}
 		wsServer.BroadcastToClients(event)
 	})
 	// Descriptions change with new firmware or re-pairing

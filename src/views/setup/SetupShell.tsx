@@ -14,6 +14,7 @@ import KeyboardIcon from '~icons/lucide/keyboard';
 import ShieldIcon from '~icons/lucide/shield-check';
 import FlameIcon from '~icons/lucide/flame';
 import ChartIcon from '~icons/lucide/chart-line';
+import BellIcon from '~icons/lucide/bell-ring';
 import GatewayIcon from '~icons/lucide/router';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useInbox } from '../../queries';
@@ -154,6 +155,10 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
             <Link to="/diagrams" className={navLink}>
               <ChartIcon />
               {m.DIAGRAMS()}
+            </Link>
+            <Link to="/rules" className={navLink}>
+              <BellIcon />
+              {m.RULES()}
             </Link>
           </NavGroup>
         </nav>

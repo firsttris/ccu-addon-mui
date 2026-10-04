@@ -99,8 +99,8 @@ Für ein Tablet an der Wand:
 
 ## Push-Benachrichtigungen
 
-Im Menü unter *Benachrichtigungen* aktivierst du Push für **Alarme** und **Servicemeldungen**, getrennt pro
-Gerät. Die Zentrale schickt sie über den Push-Dienst des Browsers (Web Push mit VAPID); ein Konto bei
+Im Menü unter *Benachrichtigungen* aktivierst du Push für **Alarme**, **Servicemeldungen** und
+**Regeln** ([Benachrichtigungsregeln](bedienung.md#benachrichtigungsregeln)), getrennt pro Gerät. Die Zentrale schickt sie über den Push-Dienst des Browsers (Web Push mit VAPID); ein Konto bei
 einem Drittanbieter ist nicht nötig. Voraussetzungen:
 
 - HTTPS (siehe oben).

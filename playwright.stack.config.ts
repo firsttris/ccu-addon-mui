@@ -70,6 +70,7 @@ export default defineConfig({
         TZ_FILE: path.join(stateDir, 'TZ'),
         GROUPS_FILE: path.join(stateDir, 'groups.gson'),
         DIAGRAMS_FILE: path.join(stateDir, 'diagrams.json'),
+        RULES_FILE: path.join(stateDir, 'rules.json'),
         DIAGRAMS_DIR: path.join(stateDir, 'diagrams'),
         CCU_CONFIG_DIR: stateDir,
         CCU_STATUS_DIR: path.join(stateDir, 'status'),

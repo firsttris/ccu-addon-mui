@@ -166,7 +166,10 @@ export type ServerMessage =
   | PrepareDeviceFirmwareUploadResponse
   | AddDeviceFirmwareResponse
   | DeleteDeviceFirmwareResponse
-  | DownloadCcuFirmwareResponse;
+  | DownloadCcuFirmwareResponse
+  | GetRulesResponse
+  | SaveRuleResponse
+  | DeleteRuleResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -316,6 +319,9 @@ export interface Protocol {
   addDeviceFirmware: AddDeviceFirmwareCall;
   deleteDeviceFirmware: DeleteDeviceFirmwareCall;
   downloadCcuFirmware: DownloadCcuFirmwareCall;
+  getRules: GetRulesCall;
+  saveRule: SaveRuleCall;
+  deleteRule: DeleteRuleCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2450,6 +2456,10 @@ export interface GetPushResponse {
   subscribed: boolean;
   alarms: boolean;
   service: boolean;
+  /**
+   * notified when a notification rule holds
+   */
+  rules?: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -2471,6 +2481,7 @@ export interface SubscribePushRequest {
   service?: boolean;
   language?: string;
   device?: string;
+  rules?: boolean;
 }
 /**
  * What PushManager.subscribe returns (toJSON)
@@ -5320,6 +5331,130 @@ export interface DownloadCcuFirmwareResponse {
   success: boolean;
   needsKey?: boolean;
   eula?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetRulesCall".
+ */
+export interface GetRulesCall {
+  request: GetRulesRequest;
+  response: GetRulesResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetRulesRequest".
+ */
+export interface GetRulesRequest {
+  type: "getRules";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetRulesResponse".
+ */
+export interface GetRulesResponse {
+  type: "getRules_response";
+  requestId?: string;
+  rules: NotificationRule[];
+}
+/**
+ * push notification once all conditions hold for minutes, inside the time window if set (pkg/rules)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "NotificationRule".
+ */
+export interface NotificationRule {
+  id: string;
+  name: string;
+  enabled: boolean;
+  conditions: RuleCondition[];
+  minutes: number;
+  /**
+   * HH:MM
+   */
+  from?: string;
+  /**
+   * HH:MM
+   */
+  to?: string;
+  /**
+   * the notification's text; empty uses summary
+   */
+  message: string;
+  /**
+   * the conditions in words, written by the app
+   */
+  summary?: string;
+}
+/**
+ * a channel's datapoint compared with a value; booleans as 1 and 0, enums by index
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RuleCondition".
+ */
+export interface RuleCondition {
+  channelId?: number;
+  interfaceName: string;
+  /**
+   * channel address
+   */
+  address: string;
+  datapoint: string;
+  op: "eq" | "ne" | "lt" | "gt";
+  value: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveRuleCall".
+ */
+export interface SaveRuleCall {
+  request: SaveRuleRequest;
+  response: SaveRuleResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveRuleRequest".
+ */
+export interface SaveRuleRequest {
+  type: "saveRule";
+  requestId?: string;
+  rule: NotificationRule;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SaveRuleResponse".
+ */
+export interface SaveRuleResponse {
+  type: "saveRule_response";
+  requestId?: string;
+  success: boolean;
+  rule: NotificationRule;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteRuleCall".
+ */
+export interface DeleteRuleCall {
+  request: DeleteRuleRequest;
+  response: DeleteRuleResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteRuleRequest".
+ */
+export interface DeleteRuleRequest {
+  type: "deleteRule";
+  requestId?: string;
+  id: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeleteRuleResponse".
+ */
+export interface DeleteRuleResponse {
+  type: "deleteRule_response";
+  requestId?: string;
+  success: boolean;
 }
 /**
  * Sent first on every connection

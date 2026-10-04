@@ -42,6 +42,8 @@ type Config struct {
 	SessionsFile string
 	// PushFile keeps the Web Push key and the subscribed devices
 	PushFile string
+	// RulesFile keeps the notification rules
+	RulesFile string
 	// PushSubject is the contact sent to the push services (VAPID "sub")
 	PushSubject string
 	// AddonsDir holds the add-on scripts (the WebUI's Zusatzsoftware)
@@ -131,6 +133,7 @@ func Load() *Config {
 		AuditLogFile:         getEnv("AUDIT_LOG_FILE", defaultConfigFile("mui-audit.log")),
 		SessionsFile:         getEnv("SESSIONS_FILE", defaultConfigFile("mui-sessions.json")),
 		PushFile:             getEnv("PUSH_FILE", defaultConfigFile("mui-push.json")),
+		RulesFile:            getEnv("RULES_FILE", defaultConfigFile("mui-rules.json")),
 		PushSubject:          getEnv("PUSH_SUBJECT", "https://github.com/firsttris/ccu-addon-mui"),
 		AddonsDir:            getEnv("ADDONS_DIR", "/etc/config/rc.d"),
 		SyslogConfig:         getEnv("SYSLOG_CONFIG", "/etc/config/syslog"),

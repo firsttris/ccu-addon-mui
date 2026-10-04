@@ -169,7 +169,9 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | | `getDiagramData` | Aggregierte Messreihen (höchstens 2000 Buckets) | alle |
 | | `saveDiagram`, `deleteDiagram` | Diagramm speichern oder löschen | Admin+T (A) |
 | Push | `getPush` | VAPID-Public-Key und Abo-Status des Endpoints | alle |
-| | `subscribePush`, `unsubscribePush` | Push-Abo anlegen oder entfernen | alle |
+| | `subscribePush`, `unsubscribePush` | Push-Abo anlegen oder entfernen, mit `alarms`, `service` und `rules` (Benachrichtigungsregeln) | alle |
+| Regeln | `getRules` | Benachrichtigungsregeln (`pkg/rules`, Datei `mui-rules.json`) | alle |
+| | `saveRule`, `deleteRule` | Regel speichern oder löschen; `summary` sind die Bedingungen in Worten, die die App schreibt | Admin+T (A) |
 | | `testPush` | Testbenachrichtigung senden | alle |
 | System | `getSystemInfo` | Add-on- und Firmware-Version, Produkt, Plattform, ReGaHss-Version (`dom.BuildLabel()`), auf der CCU der Systemzustand wie `help.cgi` (`system`), Funkmodule mit Duty Cycle | Admin |
 | | `checkFirmwareUpdate` | Neueste CCU-Firmware online abfragen; ob die CCU sie selbst laden kann und wie viel Platz frei ist | Admin |

@@ -1869,3 +1869,30 @@ test('zeigt Batterie, Empfang und Erreichbarkeit aller Geräte', async ({ page }
   await bath.getByRole('link', { name: 'Fensterkontakt Bad' }).click();
   await expect(page).toHaveURL(/\/device\/HmIP-RF\/003660C9930AB6$/);
 });
+
+test('legt eine Benachrichtigungsregel aus einer Vorlage an', async ({ page }) => {
+  await login(page);
+  await page.goto('/rules');
+  await page.getByRole('button', { name: 'Fenster lange offen' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByLabel('Name')).toHaveValue('Fenster lange offen');
+  await expect(dialog.getByLabel('Mindestens erfüllt seit')).toHaveValue('15');
+
+  // The template's datapoint stays once the channel has it
+  const conditions = dialog.getByRole('list', { name: 'Bedingungen' });
+  await conditions.getByLabel('Kanal').selectOption('7101');
+  await expect(conditions.getByLabel('Datenpunkt')).toHaveValue('STATE');
+  await expect(dialog.getByLabel('Text der Benachrichtigung (optional)')).toHaveAttribute(
+    'placeholder',
+    /^Fensterkontakt Bad: .+ seit 15 Minuten$/,
+  );
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Regel gespeichert')).toBeVisible();
+
+  const rule = page.getByRole('list', { name: 'Benachrichtigungsregeln' }).getByRole('listitem', { name: 'Fenster lange offen' });
+  await expect(rule).toContainText('seit 15 Minuten');
+
+  await rule.getByRole('button', { name: 'Regel „Fenster lange offen“ löschen' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Löschen' }).click();
+  await expect(rule).toHaveCount(0);
+});
