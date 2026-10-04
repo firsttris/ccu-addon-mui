@@ -36,7 +36,7 @@ func (s *Server) serveRestoreUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleRestore restores a backup, or installs a firmware file
-// (prepareCcuFirmware, checkCcuFirmware, installCcuFirmware,
+// (prepareCcuFirmware, checkCcuFirmware or downloadCcuFirmware, installCcuFirmware,
 // cancelCcuFirmware) or an add-on (prepareAddonUpload, installAddon), with
 // the WebUI's own steps
 // (cp_security.cgi): the browser uploads the .sbk once (prepareRestore),
@@ -103,6 +103,11 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		err = s.backup.Restore(msg.ID, username, msg.Password, msg.Key)
 	case "checkCcuFirmware":
 		response.Eula, err = s.backup.CheckFirmware(msg.ID, username, msg.Password, msg.Language)
+	case "downloadCcuFirmware":
+		var verify func() error
+		if verify, err = s.firmwareDownloadCheck(); err == nil {
+			response.Eula, err = s.backup.DownloadFirmware(username, msg.Password, msg.Language, verify)
+		}
 	case "installCcuFirmware":
 		err = s.backup.InstallFirmware(username, msg.Password)
 	case "cancelCcuFirmware":
@@ -130,6 +135,14 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 			code = "FIRMWARE_TOO_OLD"
 		case errors.Is(err, backup.ErrUploadNotFound):
 			code = rega.SetNotFound
+		case errors.Is(err, errDirectDownloadUnsupported):
+			code = "NOT_SUPPORTED"
+		case errors.Is(err, errNotEnoughSpace):
+			code = "NOT_ENOUGH_SPACE"
+		case errors.Is(err, errFirmwareChecksum):
+			code = "FIRMWARE_CHECKSUM"
+		case errors.Is(err, backup.ErrFirmwareDownloadFailed):
+			code = "DOWNLOAD_FAILED"
 		}
 		finish(code)
 		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), code)

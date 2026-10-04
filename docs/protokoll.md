@@ -170,7 +170,7 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | | `subscribePush`, `unsubscribePush` | Push-Abo anlegen oder entfernen | alle |
 | | `testPush` | Testbenachrichtigung senden | alle |
 | System | `getSystemInfo` | Add-on- und Firmware-Version, Funkmodule mit Duty Cycle | Admin |
-| | `checkFirmwareUpdate` | Neueste CCU-Firmware online abfragen | Admin |
+| | `checkFirmwareUpdate` | Neueste CCU-Firmware online abfragen; ob die CCU sie selbst laden kann und wie viel Platz frei ist | Admin |
 | | `getDeviceFirmware`, `getDeviceFirmwareChangelog` | Geräte-Firmware auf der CCU (`/etc/config/firmware`) und ihre Änderungen | Admin |
 | | `checkDeviceFirmware` | Neueste Geräte-Firmware bei eQ-3 (eine Stunde zwischengespeichert) | Admin |
 | | `downloadDeviceFirmware` | Geräte-Firmware von eQ-3 laden und über den HMServer auf die CCU legen | Admin+T (A) |
@@ -210,6 +210,7 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | | `checkRestore` | Hochgeladenes Backup durch die WebUI prüfen (`needsKey`) | Admin+T (A)(PW) |
 | | `restoreBackup` | Backup einspielen, CCU startet neu | Admin+T (A)(PW) |
 | | `checkCcuFirmware` | Firmware-Datei prüfen, EULA liefern | Admin+T (A)(PW) |
+| | `downloadCcuFirmware` | OpenCCU lädt die neueste Firmware selbst (`CCU.downloadFirmware`), SHA256 prüfen, EULA liefern | Admin+T (A)(PW) |
 | | `installCcuFirmware`, `cancelCcuFirmware` | Firmware-Update starten oder verwerfen | Admin+T (A)(PW) |
 | | `installAddon` | Hochgeladenes Add-on installieren (`reboot`-Flag) | Admin+T (A)(PW) |
 

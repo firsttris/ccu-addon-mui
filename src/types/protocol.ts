@@ -160,7 +160,8 @@ export type ServerMessage =
   | DownloadDeviceFirmwareResponse
   | PrepareDeviceFirmwareUploadResponse
   | AddDeviceFirmwareResponse
-  | DeleteDeviceFirmwareResponse;
+  | DeleteDeviceFirmwareResponse
+  | DownloadCcuFirmwareResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -304,6 +305,7 @@ export interface Protocol {
   prepareDeviceFirmwareUpload: PrepareDeviceFirmwareUploadCall;
   addDeviceFirmware: AddDeviceFirmwareCall;
   deleteDeviceFirmware: DeleteDeviceFirmwareCall;
+  downloadCcuFirmware: DownloadCcuFirmwareCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3175,6 +3177,18 @@ export interface CheckFirmwareUpdateResponse {
   requestId?: string;
   current: string;
   latest: string;
+  /**
+   * The CCU can download the update itself (downloadCcuFirmware)
+   */
+  directDownload?: boolean;
+  /**
+   * Free space on /usr/local in MB
+   */
+  freeMb?: number;
+  /**
+   * The space an update needs in MB
+   */
+  requiredMb?: number;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -5017,6 +5031,35 @@ export interface DeleteDeviceFirmwareResponse {
   requestId?: string;
   success: boolean;
   files?: DeviceFirmwareFile[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DownloadCcuFirmwareCall".
+ */
+export interface DownloadCcuFirmwareCall {
+  request: DownloadCcuFirmwareRequest;
+  response: DownloadCcuFirmwareResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DownloadCcuFirmwareRequest".
+ */
+export interface DownloadCcuFirmwareRequest {
+  type: "downloadCcuFirmware";
+  requestId?: string;
+  password: string;
+  language?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DownloadCcuFirmwareResponse".
+ */
+export interface DownloadCcuFirmwareResponse {
+  type: "downloadCcuFirmware_response";
+  requestId?: string;
+  success: boolean;
+  needsKey?: boolean;
+  eula?: string;
 }
 /**
  * Sent first on every connection

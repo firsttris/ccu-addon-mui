@@ -14,6 +14,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"slices"
 	"sort"
@@ -38,9 +39,12 @@ type CCU struct {
 	SecurityKey string
 	// GroupsFile is where the fake HMServer keeps the heating groups
 	// (groups.gson); empty: none
-	GroupsFile    string
-	groupMetadata map[string]string
-	fixture       *Fixture
+	GroupsFile string
+	// FirmwareDownloadFile is where CCU.downloadFirmware stores the
+	// downloaded update (FakeFirmwareDownload); empty: the download fails
+	FirmwareDownloadFile string
+	groupMetadata        map[string]string
+	fixture              *Fixture
 	// original is the fixture as loaded, for Reset
 	original []byte
 
@@ -1532,6 +1536,18 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		_, _ = io.WriteString(w, c.setSecurityLevel(fmt.Sprint(req.Params["level"])))
+	case "CCU.downloadFirmware":
+		// OpenCCU's downloadFirmware.tcl: wget of the newest release to
+		// /usr/local/tmp/firmwareUpdateFile
+		if req.Params["_session_id_"] != "fakeSession1" {
+			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
+			return
+		}
+		c.mu.Lock()
+		c.calls["JSON-RPC CCU.downloadFirmware"]++
+		c.mu.Unlock()
+		ok := c.FirmwareDownloadFile != "" && os.WriteFile(c.FirmwareDownloadFile, []byte(FakeFirmwareDownload), 0o644) == nil
+		_, _ = fmt.Fprintf(w, `{"version":"1.1","result":%t,"error":null}`, ok)
 	case "Firewall.setConfiguration":
 		if req.Params["_session_id_"] != "fakeSession1" {
 			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
@@ -1688,6 +1704,8 @@ func (c *CCU) handleRestoreAction(w http.ResponseWriter, action, key, filename s
 const (
 	FakeFirmware     = "fake CCU firmware update"
 	FakeFirmwareEula = "with EULA"
+	// What CCU.downloadFirmware downloads, as from GitHub
+	FakeFirmwareDownload = FakeFirmware + " " + FakeFirmwareEula + " (OpenCCU release)"
 )
 
 // handleMaintenance answers cp_maintenance.cgi's firmware update steps
@@ -1706,7 +1724,13 @@ func (c *CCU) handleMaintenance(w http.ResponseWriter, r *http.Request) {
 		// action_firmware_upload checks the file and links it as
 		// /usr/local/.firmwareUpdate
 		next := "firmware_update_invalid"
-		if r.FormValue("filename") == fakeTempFile && strings.Contains(c.tempUpload, FakeFirmware) {
+		if r.FormValue("directDownload") == "true" {
+			// The file CCU.downloadFirmware stored
+			if data, err := os.ReadFile(c.FirmwareDownloadFile); err == nil && strings.Contains(string(data), FakeFirmware) {
+				c.stagedFirmware = string(data)
+				next = "askCreateBackup"
+			}
+		} else if r.FormValue("filename") == fakeTempFile && strings.Contains(c.tempUpload, FakeFirmware) {
 			c.stagedFirmware = c.tempUpload
 			next = "askCreateBackup"
 		}

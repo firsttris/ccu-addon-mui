@@ -418,6 +418,9 @@
     },
     "deleteDeviceFirmware": {
       "$ref": "#/definitions/DeleteDeviceFirmwareCall"
+    },
+    "downloadCcuFirmware": {
+      "$ref": "#/definitions/DownloadCcuFirmwareCall"
     }
   },
   "required": [
@@ -558,7 +561,8 @@
     "downloadDeviceFirmware",
     "prepareDeviceFirmwareUpload",
     "addDeviceFirmware",
-    "deleteDeviceFirmware"
+    "deleteDeviceFirmware",
+    "downloadCcuFirmware"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3286,6 +3290,9 @@
         },
         {
           "$ref": "#/definitions/DeleteDeviceFirmwareResponse"
+        },
+        {
+          "$ref": "#/definitions/DownloadCcuFirmwareResponse"
         }
       ]
     },
@@ -7528,6 +7535,18 @@
         },
         "latest": {
           "type": "string"
+        },
+        "directDownload": {
+          "type": "boolean",
+          "description": "The CCU can download the update itself (downloadCcuFirmware)"
+        },
+        "freeMb": {
+          "type": "integer",
+          "description": "Free space on /usr/local in MB"
+        },
+        "requiredMb": {
+          "type": "integer",
+          "description": "The space an update needs in MB"
         }
       },
       "required": [
@@ -11696,6 +11715,71 @@
         },
         "response": {
           "$ref": "#/definitions/DeleteDeviceFirmwareResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DownloadCcuFirmwareRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "downloadCcuFirmware"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "DownloadCcuFirmwareResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "downloadCcuFirmware_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "needsKey": {
+          "type": "boolean"
+        },
+        "eula": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "DownloadCcuFirmwareCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/DownloadCcuFirmwareRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/DownloadCcuFirmwareResponse"
         }
       },
       "required": [

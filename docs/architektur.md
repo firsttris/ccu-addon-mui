@@ -156,6 +156,9 @@ Benutzers:
 - **HMServer** für Heizgruppen (`/pages/jpages/group/*`) und Geräte-Firmware
   (`/pages/jpages/system/DeviceFirmware/addFirmware`, `deleteFirmware`), danach
   `refreshDeployedDeviceFirmwareList` bei BidCos-RF und HmIP-RF.
+- **CCU-Firmware direkt**: `CCU.downloadFirmware` (OpenCCU lädt das Release von GitHub nach
+  `/usr/local/tmp/firmwareUpdateFile`), SHA256 gegen die `.sha256` des Releases wie
+  `checkFirmwareUpdate.sh`, dann `cp_maintenance.cgi?action=firmware_upload&directDownload=true`.
 - **eQ-3-Updateserver** (`ccu3-update.homematic.com`): Liste der neuesten Geräte-Firmware
   (`/firmware/api/firmware/search/DEVICE`) und Download, wie `webui.js` (`homematic.com`).
 

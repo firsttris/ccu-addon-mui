@@ -9,6 +9,9 @@ import { m } from '../../paraglide/messages';
 
 // Uploading and checking an update goes through the WebUI and takes a while
 const FIRMWARE_TIMEOUT_MS = 10 * 60 * 1000;
+// The CCU downloading a full OpenCCU image takes longer (the server waits
+// up to 30 minutes)
+const DOWNLOAD_TIMEOUT_MS = 35 * 60 * 1000;
 
 type Step = 'choose' | 'confirm' | 'done';
 
@@ -21,6 +24,12 @@ const errorMessage = (error: unknown) => {
       return m.TOO_MANY_ATTEMPTS();
     case 'INVALID_FIRMWARE':
       return m.CCUFW_INVALID();
+    case 'NOT_ENOUGH_SPACE':
+      return m.CCUFW_NOT_ENOUGH_SPACE();
+    case 'FIRMWARE_CHECKSUM':
+      return m.CCUFW_CHECKSUM();
+    case 'DOWNLOAD_FAILED':
+      return m.CCUFW_DOWNLOAD_FAILED();
     default:
       return `${m.CCUFW_FAILED()}${error instanceof Error ? `: ${error.message}` : ''}`;
   }
@@ -29,8 +38,10 @@ const errorMessage = (error: unknown) => {
 // Installing a firmware file on the CCU with the WebUI's own steps
 // (cp_maintenance.cgi): upload and check (firmware_upload), the update's
 // licence (EULA), then update_start: the CCU reboots into its recovery
-// system and installs it.
-export const CcuFirmwareUpload = ({ onClose }: { onClose: () => void }) => {
+// system and installs it. With download (the newest version) the CCU
+// fetches the release itself instead (performDirectDownload: OpenCCU's
+// CCU.downloadFirmware), and the server checks its SHA256 checksum.
+export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; download?: string }) => {
   const { request } = useWebSocketActions();
   const { authRequired } = useWebSocketContext();
   const [step, setStep] = useState<Step>('choose');
@@ -42,6 +53,23 @@ export const CcuFirmwareUpload = ({ onClose }: { onClose: () => void }) => {
   const [error, setError] = useState<string | null>(null);
 
   const check = async () => {
+    if (download) {
+      setBusy(true);
+      setError(null);
+      try {
+        const checked = await request(
+          { type: 'downloadCcuFirmware', password, language: getLocale() === 'en' ? 'en' : 'de' },
+          { queue: false, timeoutMs: DOWNLOAD_TIMEOUT_MS },
+        );
+        setEula(checked.eula ?? '');
+        setStep('confirm');
+      } catch (e) {
+        setError(errorMessage(e));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     if (!file) return;
     setBusy(true);
     setError(null);
@@ -107,7 +135,7 @@ export const CcuFirmwareUpload = ({ onClose }: { onClose: () => void }) => {
         onCancel={cancel}
       >
         <div className="flex flex-col gap-3">
-          <p>{m.CCUFW_CONFIRM({ name: file?.name ?? '' })}</p>
+          <p>{m.CCUFW_CONFIRM({ name: download ? `OpenCCU ${download}` : (file?.name ?? '') })}</p>
           {eula && (
             <>
               <pre
@@ -129,24 +157,28 @@ export const CcuFirmwareUpload = ({ onClose }: { onClose: () => void }) => {
   }
   return (
     <ConfirmDialog
-      title={m.CCUFW_TITLE()}
-      confirmLabel={busy ? m.CCUFW_CHECKING() : m.CCUFW_CHECK()}
-      busy={busy || !file || (authRequired && password === '')}
+      title={download ? m.CCUFW_DOWNLOAD_TITLE() : m.CCUFW_TITLE()}
+      confirmLabel={
+        download ? (busy ? m.CCUFW_DOWNLOADING() : m.CCUFW_DOWNLOAD()) : busy ? m.CCUFW_CHECKING() : m.CCUFW_CHECK()
+      }
+      busy={busy || (!download && !file) || (authRequired && password === '')}
       onConfirm={check}
       onCancel={cancel}
     >
       <div className="flex flex-col gap-3">
-        <p>{m.CCUFW_HINT()}</p>
-        <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-          {m.CCUFW_FILE()}
-          <input
-            type="file"
-            accept=".zip,.tgz,.tar.gz,.img,application/zip,application/gzip"
-            aria-label={m.CCUFW_FILE()}
-            className="text-sm text-foreground file:mr-3 file:rounded-md file:border file:bg-transparent file:px-3 file:py-1.5 file:text-sm"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-        </label>
+        <p>{download ? m.CCUFW_DOWNLOAD_HINT({ version: download }) : m.CCUFW_HINT()}</p>
+        {!download && (
+          <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+            {m.CCUFW_FILE()}
+            <input
+              type="file"
+              accept=".zip,.tgz,.tar.gz,.img,application/zip,application/gzip"
+              aria-label={m.CCUFW_FILE()}
+              className="text-sm text-foreground file:mr-3 file:rounded-md file:border file:bg-transparent file:px-3 file:py-1.5 file:text-sm"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+        )}
         <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
           {m.CCUFW_PASSWORD()}
           <Input

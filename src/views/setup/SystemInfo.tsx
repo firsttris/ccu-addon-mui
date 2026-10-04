@@ -20,44 +20,72 @@ import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsock
 import { CcuFirmwareButton, CcuFirmwareUpload } from './CcuFirmwareUpload';
 import { DeviceFirmware } from './DeviceFirmware';
 import { isNewerVersion } from '../../utils/version';
+import { Button } from '../../components/ui/button';
+import DownloadIcon from '~icons/lucide/circle-arrow-down';
+import type { CheckFirmwareUpdateResponse } from '../../types/protocol';
 
 export { isNewerVersion };
 
 // Asks the update server for the newest firmware, as the WebUI's start page
-// does (webui.js, homematic.com.init)
+// does (webui.js, homematic.com.init). OpenCCU can download it itself
+// (cp_maintenance.cgi performDirectDownload), given the room it needs.
 const FirmwareUpdate = ({ current }: { current: string }) => {
   const { request } = useWebSocketActions();
-  const [latest, setLatest] = useState<string | null>(null);
+  const { elevated } = useWebSocketContext();
+  const [result, setResult] = useState<CheckFirmwareUpdateResponse | 'failed' | null>(null);
   const [busy, setBusy] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const check = async () => {
     setBusy(true);
     try {
-      setLatest((await request({ type: 'checkFirmwareUpdate' }, { timeoutMs: 30000 })).latest);
+      setResult(await request({ type: 'checkFirmwareUpdate' }, { timeoutMs: 30000 }));
     } catch {
-      setLatest('?');
+      setResult('failed');
     } finally {
       setBusy(false);
     }
   };
 
-  if (latest === null) {
+  if (result === null) {
     return (
       <DialogButton type="button" className="h-7" disabled={busy} onClick={check}>
         {m.ADDONS_CHECK()}
       </DialogButton>
     );
   }
-  if (latest === '?') {
+  if (result === 'failed') {
     return <span className="text-xs text-muted-foreground">{m.ADDONS_CHECK_FAILED()}</span>;
   }
-  if (!isNewerVersion(latest, current)) {
+  if (!isNewerVersion(result.latest, current)) {
     return <span className="text-xs text-muted-foreground">{m.ADDONS_CURRENT()}</span>;
   }
+  const tooLittleRoom = result.directDownload && (result.freeMb ?? 0) < (result.requiredMb ?? 0);
   return (
     <span className="flex flex-col items-start gap-1">
-      <Badge variant="secondary">{m.ADDONS_NEWER({ version: latest })}</Badge>
-      <span className="text-xs text-muted-foreground">{m.FW_UPDATE_HINT()}</span>
+      <Badge variant="secondary">{m.ADDONS_NEWER({ version: result.latest })}</Badge>
+      {result.directDownload ? (
+        <>
+          <Button
+            type="button"
+            className="h-7"
+            disabled={!elevated || tooLittleRoom}
+            onClick={() => setDownloading(true)}
+          >
+            <DownloadIcon />
+            {m.CCUFW_DOWNLOAD_TITLE()}
+          </Button>
+          <span className={cn('text-xs', tooLittleRoom ? 'font-medium text-destructive' : 'text-muted-foreground')}>
+            {m.CCUFW_FREE_SPACE({
+              free: ((result.freeMb ?? 0) / 1024).toFixed(1),
+              required: ((result.requiredMb ?? 0) / 1024).toFixed(1),
+            })}
+          </span>
+        </>
+      ) : (
+        <span className="text-xs text-muted-foreground">{m.FW_UPDATE_HINT()}</span>
+      )}
+      {downloading && <CcuFirmwareUpload download={result.latest} onClose={() => setDownloading(false)} />}
     </span>
   );
 };
@@ -115,11 +143,16 @@ const Versions = () => {
           <ul className="flex flex-col divide-y rounded-lg border" aria-label={m.RADIO_MODULES()}>
             {data.radioInterfaces.map((module) => {
               const percent = Math.min(100, module.dutyCycle);
-              const bar = module.dutyCycle >= 80 ? 'bg-red-500' : module.dutyCycle >= 50 ? 'bg-amber-500' : 'bg-green-500';
+              const bar =
+                module.dutyCycle >= 80 ? 'bg-red-500' : module.dutyCycle >= 50 ? 'bg-amber-500' : 'bg-green-500';
               return (
-                <li key={`${module.interfaceName}-${module.address}`} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 text-sm">
+                <li
+                  key={`${module.interfaceName}-${module.address}`}
+                  className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 text-sm"
+                >
                   <span className="min-w-[220px] font-medium">
-                    {module.interfaceName} <span className="font-mono text-xs text-muted-foreground">{module.address}</span>
+                    {module.interfaceName}{' '}
+                    <span className="font-mono text-xs text-muted-foreground">{module.address}</span>
                   </span>
                   <Badge variant={module.connected ? 'success' : 'destructive'}>
                     {module.connected ? m.CONNECTED() : m.DISCONNECTED()}
