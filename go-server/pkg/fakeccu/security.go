@@ -38,6 +38,10 @@ func (c *CCU) securityMethod(method string, params map[string]interface{}) strin
 		flag("authEnabled", isTrue("enabled"))
 	case "CCU.setHttpsRedirectEnabled":
 		flag("httpsRedirectEnabled", isTrue("enabled"))
+	case "BidCoS_RF.isKeySet":
+		return fmt.Sprintf(`{"version":"1.1","result":%v,"error":null}`, c.SecurityKey != "")
+	case "BidCoS_RF.validateKey":
+		return fmt.Sprintf(`{"version":"1.1","result":%v,"error":null}`, c.SecurityKey != "" && fmt.Sprint(params["key"]) == c.SecurityKey)
 	case "User.existsCertificate":
 		_, err := os.Stat(filepath.Join(c.ConfigDir, "server.pem"))
 		return fmt.Sprintf(`{"version":"1.1","result":%v,"error":null}`, c.ConfigDir != "" && err == nil)
@@ -189,4 +193,26 @@ func (c *CCU) lanGatewayModules(iface string) []map[string]interface{} {
 		}
 	}
 	return modules
+}
+
+// factoryReset is cp_security.cgi's action_factory_reset_go: the key is
+// checked when one is set, then the CCU resets and restarts
+func (c *CCU) factoryReset(w http.ResponseWriter, key string) {
+	w.Header().Set("Content-Type", "text/html; charset=iso-8859-1")
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.calls["WebUI factory_reset_go"]++
+	if c.SecurityKey != "" && key != c.SecurityKey {
+		_, _ = io.WriteString(w, `<div class="popupTitle">${dialogSetSecKeyRebootFalseTitle}</div>`)
+		return
+	}
+	c.factoryResetDone = true
+	_, _ = io.WriteString(w, `<div class="popupTitle">${dialogPerformRebootTitle}</div>`)
+}
+
+// FactoryResetDone tells whether the CCU was reset (for tests)
+func (c *CCU) FactoryResetDone() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.factoryResetDone
 }

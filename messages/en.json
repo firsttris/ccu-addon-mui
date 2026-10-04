@@ -1033,5 +1033,16 @@
   "SEC_TIMEOUT_SECONDS": "Seconds (180–600)",
   "SEC_TIMEOUT_RANGE": "Please choose a time between 180 and 600 seconds.",
   "SEC_TIMEOUT_SAVED": "Saved. The central unit takes the value on its next start.",
-  "SEC_TIMEOUT_SAVE": "Save timeout"
+  "SEC_TIMEOUT_SAVE": "Save timeout",
+  "RESET_TITLE": "Factory settings",
+  "RESET_HINT": "Resets the central unit to its delivery state. It has to be set up again afterwards.",
+  "RESET_BUTTON": "Reset to factory settings",
+  "RESET_WARNING": "The central unit is reset to factory settings and restarts. This deletes:",
+  "RESET_WARNING_DEVICES": "all paired devices, rooms, functions, programs, system variables and settings",
+  "RESET_WARNING_ADDON": "all add-on software – this add-on too; afterwards only the WebUI of the central unit is left",
+  "RESET_WARNING_BACKUP": "Create a backup first if you want to keep any of it.",
+  "RESET_KEY": "System security key",
+  "RESET_KEY_WRONG": "The security key is wrong.",
+  "RESET_TYPE": "Type “{word}” to confirm",
+  "RESET_STARTED": "The central unit is being reset to factory settings and restarts. This add-on is removed; log in to the WebUI of the central unit afterwards."
 }

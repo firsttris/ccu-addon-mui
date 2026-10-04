@@ -1033,5 +1033,16 @@
   "SEC_TIMEOUT_SECONDS": "Sekunden (180–600)",
   "SEC_TIMEOUT_RANGE": "Bitte eine Zeit zwischen 180 und 600 Sekunden wählen.",
   "SEC_TIMEOUT_SAVED": "Gespeichert. Die Zentrale übernimmt den Wert beim nächsten Neustart.",
-  "SEC_TIMEOUT_SAVE": "Timeout speichern"
+  "SEC_TIMEOUT_SAVE": "Timeout speichern",
+  "RESET_TITLE": "Werkseinstellungen",
+  "RESET_HINT": "Setzt die Zentrale auf den Auslieferungszustand zurück. Danach muss sie neu eingerichtet werden.",
+  "RESET_BUTTON": "Auf Werkseinstellungen zurücksetzen",
+  "RESET_WARNING": "Die Zentrale wird auf Werkseinstellungen zurückgesetzt und startet neu. Dabei wird gelöscht:",
+  "RESET_WARNING_DEVICES": "alle angelernten Geräte, Räume, Gewerke, Programme, Systemvariablen und Einstellungen",
+  "RESET_WARNING_ADDON": "alle Zusatzsoftware – auch dieses Add-on; danach geht es nur in der WebUI der Zentrale weiter",
+  "RESET_WARNING_BACKUP": "Erstellen Sie vorher ein Backup, wenn Sie etwas davon behalten möchten.",
+  "RESET_KEY": "System-Sicherheitsschlüssel",
+  "RESET_KEY_WRONG": "Der Sicherheitsschlüssel stimmt nicht.",
+  "RESET_TYPE": "Zur Bestätigung „{word}“ eingeben",
+  "RESET_STARTED": "Die Zentrale wird auf Werkseinstellungen zurückgesetzt und startet neu. Dieses Add-on wird dabei entfernt; melden Sie sich danach in der WebUI der Zentrale an."
 }

@@ -385,6 +385,9 @@
     },
     "setSessionTimeout": {
       "$ref": "#/definitions/SetSessionTimeoutCall"
+    },
+    "factoryReset": {
+      "$ref": "#/definitions/FactoryResetCall"
     }
   },
   "required": [
@@ -514,7 +517,8 @@
     "getCertificate",
     "uploadCertificate",
     "deleteCertificate",
-    "setSessionTimeout"
+    "setSessionTimeout",
+    "factoryReset"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3171,6 +3175,9 @@
         },
         {
           "$ref": "#/definitions/SetSessionTimeoutResponse"
+        },
+        {
+          "$ref": "#/definitions/FactoryResetResponse"
         }
       ]
     },
@@ -10843,6 +10850,64 @@
         },
         "response": {
           "$ref": "#/definitions/SetSessionTimeoutResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "FactoryResetRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "factoryReset"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "FactoryResetResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "factoryReset_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "FactoryResetCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/FactoryResetRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/FactoryResetResponse"
         }
       },
       "required": [

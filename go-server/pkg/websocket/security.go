@@ -163,6 +163,39 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 				}
 			}()
 		}
+	case "factoryReset":
+		// cp_security.cgi's system reset: everything on the CCU is deleted,
+		// this add-on too. The key is checked before the answer; the reset
+		// itself stops the add-ons, so it runs after it.
+		entry := audit.Entry{User: client.user, Action: "factoryReset", Target: "CCU"}
+		if code, errorMsg := configureError(client); code != "" {
+			s.recordAudit(entry, code)
+			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+			return
+		}
+		if err := s.backup.CheckFactoryReset(client.user, msg.Password, msg.Key); err != nil {
+			code := ""
+			switch {
+			case errors.Is(err, backup.ErrResetKeyRequired):
+				code = "KEY_REQUIRED"
+			case errors.Is(err, backup.ErrResetKeyWrong):
+				code = "KEY_WRONG"
+			}
+			if code != "" {
+				s.recordAudit(entry, code)
+				s.sendRequestError(client, msg.RequestID, err.Error(), code)
+				return
+			}
+			s.securityFailed(client, msg.RequestID, entry, err)
+			return
+		}
+		s.recordAudit(entry, rega.SetOK)
+		s.sendJSON(client, changeResponse{Type: "factoryReset_response", RequestID: msg.RequestID, Success: true})
+		user, key := client.user, msg.Key
+		go func() {
+			time.Sleep(restartLighttpdDelay)
+			s.backup.FactoryReset(user, key)
+		}()
 	case "changeSecurityKey":
 		// The key is never written to the audit log
 		entry := audit.Entry{User: client.user, Action: "changeSecurityKey", Target: "system security key"}

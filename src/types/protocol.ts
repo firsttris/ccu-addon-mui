@@ -148,7 +148,8 @@ export type ServerMessage =
   | GetCertificateResponse
   | UploadCertificateResponse
   | DeleteCertificateResponse
-  | SetSessionTimeoutResponse;
+  | SetSessionTimeoutResponse
+  | FactoryResetResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -281,6 +282,7 @@ export interface Protocol {
   uploadCertificate: UploadCertificateCall;
   deleteCertificate: DeleteCertificateCall;
   setSessionTimeout: SetSessionTimeoutCall;
+  factoryReset: FactoryResetCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4639,6 +4641,33 @@ export interface SetSessionTimeoutRequest {
  */
 export interface SetSessionTimeoutResponse {
   type: "setSessionTimeout_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "FactoryResetCall".
+ */
+export interface FactoryResetCall {
+  request: FactoryResetRequest;
+  response: FactoryResetResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "FactoryResetRequest".
+ */
+export interface FactoryResetRequest {
+  type: "factoryReset";
+  requestId?: string;
+  key?: string;
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "FactoryResetResponse".
+ */
+export interface FactoryResetResponse {
+  type: "factoryReset_response";
   requestId?: string;
   success: boolean;
 }
