@@ -1466,6 +1466,12 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		_, _ = io.WriteString(w, c.setFirewall(req.Params))
+	case "BidCoS_RF.setConfigurationRF", "BidCoS_Wired.setConfigurationWired", "BidCoS.changeLanGatewayKey":
+		if req.Params["_session_id_"] != "fakeSession1" {
+			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
+			return
+		}
+		_, _ = io.WriteString(w, c.lanGatewayMethod(req.Method, req.Params))
 	default:
 		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"code":404,"message":"unknown method"}}`)
 	}
@@ -1718,6 +1724,13 @@ func (c *CCU) handleXMLRPC(iface string, w http.ResponseWriter, r *http.Request)
 	_, _ = io.WriteString(w, encodeResponse(result))
 }
 
+func paramAt(params []interface{}, i int) interface{} {
+	if i < len(params) {
+		return params[i]
+	}
+	return nil
+}
+
 func stringParam(params []interface{}, i int) string {
 	if i < len(params) {
 		s, _ := params[i].(string)
@@ -1826,7 +1839,33 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		}
 		return true, ""
 	case "listDevices":
+		if data.RadioInterfaces != nil {
+			// BidCos-RF devices carry their radio module, at first the
+			// default one
+			for _, d := range data.Devices {
+				if d["PARENT"] == nil && d["INTERFACE"] == nil {
+					for _, m := range data.RadioInterfaces {
+						if m["DEFAULT"] == true {
+							d["INTERFACE"], d["ROAMING"] = m["ADDRESS"], 0
+						}
+					}
+				}
+			}
+		}
 		return data.Devices, ""
+	case "setBidcosInterface":
+		roaming := 0
+		if b, _ := paramAt(params, 2).(bool); b {
+			roaming = 1
+		}
+		for _, d := range data.Devices {
+			if d["ADDRESS"] == stringParam(params, 0) {
+				d["INTERFACE"], d["ROAMING"] = stringParam(params, 1), roaming
+				c.calls["setBidcosInterface"]++
+				return true, ""
+			}
+		}
+		return nil, "Unknown instance"
 	case "getDeviceDescription":
 		for _, d := range data.Devices {
 			if d["ADDRESS"] == stringParam(params, 0) {
@@ -1889,7 +1928,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		if data.RadioInterfaces == nil {
 			return nil, "Unknown method listBidcosInterfaces"
 		}
-		return data.RadioInterfaces, ""
+		return append(append([]map[string]interface{}{}, data.RadioInterfaces...), c.lanGatewayModules(iface)...), ""
 	case "getLinks":
 		address := stringParam(params, 0)
 		links := []interface{}{}

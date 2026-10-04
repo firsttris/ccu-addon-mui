@@ -138,7 +138,11 @@ export type ServerMessage =
   | GetNetworkResponse
   | SetNetworkResponse
   | GetFirewallResponse
-  | SetFirewallResponse;
+  | SetFirewallResponse
+  | GetLanGatewaysResponse
+  | SetLanGatewaysResponse
+  | ChangeLanGatewayKeyResponse
+  | SetBidcosInterfaceResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -261,6 +265,10 @@ export interface Protocol {
   setNetwork: SetNetworkCall;
   getFirewall: GetFirewallCall;
   setFirewall: SetFirewallCall;
+  getLanGateways: GetLanGatewaysCall;
+  setLanGateways: SetLanGatewaysCall;
+  changeLanGatewayKey: ChangeLanGatewayKeyCall;
+  setBidcosInterface: SetBidcosInterfaceCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -683,6 +691,11 @@ export interface Device {
   channels?: DeviceDescription[];
   availableFirmware?: string;
   firmwareUpdateState?: string;
+  /**
+   * BidCos-RF: the radio module the device is assigned to
+   */
+  interface?: string;
+  roaming?: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -704,6 +717,11 @@ export interface DeviceDescription {
   linkTargetRoles?: string[];
   availableFirmware?: string;
   firmwareUpdateState?: string;
+  /**
+   * BidCos-RF: the radio module the device is assigned to
+   */
+  interface?: string;
+  roaming?: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4268,6 +4286,158 @@ export interface SetFirewallRequest {
  */
 export interface SetFirewallResponse {
   type: "setFirewall_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetLanGatewaysCall".
+ */
+export interface GetLanGatewaysCall {
+  request: GetLanGatewaysRequest;
+  response: GetLanGatewaysResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetLanGatewaysRequest".
+ */
+export interface GetLanGatewaysRequest {
+  type: "getLanGateways";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetLanGatewaysResponse".
+ */
+export interface GetLanGatewaysResponse {
+  type: "getLanGateways_response";
+  requestId?: string;
+  gateways: LanGatewayState[];
+  modules: RadioModule[];
+}
+/**
+ * A LAN gateway with its connection state
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "LanGatewayState".
+ */
+export interface LanGatewayState {
+  class: "RF" | "Wired";
+  type: "HMLGW2" | "Lan Interface" | "HMWLGW";
+  name: string;
+  serial: string;
+  key: string;
+  ip: string;
+  state: "connected" | "disconnected" | "wrongKey" | "inactive";
+  default?: boolean;
+}
+/**
+ * A radio module of an interface (listBidcosInterfaces)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RadioModule".
+ */
+export interface RadioModule {
+  address: string;
+  description?: string;
+  connected: boolean;
+  default: boolean;
+  dutyCycle: number;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLanGatewaysCall".
+ */
+export interface SetLanGatewaysCall {
+  request: SetLanGatewaysRequest;
+  response: SetLanGatewaysResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLanGatewaysRequest".
+ */
+export interface SetLanGatewaysRequest {
+  type: "setLanGateways";
+  requestId?: string;
+  gateways: LanGateway[];
+  password?: string;
+}
+/**
+ * A LAN gateway of BidCos-RF (rfd.conf) or BidCos-Wired (hs485d.conf)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "LanGateway".
+ */
+export interface LanGateway {
+  class: "RF" | "Wired";
+  type: "HMLGW2" | "Lan Interface" | "HMWLGW";
+  name: string;
+  serial: string;
+  key: string;
+  ip: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetLanGatewaysResponse".
+ */
+export interface SetLanGatewaysResponse {
+  type: "setLanGateways_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ChangeLanGatewayKeyCall".
+ */
+export interface ChangeLanGatewayKeyCall {
+  request: ChangeLanGatewayKeyRequest;
+  response: ChangeLanGatewayKeyResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ChangeLanGatewayKeyRequest".
+ */
+export interface ChangeLanGatewayKeyRequest {
+  type: "changeLanGatewayKey";
+  requestId?: string;
+  serial: string;
+  key: string;
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ChangeLanGatewayKeyResponse".
+ */
+export interface ChangeLanGatewayKeyResponse {
+  type: "changeLanGatewayKey_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetBidcosInterfaceCall".
+ */
+export interface SetBidcosInterfaceCall {
+  request: SetBidcosInterfaceRequest;
+  response: SetBidcosInterfaceResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetBidcosInterfaceRequest".
+ */
+export interface SetBidcosInterfaceRequest {
+  type: "setBidcosInterface";
+  requestId?: string;
+  address: string;
+  module: string;
+  roaming: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetBidcosInterfaceResponse".
+ */
+export interface SetBidcosInterfaceResponse {
+  type: "setBidcosInterface_response";
   requestId?: string;
   success: boolean;
 }

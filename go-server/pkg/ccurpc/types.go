@@ -25,6 +25,10 @@ type DeviceDescription struct {
 	Direction           int      `json:"direction,omitempty"`
 	LinkSource          []string `json:"linkSourceRoles,omitempty"`
 	LinkTarget          []string `json:"linkTargetRoles,omitempty"`
+	// BidCos-RF: the radio module (gateway serial) the device is assigned
+	// to, and whether it may change to another (roaming)
+	Interface string `json:"interface,omitempty"`
+	Roaming   bool   `json:"roaming,omitempty"`
 }
 
 // Parameter operations (bit mask)
@@ -124,6 +128,8 @@ func parseDeviceDescription(m map[string]interface{}) DeviceDescription {
 		Direction:           asInt(m["DIRECTION"]),
 		LinkSource:          roles(m["LINK_SOURCE_ROLES"]),
 		LinkTarget:          roles(m["LINK_TARGET_ROLES"]),
+		Interface:           asString(m["INTERFACE"]),
+		Roaming:             asInt(m["ROAMING"]) != 0,
 	}
 }
 

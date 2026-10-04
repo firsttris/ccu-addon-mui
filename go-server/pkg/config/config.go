@@ -51,6 +51,9 @@ type Config struct {
 	// ConfigDir holds the WebUI's general settings (energyPrice,
 	// hss_led_info.conf, hideStickyUnreach, fieldTestActive)
 	ConfigDir string
+	// StatusDir holds the state files of the CCU processes (/var/status:
+	// the connection state of the LAN gateways)
+	StatusDir string
 	// DiagramsFile keeps the diagrams, DiagramsDir their recorded values
 	DiagramsFile string
 	DiagramsDir  string
@@ -100,6 +103,7 @@ func Load() *Config {
 		TZFile:             getEnv("TZ_FILE", "/etc/config/TZ"),
 		GroupsFile:         getEnv("GROUPS_FILE", "/etc/config/groups.gson"),
 		ConfigDir:          getEnv("CCU_CONFIG_DIR", "/etc/config"),
+		StatusDir:          getEnv("CCU_STATUS_DIR", "/var/status"),
 		DiagramsFile:       getEnv("DIAGRAMS_FILE", defaultConfigFile("mui-diagrams.json")),
 		DiagramsDir:        getEnv("DIAGRAMS_DIR", defaultDataDir("mui-diagrams")),
 		BackupDir:          getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),

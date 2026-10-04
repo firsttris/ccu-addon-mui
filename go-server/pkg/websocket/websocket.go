@@ -241,6 +241,7 @@ type DeviceRPC interface {
 	GetLinkParamset(iface, address, partner string) (map[string]interface{}, error)
 	PutLinkParamset(iface, address, partner string, values map[string]interface{}) error
 	ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error)
+	SetBidcosInterface(iface, address, module string, roaming bool) error
 	InstallFirmware(iface, address string) error
 	LogLevel(iface string) (int, error)
 	SetLogLevel(iface string, level int) error
@@ -548,6 +549,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleLogging(client, msgType, message)
 	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "checkCcuFirmware", "installCcuFirmware", "cancelCcuFirmware", "prepareAddonUpload", "installAddon":
 		s.handleRestore(client, msgType, message)
+	case "getLanGateways", "setLanGateways", "changeLanGatewayKey", "setBidcosInterface":
+		s.handleLanGateways(client, msgType, message)
 	case "getFirewall", "setFirewall":
 		s.handleFirewall(client, msgType, message)
 	case "getNetwork", "setNetwork":

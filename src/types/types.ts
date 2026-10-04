@@ -283,6 +283,10 @@ export interface Device {
   availableFirmware?: string;
   firmwareUpdateState?: string;
   channels?: DeviceChannel[];
+  // BidCos-RF: the radio module serving the device, and whether it may
+  // change to another
+  interface?: string;
+  roaming?: boolean;
 }
 
 // A direct link: the sender channel controls the receiver channel

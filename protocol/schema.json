@@ -355,6 +355,18 @@
     },
     "setFirewall": {
       "$ref": "#/definitions/SetFirewallCall"
+    },
+    "getLanGateways": {
+      "$ref": "#/definitions/GetLanGatewaysCall"
+    },
+    "setLanGateways": {
+      "$ref": "#/definitions/SetLanGatewaysCall"
+    },
+    "changeLanGatewayKey": {
+      "$ref": "#/definitions/ChangeLanGatewayKeyCall"
+    },
+    "setBidcosInterface": {
+      "$ref": "#/definitions/SetBidcosInterfaceCall"
     }
   },
   "required": [
@@ -474,7 +486,11 @@
     "getNetwork",
     "setNetwork",
     "getFirewall",
-    "setFirewall"
+    "setFirewall",
+    "getLanGateways",
+    "setLanGateways",
+    "changeLanGatewayKey",
+    "setBidcosInterface"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -769,6 +785,13 @@
         },
         "firmwareUpdateState": {
           "type": "string"
+        },
+        "interface": {
+          "type": "string",
+          "description": "BidCos-RF: the radio module the device is assigned to"
+        },
+        "roaming": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -852,6 +875,13 @@
         },
         "firmwareUpdateState": {
           "type": "string"
+        },
+        "interface": {
+          "type": "string",
+          "description": "BidCos-RF: the radio module the device is assigned to"
+        },
+        "roaming": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -3075,6 +3105,18 @@
         },
         {
           "$ref": "#/definitions/SetFirewallResponse"
+        },
+        {
+          "$ref": "#/definitions/GetLanGatewaysResponse"
+        },
+        {
+          "$ref": "#/definitions/SetLanGatewaysResponse"
+        },
+        {
+          "$ref": "#/definitions/ChangeLanGatewayKeyResponse"
+        },
+        {
+          "$ref": "#/definitions/SetBidcosInterfaceResponse"
         }
       ]
     },
@@ -9993,6 +10035,382 @@
         "id",
         "ports",
         "access"
+      ],
+      "additionalProperties": false
+    },
+    "GetLanGatewaysRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLanGateways"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetLanGatewaysResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getLanGateways_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "gateways": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LanGatewayState"
+          }
+        },
+        "modules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RadioModule"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "gateways",
+        "modules"
+      ],
+      "additionalProperties": false
+    },
+    "GetLanGatewaysCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetLanGatewaysRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetLanGatewaysResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetLanGatewaysRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setLanGateways"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "gateways": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LanGateway"
+          }
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "gateways"
+      ],
+      "additionalProperties": false
+    },
+    "SetLanGatewaysResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setLanGateways_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetLanGatewaysCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetLanGatewaysRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetLanGatewaysResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "ChangeLanGatewayKeyRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "changeLanGatewayKey"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "serial": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "serial",
+        "key"
+      ],
+      "additionalProperties": false
+    },
+    "ChangeLanGatewayKeyResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "changeLanGatewayKey_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "ChangeLanGatewayKeyCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ChangeLanGatewayKeyRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ChangeLanGatewayKeyResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetBidcosInterfaceRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setBidcosInterface"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "module": {
+          "type": "string"
+        },
+        "roaming": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "address",
+        "module",
+        "roaming"
+      ],
+      "additionalProperties": false
+    },
+    "SetBidcosInterfaceResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setBidcosInterface_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetBidcosInterfaceCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetBidcosInterfaceRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetBidcosInterfaceResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "LanGateway": {
+      "type": "object",
+      "description": "A LAN gateway of BidCos-RF (rfd.conf) or BidCos-Wired (hs485d.conf)",
+      "properties": {
+        "class": {
+          "type": "string",
+          "enum": [
+            "RF",
+            "Wired"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "HMLGW2",
+            "Lan Interface",
+            "HMWLGW"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "serial": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "class",
+        "type",
+        "name",
+        "serial",
+        "key",
+        "ip"
+      ],
+      "additionalProperties": false
+    },
+    "LanGatewayState": {
+      "type": "object",
+      "description": "A LAN gateway with its connection state",
+      "properties": {
+        "class": {
+          "type": "string",
+          "enum": [
+            "RF",
+            "Wired"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "HMLGW2",
+            "Lan Interface",
+            "HMWLGW"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "serial": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "ip": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "connected",
+            "disconnected",
+            "wrongKey",
+            "inactive"
+          ]
+        },
+        "default": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "class",
+        "type",
+        "name",
+        "serial",
+        "key",
+        "ip",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "RadioModule": {
+      "type": "object",
+      "description": "A radio module of an interface (listBidcosInterfaces)",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "connected": {
+          "type": "boolean"
+        },
+        "default": {
+          "type": "boolean"
+        },
+        "dutyCycle": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "address",
+        "connected",
+        "default",
+        "dutyCycle"
       ],
       "additionalProperties": false
     }

@@ -192,6 +192,16 @@ func (c *Client) ListBidcosInterfaces(iface string) ([]RadioInterface, error) {
 	return modules, nil
 }
 
+// SetBidcosInterface assigns a BidCos-RF device to a radio module; with
+// roaming it may change to another (Interface.setBidcosInterface)
+func (c *Client) SetBidcosInterface(iface, address, module string, roaming bool) error {
+	if !addressRegex.MatchString(address) || strings.Contains(address, ":") || !addressRegex.MatchString(module) {
+		return ErrInvalidAddress
+	}
+	var reply interface{}
+	return c.call(iface, "setBidcosInterface", []interface{}{address, module, roaming}, &reply)
+}
+
 // ListReplaceableDevices returns the devices a new device can replace
 // (devices only, no channels), as the WebUI's ic_seldevice.cgi asks the
 // interface with listReplaceableDevices. HmIP can't replace devices.
