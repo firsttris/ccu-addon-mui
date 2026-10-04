@@ -2487,3 +2487,56 @@ func TestStackLanGateways(t *testing.T) {
 		}
 	}
 }
+
+func TestStackPairingWithKeyAndSerial(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	// HmIP without the key server: SGTIN and KEY as on the label
+	send(t, conn, message{"type": "setInstallMode", "requestId": "p1", "interfaceName": "HmIP-RF", "on": true, "seconds": 60,
+		"sgtin": "3014-F711-A000-1F98-A9B4-C2D1", "key": "00112233445566778899aabbccddeeff"})
+	if m := receive(t, conn, byRequestID("p1")); m["success"] != true {
+		t.Fatalf("whitelist: %v", m)
+	}
+	if len(ccu.Whitelist) != 1 || ccu.Whitelist[0]["ADDRESS"] != "3014F711A0001F98A9B4C2D1" || ccu.Whitelist[0]["KEY"] != "00112233445566778899AABBCCDDEEFF" || ccu.Whitelist[0]["KEY_MODE"] != "LOCAL" {
+		t.Fatalf("whitelist: %v", ccu.Whitelist)
+	}
+	send(t, conn, message{"type": "setInstallMode", "requestId": "p2", "interfaceName": "HmIP-RF", "on": true, "seconds": 60, "sgtin": "3014", "key": "x"})
+	if m := receive(t, conn, byRequestID("p2")); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("invalid SGTIN: %v", m)
+	}
+	audit, _ := os.ReadFile(auditLogs[ccu])
+	if strings.Contains(string(audit), "AABBCCDDEEFF") || strings.Contains(strings.ToUpper(string(audit)), "00112233445566778899AABBCCDDEEFF") {
+		t.Error("the device key is in the audit log")
+	}
+
+	// BidCos by serial number; a foreign security key needs the temporary key
+	send(t, conn, message{"type": "addDeviceBySerial", "requestId": "p3", "interfaceName": "BidCos-RF", "address": "leq0012345"})
+	if m := receive(t, conn, byRequestID("p3")); m["success"] != true {
+		t.Fatalf("serial: %v", m)
+	}
+	send(t, conn, message{"type": "addDeviceBySerial", "requestId": "p4", "interfaceName": "BidCos-RF", "address": "KEQ0000001"})
+	if m := receive(t, conn, byRequestID("p4")); m["code"] != "KEY_MISMATCH" {
+		t.Fatalf("key mismatch: %v", m)
+	}
+	send(t, conn, message{"type": "getInstallMode", "requestId": "p5", "interfaceName": "BidCos-RF"})
+	if m := receive(t, conn, byRequestID("p5")); m["keyMismatch"] != "KEQ0000001" {
+		t.Fatalf("mismatch device: %v", m)
+	}
+	send(t, conn, message{"type": "setTempKey", "requestId": "p6", "interfaceName": "BidCos-RF", "key": "AlterSchluessel"})
+	if m := receive(t, conn, byRequestID("p6")); m["success"] != true {
+		t.Fatalf("temp key: %v", m)
+	}
+	send(t, conn, message{"type": "addDeviceBySerial", "requestId": "p7", "interfaceName": "BidCos-RF", "address": "KEQ0000001"})
+	if m := receive(t, conn, byRequestID("p7")); m["success"] != true {
+		t.Fatalf("with temp key: %v", m)
+	}
+	send(t, conn, message{"type": "getInbox", "requestId": "p8"})
+	found := map[string]bool{}
+	for _, d := range receive(t, conn, byRequestID("p8"))["devices"].([]interface{}) {
+		found[d.(map[string]interface{})["address"].(string)] = true
+	}
+	if !found["LEQ0012345"] || !found["KEQ0000001"] || !found["001F98A9B4C2D1"] {
+		t.Fatalf("inbox: %v", found)
+	}
+}

@@ -242,6 +242,10 @@ type DeviceRPC interface {
 	PutLinkParamset(iface, address, partner string, values map[string]interface{}) error
 	ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error)
 	SetBidcosInterface(iface, address, module string, roaming bool) error
+	SetInstallModeWithWhitelist(iface string, seconds int, sgtin, key string) error
+	AddDevice(iface, serial string) error
+	KeyMismatchDevice(iface string, reset bool) (string, error)
+	SetTempKey(iface, key string) error
 	InstallFirmware(iface, address string) error
 	LogLevel(iface string) (int, error)
 	SetLogLevel(iface string, level int) error
@@ -597,7 +601,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handlePush(client, msgType, message)
 	case "setGroupMember":
 		s.handleSetGroupMember(client, message)
-	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice", "listReplaceableDevices", "replaceDevice":
+	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice", "listReplaceableDevices", "replaceDevice", "addDeviceBySerial", "setTempKey":
 		s.handlePairing(client, msgType, message)
 	case "createBackup":
 		s.handleCreateBackup(client, message)
@@ -1679,6 +1683,9 @@ type pairingResponse struct {
 	Success   bool               `json:"success"`
 	Seconds   *int               `json:"seconds,omitempty"`
 	Devices   []rega.InboxDevice `json:"devices,omitempty"`
+	// BidCos-RF: a device that failed to pair in install mode for another
+	// system security key (getKeyMismatchDevice)
+	KeyMismatch string `json:"keyMismatch,omitempty"`
 }
 
 // handlePairing: pairing (install mode), the inbox of new devices and
@@ -1696,6 +1703,10 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 		Force bool `json:"force"`
 		// replaceDevice: the device the new one (Address) replaces
 		OldAddress string `json:"oldAddress"`
+		// setInstallMode on HmIP: pair only this device with its local key,
+		// without the key server (SGTIN and KEY from its label)
+		SGTIN string `json:"sgtin"`
+		Key   string `json:"key"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -1739,6 +1750,11 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 				return
 			}
 			response.Seconds = &seconds
+			if msg.InterfaceName == "BidCos-RF" {
+				// As cp_add_device.cgi action_get_install_status; the CCU
+				// forgets the device once it is read
+				response.KeyMismatch, _ = s.rpc.KeyMismatchDevice(msg.InterfaceName, true)
+			}
 		} else {
 			devices, err := s.regaClient.GetInbox()
 			if err != nil {
@@ -1756,8 +1772,46 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 	case "setInstallMode":
 		entry.Target = msg.InterfaceName
 		entry.Value = map[string]interface{}{"on": msg.On, "seconds": msg.Seconds}
+		if msg.SGTIN != "" || msg.Key != "" {
+			// The key is never written to the audit log
+			entry.Value = map[string]interface{}{"on": msg.On, "seconds": msg.Seconds, "sgtin": msg.SGTIN}
+		}
 		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			if msg.On && (msg.SGTIN != "" || msg.Key != "") {
+				if !strings.HasPrefix(msg.InterfaceName, "HmIP") {
+					return nil, "", errors.New("invalid: only HmIP pairs with SGTIN and key")
+				}
+				sgtin, key, err := ccurpc.HmIPWhitelistEntry(msg.SGTIN, msg.Key)
+				if err != nil {
+					return nil, "", fmt.Errorf("invalid: %w", err)
+				}
+				return nil, rega.SetOK, s.rpc.SetInstallModeWithWhitelist(msg.InterfaceName, msg.Seconds, sgtin, key)
+			}
 			return nil, rega.SetOK, s.rpc.SetInstallMode(msg.InterfaceName, msg.On, msg.Seconds)
+		})
+	case "addDeviceBySerial":
+		entry.Target = msg.InterfaceName + "." + strings.ToUpper(msg.Address)
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			if msg.InterfaceName != "BidCos-RF" {
+				return nil, "", errors.New("invalid: only BidCos-RF pairs by serial number")
+			}
+			err := s.rpc.AddDevice(msg.InterfaceName, strings.ToUpper(strings.TrimSpace(msg.Address)))
+			if errors.Is(err, ccurpc.ErrKeyMismatch) {
+				return nil, "KEY_MISMATCH", nil
+			}
+			if errors.Is(err, ccurpc.ErrInvalidAddress) {
+				return nil, "", errors.New("invalid serial number")
+			}
+			return nil, rega.SetOK, err
+		})
+	case "setTempKey":
+		// The key itself is never written to the audit log
+		entry.Target = msg.InterfaceName
+		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			if msg.InterfaceName != "BidCos-RF" || msg.Key == "" || len(msg.Key) > 64 || strings.ContainsAny(msg.Key, "\r\n") {
+				return nil, "", errors.New("invalid temporary key")
+			}
+			return nil, rega.SetOK, s.rpc.SetTempKey(msg.InterfaceName, msg.Key)
 		})
 	case "acceptDevice":
 		entry.Target = msg.Address

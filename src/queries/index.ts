@@ -129,7 +129,11 @@ export const useInstallMode = (interfaceName: string, { poll }: { poll: boolean 
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['installMode', interfaceName],
-    queryFn: async () => (await request({ type: 'getInstallMode', interfaceName })).seconds ?? 0,
+    queryFn: async () => {
+      const response = await request({ type: 'getInstallMode', interfaceName });
+      // BidCos-RF: a device that failed for another security key
+      return { seconds: response.seconds ?? 0, keyMismatch: response.keyMismatch };
+    },
     refetchInterval: poll ? 1000 : false,
     retry: false,
   });
@@ -148,7 +152,9 @@ export const useInbox = ({ poll = false, enabled = true }: { poll?: boolean; ena
 };
 
 export type PairingAction =
-  | { type: 'setInstallMode'; interfaceName: string; on: boolean; seconds: number }
+  | { type: 'setInstallMode'; interfaceName: string; on: boolean; seconds: number; sgtin?: string; key?: string }
+  | { type: 'addDeviceBySerial'; interfaceName: string; address: string }
+  | { type: 'setTempKey'; interfaceName: string; key: string }
   | { type: 'acceptDevice'; address: string }
   | { type: 'deleteDevice'; interfaceName: string; address: string; reset: boolean; force: boolean };
 

@@ -1466,3 +1466,39 @@ test('richtet ein LAN-Gateway ein und ordnet ein Gerät zu', async ({ page }) =>
   await page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first().selectOption('NEQ1234567');
   await expect(page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first()).toHaveValue('NEQ1234567');
 });
+
+test('lernt mit KEY und SGTIN sowie mit Seriennummer und fremdem Schlüssel an', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/pairing');
+  const pairing = page.getByRole('region', { name: 'Geräte anlernen' });
+  const inbox = pairing.getByRole('list', { name: 'Neue Geräte (Posteingang)' });
+
+  // HmIP without the key server: only this device
+  await pairing.getByText('Anlernen ohne Internetzugang (mit KEY und SGTIN)').click();
+  await pairing.getByLabel('SGTIN').fill('3014-F711-A000-1F98-A9B4-C2D1');
+  await pairing.getByLabel('KEY').fill('0011-2233');
+  await expect(pairing.getByRole('button', { name: 'Lokal anlernen' })).toBeDisabled();
+  await pairing.getByLabel('KEY').fill('00112233445566778899aabbccddeeff');
+  await pairing.getByRole('button', { name: 'Lokal anlernen' }).click();
+  await expect(pairing.getByRole('status')).toContainText('Anlernen aktiv');
+  await expect(inbox).toContainText('HmIP-PSM');
+  await pairing.getByRole('button', { name: 'Beenden' }).click();
+
+  // BidCos by serial number; the device has another system security key
+  await pairing.getByLabel('Schnittstelle').selectOption('BidCos-RF');
+  await pairing.getByLabel('Seriennummer').fill('KEQ0000002');
+  await pairing.getByRole('button', { name: 'Mit Seriennummer anlernen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Anderer Sicherheitsschlüssel' });
+  await expect(dialog).toContainText('KEQ0000002');
+  await dialog.getByLabel('System-Sicherheitsschlüssel des Geräts').fill('AlterSchluessel');
+  await dialog.getByRole('button', { name: 'Schlüssel setzen und erneut versuchen' }).click();
+  await expect(page.getByText('Gerät KEQ0000002 angelernt')).toBeVisible();
+  await expect(inbox).toContainText('HM-LC-Sw1-FM');
+
+  // Taken over one by one, so the inbox is empty for a second run
+  for (let count = await inbox.getByRole('listitem').count(); count > 0; count--) {
+    await inbox.getByRole('button', { name: 'Übernehmen' }).first().click();
+    if (count > 1) await expect(inbox.getByRole('listitem')).toHaveCount(count - 1);
+  }
+  await expect(pairing.getByText('Keine neuen Geräte')).toBeVisible();
+});

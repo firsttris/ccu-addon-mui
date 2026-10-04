@@ -142,7 +142,9 @@ export type ServerMessage =
   | GetLanGatewaysResponse
   | SetLanGatewaysResponse
   | ChangeLanGatewayKeyResponse
-  | SetBidcosInterfaceResponse;
+  | SetBidcosInterfaceResponse
+  | AddDeviceBySerialResponse
+  | SetTempKeyResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -269,6 +271,8 @@ export interface Protocol {
   setLanGateways: SetLanGatewaysCall;
   changeLanGatewayKey: ChangeLanGatewayKeyCall;
   setBidcosInterface: SetBidcosInterfaceCall;
+  addDeviceBySerial: AddDeviceBySerialCall;
+  setTempKey: SetTempKeyCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -823,6 +827,14 @@ export interface SetInstallModeRequest {
   interfaceName: string;
   on: boolean;
   seconds: number;
+  /**
+   * HmIP: pair only this device, with its local key, without the key server
+   */
+  sgtin?: string;
+  /**
+   * The device key from the label (base32 or 32 hex digits)
+   */
+  key?: string;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -1131,6 +1143,10 @@ export interface GetInstallModeResponse {
   requestId?: string;
   success: boolean;
   seconds: number;
+  /**
+   * BidCos-RF: a device that failed to pair for another system security key
+   */
+  keyMismatch?: string;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4438,6 +4454,60 @@ export interface SetBidcosInterfaceRequest {
  */
 export interface SetBidcosInterfaceResponse {
   type: "setBidcosInterface_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddDeviceBySerialCall".
+ */
+export interface AddDeviceBySerialCall {
+  request: AddDeviceBySerialRequest;
+  response: AddDeviceBySerialResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddDeviceBySerialRequest".
+ */
+export interface AddDeviceBySerialRequest {
+  type: "addDeviceBySerial";
+  requestId?: string;
+  interfaceName: string;
+  address: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AddDeviceBySerialResponse".
+ */
+export interface AddDeviceBySerialResponse {
+  type: "addDeviceBySerial_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetTempKeyCall".
+ */
+export interface SetTempKeyCall {
+  request: SetTempKeyRequest;
+  response: SetTempKeyResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetTempKeyRequest".
+ */
+export interface SetTempKeyRequest {
+  type: "setTempKey";
+  requestId?: string;
+  interfaceName: string;
+  key: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetTempKeyResponse".
+ */
+export interface SetTempKeyResponse {
+  type: "setTempKey_response";
   requestId?: string;
   success: boolean;
 }
