@@ -10,15 +10,18 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
 
 // Restoring a backup goes through the WebUI's own steps (cp_security.cgi):
-// the .sbk goes up with fileupload.ccc (action backup_upload), then
-// backup_restore_check unpacks and checks it, backup_restore_go applies it
-// and the CCU reboots (action reboot). Each check unpacks the upload anew,
-// so the file is kept here between the steps.
+// the .sbk goes up with fileupload.ccc, which stores it under a temporary
+// name and sends the browser on to action backup_upload with that
+// filename (moving it to new_config.tar); then backup_restore_check
+// unpacks and checks it, backup_restore_go applies it and the CCU reboots
+// (action reboot). Each check unpacks the upload anew, so the file is kept
+// here between the steps.
 
 var (
 	// ErrInvalidBackup: the file is no HomeMatic system backup
@@ -36,6 +39,9 @@ const uploadLifetime = 30 * time.Minute
 
 // The largest backup taken (a CCU with a long history)
 const maxBackupSize = 1 << 30
+
+// Where fileupload.ccc stored the upload (mktemp -p /usr/local/tmp)
+var uploadedFileRegex = regexp.MustCompile(`action=backup_upload&filename=(/usr/local/tmp/[A-Za-z0-9._-]+)'`)
 
 // The texts the WebUI's answers carry, untranslated (${...} keys)
 const (
@@ -243,6 +249,15 @@ func (s *Service) uploadAndCheck(sessionID, path string) (string, error) {
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusOK || strings.HasPrefix(string(answer), "ERROR") {
 		return "", fmt.Errorf("the CCU did not take the backup: %s", strings.TrimSpace(string(answer)))
+	}
+	// fileupload.ccc's page goes on with LoadFromFile(url,
+	// 'action=backup_upload&filename=/usr/local/tmp/tmp.XXXXXX')
+	match := uploadedFileRegex.FindStringSubmatch(string(answer))
+	if match == nil {
+		return "", fmt.Errorf("unexpected answer from fileupload.ccc")
+	}
+	if _, err := s.securityAction(sessionID, url.Values{"action": {"backup_upload"}, "filename": {match[1]}}); err != nil {
+		return "", err
 	}
 	page, err := s.securityAction(sessionID, url.Values{"action": {"backup_restore_check"}})
 	if err != nil {

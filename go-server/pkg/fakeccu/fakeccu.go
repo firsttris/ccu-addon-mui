@@ -63,9 +63,9 @@ type CCU struct {
 	// (logLevel)
 	regaLogLevel int
 	// The backup restore through the WebUI (fileupload.ccc, cp_security.cgi)
-	uploadedBackup, checkedBackup, restoredBackup string
-	rebooted                                      bool
-	rpcLogLevels                                  map[string]int
+	tempUpload, uploadedBackup, checkedBackup, restoredBackup string
+	rebooted                                                  bool
+	rpcLogLevels                                              map[string]int
 }
 
 // CallCount returns how often an XML-RPC method was called, e.g.
@@ -1427,7 +1427,7 @@ const FakeBackup = "fake CCU backup (usr_local.tar.gz, signature, key_index, fir
 func (c *CCU) handleBackup(w http.ResponseWriter, r *http.Request) {
 	// Like the WebUI, which looks for the session in the raw query
 	if strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") && r.Method == http.MethodPost {
-		c.handleRestoreAction(w, r.FormValue("action"), r.FormValue("key"))
+		c.handleRestoreAction(w, r.FormValue("action"), r.FormValue("key"), r.FormValue("filename"))
 		return
 	}
 	c.mu.Lock()
@@ -1453,6 +1453,9 @@ const (
 	FakeBackupNewer = "firmware_version 9.9.9"
 )
 
+// Where the fake's fileupload.ccc stores an upload (mktemp -p /usr/local/tmp)
+const fakeTempFile = "/usr/local/tmp/tmp.Fake01"
+
 // handleFileUpload is the WebUI's fileupload.ccc: one file, an admin
 // session, then the action of the page in "url"
 func (c *CCU) handleFileUpload(w http.ResponseWriter, r *http.Request) {
@@ -1477,15 +1480,16 @@ func (c *CCU) handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	data, _ := io.ReadAll(file)
 	c.mu.Lock()
-	c.uploadedBackup = string(data)
-	c.calls["WebUI backup_upload"]++
+	c.tempUpload = string(data)
 	c.mu.Unlock()
-	_, _ = io.WriteString(w, `<script>dlgPopup.LoadFromFile(url, "action=backup_restore_check");</script>`)
+	// As fileupload.ccc: the page sends the browser on with the temp file
+	_, _ = fmt.Fprintf(w, "<script>var url = '%s?sid=@fakeSession1@';\ndlgPopup.LoadFromFile(url, 'action=%s&filename=%s');</script>",
+		query.Get("url"), query.Get("action"), fakeTempFile)
 }
 
 // handleRestoreAction answers cp_security.cgi's restore steps with the
 // WebUI's untranslated ${...} texts
-func (c *CCU) handleRestoreAction(w http.ResponseWriter, action, key string) {
+func (c *CCU) handleRestoreAction(w http.ResponseWriter, action, key, filename string) {
 	w.Header().Set("Content-Type", "text/html; charset=iso-8859-1")
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -1493,8 +1497,15 @@ func (c *CCU) handleRestoreAction(w http.ResponseWriter, action, key string) {
 	backup := c.uploadedBackup
 	keyed := strings.Contains(backup, FakeBackupKeyed)
 	switch action {
+	case "backup_upload":
+		// action_backup_upload moves the temp file to new_config.tar
+		if filename == fakeTempFile && c.tempUpload != "" {
+			c.uploadedBackup, c.tempUpload = c.tempUpload, ""
+		}
+		_, _ = io.WriteString(w, `<script>dlgPopup.LoadFromFile(url, "action=backup_restore_check");</script>`)
 	case "backup_restore_check":
-		c.checkedBackup = ""
+		// It unpacks new_config.tar and deletes it
+		c.checkedBackup, c.uploadedBackup = "", ""
 		if !strings.Contains(backup, FakeBackup) {
 			_, _ = io.WriteString(w, `<div class="popupTitle">${dialogSettingsSecurityMessageSysBackupInvalidFileTitle}</div>`)
 			return
@@ -1506,6 +1517,9 @@ func (c *CCU) handleRestoreAction(w http.ResponseWriter, action, key string) {
 			_, _ = io.WriteString(w, `<div id="performUpdateTitle">${dialogSettingsSecurityMessageSysBackupPerformTitle}</div><input type=hidden name="key" value=dummy id="text_key"/>`)
 		}
 	case "backup_restore_go":
+		// It works on what the check unpacked
+		backup = c.checkedBackup
+		keyed = strings.Contains(backup, FakeBackupKeyed)
 		switch {
 		case c.checkedBackup == "":
 			_, _ = io.WriteString(w, `${dialogSettingsSecurityMessageSysBackupErrorTitle}`)
