@@ -738,5 +738,8 @@
   "SCRIPT_OUTPUT": "Output",
   "SCRIPT_NO_OUTPUT": "(no output)",
   "SCRIPT_SYNTAX_ERROR": "Syntax error",
-  "SCRIPT_HINT": "The script really runs on the CCU and can change anything. Its syntax is checked first."
+  "SCRIPT_HINT": "The script really runs on the CCU and can change anything. Its syntax is checked first.",
+  "LOGIC_VISIBLE": "visible",
+  "LOGIC_OPERATE": "operable",
+  "LOGIC_HIDDEN": "hidden"
 }

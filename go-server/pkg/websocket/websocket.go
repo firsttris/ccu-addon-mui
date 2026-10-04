@@ -579,7 +579,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleServiceMessages(client, msgType, message)
 	case "createGroup", "renameGroup", "deleteGroup", "createSysvar", "renameSysvar", "deleteSysvar":
 		s.handleObjects(client, msgType, message)
-	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive":
+	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive", "setLogicOption":
 		s.handleLogic(client, msgType, message)
 	case "getProgram", "saveProgram", "deleteProgram":
 		s.handleProgramEditor(client, msgType, message)
@@ -1536,6 +1536,8 @@ func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
 		ID        int64       `json:"id"`
 		Value     interface{} `json:"value"`
 		Active    bool        `json:"active"`
+		// setLogicOption: "visible" or "operate"
+		Option string `json:"option"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -1574,6 +1576,17 @@ func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
 				return !msg.Active, result, err
 			})
 		return
+	case "setLogicOption":
+		value, isBool := msg.Value.(bool)
+		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: fmt.Sprintf("%d %s", msg.ID, msg.Option), Value: msg.Value},
+			func() (interface{}, string, error) {
+				if !isBool {
+					return nil, "", fmt.Errorf("invalid value")
+				}
+				result, previous, err := s.regaClient.SetLogicOption(msg.ID, msg.Option, value)
+				return previous, result, err
+			})
+		return
 	}
 
 	// setSysvar, runProgram: operating
@@ -1594,6 +1607,12 @@ func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
 	if msgType == "runProgram" {
 		entry.Target = fmt.Sprintf("program %d", msg.ID)
 		entry.Value = nil
+		// Only programs marked "bedienbar" for users other than administrators
+		if client.level != auth.LevelAdmin && !s.programOperable(msg.ID) {
+			finish("FORBIDDEN")
+			s.sendRequestError(client, msg.RequestID, "this program may only be run by administrators", "FORBIDDEN")
+			return
+		}
 		result, err = s.regaClient.ProgramAction(msg.ID, rega.ProgramRun)
 	} else {
 		entry.Target = fmt.Sprintf("sysvar %d", msg.ID)
@@ -2268,4 +2287,20 @@ func (s *Server) handlePush(client *Client, msgType string, message []byte) {
 		}
 	}
 	s.sendJSON(client, changeResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true})
+}
+
+// programOperable: the program may be run by users other than
+// administrators (UserAccessRights full access); unknown programs too, so
+// ProgramAction reports them
+func (s *Server) programOperable(id int64) bool {
+	programs, err := s.regaClient.GetPrograms()
+	if err != nil {
+		return false
+	}
+	for _, p := range programs {
+		if p.ID == id {
+			return p.Operate
+		}
+	}
+	return true
 }

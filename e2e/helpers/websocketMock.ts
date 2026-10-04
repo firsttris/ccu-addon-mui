@@ -41,7 +41,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
     const sysvars = [
       { id: 950, name: 'Anwesenheit', visible: true, kind: 'bool', value: true, trueName: 'anwesend', falseName: 'abwesend' },
     ];
-    const programs = [{ id: 1201, name: 'Rollläden abends schließen', active: true, visible: true }];
+    const programs = [{ id: 1201, name: 'Rollläden abends schließen', active: true, visible: true, operate: true }];
 
     // Tile layouts by room, trade or favorite list (kept across reloads)
     const layouts: Record<string, string> = JSON.parse(sessionStorage.getItem('mock-layouts') ?? '{}');

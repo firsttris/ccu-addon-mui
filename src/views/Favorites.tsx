@@ -132,6 +132,7 @@ const LogicItems = ({ favorite }: { favorite: FavoriteList }) => {
   const { data: sysvars = [] } = useSysvars();
   const { data: programs = [] } = usePrograms();
   const action = useLogicAction();
+  const { userLevel } = useWebSocketContext();
   const { showToast } = useToast();
   const onError = (error: Error) => showToast(`${m.SET_FAILED()}: ${error.message}`);
   const rows = favorite.items.flatMap((item): { key: number; sysvar?: Sysvar; program?: Program }[] => {
@@ -168,7 +169,7 @@ const LogicItems = ({ favorite }: { favorite: FavoriteList }) => {
                     onSet={(value) => action.mutate({ type: 'setSysvar', id: sysvar.id, value }, { onError })}
                   />
                 )}
-                {program && (
+                {program && (program.operate || userLevel === 'admin') && (
                   <DialogButton
                     type="button"
                     aria-label={`${m.RUN()} ${program.name}`}

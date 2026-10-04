@@ -59,6 +59,8 @@ type Program struct {
 	Name    string `json:"name"`
 	Active  bool   `json:"active"`
 	Visible bool   `json:"visible"`
+	// ReadOnly: users other than administrators may not run it
+	ReadOnly bool `json:"readOnly,omitempty"`
 	// Runs counts how often the program was run (not part of ReGa)
 	Runs        int    `json:"runs,omitempty"`
 	Description string `json:"description,omitempty"`

@@ -201,6 +201,7 @@ export const usePrograms = () => {
 export type LogicAction =
   | { type: 'setSysvar'; id: number; value: string | number | boolean }
   | { type: 'runProgram'; id: number }
+  | { type: 'setLogicOption'; id: number; option: 'visible' | 'operate'; value: boolean }
   | { type: 'setProgramActive'; id: number; active: boolean };
 
 // Sets a system variable (shown at once), runs a program or switches it
@@ -218,14 +219,22 @@ export const useLogicAction = () => {
           sysvars?.map((sv) => (sv.id === action.id ? { ...sv, value: action.value } : sv)),
         );
       }
+      if (action.type === 'setLogicOption') {
+        const set = <T extends { id: number }>(list?: T[]) =>
+          list?.map((item) => (item.id === action.id ? { ...item, [action.option]: action.value } : item));
+        queryClient.setQueryData<Program[]>(['programs'], set);
+        if (action.option === 'visible') queryClient.setQueryData<Sysvar[]>(['sysvars'], set);
+      }
       if (action.type === 'setProgramActive') {
         queryClient.setQueryData<Program[]>(['programs'], (programs) =>
           programs?.map((p) => (p.id === action.id ? { ...p, active: action.active } : p)),
         );
       }
     },
-    onSettled: (_, __, action) =>
-      queryClient.invalidateQueries({ queryKey: [action.type === 'setSysvar' ? 'sysvars' : 'programs'] }),
+    onSettled: async (_, __, action) => {
+      if (action.type === 'setSysvar' || action.type === 'setLogicOption') await queryClient.invalidateQueries({ queryKey: ['sysvars'] });
+      if (action.type !== 'setSysvar') await queryClient.invalidateQueries({ queryKey: ['programs'] });
+    },
   });
 };
 
