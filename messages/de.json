@@ -753,5 +753,10 @@
   "SYS_CLOCK_SET": "Uhrzeit gestellt",
   "SYS_CLOCK_HINT": "Wie die Zeit-/Positionseinstellungen der WebUI. Mit Zeitserver stellt sich die CCU selbst; von Hand nur ohne Internet nötig.",
   "SYSVAR_CHANNEL": "Kanalzuordnung",
-  "SYSVAR_NO_CHANNEL": "keine"
+  "SYSVAR_NO_CHANNEL": "keine",
+  "GROUP_CHANNELS": "Kanäle in {name}",
+  "GROUP_NO_CHANNELS": "Noch keine Kanäle.",
+  "GROUP_REMOVE_CHANNEL": "{name} entfernen",
+  "GROUP_ADD_CHANNEL": "Kanal zu {name} hinzufügen",
+  "GROUP_CHOOSE_CHANNEL": "Kanal wählen …"
 }
