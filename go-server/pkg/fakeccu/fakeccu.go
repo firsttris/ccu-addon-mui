@@ -422,6 +422,9 @@ func (c *CCU) runScript(body string) (string, error) {
 		case "clear_history":
 			c.historyCleared = true
 			return "OK", nil
+		case "check_script":
+			code := strings.ReplaceAll(values["CODE"], `^#"^"#^`, "^")
+			return checkTestScript(code), nil
 		case "get_log_level":
 			return strconv.Itoa(c.regaLogLevel), nil
 		case "set_log_level":
@@ -539,7 +542,41 @@ func (c *CCU) runScript(body string) (string, error) {
 			return "", nil
 		}
 	}
-	return "", fmt.Errorf("unknown script")
+	// A script tested in the editor: only Write/WriteLine of strings
+	return runTestScript(body)
+}
+
+// The statements the fake runs of a tested script
+var (
+	writeRegex = regexp.MustCompile(`^(Write|WriteLine)\("([^"]*)"\)$`)
+)
+
+// checkTestScript stands in for system.SyntaxCheck: every statement must be
+// Write("…") or WriteLine("…")
+func checkTestScript(code string) string {
+	for i, statement := range strings.Split(code, ";") {
+		statement = strings.TrimSpace(statement)
+		if statement != "" && !writeRegex.MatchString(statement) {
+			return fmt.Sprintf("Error 1 at row %d col 1 near ^%s^", i+1, statement)
+		}
+	}
+	return ""
+}
+
+func runTestScript(code string) (string, error) {
+	if checkTestScript(code) != "" {
+		return "", fmt.Errorf("unknown script")
+	}
+	var b strings.Builder
+	for _, statement := range strings.Split(code, ";") {
+		if m := writeRegex.FindStringSubmatch(strings.TrimSpace(statement)); m != nil {
+			b.WriteString(m[2])
+			if m[1] == "WriteLine" {
+				b.WriteString("\n")
+			}
+		}
+	}
+	return b.String(), nil
 }
 
 // itemType says what a favorite list entry is, as get_favorites.tcl

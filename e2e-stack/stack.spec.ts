@@ -849,6 +849,20 @@ test('stellt die Protokollierung ein und lädt die Protokolldateien herunter', a
   await expect(panel.getByLabel('Syslog-Server')).toHaveValue('');
 });
 
+test('testet ein Skript auf der Programmseite', async ({ page }) => {
+  await login(page);
+  await page.goto('/programs');
+  await page.getByRole('button', { name: 'Skript testen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Skript testen' });
+  await dialog.getByLabel('Skript').fill('WriteLine("Hallo");\nWrite("Welt");');
+  await dialog.getByRole('button', { name: 'Ausführen' }).click();
+  await expect(dialog.getByLabel('Ausgabe')).toHaveText('Hallo\nWelt');
+
+  await dialog.getByLabel('Skript').fill('dom.Kaputt(');
+  await dialog.getByRole('button', { name: 'Ausführen' }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Syntaxfehler');
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {

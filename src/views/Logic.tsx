@@ -8,6 +8,8 @@ import { EditableName } from '../components/EditableName';
 import { Button } from '../components/ui/button';
 import { NewSysvarDialog } from './NewSysvarDialog';
 import PlusIcon from '~icons/lucide/plus';
+import TerminalIcon from '~icons/lucide/square-terminal';
+import { ScriptTestDialog } from './programs/ScriptTest';
 import { Link } from '@tanstack/react-router';
 import { ListSkeletonItems } from '../components/ui/skeleton';
 import { m } from '../paraglide/messages';
@@ -228,6 +230,7 @@ export const Programs = () => {
   const { data: programs = [], isPending: loading } = usePrograms();
   const action = useLogicAction();
   const canConfigure = userLevel === 'admin' && elevated;
+  const [testing, setTesting] = useState(false);
   usePageTitle(m.PROGRAMS());
 
   const run = (variables: Parameters<typeof action.mutate>[0], success?: string) =>
@@ -239,7 +242,11 @@ export const Programs = () => {
   return (
     <Container>
       {canConfigure && (
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" onClick={() => setTesting(true)}>
+            <TerminalIcon />
+            {m.SCRIPT_TEST()}
+          </Button>
           <Button variant="outline" asChild>
             <Link to="/program/$programId" params={{ programId: 'new' }}>
               <PlusIcon />
@@ -248,6 +255,7 @@ export const Programs = () => {
           </Button>
         </div>
       )}
+      {testing && <ScriptTestDialog onDone={() => setTesting(false)} />}
       <List aria-label={m.PROGRAMS()} loading={loading}>
         {programs
           .filter((p) => p.visible)

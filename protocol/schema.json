@@ -259,6 +259,9 @@
     },
     "downloadLogs": {
       "$ref": "#/definitions/DownloadLogsCall"
+    },
+    "runScript": {
+      "$ref": "#/definitions/RunScriptCall"
     }
   },
   "required": [
@@ -346,7 +349,8 @@
     "checkFirmwareUpdate",
     "getLogging",
     "setLogging",
-    "downloadLogs"
+    "downloadLogs",
+    "runScript"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -2834,6 +2838,9 @@
         },
         {
           "$ref": "#/definitions/DownloadLogsResponse"
+        },
+        {
+          "$ref": "#/definitions/RunScriptResponse"
         }
       ]
     },
@@ -7270,6 +7277,65 @@
         },
         "response": {
           "$ref": "#/definitions/DownloadLogsResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "RunScriptRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "runScript"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "script": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "script"
+      ],
+      "additionalProperties": false
+    },
+    "RunScriptResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "runScript_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "syntaxError": {
+          "type": "string"
+        },
+        "output": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "output"
+      ],
+      "additionalProperties": false
+    },
+    "RunScriptCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/RunScriptRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/RunScriptResponse"
         }
       },
       "required": [

@@ -106,7 +106,8 @@ export type ServerMessage =
   | CheckFirmwareUpdateResponse
   | GetLoggingResponse
   | SetLoggingResponse
-  | DownloadLogsResponse;
+  | DownloadLogsResponse
+  | RunScriptResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -197,6 +198,7 @@ export interface Protocol {
   getLogging: GetLoggingCall;
   setLogging: SetLoggingCall;
   downloadLogs: DownloadLogsCall;
+  runScript: RunScriptCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -3093,6 +3095,33 @@ export interface DownloadLogsResponse {
   success: boolean;
   url: string;
   fileName: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RunScriptCall".
+ */
+export interface RunScriptCall {
+  request: RunScriptRequest;
+  response: RunScriptResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RunScriptRequest".
+ */
+export interface RunScriptRequest {
+  type: "runScript";
+  requestId?: string;
+  script: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "RunScriptResponse".
+ */
+export interface RunScriptResponse {
+  type: "runScript_response";
+  requestId?: string;
+  syntaxError?: string;
+  output: string;
 }
 /**
  * Sent first on every connection
