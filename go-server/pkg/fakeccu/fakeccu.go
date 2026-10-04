@@ -65,6 +65,7 @@ type CCU struct {
 	// starting with "KEQ") need the temporary key set; the device that
 	// failed last (getKeyMismatchDevice)
 	tempKey, keyMismatch string
+	factoryResetDone     bool
 	// The last HmIP whitelist (setInstallModeWithWhitelist)
 	Whitelist []map[string]interface{}
 	// Time modules created by save_program, for their ids
@@ -1465,7 +1466,7 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":501,"message":"invalid credentials"}}`)
 	case "Session.logout":
 		_, _ = io.WriteString(w, `{"version":"1.1","result":true,"error":null}`)
-	case "CCU.setSSH", "CCU.setSSHPassword", "CCU.restartSSHDaemon", "CCU.setAuthEnabled", "CCU.setHttpsRedirectEnabled", "User.restartLighttpd", "User.existsCertificate":
+	case "CCU.setSSH", "CCU.setSSHPassword", "CCU.restartSSHDaemon", "CCU.setAuthEnabled", "CCU.setHttpsRedirectEnabled", "User.restartLighttpd", "User.existsCertificate", "BidCoS_RF.isKeySet", "BidCoS_RF.validateKey":
 		if req.Params["_session_id_"] != "fakeSession1" {
 			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
 			return
@@ -1498,6 +1499,10 @@ func (c *CCU) handleBackup(w http.ResponseWriter, r *http.Request) {
 	if strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") && r.Method == http.MethodPost {
 		if r.FormValue("action") == "change_key" {
 			c.changeKey(w, r.FormValue("key1"), r.FormValue("key2"))
+			return
+		}
+		if r.FormValue("action") == "factory_reset_go" {
+			c.factoryReset(w, r.FormValue("key"))
 			return
 		}
 		c.handleRestoreAction(w, r.FormValue("action"), r.FormValue("key"), r.FormValue("filename"))

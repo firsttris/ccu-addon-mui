@@ -2552,3 +2552,36 @@ func TestStackPairingWithKeyAndSerial(t *testing.T) {
 		t.Fatalf("inbox: %v", found)
 	}
 }
+
+func TestStackFactoryReset(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	ccu.SecurityKey = "Schluessel1"
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "factoryReset", "requestId": "r1"})
+	if m := receive(t, conn, byRequestID("r1")); m["code"] != "PASSWORD_REQUIRED" {
+		t.Fatalf("without password: %v", m)
+	}
+	send(t, conn, message{"type": "factoryReset", "requestId": "r2", "password": "secret"})
+	if m := receive(t, conn, byRequestID("r2")); m["code"] != "KEY_REQUIRED" {
+		t.Fatalf("without key: %v", m)
+	}
+	send(t, conn, message{"type": "factoryReset", "requestId": "r3", "key": "falsch"})
+	if m := receive(t, conn, byRequestID("r3")); m["code"] != "KEY_WRONG" {
+		t.Fatalf("wrong key: %v", m)
+	}
+	if ccu.FactoryResetDone() {
+		t.Fatal("reset with a wrong key")
+	}
+	send(t, conn, message{"type": "factoryReset", "requestId": "r4", "key": "Schluessel1"})
+	if m := receive(t, conn, byRequestID("r4")); m["success"] != true {
+		t.Fatalf("reset: %v", m)
+	}
+	// The reset runs after the answer
+	deadline := time.Now().Add(5 * time.Second)
+	for !ccu.FactoryResetDone() && time.Now().Before(deadline) {
+		time.Sleep(50 * time.Millisecond)
+	}
+	if !ccu.FactoryResetDone() {
+		t.Fatal("not reset")
+	}
+}

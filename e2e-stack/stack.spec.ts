@@ -1627,3 +1627,37 @@ test('stellt den Sitzungs-Timeout der WebUI ein', async ({ page }) => {
   await page.getByRole('region', { name: 'Sicherheit' }).getByRole('button', { name: 'Timeout speichern' }).click();
   await expect(page.getByText('beim nächsten Neustart').first()).toBeVisible();
 });
+
+test('setzt die Zentrale erst nach Bestätigung auf Werkseinstellungen zurück', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Sicherheit' });
+  await panel.getByRole('button', { name: 'Auf Werkseinstellungen zurücksetzen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Werkseinstellungen' });
+  await expect(dialog).toContainText('auch dieses Add-on');
+  const confirm = dialog.getByRole('button', { name: 'Auf Werkseinstellungen zurücksetzen' });
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel('Zur Bestätigung „ZURÜCKSETZEN“ eingeben').fill('zurücksetzen');
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel('Zur Bestätigung „ZURÜCKSETZEN“ eingeben').fill('ZURÜCKSETZEN');
+  await confirm.click();
+
+  // The WebUI session and, if one is set, the security key (set by an
+  // earlier test) are asked for
+  const started = panel.getByRole('alert');
+  for (let i = 0; i < 3; i++) {
+    const passwordField = dialog.getByLabel('Passwort', { exact: true });
+    const keyField = dialog.getByLabel('System-Sicherheitsschlüssel');
+    await expect(started.or(passwordField).or(keyField)).toBeVisible();
+    if (await started.isVisible()) break;
+    if (await keyField.isVisible()) {
+      await keyField.fill('falsch');
+      await confirm.click();
+      await expect(dialog).toContainText('Der Sicherheitsschlüssel stimmt nicht.');
+      await keyField.fill('Neuer_Key_1');
+    }
+    if (await passwordField.isVisible()) await passwordField.fill('secret');
+    await confirm.click();
+  }
+  await expect(started).toContainText('wird auf Werkseinstellungen zurückgesetzt');
+});
