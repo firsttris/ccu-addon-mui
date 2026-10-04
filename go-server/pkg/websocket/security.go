@@ -27,6 +27,8 @@ type securityResponse struct {
 	securitySettings
 	// Seconds until an idle WebUI session ends (rega.conf)
 	SessionTimeout int `json:"sessionTimeout"`
+	// The level of the security wizard: LOW, MEDIUM, HIGH or CUSTOM
+	SecurityLevel string `json:"securityLevel"`
 }
 
 // After a change of authentication or HTTPS redirect lighttpd restarts,
@@ -49,6 +51,8 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		Password    string `json:"password"`
 		// setSessionTimeout
 		Seconds int `json:"seconds"`
+		// setSecurityLevel
+		Level string `json:"level"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -74,7 +78,45 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 			s.sendRequestError(client, msg.RequestID, "session timeout: "+err.Error(), "CCU_ERROR")
 			return
 		}
-		s.sendJSON(client, securityResponse{Type: "getSecurity_response", RequestID: msg.RequestID, securitySettings: current, SessionTimeout: timeout})
+		level, err := s.settings.SecurityLevel()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "security level: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		s.sendJSON(client, securityResponse{Type: "getSecurity_response", RequestID: msg.RequestID, securitySettings: current, SessionTimeout: timeout, SecurityLevel: level})
+	case "setSecurityLevel":
+		// The security wizard (DialogChooseSecuritySettings): firewall and
+		// authentication together through CCU.setSecurityLevel, then
+		// lighttpd restarts as in the WebUI, after the answer
+		previous, _ := s.settings.SecurityLevel()
+		entry := audit.Entry{User: client.user, Action: "setSecurityLevel", Target: "security level", Value: msg.Level, Previous: previous}
+		if code, errorMsg := configureError(client); code != "" {
+			s.recordAudit(entry, code)
+			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+			return
+		}
+		if !settings.ValidSecurityLevel(msg.Level) {
+			s.recordAudit(entry, "INVALID_VALUE")
+			s.sendRequestError(client, msg.RequestID, "unknown security level "+msg.Level, "INVALID_VALUE")
+			return
+		}
+		result, err := s.backup.AdminCall(client.user, msg.Password, "CCU.setSecurityLevel", map[string]interface{}{"level": msg.Level})
+		if err == nil && result != true {
+			err = errors.New("the CCU did not set the security level")
+		}
+		if err != nil {
+			s.securityFailed(client, msg.RequestID, entry, err)
+			return
+		}
+		s.recordAudit(entry, rega.SetOK)
+		s.sendJSON(client, changeResponse{Type: "setSecurityLevel_response", RequestID: msg.RequestID, Success: true})
+		user := client.user
+		go func() {
+			time.Sleep(restartLighttpdDelay)
+			if _, err := s.backup.AdminCall(user, "", "User.restartLighttpd", nil); err != nil {
+				logger.Error("Failed to restart lighttpd:", err)
+			}
+		}()
 	case "setSessionTimeout":
 		// Written as cp_security.cgi action_set_session_timeout does; ReGa
 		// takes it on the next start

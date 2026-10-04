@@ -216,3 +216,55 @@ func (c *CCU) FactoryResetDone() bool {
 	defer c.mu.Unlock()
 	return c.factoryResetDone
 }
+
+// setSecurityLevel is SEC_setsecuritylevel (/lib/libsecuritylevel.tcl):
+// the firewall and the authentication flag for a level
+func (c *CCU) setSecurityLevel(level string) string {
+	levels := map[string]struct {
+		mode, xmlrpc, rega, neo string
+		auth                    bool
+	}{
+		"LOW":    {"MOST_OPEN", "full", "restricted", "full", false},
+		"MEDIUM": {"RESTRICTIVE", "restricted", "restricted", "restricted", true},
+		"HIGH":   {"RESTRICTIVE", "none", "none", "none", true},
+	}
+	l, ok := levels[level]
+	if !ok {
+		return `{"version":"1.1","result":false,"error":null}`
+	}
+	// The addresses and ports stay as they are
+	ips, ports := []interface{}{}, []interface{}{}
+	if data, err := os.ReadFile(filepath.Join(c.ConfigDir, "firewall.conf")); err == nil && c.ConfigDir != "" {
+		for _, line := range strings.Split(string(data), "\n") {
+			key, value, _ := strings.Cut(line, "=")
+			for _, v := range strings.Fields(value) {
+				switch strings.TrimSpace(key) {
+				case "IPs":
+					ips = append(ips, v)
+				case "USERPORTS":
+					ports = append(ports, v)
+				}
+			}
+		}
+	}
+	c.setFirewall(map[string]interface{}{
+		"mode": l.mode, "ips": ips, "userports": ports,
+		"services": []interface{}{
+			map[string]interface{}{"name": "XMLRPC", "access": l.xmlrpc},
+			map[string]interface{}{"name": "REGA", "access": l.rega},
+			map[string]interface{}{"name": "NEOSERVER", "access": l.neo},
+		},
+	})
+	c.mu.Lock()
+	c.calls["JSON CCU.setSecurityLevel"]++
+	c.mu.Unlock()
+	if c.ConfigDir != "" {
+		path := filepath.Join(c.ConfigDir, "authEnabled")
+		if l.auth {
+			_ = os.WriteFile(path, nil, 0o644)
+		} else {
+			_ = os.Remove(path)
+		}
+	}
+	return `{"version":"1.1","result":true,"error":null}`
+}
