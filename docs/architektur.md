@@ -115,7 +115,7 @@ Benutzer und das Systemprotokoll. Der Server schickt ihr HM-Script per `POST /re
 | Dienst | Port auf der CCU (aus dem LAN) | wofür |
 |---|---|---|
 | BidCos-RF (rfd) | 32001 (2001) | Gerätebeschreibungen, Paramsets, Anlernen, Verknüpfungen, LAN-Gateways, Gerätetausch, Log-Level; Events |
-| HmIP-RF (crRFD) | 32010 (2010) | dasselbe für HmIP und HmIP Wired, dazu Anlernen mit KEY/SGTIN und Firmware-Updates; Events |
+| HmIP-RF (crRFD) | 32010 (2010) | dasselbe für HmIP und HmIP Wired, dazu Anlernen mit KEY/SGTIN und Firmware-Updates (`installFirmware`; BidCos: `updateFirmware`); Events |
 | VirtualDevices | 39292 (9292) | Heizgruppen und virtuelle Geräte |
 | BidCos-Wired (hs485d) | 32000 (2000) | wie BidCos-RF für HMW-Geräte am RS485-Bus, dazu die Gerätesuche; nur mit Wired-Gateway, dann trägt `hs485dLoader` es in `InterfacesList.xml` ein |
 

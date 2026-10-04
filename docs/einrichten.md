@@ -56,7 +56,7 @@ Ein Klick auf ein Gerät öffnet seine Seite:
 - **Wochenprogramm bearbeiten** bei Thermostaten und HmIP-Aktoren (siehe [Bedienung](bedienung.md#heizen)).
 - **Namen, Räume und Gewerke**: Gerät und Kanäle umbenennen, Kanäle Räumen und Gewerken zuordnen, die
   Optionen der CCU *sichtbar*, *bedienbar (nicht nur Admins)*, *protokolliert* und *gesichert (AES)*.
-- **Firmware**: installierte und verfügbare Version, Update starten (HmIP).
+- **Firmware**: installierte und verfügbare Version, Update starten wie in der WebUI: HmIP, sobald die Firmware auf dem Gerät liegt (auch bei „wartet auf das Gerät“), BidCos in einem Schritt, Access Points (HAP, DRAP) als Live-Update. Bei zu hohem Duty Cycle sperrt der Server das Update; ist das Gerät nicht erreichbar, sagt die App, dass es mit der Systemtaste geweckt werden muss.
 - **Funktionstest**: prüft, ob das Gerät antwortet, wie in der WebUI.
 - **Verlauf**: die protokollierten Werte als kleine Diagramme.
 - **Programme** und **Systemvariablen**, die das Gerät verwenden.

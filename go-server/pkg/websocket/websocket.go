@@ -1454,8 +1454,9 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 	s.sendJSON(client, changeResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true})
 }
 
-// handleInstallFirmware starts the update of a device whose new firmware
-// has been delivered. Setup, for administrators only.
+// handleInstallFirmware starts the update of a device to the firmware the
+// CCU has for it. Setup, for administrators only. DEVICE_UNREACHABLE asks
+// to wake the device, DUTY_CYCLE_HIGH to try again later.
 func (s *Server) handleInstallFirmware(client *Client, message []byte) {
 	var msg struct {
 		RequestID     string `json:"requestId"`
@@ -1472,7 +1473,13 @@ func (s *Server) handleInstallFirmware(client *Client, message []byte) {
 	}
 	s.configure(client, msg.RequestID, audit.Entry{Action: "installFirmware", Target: msg.InterfaceName + " " + msg.Address},
 		func() (interface{}, string, error) {
-			if err := s.rpc.InstallFirmware(msg.InterfaceName, msg.Address); err != nil {
+			err := s.rpc.InstallFirmware(msg.InterfaceName, msg.Address)
+			switch {
+			case errors.Is(err, ccurpc.ErrDeviceUnreachable):
+				return nil, "DEVICE_UNREACHABLE", nil
+			case errors.Is(err, ccurpc.ErrDutyCycleHigh):
+				return nil, "DUTY_CYCLE_HIGH", nil
+			case err != nil:
 				return nil, "", err
 			}
 			return nil, rega.SetOK, nil

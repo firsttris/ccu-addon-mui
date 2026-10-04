@@ -1887,20 +1887,54 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		}
 		return int(remaining.Seconds()), ""
 	case "installFirmware":
+		// HmIP: the delivered firmware is installed (on a live update the
+		// access point stays online: LIVE_UP_TO_DATE)
 		address := stringParam(params, 0)
 		for _, d := range data.Devices {
 			if d["ADDRESS"] != address {
 				continue
 			}
 			state, _ := d["FIRMWARE_UPDATE_STATE"].(string)
-			if !strings.HasSuffix(state, "READY_FOR_UPDATE") {
-				return nil, "Firmware update not ready"
+			switch state {
+			case "READY_FOR_UPDATE", "DO_UPDATE_PENDING":
+				d["FIRMWARE_UPDATE_STATE"] = "UP_TO_DATE"
+			case "LIVE_NEW_FIRMWARE_AVAILABLE":
+				d["FIRMWARE_UPDATE_STATE"] = "LIVE_UP_TO_DATE"
+			default:
+				return nil, "-5:Firmware update not ready"
 			}
 			d["FIRMWARE"] = d["AVAILABLE_FIRMWARE"]
-			d["FIRMWARE_UPDATE_STATE"] = strings.TrimSuffix(state, "READY_FOR_UPDATE") + "UP_TO_DATE"
 			return true, ""
 		}
-		return nil, "Unknown instance"
+		return nil, "-2:Unknown instance"
+	case "updateFirmware":
+		// BidCos: transfers and installs the firmware the CCU has. A device
+		// that is not always listening (RX_MODE without ALWAYS) has to be
+		// woken with its key; the fake one never is: fault -1, as the
+		// WebUI's ic_ifacecmd.cgi expects it.
+		address := stringParam(params, 0)
+		for _, d := range data.Devices {
+			if d["ADDRESS"] != address {
+				continue
+			}
+			available, _ := d["AVAILABLE_FIRMWARE"].(string)
+			if available == "" || available == d["FIRMWARE"] {
+				return nil, "-5:No firmware update available"
+			}
+			rxMode := 1
+			switch v := d["RX_MODE"].(type) {
+			case float64:
+				rxMode = int(v)
+			case int:
+				rxMode = v
+			}
+			if rxMode&1 == 0 {
+				return nil, "-1:Bootloader in device " + address + " didn't start"
+			}
+			d["FIRMWARE"] = available
+			return []interface{}{true}, ""
+		}
+		return nil, "-2:Unknown instance"
 	case "listReplaceableDevices":
 		// Devices of the new device's type that are set up (not in the inbox)
 		newAddress := stringParam(params, 0)

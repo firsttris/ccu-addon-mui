@@ -1057,6 +1057,27 @@ func TestStackFirmwareUpdate(t *testing.T) {
 	if m := receive(t, conn, byRequestID("q4")); m["code"] != "CCU_ERROR" {
 		t.Fatalf("expected CCU_ERROR, got %v", m)
 	}
+
+	// BidCos: updateFirmware transfers and installs in one go
+	send(t, conn, message{"type": "installFirmware", "requestId": "q5", "interfaceName": "BidCos-RF", "address": "LEQ0000001"})
+	if m := receive(t, conn, byRequestID("q5")); m["success"] != true {
+		t.Fatalf("updateFirmware failed: %v", m)
+	}
+	// A sleeping device has to be woken with its key
+	send(t, conn, message{"type": "installFirmware", "requestId": "q6", "interfaceName": "BidCos-RF", "address": "LEQ0000004"})
+	if m := receive(t, conn, byRequestID("q6")); m["code"] != "DEVICE_UNREACHABLE" {
+		t.Fatalf("expected DEVICE_UNREACHABLE, got %v", m)
+	}
+	send(t, conn, message{"type": "listDevices", "requestId": "q7"})
+	for _, raw := range receive(t, conn, byRequestID("q7"))["devices"].([]interface{}) {
+		d := raw.(map[string]interface{})
+		if d["address"] == "LEQ0000001" && (d["firmware"] != "2.11" || d["availableFirmware"] != nil) {
+			t.Fatalf("BidCos firmware not updated: %v", d)
+		}
+		if d["address"] == "LEQ0000004" && d["availableFirmware"] != "1.5" {
+			t.Fatalf("unexpected BidCos firmware: %v", d)
+		}
+	}
 }
 
 func TestStackBackup(t *testing.T) {

@@ -276,9 +276,10 @@ export interface Device {
   paramsets: string[];
   version: number;
   firmware?: string;
-  // Newer firmware the CCU has for the device (HmIP), and how far its
+  // Newer firmware the CCU has for the device, and (HmIP) how far its
   // update is: UP_TO_DATE, NEW_FIRMWARE_AVAILABLE, DELIVER_FIRMWARE_IMAGE,
-  // READY_FOR_UPDATE, PERFORMING_UPDATE
+  // READY_FOR_UPDATE, DO_UPDATE_PENDING, PERFORMING_UPDATE and for access
+  // points the LIVE_ states
   availableFirmware?: string;
   firmwareUpdateState?: string;
   channels?: DeviceChannel[];
