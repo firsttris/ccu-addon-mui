@@ -1295,5 +1295,8 @@
   "DISPLAY_SOUND_6": "Event",
   "DISPLAY_SOUND_7": "Error",
   "DISPLAY_EPAPER_STATUS": "5 lines of text and icons",
-  "DISPLAY_RC19_STATUS": "Up to 5 characters with symbols"
+  "DISPLAY_RC19_STATUS": "Up to 5 characters with symbols",
+  "SYS_SAFE_MODE": "Restart in safe mode",
+  "SYS_SAFE_MODE_CONFIRM": "The central unit starts once in safe mode: installed add-ons are not started, this one neither. The old WebUI stays reachable; a normal restart ends the mode. Changed settings are saved before.",
+  "SYS_SAFE_MODE_STARTING": "The central unit starts in safe mode. This add-on is not reachable until the next normal restart."
 }

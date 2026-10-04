@@ -4,6 +4,7 @@ import MapPinIcon from '~icons/lucide/map-pin';
 import LocateIcon from '~icons/lucide/locate-fixed';
 import RotateCwIcon from '~icons/lucide/rotate-cw';
 import PowerIcon from '~icons/lucide/power';
+import ShieldIcon from '~icons/lucide/shield';
 import ClockIcon from '~icons/lucide/clock';
 import { NativeSelect } from '../../components/ui/select';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
@@ -121,7 +122,13 @@ const Clock = () => {
         <div className={row}>
           <label className={label}>
             <span className={caption}>{m.SYS_TIME_ZONE()}</span>
-            <NativeSelect className="w-60" aria-label={m.SYS_TIME_ZONE()} disabled={!elevated} value={zone} onChange={(e) => setZone(e.target.value)}>
+            <NativeSelect
+              className="w-60"
+              aria-label={m.SYS_TIME_ZONE()}
+              disabled={!elevated}
+              value={zone}
+              onChange={(e) => setZone(e.target.value)}
+            >
               {!data.timeZones.includes(zone) && <option value={zone}>{zone || '–'}</option>}
               {data.timeZones.map((tz) => (
                 <option key={tz} value={tz}>
@@ -165,7 +172,12 @@ const Clock = () => {
       )}
       {data.canSetClock && (
         <div className={row}>
-          <Button type="button" variant="outline" disabled={!elevated || busy} onClick={() => save({ type: 'setClock', time: formatClock(new Date()) }, m.SYS_CLOCK_SET())}>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!elevated || busy}
+            onClick={() => save({ type: 'setClock', time: formatClock(new Date()) }, m.SYS_CLOCK_SET())}
+          >
             <ClockIcon />
             {m.SYS_CLOCK_FROM_BROWSER()}
           </Button>
@@ -299,23 +311,32 @@ const Location = () => {
   );
 };
 
-const Power = () => {
+// The safe mode as the WebUI's maintenance page (cp_maintenance.cgi:
+// OnEnterSafeMode, SafeMode.enter)
+type Action = 'reboot' | 'shutdown' | 'safemode';
+const labels: Record<Action, { title: () => string; confirm: () => string; done: () => string }> = {
+  reboot: { title: m.SYS_REBOOT, confirm: m.SYS_REBOOT_CONFIRM, done: m.SYS_REBOOTING },
+  shutdown: { title: m.SYS_SHUTDOWN, confirm: m.SYS_SHUTDOWN_CONFIRM, done: m.SYS_SHUTTING_DOWN },
+  safemode: { title: m.SYS_SAFE_MODE, confirm: m.SYS_SAFE_MODE_CONFIRM, done: m.SYS_SAFE_MODE_STARTING },
+};
+
+export const Power = () => {
   const { request } = useWebSocketActions();
   const { elevated } = useWebSocketContext();
   const { showToast } = useToast();
   const { data } = useSystemSettings();
-  const [asking, setAsking] = useState<'reboot' | 'shutdown' | null>(null);
+  const [asking, setAsking] = useState<Action | null>(null);
   const [busy, setBusy] = useState(false);
 
   if (!data) {
     return null;
   }
 
-  const run = async (action: 'reboot' | 'shutdown') => {
+  const run = async (action: Action) => {
     setBusy(true);
     try {
       await request({ type: 'powerAction', action }, { queue: false });
-      showToast(action === 'reboot' ? m.SYS_REBOOTING() : m.SYS_SHUTTING_DOWN(), 'info');
+      showToast(labels[action].done(), 'info');
       setAsking(null);
     } catch (error) {
       showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
@@ -337,6 +358,10 @@ const Power = () => {
             <PowerIcon />
             {m.SYS_SHUTDOWN()}
           </Button>
+          <Button type="button" variant="outline" disabled={!elevated} onClick={() => setAsking('safemode')}>
+            <ShieldIcon />
+            {m.SYS_SAFE_MODE()}
+          </Button>
         </div>
       ) : (
         <p className="text-xs">
@@ -345,14 +370,14 @@ const Power = () => {
       )}
       {asking && (
         <ConfirmDialog
-          title={asking === 'reboot' ? m.SYS_REBOOT() : m.SYS_SHUTDOWN()}
-          confirmLabel={asking === 'reboot' ? m.SYS_REBOOT() : m.SYS_SHUTDOWN()}
+          title={labels[asking].title()}
+          confirmLabel={labels[asking].title()}
           destructive
           busy={busy}
           onConfirm={() => run(asking)}
           onCancel={() => setAsking(null)}
         >
-          {asking === 'reboot' ? m.SYS_REBOOT_CONFIRM() : m.SYS_SHUTDOWN_CONFIRM()}
+          {labels[asking].confirm()}
         </ConfirmDialog>
       )}
     </Panel>

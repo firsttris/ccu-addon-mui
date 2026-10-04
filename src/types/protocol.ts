@@ -2572,7 +2572,7 @@ export interface PowerActionCall {
 export interface PowerActionRequest {
   type: "powerAction";
   requestId?: string;
-  action: "reboot" | "shutdown";
+  action: "reboot" | "shutdown" | "safemode";
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

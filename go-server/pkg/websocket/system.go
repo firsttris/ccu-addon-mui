@@ -100,11 +100,17 @@ func (s *Server) handleSystemInfo(client *Client, requestID string) {
 var timeConfFile = "/etc/config/time.conf"
 
 // What cp_maintenance.cgi runs after saving (action_reboot,
-// action_shutdown); a shutdown first leaves /tmp/shutdown.
+// action_shutdown); a shutdown first leaves /tmp/shutdown. The safe mode
+// (SafeMode.enter, api/methods/safemode/enter.tcl) leaves safeModeFile
+// first: OpenCCU then starts no add-ons (S55InitAddons, S98StartAddons),
+// this one neither, and removes the file once up (S99SetupLEDs).
 var powerCommands = map[string][][]string{
 	"reboot":   {{"/sbin/reboot"}},
 	"shutdown": {{"touch", "/tmp/shutdown"}, {"/sbin/poweroff"}},
+	"safemode": {{"/sbin/reboot"}},
 }
+
+var safeModeFile = "/etc/config/safemode"
 
 // powerAvailable: the add-on runs on the CCU itself, which only the
 // firmware's VERSION file and the commands tell.
@@ -302,6 +308,10 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 					return nil, "NOT_SUPPORTED", nil
 				}
 				result, err := s.regaClient.SaveSystem()
+				if err == nil && result == rega.SetOK && msg.Action == "safemode" {
+					// enter.tcl writes "1"
+					err = os.WriteFile(safeModeFile, []byte("1\n"), 0o644)
+				}
 				ran = err == nil && result == rega.SetOK
 				return nil, result, err
 			})
