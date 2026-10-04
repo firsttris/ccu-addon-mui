@@ -169,7 +169,8 @@ export type ServerMessage =
   | DownloadCcuFirmwareResponse
   | GetRulesResponse
   | SaveRuleResponse
-  | DeleteRuleResponse;
+  | DeleteRuleResponse
+  | GetDeviceImagesResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -322,6 +323,7 @@ export interface Protocol {
   getRules: GetRulesCall;
   saveRule: SaveRuleCall;
   deleteRule: DeleteRuleCall;
+  getDeviceImages: GetDeviceImagesCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -5455,6 +5457,67 @@ export interface DeleteRuleResponse {
   type: "deleteRule_response";
   requestId?: string;
   success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceImagesCall".
+ */
+export interface GetDeviceImagesCall {
+  request: GetDeviceImagesRequest;
+  response: GetDeviceImagesResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceImagesRequest".
+ */
+export interface GetDeviceImagesRequest {
+  type: "getDeviceImages";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetDeviceImagesResponse".
+ */
+export interface GetDeviceImagesResponse {
+  type: "getDeviceImages_response";
+  requestId?: string;
+  /**
+   * by device type in lower case
+   */
+  images: {
+    [k: string]: DeviceImage;
+  };
+}
+/**
+ * a device type's picture from the WebUI's DEVDB.tcl
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeviceImage".
+ */
+export interface DeviceImage {
+  /**
+   * below www/config/img/devices, served at /ws/mui/img/
+   */
+  path: string;
+  /**
+   * shapes per channel (form names of DEVDB.tcl: 1, 1+2, ...)
+   */
+  channels?: {
+    [k: string]: DeviceImageShape[];
+  };
+}
+/**
+ * marks a channel in the picture, in fractions of its size (webui.js DrawForm)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "DeviceImageShape".
+ */
+export interface DeviceImageShape {
+  kind: "circle" | "rect" | "ellipse";
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 /**
  * Sent first on every connection

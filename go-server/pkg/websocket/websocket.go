@@ -326,6 +326,7 @@ func (s *Server) Start(ctx context.Context) error {
 	if s.logs != nil {
 		mux.Handle(LogsPath, s.logs)
 	}
+	mux.Handle(DeviceImagePath, s.deviceImageHandler())
 
 	s.httpServer = &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", s.cfg.WSBindHost, s.cfg.WSPort),
@@ -624,6 +625,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleLayout(client, msgType, message)
 	case "getPush", "subscribePush", "unsubscribePush", "testPush":
 		s.handlePush(client, msgType, message)
+	case "getDeviceImages":
+		s.handleDeviceImages(client, requestID)
 	case "getRules", "saveRule", "deleteRule":
 		s.handleRules(client, msgType, message)
 	case "setGroupMember":

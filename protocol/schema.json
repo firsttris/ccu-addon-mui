@@ -445,6 +445,9 @@
     },
     "deleteRule": {
       "$ref": "#/definitions/DeleteRuleCall"
+    },
+    "getDeviceImages": {
+      "$ref": "#/definitions/GetDeviceImagesCall"
     }
   },
   "required": [
@@ -594,7 +597,8 @@
     "downloadCcuFirmware",
     "getRules",
     "saveRule",
-    "deleteRule"
+    "deleteRule",
+    "getDeviceImages"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3349,6 +3353,9 @@
         },
         {
           "$ref": "#/definitions/DeleteRuleResponse"
+        },
+        {
+          "$ref": "#/definitions/GetDeviceImagesResponse"
         }
       ]
     },
@@ -12580,6 +12587,120 @@
         },
         "response": {
           "$ref": "#/definitions/DeleteRuleResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "DeviceImageShape": {
+      "type": "object",
+      "description": "marks a channel in the picture, in fractions of its size (webui.js DrawForm)",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "circle",
+            "rect",
+            "ellipse"
+          ]
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        },
+        "h": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "additionalProperties": false
+    },
+    "DeviceImage": {
+      "type": "object",
+      "description": "a device type's picture from the WebUI's DEVDB.tcl",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "below www/config/img/devices, served at /ws/mui/img/"
+        },
+        "channels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/DeviceImageShape"
+            }
+          },
+          "description": "shapes per channel (form names of DEVDB.tcl: 1, 1+2, ...)"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceImagesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDeviceImages"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceImagesResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getDeviceImages_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "images": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/DeviceImage"
+          },
+          "description": "by device type in lower case"
+        }
+      },
+      "required": [
+        "type",
+        "images"
+      ],
+      "additionalProperties": false
+    },
+    "GetDeviceImagesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetDeviceImagesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetDeviceImagesResponse"
         }
       },
       "required": [

@@ -40,11 +40,13 @@ const NameField = ({ label, name, onRename }: { label: string; name: string; onR
 interface NamesAndRoomsProps {
   deviceAddress: string;
   deviceName: string;
+  // A channel is pointed at (its address) or left; the device picture marks it
+  onPointChannel?: (address?: string) => void;
 }
 
 // Renaming the device and its channels, and the rooms and trades of each
 // channel. Every change is saved right away.
-export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps) => {
+export const NamesAndRooms = ({ deviceAddress, deviceName, onPointChannel }: NamesAndRoomsProps) => {
   const { showToast } = useToast();
   const { data: allChannels, isPending: channelsLoading } = useChannels({ all: true });
   const { data: rooms = [] } = useRooms();
@@ -68,7 +70,13 @@ export const NamesAndRooms = ({ deviceAddress, deviceName }: NamesAndRoomsProps)
       />
       {channelsLoading && <PanelSkeleton lines={3} className="border-t pt-3" />}
       {channels.map((channel) => (
-        <div key={channel.address} className="flex flex-col gap-2 border-t pt-3">
+        <div
+          key={channel.address}
+          className="flex flex-col gap-2 border-t pt-3"
+          onPointerEnter={() => onPointChannel?.(channel.address)}
+          onPointerLeave={() => onPointChannel?.()}
+          onFocus={() => onPointChannel?.(channel.address)}
+        >
           <NameField
             label={`${m.NAME()} ${channel.address}`}
             name={channel.name}

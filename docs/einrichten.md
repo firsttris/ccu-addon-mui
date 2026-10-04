@@ -29,6 +29,10 @@ und sortierbar. Die Filter zeigen nur Geräte mit Problemen oder nur die mit ver
 
 ### Die Geräteseite
 
+Geräteliste, Posteingang und Geräteseite zeigen die Zeichnungen der Geräte aus der WebUI (`DEVDB.tcl`,
+im dunklen Modus hell gezeichnet). Zeigst du auf der Geräteseite auf einen Kanal, markiert das Bild,
+wo er am Gerät sitzt, z. B. welche Taste eines Wandtasters. Geräte ohne Zeichnung bekommen ein Symbol.
+
 Ein Klick auf ein Gerät öffnet seine Seite:
 
 <img src="screenshot-geraet.png" alt="Geräteseite eines Wandthermostats" width="900">

@@ -71,6 +71,7 @@ export default defineConfig({
         GROUPS_FILE: path.join(stateDir, 'groups.gson'),
         DIAGRAMS_FILE: path.join(stateDir, 'diagrams.json'),
         RULES_FILE: path.join(stateDir, 'rules.json'),
+        CCU_WWW_DIR: path.resolve('fixtures/www'),
         DIAGRAMS_DIR: path.join(stateDir, 'diagrams'),
         CCU_CONFIG_DIR: stateDir,
         CCU_STATUS_DIR: path.join(stateDir, 'status'),

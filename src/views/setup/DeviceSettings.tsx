@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { DeviceImage } from "../../components/DeviceImage";
 import { useQueries } from "@tanstack/react-query";
 import {
   useDevices,
@@ -86,6 +87,8 @@ export const DeviceSettings = () => {
   const pairingAction = usePairingAction();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
+  // The channel whose settings are pointed at, marked in the picture
+  const [activeChannel, setActiveChannel] = useState<string | undefined>();
   const [scheduleAddress, setScheduleAddress] = useState<string | null>(null);
   const [deleteOptions, setDeleteOptions] = useState({
     reset: false,
@@ -285,19 +288,27 @@ export const DeviceSettings = () => {
           {m.DEVICES()}
         </Link>
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-              {device?.type && <Badge variant="outline">{device.type}</Badge>}
-              <span className="font-mono text-[13px]">{address}</span>
-              <span>· {interfaceName}</span>
-              {device?.firmware && (
-                <span>
-                  · {m.FIRMWARE()} {device.firmware}
-                </span>
-              )}
-              <span>·</span>
-              <WebUILink />
+          <div className="flex min-w-0 items-center gap-4">
+            <DeviceImage
+              type={device?.type}
+              size={120}
+              channel={activeChannel}
+              className="max-sm:hidden"
+            />
+            <div className="flex min-w-0 flex-col gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                {device?.type && <Badge variant="outline">{device.type}</Badge>}
+                <span className="font-mono text-[13px]">{address}</span>
+                <span>· {interfaceName}</span>
+                {device?.firmware && (
+                  <span>
+                    · {m.FIRMWARE()} {device.firmware}
+                  </span>
+                )}
+                <span>·</span>
+                <WebUILink />
+              </div>
             </div>
           </div>
           {canEdit && device && (
@@ -329,7 +340,13 @@ export const DeviceSettings = () => {
                 ? m.DEVICE_SETTINGS()
                 : (names.get(s.address) ?? s.address);
             return (
-              <Section key={s.address} aria-label={label}>
+              <Section
+                key={s.address}
+                aria-label={label}
+                onPointerEnter={() => setActiveChannel(s.address.split(":")[1])}
+                onPointerLeave={() => setActiveChannel(undefined)}
+                onFocus={() => setActiveChannel(s.address.split(":")[1])}
+              >
                 <h2 className="flex items-baseline justify-between gap-2">
                   <span className="truncate">{label}</span>
                   {label !== s.address && (
@@ -372,7 +389,11 @@ export const DeviceSettings = () => {
           {canEdit && (
             <Section aria-label={m.NAMES_AND_ROOMS()}>
               <h2>{m.NAMES_AND_ROOMS()}</h2>
-              <NamesAndRooms deviceAddress={address} deviceName={title} />
+              <NamesAndRooms
+                deviceAddress={address}
+                deviceName={title}
+                onPointChannel={(a) => setActiveChannel(a?.split(":")[1])}
+              />
             </Section>
           )}
           {userLevel === "admin" && device && (

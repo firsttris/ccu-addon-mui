@@ -931,6 +931,11 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         return;
       }
 
+      if (message.type === 'getDeviceImages') {
+        delayedBroadcast({ type: 'getDeviceImages_response', images: {}, requestId: message.requestId });
+        return;
+      }
+
       if (message.type === 'getRules') {
         delayedBroadcast({ type: 'getRules_response', rules, requestId: message.requestId });
         return;

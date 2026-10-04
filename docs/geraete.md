@@ -110,8 +110,7 @@ Nach Bedeutung:
 1. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
    Profile). Für die übrigen 59 Empfängertypen der WebUI (2065 Profile) geht nur der Expertenmodus mit allen
    Parametern.
-2. **Gerätebilder** der WebUI zeigt das Add-on nicht.
-3. **Ohne eigene Kachel** sind noch diese Gerätetypen (Stand: Zählung oben). Sie sind trotzdem voll
+2. **Ohne eigene Kachel** sind noch diese Gerätetypen (Stand: Zählung oben). Sie sind trotzdem voll
    bedienbar, über die generische Kachel.
 
    *Nur generisch (19):*
