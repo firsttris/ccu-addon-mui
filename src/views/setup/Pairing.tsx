@@ -183,9 +183,16 @@ export const Pairing = () => {
     serial: string;
     bySerial: boolean;
   } | null>(null);
-  // The CCU reports such a device once (getKeyMismatchDevice resets it)
+  // The CCU reports such a device once (getKeyMismatchDevice resets it).
+  // A failed addDevice reports it there too: then it stays a retry by
+  // serial number instead of turning into install mode.
   useEffect(() => {
-    if (keyMismatch) setMismatch({ serial: keyMismatch, bySerial: false });
+    if (keyMismatch)
+      setMismatch((prev) =>
+        prev?.serial === keyMismatch.toUpperCase()
+          ? prev
+          : { serial: keyMismatch, bySerial: false },
+      );
   }, [keyMismatch, dataUpdatedAt]);
 
   const startPairing = () => {

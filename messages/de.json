@@ -1437,5 +1437,6 @@
   "GROUP_ADD_CHANNELS": "Kanäle hinzufügen",
   "GROUP_ADD_CHANNELS_TO": "Kanäle zu {name} hinzufügen",
   "GROUP_ONLY_WITHOUT_ROOM": "Nur Kanäle ohne Raum",
-  "GROUP_ONLY_WITHOUT_TRADE": "Nur Kanäle ohne Gewerk"
+  "GROUP_ONLY_WITHOUT_TRADE": "Nur Kanäle ohne Gewerk",
+  "LINK_PARAMS_FAILED": "Parameter konnten nicht geladen werden"
 }

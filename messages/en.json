@@ -1437,5 +1437,6 @@
   "GROUP_ADD_CHANNELS": "Add channels",
   "GROUP_ADD_CHANNELS_TO": "Add channels to {name}",
   "GROUP_ONLY_WITHOUT_ROOM": "Only channels without a room",
-  "GROUP_ONLY_WITHOUT_TRADE": "Only channels without a trade"
+  "GROUP_ONLY_WITHOUT_TRADE": "Only channels without a trade",
+  "LINK_PARAMS_FAILED": "Could not load the parameters"
 }
