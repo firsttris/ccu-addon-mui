@@ -26,6 +26,7 @@ func main() {
 	hmipPort := flag.Int("hmip-port", 12010, "HmIP-RF XML-RPC port")
 	virtualPort := flag.Int("virtual-port", 19292, "VirtualDevices XML-RPC port")
 	groupsFile := flag.String("groups-file", "", "heating groups of the fake HMServer (groups.gson)")
+	configDir := flag.String("config-dir", "", "fake /etc/config for the security settings")
 	flag.Parse()
 
 	fixture, err := fakeccu.LoadFixture(*fixturePath)
@@ -34,6 +35,7 @@ func main() {
 	}
 	ccu := fakeccu.New(fixture)
 	ccu.GroupsFile = *groupsFile
+	ccu.ConfigDir = *configDir
 	if err := ccu.Start(*host, *regaPort, *webUIPort, *bidcosPort, *hmipPort, *virtualPort); err != nil {
 		log.Fatal(err)
 	}

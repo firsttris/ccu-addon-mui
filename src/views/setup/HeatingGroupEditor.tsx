@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PlusIcon from '~icons/lucide/plus';
 import XIcon from '~icons/lucide/x';
-import { RequestError, useWebSocketActions } from '../../hooks/useWebsocket';
+import { useWebSocketActions } from '../../hooks/useWebsocket';
+import { usePasswordRetry } from './usePasswordRetry';
 import { useToast } from '../../contexts/ToastContext';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Input } from '../../components/ui/input';
@@ -26,37 +27,6 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
     {children}
   </label>
 );
-
-// The HMServer needs a WebUI session for changes: the password once, until
-// the session expires (PASSWORD_REQUIRED)
-export const usePasswordRetry = () => {
-  const [needed, setNeeded] = useState(false);
-  const [password, setPassword] = useState('');
-  const field = needed ? (
-    <Field label={m.HG_PASSWORD()}>
-      <Input type="password" autoComplete="current-password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} />
-      <span className="text-xs">{m.HG_PASSWORD_HINT()}</span>
-    </Field>
-  ) : null;
-  // Runs a change; asks for the password if the server needs it
-  const run = async (change: (password: string | undefined) => Promise<void>, onError: (error: Error) => void) => {
-    try {
-      await change(needed ? password : undefined);
-      setNeeded(false);
-      setPassword('');
-    } catch (error) {
-      if (error instanceof RequestError && error.code === 'PASSWORD_REQUIRED') {
-        setNeeded(true);
-        return;
-      }
-      if (error instanceof RequestError && error.code === 'INVALID_CREDENTIALS') {
-        setPassword('');
-      }
-      onError(error as Error);
-    }
-  };
-  return { field, run, blocked: needed && password === '' };
-};
 
 // Creating or changing a heating group, as the WebUI's GroupEditPage.ftl:
 // name, type, whether its members may still be operated alone, and the

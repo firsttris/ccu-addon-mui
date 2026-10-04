@@ -30,6 +30,12 @@ var interfaceNames = []string{"BidCos-RF", "HmIP-RF", "VirtualDevices"}
 
 type CCU struct {
 	mu sync.Mutex
+	// ConfigDir is the fake /etc/config, for the security settings
+	// flag files (sshEnabled, authEnabled, httpsRedirectEnabled)
+	ConfigDir string
+	// The SSH password and the system security key set
+	SSHPassword string
+	SecurityKey string
 	// GroupsFile is where the fake HMServer keeps the heating groups
 	// (groups.gson); empty: none
 	GroupsFile    string
@@ -1427,8 +1433,8 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req struct {
-		Method string            `json:"method"`
-		Params map[string]string `json:"params"`
+		Method string                 `json:"method"`
+		Params map[string]interface{} `json:"params"`
 	}
 	if err := jsonDecode(r.Body, &req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -1440,7 +1446,7 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		c.mu.Lock()
 		defer c.mu.Unlock()
 		for _, user := range c.fixture.Users {
-			if user.Name == req.Params["username"] && user.Password == req.Params["password"] {
+			if user.Name == fmt.Sprint(req.Params["username"]) && user.Password == fmt.Sprint(req.Params["password"]) {
 				_, _ = io.WriteString(w, `{"version":"1.1","result":"fakeSession1","error":null}`)
 				return
 			}
@@ -1448,6 +1454,12 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":501,"message":"invalid credentials"}}`)
 	case "Session.logout":
 		_, _ = io.WriteString(w, `{"version":"1.1","result":true,"error":null}`)
+	case "CCU.setSSH", "CCU.setSSHPassword", "CCU.restartSSHDaemon", "CCU.setAuthEnabled", "CCU.setHttpsRedirectEnabled", "User.restartLighttpd":
+		if req.Params["_session_id_"] != "fakeSession1" {
+			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
+			return
+		}
+		_, _ = io.WriteString(w, c.securityMethod(req.Method, req.Params))
 	default:
 		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"code":404,"message":"unknown method"}}`)
 	}
@@ -1461,6 +1473,10 @@ const FakeBackup = "fake CCU backup (usr_local.tar.gz, signature, key_index, fir
 func (c *CCU) handleBackup(w http.ResponseWriter, r *http.Request) {
 	// Like the WebUI, which looks for the session in the raw query
 	if strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") && r.Method == http.MethodPost {
+		if r.FormValue("action") == "change_key" {
+			c.changeKey(w, r.FormValue("key1"), r.FormValue("key2"))
+			return
+		}
 		c.handleRestoreAction(w, r.FormValue("action"), r.FormValue("key"), r.FormValue("filename"))
 		return
 	}

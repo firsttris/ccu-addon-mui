@@ -77,6 +77,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	cfg.DiagramsFile = filepath.Join(t.TempDir(), "diagrams.json")
 	cfg.DiagramsDir = filepath.Join(t.TempDir(), "diagrams")
 	cfg.ConfigDir = t.TempDir()
+	ccu.ConfigDir = cfg.ConfigDir
 	auditLogs[ccu] = cfg.AuditLogFile
 	wsPorts[ccu] = cfg.WSPort
 
@@ -2303,5 +2304,60 @@ func TestStackEditHeatingGroups(t *testing.T) {
 	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h10", "group": map[string]interface{}{"id": 0, "name": "", "type": "hmip.heating.group"}})
 	if m := receive(t, conn, byRequestID("h10")); m["code"] != "INVALID_VALUE" {
 		t.Errorf("no name: %v", m)
+	}
+}
+
+func TestStackSecurity(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getSecurity", "requestId": "s1"})
+	if m := receive(t, conn, byRequestID("s1")); m["ssh"] != false || m["auth"] != false || m["httpsRedirect"] != false {
+		t.Fatalf("security: %v", m)
+	}
+	change := message{"type": "setSecurity", "requestId": "s2", "ssh": true, "sshPassword": "geheim123", "auth": true, "httpsRedirect": false}
+	send(t, conn, change)
+	if m := receive(t, conn, byRequestID("s2")); m["code"] != "PASSWORD_REQUIRED" {
+		t.Fatalf("without password: %v", m)
+	}
+	change["requestId"] = "s3"
+	change["password"] = "secret"
+	send(t, conn, change)
+	if m := receive(t, conn, byRequestID("s3")); m["success"] != true {
+		t.Fatalf("set: %v", m)
+	}
+	send(t, conn, message{"type": "getSecurity", "requestId": "s4"})
+	if m := receive(t, conn, byRequestID("s4")); m["ssh"] != true || m["auth"] != true || m["httpsRedirect"] != false {
+		t.Errorf("after set: %v", m)
+	}
+	if ccu.SSHPassword != "geheim123" || ccu.CallCount("JSON CCU.restartSSHDaemon") != 1 {
+		t.Errorf("ssh: %q %d", ccu.SSHPassword, ccu.CallCount("JSON CCU.restartSSHDaemon"))
+	}
+	// lighttpd restarts after the answer, with the kept session
+	deadline := time.Now().Add(3 * time.Second)
+	for ccu.CallCount("JSON User.restartLighttpd") == 0 && time.Now().Before(deadline) {
+		time.Sleep(20 * time.Millisecond)
+	}
+	if ccu.CallCount("JSON User.restartLighttpd") != 1 {
+		t.Error("lighttpd not restarted")
+	}
+
+	// The key with the kept session
+	send(t, conn, message{"type": "changeSecurityKey", "requestId": "s5", "key": "kurz"})
+	if m := receive(t, conn, byRequestID("s5")); m["code"] != "INVALID_VALUE" {
+		t.Errorf("short key: %v", m)
+	}
+	send(t, conn, message{"type": "changeSecurityKey", "requestId": "s6", "key": "Neuer_Schluessel1"})
+	if m := receive(t, conn, byRequestID("s6")); m["success"] != true || ccu.SecurityKey != "Neuer_Schluessel1" {
+		t.Errorf("key: %v %q", m, ccu.SecurityKey)
+	}
+	send(t, conn, message{"type": "changeSecurityKey", "requestId": "s7", "key": "Neuer_Schluessel1"})
+	if m := receive(t, conn, byRequestID("s7")); m["code"] != "KEY_SAME" {
+		t.Errorf("same key: %v", m)
+	}
+	// Neither the key nor the SSH password are in the audit log
+	data, _ := os.ReadFile(auditLogs[ccu])
+	if strings.Contains(string(data), "Neuer_Schluessel1") || strings.Contains(string(data), "geheim123") {
+		t.Errorf("secret in the audit log: %s", data)
 	}
 }

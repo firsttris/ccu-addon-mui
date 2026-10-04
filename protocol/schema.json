@@ -334,6 +334,15 @@
     },
     "deleteHeatingGroup": {
       "$ref": "#/definitions/DeleteHeatingGroupCall"
+    },
+    "getSecurity": {
+      "$ref": "#/definitions/GetSecurityCall"
+    },
+    "setSecurity": {
+      "$ref": "#/definitions/SetSecurityCall"
+    },
+    "changeSecurityKey": {
+      "$ref": "#/definitions/ChangeSecurityKeyCall"
     }
   },
   "required": [
@@ -446,7 +455,10 @@
     "setGeneralSettings",
     "getHeatingGroupMembers",
     "saveHeatingGroup",
-    "deleteHeatingGroup"
+    "deleteHeatingGroup",
+    "getSecurity",
+    "setSecurity",
+    "changeSecurityKey"
   ],
   "additionalProperties": false,
   "definitions": {
@@ -3026,6 +3038,15 @@
         },
         {
           "$ref": "#/definitions/DeleteHeatingGroupResponse"
+        },
+        {
+          "$ref": "#/definitions/GetSecurityResponse"
+        },
+        {
+          "$ref": "#/definitions/SetSecurityResponse"
+        },
+        {
+          "$ref": "#/definitions/ChangeSecurityKeyResponse"
         }
       ]
     },
@@ -9385,6 +9406,198 @@
         "id",
         "name",
         "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetSecurityRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getSecurity"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "GetSecurityResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "getSecurity_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "ssh": {
+          "type": "boolean"
+        },
+        "auth": {
+          "type": "boolean",
+          "description": "Authentication of the remote API"
+        },
+        "httpsRedirect": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "ssh",
+        "auth",
+        "httpsRedirect"
+      ],
+      "additionalProperties": false
+    },
+    "GetSecurityCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/GetSecurityRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/GetSecurityResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetSecurityRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setSecurity"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "ssh": {
+          "type": "boolean"
+        },
+        "sshPassword": {
+          "type": "string",
+          "description": "A new SSH password (root); empty keeps it"
+        },
+        "auth": {
+          "type": "boolean"
+        },
+        "httpsRedirect": {
+          "type": "boolean"
+        },
+        "password": {
+          "type": "string",
+          "description": "For a new WebUI session, when the last answer was PASSWORD_REQUIRED"
+        }
+      },
+      "required": [
+        "type",
+        "ssh",
+        "auth",
+        "httpsRedirect"
+      ],
+      "additionalProperties": false
+    },
+    "SetSecurityResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setSecurity_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetSecurityCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetSecurityRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetSecurityResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "ChangeSecurityKeyRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "changeSecurityKey"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "key"
+      ],
+      "additionalProperties": false
+    },
+    "ChangeSecurityKeyResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "changeSecurityKey_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "ChangeSecurityKeyCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/ChangeSecurityKeyRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/ChangeSecurityKeyResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
       ],
       "additionalProperties": false
     }
