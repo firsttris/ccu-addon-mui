@@ -24,18 +24,21 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 
 const toNumber = (text: string) => (text.trim() === '' ? undefined : Number(text.replace(',', '.')));
 
-// Creating a system variable with the settings its kind calls for
-export const NewSysvarDialog = ({ onClose }: { onClose: () => void }) => {
+// Creating a system variable with the settings its kind calls for, or
+// changing them (the WebUI's sysvar dialog, system.fn::saveSysVar): its kind
+// stays, renaming is in the list
+export const NewSysvarDialog = ({ sysvar, onClose }: { sysvar?: Sysvar; onClose: () => void }) => {
   const { showToast } = useToast();
   const change = useObjectChange();
-  const [name, setName] = useState('');
-  const [kind, setKind] = useState<Sysvar['kind']>('bool');
-  const [unit, setUnit] = useState('');
-  const [min, setMin] = useState('');
-  const [max, setMax] = useState('');
-  const [trueName, setTrueName] = useState('');
-  const [falseName, setFalseName] = useState('');
-  const [values, setValues] = useState('');
+  const [name, setName] = useState(sysvar?.name ?? '');
+  const [kind, setKind] = useState<Sysvar['kind']>(sysvar?.kind ?? 'bool');
+  const [unit, setUnit] = useState(sysvar?.unit ?? '');
+  const [min, setMin] = useState(sysvar?.min !== undefined ? String(sysvar.min) : '');
+  const [max, setMax] = useState(sysvar?.max !== undefined ? String(sysvar.max) : '');
+  const [trueName, setTrueName] = useState(sysvar?.trueName ?? '');
+  const [falseName, setFalseName] = useState(sysvar?.falseName ?? '');
+  const [values, setValues] = useState(sysvar?.valueList?.join('\n') ?? '');
+  const [description, setDescription] = useState(sysvar?.description ?? '');
 
   const valueList = values
     .split('\n')
@@ -46,21 +49,23 @@ export const NewSysvarDialog = ({ onClose }: { onClose: () => void }) => {
     (Number.isNaN(toNumber(min) ?? 0) ||
       Number.isNaN(toNumber(max) ?? 0) ||
       (toNumber(min) ?? -65535) >= (toNumber(max) ?? 65535));
-  const valid = name.trim() !== '' && !invalidRange && (kind !== 'enum' || valueList.length > 0);
+  const valid =
+    name.trim() !== '' && !invalidRange && (kind !== 'enum' || valueList.length > 0) && !description.includes('^');
 
+  const settings = {
+    kind,
+    ...(kind === 'number' ? { unit: unit.trim(), min: toNumber(min), max: toNumber(max) } : {}),
+    ...(kind === 'bool' || kind === 'alarm' ? { trueName: trueName.trim(), falseName: falseName.trim() } : {}),
+    ...(kind === 'enum' ? { valueList } : {}),
+  };
   const create = () =>
     change.mutate(
-      {
-        type: 'createSysvar',
-        name: name.trim(),
-        kind,
-        ...(kind === 'number' ? { unit: unit.trim(), min: toNumber(min), max: toNumber(max) } : {}),
-        ...(kind === 'bool' || kind === 'alarm' ? { trueName: trueName.trim(), falseName: falseName.trim() } : {}),
-        ...(kind === 'enum' ? { valueList } : {}),
-      },
+      sysvar
+        ? { type: 'editSysvar', id: sysvar.id, description: description.trim(), ...settings }
+        : { type: 'createSysvar', name: name.trim(), ...settings },
       {
         onSuccess: () => {
-          showToast(m.CREATED(), 'info');
+          showToast(sysvar ? m.SAVED() : m.CREATED(), 'info');
           onClose();
         },
         onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
@@ -68,7 +73,13 @@ export const NewSysvarDialog = ({ onClose }: { onClose: () => void }) => {
     );
 
   return (
-    <ConfirmDialog title={m.NEW_SYSVAR()} confirmLabel={m.CREATE()} busy={!valid || change.isPending} onConfirm={create} onCancel={onClose}>
+    <ConfirmDialog
+      title={sysvar ? m.EDIT_SYSVAR({ name: sysvar.name }) : m.NEW_SYSVAR()}
+      confirmLabel={sysvar ? m.SAVE() : m.CREATE()}
+      busy={!valid || change.isPending}
+      onConfirm={create}
+      onCancel={onClose}
+    >
       <form
         className="grid gap-4"
         onSubmit={(event) => {
@@ -76,11 +87,13 @@ export const NewSysvarDialog = ({ onClose }: { onClose: () => void }) => {
           if (valid) create();
         }}
       >
-        <Field label={m.NAME()}>
-          <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} />
-        </Field>
+        {!sysvar && (
+          <Field label={m.NAME()}>
+            <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} />
+          </Field>
+        )}
         <Field label={m.SYSVAR_KIND()}>
-          <NativeSelect value={kind} onChange={(e) => setKind(e.target.value as Sysvar['kind'])}>
+          <NativeSelect value={kind} disabled={!!sysvar} onChange={(e) => setKind(e.target.value as Sysvar['kind'])}>
             {kinds.map((k) => (
               <option key={k.kind} value={k.kind}>
                 {k.label()}
@@ -117,6 +130,16 @@ export const NewSysvarDialog = ({ onClose }: { onClose: () => void }) => {
               rows={4}
               value={values}
               onChange={(e) => setValues(e.target.value)}
+              className="rounded-md border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
+            />
+          </Field>
+        )}
+        {sysvar && (
+          <Field label={m.DESCRIPTION()}>
+            <textarea
+              rows={2}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="rounded-md border border-input bg-transparent px-3 py-2 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
             />
           </Field>

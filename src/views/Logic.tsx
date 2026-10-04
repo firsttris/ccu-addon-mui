@@ -8,6 +8,7 @@ import { EditableName } from '../components/EditableName';
 import { Button } from '../components/ui/button';
 import { NewSysvarDialog } from './NewSysvarDialog';
 import PlusIcon from '~icons/lucide/plus';
+import SettingsIcon from '~icons/lucide/sliders-horizontal';
 import TerminalIcon from '~icons/lucide/square-terminal';
 import { ScriptTestDialog } from './programs/ScriptTest';
 import { Link } from '@tanstack/react-router';
@@ -167,6 +168,7 @@ export const Sysvars = () => {
   const change = useObjectChange();
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<Sysvar | null>(null);
+  const [editing, setEditing] = useState<Sysvar | null>(null);
   usePageTitle(m.SYSVARS());
 
   const runChange = (variables: Parameters<typeof change.mutate>[0], success: string, onSuccess?: () => void) =>
@@ -193,17 +195,34 @@ export const Sysvars = () => {
           .filter((sv) => sv.visible || userLevel === 'admin')
           .map((sysvar) => (
             <Item key={sysvar.id}>
-              {canConfigure ? (
-                <EditableName
-                  name={sysvar.name}
-                  onRename={(name) => runChange({ type: 'renameSysvar', id: sysvar.id, name }, m.RENAMED())}
-                  onDelete={() => setDeleting(sysvar)}
-                />
-              ) : (
-                <Name>{sysvar.name}</Name>
-              )}
-              {!sysvar.visible && <Badge>{m.LOGIC_HIDDEN()}</Badge>}
+              <div className="flex min-w-40 flex-1 flex-col gap-0.5">
+                <span className="flex flex-wrap items-center gap-2">
+                  {canConfigure ? (
+                    <EditableName
+                      name={sysvar.name}
+                      onRename={(name) => runChange({ type: 'renameSysvar', id: sysvar.id, name }, m.RENAMED())}
+                      onDelete={() => setDeleting(sysvar)}
+                    />
+                  ) : (
+                    <Name>{sysvar.name}</Name>
+                  )}
+                  {!sysvar.visible && <Badge>{m.LOGIC_HIDDEN()}</Badge>}
+                </span>
+                {sysvar.description && <span className="text-xs whitespace-pre-line text-muted-foreground">{sysvar.description}</span>}
+              </div>
               <Controls>
+                {canConfigure && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    aria-label={m.EDIT_SYSVAR({ name: sysvar.name })}
+                    title={m.EDIT()}
+                    onClick={() => setEditing(sysvar)}
+                  >
+                    <SettingsIcon />
+                  </Button>
+                )}
                 {canConfigure && (
                   <OptionCheckbox
                     label={m.LOGIC_VISIBLE()}
@@ -231,6 +250,7 @@ export const Sysvars = () => {
           ))}
       </List>
       {creating && <NewSysvarDialog onClose={() => setCreating(false)} />}
+      {editing && <NewSysvarDialog sysvar={editing} onClose={() => setEditing(null)} />}
       {deleting && (
         <ConfirmDialog
           title={m.DELETE_NAMED({ name: deleting.name })}

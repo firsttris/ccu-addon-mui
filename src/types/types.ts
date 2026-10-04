@@ -232,6 +232,8 @@ export interface Sysvar {
   falseName?: string;
   trueName?: string;
   valueList?: string[];
+  // The info text (DPInfo)
+  description?: string;
 }
 
 export interface Program {

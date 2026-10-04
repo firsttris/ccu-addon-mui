@@ -741,5 +741,7 @@
   "SCRIPT_HINT": "Das Skript läuft wirklich auf der CCU und kann alles ändern. Vorher wird die Syntax geprüft.",
   "LOGIC_VISIBLE": "sichtbar",
   "LOGIC_OPERATE": "bedienbar",
-  "LOGIC_HIDDEN": "unsichtbar"
+  "LOGIC_HIDDEN": "unsichtbar",
+  "DESCRIPTION": "Beschreibung",
+  "EDIT_SYSVAR": "{name} bearbeiten"
 }
