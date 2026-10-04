@@ -78,6 +78,9 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	cfg.DiagramsDir = filepath.Join(t.TempDir(), "diagrams")
 	cfg.ConfigDir = t.TempDir()
 	ccu.ConfigDir = cfg.ConfigDir
+	if data, err := os.ReadFile("../fixtures/netconfig"); err == nil {
+		_ = os.WriteFile(filepath.Join(cfg.ConfigDir, "netconfig"), data, 0o644)
+	}
 	auditLogs[ccu] = cfg.AuditLogFile
 	wsPorts[ccu] = cfg.WSPort
 
@@ -2359,5 +2362,30 @@ func TestStackSecurity(t *testing.T) {
 	data, _ := os.ReadFile(auditLogs[ccu])
 	if strings.Contains(string(data), "Neuer_Schluessel1") || strings.Contains(string(data), "geheim123") {
 		t.Errorf("secret in the audit log: %s", data)
+	}
+}
+
+func TestStackNetwork(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "getNetwork", "requestId": "n1"})
+	m := receive(t, conn, byRequestID("n1"))
+	config := m["config"].(map[string]interface{})
+	if config["dhcp"] != true || config["hostname"] != "homematic-ccu3" || m["tailscale"].(map[string]interface{})["available"] != false {
+		t.Fatalf("network: %v", m)
+	}
+	manual := map[string]interface{}{"dhcp": false, "hostname": "ccu-keller", "ip": "192.168.178.30", "netmask": "255.255.255.0", "gateway": "192.168.178.1", "dns1": "192.168.178.1", "dns2": ""}
+	send(t, conn, message{"type": "setNetwork", "requestId": "n2", "config": manual})
+	if m := receive(t, conn, byRequestID("n2")); m["success"] != true {
+		t.Fatalf("set: %v", m)
+	}
+	send(t, conn, message{"type": "getNetwork", "requestId": "n3"})
+	if c := receive(t, conn, byRequestID("n3"))["config"].(map[string]interface{}); c["dhcp"] != false || c["ip"] != "192.168.178.30" || c["hostname"] != "ccu-keller" {
+		t.Errorf("after set: %v", c)
+	}
+	manual["gateway"] = "10.0.0.1"
+	send(t, conn, message{"type": "setNetwork", "requestId": "n4", "config": manual})
+	if m := receive(t, conn, byRequestID("n4")); m["code"] != "INVALID_VALUE" {
+		t.Errorf("gateway outside: %v", m)
 	}
 }

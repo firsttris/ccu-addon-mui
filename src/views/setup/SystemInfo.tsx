@@ -7,6 +7,7 @@ import { Logging } from './Logging';
 import { SystemSettings } from './SystemSettings';
 import { GeneralSettings } from './GeneralSettings';
 import { Security } from './Security';
+import { Network } from './Network';
 import { useSystemInfo } from '../../queries';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Badge } from '../../components/ui/badge';
@@ -71,6 +72,7 @@ export const SystemInfo = () => (
     <Versions />
     <SystemSettings />
     <GeneralSettings />
+    <Network />
     <Security />
     <Addons />
     <Logging />

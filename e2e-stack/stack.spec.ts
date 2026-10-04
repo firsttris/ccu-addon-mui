@@ -1339,3 +1339,30 @@ test('schaltet SSH ein und setzt den Sicherheitsschlüssel', async ({ page }) =>
   await expect(dialog).toContainText('Notieren Sie den Schlüssel');
   await saveWithSession(dialog.getByRole('button', { name: 'Schlüssel setzen' }), dialog, page.getByText('Sicherheitsschlüssel gesetzt'));
 });
+
+test('stellt eine feste IP-Adresse ein und wieder DHCP', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Netzwerk' });
+  await expect(panel.getByLabel('Hostname')).toHaveValue('homematic-ccu3');
+  await expect(panel.getByRole('radio', { name: 'Automatisch (DHCP)' })).toHaveAttribute('aria-checked', 'true');
+  await panel.getByRole('radio', { name: 'Manuell' }).click();
+  await panel.getByLabel('IP-Adresse').fill('192.168.178.30');
+  await panel.getByLabel('Gateway').fill('10.0.0.1');
+  await expect(panel).toContainText('Das Gateway liegt nicht im Netz');
+  await expect(panel.getByRole('button', { name: 'Speichern' })).toBeDisabled();
+  await panel.getByLabel('Gateway').fill('192.168.178.1');
+  await panel.getByLabel('Hostname').fill('ccu-keller');
+  await panel.getByRole('button', { name: 'Speichern' }).click();
+  await expect(panel.getByRole('status')).toContainText('beim nächsten Neustart');
+
+  await page.reload();
+  const reloaded = page.getByRole('region', { name: 'Netzwerk' });
+  await expect(reloaded.getByRole('radio', { name: 'Manuell' })).toHaveAttribute('aria-checked', 'true');
+  await expect(reloaded.getByLabel('IP-Adresse')).toHaveValue('192.168.178.30');
+  await expect(reloaded.getByLabel('Hostname')).toHaveValue('ccu-keller');
+  await reloaded.getByRole('radio', { name: 'Automatisch (DHCP)' }).click();
+  await reloaded.getByLabel('Hostname').fill('homematic-ccu3');
+  await reloaded.getByRole('button', { name: 'Speichern' }).click();
+  await expect(reloaded.getByRole('status')).toBeVisible();
+});
