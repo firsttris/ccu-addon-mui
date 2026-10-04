@@ -25,7 +25,7 @@ import { getLocale } from '../../paraglide/runtime';
 import { useChannelNames } from './channelNames';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
-import { LinkList } from './LinkList';
+import { linkKey, LinkList } from './LinkList';
 import { NativeSelect } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
 
@@ -328,7 +328,8 @@ export const AddLinkForm = ({
   interfaceName: deviceInterface,
   deviceAddress: device,
   channels,
-}: Partial<LinksProps>) => {
+  onAdded,
+}: Partial<LinksProps> & { onAdded?: (key: string) => void }) => {
   const { showToast } = useToast();
   const { data: devices = [] } = useDevices();
   const names = useChannelNames();
@@ -386,17 +387,15 @@ export const AddLinkForm = ({
     if (!ownChannel || !partnerChannel) return;
     // The side with matching source roles sends
     const ownSends = shareRole(ownChannel.linkSourceRoles, partnerChannel.linkTargetRoles);
+    const sender = ownSends ? own : partner;
+    const receiver = ownSends ? partner : own;
     action.mutate(
-      {
-        type: 'addLink',
-        interfaceName,
-        sender: ownSends ? own : partner,
-        receiver: ownSends ? partner : own,
-        name: linkName,
-      },
+      { type: 'addLink', interfaceName, sender, receiver, name: linkName },
       {
         onSuccess: () => {
           showToast(m.LINK_ADDED(), 'info');
+          // Its behaviour next, so it doesn't stay on the defaults unnoticed
+          onAdded?.(linkKey({ interfaceName, sender, receiver }));
           setPartner('');
           setLinkName('');
         },
@@ -462,15 +461,16 @@ export const AddLinkForm = ({
 export const Links = ({ interfaceName, deviceAddress, channels }: LinksProps) => {
   const { data: links = [], isPending: linksLoading } = useLinks(interfaceName, deviceAddress);
   const withInterface = useMemo(() => links.map((link) => ({ ...link, interfaceName })), [links, interfaceName]);
+  const [added, setAdded] = useState<string>();
 
   return (
     <>
       {!linksLoading && links.length === 0 ? (
         <p>{m.NO_LINKS()}</p>
       ) : (
-        <LinkList links={withInterface} isLoading={linksLoading} device={deviceAddress} />
+        <LinkList links={withInterface} isLoading={linksLoading} device={deviceAddress} added={added} />
       )}
-      <AddLinkForm interfaceName={interfaceName} deviceAddress={deviceAddress} channels={channels} />
+      <AddLinkForm interfaceName={interfaceName} deviceAddress={deviceAddress} channels={channels} onAdded={setAdded} />
     </>
   );
 };

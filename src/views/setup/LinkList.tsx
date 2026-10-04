@@ -16,6 +16,10 @@ import { m } from '../../paraglide/messages';
 
 const deviceAddressOf = (address: string) => address.split(':')[0];
 
+// Identifies a link in the list
+export const linkKey = (link: Pick<InterfaceLink, 'interfaceName' | 'sender' | 'receiver'>) =>
+  `${link.interfaceName}:${link.sender}>${link.receiver}`;
+
 // Rendered once the element comes near the screen: the behaviour of each
 // link needs two requests to the CCU, so only the visible ones ask
 const useNearScreen = <T extends Element>() => {
@@ -100,16 +104,22 @@ const LinkRow = ({
   link,
   endpoint,
   open,
+  focus,
   onToggle,
   onRemove,
 }: {
   link: InterfaceLink;
   endpoint: (address: string) => Endpoint;
   open: boolean;
+  // Just added: scrolled to, with its behaviour open
+  focus: boolean;
   onToggle: () => void;
   onRemove: () => void;
 }) => {
   const [ref, near] = useNearScreen<HTMLLIElement>();
+  useEffect(() => {
+    if (focus) ref.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+  }, [focus, ref]);
   const behaviour = useBehaviour(link, near);
   const channelInfo = useLinkChannelInfo();
   const sender = endpoint(link.sender);
@@ -127,7 +137,7 @@ const LinkRow = ({
         </div>
         <div className="flex gap-2">
           <DialogButton type="button" aria-expanded={open} onClick={onToggle}>
-            {m.LINK_PARAMETERS()}
+            {m.LINK_SET_BEHAVIOUR()}
           </DialogButton>
           <DialogButton type="button" onClick={onRemove}>
             {m.REMOVE()}
@@ -163,11 +173,13 @@ interface LinkListProps {
   // On a device page: its links split into what it controls and what
   // controls it; otherwise grouped by the sending device
   device?: string;
+  // The link just added (linkKey): opened and scrolled to once it shows
+  added?: string;
 }
 
 // Direct links as "who controls whom": sender → receiver with pictures,
 // rooms and what the link does
-export const LinkList = ({ links, isLoading, device }: LinkListProps) => {
+export const LinkList = ({ links, isLoading, device, added }: LinkListProps) => {
   const { data: devices = [] } = useDevices();
   const { data: channels = [] } = useChannels({ all: true });
   const { data: rooms = [] } = useRooms();
@@ -175,6 +187,9 @@ export const LinkList = ({ links, isLoading, device }: LinkListProps) => {
   const action = useLinkAction();
   const { showToast } = useToast();
   const [open, setOpen] = useState<string | null>(null);
+  useEffect(() => {
+    if (added) setOpen(added);
+  }, [added]);
   const [removing, setRemoving] = useState<InterfaceLink | null>(null);
 
   const endpoint = useMemo(() => {
@@ -239,13 +254,14 @@ export const LinkList = ({ links, isLoading, device }: LinkListProps) => {
           </h3>
           <ul aria-label={`${m.LINKS()}: ${group.title}`} className="flex flex-col divide-y rounded-2xl border bg-card">
             {group.links.map((link) => {
-              const key = `${link.interfaceName}:${link.sender}>${link.receiver}`;
+              const key = linkKey(link);
               return (
                 <LinkRow
                   key={key}
                   link={link}
                   endpoint={endpoint}
                   open={open === key}
+                  focus={added === key}
                   onToggle={() => setOpen(open === key ? null : key)}
                   onRemove={() => setRemoving(link)}
                 />
