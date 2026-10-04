@@ -15,6 +15,8 @@ import { MotionDetectorControl, SirenControl, SmokeDetectorControl, WaterDetecto
 import { GarageDoorControl } from './GarageDoorControl';
 import { AccessControl, AccessPointControl } from './AccessControls';
 import { InputControl } from './InputControl';
+import { ServoControl } from './ServoControl';
+import { SwitchControl as AlarmOutputControl } from './SwitchControl';
 import { AutoRelockControl, DoorStateControl, FloorOutputControl, LockStateControl } from './SideChannelControls';
 import {
   BrightnessControl,
@@ -48,6 +50,7 @@ export type SectionId =
   | 'security'
   | 'sensors'
   | 'water'
+  | 'drives'
   | 'buttons'
   | 'inputs'
   | 'energy'
@@ -55,13 +58,14 @@ export type SectionId =
 
 // Hand-made controls for common channel types. They refine the generic
 // renderer (GenericControl), which every other type falls back to.
-export type ControlOverride = // One tile per channel
-(
-  | { per: 'channel'; component: ComponentType<{ channel: Channel }> }
-  // One tile for all channels of a device of this type (e.g. the four
-  // channels of an energy meter)
-  | { per: 'device'; component: ComponentType<{ channels: Channel[] }> }
-) & { section: SectionId };
+export type ControlOverride =
+  // One tile per channel
+  (
+    | { per: 'channel'; component: ComponentType<{ channel: Channel }> }
+    // One tile for all channels of a device of this type (e.g. the four
+    // channels of an energy meter)
+    | { per: 'device'; component: ComponentType<{ channels: Channel[] }> }
+  ) & { section: SectionId };
 
 const channelControl = <T extends Channel>(
   section: SectionId,
@@ -158,6 +162,12 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   WATER_FLOW_TRANSMITTER: channelControl('water', WaterFlowControl),
   WATER_PRESSURE_TRANSMITTER: channelControl('water', WaterPressureControl),
   VALVE_ACTUATOR_RECEIVER: channelControl('water', ValveControl),
+  // The alarm output of the HmIP-WSS (channel 3: STATE; the WebUI has no
+  // control for it, datapointconfigurator.fn)
+  ALARM_ACTUATOR_RECEIVER: channelControl('water', AlarmOutputControl),
+  // Servo controllers HmIP-WSC (servo.fn)
+  SERVO_VIRTUAL_RECEIVER: channelControl('drives', ServoControl),
+  SERVO_TRANSMITTER: channelControl('drives', ServoControl),
   // Vibration, position and tilt (acceleration_transceiver.fn), mains failure
   ACCELERATION_TRANSCEIVER: channelControl('security', TiltSensorControl),
   POWER_MAINS_TRANSMITTER: channelControl('security', PowerMainsControl),

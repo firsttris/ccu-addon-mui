@@ -398,6 +398,32 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         type: 'OPTICAL_SIGNAL_RECEIVER',
         datapoints: { LEVEL: 1, COLOR: 2, COLOR_BEHAVIOUR: 3 },
       },
+      // Servo controller HmIP-WSC (actual position, first servo with ramp)
+      // and the alarm output of the water safety system HmIP-WSS
+      {
+        id: 658,
+        name: 'Lüftungsklappe Ist',
+        address: '00349D89A1B2C1:3',
+        interfaceName: 'HmIP-RF',
+        type: 'SERVO_TRANSMITTER',
+        datapoints: { LEVEL: 0.25, LEVEL_STATUS: 0, ERROR_RESTART_NEEDED: false },
+      },
+      {
+        id: 659,
+        name: 'Lüftungsklappe',
+        address: '00349D89A1B2C1:4',
+        interfaceName: 'HmIP-RF',
+        type: 'SERVO_VIRTUAL_RECEIVER',
+        datapoints: { LEVEL: 0.25, LEVEL_STATUS: 0 },
+      },
+      {
+        id: 660,
+        name: 'Alarmausgang Wasser',
+        address: '00359D89A1B2C1:3',
+        interfaceName: 'HmIP-RF',
+        type: 'ALARM_ACTUATOR_RECEIVER',
+        datapoints: { STATE: false },
+      },
       // Irrigation, its water meter and window drives
       {
         id: 641,
