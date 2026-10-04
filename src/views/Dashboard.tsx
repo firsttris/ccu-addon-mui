@@ -79,7 +79,9 @@ export const NavTabs = ({ label, items, activeId, to }: NavTabsProps) => {
             style={{
               left: marker.left,
               width: marker.width,
-              boxShadow: effects.on ? `0 0 ${18 * effects.k}px rgba(250,250,250,${Math.min(1, 0.14 * effects.k)})` : undefined,
+              boxShadow: effects.on
+                ? `0 0 ${18 * effects.k}px rgba(250,250,250,${Math.min(1, 0.14 * effects.k)})`
+                : undefined,
             }}
           />
         )}
@@ -127,7 +129,9 @@ const isLightOn = (channel: Channel) => {
 
 const Stat = ({ icon, tint, label, value }: { icon: ReactNode; tint: string; label: string; value: string }) => (
   <div className="tile-edge flex min-w-0 items-center gap-3 rounded-2xl border bg-card p-4">
-    <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5', tint)}>{icon}</div>
+    <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5', tint)}>
+      {icon}
+    </div>
     <div className="flex min-w-0 flex-col gap-0.5">
       <div className="text-[13px] text-muted-foreground">{label}</div>
       <div className="truncate text-xl font-semibold">{value}</div>
@@ -205,6 +209,7 @@ const sectionTitles: Record<SectionId, () => string> = {
   security: m.SECTION_SECURITY,
   sensors: m.SECTION_SENSORS,
   water: m.SECTION_WATER,
+  drives: m.SECTION_DRIVES,
   buttons: m.SECTION_BUTTONS,
   inputs: m.SECTION_INPUTS,
   energy: m.SECTION_ENERGY,
@@ -222,6 +227,7 @@ const sectionMinPx: Record<SectionId | 'generic', number> = {
   security: 250,
   sensors: 250,
   water: 250,
+  drives: 280,
   buttons: 240,
   inputs: 250,
   energy: 260,
@@ -241,7 +247,11 @@ const gridTiles = (channelsByType: [string, Channel[]][]): GridTile[] =>
             minPx,
             element: <override.component channels={deviceChannels} />,
           }))
-        : channels.map((channel) => ({ key: `c:${channel.address}`, minPx, element: <ControlComponent channel={channel} /> }));
+        : channels.map((channel) => ({
+            key: `c:${channel.address}`,
+            minPx,
+            element: <ControlComponent channel={channel} />,
+          }));
     });
   });
 
@@ -255,6 +265,7 @@ const sectionGrids: Record<SectionId | 'generic', string> = {
   security: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
   sensors: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
   water: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
+  drives: 'items-start [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]',
   buttons: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
   inputs: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
   energy: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',

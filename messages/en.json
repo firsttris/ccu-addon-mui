@@ -1181,5 +1181,17 @@
   "BEHAVIOUR_FLASH_FAST": "Flash fast",
   "BEHAVIOUR_BILLOW_SLOW": "Pulse slowly",
   "BEHAVIOUR_BILLOW_MIDDLE": "Pulse",
-  "BEHAVIOUR_BILLOW_FAST": "Pulse fast"
+  "BEHAVIOUR_BILLOW_FAST": "Pulse fast",
+  "SECTION_DRIVES": "Drives",
+  "SERVO_POSITION": "Position",
+  "SERVO_RAMP": "Travel time",
+  "SERVO_L": "Left",
+  "SERVO_N": "Neutral",
+  "SERVO_R": "Right",
+  "SERVO_NEUTRAL": "Neutral (50 %)",
+  "SERVO_LEFT": "Left · {percent} %",
+  "SERVO_RIGHT": "Right · {percent} %",
+  "SERVO_STATUS_UNKNOWN": "Position unknown",
+  "SERVO_STATUS_ERROR": "Servo error",
+  "SERVO_RESTART_NEEDED": "Device restart needed"
 }

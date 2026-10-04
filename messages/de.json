@@ -1181,5 +1181,17 @@
   "BEHAVIOUR_FLASH_FAST": "Blitzen schnell",
   "BEHAVIOUR_BILLOW_SLOW": "Pulsieren langsam",
   "BEHAVIOUR_BILLOW_MIDDLE": "Pulsieren mittel",
-  "BEHAVIOUR_BILLOW_FAST": "Pulsieren schnell"
+  "BEHAVIOUR_BILLOW_FAST": "Pulsieren schnell",
+  "SECTION_DRIVES": "Antriebe",
+  "SERVO_POSITION": "Position",
+  "SERVO_RAMP": "Fahrzeit",
+  "SERVO_L": "Links",
+  "SERVO_N": "Neutral",
+  "SERVO_R": "Rechts",
+  "SERVO_NEUTRAL": "Neutral (50 %)",
+  "SERVO_LEFT": "Links · {percent} %",
+  "SERVO_RIGHT": "Rechts · {percent} %",
+  "SERVO_STATUS_UNKNOWN": "Position unbekannt",
+  "SERVO_STATUS_ERROR": "Fehler am Servo",
+  "SERVO_RESTART_NEEDED": "Neustart des Geräts nötig"
 }

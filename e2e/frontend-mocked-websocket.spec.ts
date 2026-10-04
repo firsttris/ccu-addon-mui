@@ -364,6 +364,31 @@ test('zeigt Nebenkanäle von Fußbodenheizung, Türschloss und LEDs', async ({ p
   await expect.poll(last).toMatchObject({ attribute: 'COLOR_BEHAVIOUR', value: 5 });
 });
 
+test('stellt Servos und schaltet den Alarmausgang', async ({ page }) => {
+  await page.goto('/devices');
+  const last = async () => (await sentSetDatapoints(page)).at(-1);
+
+  // The transmitter reports where the servo stands
+  await expect(page.getByRole('group', { name: 'Lüftungsklappe Ist' }).getByRole('status')).toHaveText(/(Links|Left) · 25 %/);
+
+  // Ramp first, then the position (one step right of 25 %)
+  const servo = page.getByRole('group', { name: 'Lüftungsklappe', exact: true });
+  const ramp = servo.getByRole('slider', { name: /(Fahrzeit|Travel time)/ });
+  await ramp.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(servo).toContainText('1 s');
+  await servo.getByRole('slider', { name: /Position/ }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(async () => (await sentSetDatapoints(page)).slice(-2)).toMatchObject([
+    { attribute: 'RAMP_TIME', value: 1 },
+    { attribute: 'LEVEL', value: 0.255 },
+  ]);
+
+  // Alarm output of the water safety system
+  await page.getByRole('button', { name: /Alarmausgang Wasser/ }).first().click();
+  await expect.poll(last).toMatchObject({ attribute: 'STATE', value: true });
+});
+
 test('zeigt Sensoren mit eigenen Kacheln', async ({ page }) => {
   await page.goto('/devices');
   const emit = (channel: string, datapoint: string, value: unknown) =>

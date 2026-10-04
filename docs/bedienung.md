@@ -71,6 +71,7 @@ erreichbar ist. Dann erscheint ein Hinweis.
 | **Türschloss** | Entsperren und Sperren durch **Gedrückthalten**, Öffnen durch **Schieben**, damit nichts versehentlich aufgeht |
 | **Türschloss-Zusatzkanäle** | Türzustand (offen/geschlossen, kalibrieren), Auto-Relock an/aus, Riegelkontakt; Benutzer des Türschlossantriebs freigeben oder sperren |
 | **Fußbodenheizung: Pumpe, Direktausgang** | läuft oder aus, schaltbar; Taupunkt-, Feuchte- und Notbetrieb-Warnungen, Frostschutz |
+| **Servos** (HmIP-WSC) | Position von links über neutral nach rechts in 0,5-%-Schritten, Fahrzeit 0–50 s; Ist-Position mit Fehlermeldung |
 | **Status-LEDs, Hintergrundbeleuchtung** | Helligkeit, Farbe und Blinkverhalten (Blinken, Blitzen, Pulsieren) |
 | **Garagentor** | Öffnen gedrückt halten, Zu, Lüften, Stopp |
 | **Rauchmelder** | Zustand, Rauchtest gedrückt halten |
