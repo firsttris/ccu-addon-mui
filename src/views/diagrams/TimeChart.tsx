@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { defaultLang } from '../../i18n/utils';
+import { useEffects } from '../../contexts/EffectsContext';
 import { m } from '../../paraglide/messages';
 import { nearest, niceTicks, timeTicks, DAY, type Bar, type ChartPoint, type RenderSeries } from './chart';
 
@@ -54,6 +55,10 @@ interface TimeChartProps {
   from: number;
   to: number;
   height?: number;
+  // Changes when the chart should draw in again (another range or other
+  // series), not with every new value
+  animationKey?: string;
+  live?: boolean;
   onZoom: (from: number, to: number) => void;
 }
 
@@ -62,7 +67,11 @@ interface TimeChartProps {
 // interval, steps, and states as bands below the chart. A value axis per
 // side, gaps where values are missing, the period before for comparison.
 // Hovering shows the values, dragging zooms in.
-export const TimeChart = ({ label, series, from, to, height = 300, onZoom }: TimeChartProps) => {
+export const TimeChart = ({ label, series, from, to, height = 300, animationKey = '', live = false, onZoom }: TimeChartProps) => {
+  const effects = useEffects();
+  const strong = effects.level === 'strong';
+  // Strong effects draw the series one after the other
+  const delay = (i: number) => ({ '--chart-delay': `${strong ? i * 180 : 0}ms` }) as React.CSSProperties;
   const ref = useRef<HTMLDivElement>(null);
   const id = `chart${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const [width, setWidth] = useState(640);
@@ -301,6 +310,7 @@ export const TimeChart = ({ label, series, from, to, height = 300, onZoom }: Tim
         ))}
         <line x1={left} x2={left + plotWidth} y1={TOP + plotHeight} y2={TOP + plotHeight} className="stroke-border" />
 
+        <g key={animationKey} className={effects.on ? 'chart-anim' : undefined} data-level={effects.level}>
         <g clipPath={`url(#${id}-clip)`}>
           {/* Bars, side by side per interval, the period before as outline */}
           {bars.map((s, bi) => {
@@ -325,6 +335,8 @@ export const TimeChart = ({ label, series, from, to, height = 300, onZoom }: Tim
                   stroke={outline ? s.color : 'none'}
                   strokeOpacity={0.6}
                   strokeDasharray={outline ? '3 2' : undefined}
+                  className={outline ? 'chart-fill' : 'chart-bar'}
+                  style={outline ? undefined : ({ '--chart-delay': `${Math.min(600, bi * 120 + (x(b.t0) - left) * (strong ? 0.9 : 0.4))}ms` } as React.CSSProperties)}
                 />
               );
             };
@@ -338,19 +350,29 @@ export const TimeChart = ({ label, series, from, to, height = 300, onZoom }: Tim
           {/* Lines, areas and steps */}
           {drawn
             .filter((s) => s.kind !== 'bar')
-            .map((s) => {
+            .map((s, i) => {
               const scale = scales.get(scaleKey(s));
               if (!scale) return null;
               const paths = linePaths(s, s.points, scale);
               const before = s.compare ? linePaths(s, s.compare.points, scale) : null;
               return (
                 <g key={s.key} data-series={s.key} data-kind={s.kind}>
-                  {before && <path d={before.line} fill="none" stroke={s.color} strokeOpacity={0.45} strokeWidth={1.25} strokeDasharray="4 3" />}
-                  {paths.area && <path d={paths.area} fill={`url(#${id}-g${drawn.indexOf(s)})`} stroke="none" />}
-                  {paths.band && <path d={paths.band} fill={s.color} fillOpacity={0.15} stroke="none" />}
-                  <path d={paths.line} fill="none" stroke={s.color} strokeWidth={s.kind === 'area' ? 2 : 1.75} strokeLinejoin="round" strokeLinecap="round" />
+                  {before && <path d={before.line} className="chart-fill" style={delay(i)} fill="none" stroke={s.color} strokeOpacity={0.45} strokeWidth={1.25} strokeDasharray="4 3" />}
+                  {paths.area && <path d={paths.area} className="chart-fill" style={delay(i)} fill={`url(#${id}-g${drawn.indexOf(s)})`} stroke="none" />}
+                  {paths.band && <path d={paths.band} className="chart-fill" style={delay(i)} fill={s.color} fillOpacity={0.15} stroke="none" />}
+                  <path
+                    d={paths.line}
+                    pathLength={1}
+                    className="chart-line"
+                    style={delay(i)}
+                    fill="none"
+                    stroke={s.color}
+                    strokeWidth={s.kind === 'area' ? 2 : 1.75}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
                   {paths.dots.map(([cx, cy]) => (
-                    <circle key={`${cx},${cy}`} cx={cx} cy={cy} r={2.5} fill={s.color} />
+                    <circle key={`${cx},${cy}`} className="chart-fill" style={delay(i)} cx={cx} cy={cy} r={2.5} fill={s.color} />
                   ))}
                 </g>
               );
@@ -362,7 +384,7 @@ export const TimeChart = ({ label, series, from, to, height = 300, onZoom }: Tim
           const top = lanesTop + i * LANE;
           const end = Math.min(Date.now(), to);
           return (
-            <g key={s.key} data-series={s.key} data-kind="state">
+            <g key={s.key} data-series={s.key} data-kind="state" className="chart-lane" style={delay(i)}>
               <rect x={left} y={top} width={Math.max(0, plotWidth)} height={LANE - 4} rx={3} className="fill-muted" />
               {s.points.map((p, j) => {
                 if (p[1] < 0.5 && p[3] < 0.5) return null;
@@ -377,6 +399,18 @@ export const TimeChart = ({ label, series, from, to, height = 300, onZoom }: Tim
             </g>
           );
         })}
+
+        {/* The current value of live lines pulses */}
+        {strong &&
+          live &&
+          drawn
+            .filter((s) => s.kind === 'line' || s.kind === 'area')
+            .map((s) => {
+              const scale = scales.get(scaleKey(s));
+              const last = s.points[s.points.length - 1];
+              return scale && last ? <circle key={s.key} className="chart-pulse" cx={x(last[0])} cy={y(scale, last[1])} r={3.5} fill={s.color} /> : null;
+            })}
+        </g>
 
         {/* Hover and zoom selection */}
         {hover !== null && !drag && <line x1={hover} x2={hover} y1={TOP} y2={TOP + plotHeight + lanes} className="stroke-foreground/40" />}

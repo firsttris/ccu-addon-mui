@@ -202,6 +202,14 @@ const DiagramCard = ({ diagram, canEdit, names }: { diagram: Diagram; canEdit: b
     else if ('zoomed' in range) setRange({ ...range, from: from + direction * width, to: end });
     else setRange({ period: range.period, end });
   };
+  // Draws in again on another range or other settings, not on new values
+  const animationKey = [
+    range.period,
+    'zoomed' in range ? `${range.from}-${range.to}` : (range.end ?? 'live'),
+    compare,
+    JSON.stringify(diagram.series),
+    data.data === undefined || data.isPlaceholderData,
+  ].join('|');
   const zoom = (a: number, b: number) => setRange({ period: range.period, from: a, to: b, zoomed: true });
 
   const chart = (height: number) =>
@@ -210,7 +218,7 @@ const DiagramCard = ({ diagram, canEdit, names }: { diagram: Diagram; canEdit: b
     ) : empty ? (
       <div className="flex h-40 items-center justify-center rounded-lg bg-muted/40 text-sm text-muted-foreground">{m.DIAG_NO_DATA()}</div>
     ) : (
-      <TimeChart label={diagram.name} series={shown} from={from} to={to} height={height} onZoom={zoom} />
+      <TimeChart label={diagram.name} series={shown} from={from} to={to} height={height} animationKey={animationKey} live={live} onZoom={zoom} />
     );
 
   const toolbar = (
