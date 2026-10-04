@@ -344,10 +344,14 @@ test('legt Direktverknüpfungen an, ändert ihre Parameter und löscht sie', asy
 
   // Lower button to the dimmer: only fitting partners are offered
   const form = section.getByRole('form', { name: 'Verknüpfung anlegen' });
-  await form.getByLabel('Kanal dieses Geräts').selectOption('000855699C4F38:2');
-  const partner = form.getByLabel('Partner');
-  await expect(partner.locator('option')).toHaveCount(2);
-  await partner.selectOption('00151BE9A1C2D3:4');
+  // Both channels from the channel dialog (pictures, search, one click)
+  await form.getByRole('button', { name: 'Kanal dieses Geräts' }).click();
+  await page.getByRole('dialog', { name: 'Kanal dieses Geräts' }).getByRole('button', { name: /:2$/ }).click();
+  await form.getByRole('button', { name: 'Partner' }).click();
+  const partners = page.getByRole('dialog', { name: 'Partner' });
+  await expect(partners.getByRole('listitem').getByRole('button')).toHaveCount(1);
+  await partners.getByRole('button', { name: /Dimmer Esstisch.*:4$/ }).click();
+  await expect(form.getByRole('button', { name: 'Partner' })).toContainText('00151BE9A1C2D3:4');
   await form.getByLabel('Name der Verknüpfung').fill('Esstisch dimmen');
   await form.getByRole('button', { name: 'Verknüpfen' }).click();
   await expect(page.getByText('Verknüpfung angelegt')).toBeVisible();
@@ -700,8 +704,10 @@ test('listet alle Direktverknüpfungen in Einrichten und legt neue an', async ({
   const add = page.getByRole('region', { name: 'Verknüpfung anlegen' });
   await add.getByLabel('Gerät').selectOption({ label: 'Taster Esszimmer (000855699C4F38)' });
   const form = add.getByRole('form', { name: 'Verknüpfung anlegen' });
-  await form.getByLabel('Kanal dieses Geräts').selectOption('000855699C4F38:2');
-  await form.getByLabel('Partner').selectOption('00151BE9A1C2D3:4');
+  await form.getByRole('button', { name: 'Kanal dieses Geräts' }).click();
+  await page.getByRole('dialog', { name: 'Kanal dieses Geräts' }).getByRole('button', { name: /:2$/ }).click();
+  await form.getByRole('button', { name: 'Partner' }).click();
+  await page.getByRole('dialog', { name: 'Partner' }).getByRole('button', { name: /:4$/ }).click();
   await form.getByLabel('Name der Verknüpfung').fill('Übersicht-Test');
   await form.getByRole('button', { name: 'Verknüpfen' }).click();
   const item = list.getByRole('listitem').filter({ hasText: 'Übersicht-Test' });
@@ -1948,7 +1954,13 @@ test('legt eine Benachrichtigungsregel aus einer Vorlage an', async ({ page }) =
 
   // The template's datapoint stays once the channel has it
   const conditions = dialog.getByRole('list', { name: 'Bedingungen' });
-  await conditions.getByLabel('Kanal').selectOption('7101');
+  // The channel from the channel dialog: search, then a click
+  await conditions.getByRole('button', { name: 'Kanal' }).click();
+  const picker = page.getByRole('dialog', { name: 'Kanal' });
+  await picker.getByLabel('Suchen: Name, Gerät, Typ, Raum, Adresse').fill('fensterkontakt bad');
+  await picker.getByRole('button', { name: /^Fensterkontakt Bad/ }).first().click();
+  await expect(picker).toHaveCount(0);
+  await expect(conditions.getByRole('button', { name: 'Kanal' })).toContainText('Fensterkontakt Bad');
   await expect(conditions.getByLabel('Datenpunkt')).toHaveValue('STATE');
   await expect(dialog.getByLabel('Text der Benachrichtigung (optional)')).toHaveAttribute(
     'placeholder',

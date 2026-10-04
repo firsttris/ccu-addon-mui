@@ -1460,5 +1460,7 @@
   "TIME_MINUTE": "Minute",
   "USERS_AUTO_LOGIN": "Log in automatically",
   "USERS_AUTO_LOGIN_BADGE": "logs in automatically",
-  "USERS_AUTO_LOGIN_HINT": "Whoever opens the app is logged in as this user without a password. Only one user can be; after logging out, the login appears."
+  "USERS_AUTO_LOGIN_HINT": "Whoever opens the app is logged in as this user without a password. Only one user can be; after logging out, the login appears.",
+  "PICKER_CHOOSE_ONE": "Tap a channel",
+  "PICKER_CHOOSE_CHANNEL": "Choose a channel …"
 }
