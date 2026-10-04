@@ -62,7 +62,7 @@ func export(cfg *config.Config, withRPC bool) (*fakeccu.Fixture, error) {
 		if _, ok := channels[ch.Address]; !ok {
 			channels[ch.Address] = &fakeccu.Channel{
 				ID: ch.ID, Address: ch.Address, Type: ch.Type, Interface: ch.InterfaceName,
-				Name: ch.Name, Datapoints: ch.Datapoints,
+				Name: ch.Name, Datapoints: ch.Datapoints, Mode: ch.Mode,
 			}
 			order = append(order, ch.Address)
 		}

@@ -18,7 +18,7 @@ import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { useValueList } from './useValueList';
 
-type Tone = 'calm' | 'active' | 'alarm';
+export type Tone = 'calm' | 'active' | 'alarm';
 
 const toneRgb: Record<Tone, string> = { calm: '34,197,94', active: '56,189,248', alarm: '239,68,68' };
 const toneText: Record<Tone, string> = {
@@ -57,7 +57,7 @@ const Emblem = ({ tone, waves, children }: { tone: Tone; waves: boolean; childre
   );
 };
 
-const DetectorTile = ({
+export const DetectorTile = ({
   channel,
   tone,
   waves,

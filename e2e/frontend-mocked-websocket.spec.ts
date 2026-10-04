@@ -297,6 +297,33 @@ test('dimmt, färbt Licht und drückt Taster', async ({ page }) => {
   expect((await sentSetDatapoints(page)).filter((m) => m.attribute?.startsWith('PRESS'))).toHaveLength(2);
 });
 
+test('zeigt Eingänge je nach Kanalmodus', async ({ page }) => {
+  await page.goto('/devices');
+  const emit = (channel: string, datapoint: string, value: unknown) =>
+    page.evaluate(
+      (e) => (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent(e),
+      { channel, datapoint, value },
+    );
+
+  // Wired as a contact: open or closed
+  const gate = page.getByRole('group', { name: 'Gartentor' });
+  await expect(gate).toContainText(/Kontakt|Contact/);
+  await expect(gate.getByRole('status')).toHaveText(/Geschlossen|Closed/);
+  await emit('0019A0C9B3E2D1:1', 'STATE', true);
+  await expect(gate.getByRole('status')).toHaveText(/^(Offen|Open)$/);
+
+  // No channel mode stored: a key, presses light up
+  const bell = page.getByRole('group', { name: 'Klingeltaster' });
+  await expect(bell).toContainText(/Taster|Button/);
+  await expect(bell.getByRole('status')).toHaveText(/Wartet auf Signal|Waiting for a signal/);
+  await emit('0019A0C9B3E2D2:1', 'PRESS_LONG', true);
+  await expect(bell.getByRole('status')).toHaveText(/Lang gedrückt|Pressed long/);
+
+  // Like the WebUI, the tile only shows; nothing is sent
+  await bell.click();
+  expect(await sentSetDatapoints(page)).toHaveLength(0);
+});
+
 test('bedient Melder und Garagentor', async ({ page }) => {
   await page.goto('/devices');
 

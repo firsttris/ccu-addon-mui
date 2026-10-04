@@ -149,6 +149,21 @@ func TestParseChannelsTile(t *testing.T) {
 	}
 }
 
+func TestParseChannelsMode(t *testing.T) {
+	output := "C\t1\tA:1\tMULTI_MODE_INPUT_TRANSMITTER\tHmIP-RF\tTor\n" +
+		"O\t3\n" +
+		"C\t2\tA:2\tMULTI_MODE_INPUT_TRANSMITTER\tHmIP-RF\tTaster\n" +
+		"C\t3\tA:3\tMULTI_MODE_INPUT_TRANSMITTER\tHmIP-RF\tKaputt\n" +
+		"O\t9\n" +
+		"C\t4\tA:4\tMULTI_MODE_INPUT_TRANSMITTER\tHmIP-RF\tAus\n" +
+		"O\t0\n"
+	channels := parseChannels(output)
+	if len(channels) != 4 || channels[0].Mode == nil || *channels[0].Mode != 3 || channels[1].Mode != nil ||
+		channels[2].Mode != nil || channels[3].Mode == nil || *channels[3].Mode != 0 {
+		t.Fatalf("unexpected modes: %+v", channels)
+	}
+}
+
 func TestParseChannelsOptions(t *testing.T) {
 	channels := parseChannels("C\t1\tA:1\tSWITCH\tBidCos-RF\tLicht\nF\tfalse\tfalse\ttrue\ttrue\nC\t2\tA:2\tSWITCH\tBidCos-RF\tSteckdose\nF\ttrue\ttrue\tfalse\n")
 	if len(channels) != 2 || !channels[0].Hidden || !channels[0].ReadOnly || !channels[0].Logged || !channels[0].AES || channels[1].AES {

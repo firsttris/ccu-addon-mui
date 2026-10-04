@@ -408,6 +408,10 @@ export interface Channel {
    */
   tile?: "light" | "switch";
   /**
+   * Input channels (MULTI_MODE_INPUT_TRANSMITTER): what they are wired to, the WebUI's metadata channelMode (0 off, 1 key, 2 switch, 3 contact, 4 level, 5 condition); missing means key
+   */
+  mode?: number;
+  /**
    * not visible (the WebUI's channel option)
    */
   hidden?: boolean;

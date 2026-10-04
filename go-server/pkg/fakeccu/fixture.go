@@ -120,6 +120,10 @@ type Channel struct {
 	ReadOnly bool `json:"readOnly,omitempty"`
 	Logged   bool `json:"logged,omitempty"`
 	AES      bool `json:"aes,omitempty"`
+	// Mode is what an input channel (MULTI_MODE_INPUT_TRANSMITTER) is
+	// wired to, ReGa metadata "channelMode": 0 off, 1 key, 2 switch,
+	// 3 contact
+	Mode *int `json:"mode,omitempty"`
 }
 
 // InterfaceData is what an XML-RPC interface (e.g. HmIP-RF) returns.

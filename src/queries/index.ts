@@ -120,8 +120,12 @@ export const usePutParamset = () => {
     }) => {
       await request({ type: 'putParamset', interfaceName, address, paramsetKey: 'MASTER', values }, { queue: false });
     },
-    onSettled: (_, __, { interfaceName, address }) =>
-      queryClient.invalidateQueries({ queryKey: ['paramset', interfaceName, address] }),
+    onSettled: (_, __, { interfaceName, address, values }) => {
+      // An input's operation mode is also its channel mode, which decides its
+      // tile (stored by the server as metadata channelMode)
+      if ('CHANNEL_OPERATION_MODE' in values) queryClient.invalidateQueries({ queryKey: ['channels'] });
+      return queryClient.invalidateQueries({ queryKey: ['paramset', interfaceName, address] });
+    },
   });
 };
 

@@ -351,8 +351,8 @@ func TestStackAllDevices(t *testing.T) {
 			t.Fatalf("maintenance channel listed: %s", ch.Address)
 		}
 	}
-	if len(channels) != 23 {
-		t.Fatalf("expected all 23 channels, got %d", len(channels))
+	if len(channels) != 24 {
+		t.Fatalf("expected all 24 channels, got %d", len(channels))
 	}
 }
 
@@ -406,6 +406,51 @@ func TestStackGuestMayNotControlAndChangesAreAudited(t *testing.T) {
 	}
 }
 
+// Saving an input's operation mode stores it as metadata "channelMode" in
+// the interface process and in ReGa, as the WebUI does (webui.js
+// SetParameters, hmipChannelConfigDialogs.tcl), so getChannels reports it
+func TestStackInputChannelMode(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	modeOf := func(id string) interface{} {
+		send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "all": true, "requestId": id})
+		raw, _ := json.Marshal(receive(t, conn, byRequestID(id))["channels"])
+		var channels []map[string]interface{}
+		_ = json.Unmarshal(raw, &channels)
+		for _, ch := range channels {
+			if ch["address"] == "0019A0C9B3E2D1:1" {
+				return ch["mode"]
+			}
+		}
+		t.Fatalf("input channel missing")
+		return nil
+	}
+	if mode := modeOf("q1"); mode != 3.0 {
+		t.Fatalf("expected mode 3 from the fixture, got %v", mode)
+	}
+
+	send(t, conn, message{"type": "putParamset", "requestId": "q2", "interfaceName": "HmIP-RF",
+		"address": "0019A0C9B3E2D1:1", "paramsetKey": "MASTER", "values": map[string]interface{}{"CHANNEL_OPERATION_MODE": 1}})
+	if m := receive(t, conn, byRequestID("q2")); m["success"] != true {
+		t.Fatalf("putParamset failed: %v", m)
+	}
+	if v := ccu.Metadata("HmIP-RF", "0019A0C9B3E2D1:1", "channelMode"); fmt.Sprint(v) != "1" {
+		t.Fatalf("setMetadata not called: %v", v)
+	}
+	if mode := modeOf("q3"); mode != 1.0 {
+		t.Fatalf("expected mode 1 after saving, got %v", mode)
+	}
+
+	// Other channels get no channel mode
+	send(t, conn, message{"type": "putParamset", "requestId": "q4", "interfaceName": "HmIP-RF",
+		"address": "0000DBE9A5C1F2:1", "paramsetKey": "MASTER", "values": map[string]interface{}{"EVENT_DELAY_UNIT": 1}})
+	receive(t, conn, byRequestID("q4"))
+	if ccu.CallCount("HmIP-RF setMetadata") != 1 {
+		t.Fatalf("expected one setMetadata, got %d", ccu.CallCount("HmIP-RF setMetadata"))
+	}
+}
+
 func TestStackChangeDeviceSettings(t *testing.T) {
 	ccu, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
@@ -451,7 +496,7 @@ func TestStackListDevices(t *testing.T) {
 		d := raw.(map[string]interface{})
 		types[d["address"].(string)] = d["interfaceName"].(string) + " " + d["type"].(string)
 	}
-	if len(types) != 7 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" ||
+	if len(types) != 8 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" ||
 		types["LEQ0000004"] != "BidCos-RF HM-TC-IT-WM-W-EU" {
 		t.Fatalf("unexpected devices: %v", types)
 	}

@@ -614,6 +614,12 @@
           ],
           "description": "Tile chosen in the add-on (ReGa metadata)"
         },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Input channels (MULTI_MODE_INPUT_TRANSMITTER): what they are wired to, the WebUI's metadata channelMode (0 off, 1 key, 2 switch, 3 contact, 4 level, 5 condition); missing means key"
+        },
         "hidden": {
           "type": "boolean",
           "description": "not visible (the WebUI's channel option)"

@@ -205,6 +205,7 @@ const sectionTitles: Record<SectionId, () => string> = {
   security: m.SECTION_SECURITY,
   sensors: m.SECTION_SENSORS,
   buttons: m.SECTION_BUTTONS,
+  inputs: m.SECTION_INPUTS,
   energy: m.SECTION_ENERGY,
   system: m.SECTION_SYSTEM,
 };
@@ -220,6 +221,7 @@ const sectionMinPx: Record<SectionId | 'generic', number> = {
   security: 250,
   sensors: 250,
   buttons: 240,
+  inputs: 250,
   energy: 260,
   system: 260,
   generic: 240,
@@ -251,6 +253,7 @@ const sectionGrids: Record<SectionId | 'generic', string> = {
   security: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
   sensors: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
   buttons: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
+  inputs: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
   energy: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
   system: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
   generic: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',

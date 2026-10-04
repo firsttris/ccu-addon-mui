@@ -86,8 +86,8 @@ zu bedienen. Dieses Add-on ersetzt sie durch eine moderne App, die auf der Zentr
 |---|---|---|
 | **Funktionen der WebUI** | **85 %** (56 von 66) | Was fehlt: [Vergleich mit der CCU3-WebUI](docs/vergleich-ccu3.md) |
 | **Gerätetypen bedienbar** | **alle 465** an HmIP, HmIP Wired und BidCos-RF | jedes Gerät, das die CCU kennt |
-| … mit eigener Kachel für jede Funktion | **309** (66 %) | |
-| … mit eigener Kachel für die Hauptfunktion | **416** (89 %) | Rest: [generische Kachel](docs/geraete.md#generische-kachel) |
+| … mit eigener Kachel für jede Funktion | **328** (71 %) | |
+| … mit eigener Kachel für die Hauptfunktion | **425** (91 %) | Rest: [generische Kachel](docs/geraete.md#generische-kachel) |
 | **Direktverknüpfungs-Vorlagen** | 722 Profile für die 7 häufigsten Empfänger | alle anderen im Expertenmodus |
 | **Automatisierte Tests** | über 470 | Unit, Go, End-to-End gegen eine Fake-CCU: [Tests](docs/tests.md) |
 

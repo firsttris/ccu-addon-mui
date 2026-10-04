@@ -58,13 +58,16 @@ func TestExportRoundTrip(t *testing.T) {
 			}
 			continue
 		}
+		if (want.Mode == nil) != (got.Mode == nil) || (want.Mode != nil && *got.Mode != *want.Mode) {
+			t.Errorf("%s: mode %v, want %v", want.Address, got.Mode, want.Mode)
+		}
 		if got.Name != want.Name || got.Type != want.Type || got.Interface != want.Interface || len(got.Datapoints) != len(want.Datapoints) {
 			t.Errorf("%s: got %+v, want %+v", want.Address, got, want)
 		}
 	}
 
 	hmip := exported.Interfaces["HmIP-RF"]
-	if hmip == nil || len(hmip.Devices) != 17 || hmip.ParamsetDescriptions["0000DBE9A5C1F2:1"]["VALUES"] == nil ||
+	if hmip == nil || len(hmip.Devices) != 20 || hmip.ParamsetDescriptions["0000DBE9A5C1F2:1"]["VALUES"] == nil ||
 		fmt.Sprint(hmip.Paramsets["0000DBE9A5C1F2:1"]["MASTER"]["EVENT_DELAY_UNIT"]) != "0" {
 		t.Fatalf("unexpected HmIP-RF data: %+v", hmip)
 	}
