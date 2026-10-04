@@ -561,7 +561,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleFirewall(client, msgType, message)
 	case "getNetwork", "setNetwork":
 		s.handleNetwork(client, msgType, message)
-	case "getSecurity", "setSecurity", "changeSecurityKey":
+	case "getSecurity", "setSecurity", "changeSecurityKey", "setSessionTimeout":
 		s.handleSecurity(client, msgType, message)
 	case "getGeneralSettings", "setGeneralSettings":
 		s.handleGeneralSettings(client, msgType, message)

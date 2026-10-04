@@ -25,6 +25,8 @@ type securityResponse struct {
 	Type      string `json:"type"`
 	RequestID string `json:"requestId,omitempty"`
 	securitySettings
+	// Seconds until an idle WebUI session ends (rega.conf)
+	SessionTimeout int `json:"sessionTimeout"`
 }
 
 // After a change of authentication or HTTPS redirect lighttpd restarts,
@@ -45,6 +47,8 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		SSHPassword string `json:"sshPassword"`
 		Key         string `json:"key"`
 		Password    string `json:"password"`
+		// setSessionTimeout
+		Seconds int `json:"seconds"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -65,7 +69,33 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 	}
 	switch msgType {
 	case "getSecurity":
-		s.sendJSON(client, securityResponse{Type: "getSecurity_response", RequestID: msg.RequestID, securitySettings: current})
+		timeout, err := s.settings.SessionTimeout()
+		if err != nil {
+			s.sendRequestError(client, msg.RequestID, "session timeout: "+err.Error(), "CCU_ERROR")
+			return
+		}
+		s.sendJSON(client, securityResponse{Type: "getSecurity_response", RequestID: msg.RequestID, securitySettings: current, SessionTimeout: timeout})
+	case "setSessionTimeout":
+		// Written as cp_security.cgi action_set_session_timeout does; ReGa
+		// takes it on the next start
+		previous, _ := s.settings.SessionTimeout()
+		entry := audit.Entry{User: client.user, Action: "setSessionTimeout", Target: "rega.conf", Value: msg.Seconds, Previous: previous}
+		if code, errorMsg := configureError(client); code != "" {
+			s.recordAudit(entry, code)
+			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+			return
+		}
+		if err := s.settings.SetSessionTimeout(msg.Seconds); err != nil {
+			code := "CCU_ERROR"
+			if errors.Is(err, settings.ErrInvalid) {
+				code = "INVALID_VALUE"
+			}
+			s.recordAudit(entry, code)
+			s.sendRequestError(client, msg.RequestID, err.Error(), code)
+			return
+		}
+		s.recordAudit(entry, rega.SetOK)
+		s.sendJSON(client, changeResponse{Type: "setSessionTimeout_response", RequestID: msg.RequestID, Success: true})
 	case "setSecurity":
 		next := msg.securitySettings
 		// The SSH password is never written to the audit log

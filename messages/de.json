@@ -1027,5 +1027,11 @@
   "CERT_INVALID": "Die Datei muss ein Zertifikat und den zugehörigen privaten Schlüssel enthalten (PEM).",
   "CERT_UPLOADED": "Zertifikat gespeichert. Der Webserver startet neu.",
   "CERT_DELETED": "Zertifikat gelöscht. Der Webserver startet neu.",
-  "CERT_RESTART_HINT": "Nach dem Hochladen startet der Webserver neu; die WebUI ist dann kurz nicht erreichbar."
+  "CERT_RESTART_HINT": "Nach dem Hochladen startet der Webserver neu; die WebUI ist dann kurz nicht erreichbar.",
+  "SEC_TIMEOUT": "Sitzungs-Timeout der WebUI",
+  "SEC_TIMEOUT_HINT": "Nach dieser Zeit ohne Bedienung endet eine Sitzung der alten WebUI. Erhöhen Sie sie, wenn Sie die Meldung „Sitzung ist abgelaufen“ erhalten. Die Zentrale übernimmt den Wert beim nächsten Neustart.",
+  "SEC_TIMEOUT_SECONDS": "Sekunden (180–600)",
+  "SEC_TIMEOUT_RANGE": "Bitte eine Zeit zwischen 180 und 600 Sekunden wählen.",
+  "SEC_TIMEOUT_SAVED": "Gespeichert. Die Zentrale übernimmt den Wert beim nächsten Neustart.",
+  "SEC_TIMEOUT_SAVE": "Timeout speichern"
 }

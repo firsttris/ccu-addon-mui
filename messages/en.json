@@ -1027,5 +1027,11 @@
   "CERT_INVALID": "The file must contain a certificate and its private key (PEM).",
   "CERT_UPLOADED": "Certificate saved. The web server restarts.",
   "CERT_DELETED": "Certificate deleted. The web server restarts.",
-  "CERT_RESTART_HINT": "After the upload the web server restarts; the WebUI is briefly unreachable."
+  "CERT_RESTART_HINT": "After the upload the web server restarts; the WebUI is briefly unreachable.",
+  "SEC_TIMEOUT": "WebUI session timeout",
+  "SEC_TIMEOUT_HINT": "After this time without use a session of the old WebUI ends. Raise it if you get the message “session expired”. The central unit takes the value on its next start.",
+  "SEC_TIMEOUT_SECONDS": "Seconds (180–600)",
+  "SEC_TIMEOUT_RANGE": "Please choose a time between 180 and 600 seconds.",
+  "SEC_TIMEOUT_SAVED": "Saved. The central unit takes the value on its next start.",
+  "SEC_TIMEOUT_SAVE": "Save timeout"
 }
