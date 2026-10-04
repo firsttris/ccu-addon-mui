@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="t d">
+  <title id="t">ccu-addon-mui</title>
+  <desc id="d">ccu-addon-mui: die komplette WebUI der Homematic-Zentrale CCU3 und OpenCCU, neu gebaut</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14181d"/>
+      <stop offset="1" stop-color="#0a0c0f"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.08" cy="0.1" r="0.7">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0.95" cy="1" r="0.55">
+      <stop offset="0" stop-color="#a855f7" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#a855f7" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="arc" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#84cc16"/>
+      <stop offset="1" stop-color="#a3e635"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#1d232a" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="360" rx="24" fill="url(#bg)"/>
+  <rect width="1280" height="360" rx="24" fill="url(#grid)" opacity="0.6"/>
+  <rect width="1280" height="360" rx="24" fill="url(#glow)"/>
+  <rect width="1280" height="360" rx="24" fill="url(#glow2)"/>
+  <rect x="0.5" y="0.5" width="1279" height="359" rx="23.5" fill="none" stroke="#262c34"/>
+
+  <!-- App-Icon (public/icon.svg) -->
+  <defs>
+    <linearGradient id="icon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f8ff7"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>
+  </defs>
+  <g transform="translate(64 58) scale(0.15625)">
+    <rect width="512" height="512" rx="112" fill="url(#icon)"/>
+    <g transform="translate(-27 17)" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M128 258 236 166l108 92v108a20 20 0 0 1-20 20H148a20 20 0 0 1-20-20z" stroke-width="34"/>
+      <path d="M204 386v-70a12 12 0 0 1 12-12h40a12 12 0 0 1 12 12v70" stroke-width="30"/>
+      <path d="M330 150a64 64 0 0 1 46 46" stroke-width="28"/>
+      <path d="M336 92a120 120 0 0 1 102 102" stroke-width="28"/>
+    </g>
+  </g>
+  <text x="168" y="104" fill="#f1f5f9" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="56" font-weight="700" letter-spacing="-1.5">ccu-addon-mui</text>
+  <text x="168" y="138" fill="#94a3b8" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="20">Die komplette WebUI für Homematic CCU3 und OpenCCU, neu gebaut.</text>
+
+  <g font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <!-- Thermostat -->
+    <g transform="translate(64 196)">
+      <rect width="262" height="116" rx="16" fill="#111418" stroke="#262c34"/>
+      <text x="20" y="32" fill="#94a3b8" font-size="14">Wohnzimmer</text>
+      <text x="20" y="84" fill="#f1f5f9" font-size="44" font-weight="700" letter-spacing="-1">21,0<tspan font-size="20" dx="4" dy="-20" font-weight="500">°C</tspan></text>
+      <path d="M196 96a30 30 0 1 1 42 0" fill="none" stroke="#262c34" stroke-width="8" stroke-linecap="round"/>
+      <path d="M196 96a30 30 0 0 1 32-52" fill="none" stroke="url(#arc)" stroke-width="8" stroke-linecap="round"/>
+    </g>
+    <!-- Direktverknuepfung -->
+    <g transform="translate(356 196)">
+      <rect width="262" height="116" rx="16" fill="#111418" stroke="#262c34"/>
+      <text x="20" y="32" fill="#94a3b8" font-size="14">Direktverknüpfung</text>
+      <text x="20" y="64" fill="#f1f5f9" font-size="19" font-weight="600">Taster → Dimmer</text>
+      <rect x="20" y="80" width="222" height="12" rx="6" fill="#262c34"/>
+      <rect x="20" y="80" width="134" height="12" rx="6" fill="#eab308"/>
+      <text x="242" y="64" text-anchor="end" fill="#eab308" font-size="15" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">60 %</text>
+    </g>
+    <!-- Programm -->
+    <g transform="translate(648 196)">
+      <rect width="262" height="116" rx="16" fill="#111418" stroke="#262c34"/>
+      <text x="20" y="32" fill="#94a3b8" font-size="14">Programm: wenn</text>
+      <text x="20" y="64" fill="#f1f5f9" font-size="19" font-weight="600">19:30 und abwesend</text>
+      <text x="20" y="94" fill="#60a5fa" font-size="16" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">dann Rollläden zu</text>
+    </g>
+    <!-- Push -->
+    <g transform="translate(940 196)">
+      <rect width="276" height="116" rx="16" fill="#1a0b0d" stroke="#7f1d1d"/>
+      <circle cx="40" cy="58" r="20" fill="#dc2626"/>
+      <path d="M33 64v-8a7 7 0 0 1 14 0v8m-17 0h20" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>
+      <text x="72" y="52" fill="#fecaca" font-size="17" font-weight="600">Wasseralarm</text>
+      <text x="72" y="76" fill="#fca5a5" font-size="14">Push aufs Handy</text>
+    </g>
+  </g>
+</svg>

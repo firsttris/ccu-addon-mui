@@ -1,187 +1,89 @@
 <div align="center">
 
-# CCU3 Add-on: Modern Web-UI
+<img src="docs/banner.png" alt="ccu-addon-mui: thermostat, direct link, program and push alarm" width="900">
 
-<img src="docs/tablet-screen.jpg" alt="Tablet Screen" height="400" />
+**The complete WebUI of your Homematic central unit, rebuilt.**<br>
+Control, configure, link and program, live and on every device:
+an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
 
 [![Build](https://github.com/firsttris/ccu-addon-mui/actions/workflows/build.yml/badge.svg)](https://github.com/firsttris/ccu-addon-mui/actions/workflows/build.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Go Tests](https://github.com/firsttris/ccu-addon-mui/actions/workflows/go-unit-tests.yml/badge.svg)](https://github.com/firsttris/ccu-addon-mui/actions/workflows/go-unit-tests.yml)
+[![E2E](https://github.com/firsttris/ccu-addon-mui/actions/workflows/playwright-e2e.yml/badge.svg)](https://github.com/firsttris/ccu-addon-mui/actions/workflows/playwright-e2e.yml)
+[![Release](https://img.shields.io/github/v/release/firsttris/ccu-addon-mui?label=release&color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/firsttris/ccu-addon-mui/total?color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
+[![CCU3 | OpenCCU](https://img.shields.io/badge/central-CCU3%20%7C%20OpenCCU-1d4ed8)](docs/installation.md)
 
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://golang.org/)
-
-**A modern, fast, and responsive Progressive Web App (PWA) with integrated WebSocket server for your CCU3.**
-
-My motivation was to refresh the proven CCU3 with modern software and give it a contemporary, responsive interface.
-
-[Deutsche Version](README.md)
+<img src="docs/screenshot-hero.png" alt="All devices on a tablet, living room and boiler room on two phones" width="900">
 
 </div>
 
-## 🚀 Features
+> The full documentation is in German: [docs/README.md](docs/README.md). Homematic is used mostly in
+> German-speaking countries, so that is where the detail lives. The app itself speaks German and English.
 
-- **Modern UI**: Responsive design, optimized for tablets and mobile devices.
-- **Device Support**: Control of switches, thermostats, blinds, doors, and floor heating; energy meter readings.
-- **Real-time Updates**: WebSocket-based communication for instant device status updates.
-- **Device Health**: Low batteries and unreachable devices are shown on the card and collected on the start page.
-- **Login with a CCU user**: Log in once per device, it then stays logged in.
-- **PWA-Ready**: Installable as a native app on Android and iOS home screens.
-- **WakeLock Support**: Prevents screen standby for continuous control.
-- **Easy Installation**: Simple add-on installation for CCU3 systems.
+## 💡 Why?
 
-## 🏗️ Installation
+The CCU3 WebUI can do everything, but it looks like 2008: tables, popups, every page rendered by the
+server on each click, and values that are polled every few seconds. On a phone it is hardly usable.
+This add-on replaces it with a modern app that runs on the central unit itself:
 
-### Install Add-on
-1.  Download the latest addon `tar.gz` file from the [Releases Page](https://github.com/firsttris/ccu-addon-mui/releases).
-2.  Install it as a plugin on your CCU3 under "Additional Software".
-    *   _Note: Upload and reboot take some time._
-3.  The add-on is available at `http://<Your-CCU-IP>/addons/mui`.
+- **Everything in one place**: control rooms, trades and favourites, and just as well pair devices,
+  transfer settings, create direct links, write programs, make backups and install firmware.
+- **Live instead of polling**: every device change reaches every open screen over WebSocket within
+  milliseconds. The WebUI polls each open tab every 3 seconds.
+- **Made for hand and wall**: tiles that show what is going on, gestures instead of forms, light and dark,
+  installable as an app.
+- **As secure as the CCU**: log in with the CCU's users and their rights, a short-lived admin token for
+  settings, an audit log of every change.
+- **Built after the original**: every feature follows the WebUI sources of
+  [OpenCCU](https://github.com/OpenCCU/OpenCCU-Base) and uses only the CCU's own interfaces.
 
-### Prerequisites for CCU3
-*   **Rooms & Trades**: For the add-on to work, you must have rooms or trades configured in your CCU3 and channels assigned.
+## ✨ Features
 
-### Login
-On first use, log in with a **CCU WebUI user** (like RedMatic). The device then stays logged in – also after closing the app or a restart; the login is renewed automatically whenever it is used. The password is not stored.
+- **Dashboard** for rooms, trades, favourites and all devices, with dedicated tiles for thermostats, floor
+  heating, lights, dimmers, colour lights, blinds, windows, locks, garage doors, detectors, sirens, climate
+  and weather sensors, buttons, energy meters and access control. Every other device gets a tile built from
+  its device description. Tiles can be arranged by drag and drop.
+- **Alarms and service messages** live, with **push notifications** to your phone.
+- **Week program editors** for thermostats and actuators, heating groups.
+- **Charts** for any datapoint or system variable, without a microSD card.
+- **Program editor** with all time controls and a script tester, system variables, virtual keys,
+  system log.
+- **Device setup**: pairing (also HmIP KEY/SGTIN), settings with proper controls and transfer status,
+  direct links with the WebUI's 722 profiles, firmware updates, function test, device replacement.
+- **Central unit**: users and rights, backup and restore, CCU firmware, add-ons, time and location,
+  network, firewall, HTTPS certificate, SSH, security key and level, LAN gateways, logging, factory reset.
 
-Without logging in, nobody on the network can read or control devices. To turn the login off, create `/usr/local/etc/config/mui.conf` containing `AUTH_MODE=none` and restart the add-on. To log out all devices, delete `/usr/local/etc/config/mui-auth.key` and restart the add-on.
+## 📊 Status compared to the CCU3 WebUI
 
-### HTTPS Workaround (Chrome)
-Features like PWA and WakeLock require a secure context (HTTPS). Since the CCU3 uses local HTTP by default:
-1.  Open `chrome://flags` in Chrome.
-2.  Search for `Insecure origins treated as secure`.
-3.  Add your CCU3 IP (e.g., `http://192.168.178.111`).
-4.  Restart Chrome.
+| | |
+|---|---|
+| Features of the WebUI | **85 %** (56 of 66), see [comparison](docs/vergleich-ccu3.md) |
+| Device types | **all 465** on HmIP, HmIP Wired and BidCos-RF can be controlled; 309 (66 %) have a dedicated tile for every function, 416 (89 %) for their main function |
+| Automated tests | more than 470 (unit, Go, end-to-end against a fake CCU) |
 
-## ℹ️ User Interface Overview
+Classic BidCos-Wired (HMW devices on the RS485 bus) is not connected yet.
 
-### Channels View
-Here you can see and change the status of the channels assigned to the selected room.
+## 🚀 Installation
+
+1. Download `mui-<version>.tar.gz` from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases/latest).
+2. Upload and install it in the WebUI under *Settings → Control panel → Additional software*. The CCU restarts.
+3. Open **http://&lt;ccu-ip&gt;/addons/mui** and log in with a CCU user.
+
+## 🔧 Development
+
+```bash
+npm install
+npm run dev:fake   # fake CCU + Go server + app on http://localhost:4200, login Admin / secret
+```
+
+Go server (WebSocket, XML-RPC, ReGa, JSON-RPC) · React 19 with TanStack Router and Query, Tailwind,
+shadcn/ui · a JSON schema as the contract between both · Vitest, Go tests and Playwright.
+See [Entwicklung](docs/entwicklung.md) and [Architektur](docs/architektur.md).
+
+---
 
 <div align="center">
-  <img src="./docs/channel1.png" alt="Channel View 1" height="400" />
-  <img src="./docs/channel2.png" alt="Channel View 2" height="400" />
+<sub>License: <a href="LICENSE">MIT</a> · <a href="README.md">Deutsche Version</a><br>
+Homematic and Homematic IP are trademarks of eQ-3 AG. This project is not affiliated with eQ-3 or OpenCCU.</sub>
 </div>
-
-<details>
-<summary><strong>📱 Device Support</strong></summary>
-
-### [Switch](src/controls/SwitchControl.tsx)
-**Channel Type:** `SWITCH_VIRTUAL_RECEIVER`
-
-<img src="docs/controls/switch.png" alt="Switch Control" width="300" />
-
-- Show light status
-- Switch light on/off
-
-### [Thermostat](src/controls/ThermostatControl.tsx)
-**Channel Type:** `HEATING_CLIMATECONTROL_TRANSCEIVER`
-
-<img src="docs/controls/thermostat.png" alt="Thermostat Control" width="300" />
-
-- Show current humidity
-- Show target temperature and current temperature
-- Show window open status
-- Set target temperature
-- Switch between manual and automatic mode
-- Turn thermostat off
-- Boost mode (only for radiator thermostats)
-
-### [Blinds](src/controls/BlindsControl.tsx)
-**Channel Type:** `BLIND_VIRTUAL_RECEIVER`
-
-<img src="docs/controls/blinds.png" alt="Blinds Control" width="300" />
-
-- Show opening percentage
-- Open/Close/Stop
-- Set opening percentage by clicking
-
-_For this to work properly, you must measure and configure the opening and closing times for your blinds in the CCU3._
-
-### [Door Opener](src/controls/DoorControl.tsx)
-**Channel Type:** `KEYMATIC`
-
-<img src="docs/controls/door-operator.png" alt="Door Control" width="300" />
-
-- Show door status
-- Unlock/Lock/Open door (unlocking and opening ask for confirmation)
-
-### [Energy Meter](src/controls/EnergyMeterControl.tsx)
-**Channel Type:** `ENERGIE_METER_TRANSMITTER` (HmIP-ESI)
-
-- Current power and meter readings (electricity) or meter reading and flow (gas)
-- One card per meter
-
-### [Floor Heating](src/controls/FloorControl.tsx)
-**Channel Type:** `CLIMATECONTROL_FLOOR_TRANSCEIVER`
-
-<img src="docs/controls/floor-heating.png" alt="Floor Control" width="300" />
-
-- Show valve opening percentage
-- Show target temperature and current temperature
-
-</details>
-
-## 📲 Add PWA to Home Screen
-
-### Android
-1.  Open the PWA in the browser.
-2.  Menu (three dots) -> "Add to Home screen".
-
-### iOS
-1.  Open the PWA in Safari.
-2.  Share button -> "Add to Home Screen".
-
-### WakeLock
-Prevents standby. If it doesn't work, check `chrome://flags` -> `Experimental Web Platform features` (usually active by default in newer versions).
-
-## 💻 Development and Build
-
-### Prerequisites
-- **Node.js**: v22.12+
-- **Go**: v1.27+
-
-### Quick Start
-```bash
-git clone https://github.com/firsttris/ccu-addon-mui.git
-cd ccu-addon-mui
-npm install
-```
-
-**Frontend and Go server locally, against the real CCU:**
-```bash
-cp go-server/.env.example go-server/.env
-# Set CCU_HOST, CCU_USER/CCU_PASS and CALLBACK_HOST (this machine's IP) in .env
-npm run dev
-```
-Starts the Go server and the frontend (http://localhost:4200) together; Ctrl+C stops both and unregisters the server from the CCU. The CCU must be able to reach this machine on port 9099, otherwise no events arrive.
-
-**Frontend only, against the add-on installed on the CCU:**
-```bash
-# Adjust CCU IP in vite.config.mts (proxyTargets), then:
-npm run start:fe:ccu3
-```
-
-### Build
-```bash
-npm run build
-```
-Creates React app, Go server, and an installable `.tar.gz` archive.
-
-### WebSocket Test
-The easiest way is [websocat](https://github.com/vi/websocat) on the command line. Browser extensions are rejected by the server's origin check.
-```bash
-websocat ws://<CCU-IP>/ws/mui
-{"type": "login", "username": "Admin", "password": "<CCU password>"}
-{"type": "getRooms", "deviceId": "test-device"}
-```
-Without a `login` first, the server answers `authentication required` (unless `AUTH_MODE=none`). All messages are described in the [Go server README](go-server/README.md#-websocket-protocol).
-
-## 🤝 Contributions
-
-We welcome pull requests! Visit our [Issues Page](https://github.com/firsttris/ccu-addon-mui/issues).
-
-## ⚖️ License
-
-Licensed under the [MIT License](LICENSE).
