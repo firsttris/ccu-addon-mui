@@ -42,7 +42,7 @@ const ratingText: Record<Rating, string> = {
 
 // A measurement: the value large with its unit, how good it is, and more
 // values below
-const MeasureTile = ({
+export const MeasureTile = ({
   channel,
   value,
   unit,

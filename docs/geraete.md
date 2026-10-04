@@ -13,12 +13,12 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
 
 | Familie | im Katalog | bedienbar | alle Kanäle mit eigener Kachel | Hauptfunktion mit eigener Kachel | nur generisch |
 |---|---:|---:|---:|---:|---:|
-| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 172 | 45 | 6 |
+| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 175 | 42 | 6 |
 | HomeMatic IP Wired (HmIPW) | 38 | 38 | 24 | 12 | 2 |
-| BidCos-RF (HM-) | 186 | 168 | 115 | 36 | 17 |
+| BidCos-RF (HM-) | 186 | 168 | 116 | 36 | 16 |
 | BidCos-RF, ältere und OEM-Typen | 41 | 36 | 29 | 3 | 4 |
 | BidCos-Wired (HMW-) | 15 | 11 | 6 | 0 | 5 |
-| **Summe** | **524** | **476** | **346 (73 %)** | **96 (20 %)** | **34 (7 %)** |
+| **Summe** | **524** | **476** | **350 (74 %)** | **93 (20 %)** | **33 (7 %)** |
 | virtuelle Typen (VIR-) | 11 | nicht geprüft | | | |
 
 - **BidCos-Wired** ist angebunden, sobald ein Wired-Gateway (HMW-LGW) eingerichtet ist, aber noch nicht an
@@ -31,7 +31,7 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
   Hintergrundbeleuchtung eines Wandthermostats oder die Pumpe einer Fußbodenheizung.
 - **nur generisch**: kein Kanal hat eine eigene Kachel. Das Gerät ist trotzdem voll bedienbar.
 
-Zusammen haben **442 von 476 Gerätetypen (93 %)** eine eigene Kachel für ihre Hauptfunktion.
+Zusammen haben **443 von 476 Gerätetypen (93 %)** eine eigene Kachel für ihre Hauptfunktion.
 
 Die Zählung ist reproduzierbar. Die Skripte vergleichen die Gerätebeschreibungen mit
 `src/controls/registry.ts`, gegengeprüft an einem Export einer echten CCU (`fixtures/my-ccu.json`).
@@ -51,6 +51,7 @@ Welche Kachel ein Kanal bekommt, entscheidet sein Kanaltyp (`src/controls/regist
 | Farblicht | `UNIVERSAL_LIGHT_RECEIVER` | HmIP-RGBW, -LSC, -DRG-DALI |
 | Rollladen und Jalousie | `BLIND_VIRTUAL_RECEIVER`, `SHUTTER_VIRTUAL_RECEIVER`, `BLIND`, `JALOUSIE` | HmIP-BROLL, -FROLL, -BBL, -FBL, HmIPW-DRBL4, HM-LC-Bl1-FM, HM-LC-Ja1PBU-FM |
 | Fenster | `SHUTTER_CONTACT`, `ROTARY_HANDLE_SENSOR`, `ROTARY_HANDLE_TRANSCEIVER` | HmIP-SWDO, -SCI, -SRH, HM-Sec-SCo, HM-Sec-RHS |
+| Fensterantrieb | `WINDOW_DRIVE_RECEIVER`: öffnen, schließen, Stopp; `WINMATIC` zusätzlich verriegeln, `AKKU` mit Ladezustand | HmIP-MOD-WD-VK, HM-Sec-Win |
 | Türschloss | `KEYMATIC`, `DOOR_LOCK_TRANSCEIVER`, `DOOR_LOCK_STATE_TRANSMITTER` | HM-Sec-Key, HmIP-DLD |
 | Garagentor | `DOOR_RECEIVER` | HmIP-MOD-HO, -MOD-TM |
 | Rauchmelder | `SMOKE_DETECTOR` | HmIP-SWSD, HM-Sec-SD-2 |
@@ -66,6 +67,8 @@ Welche Kachel ein Kanal bekommt, entscheidet sein Kanaltyp (`src/controls/regist
 | Bodenfeuchte | `SOIL_MOISTURE_TRANSMITTER`: Feuchte, Bodentemperatur | ELV-SH-SMSI |
 | Erschütterung und Neigung | `ACCELERATION_TRANSCEIVER`, je nach Betriebsart Erschütterung, Lage oder Neigung | HmIP-SAM, -STV, ELV-SH-CTV, -TACO |
 | Netzausfall | `POWER_MAINS_TRANSMITTER` | HmIP-PMFS |
+| Bewässerung | `WATER_SWITCH_VIRTUAL_RECEIVER`: Ventil auf und zu, mit `ON_TIME` auch für 10, 30 oder 60 Minuten; `FLOW_METER_TRANSMITTER`: Durchfluss, Menge seit dem Öffnen, Gesamtmenge | HmIP-WSM, ELV-SH-WSM |
+| Wasserschutz | `VALVE_ACTUATOR_RECEIVER` (Absperrventil), `WATER_FLOW_TRANSMITTER`, `WATER_PRESSURE_TRANSMITTER` | HmIP-WSS |
 | Taster | `KEY_TRANSCEIVER`, `KEY`, `VIRTUAL_KEY` (eine Kachel je Gerät) | HmIP-WRC2, -WRC6, -BRC2, HM-PB-2-WM55, Fernbedienungen |
 | Eingang | `MULTI_MODE_INPUT_TRANSMITTER`, je nach Betriebsart Taster, Schalter, Kontakt oder Level | HmIP-FCI1, -FCI6, -DSD-PCB, die Eingänge von HmIP-BSL, -DRSI4, HmIPW-DRI16 |
 | Energiezähler | `ENERGIE_METER_TRANSMITTER`, `POWERMETER` (eine Kachel je Gerät) | HmIP-ESI, HmIP-PSM, HM-ES-PMSw1 |
@@ -103,8 +106,7 @@ Nach Bedeutung:
 
 1. **Display-Geräte**: HmIP-WGD, HmIPW-WGD und das Display des HmIP-WRCD haben keinen Baukasten für Texte und
    Symbole; die Werte sind nur generisch bedienbar.
-2. **Bewässerung und Antriebe**: HmIP-WSM, ELV-SH-WSM, HmIP-WSS; Fenster- und Lüftungsantriebe (HmIP-WSC,
-   Winmatic).
+2. **Antriebe**: der Servo-Antrieb HmIP-WSC und der Alarmausgang der HmIP-WSS haben noch keine eigene Kachel.
 3. **Weitere Sensoren**: Abstand, Durchgang (HmIP-SPDR), Füllstand, Zählersensoren (HM-ES-TX-WM).
 4. **Nebenkanäle**: Pumpe und Direktausgang der Fußbodenheizung, Zusatzkanäle von Türschlössern
    (Zugang, Auto-Relock, Türzustand), Status-LEDs und Hintergrundbeleuchtung, die virtuellen Kanäle der

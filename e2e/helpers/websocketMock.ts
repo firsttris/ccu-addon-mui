@@ -340,6 +340,39 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
     // In no room or trade: only listed under "all devices"
     const unassignedChannels: AnyPayload[] = [
+      // Irrigation, its water meter and window drives
+      {
+        id: 641,
+        name: 'Bewässerung Beet',
+        address: '00299D89A1B2C1:3',
+        interfaceName: 'HmIP-RF',
+        type: 'WATER_SWITCH_VIRTUAL_RECEIVER',
+        datapoints: { STATE: false, PROCESS: 0 },
+      },
+      {
+        id: 642,
+        name: 'Wasserzähler Beet',
+        address: '00299D89A1B2C1:6',
+        interfaceName: 'HmIP-RF',
+        type: 'FLOW_METER_TRANSMITTER',
+        datapoints: { WATER_FLOW: 0, WATER_FLOW_STATUS: 0, WATER_VOLUME: 1284.5, WATER_VOLUME_SINCE_OPEN: 42.3 },
+      },
+      {
+        id: 643,
+        name: 'Oberlicht Treppenhaus',
+        address: '00299D89A1B2C2:1',
+        interfaceName: 'HmIP-RF',
+        type: 'WINDOW_DRIVE_RECEIVER',
+        datapoints: { LEVEL: 0, LEVEL_STATUS: 0, ACTIVITY_STATE: 3 },
+      },
+      {
+        id: 644,
+        name: 'Dachfenster Bad',
+        address: 'NEQ0001234:1',
+        interfaceName: 'BidCos-RF',
+        type: 'WINMATIC',
+        datapoints: { LEVEL: -0.005, STATE_UNCERTAIN: false, ERROR: 0 },
+      },
       // Sensors with their own tiles
       {
         id: 631,
@@ -557,6 +590,14 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       '002BE0C98ECD57:1': {
         STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
         ACCESS_AUTHORIZATION: { type: 'ENUM', operations: 4, flags: 1, tabOrder: 1, min: 0, max: 1, valueList: ['DISABLE', 'ENABLE'] },
+      },
+      '00299D89A1B2C1:3': {
+        STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },
+        ON_TIME: { type: 'FLOAT', operations: 2, flags: 1, tabOrder: 1, min: 0, max: 8580000, unit: 's' },
+      },
+      '00299D89A1B2C1:6': {
+        WATER_FLOW: { type: 'FLOAT', operations: 5, flags: 1, tabOrder: 0, min: 0, max: 10000, unit: 'l/h' },
+        WATER_VOLUME: { type: 'FLOAT', operations: 5, flags: 1, tabOrder: 1, min: 0, max: 1000000, unit: 'l' },
       },
       '0000DBE9A5C1F3:1': {
         STATE: { type: 'BOOL', operations: 7, flags: 1, tabOrder: 0 },

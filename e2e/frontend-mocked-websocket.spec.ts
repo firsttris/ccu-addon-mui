@@ -297,6 +297,42 @@ test('dimmt, färbt Licht und drückt Taster', async ({ page }) => {
   expect((await sentSetDatapoints(page)).filter((m) => m.attribute?.startsWith('PRESS'))).toHaveLength(2);
 });
 
+test('bedient Bewässerung und Fensterantriebe', async ({ page }) => {
+  await page.goto('/devices');
+  const last = async () => (await sentSetDatapoints(page)).at(-1);
+
+  // Irrigation: open, and open for 10 minutes (ON_TIME first, then STATE)
+  const water = page.getByRole('group', { name: 'Bewässerung Beet' });
+  await expect(water.getByRole('status')).toHaveText(/Geschlossen|Closed/);
+  await water.getByRole('button', { name: /^(Öffnen|Open)$/ }).click();
+  await expect.poll(last).toMatchObject({ attribute: 'STATE', value: true });
+  await expect(water.getByRole('status')).toHaveText(/Wasser läuft|Water running/);
+  await water.getByRole('button', { name: /(Für 10 min öffnen|Open for 10 min)/ }).click();
+  await expect.poll(async () => (await sentSetDatapoints(page)).slice(-2)).toMatchObject([
+    { attribute: 'ON_TIME', value: 600 },
+    { attribute: 'STATE', value: true },
+  ]);
+
+  // The water meter with the device's units
+  const meter = page.getByRole('group', { name: 'Wasserzähler Beet' });
+  await expect(meter).toContainText('l/h');
+  await expect(meter).toContainText(/1[.,]284[.,]5 l/);
+
+  // Window drive: open; Winmatic: locked, lock again after opening
+  const drive = page.getByRole('group', { name: 'Oberlicht Treppenhaus' });
+  await expect(drive.getByRole('status')).toHaveText(/Geschlossen|Closed/);
+  await drive.getByRole('button', { name: /^(Öffnen|Open)$/ }).click();
+  await expect.poll(last).toMatchObject({ attribute: 'LEVEL', value: 1 });
+  const winmatic = page.getByRole('group', { name: 'Dachfenster Bad' });
+  await expect(winmatic.getByRole('status')).toHaveText(/Verriegelt|Locked/);
+  await winmatic.getByRole('button', { name: /^(Öffnen|Open)$/ }).click();
+  await expect(winmatic.getByRole('status')).toHaveText(/^(Offen|Open)$/);
+  await winmatic.getByRole('button', { name: /^(Verriegeln|Lock)$/ }).click();
+  await expect.poll(last).toMatchObject({ attribute: 'LEVEL', value: -0.005 });
+  await winmatic.getByRole('button', { name: /^(Stopp|Stop)$/ }).click();
+  await expect.poll(last).toMatchObject({ attribute: 'STOP', value: true });
+});
+
 test('zeigt Sensoren mit eigenen Kacheln', async ({ page }) => {
   await page.goto('/devices');
   const emit = (channel: string, datapoint: string, value: unknown) =>

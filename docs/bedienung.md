@@ -32,7 +32,7 @@ Alle vier Ansichten sind gleich aufgebaut:
 2. **Übersicht**: Innentemperatur im Schnitt, eingeschaltete Lichter („5 von 6“), offene Fenster mit
    Namen.
 3. **Abschnitte** nach Art: Klima, Fußbodenheizung, Licht & Schalter, Rollläden, Fenster, Türen,
-   Sicherheit, Klima & Wetter, Taster, Eingänge, Energie, System. Was keine eigene Kachel hat, folgt alphabetisch
+   Sicherheit, Klima & Wetter, Bewässerung & Wasser, Taster, Eingänge, Energie, System. Was keine eigene Kachel hat, folgt alphabetisch
    nach Kanaltyp.
 4. **Diagramme**, die als Kachel an diesem Ort hängen.
 
@@ -67,6 +67,7 @@ erreichbar ist. Dann erscheint ein Hinweis.
 | **Farblicht** | Helligkeit, Farbton und Farbvorgaben (HmIP-RGBW, -LSC, -DRG-DALI) |
 | **Rollladen, Jalousie** | Auf, Stopp, Ab; ins Fenster tippen setzt die Position; bei Jalousien auch die Lamellen |
 | **Fenster** | Fensterkontakt und Fenstergriff: geschlossen, gekippt, offen, als Bild |
+| **Fensterantrieb** | Öffnen, Schließen, Stopp; die Winmatic auch Verriegeln, dazu ihr Akku |
 | **Türschloss** | Entsperren und Sperren durch **Gedrückthalten**, Öffnen durch **Schieben**, damit nichts versehentlich aufgeht |
 | **Garagentor** | Öffnen gedrückt halten, Zu, Lüften, Stopp |
 | **Rauchmelder** | Zustand, Rauchtest gedrückt halten |
@@ -80,6 +81,8 @@ erreichbar ist. Dann erscheint ein Hinweis.
 | **Regen, Helligkeit** | Regen ja oder nein mit Heizung und Temperatur; Helligkeit mit Durchschnitt, Minimum und Maximum |
 | **CO₂, Feinstaub** | Messwert mit Bewertung (CO₂ nach Umweltbundesamt, Feinstaub nach dem Europäischen Luftqualitätsindex) |
 | **Bodenfeuchte** | Feuchte in Prozent mit Bewertung, Bodentemperatur |
+| **Bewässerung** | Ventil öffnen und schließen, auch für 10, 30 oder 60 Minuten; Wasserzähler mit Durchfluss und Mengen |
+| **Wasserschutz** | Absperrventil öffnen und schließen, Durchfluss und Wasserdruck |
 | **Taster** | kurz antippen oder für einen langen Tastendruck halten |
 | **Eingänge** | je nach Betriebsart: Tastendrücke leuchten auf, Kontakt offen oder geschlossen, Level |
 | **Energiezähler** | Leistung und Zählerstände, Gas mit Durchfluss |
