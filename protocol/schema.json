@@ -8785,6 +8785,37 @@
         },
         "unit": {
           "type": "string"
+        },
+        "chart": {
+          "type": "string",
+          "enum": [
+            "",
+            "line",
+            "area",
+            "bar",
+            "step",
+            "state"
+          ],
+          "description": "How the series is drawn; empty lets the app choose"
+        },
+        "aggregate": {
+          "type": "string",
+          "enum": [
+            "",
+            "avg",
+            "min",
+            "max",
+            "delta"
+          ],
+          "description": "What is shown of an interval; delta is the increase of a counter (consumption)"
+        },
+        "axis": {
+          "type": "string",
+          "enum": [
+            "",
+            "left",
+            "right"
+          ]
         }
       },
       "required": [

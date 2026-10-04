@@ -30,7 +30,21 @@ type Series struct {
 	Label string `json:"label,omitempty"`
 	Color string `json:"color,omitempty"`
 	Unit  string `json:"unit,omitempty"`
+	// Chart is how the series is drawn: line, area, bar, step or state
+	// (a band of on and off); empty lets the app choose
+	Chart string `json:"chart,omitempty"`
+	// Aggregate is what is shown of an interval: avg, min, max, or delta
+	// (the increase of a counter, as consumption per interval)
+	Aggregate string `json:"aggregate,omitempty"`
+	// Axis is left or right; empty chooses by unit
+	Axis string `json:"axis,omitempty"`
 }
+
+var (
+	charts     = map[string]bool{"": true, "line": true, "area": true, "bar": true, "step": true, "state": true}
+	aggregates = map[string]bool{"": true, "avg": true, "min": true, "max": true, "delta": true}
+	axes       = map[string]bool{"": true, "left": true, "right": true}
+)
 
 // SysvarAddress marks a series of a system variable
 const SysvarAddress = "sysvar"
@@ -82,7 +96,8 @@ func (d *Diagram) Validate() error {
 		s := &d.Series[i]
 		s.Label = strings.TrimSpace(s.Label)
 		if !addressRegex.MatchString(s.Address) || !datapointRegex.MatchString(s.Datapoint) ||
-			(s.Color != "" && !colorRegex.MatchString(s.Color)) || len(s.Label) > 100 || len(s.Unit) > 20 {
+			(s.Color != "" && !colorRegex.MatchString(s.Color)) || len(s.Label) > 100 || len(s.Unit) > 20 ||
+			!charts[s.Chart] || !aggregates[s.Aggregate] || !axes[s.Axis] {
 			return fmt.Errorf("%w: series %d", ErrInvalid, i+1)
 		}
 		if seen[s.Key()] {

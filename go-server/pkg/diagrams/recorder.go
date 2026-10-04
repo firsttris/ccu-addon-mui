@@ -238,7 +238,8 @@ func appendPoints(file string, points []Point) error {
 }
 
 func formatFloat(v float64) string {
-	return strconv.FormatFloat(v, 'g', 8, 64)
+	// Exact: counters reach hundreds of millions of Wh
+	return strconv.FormatFloat(v, 'g', -1, 64)
 }
 
 func readPoints(file string, from, to int64, into []Point) []Point {

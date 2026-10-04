@@ -3676,6 +3676,15 @@ export interface DiagramSeries {
   label?: string;
   color?: string;
   unit?: string;
+  /**
+   * How the series is drawn; empty lets the app choose
+   */
+  chart?: "" | "line" | "area" | "bar" | "step" | "state";
+  /**
+   * What is shown of an interval; delta is the increase of a counter (consumption)
+   */
+  aggregate?: "" | "avg" | "min" | "max" | "delta";
+  axis?: "" | "left" | "right";
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

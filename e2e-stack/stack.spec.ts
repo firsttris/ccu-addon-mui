@@ -1186,6 +1186,8 @@ test('legt ein Diagramm an, zeigt die aufgezeichneten Werte und löscht es', asy
   await search.fill('Außen');
   await dialog.getByRole('button', { name: 'Außentemperatur hinzufügen' }).click();
   await dialog.getByLabel('Bezeichnung Außentemperatur').fill('Draußen');
+  await dialog.getByLabel('Darstellung Wohnzimmer Thermostat · Temperatur').selectOption('area');
+  await dialog.getByLabel('Achse Außentemperatur').selectOption('right');
   await expect(dialog.getByRole('list', { name: 'Datenquellen' }).getByRole('listitem')).toHaveCount(2);
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(dialog).toHaveCount(0);
@@ -1196,6 +1198,16 @@ test('legt ein Diagramm an, zeigt die aufgezeichneten Werte und löscht es', asy
   await expect(card.getByRole('button', { name: 'Wohnzimmer Thermostat · Temperatur ein- oder ausblenden' })).toContainText('21,5 °C');
   await expect(card.getByRole('button', { name: 'Draußen ein- oder ausblenden' })).toContainText('12,5 °C');
   await expect(card.getByRole('button', { name: 'Woche' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(card.locator('[data-kind="area"]')).toHaveCount(1);
+
+  // The same period before, dashed, and the chart in full screen
+  await card.getByRole('button', { name: 'Vorzeitraum' }).click();
+  await expect(card.getByRole('button', { name: 'Vorzeitraum' })).toHaveAttribute('aria-pressed', 'true');
+  await card.getByRole('button', { name: 'Vollbild' }).click();
+  const full = page.getByRole('dialog', { name: 'Klima' });
+  await expect(full.getByRole('img', { name: 'Klima' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(full).toHaveCount(0);
 
   // Hiding a series and choosing another period
   await card.getByRole('button', { name: 'Draußen ein- oder ausblenden' }).click();

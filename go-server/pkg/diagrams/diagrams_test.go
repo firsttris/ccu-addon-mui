@@ -15,7 +15,7 @@ func TestStore(t *testing.T) {
 	if err != nil || len(store.List()) != 0 {
 		t.Fatalf("empty store: %v %v", store, err)
 	}
-	d := Diagram{Name: " Klima ", Series: []Series{{Address: "LEQ0000001:1", Datapoint: "ACTUAL_TEMPERATURE", Color: "#ff0000"}, {Address: SysvarAddress, Datapoint: "1234"}}}
+	d := Diagram{Name: " Klima ", Series: []Series{{Address: "LEQ0000001:1", Datapoint: "ACTUAL_TEMPERATURE", Color: "#ff0000"}, {Address: SysvarAddress, Datapoint: "1234", Chart: "bar", Aggregate: "delta", Axis: "right"}}}
 	saved, previous, err := store.Save(d)
 	if err != nil || previous != nil || saved.ID == "" || saved.Name != "Klima" {
 		t.Fatalf("save: %+v %v %v", saved, previous, err)
@@ -53,6 +53,9 @@ func TestValidate(t *testing.T) {
 		"bad addr":   {Name: "x", Series: []Series{{Address: "../x", Datapoint: "LEVEL"}}},
 		"bad color":  {Name: "x", Series: []Series{{Address: "A:1", Datapoint: "LEVEL", Color: "red"}}},
 		"bad period": {Name: "x", Series: []Series{ok}, Period: "decade"},
+		"bad chart":  {Name: "x", Series: []Series{{Address: "A:1", Datapoint: "LEVEL", Chart: "pie"}}},
+		"bad agg":    {Name: "x", Series: []Series{{Address: "A:1", Datapoint: "LEVEL", Aggregate: "sum"}}},
+		"bad axis":   {Name: "x", Series: []Series{{Address: "A:1", Datapoint: "LEVEL", Axis: "top"}}},
 	} {
 		if err := d.Validate(); !errors.Is(err, ErrInvalid) {
 			t.Errorf("%s: %v", name, err)

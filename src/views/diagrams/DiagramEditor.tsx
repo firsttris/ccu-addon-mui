@@ -36,6 +36,13 @@ export const guessUnit = (datapoint: string) => {
   return '';
 };
 
+// Counters are shown as consumption per interval, switches and contacts as
+// a band of their states
+const isCounter = (datapoint: string) => /(ENERGY_COUNTER|GAS_VOLUME|RAIN_COUNTER|WATER_VOLUME|_COUNTER)$/.test(datapoint);
+
+export const defaultsFor = (datapoint: string, value: unknown): Partial<DiagramSeries> =>
+  isCounter(datapoint) ? { chart: 'bar', aggregate: 'delta' } : typeof value === 'boolean' || datapoint === 'STATE' ? { chart: 'state' } : {};
+
 export interface Candidate {
   series: DiagramSeries;
   name: string;
@@ -53,7 +60,7 @@ export const useCandidates = () => {
       for (const [datapoint, value] of Object.entries(channel.datapoints ?? {})) {
         if ((typeof value === 'number' || typeof value === 'boolean') && !skipped.test(datapoint)) {
           list.push({
-            series: { address: channel.address, datapoint, unit: guessUnit(datapoint) },
+            series: { address: channel.address, datapoint, unit: guessUnit(datapoint), ...defaultsFor(datapoint, value) },
             name: `${channel.name} · ${datapointLabel(datapoint)}`,
             detail: `${channel.address} ${datapoint}`,
           });
@@ -63,7 +70,12 @@ export const useCandidates = () => {
     for (const sysvar of sysvars) {
       if (sysvar.kind !== 'string') {
         list.push({
-          series: { address: SYSVAR, datapoint: String(sysvar.id), unit: sysvar.unit ?? '' },
+          series: {
+            address: SYSVAR,
+            datapoint: String(sysvar.id),
+            unit: sysvar.unit ?? '',
+            ...(sysvar.kind === 'bool' || sysvar.kind === 'alarm' ? { chart: 'state' as const } : {}),
+          },
           name: sysvar.name,
           detail: m.DIAG_SYSVAR(),
         });
@@ -178,6 +190,42 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
                     >
                       <XIcon />
                     </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <NativeSelect
+                      aria-label={`${m.DIAG_CHART()} ${nameOf(s)}`}
+                      value={s.chart ?? ''}
+                      onChange={(e) => update(i, { chart: e.target.value as DiagramSeries['chart'] })}
+                      className="h-8 text-xs"
+                    >
+                      <option value="">{m.DIAG_CHART_AUTO()}</option>
+                      <option value="line">{m.DIAG_CHART_LINE()}</option>
+                      <option value="area">{m.DIAG_CHART_AREA()}</option>
+                      <option value="bar">{m.DIAG_CHART_BAR()}</option>
+                      <option value="step">{m.DIAG_CHART_STEP()}</option>
+                      <option value="state">{m.DIAG_CHART_STATE()}</option>
+                    </NativeSelect>
+                    <NativeSelect
+                      aria-label={`${m.DIAG_AGGREGATE()} ${nameOf(s)}`}
+                      value={s.aggregate || 'avg'}
+                      onChange={(e) => update(i, { aggregate: e.target.value as DiagramSeries['aggregate'] })}
+                      className="h-8 text-xs"
+                    >
+                      <option value="avg">{m.DIAG_AGG_AVG()}</option>
+                      <option value="min">{m.DIAG_AGG_MIN()}</option>
+                      <option value="max">{m.DIAG_AGG_MAX()}</option>
+                      <option value="delta">{m.DIAG_AGG_DELTA()}</option>
+                    </NativeSelect>
+                    <NativeSelect
+                      aria-label={`${m.DIAG_AXIS()} ${nameOf(s)}`}
+                      value={s.axis ?? ''}
+                      onChange={(e) => update(i, { axis: e.target.value as DiagramSeries['axis'] })}
+                      className="h-8 text-xs"
+                    >
+                      <option value="">{m.DIAG_AXIS()}: {m.DIAG_AXIS_AUTO()}</option>
+                      <option value="left">{m.DIAG_AXIS()}: {m.DIAG_AXIS_LEFT()}</option>
+                      <option value="right">{m.DIAG_AXIS()}: {m.DIAG_AXIS_RIGHT()}</option>
+                    </NativeSelect>
                   </div>
                   <div className="grid grid-cols-[1fr_5.5rem] gap-2">
                     <Input
