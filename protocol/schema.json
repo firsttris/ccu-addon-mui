@@ -3908,6 +3908,21 @@
           "items": {
             "$ref": "#/definitions/RadioInterface"
           }
+        },
+        "product": {
+          "type": "string",
+          "description": "PRODUCT of /VERSION"
+        },
+        "platform": {
+          "type": "string",
+          "description": "PLATFORM of /VERSION (OpenCCU)"
+        },
+        "regaBuild": {
+          "type": "string",
+          "description": "the ReGaHss version (dom.BuildLabel())"
+        },
+        "system": {
+          "$ref": "#/definitions/SystemState"
         }
       },
       "required": [
@@ -12076,6 +12091,87 @@
       "required": [
         "request",
         "response"
+      ],
+      "additionalProperties": false
+    },
+    "SystemState": {
+      "type": "object",
+      "description": "the CCU's hardware and system state as the WebUI's help page (help.cgi), only on the CCU",
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "serial": {
+          "type": "string"
+        },
+        "cpus": {
+          "type": "integer"
+        },
+        "memoryTotal": {
+          "type": "integer",
+          "description": "bytes"
+        },
+        "memoryUsed": {
+          "type": "number",
+          "description": "percent"
+        },
+        "swapUsed": {
+          "type": "number",
+          "description": "percent"
+        },
+        "uptime": {
+          "type": "integer",
+          "description": "seconds"
+        },
+        "load": {
+          "type": "string",
+          "description": "1, 5 and 15 minute load averages"
+        },
+        "temperature": {
+          "type": "number",
+          "description": "°C"
+        },
+        "os": {
+          "type": "string"
+        },
+        "kernel": {
+          "type": "string"
+        },
+        "status": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "on": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "on"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "rootFree": {
+          "type": "integer"
+        },
+        "rootTotal": {
+          "type": "integer"
+        },
+        "userFree": {
+          "type": "integer"
+        },
+        "userTotal": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "cpus",
+        "status"
       ],
       "additionalProperties": false
     }

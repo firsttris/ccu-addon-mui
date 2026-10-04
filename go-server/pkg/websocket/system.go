@@ -16,6 +16,7 @@ import (
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/rega"
+	"ccu-addon-mui-server/pkg/sysinfo"
 )
 
 // Where the CCU (CCU3, OpenCCU) keeps its firmware version, as VERSION=...
@@ -68,6 +69,12 @@ type systemInfoResponse struct {
 	AddonVersion    string           `json:"addonVersion,omitempty"`
 	FirmwareVersion string           `json:"firmwareVersion,omitempty"`
 	RadioInterfaces []radioInterface `json:"radioInterfaces"`
+	// As the WebUI's help page (help.cgi): product and platform from
+	// /VERSION, the ReGaHss version and, on the CCU, its system state
+	Product   string        `json:"product,omitempty"`
+	Platform  string        `json:"platform,omitempty"`
+	RegaBuild string        `json:"regaBuild,omitempty"`
+	System    *sysinfo.Info `json:"system,omitempty"`
 }
 
 // handleSystemInfo: versions and the radio modules with their duty cycle,
@@ -80,6 +87,17 @@ func (s *Server) handleSystemInfo(client *Client, requestID string) {
 	response := systemInfoResponse{
 		Type: "getSystemInfo_response", RequestID: requestID, Success: true,
 		AddonVersion: addonVersion(), FirmwareVersion: firmwareVersion(), RadioInterfaces: []radioInterface{},
+		Product: versionFileValue("PRODUCT"), Platform: versionFileValue("PLATFORM"),
+	}
+	if s.regaClient != nil {
+		if build, err := s.regaClient.BuildLabel(); err == nil {
+			response.RegaBuild = build
+		}
+	}
+	// Only on the CCU itself: elsewhere it would describe the add-on's host
+	if response.FirmwareVersion != "" {
+		info := sysinfo.Read()
+		response.System = &info
 	}
 	if s.rpc != nil {
 		for _, iface := range s.rpc.InterfaceNames() {

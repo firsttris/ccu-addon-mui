@@ -22,7 +22,9 @@ import { DeviceFirmware } from './DeviceFirmware';
 import { isNewerVersion } from '../../utils/version';
 import { Button } from '../../components/ui/button';
 import DownloadIcon from '~icons/lucide/circle-arrow-down';
-import type { CheckFirmwareUpdateResponse } from '../../types/protocol';
+import type { CheckFirmwareUpdateResponse, SystemState as State } from '../../types/protocol';
+import { WEBUI_URL } from '../../components/WebUILink';
+import { getLocale } from '../../paraglide/runtime';
 
 export { isNewerVersion };
 
@@ -93,6 +95,7 @@ const FirmwareUpdate = ({ current }: { current: string }) => {
 export const SystemInfo = () => (
   <>
     <Versions />
+    <Help />
     <SystemSettings />
     <GeneralSettings />
     <Network />
@@ -135,8 +138,21 @@ const Versions = () => {
           {data.firmwareVersion && <FirmwareUpdate current={data.firmwareVersion} />}
           <CcuFirmwareButton disabled={!elevated} onClick={() => setUploading(true)} />
         </dd>
+        {data.product && (
+          <>
+            <dt className="text-muted-foreground">{m.SYS_PRODUCT()}</dt>
+            <dd>{data.platform ? `${data.product} (${data.platform})` : data.product}</dd>
+          </>
+        )}
+        {data.regaBuild && (
+          <>
+            <dt className="text-muted-foreground">{m.SYS_REGA_BUILD()}</dt>
+            <dd>{data.regaBuild}</dd>
+          </>
+        )}
       </dl>
       {uploading && <CcuFirmwareUpload onClose={() => setUploading(false)} />}
+      {data.system && <SystemState state={data.system} />}
       {data.radioInterfaces.length > 0 && (
         <>
           <h2 className="mt-3">{m.RADIO_MODULES()}</h2>
@@ -181,3 +197,98 @@ const Versions = () => {
     </Panel>
   );
 };
+
+const gigabytes = (bytes: number) =>
+  `${new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 1 }).format(bytes / 1024 ** 3)} GB`;
+const percent = (value: number) =>
+  `${new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 1 }).format(value)} %`;
+
+// "3 d 4 h 5 min", as help.cgi's uptime
+export const formatUptime = (seconds: number) => {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  return `${days} d ${hours} h ${minutes} min`;
+};
+
+// The CCU's hardware and system, as the WebUI's help page lists them
+// (help.cgi: CCU Hardware Info, Operating System Info)
+const SystemState = ({ state }: { state: State }) => {
+  const rows: [string, string][] = [];
+  const add = (label: string, value: string | undefined | false) => {
+    if (value) rows.push([label, value]);
+  };
+  add(m.SYS_MODEL(), state.model);
+  add(m.SYS_SERIAL(), state.serial);
+  add(m.SYS_CPU_MEMORY(), `${state.cpus}${state.memoryTotal ? `, ${gigabytes(state.memoryTotal)}` : ''}`);
+  add(
+    m.SYS_MEMORY_USE(),
+    state.memoryUsed !== undefined &&
+      `${percent(state.memoryUsed)}${state.swapUsed !== undefined ? ` · Swap ${percent(state.swapUsed)}` : ''}`,
+  );
+  add(m.SYS_UPTIME(), state.uptime !== undefined && formatUptime(state.uptime));
+  add(m.SYS_LOAD(), state.load);
+  add(
+    m.SYS_TEMPERATURE(),
+    state.temperature !== undefined &&
+      `${new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 1 }).format(state.temperature)} °C`,
+  );
+  add(m.SYS_OS(), state.os && state.kernel ? `${state.os} (${state.kernel})` : state.os || state.kernel);
+  add(m.SYS_ROOT_FREE(), !!state.rootTotal && `${gigabytes(state.rootFree ?? 0)} / ${gigabytes(state.rootTotal)}`);
+  add(m.SYS_USER_FREE(), !!state.userTotal && `${gigabytes(state.userFree ?? 0)} / ${gigabytes(state.userTotal)}`);
+  return (
+    <>
+      <h2 className="mt-3">{m.SYS_CCU()}</h2>
+      <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
+        {rows.map(([label, value]) => (
+          <div key={label} className="contents">
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      {state.status.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5" aria-label={m.SYS_STATUS()}>
+          {state.status.map((flag) => (
+            <li key={flag.name}>
+              <Badge variant={flag.on ? 'success' : 'secondary'}>{flag.name}</Badge>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+};
+
+// Help and licences, as the WebUI's help page links them (help.cgi): the
+// OpenCCU documentation, eQ-3's service pages, the licences of the CCU's
+// software, and this add-on's documentation and licence
+const helpLinks = (): [string, string][] => [
+  [m.HELP_ADDON_DOCS(), 'https://github.com/firsttris/ccu-addon-mui#readme'],
+  [m.HELP_ADDON_LICENSE(), 'https://github.com/firsttris/ccu-addon-mui/blob/main/LICENSE'],
+  [m.HELP_OPENCCU_DOCS(), 'https://github.com/openccu/openccu/wiki'],
+  [m.HELP_HOMEMATIC(), 'http://www.eq-3.de/service.html'],
+  [m.HELP_HOMEMATIC_IP(), 'https://www.homematic-ip.com/service.html'],
+  [m.HELP_CCU_LICENSES(), `${WEBUI_URL.replace(/\/?$/, '/')}licenseinfo.htm`],
+];
+
+const Help = () => (
+  <Panel aria-label={m.HELP()}>
+    <h2>{m.HELP()}</h2>
+    <ul className="flex flex-col gap-1.5 text-sm">
+      {helpLinks().map(([label, href]) => (
+        <li key={href}>
+          <a
+            className="text-primary underline-offset-4 hover:underline"
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {label} ↗
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p className="text-xs">{m.HELP_COPYRIGHT()}</p>
+  </Panel>
+);

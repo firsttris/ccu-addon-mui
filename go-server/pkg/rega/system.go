@@ -84,6 +84,12 @@ func (c *Client) SaveSystem() (string, error) {
 	return result, err
 }
 
+// BuildLabel is the ReGaHss version (dom.BuildLabel())
+func (c *Client) BuildLabel() (string, error) {
+	output, err := c.Execute(getBuildLabelScript)
+	return strings.TrimSpace(output), err
+}
+
 // ClockStep tells ReGa the clock is set by hand: "setting" before, "changed"
 // after (cp_time.cgi, action_apply_time)
 func (c *Client) ClockStep(step string) error {

@@ -215,6 +215,9 @@ func (c *CCU) handleRega(w http.ResponseWriter, r *http.Request) {
 	_, _ = io.WriteString(w, output+"<xml><exec>/rega.exe</exec></xml>")
 }
 
+// FakeRegaBuild is the ReGaHss version the fake reports
+const FakeRegaBuild = "R1.00.0388.0235"
+
 func (c *CCU) runScript(body string) (string, error) {
 	if strings.HasPrefix(body, "Write(\"Hello") {
 		return "Hello from WebSocket Server", nil
@@ -635,6 +638,8 @@ func (c *CCU) runScript(body string) (string, error) {
 		case "set_location":
 			c.latitude, c.longitude = values["LATITUDE"], values["LONGITUDE"]
 			return "OK", nil
+		case "get_build_label":
+			return FakeRegaBuild, nil
 		case "save_system":
 			return "OK", nil
 		case "get_user_level":

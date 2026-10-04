@@ -159,7 +159,8 @@ welches Funkmodul die Zentrale mit welchem BidCos-Gerät spricht, mit *Roaming*.
 
 | Bereich | Inhalt |
 |---|---|
-| **Versionen** | Add-on, Firmware der Zentrale, Funkmodule mit Status und **Duty Cycle**. **CCU-Firmware**: nach neuer Version suchen (OpenCCU oder eQ-3); bei OpenCCU **„Herunterladen und installieren“**: die CCU lädt das Release selbst von GitHub, der Server prüft die SHA256-Prüfsumme und den freien Speicher (2,8 GB); sonst Datei hochladen; Lizenz bestätigen, installieren |
+| **Versionen** | Add-on, Firmware der Zentrale, Produkt, ReGaHss-Version; auf der CCU Hardware, Seriennummer, Speicher, Laufzeit, Last, Temperatur, Betriebssystem, freier Platz und Netzwerkstatus (wie die Hilfe-Seite der WebUI); Funkmodule mit Status und **Duty Cycle**. **CCU-Firmware**: nach neuer Version suchen (OpenCCU oder eQ-3); bei OpenCCU **„Herunterladen und installieren“**: die CCU lädt das Release selbst von GitHub, der Server prüft die SHA256-Prüfsumme und den freien Speicher (2,8 GB); sonst Datei hochladen; Lizenz bestätigen, installieren |
+| **Hilfe und Lizenzen** | Dokumentation und Lizenz des Add-ons, OpenCCU-Dokumentation, Hilfe von eQ-3 (Homematic, Homematic IP), Lizenzinformationen der CCU-Software |
 | **Standort und Uhrzeit** | Koordinaten für Astro-Zeiten, Zeitzone, Zeitserver, Uhr stellen; **Neustart**, **Herunterfahren** und **Neustart im abgesicherten Modus** (Zusatzsoftware startet einmalig nicht, auch dieses Add-on nicht; die alte WebUI bleibt erreichbar); auf der eQ-3-Firmware die **Version der Logikschicht** (Standard oder Kompatibilitätsmodus) |
 | **Allgemeine Einstellungen** | Strom- und Gaspreise (für Diagramme), Info-LED, Beta-Firmware für Geräte, Meldungen „nicht erreichbar“ ausblenden, Speicherplatz der Diagramme |
 | **Netzwerk** | Hostname, DHCP oder feste IP, DNS; Tailscale (OpenCCU). Wirkt nach dem nächsten Neustart |

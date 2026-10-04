@@ -1493,6 +1493,19 @@ export interface GetSystemInfoResponse {
   addonVersion?: string;
   firmwareVersion?: string;
   radioInterfaces: RadioInterface[];
+  /**
+   * PRODUCT of /VERSION
+   */
+  product?: string;
+  /**
+   * PLATFORM of /VERSION (OpenCCU)
+   */
+  platform?: string;
+  /**
+   * the ReGaHss version (dom.BuildLabel())
+   */
+  regaBuild?: string;
+  system?: SystemState;
 }
 /**
  * A radio module with its duty cycle (percent of the allowed transmit time used)
@@ -1507,6 +1520,51 @@ export interface RadioInterface {
   connected: boolean;
   default: boolean;
   dutyCycle: number;
+}
+/**
+ * the CCU's hardware and system state as the WebUI's help page (help.cgi), only on the CCU
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SystemState".
+ */
+export interface SystemState {
+  model?: string;
+  serial?: string;
+  cpus: number;
+  /**
+   * bytes
+   */
+  memoryTotal?: number;
+  /**
+   * percent
+   */
+  memoryUsed?: number;
+  /**
+   * percent
+   */
+  swapUsed?: number;
+  /**
+   * seconds
+   */
+  uptime?: number;
+  /**
+   * 1, 5 and 15 minute load averages
+   */
+  load?: string;
+  /**
+   * °C
+   */
+  temperature?: number;
+  os?: string;
+  kernel?: string;
+  status: {
+    name: string;
+    on: boolean;
+  }[];
+  rootFree?: number;
+  rootTotal?: number;
+  userFree?: number;
+  userTotal?: number;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
