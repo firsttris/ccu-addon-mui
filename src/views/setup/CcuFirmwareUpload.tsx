@@ -1,0 +1,171 @@
+import { useState } from 'react';
+import UploadIcon from '~icons/lucide/upload';
+import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { getLocale } from '../../paraglide/runtime';
+import { m } from '../../paraglide/messages';
+
+// Uploading and checking an update goes through the WebUI and takes a while
+const FIRMWARE_TIMEOUT_MS = 10 * 60 * 1000;
+
+type Step = 'choose' | 'confirm' | 'done';
+
+const errorMessage = (error: unknown) => {
+  const code = error instanceof RequestError ? error.code : undefined;
+  switch (code) {
+    case 'INVALID_CREDENTIALS':
+      return m.INVALID_CREDENTIALS();
+    case 'TOO_MANY_ATTEMPTS':
+      return m.TOO_MANY_ATTEMPTS();
+    case 'INVALID_FIRMWARE':
+      return m.CCUFW_INVALID();
+    default:
+      return `${m.CCUFW_FAILED()}${error instanceof Error ? `: ${error.message}` : ''}`;
+  }
+};
+
+// Installing a firmware file on the CCU with the WebUI's own steps
+// (cp_maintenance.cgi): upload and check (firmware_upload), the update's
+// licence (EULA), then update_start: the CCU reboots into its recovery
+// system and installs it.
+export const CcuFirmwareUpload = ({ onClose }: { onClose: () => void }) => {
+  const { request } = useWebSocketActions();
+  const { authRequired } = useWebSocketContext();
+  const [step, setStep] = useState<Step>('choose');
+  const [file, setFile] = useState<File | null>(null);
+  const [password, setPassword] = useState('');
+  const [eula, setEula] = useState('');
+  const [accepted, setAccepted] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const check = async () => {
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const prepared = await request({ type: 'prepareCcuFirmware' }, { queue: false });
+      const upload = await fetch(prepared.url, { method: 'POST', body: file });
+      if (!upload.ok) throw new Error(await upload.text());
+      const checked = await request(
+        { type: 'checkCcuFirmware', id: prepared.id, password, language: getLocale() === 'en' ? 'en' : 'de' },
+        { queue: false, timeoutMs: FIRMWARE_TIMEOUT_MS },
+      );
+      setEula(checked.eula ?? '');
+      setStep('confirm');
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const install = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await request({ type: 'installCcuFirmware', password }, { queue: false, timeoutMs: FIRMWARE_TIMEOUT_MS });
+      setStep('done');
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // A checked file waits on the CCU: removed again when cancelled
+  const cancel = () => {
+    if (step === 'confirm') {
+      request({ type: 'cancelCcuFirmware', password }, { queue: false }).catch(() => undefined);
+    }
+    onClose();
+  };
+
+  const errorLine = error && (
+    <p role="alert" className="text-destructive">
+      {error}
+    </p>
+  );
+
+  if (step === 'done') {
+    return (
+      <ConfirmDialog title={m.CCUFW_TITLE()} confirmLabel={m.STATUS_OK()} onConfirm={onClose} onCancel={onClose}>
+        <p role="status">{m.CCUFW_DONE()}</p>
+      </ConfirmDialog>
+    );
+  }
+  if (step === 'confirm') {
+    return (
+      <ConfirmDialog
+        title={m.CCUFW_TITLE()}
+        confirmLabel={busy ? m.CCUFW_STARTING() : m.CCUFW_INSTALL()}
+        destructive
+        busy={busy || (eula !== '' && !accepted)}
+        onConfirm={install}
+        onCancel={cancel}
+      >
+        <div className="flex flex-col gap-3">
+          <p>{m.CCUFW_CONFIRM({ name: file?.name ?? '' })}</p>
+          {eula && (
+            <>
+              <pre
+                aria-label={m.CCUFW_EULA()}
+                className="max-h-48 overflow-auto rounded-md border bg-muted/40 p-2 text-xs whitespace-pre-wrap text-foreground"
+              >
+                {eula}
+              </pre>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
+                {m.CCUFW_ACCEPT()}
+              </label>
+            </>
+          )}
+          {errorLine}
+        </div>
+      </ConfirmDialog>
+    );
+  }
+  return (
+    <ConfirmDialog
+      title={m.CCUFW_TITLE()}
+      confirmLabel={busy ? m.CCUFW_CHECKING() : m.CCUFW_CHECK()}
+      busy={busy || !file || (authRequired && password === '')}
+      onConfirm={check}
+      onCancel={cancel}
+    >
+      <div className="flex flex-col gap-3">
+        <p>{m.CCUFW_HINT()}</p>
+        <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+          {m.CCUFW_FILE()}
+          <input
+            type="file"
+            accept=".zip,.tgz,.tar.gz,.img,application/zip,application/gzip"
+            aria-label={m.CCUFW_FILE()}
+            className="text-sm text-foreground file:mr-3 file:rounded-md file:border file:bg-transparent file:px-3 file:py-1.5 file:text-sm"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+          {m.CCUFW_PASSWORD()}
+          <Input
+            type="password"
+            aria-label={m.PASSWORD()}
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        {errorLine}
+      </div>
+    </ConfirmDialog>
+  );
+};
+
+export const CcuFirmwareButton = ({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) => (
+  <Button type="button" variant="outline" className="h-7" disabled={disabled} onClick={onClick}>
+    <UploadIcon />
+    {m.CCUFW_TITLE()}
+  </Button>
+);

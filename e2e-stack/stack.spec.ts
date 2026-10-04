@@ -1040,6 +1040,27 @@ test('spielt ein Backup mit Sicherheitsschlüssel ein', async ({ page }) => {
   await expect(dialog.getByRole('status')).toContainText('Das Backup ist eingespielt');
 });
 
+test('spielt eine CCU-Firmware mit Lizenzbedingungen ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  await page.getByRole('region', { name: 'System' }).getByRole('button', { name: 'Firmware einspielen' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Firmware einspielen' });
+
+  await dialog.getByLabel('Firmware-Datei').setInputFiles({ name: 'urlaub.zip', mimeType: 'application/zip', buffer: Buffer.from('holiday photos') });
+  await dialog.getByLabel('Passwort').fill('secret');
+  await dialog.getByRole('button', { name: 'Hochladen und prüfen' }).click();
+  await expect(dialog.getByRole('alert')).toContainText('keine Firmware');
+
+  await dialog.getByLabel('Firmware-Datei').setInputFiles({ name: 'openccu.zip', mimeType: 'application/zip', buffer: Buffer.from('fake CCU firmware update with EULA') });
+  await dialog.getByRole('button', { name: 'Hochladen und prüfen' }).click();
+  await expect(dialog.getByLabel('Lizenzbedingungen', { exact: true })).toContainText('Lizenzbedingungen der Fake-Firmware');
+  const install = dialog.getByRole('button', { name: 'Installieren und neu starten' });
+  await expect(install).toBeDisabled();
+  await dialog.getByLabel('Ich akzeptiere die Lizenzbedingungen').check();
+  await install.click();
+  await expect(dialog.getByRole('status')).toContainText('installiert die Firmware');
+});
+
 test('ändert das eigene Passwort', async ({ page }) => {
   await login(page);
   const change = async (current: string, next: string) => {

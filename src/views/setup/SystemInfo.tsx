@@ -11,7 +11,8 @@ import { Badge } from '../../components/ui/badge';
 import { m } from '../../paraglide/messages';
 import { cn } from '../../lib/utils';
 import { DialogButton } from '../../components/ConfirmDialog';
-import { useWebSocketActions } from '../../hooks/useWebsocket';
+import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { CcuFirmwareButton, CcuFirmwareUpload } from './CcuFirmwareUpload';
 
 // Whether version a is newer than b, comparing the numbers of 3.89.11.20260919
 export const isNewerVersion = (a: string, b: string) => {
@@ -77,6 +78,8 @@ export const SystemInfo = () => (
 const Versions = () => {
   usePageTitle(m.SETUP());
   const { data, isError } = useSystemInfo();
+  const { elevated } = useWebSocketContext();
+  const [uploading, setUploading] = useState(false);
   if (isError) {
     return null;
   }
@@ -98,8 +101,10 @@ const Versions = () => {
         <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {data.firmwareVersion || '–'}
           {data.firmwareVersion && <FirmwareUpdate current={data.firmwareVersion} />}
+          <CcuFirmwareButton disabled={!elevated} onClick={() => setUploading(true)} />
         </dd>
       </dl>
+      {uploading && <CcuFirmwareUpload onClose={() => setUploading(false)} />}
       {data.radioInterfaces.length > 0 && (
         <>
           <h2 className="mt-3">{m.RADIO_MODULES()}</h2>
