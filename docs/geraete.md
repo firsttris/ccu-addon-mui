@@ -111,6 +111,35 @@ Nach Bedeutung:
    Profile). Für die übrigen 59 Empfängertypen der WebUI (2065 Profile) geht nur der Expertenmodus mit allen
    Parametern.
 2. **Gerätebilder** der WebUI zeigt das Add-on nicht.
+3. **Ohne eigene Kachel** sind noch diese Gerätetypen (Stand: Zählung oben). Sie sind trotzdem voll
+   bedienbar, über die generische Kachel.
+
+   *Nur generisch (19):*
+
+   | Gerätetyp | Kanaltyp |
+   |---|---|
+   | HM-SwI-3-FM und OEM-Varianten | `SWITCH_INTERFACE` |
+   | HM-CC-VD und OEM-Variante | `CLIMATECONTROL_VENT_DRIVE` |
+   | HM-Sec-Sir-WM | `ARMING`, `SWITCH_PANIC`, `SWITCH_SENSOR` |
+   | HM-Sen-RD-O | `RAINDETECTOR`, `RAINDETECTOR_HEAT` |
+   | HM-Sec-TiS, HM-Sec-SFA-SM, HM-Sen-EP, HM-LC-DDC1-PCB, HM-Dis-TD-T | je ein eigener Kanaltyp |
+   | HmIP-STE2-PCB | `COND_SWITCH_TRANSMITTER_TEMPERATURE` |
+   | HMW-IO-12-FM, -IO-4-FM, -IO-12-Sw14-DR, -Sen-SC-12-FM/-DR | Ein- und Ausgänge (BidCos-Wired) |
+   | 263 149/263 150 (OEM) | `ACTOR_SECURITY`, `ACTOR_WINDOW`, `SENSOR_WINDOW` |
+
+   *Hauptfunktion mit eigener Kachel, ein Nebenkanal generisch (26):*
+
+   | Gerätetyp | generischer Nebenkanal |
+   |---|---|
+   | HM-ES-PMSw1 (8 Varianten) | Schwellwerte `CONDITION_POWER/CURRENT/VOLTAGE/FREQUENCY` |
+   | HmIP-SWO-B, -SWO-PL, -SWO-PR, HmIP-SFD | Schwellwert `COND_SWITCH_TRANSMITTER_TEMPERATURE` |
+   | HM-CC-TC und OEM-Variante | `CLIMATECONTROL_REGULATOR` |
+   | HmIP-FDC, -FLC | `SWITCH_TRANSCEIVER` |
+   | HmIP-MOD-TM, -MOD-HO | `SIMPLE_SWITCH_RECEIVER` |
+   | HmIP-ASIR, -ASIR-B1 | Statuskanal `SWITCH_TRANSMITTER` |
+   | HmIP-WRCR | Drehregler `ROTARY_CONTROL_TRANSCEIVER` |
+   | HmIP-MIOB, -MIO16-PCB | analoge Ein- und Ausgänge |
+   | HM-TC-IT-WM-W-EU, HM-MOD-EM-8Bit, ELV-SH-BM-S | je ein Nebenkanal |
 
 ## Ein Gerät fehlt oder sieht falsch aus?
 
