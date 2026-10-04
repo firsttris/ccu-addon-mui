@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import PlusIcon from '~icons/lucide/plus';
 import XIcon from '~icons/lucide/x';
 import { useWebSocketActions } from '../../hooks/useWebsocket';
-import { useChannelList, useSysvars } from '../../queries';
+import { useChannelList, useFavorites, useRooms, useSysvars, useTrades } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Input } from '../../components/ui/input';
@@ -106,6 +106,15 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
   const [period, setPeriod] = useState<Period>((diagram?.period || 'day') as Period);
   const [series, setSeries] = useState<DiagramSeries[]>(diagram?.series ?? []);
   const [query, setQuery] = useState('');
+  const [places, setPlaces] = useState<number[]>(diagram?.places ?? []);
+  const { data: rooms = [] } = useRooms();
+  const { data: trades = [] } = useTrades();
+  const { data: favorites = [] } = useFavorites();
+  const placeGroups = [
+    { label: m.ROOMS(), items: rooms },
+    { label: m.TRADES(), items: trades },
+    { label: m.FAVORITES(), items: favorites },
+  ].filter((g) => g.items.length > 0);
 
   const nameOf = (s: DiagramSeries) => candidates.find((c) => seriesKey(c.series) === seriesKey(s))?.name ?? `${s.address} ${s.datapoint}`;
   const used = new Set(series.map(seriesKey));
@@ -119,7 +128,7 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
       (
         await request({
           type: 'saveDiagram',
-          diagram: { id: diagram?.id ?? '', name: name.trim(), period, series },
+          diagram: { id: diagram?.id ?? '', name: name.trim(), period, series, places },
         })
       ).diagram,
     onSuccess: () => {
@@ -164,6 +173,35 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
             </NativeSelect>
           </Field>
         </div>
+
+        {placeGroups.length > 0 && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1.5 text-sm text-muted-foreground">{m.DIAG_PLACES()}</legend>
+            {placeGroups.map((group) => (
+              <div key={group.label} className="flex flex-wrap items-center gap-1.5" role="group" aria-label={group.label}>
+                <span className="w-full text-xs text-muted-foreground">{group.label}</span>
+                {group.items.map((item) => {
+                  const on = places.includes(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setPlaces((list) => (on ? list.filter((p) => p !== item.id) : [...list, item.id]))}
+                      className={
+                        on
+                          ? 'h-7 rounded-full border border-primary bg-primary px-3 text-xs text-primary-foreground'
+                          : 'h-7 rounded-full border px-3 text-xs text-foreground hover:bg-accent'
+                      }
+                    >
+                      {item.name}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+          </fieldset>
+        )}
 
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1.5 text-sm text-muted-foreground">{m.DIAG_SERIES()}</legend>

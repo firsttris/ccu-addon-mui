@@ -3663,6 +3663,10 @@ export interface Diagram {
   name: string;
   series: DiagramSeries[];
   period?: "" | "day" | "week" | "month" | "year";
+  /**
+   * Rooms, trades and favorite lists (ReGa ids) that show the diagram as a tile
+   */
+  places?: number[];
 }
 /**
  * A line of a diagram: a channel's datapoint, or a system variable (address "sysvar", datapoint its id)

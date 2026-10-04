@@ -857,5 +857,6 @@
   "DIAG_STAT_AVG": "Ø {value}",
   "DIAG_STAT_SUM": "Summe {value}",
   "DIAG_STAT_RANGE": "{min} bis {max}",
-  "DIAG_LIVE": "Live"
+  "DIAG_LIVE": "Live",
+  "DIAG_PLACES": "Auch anzeigen in"
 }

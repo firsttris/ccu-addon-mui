@@ -61,7 +61,13 @@ type Diagram struct {
 	Series []Series `json:"series"`
 	// Period is the range shown first: day, week, month or year
 	Period string `json:"period,omitempty"`
+	// Places are the rooms, trades and favorite lists (ReGa ids) that show
+	// the diagram as a tile
+	Places []int64 `json:"places,omitempty"`
 }
+
+// MaxPlaces limits the places of one diagram
+const MaxPlaces = 50
 
 // MaxSeries limits the series of one diagram
 const MaxSeries = 12
@@ -90,6 +96,14 @@ func (d *Diagram) Validate() error {
 	case "", "day", "week", "month", "year":
 	default:
 		return fmt.Errorf("%w: period", ErrInvalid)
+	}
+	if len(d.Places) > MaxPlaces {
+		return fmt.Errorf("%w: places", ErrInvalid)
+	}
+	for _, place := range d.Places {
+		if place <= 0 {
+			return fmt.Errorf("%w: place %d", ErrInvalid, place)
+		}
 	}
 	seen := map[string]bool{}
 	for i := range d.Series {

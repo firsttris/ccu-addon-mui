@@ -1,3 +1,4 @@
+import { PlaceDiagrams } from './diagrams/Diagrams';
 import { ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import ThermometerIcon from '~icons/lucide/thermometer';
@@ -412,6 +413,7 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, em
         groupIntoSections(channelsByType).map((group) => <Section key={group.key} group={group} />)
       )}
       {isLoading && channelsByType.length === 0 && <TileSkeletonGrid />}
+      {layoutId !== undefined && <PlaceDiagrams place={layoutId} />}
       {extra}
       {!isLoading && channelsByType.length === 0 && !extra && (
         <p className="py-12 text-center text-muted-foreground">{empty ?? m.NO_CHANNELS()}</p>
