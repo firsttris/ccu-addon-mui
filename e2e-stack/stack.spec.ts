@@ -305,7 +305,7 @@ test('stellt eine Direktverknüpfung über eine Vorlage der WebUI ein', async ({
   await page.goto('/device/HmIP-RF/000855699C4F38?tab=links');
   const list = page.getByRole('region', { name: 'Direktverknüpfungen' }).getByRole('list', { name: 'Direktverknüpfungen' });
   const item = list.getByRole('listitem').filter({ hasText: 'Esstisch an' });
-  await item.getByRole('button', { name: 'Parameter' }).click();
+  await item.getByRole('button', { name: 'Verhalten einstellen' }).click();
 
   // A new link has the dimmer's default: on/off and brighter/darker
   const profile = item.getByRole('combobox', { name: 'Vorlage' });
@@ -323,7 +323,7 @@ test('stellt eine Direktverknüpfung über eine Vorlage der WebUI ein', async ({
 
   // Stored in the device: recognised again after a reload
   await page.reload();
-  await item.getByRole('button', { name: 'Parameter' }).click();
+  await item.getByRole('button', { name: 'Verhalten einstellen' }).click();
   await expect(profile).toHaveValue('4');
   await expect(item.getByRole('combobox', { name: 'Einschaltdauer', exact: true })).toHaveValue('300');
 });
@@ -357,9 +357,9 @@ test('legt Direktverknüpfungen an, ändert ihre Parameter und löscht sie', asy
   await expect(page.getByText('Verknüpfung angelegt')).toBeVisible();
   await expect(list.getByRole('listitem')).toHaveCount(2);
 
-  // Parameters of the new link on the dimmer's side
+  // The new link's behaviour opens right away, on the dimmer's side
   const item = list.getByRole('listitem').filter({ hasText: 'Esstisch dimmen' });
-  await item.getByRole('button', { name: 'Parameter' }).click();
+  await expect(item.getByRole('button', { name: 'Verhalten einstellen' })).toHaveAttribute('aria-expanded', 'true');
   const level = item.getByRole('textbox', { name: 'Pegel im Zustand "ein"', exact: true });
   await expect(level).toHaveValue('100');
   await level.fill('40');
@@ -718,7 +718,7 @@ test('listet alle Direktverknüpfungen in Einrichten und legt neue an', async ({
   // Search, parameters with the profiles, remove
   await page.getByRole('searchbox', { name: 'Suchen' }).fill('Übersicht');
   await expect(list.getByRole('listitem')).toHaveCount(1);
-  await item.getByRole('button', { name: 'Parameter' }).click();
+  // Opened by adding it, behaviour with the profiles
   await expect(item.getByRole('combobox', { name: 'Vorlage' })).toBeVisible();
   await item.getByRole('button', { name: 'Löschen' }).click();
   await page.getByRole('dialog', { name: 'Verknüpfung löschen' }).getByRole('button', { name: 'Löschen' }).click();

@@ -21,6 +21,7 @@ export const AllLinks = () => {
   const { data: rooms = [] } = useRooms();
   const [query, setQuery] = useState('');
   const [room, setRoom] = useState('');
+  const [added, setAdded] = useState<string>();
 
   const label = (address: string) => `${names.get(address) ?? address} (${address})`;
   const needle = query.trim().toLocaleLowerCase();
@@ -53,11 +54,18 @@ export const AllLinks = () => {
       {!isLoading && shown.length === 0 ? (
         <p className="text-sm text-muted-foreground">{links.length === 0 ? m.NO_LINKS() : m.NO_RESULTS()}</p>
       ) : (
-        <LinkList links={shown} isLoading={isLoading} />
+        <LinkList links={shown} isLoading={isLoading} added={added} />
       )}
 
       <section aria-label={m.ADD_LINK()} className="flex flex-col gap-3">
-        <AddLinkForm />
+        <AddLinkForm
+          onAdded={(key) => {
+            // The filters must not hide the new link
+            setQuery('');
+            setRoom('');
+            setAdded(key);
+          }}
+        />
       </section>
 
     </div>
