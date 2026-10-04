@@ -11,7 +11,7 @@ in den Tabellen unten.
 |---|---|
 | Funktionen der WebUI | **58 von 66 vorhanden (88 %)** |
 | Fehlen | 8, meist Einzeloptionen; der größte Brocken sind die Kopplungen (Hue, Lightify) |
-| Gerätetypen | alle 476 an HmIP, HmIP Wired, BidCos-RF und BidCos-Wired bedienbar, 93 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
+| Gerätetypen | alle 472 an HmIP, HmIP Wired, BidCos-RF und BidCos-Wired bedienbar, 95 % mit eigener Kachel für die Hauptfunktion ([Geräteunterstützung](geraete.md)) |
 
 Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · ❌ fehlt
 

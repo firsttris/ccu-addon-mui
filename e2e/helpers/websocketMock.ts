@@ -467,6 +467,32 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         type: 'POWERMETER_IEC1',
         datapoints: { ENERGY_COUNTER: 0, POWER: 0, IEC_ENERGY_COUNTER: 18342.5, IEC_POWER: 512.3, BOOT: false },
       },
+      // Displays: the e-paper of the HmIP-WRCD, the HM-RC-19 and a tile of
+      // the HmIP-WGD, which is hidden as in the WebUI
+      {
+        id: 666,
+        name: 'Display Flur',
+        address: '00389D89A1B2C1:3',
+        interfaceName: 'HmIP-RF',
+        type: 'ACOUSTIC_DISPLAY_RECEIVER',
+        datapoints: { COMBINED_PARAMETER: '', DISPLAY_DATA_ID: 1, DISPLAY_DATA_STRING: '' },
+      },
+      {
+        id: 667,
+        name: 'Fernbedienung Display',
+        address: 'LEQ0000032:18',
+        interfaceName: 'BidCos-RF',
+        type: 'DISPLAY',
+        datapoints: { TEXT: '', UNIT: 0, BACKLIGHT: 0, BEEP: 0, SUBMIT: false },
+      },
+      {
+        id: 668,
+        name: 'Wandtafel Kachel 1',
+        address: '00399D89A1B2C1:1',
+        interfaceName: 'HmIP-RF',
+        type: 'DISPLAY_INPUT_TRANSMITTER',
+        datapoints: { PRESS_SHORT: false, PRESS_LONG: false },
+      },
       // Irrigation, its water meter and window drives
       {
         id: 641,

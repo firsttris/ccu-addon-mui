@@ -13,25 +13,27 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
 
 | Familie | im Katalog | bedienbar | alle Kanäle mit eigener Kachel | Hauptfunktion mit eigener Kachel | nur generisch |
 |---|---:|---:|---:|---:|---:|
-| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 223 | 204 | 16 | 3 |
-| HomeMatic IP Wired (HmIPW) | 38 | 38 | 36 | 0 | 2 |
-| BidCos-RF (HM-) | 186 | 168 | 139 | 15 | 14 |
+| HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 221 | 205 | 15 | 1 |
+| HomeMatic IP Wired (HmIPW) | 38 | 36 | 36 | 0 | 0 |
+| BidCos-RF (HM-) | 186 | 168 | 142 | 12 | 14 |
 | BidCos-RF, ältere und OEM-Typen | 41 | 36 | 31 | 1 | 4 |
 | BidCos-Wired (HMW-) | 15 | 11 | 6 | 0 | 5 |
-| **Summe** | **524** | **476** | **416 (87 %)** | **32 (7 %)** | **28 (6 %)** |
+| **Summe** | **524** | **472** | **420 (89 %)** | **28 (6 %)** | **24 (5 %)** |
 | virtuelle Typen (VIR-) | 11 | nicht geprüft | | | |
 
 - **BidCos-Wired** ist angebunden, sobald ein Wired-Gateway (HMW-LGW) eingerichtet ist, aber noch nicht an
   echter Wired-Hardware getestet.
 - **bedienbar**: Gerätetypen mit Beschreibung und mindestens einem Kanal mit Werten. Nicht mitgezählt sind
   Access Points, Repeater und Funkmodule ohne bedienbaren Kanal sowie Typen, zu denen OpenCCU keine
-  Beschreibung mitliefert (z. B. die -644-Dimmer und WS550).
+  Beschreibung mitliefert (z. B. die -644-Dimmer und WS550). Ebenso die Wandtafeln HmIP(W)-WGD: Ihre Kacheln
+  und Wetterdaten blendet schon die WebUI aus (`functions.fn`), sie werden in den Geräteeinstellungen und
+  Direktverknüpfungen eingerichtet.
 - **alle Kanäle mit eigener Kachel**: Jeder sichtbare Kanal des Geräts hat eine gestaltete Kachel.
 - **Hauptfunktion mit eigener Kachel**: Der Hauptkanal ist gestaltet, ein Nebenkanal generisch, z. B. das
   Display eines Wandthermostats.
 - **nur generisch**: kein Kanal hat eine eigene Kachel. Das Gerät ist trotzdem voll bedienbar.
 
-Zusammen haben **448 von 476 Gerätetypen (94 %)** eine eigene Kachel für ihre Hauptfunktion.
+Zusammen haben **448 von 472 Gerätetypen (95 %)** eine eigene Kachel für ihre Hauptfunktion.
 
 Die Zählung ist reproduzierbar. Die Skripte vergleichen die Gerätebeschreibungen mit
 `src/controls/registry.ts`, gegengeprüft an einem Export einer echten CCU (`fixtures/my-ccu.json`).
@@ -104,12 +106,10 @@ angebundenen Schnittstellen, mit passenden Bedienelementen (siehe [Einrichten](e
 
 Nach Bedeutung:
 
-1. **Display-Geräte**: HmIP-WGD, HmIPW-WGD und das Display des HmIP-WRCD haben keinen Baukasten für Texte und
-   Symbole; die Werte sind nur generisch bedienbar.
-2. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
+1. **Verknüpfungsvorlagen** gibt es für die 7 häufigsten Empfänger (Schalt-, Dimm- und Rollladenaktoren, 722
    Profile). Für die übrigen 59 Empfängertypen der WebUI (2065 Profile) geht nur der Expertenmodus mit allen
    Parametern.
-3. **Gerätebilder** der WebUI zeigt das Add-on nicht.
+2. **Gerätebilder** der WebUI zeigt das Add-on nicht.
 
 ## Ein Gerät fehlt oder sieht falsch aus?
 

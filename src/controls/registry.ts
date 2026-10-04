@@ -16,6 +16,7 @@ import { GarageDoorControl } from './GarageDoorControl';
 import { AccessControl, AccessPointControl } from './AccessControls';
 import { InputControl } from './InputControl';
 import { ServoControl } from './ServoControl';
+import { AcousticDisplayControl, Rc19DisplayControl } from './DisplayControls';
 import {
   DistanceControl,
   FillingLevelControl,
@@ -186,7 +187,13 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   ACCELERATION_TRANSCEIVER: channelControl('security', TiltSensorControl),
   POWER_MAINS_TRANSMITTER: channelControl('security', PowerMainsControl),
   [ChannelType.KEY_TRANSCEIVER]: deviceControl('buttons', ButtonsControl),
+  // Displays written by the CCU: HmIP-WRCD (acoustic_display_receiver.fn)
+  // and HM-RC-19 (rc19_display.fn)
+  ACOUSTIC_DISPLAY_RECEIVER: channelControl('buttons', AcousticDisplayControl),
+  DISPLAY: channelControl('buttons', Rc19DisplayControl),
   KEY: deviceControl('buttons', ButtonsControl),
+  // The keys of the HM-RC-19 for links to the CCU (rf_rc_19.xml: PRESS_SHORT, PRESS_LONG)
+  CENTRAL_KEY: deviceControl('buttons', ButtonsControl),
   VIRTUAL_KEY: deviceControl('buttons', ButtonsControl),
   // Inputs set up as key, switch or contact (hmipChannelConfigDialogs.tcl)
   MULTI_MODE_INPUT_TRANSMITTER: channelControl('inputs', InputControl),
