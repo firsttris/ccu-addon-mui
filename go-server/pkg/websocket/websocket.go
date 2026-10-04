@@ -548,6 +548,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleLogging(client, msgType, message)
 	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "checkCcuFirmware", "installCcuFirmware", "cancelCcuFirmware", "prepareAddonUpload", "installAddon":
 		s.handleRestore(client, msgType, message)
+	case "getFirewall", "setFirewall":
+		s.handleFirewall(client, msgType, message)
 	case "getNetwork", "setNetwork":
 		s.handleNetwork(client, msgType, message)
 	case "getSecurity", "setSecurity", "changeSecurityKey":

@@ -136,7 +136,9 @@ export type ServerMessage =
   | SetSecurityResponse
   | ChangeSecurityKeyResponse
   | GetNetworkResponse
-  | SetNetworkResponse;
+  | SetNetworkResponse
+  | GetFirewallResponse
+  | SetFirewallResponse;
 
 /**
  * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
@@ -257,6 +259,8 @@ export interface Protocol {
   changeSecurityKey: ChangeSecurityKeyCall;
   getNetwork: GetNetworkCall;
   setNetwork: SetNetworkCall;
+  getFirewall: GetFirewallCall;
+  setFirewall: SetFirewallCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -4191,6 +4195,79 @@ export interface SetNetworkRequest {
  */
 export interface SetNetworkResponse {
   type: "setNetwork_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetFirewallCall".
+ */
+export interface GetFirewallCall {
+  request: GetFirewallRequest;
+  response: GetFirewallResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetFirewallRequest".
+ */
+export interface GetFirewallRequest {
+  type: "getFirewall";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "GetFirewallResponse".
+ */
+export interface GetFirewallResponse {
+  type: "getFirewall_response";
+  requestId?: string;
+  firewall: Firewall;
+}
+/**
+ * The CCU's firewall (firewall.conf, libfirewall.tcl)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "Firewall".
+ */
+export interface Firewall {
+  mode: "MOST_OPEN" | "RESTRICTIVE";
+  services: FirewallService[];
+  ips: string[];
+  userPorts: string[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "FirewallService".
+ */
+export interface FirewallService {
+  id: string;
+  ports: number[];
+  access: "full" | "restricted" | "none";
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetFirewallCall".
+ */
+export interface SetFirewallCall {
+  request: SetFirewallRequest;
+  response: SetFirewallResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetFirewallRequest".
+ */
+export interface SetFirewallRequest {
+  type: "setFirewall";
+  requestId?: string;
+  firewall: Firewall;
+  password?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetFirewallResponse".
+ */
+export interface SetFirewallResponse {
+  type: "setFirewall_response";
   requestId?: string;
   success: boolean;
 }

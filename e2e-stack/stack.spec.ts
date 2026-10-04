@@ -1366,3 +1366,43 @@ test('stellt eine feste IP-Adresse ein und wieder DHCP', async ({ page }) => {
   await reloaded.getByRole('button', { name: 'Speichern' }).click();
   await expect(reloaded.getByRole('status')).toBeVisible();
 });
+
+test('gibt die Script-API frei und schränkt sie wieder ein', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup/system');
+  const panel = page.getByRole('region', { name: 'Firewall' });
+  const rega = panel.getByRole('radiogroup', { name: 'Remote Homematic-Script API' });
+  await expect(panel.getByRole('radio', { name: 'Ports blockiert' })).toHaveAttribute('aria-checked', 'true');
+  await expect(rega.getByRole('radio', { name: 'Eingeschränkt' })).toHaveAttribute('aria-checked', 'true');
+  await expect(panel.getByLabel('IP-Adressen für den eingeschränkten Zugriff')).toHaveValue('192.168.0.0/16; fc00::/7');
+
+  await panel.getByLabel('IP-Adressen für den eingeschränkten Zugriff').fill('192.168.0.0/16; 10.0.0.300');
+  await expect(panel).toContainText('Ungültige Adressen: 10.0.0.300');
+  await expect(panel.getByRole('button', { name: 'Speichern' })).toBeDisabled();
+  await panel.getByLabel('IP-Adressen für den eingeschränkten Zugriff').fill('192.168.0.0/16; 10.0.0.0/8');
+  await rega.getByRole('radio', { name: 'Vollzugriff' }).click();
+  await panel.getByLabel('Port-Freigabe').fill('8080; 1883');
+  // The WebUI session may be kept from before: then no password is asked
+  const done = page.getByText('Einstellungen gespeichert');
+  await panel.getByRole('button', { name: 'Speichern' }).click();
+  const passwordField = panel.getByLabel('Passwort', { exact: true });
+  await expect(done.or(passwordField)).toBeVisible();
+  if (await passwordField.isVisible()) {
+    await passwordField.fill('secret');
+    await panel.getByRole('button', { name: 'Speichern' }).click();
+  }
+  await expect(done).toBeVisible();
+
+  await page.reload();
+  const reloaded = page.getByRole('region', { name: 'Firewall' });
+  await expect(reloaded.getByRole('radiogroup', { name: 'Remote Homematic-Script API' }).getByRole('radio', { name: 'Vollzugriff' })).toHaveAttribute('aria-checked', 'true');
+  await expect(reloaded.getByLabel('IP-Adressen für den eingeschränkten Zugriff')).toHaveValue('192.168.0.0/16; 10.0.0.0/8');
+  await expect(reloaded.getByLabel('Port-Freigabe')).toHaveValue('8080; 1883');
+
+  // Back as before, for a second run (the session is kept now)
+  await reloaded.getByRole('radiogroup', { name: 'Remote Homematic-Script API' }).getByRole('radio', { name: 'Eingeschränkt' }).click();
+  await reloaded.getByLabel('IP-Adressen für den eingeschränkten Zugriff').fill('192.168.0.0/16; fc00::/7');
+  await reloaded.getByLabel('Port-Freigabe').fill('');
+  await reloaded.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+});

@@ -78,8 +78,10 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	cfg.DiagramsDir = filepath.Join(t.TempDir(), "diagrams")
 	cfg.ConfigDir = t.TempDir()
 	ccu.ConfigDir = cfg.ConfigDir
-	if data, err := os.ReadFile("../fixtures/netconfig"); err == nil {
-		_ = os.WriteFile(filepath.Join(cfg.ConfigDir, "netconfig"), data, 0o644)
+	for _, name := range []string{"netconfig", "firewall.conf"} {
+		if data, err := os.ReadFile("../fixtures/" + name); err == nil {
+			_ = os.WriteFile(filepath.Join(cfg.ConfigDir, name), data, 0o644)
+		}
 	}
 	auditLogs[ccu] = cfg.AuditLogFile
 	wsPorts[ccu] = cfg.WSPort
@@ -2387,5 +2389,42 @@ func TestStackNetwork(t *testing.T) {
 	send(t, conn, message{"type": "setNetwork", "requestId": "n4", "config": manual})
 	if m := receive(t, conn, byRequestID("n4")); m["code"] != "INVALID_VALUE" {
 		t.Errorf("gateway outside: %v", m)
+	}
+}
+
+func TestStackFirewall(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	send(t, conn, message{"type": "getFirewall", "requestId": "f1"})
+	fw := receive(t, conn, byRequestID("f1"))["firewall"].(map[string]interface{})
+	if fw["mode"] != "RESTRICTIVE" || len(fw["ips"].([]interface{})) != 2 || len(fw["services"].([]interface{})) != 4 {
+		t.Fatalf("firewall: %v", fw)
+	}
+	next := map[string]interface{}{
+		"mode": "RESTRICTIVE", "ips": []string{"192.168.178.0/24"}, "userPorts": []string{"1883"},
+		"services": []map[string]interface{}{{"id": "XMLRPC", "ports": []int{}, "access": "full"}, {"id": "REGA", "ports": []int{}, "access": "restricted"}, {"id": "NEOSERVER", "ports": []int{}, "access": "none"}},
+	}
+	send(t, conn, message{"type": "setFirewall", "requestId": "f2", "firewall": next})
+	if m := receive(t, conn, byRequestID("f2")); m["code"] != "PASSWORD_REQUIRED" {
+		t.Fatalf("without password: %v", m)
+	}
+	send(t, conn, message{"type": "setFirewall", "requestId": "f3", "firewall": next, "password": "secret"})
+	if m := receive(t, conn, byRequestID("f3")); m["success"] != true || ccu.CallCount("JSON Firewall.setConfiguration") != 1 {
+		t.Fatalf("set: %v", m)
+	}
+	send(t, conn, message{"type": "getFirewall", "requestId": "f4"})
+	fw = receive(t, conn, byRequestID("f4"))["firewall"].(map[string]interface{})
+	if fw["ips"].([]interface{})[0] != "192.168.178.0/24" || fw["userPorts"].([]interface{})[0] != "1883" {
+		t.Errorf("after set: %v", fw)
+	}
+	for _, s := range fw["services"].([]interface{}) {
+		if s := s.(map[string]interface{}); s["id"] == "XMLRPC" && s["access"] != "full" {
+			t.Errorf("xmlrpc: %v", s)
+		}
+	}
+	next["ips"] = []string{"192.168.178"}
+	send(t, conn, message{"type": "setFirewall", "requestId": "f5", "firewall": next})
+	if m := receive(t, conn, byRequestID("f5")); m["code"] != "INVALID_VALUE" {
+		t.Errorf("invalid address: %v", m)
 	}
 }
