@@ -91,7 +91,8 @@
       "datapoints": {
         "UNREACH": false,
         "STICKY_UNREACH": true,
-        "LOW_BAT": false
+        "LOW_BAT": false,
+        "CONFIG_PENDING": false
       }
     },
     {
@@ -4245,6 +4246,82 @@
               "TAB_ORDER": 1
             }
           }
+        },
+        "LEQ0000004": {
+          "MASTER": {
+            "TEMPERATURE_COMFORT": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 21,
+              "MIN": 15,
+              "MAX": 30,
+              "TAB_ORDER": 1,
+              "UNIT": "°C"
+            },
+            "BOOST_POSITION": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 80,
+              "MIN": 0,
+              "MAX": 100,
+              "TAB_ORDER": 2
+            },
+            "VALVE_MAXIMUM_POSITION": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 1,
+              "MIN": 0,
+              "MAX": 1,
+              "TAB_ORDER": 3
+            },
+            "DECALCIFICATION_WEEKDAY": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 6,
+              "MIN": 0,
+              "MAX": 6,
+              "TAB_ORDER": 4,
+              "VALUE_LIST": [
+                "SUNDAY",
+                "MONDAY",
+                "TUESDAY",
+                "WEDNESDAY",
+                "THURSDAY",
+                "FRIDAY",
+                "SATURDAY"
+              ]
+            },
+            "DECALCIFICATION_TIME": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 22,
+              "MIN": 0,
+              "MAX": 47,
+              "TAB_ORDER": 5
+            },
+            "MANU_MODE_PRIORITIZATION": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 1,
+              "MIN": 0,
+              "MAX": 5,
+              "TAB_ORDER": 6,
+              "VALUE_LIST": [
+                "SET_TEMPERATURE_CHANGE_ONLY_BY_RT_TC_SC_SELF",
+                "SET_TEMPERATURE_CHANGE_BY_ALL",
+                "SET_TEMPERATURE_CHANGE_ONLY_BY_RT_TC_CCU_SELF",
+                "SET_TEMPERATURE_CHANGE_ONLY_BY_CCU",
+                "SET_TEMPERATURE_CHANGE_ONLY_BY_SELF",
+                "SET_TEMPERATURE_CHANGE_BY_NONE"
+              ]
+            }
+          }
         }
       },
       "radioInterfaces": [
@@ -4625,6 +4702,16 @@
             "P2_TEMPERATURE_SUNDAY_13": 19.0,
             "TEMPERATURE_OFFSET": 0.0
           }
+        },
+        "LEQ0000004": {
+          "MASTER": {
+            "TEMPERATURE_COMFORT": 21.0,
+            "BOOST_POSITION": 80,
+            "VALVE_MAXIMUM_POSITION": 1.0,
+            "DECALCIFICATION_WEEKDAY": 6,
+            "DECALCIFICATION_TIME": 22,
+            "MANU_MODE_PRIORITIZATION": 1
+          }
         }
       }
     },
@@ -4644,6 +4731,19 @@
           "VERSION": 4,
           "FIRMWARE": "1.2.10",
           "FLAGS": 1
+        },
+        {
+          "ADDRESS": "0000DBE9A5C1F2:0",
+          "TYPE": "MAINTENANCE",
+          "PARENT": "0000DBE9A5C1F2",
+          "PARENT_TYPE": "HmIP-SRH",
+          "INDEX": 0,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES"
+          ],
+          "VERSION": 4,
+          "FLAGS": 3
         },
         {
           "ADDRESS": "0000DBE9A5C1F2:1",
@@ -4918,7 +5018,31 @@
                 "5S",
                 "10S"
               ],
+              "TAB_ORDER": 1
+            },
+            "EVENT_DELAY_VALUE": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 63,
               "TAB_ORDER": 0
+            },
+            "MSG_FOR_POS_A": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 2,
+              "MIN": 0,
+              "MAX": 3,
+              "TAB_ORDER": 2,
+              "VALUE_LIST": [
+                "NO_MSG",
+                "CLOSED",
+                "OPEN",
+                "TILTED"
+              ]
             }
           }
         },
@@ -6410,12 +6534,64 @@
               "TAB_ORDER": 0
             }
           }
+        },
+        "0000DBE9A5C1F2:0": {
+          "MASTER": {
+            "CYCLIC_INFO_MSG_DIS": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 0,
+              "MIN": 0,
+              "MAX": 255,
+              "TAB_ORDER": 1
+            },
+            "LOCAL_RESET_DISABLED": {
+              "TYPE": "BOOL",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": false,
+              "MIN": false,
+              "MAX": true,
+              "TAB_ORDER": 2
+            },
+            "LOW_BAT_LIMIT": {
+              "TYPE": "FLOAT",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 1.1,
+              "MIN": 0,
+              "MAX": 25.2,
+              "TAB_ORDER": 3,
+              "UNIT": "V"
+            },
+            "DST_START_TIME": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 120,
+              "MIN": 0,
+              "MAX": 1425,
+              "TAB_ORDER": 4
+            },
+            "DST_START_MONTH": {
+              "TYPE": "INTEGER",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 3,
+              "MIN": 1,
+              "MAX": 12,
+              "TAB_ORDER": 5
+            }
+          }
         }
       },
       "paramsets": {
         "0000DBE9A5C1F2:1": {
           "MASTER": {
-            "EVENT_DELAY_UNIT": 0
+            "EVENT_DELAY_UNIT": 0,
+            "EVENT_DELAY_VALUE": 5,
+            "MSG_FOR_POS_A": 2
           }
         },
         "00195F29B04142:7": {
@@ -6463,6 +6639,15 @@
           },
           "VALUES": {
             "WEEK_PROGRAM_CHANNEL_LOCKS": 0
+          }
+        },
+        "0000DBE9A5C1F2:0": {
+          "MASTER": {
+            "CYCLIC_INFO_MSG_DIS": 0,
+            "LOCAL_RESET_DISABLED": false,
+            "LOW_BAT_LIMIT": 1.1,
+            "DST_START_TIME": 120,
+            "DST_START_MONTH": 3
           }
         }
       },

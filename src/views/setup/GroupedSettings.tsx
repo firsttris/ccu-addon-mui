@@ -1,13 +1,18 @@
-import { useMemo } from 'react';
-import CalendarDaysIcon from '~icons/lucide/calendar-days';
-import ChevronRightIcon from '~icons/lucide/chevron-right';
-import { DatapointValue, ParamsetDescription } from '../../types/types';
-import { ParamsetView, shownParameters } from '../../controls/generic/ParamsetView';
-import { GROUP_ORDER, ParameterGroup, parameterGroup } from '../../controls/generic/parameters';
-import { Button } from '../../components/ui/button';
-import { m } from '../../paraglide/messages';
+import { useMemo } from "react";
+import CalendarDaysIcon from "~icons/lucide/calendar-days";
+import ChevronRightIcon from "~icons/lucide/chevron-right";
+import { DatapointValue, ParamsetDescription } from "../../types/types";
+import { shownParameters } from "../../controls/generic/ParamsetView";
+import { SettingsView } from "../../controls/generic/SettingsView";
+import {
+  GROUP_ORDER,
+  ParameterGroup,
+  parameterGroup,
+} from "../../controls/generic/parameters";
+import { Button } from "../../components/ui/button";
+import { m } from "../../paraglide/messages";
 
-const groupTitles: Record<Exclude<ParameterGroup, 'hidden'>, () => string> = {
+const groupTitles: Record<Exclude<ParameterGroup, "hidden">, () => string> = {
   operation: m.GROUP_OPERATION,
   heating: m.GROUP_HEATING,
   switching: m.GROUP_SWITCHING,
@@ -18,7 +23,7 @@ const groupTitles: Record<Exclude<ParameterGroup, 'hidden'>, () => string> = {
 };
 
 // Rarely needed groups start folded
-const folded = new Set<ParameterGroup>(['schedule', 'expert']);
+const folded = new Set<ParameterGroup>(["schedule", "expert"]);
 
 interface GroupedSettingsProps {
   label: string;
@@ -32,7 +37,15 @@ interface GroupedSettingsProps {
 
 // A channel's settings in groups with readable names; the week schedule's
 // many parameters are left to its editor
-export const GroupedSettings = ({ label, description, values, changed, readOnly, onSet, onEditWeekProfile }: GroupedSettingsProps) => {
+export const GroupedSettings = ({
+  label,
+  description,
+  values,
+  changed,
+  readOnly,
+  onSet,
+  onEditWeekProfile,
+}: GroupedSettingsProps) => {
   const groups = useMemo(() => {
     const byGroup = new Map<ParameterGroup, ParamsetDescription>();
     for (const [name, parameter] of shownParameters(description)) {
@@ -44,23 +57,26 @@ export const GroupedSettings = ({ label, description, values, changed, readOnly,
 
   return (
     <div className="flex flex-col gap-4">
-      {groups.has('hidden') && onEditWeekProfile && (
-        <Button variant="outline" className="justify-start" onClick={onEditWeekProfile}>
+      {groups.has("hidden") && onEditWeekProfile && (
+        <Button
+          variant="outline"
+          className="justify-start"
+          onClick={onEditWeekProfile}
+        >
           <CalendarDaysIcon />
           {m.EDIT_WEEK_PROFILE()}
         </Button>
       )}
       {GROUP_ORDER.filter((group) => groups.has(group)).map((group) => {
-        const title = groupTitles[group as Exclude<ParameterGroup, 'hidden'>]();
+        const title = groupTitles[group as Exclude<ParameterGroup, "hidden">]();
         const view = (
-          <ParamsetView
+          <SettingsView
             label={`${label} ${title}`}
             description={groups.get(group)!}
             values={values}
             changed={changed}
             readOnly={readOnly}
             onSet={onSet}
-            readable
           />
         );
         if (folded.has(group)) {
@@ -70,7 +86,9 @@ export const GroupedSettings = ({ label, description, values, changed, readOnly,
               <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm font-medium [&::-webkit-details-marker]:hidden">
                 <ChevronRightIcon className="size-4 text-muted-foreground transition-transform group-open:rotate-90" />
                 <span className="flex-1">{title}</span>
-                <span className="text-xs font-normal text-muted-foreground">{m.SETTINGS_COUNT({ count })}</span>
+                <span className="text-xs font-normal text-muted-foreground">
+                  {m.SETTINGS_COUNT({ count })}
+                </span>
               </summary>
               <div className="border-t px-3 py-3">{view}</div>
             </details>
@@ -78,7 +96,9 @@ export const GroupedSettings = ({ label, description, values, changed, readOnly,
         }
         return (
           <div key={group} className="flex flex-col gap-2">
-            <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{title}</h3>
+            <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              {title}
+            </h3>
             {view}
           </div>
         );

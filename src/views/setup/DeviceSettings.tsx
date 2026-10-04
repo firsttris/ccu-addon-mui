@@ -1,47 +1,68 @@
-import { HTMLAttributes, useCallback, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { useQueries } from '@tanstack/react-query';
-import { useDevices, usePairingAction, useParamset, usePutParamset } from '../../queries';
-import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
-import { ElevateDialog } from '../../components/ElevateDialog';
-import { useToast } from '../../contexts/ToastContext';
-import { TranslationKey, useTranslations } from '../../i18n/utils';
-import { DatapointValue, ParamsetDescription } from '../../types/types';
-import { formatParameterValue, ParamsetView, shownParameters } from '../../controls/generic/ParamsetView';
-import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
-import { WebUILink } from '../../components/WebUILink';
-import ChevronLeftIcon from '~icons/lucide/chevron-left';
-import TrashIcon from '~icons/lucide/trash-2';
-import { Notice } from './SetupShell';
-import { Panel } from './Panel';
-import { usePageTitle } from '../../contexts/PageTitleContext';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
-import { useChannelNames } from './channelNames';
-import { NamesAndRooms } from './NamesAndRooms';
-import { GroupedSettings } from './GroupedSettings';
-import { WeekProfileSheet } from '../../controls/ThermostatControl/profile/WeekProfileSheet';
-import { WeekProgramSheet, WeekProgramKind } from '../../controls/schedule/WeekProgramSheet';
-import { parameterLabel } from '../../controls/generic/parameters';
-import { Links } from './Links';
-import { DevicePrograms } from './DevicePrograms';
-import { ComTest } from './ComTest';
-import { DeviceHistory } from './DeviceHistory';
-import { DeviceSysvars, useDeviceSysvars } from './DeviceSysvars';
-import { Firmware } from './Firmware';
-import { PanelSkeleton } from '../../components/ui/skeleton';
-import { m } from '../../paraglide/messages';
+import {
+  HTMLAttributes,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
+import { useQueries } from "@tanstack/react-query";
+import {
+  useDevices,
+  usePairingAction,
+  useParamset,
+  usePutParamset,
+} from "../../queries";
+import {
+  RequestError,
+  useWebSocketActions,
+  useWebSocketContext,
+} from "../../hooks/useWebsocket";
+import { ElevateDialog } from "../../components/ElevateDialog";
+import { useToast } from "../../contexts/ToastContext";
+import { TranslationKey, useTranslations } from "../../i18n/utils";
+import { DatapointValue, ParamsetDescription } from "../../types/types";
+import { shownParameters } from "../../controls/generic/ParamsetView";
+import { readableValue } from "../../controls/generic/SettingsView";
+import CheckIcon from "~icons/lucide/check-circle-2";
+import SendIcon from "~icons/lucide/send";
+import { ConfirmDialog, DialogButton } from "../../components/ConfirmDialog";
+import { WebUILink } from "../../components/WebUILink";
+import ChevronLeftIcon from "~icons/lucide/chevron-left";
+import TrashIcon from "~icons/lucide/trash-2";
+import { Notice } from "./SetupShell";
+import { Panel } from "./Panel";
+import { usePageTitle } from "../../contexts/PageTitleContext";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { useChannelNames } from "./channelNames";
+import { NamesAndRooms } from "./NamesAndRooms";
+import { GroupedSettings } from "./GroupedSettings";
+import { WeekProfileSheet } from "../../controls/ThermostatControl/profile/WeekProfileSheet";
+import {
+  WeekProgramSheet,
+  WeekProgramKind,
+} from "../../controls/schedule/WeekProgramSheet";
+import { parameterLabel } from "../../controls/generic/parameters";
+import { Links } from "./Links";
+import { DevicePrograms } from "./DevicePrograms";
+import { ComTest } from "./ComTest";
+import { DeviceHistory } from "./DeviceHistory";
+import { DeviceSysvars, useDeviceSysvars } from "./DeviceSysvars";
+import { Firmware } from "./Firmware";
+import { PanelSkeleton } from "../../components/ui/skeleton";
+import { m } from "../../paraglide/messages";
 
 const Section = (props: HTMLAttributes<HTMLElement>) => <Panel {...props} />;
 
 const weekProgramKindOf = (type: string): WeekProgramKind | null =>
-  !type.endsWith('_WEEK_PROFILE')
+  !type.endsWith("_WEEK_PROFILE")
     ? null
-    : type.startsWith('BLIND') || type.startsWith('SHUTTER')
-      ? 'blind'
-      : type.startsWith('SWITCH') || type.startsWith('WATER_SWITCH')
-        ? 'switch'
-        : 'dimmer';
+    : type.startsWith("BLIND") || type.startsWith("SHUTTER")
+      ? "blind"
+      : type.startsWith("SWITCH") || type.startsWith("WATER_SWITCH")
+        ? "switch"
+        : "dimmer";
 
 type Values = Record<string, DatapointValue>;
 
@@ -49,12 +70,14 @@ type Values = Record<string, DatapointValue>;
 // collected first and saved after a confirmation listing old and new
 // values.
 export const DeviceSettings = () => {
-  const { interfaceName, address } = useParams({ from: '/device/$interfaceName/$address' });
+  const { interfaceName, address } = useParams({
+    from: "/device/$interfaceName/$address",
+  });
   const t = useTranslations();
   const { showToast } = useToast();
   const { request } = useWebSocketActions();
   const { userLevel, elevated } = useWebSocketContext();
-  const isAdmin = userLevel === 'admin';
+  const isAdmin = userLevel === "admin";
   const canEdit = isAdmin && elevated;
   const [elevating, setElevating] = useState(false);
   const { data: devices, isPending: devicesLoading } = useDevices();
@@ -64,37 +87,86 @@ export const DeviceSettings = () => {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
   const [scheduleAddress, setScheduleAddress] = useState<string | null>(null);
-  const [deleteOptions, setDeleteOptions] = useState({ reset: false, force: false });
+  const [deleteOptions, setDeleteOptions] = useState({
+    reset: false,
+    force: false,
+  });
 
-  const device = devices?.find((d) => d.address === address && d.interfaceName === interfaceName);
+  const device = devices?.find(
+    (d) => d.address === address && d.interfaceName === interfaceName,
+  );
   // Device-wide settings are on the device (BidCos) or its channel 0 (HmIP)
-  const addresses = useMemo(() => [address, ...(device?.children ?? [])], [address, device]);
+  const addresses = useMemo(
+    () => [address, ...(device?.children ?? [])],
+    [address, device],
+  );
 
   const descriptions = useQueries({
     queries: addresses.map((a) => ({
-      queryKey: ['paramsetDescription', interfaceName, a, 'MASTER'],
+      queryKey: ["paramsetDescription", interfaceName, a, "MASTER"],
       queryFn: async () =>
-        ((await request({ type: 'getParamsetDescription', interfaceName, address: a, paramsetKey: 'MASTER' }))
-          .description ?? {}) as ParamsetDescription,
+        ((
+          await request({
+            type: "getParamsetDescription",
+            interfaceName,
+            address: a,
+            paramsetKey: "MASTER",
+          })
+        ).description ?? {}) as ParamsetDescription,
       staleTime: Infinity,
       retry: false,
     })),
   });
   const values = useQueries({
     queries: addresses.map((a) => ({
-      queryKey: ['paramset', interfaceName, a, 'MASTER'],
+      queryKey: ["paramset", interfaceName, a, "MASTER"],
       queryFn: async () =>
-        ((await request({ type: 'getParamset', interfaceName, address: a, paramsetKey: 'MASTER' })).values ??
-          {}) as Values,
+        ((
+          await request({
+            type: "getParamset",
+            interfaceName,
+            address: a,
+            paramsetKey: "MASTER",
+          })
+        ).values ?? {}) as Values,
       retry: false,
     })),
   });
 
-  // Battery devices only fetch new settings when woken up
-  const { data: maintenance } = useParamset(interfaceName, `${address}:0`, 'VALUES', {
-    enabled: device?.children?.includes(`${address}:0`) === true,
-  });
+  // After saving the CCU transfers the settings to the device; battery
+  // devices only fetch them when woken up. CONFIG_PENDING (channel 0)
+  // tells, so it is watched for two minutes after saving.
+  const [transferSince, setTransferSince] = useState<number | null>(null);
+  const [now, setNow] = useState(Date.now());
+  const watching = transferSince !== null && now - transferSince < 120_000;
+  useEffect(() => {
+    if (transferSince === null) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [transferSince]);
+  const hasMaintenance = device?.children?.includes(`${address}:0`) === true;
+  const { data: maintenance } = useParamset(
+    interfaceName,
+    `${address}:0`,
+    "VALUES",
+    {
+      enabled: hasMaintenance,
+      refetchInterval: watching ? 2000 : false,
+    },
+  );
   const configPending = maintenance?.CONFIG_PENDING === true;
+  // The CCU needs a moment to mark the device pending; until then nothing
+  // is claimed
+  const transfer: "none" | "sending" | "pending" | "done" | "handedOver" =
+    transferSince === null
+      ? "none"
+      : configPending
+        ? "pending"
+        : !hasMaintenance || maintenance?.CONFIG_PENDING === undefined
+          ? "handedOver"
+          : now - transferSince < 4000
+            ? "sending"
+            : "done";
 
   const [drafts, setDrafts] = useState<Record<string, Values>>({});
   const [confirming, setConfirming] = useState(false);
@@ -113,9 +185,21 @@ export const DeviceSettings = () => {
   );
 
   const sections = addresses
-    .map((a, i) => ({ address: a, description: descriptions[i].data, current: values[i].data ?? {} }))
-    .filter((s): s is { address: string; description: ParamsetDescription; current: Values } =>
-      s.description !== undefined && shownParameters(s.description).length > 0,
+    .map((a, i) => ({
+      address: a,
+      description: descriptions[i].data,
+      current: values[i].data ?? {},
+    }))
+    .filter(
+      (
+        s,
+      ): s is {
+        address: string;
+        description: ParamsetDescription;
+        current: Values;
+      } =>
+        s.description !== undefined &&
+        shownParameters(s.description).length > 0,
     );
 
   const changes = sections.flatMap((s) =>
@@ -133,17 +217,28 @@ export const DeviceSettings = () => {
       for (const s of sections) {
         const draft = drafts[s.address];
         if (draft && Object.keys(draft).length > 0) {
-          await putParamset.mutateAsync({ interfaceName, address: s.address, values: draft });
+          await putParamset.mutateAsync({
+            interfaceName,
+            address: s.address,
+            values: draft,
+          });
         }
       }
       setDrafts({});
-      showToast(m.SAVED(), 'info');
+      setTransferSince(Date.now());
+      setNow(Date.now());
+      showToast(m.SAVED(), "info");
     } catch (error) {
-      if (error instanceof RequestError && error.code === 'ELEVATION_REQUIRED') {
+      if (
+        error instanceof RequestError &&
+        error.code === "ELEVATION_REQUIRED"
+      ) {
         // The 8 hours are over: ask for the password, keep the changes
         setElevating(true);
       } else {
-        showToast(`${m.SAVE_FAILED()}: ${error instanceof Error ? error.message : error}`);
+        showToast(
+          `${m.SAVE_FAILED()}: ${error instanceof Error ? error.message : error}`,
+        );
       }
     } finally {
       setConfirming(false);
@@ -151,20 +246,31 @@ export const DeviceSettings = () => {
   };
 
   // HmIP actuators keep their own week program on a *_WEEK_PROFILE channel
-  const scheduleType = device?.channels?.find((c) => c.address === scheduleAddress)?.type ?? '';
+  const scheduleType =
+    device?.channels?.find((c) => c.address === scheduleAddress)?.type ?? "";
   const weekProgramKind = weekProgramKindOf(scheduleType);
   const weekProgramTargets = useMemo(
     () =>
       // Bits of WP_TARGET_CHANNELS: the device's virtual channels in order
       // (getWPVirtualChannels in the WebUI's HmIPWeeklyProgram.js)
       (device?.channels ?? [])
-        .filter((c) => /_VIRTUAL_RECEIVER|ACCESS_RECEIVER|ACCESS_TRANSCEIVER|DOOR_LOCK_STATE_TRANSMITTER/.test(c.type))
-        .map((c, index) => ({ index, label: names.get(c.address) ?? c.address })),
+        .filter((c) =>
+          /_VIRTUAL_RECEIVER|ACCESS_RECEIVER|ACCESS_TRANSCEIVER|DOOR_LOCK_STATE_TRANSMITTER/.test(
+            c.type,
+          ),
+        )
+        .map((c, index) => ({
+          index,
+          label: names.get(c.address) ?? c.address,
+        })),
     [device, names],
   );
   // The channels come with the device list; until it and every description
   // and value are there, placeholders stand in for the settings
-  const loading = devicesLoading || descriptions.some((d) => d.isPending) || values.some((v) => v.isPending);
+  const loading =
+    devicesLoading ||
+    descriptions.some((d) => d.isPending) ||
+    values.some((v) => v.isPending);
   const title = names.get(address) ?? address;
   usePageTitle(title);
 
@@ -207,7 +313,9 @@ export const DeviceSettings = () => {
           )}
         </div>
       </div>
-      {configPending && <Notice role="status">{m.CONFIG_PENDING()}</Notice>}
+      {configPending && transfer === "none" && (
+        <Notice role="status">{m.CONFIG_PENDING()}</Notice>
+      )}
 
       <div className="grid items-start gap-5 xl:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-5">
@@ -216,7 +324,8 @@ export const DeviceSettings = () => {
             // Device-wide settings: on the device (BidCos) or its channel 0 (HmIP)
             const label =
               s.address === address ||
-              (s.address === `${address}:0` && [undefined, s.address].includes(names.get(s.address)))
+              (s.address === `${address}:0` &&
+                [undefined, s.address].includes(names.get(s.address)))
                 ? m.DEVICE_SETTINGS()
                 : (names.get(s.address) ?? s.address);
             return (
@@ -224,7 +333,9 @@ export const DeviceSettings = () => {
                 <h2 className="flex items-baseline justify-between gap-2">
                   <span className="truncate">{label}</span>
                   {label !== s.address && (
-                    <span className="shrink-0 font-mono text-xs font-normal text-muted-foreground">{s.address}</span>
+                    <span className="shrink-0 font-mono text-xs font-normal text-muted-foreground">
+                      {s.address}
+                    </span>
                   )}
                 </h2>
                 <GroupedSettings
@@ -233,14 +344,23 @@ export const DeviceSettings = () => {
                   values={{ ...s.current, ...draft }}
                   changed={new Set(Object.keys(draft))}
                   readOnly={!canEdit}
-                  onSet={(name, value) => setDraft(s.address, s.current, name, value)}
+                  onSet={(name, value) =>
+                    setDraft(s.address, s.current, name, value)
+                  }
                   onEditWeekProfile={() => setScheduleAddress(s.address)}
                 />
               </Section>
             );
           })}
-          {loading && <PanelSkeleton lines={6} className="rounded-xl border bg-card p-5" />}
-          {!loading && sections.length === 0 && <p className="text-sm text-muted-foreground">{m.NO_SETTINGS()}</p>}
+          {loading && (
+            <PanelSkeleton
+              lines={6}
+              className="rounded-xl border bg-card p-5"
+            />
+          )}
+          {!loading && sections.length === 0 && (
+            <p className="text-sm text-muted-foreground">{m.NO_SETTINGS()}</p>
+          )}
         </div>
         <div className="flex min-w-0 flex-col gap-5">
           {device && (
@@ -255,7 +375,7 @@ export const DeviceSettings = () => {
               <NamesAndRooms deviceAddress={address} deviceName={title} />
             </Section>
           )}
-          {userLevel === 'admin' && device && (
+          {userLevel === "admin" && device && (
             <Section aria-label={m.COMTEST()}>
               <h2>{m.COMTEST()}</h2>
               <ComTest address={address} />
@@ -274,23 +394,76 @@ export const DeviceSettings = () => {
           </Section>
           {canEdit &&
             device &&
-            (device.channels ?? []).some((c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length) && (
+            (device.channels ?? []).some(
+              (c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length,
+            ) && (
               <Section aria-label={m.LINKS()}>
                 <h2>{m.LINKS()}</h2>
-                <Links interfaceName={interfaceName} deviceAddress={address} channels={device.channels ?? []} />
+                <Links
+                  interfaceName={interfaceName}
+                  deviceAddress={address}
+                  channels={device.channels ?? []}
+                />
               </Section>
             )}
         </div>
       </div>
 
-      {canEdit && changes.length > 0 && (
-        <div className="sticky bottom-4 animate-in fade-in-0 slide-in-from-bottom-4 z-10 flex flex-wrap items-center justify-end gap-2 rounded-xl border bg-background/85 p-3 shadow-lg backdrop-blur-md">
-          <span className="mr-auto" />
-          <DialogButton type="button" disabled={changes.length === 0} onClick={() => setDrafts({})}>
-            {m.RESET()}
-          </DialogButton>
-          <DialogButton type="button" primary disabled={changes.length === 0} onClick={() => setConfirming(true)}>
-            {m.SAVE()} {changes.length > 0 ? `(${changes.length})` : ''}
+      {canEdit && sections.length > 0 && (
+        <div
+          role="region"
+          aria-label={m.SETTINGS_SAVE_BAR()}
+          className={`sticky bottom-4 z-10 flex flex-wrap items-center justify-end gap-2 rounded-xl border p-3 shadow-lg backdrop-blur-md transition-colors ${changes.length > 0 ? "border-blue-500/40 bg-blue-50/90 dark:bg-blue-950/60" : "bg-background/85"}`}
+        >
+          <span
+            role="status"
+            className="mr-auto flex items-center gap-2 text-sm"
+          >
+            {changes.length > 0 ? (
+              <>
+                <span className="size-2 rounded-full bg-blue-600" />
+                {m.SETTINGS_UNSAVED({ count: changes.length })}
+              </>
+            ) : transfer === "sending" ? (
+              <>
+                <SendIcon className="size-4 animate-pulse text-sky-600" />
+                {m.SETTINGS_SENDING()}
+              </>
+            ) : transfer === "pending" ? (
+              <>
+                <SendIcon className="size-4 animate-pulse text-amber-600" />
+                {m.CONFIG_PENDING()}
+              </>
+            ) : transfer === "done" ? (
+              <>
+                <CheckIcon className="size-4 text-green-600" />
+                {m.SETTINGS_TRANSFERRED()}
+              </>
+            ) : transfer === "handedOver" ? (
+              <>
+                <CheckIcon className="size-4 text-green-600" />
+                {m.SETTINGS_HANDED_OVER()}
+              </>
+            ) : (
+              <span className="text-muted-foreground">
+                {m.SETTINGS_NO_CHANGES()}
+              </span>
+            )}
+          </span>
+          {changes.length > 0 && (
+            <DialogButton type="button" onClick={() => setDrafts({})}>
+              {m.RESET()}
+            </DialogButton>
+          )}
+          <DialogButton
+            type="button"
+            primary
+            disabled={changes.length === 0}
+            onClick={() => setConfirming(true)}
+          >
+            <SendIcon />
+            {m.SETTINGS_SAVE_TRANSFER()}{" "}
+            {changes.length > 0 ? `(${changes.length})` : ""}
           </DialogButton>
         </div>
       )}
@@ -304,33 +477,49 @@ export const DeviceSettings = () => {
           onCancel={() => setDeleting(false)}
           onConfirm={() =>
             pairingAction.mutate(
-              { type: 'deleteDevice', interfaceName, address, ...deleteOptions },
+              {
+                type: "deleteDevice",
+                interfaceName,
+                address,
+                ...deleteOptions,
+              },
               {
                 onSuccess: () => {
-                  showToast(m.DELETED(), 'info');
-                  navigate({ to: '/setup' });
+                  showToast(m.DELETED(), "info");
+                  navigate({ to: "/setup" });
                 },
-                onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+                onError: (error) =>
+                  showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
                 onSettled: () => setDeleting(false),
               },
             )
           }
         >
           <p>{m.DELETE_DEVICE_CONFIRM()}</p>
-          {(['reset', 'force'] as const).map((option) => (
+          {(["reset", "force"] as const).map((option) => (
             <label key={option} className="mt-2 flex items-center gap-2">
               <input
                 type="checkbox"
                 checked={deleteOptions[option]}
-                onChange={(event) => setDeleteOptions((prev) => ({ ...prev, [option]: event.target.checked }))}
+                onChange={(event) =>
+                  setDeleteOptions((prev) => ({
+                    ...prev,
+                    [option]: event.target.checked,
+                  }))
+                }
               />
-              {t(option === 'reset' ? 'DELETE_RESET' : 'DELETE_FORCE')}
+              {t(option === "reset" ? "DELETE_RESET" : "DELETE_FORCE")}
             </label>
           ))}
         </ConfirmDialog>
       )}
 
-      {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}
+      {elevating && (
+        <ElevateDialog
+          onDone={() => setElevating(false)}
+          onCancel={() => setElevating(false)}
+        />
+      )}
       {weekProgramKind ? (
         <WeekProgramSheet
           open={scheduleAddress !== null}
@@ -362,11 +551,16 @@ export const DeviceSettings = () => {
           <ul className="flex list-disc flex-col gap-1 pl-5">
             {changes.map((c) => (
               <li key={`${c.address}.${c.name}`}>
-                <strong>{parameterLabel(c.name)}</strong> ({names.get(c.address) ?? c.address}):{' '}
-                {formatParameterValue(c.parameter, c.previous, t)} → {formatParameterValue(c.parameter, c.value, t)}
+                <strong>{parameterLabel(c.name)}</strong> (
+                {names.get(c.address) ?? c.address}):{" "}
+                {readableValue(c.name, c.parameter, c.previous)} →{" "}
+                {readableValue(c.name, c.parameter, c.value)}
               </li>
             ))}
           </ul>
+          <p className="mt-3 text-muted-foreground">
+            {m.SETTINGS_TRANSFER_HINT()}
+          </p>
         </ConfirmDialog>
       )}
     </>

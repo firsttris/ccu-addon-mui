@@ -2051,9 +2051,35 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		for name, v := range values {
 			data.Paramsets[address][key][name] = v
 		}
+		if key == "MASTER" {
+			c.markConfigPending(iface, deviceAddress(address))
+		}
 		return "", ""
 	}
 	return nil, "Unknown method " + method
+}
+
+// ConfigPendingFor is how long a device with a maintenance channel takes
+// to fetch new settings
+var ConfigPendingFor = 3 * time.Second
+
+// markConfigPending sets CONFIG_PENDING on the device's channel 0 for a
+// while after its settings changed, as a battery device that still has to
+// fetch them; c.mu must be held
+func (c *CCU) markConfigPending(iface, device string) {
+	ch := c.channelByAddress(iface, device+":0")
+	if ch == nil {
+		return
+	}
+	if _, ok := ch.Datapoints["CONFIG_PENDING"]; !ok {
+		return
+	}
+	c.setValue(ch, "CONFIG_PENDING", true)
+	time.AfterFunc(ConfigPendingFor, func() {
+		c.mu.Lock()
+		defer c.mu.Unlock()
+		c.setValue(ch, "CONFIG_PENDING", false)
+	})
 }
 
 // sendEvents delivers events to the callbacks one at a time, in order, as

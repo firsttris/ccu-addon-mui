@@ -116,14 +116,17 @@ test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ pag
   await table.getByRole('link', { name: 'Fenstergriff Wohnzimmer' }).click();
 
   const settings = page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' });
+  // The debounce time as count × unit, with the resulting duration
   const select = settings.getByRole('combobox', { name: 'Entprellzeit (Einheit)' });
   await expect(select).toHaveValue('0');
-  await select.selectOption({ label: '5S' });
+  await expect(settings.getByRole('group', { name: 'Entprellzeit' })).toContainText('= 0,5 s');
+  await select.selectOption({ label: '5 s' });
+  await expect(settings.getByRole('group', { name: 'Entprellzeit' })).toContainText('= 25 s');
 
-  await page.getByRole('button', { name: 'Speichern (1)' }).click();
+  await page.getByRole('button', { name: 'Speichern und übertragen (1)' }).click();
   const dialog = page.getByRole('dialog', { name: 'Änderungen speichern?' });
   await expect(dialog).toContainText('Entprellzeit (Einheit)');
-  await expect(dialog).toContainText('100MS → 5S');
+  await expect(dialog).toContainText('100 ms → 5 s');
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
 
@@ -146,7 +149,7 @@ test('zeigt Gästen die Einstellungen nur an', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Einrichten' })).toHaveCount(0);
   await page.goto('/device/HmIP-RF/0000DBE9A5C1F2');
   await expect(page.getByText('Nur Administratoren können Einstellungen ändern.')).toBeVisible();
-  await expect(page.getByText('100MS')).toBeVisible();
+  await expect(page.getByText('5 × 100 ms')).toBeVisible();
   await expect(page.getByRole('combobox')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Speichern/ })).toHaveCount(0);
 });
@@ -158,7 +161,7 @@ test('verlangt nach Ablauf des Admin-Tokens das Passwort erneut', async ({ page 
   await page.goto('/device/HmIP-RF/0000DBE9A5C1F2');
 
   const settings = page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' });
-  await expect(settings.getByText('100MS')).toBeVisible();
+  await expect(settings.getByText(/× (100 ms|5 s)/)).toBeVisible();
   await expect(settings.getByRole('combobox')).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Passwort eingeben' }).click();
@@ -1501,4 +1504,73 @@ test('lernt mit KEY und SGTIN sowie mit Seriennummer und fremdem Schlüssel an',
     if (count > 1) await expect(inbox.getByRole('listitem')).toHaveCount(count - 1);
   }
   await expect(pairing.getByText('Keine neuen Geräte')).toBeVisible();
+});
+
+test('stellt Geräteeinstellungen mit passenden Bedienelementen ein und überträgt sie', async ({ page }) => {
+  await login(page);
+  await page.goto('/device/BidCos-RF/LEQ0000004');
+  const device = page.getByRole('region', { name: 'Gerät', exact: true });
+  const bar = page.getByRole('region', { name: 'Einstellungen speichern' });
+  // The save button is always there, ready once something changed
+  await expect(bar.getByRole('button', { name: 'Speichern und übertragen' })).toBeDisabled();
+
+  // Temperature with − and + in half degrees, its range shown
+  const comfort = device.getByRole('group', { name: 'Komforttemperatur' });
+  await expect(comfort).toContainText('15 – 30 °C');
+  await comfort.getByRole('button', { name: 'Komforttemperatur +' }).click();
+  await expect(comfort.getByLabel('Komforttemperatur', { exact: true })).toHaveValue('21,5');
+  // Typing beyond the range is marked and kept in range
+  await comfort.getByLabel('Komforttemperatur', { exact: true }).fill('40');
+  await expect(comfort.getByLabel('Komforttemperatur', { exact: true })).toHaveAttribute('aria-invalid', 'true');
+  await comfort.getByLabel('Komforttemperatur', { exact: true }).press('Enter');
+  await expect(comfort.getByLabel('Komforttemperatur', { exact: true })).toHaveValue('30');
+
+  // Percent as a slider, the time of day and weekday as choices
+  const boost = device.getByRole('slider', { name: 'Ventilöffnung bei Boost' });
+  await expect(boost).toHaveValue('80');
+  await boost.focus();
+  await boost.press('ArrowRight');
+  await expect(device.getByRole('group', { name: 'Ventilöffnung bei Boost' })).toContainText('81 %');
+  await device.getByRole('combobox', { name: 'Entkalkung: Uhrzeit' }).selectOption({ label: '03:30' });
+  await expect(device.getByRole('combobox', { name: 'Entkalkung: Wochentag' })).toHaveValue('6');
+  await expect(device.getByRole('combobox', { name: 'Vorrang des Manuell-Modus' }).locator('option:checked')).toHaveText('Von allen');
+
+  // Back to the default with one click
+  await device.getByRole('button', { name: 'Komforttemperatur auf Standard zurücksetzen' }).click();
+  await expect(comfort.getByLabel('Komforttemperatur', { exact: true })).toHaveValue('21');
+
+  await expect(bar).toContainText('2 ungespeicherte Änderung(en)');
+  await bar.getByRole('button', { name: 'Speichern und übertragen (2)' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Änderungen speichern?' });
+  await expect(dialog).toContainText('80 % → 81 %');
+  await expect(dialog).toContainText('11:00 → 03:30');
+  await dialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(bar).toContainText('Gespeichert');
+
+  await page.reload();
+  await expect(page.getByRole('region', { name: 'Gerät', exact: true }).getByRole('slider', { name: 'Ventilöffnung bei Boost' })).toHaveValue('81');
+  await expect(page.getByRole('region', { name: 'Gerät', exact: true }).getByRole('combobox', { name: 'Entkalkung: Uhrzeit' })).toHaveValue('7');
+  // Both back to their defaults (as in the fixture), for a second run
+  const reloaded = page.getByRole('region', { name: 'Gerät', exact: true });
+  await reloaded.getByRole('button', { name: 'Ventilöffnung bei Boost auf Standard zurücksetzen' }).click();
+  await reloaded.getByRole('button', { name: 'Entkalkung: Uhrzeit auf Standard zurücksetzen' }).click();
+  await bar.getByRole('button', { name: 'Speichern und übertragen (2)' }).click();
+  await page.getByRole('dialog', { name: 'Änderungen speichern?' }).getByRole('button', { name: 'Speichern' }).click();
+  await expect(bar).toContainText('Gespeichert');
+
+  // A battery device fetches its settings later: shown until it did
+  await page.goto('/device/HmIP-RF/0000DBE9A5C1F2');
+  const handle = page.getByRole('region', { name: 'Gerät', exact: true });
+  await handle.getByRole('switch', { name: 'Werksreset am Gerät sperren' }).click();
+  await expect(handle.getByRole('combobox', { name: 'Sommerzeit Beginn: Monat' }).locator('option:checked')).toHaveText('März');
+  await bar.getByRole('button', { name: 'Speichern und übertragen (1)' }).click();
+  await page.getByRole('dialog', { name: 'Änderungen speichern?' }).getByRole('button', { name: 'Speichern' }).click();
+  await expect(bar).toContainText('Übernahme ausstehend');
+  await expect(bar).toContainText('Einstellungen sind im Gerät gespeichert.', { timeout: 15000 });
+
+  // Back as before, for a second run
+  await handle.getByRole('button', { name: 'Werksreset am Gerät sperren auf Standard zurücksetzen' }).click();
+  await bar.getByRole('button', { name: 'Speichern und übertragen (1)' }).click();
+  await page.getByRole('dialog', { name: 'Änderungen speichern?' }).getByRole('button', { name: 'Speichern' }).click();
+  await expect(bar).toContainText(/Übernahme ausstehend|gespeichert/);
 });
