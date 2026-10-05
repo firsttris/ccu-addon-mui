@@ -30,22 +30,14 @@ build-ccu3:
 	CGO_ENABLED=0 GOOS=$(GOOS_CCU) GOARCH=$(GOARCH_CCU) GOARM=$(GOARM_CCU) \
 		$(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-arm -v
 
-## Build all add-on binaries: ARMv7 (CCU3, 32-bit OpenCCU), arm64 and amd64
-## (64-bit OpenCCU on Raspberry Pi 4/5, OVA, Docker, LXC). update_script
-## installs the one matching uname -m.
-build-addon: build-ccu3
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-arm64 -v
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-amd64 -v
-
 ## Run tests
 test:
 	$(GOTEST) -v ./...
 
-## Build all add-on binaries: ARMv7 (CCU3, 32-bit OpenCCU), arm64 and amd64
-## (64-bit OpenCCU on Raspberry Pi 4/5, OVA, Docker, LXC). update_script
-## installs the one matching uname -m.
+## Build both add-on binaries: ARMv7 for the CCU3 and every Raspberry Pi
+## (64-bit ARM kernels run it too), amd64 for OpenCCU on x86 (OVA, Docker,
+## LXC). Each goes into an archive of its own.
 build-addon: build-ccu3
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-arm64 -v
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-amd64 -v
 
 ## Run tests with coverage and generate reports
@@ -58,7 +50,7 @@ coverage:
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
-	rm -f $(BINARY_NAME)-arm $(BINARY_NAME)-arm64 $(BINARY_NAME)-amd64
+	rm -f $(BINARY_NAME)-arm $(BINARY_NAME)-amd64
 
 ## Download dependencies
 deps:
@@ -77,6 +69,6 @@ size: build build-ccu3
 ## Install the binaries to the addon_installer directory
 install-addon: build-addon
 	mkdir -p ../addon_installer/go-server
-	cp $(BINARY_NAME)-arm $(BINARY_NAME)-arm64 $(BINARY_NAME)-amd64 ../addon_installer/go-server/
+	cp $(BINARY_NAME)-arm $(BINARY_NAME)-amd64 ../addon_installer/go-server/
 
 .PHONY: all build build-ccu3 build-addon test coverage clean deps run size install-addon

@@ -7,7 +7,6 @@ addon_installer/go-server/
 addon_installer/VERSION
 go-server/ccu-addon-mui-server
 go-server/ccu-addon-mui-server-arm
-go-server/ccu-addon-mui-server-arm64
 go-server/ccu-addon-mui-server-amd64
 go-server/ccu-addon-mui-server-local
 

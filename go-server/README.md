@@ -18,7 +18,7 @@ Die ausführliche Doku steht in [`docs/`](../docs/README.md):
 Die erste Version des Add-ons lief auf Node.js und brachte dafür eine Laufzeit von 71 MB mit, die eine
 passende GLIBC auf der CCU brauchte. Der Go-Server ist ein einziges statisches Binary:
 
-- rund 8,6 MB für ARMv7, ohne Laufzeit und ohne Bibliotheken der CCU
+- rund 10 MB für ARMv7, ohne Laufzeit und ohne Bibliotheken der CCU
 - läuft deshalb unabhängig von der Firmware-Version
 - vier Abhängigkeiten, alle einkompiliert: `gorilla/websocket`, `kolo/xmlrpc`, `rogpeppe/go-charset` und
   `golang.org/x/text` (ISO-8859-1 von ReGa und den XML-RPC-Callbacks)
@@ -28,7 +28,7 @@ passende GLIBC auf der CCU brauchte. Der Go-Server ist ein einziges statisches B
 ```bash
 make build          # Binary für diesen Rechner
 make build-ccu3     # statisches ARMv7-Binary für die CCU (ccu-addon-mui-server-arm)
-make build-addon    # dazu arm64 und amd64 für 64-bit-OpenCCU (…-arm64, …-amd64)
+make build-addon    # dazu amd64 für OpenCCU auf x86 (…-amd64)
 make size           # Größen von Binary und ARMv7-Binary
 make test           # go test ./...
 make coverage       # Coverage-Bericht (coverage.out, coverage.html)
@@ -63,7 +63,7 @@ Auf der CCU selbst gilt `CALLBACK_HOST=127.0.0.1` (Standard). Optionen kommen do
 ## Nur den Server auf der CCU tauschen
 
 ```bash
-make build-ccu3     # bzw. build-addon und …-arm64 für 64-bit-OpenCCU auf dem Raspberry Pi
+make build-ccu3     # bzw. build-addon und …-amd64 für OpenCCU auf x86
 ssh root@<CCU> /usr/local/etc/config/rc.d/mui stop
 scp ccu-addon-mui-server-arm root@<CCU>:/usr/local/addons/mui/go-server/ccu-addon-mui-server
 ssh root@<CCU> /usr/local/etc/config/rc.d/mui start
