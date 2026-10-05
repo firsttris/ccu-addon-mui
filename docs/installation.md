@@ -6,8 +6,9 @@ Rechner, Docker oder eine Cloud werden nicht gebraucht.
 
 ## Voraussetzungen
 
-- **Zentrale**: CCU3 oder OpenCCU (früher RaspberryMatic) auf ARM, also z. B. auf einem Raspberry Pi. Der
-  Server ist ein statisches ARMv7-Binary.
+- **Zentrale**: CCU3 oder OpenCCU (früher RaspberryMatic), auf dem Raspberry Pi wie auf x86 (OVA, Docker,
+  LXC). Das Archiv bringt den Server als statisches Binary für ARMv7, arm64 und amd64 mit; installiert wird
+  das passende.
 - **Räume oder Gewerke**: Das Dashboard zeigt Kanäle nach Raum und Gewerk. Ohne Zuordnung erscheint ein
   Gerät nur unter *Alle Geräte*. Zuordnen kannst du direkt im Add-on (siehe [Einrichten](einrichten.md)).
 - **Browser**: aktuelle Versionen von Chrome, Edge, Firefox oder Safari, auf Desktop, Tablet und Handy.
@@ -18,7 +19,8 @@ Rechner, Docker oder eine Cloud werden nicht gebraucht.
    [Releases-Seite](https://github.com/firsttris/ccu-addon-mui/releases/latest) laden. Das Archiv nicht
    entpacken.
 2. In der WebUI der CCU *Einstellungen → Systemsteuerung → Zusatzsoftware* öffnen, die Datei auswählen und
-   *Installieren* klicken. Hochladen und Neustart dauern ein paar Minuten.
+   *Installieren* klicken. OpenCCU startet das Add-on sofort, ohne Neustart der CCU. Die CCU3 mit der
+   Firmware von eQ-3 startet nach jeder Installation neu, das dauert ein paar Minuten.
 
    <img src="ccu3-install.png" alt="Zusatzsoftware in der WebUI: Datei auswählen und installieren" width="700">
 
@@ -132,7 +134,8 @@ unter *Zusatzsoftware → Neustart* oder per SSH mit `/usr/local/etc/config/rc.d
 
 | Pfad | Inhalt |
 |---|---|
-| `/usr/local/addons/mui/` | App und Server (`go-server/ccu-addon-mui-server`) |
+| `/usr/local/addons/mui/` | App, Server (`go-server/ccu-addon-mui-server`) und `update-check.cgi`, über das die CCU nach Updates fragt |
+| `/usr/local/etc/config/addons/www/mui` | Link auf das Add-on-Verzeichnis, darüber liefert die CCU `/addons/mui` aus |
 | `/usr/local/etc/config/rc.d/mui` | Startskript |
 | `/usr/local/etc/config/lighttpd/mui.conf` | Weiterleitung von `/ws/mui` an den Server |
 | `/usr/local/etc/config/mui.conf` | deine Optionen (optional) |
@@ -141,8 +144,9 @@ unter *Zusatzsoftware → Neustart* oder per SSH mit `/usr/local/etc/config/rc.d
 | `/usr/local/etc/config/mui-audit.log` | Protokoll aller Änderungen über das Add-on |
 | `/usr/local/etc/config/mui-push.json` | Push-Schlüssel und Abos |
 | `/usr/local/etc/config/mui-diagrams.json` | Diagramme |
+| `/usr/local/etc/config/mui-rules.json` | Benachrichtigungsregeln |
 | `/usr/local/mui-diagrams/` | aufgezeichnete Werte (Minutenwerte 60 Tage, Stundenwerte unbegrenzt) |
-| `/var/log/mui-websocket-server.log` | Log des Servers (im RAM, ab 1 MB rotiert) |
+| `/var/log/mui-websocket-server.log` | Log des Servers (im RAM; ist es beim Start größer als 1 MB, wird es zu `.old`) |
 
 Die Dateien unter `/usr/local/etc/config` sind Teil jedes CCU-Backups. Die Minutenwerte der Diagramme
 sind davon ausgenommen, damit Backups klein bleiben.
@@ -150,9 +154,9 @@ sind davon ausgenommen, damit Backups klein bleiben.
 ## Deinstallieren
 
 In der WebUI unter *Zusatzsoftware → Deinstallieren*. Das entfernt App, Server, Startskript, Log,
-`mui.conf` und `mui-auth.key`. Liegen bleiben `mui-sessions.json`, `mui-push.json`, `mui-audit.log`,
-`mui-diagrams.json` und `/usr/local/mui-diagrams`, damit eine Neuinstallation Diagramme und Verlauf
-behält. Wer alles entfernen will, löscht sie per SSH.
+`mui.conf`, `mui-auth.key`, die Weiterleitung `lighttpd/mui.conf` und den Link unter `addons/www`. Liegen
+bleiben `mui-sessions.json`, `mui-push.json`, `mui-audit.log`, `mui-diagrams.json`, `mui-rules.json` und
+`/usr/local/mui-diagrams`, damit eine Neuinstallation Diagramme, Regeln und Verlauf behält. Wer alles entfernen will, löscht sie per SSH.
 
 ## Häufige Probleme
 

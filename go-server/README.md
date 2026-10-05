@@ -28,12 +28,13 @@ passende GLIBC auf der CCU brauchte. Der Go-Server ist ein einziges statisches B
 ```bash
 make build          # Binary für diesen Rechner
 make build-ccu3     # statisches ARMv7-Binary für die CCU (ccu-addon-mui-server-arm)
-make size           # Größen beider Binaries
+make build-addon    # dazu arm64 und amd64 für 64-bit-OpenCCU (…-arm64, …-amd64)
+make size           # Größen von Binary und ARMv7-Binary
 make test           # go test ./...
 make coverage       # Coverage-Bericht (coverage.out, coverage.html)
 ```
 
-`build-ccu3` baut mit `GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=0`, `-ldflags="-s -w -extldflags=-static"`
+`update_script` installiert das Binary, das zu `uname -m` passt. `build-ccu3` baut mit `GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=0`, `-ldflags="-s -w -extldflags=-static"`
 und `-tags netgo` (DNS ohne libc). Im Normalfall baut `npm run build` im Wurzelverzeichnis alles zusammen,
 inklusive App und installierbarem `mui-<version>.tar.gz`.
 
@@ -62,9 +63,10 @@ Auf der CCU selbst gilt `CALLBACK_HOST=127.0.0.1` (Standard). Optionen kommen do
 ## Nur den Server auf der CCU tauschen
 
 ```bash
-make build-ccu3
+make build-ccu3     # bzw. build-addon und …-arm64 für 64-bit-OpenCCU auf dem Raspberry Pi
+ssh root@<CCU> /usr/local/etc/config/rc.d/mui stop
 scp ccu-addon-mui-server-arm root@<CCU>:/usr/local/addons/mui/go-server/ccu-addon-mui-server
-ssh root@<CCU> /usr/local/etc/config/rc.d/mui restart
+ssh root@<CCU> /usr/local/etc/config/rc.d/mui start
 ```
 
 Das Log steht in `/var/log/mui-websocket-server.log`, mit `DEBUG=true` in `mui.conf` ausführlicher.

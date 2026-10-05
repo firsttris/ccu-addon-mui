@@ -93,6 +93,11 @@ case "$1" in
     ""|start)
         start
     ;;
+
+    init)
+        # S55InitAddons calls every add-on with init at boot, before
+        # S98StartAddons starts them: nothing to prepare here
+    ;;
     
     stop)
         stop
@@ -107,11 +112,7 @@ case "$1" in
     ;;
     
     info)
-        # Read version from VERSION file if it exists, otherwise use fallback
-        VERSION="0.0.55"
-        if [ -f "$ADDON_DIR/VERSION" ]; then
-            VERSION=$(cat "$ADDON_DIR/VERSION")
-        fi
+        VERSION=$(cat "$ADDON_DIR/VERSION" 2>/dev/null)
         
         echo "Info: <b>MUI CCU Addon</b><br>"
         echo "Info: <a href='https://github.com/firsttris/ccu-addon-mui'>https://github.com/firsttris/ccu-addon-mui</a>"
@@ -127,11 +128,16 @@ case "$1" in
         stop
         rm -rf $ADDON_DIR
         rm -f $LOG_FILE $LOG_FILE.old $CONFIG_FILE $AUTH_KEY_FILE
+        # The proxy for /ws/mui and the link the WebUI serves /addons/mui from
+        rm -f /usr/local/etc/config/lighttpd/mui.conf /usr/local/etc/config/addons/www/mui
+        if [ -x /etc/init.d/S50lighttpd ]; then
+            /etc/init.d/S50lighttpd reload
+        fi
         echo "Deinstallation abgeschlossen."
     ;;
     
     *)
-        echo "Usage: $0 {start|stop|restart|info|uninstall}" >&2
+        echo "Usage: $0 {start|stop|restart|status|info|uninstall}" >&2
         exit 1
     ;;
 esac

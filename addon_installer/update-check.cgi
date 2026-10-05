@@ -3,17 +3,21 @@
 set checkURL "https://api.github.com/repos/firsttris/ccu-addon-mui/releases/latest"
 set downloadURL "https://github.com/firsttris/ccu-addon-mui/releases/latest"
 
+# Only "cmd" is read from the query: the WebUI calls this page with
+# cmd=check_version for the version check and cmd=download for the release
+# page, both with &version=... (cp_software.cgi). Setting any variable from
+# the query would let the caller overwrite the URLs above, which end up in
+# exec and in the redirect.
+set cmd ""
 catch {
-    set input $env(QUERY_STRING)
-    set pairs [split $input &]
-    foreach pair $pairs {
-        if {0 != [regexp "^(\[^=]*)=(.*)$" $pair dummy varname val]} {
-            set $varname $val
+    foreach pair [split $env(QUERY_STRING) &] {
+        if {$pair == "cmd=download"} {
+            set cmd "download"
         }
     }
 }
 
-if {[info exists cmd] && $cmd == "download"} {
+if {$cmd == "download"} {
     puts -nonewline "Content-Type: text/html; charset=utf-8\r\n\r\n"
     puts "<html><head><meta http-equiv='refresh' content='0; url=$downloadURL' /></head></html>"
 } else {
