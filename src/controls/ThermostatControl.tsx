@@ -20,6 +20,7 @@ type ThermostatProps = {
 };
 
 const BOOST_COLOR = '#FF7043';
+const OFF_TEMPERATURE = 4.5;
 
 export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const effects = useEffects();
@@ -58,8 +59,18 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const set = (datapoint: string, value: number | boolean) =>
     setDataPoint(channel.interfaceName, channel.address, datapoint, value);
 
-  // Off: the lowest setting (BidCos 4.5 °C means "off")
-  const handlePowerOff = () => (bidcos ? set('SET_TEMPERATURE', 4.5) : set('SET_POINT_TEMPERATURE', 5));
+  // Off: 4.5 °C, which the thermostats take as "off" (frost protection). For
+  // HmIP in manual mode as the WebUI does (webui.js onClickModeOFF: SET_POINT_MODE
+  // and CONTROL_MODE 1, SET_POINT_TEMPERATURE offTemp 4.5), else the next
+  // switching time of the week profile turns the heating back on.
+  const handlePowerOff = () => {
+    if (bidcos) {
+      set('SET_TEMPERATURE', OFF_TEMPERATURE);
+      return;
+    }
+    set('CONTROL_MODE', 1);
+    set('SET_POINT_TEMPERATURE', OFF_TEMPERATURE);
+  };
 
   const handleToggleMode = () => {
     if (!bidcos) set('CONTROL_MODE', manualMode ? 0 : 1);
