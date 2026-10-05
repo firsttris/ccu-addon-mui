@@ -18,6 +18,10 @@ type SessionInfo struct {
 	Device   string    `json:"device"`
 	Created  time.Time `json:"created"`
 	LastUsed time.Time `json:"lastUsed"`
+	// AdminNotBefore: admin tokens of the device issued up to then no
+	// longer work (EndElevation); its login stays valid. Only kept in the
+	// file, Sessions leaves it out.
+	AdminNotBefore *time.Time `json:"adminNotBefore,omitempty"`
 }
 
 const (
@@ -133,7 +137,9 @@ func (a *Authenticator) Sessions() []SessionInfo {
 	}
 	list := make([]SessionInfo, 0, len(a.store.sessions))
 	for _, s := range a.store.sessions {
-		list = append(list, *s)
+		info := *s
+		info.AdminNotBefore = nil
+		list = append(list, info)
 	}
 	sort.Slice(list, func(i, j int) bool { return list[i].LastUsed.After(list[j].LastUsed) })
 	return list
@@ -152,4 +158,35 @@ func (a *Authenticator) Revoke(id string) bool {
 	delete(a.store.sessions, id)
 	_ = a.store.save()
 	return true
+}
+
+// EndElevation gives up the admin rights of a device before its admin
+// token expires: admin tokens issued so far stop working, the device stays
+// logged in.
+func (a *Authenticator) EndElevation(id string) bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.store == nil {
+		return false
+	}
+	info, ok := a.store.sessions[id]
+	if !ok {
+		return false
+	}
+	now := a.now()
+	info.AdminNotBefore = &now
+	_ = a.store.save()
+	return true
+}
+
+// elevationEnded reports whether an admin token was issued before its
+// device gave up the admin rights.
+func (a *Authenticator) elevationEnded(session Session) bool {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.store == nil {
+		return false
+	}
+	info, ok := a.store.sessions[session.ID]
+	return ok && info.AdminNotBefore != nil && !session.IssuedAt.After(*info.AdminNotBefore)
 }

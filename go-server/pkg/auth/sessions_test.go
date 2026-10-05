@@ -100,3 +100,59 @@ func TestLastUsedIsUpdatedHourly(t *testing.T) {
 		t.Fatalf("expected lastUsed %v, got %v", now, got)
 	}
 }
+
+func TestEndElevationKeepsTheDeviceLoggedIn(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	dir := t.TempDir()
+	a := newTestAuthenticator(t, ccu.URL)
+	now := time.Now()
+	a.now = func() time.Time { return now }
+	a.SetLevelFunc(func(string) (string, error) { return LevelAdmin, nil })
+	if err := a.EnableSessions(filepath.Join(dir, "sessions.json")); err != nil {
+		t.Fatal(err)
+	}
+
+	session, token, err := a.Login("Admin", "secret", "Wandtablet", "192.0.2.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, phone, _ := a.Login("Admin", "secret", "Handy", "192.0.2.1")
+	phoneSession, _ := a.Verify(phone)
+	adminToken, _ := a.IssueAdminToken(session)
+	phoneAdmin, _ := a.IssueAdminToken(phoneSession)
+
+	now = now.Add(time.Minute)
+	if !a.EndElevation(session.ID) {
+		t.Fatal("EndElevation failed")
+	}
+	if _, ok := a.VerifyAdmin(adminToken, "Admin"); ok {
+		t.Fatal("the admin token must stop working")
+	}
+	if _, _, err := a.Refresh(token, "Wandtablet"); err != nil {
+		t.Fatalf("the device stays logged in: %v", err)
+	}
+	if _, ok := a.VerifyAdmin(phoneAdmin, "Admin"); !ok {
+		t.Fatal("other devices keep their admin rights")
+	}
+	if list := a.Sessions(); list[0].AdminNotBefore != nil || list[1].AdminNotBefore != nil {
+		t.Fatal("Sessions must leave out AdminNotBefore")
+	}
+
+	// Entering the password again works, also after a restart
+	now = now.Add(time.Millisecond)
+	again, _ := a.IssueAdminToken(session)
+	b := newTestAuthenticator(t, ccu.URL)
+	b.key = a.key
+	b.now = a.now
+	if err := b.EnableSessions(filepath.Join(dir, "sessions.json")); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := b.VerifyAdmin(again, "Admin"); !ok {
+		t.Fatal("a new admin token must work")
+	}
+	if _, ok := b.VerifyAdmin(adminToken, "Admin"); ok {
+		t.Fatal("the ended admin token must stay invalid after a restart")
+	}
+}

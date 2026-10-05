@@ -448,6 +448,9 @@
     },
     "getDeviceImages": {
       "$ref": "#/definitions/GetDeviceImagesCall"
+    },
+    "endElevation": {
+      "$ref": "#/definitions/EndElevationCall"
     }
   },
   "required": [
@@ -472,6 +475,7 @@
     "setProgramActive",
     "revokeSession",
     "logout",
+    "endElevation",
     "addLink",
     "removeLink",
     "putLinkParamset",
@@ -1758,6 +1762,10 @@
         },
         "adminToken": {
           "type": "string"
+        },
+        "elevatedUntil": {
+          "type": "string",
+          "description": "RFC 3339 time the admin rights end; absent without an expiry or when not elevated"
         }
       },
       "required": [
@@ -2805,6 +2813,10 @@
         },
         "code": {
           "type": "string"
+        },
+        "elevatedUntil": {
+          "type": "string",
+          "description": "RFC 3339 time the admin rights end; absent without an expiry or when not elevated"
         }
       },
       "required": [
@@ -2979,6 +2991,9 @@
         },
         {
           "$ref": "#/definitions/LogoutResponse"
+        },
+        {
+          "$ref": "#/definitions/EndElevationResponse"
         },
         {
           "$ref": "#/definitions/AddLinkResponse"
@@ -12714,6 +12729,59 @@
         },
         "response": {
           "$ref": "#/definitions/GetDeviceImagesResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "EndElevationRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "endElevation"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "description": "Gives up the admin rights before they expire: the admin token of this device stops working"
+    },
+    "EndElevationResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "endElevation_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "EndElevationCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/EndElevationRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/EndElevationResponse"
         }
       },
       "required": [

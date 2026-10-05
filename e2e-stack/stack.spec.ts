@@ -183,6 +183,39 @@ test('verlangt nach Ablauf des Admin-Tokens das Passwort erneut', async ({ page 
   ).toBeVisible();
 });
 
+test('beendet die Admin-Rechte vor Ablauf, angemeldet bleibt man', async ({ page }) => {
+  await login(page);
+  // On every page while they last: how long, and a click ends them
+  const lock = page.getByRole('button', { name: /^Admin-Rechte beenden \(noch \d+ h\)$/ });
+  await expect(lock).toBeVisible();
+  await page.goto('/device/HmIP-RF/0000DBE9A5C1F2');
+  const settings = page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' });
+  await expect(settings.getByRole('combobox', { name: 'Entprellzeit (Einheit)' })).toBeVisible();
+
+  await lock.click();
+  await expect(page.getByText('Admin-Rechte beendet')).toBeVisible();
+  await expect(lock).toHaveCount(0);
+  await expect(settings.getByRole('combobox')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Passwort eingeben' })).toBeVisible();
+
+  // Still logged in after a reload, without admin rights
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Menü' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Passwort eingeben' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Admin-Rechte beenden/ })).toHaveCount(0);
+
+  // The password brings them back; in setting up they can be ended too
+  await page.getByRole('button', { name: 'Passwort eingeben' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Passwort eingeben' });
+  await dialog.getByLabel('Passwort').fill('secret');
+  await dialog.getByRole('button', { name: 'Bestätigen' }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.goto('/setup/');
+  await expect(page.getByText(/^Admin-Modus · noch \d+ h$/)).toBeVisible();
+  await page.getByRole('button', { name: 'Admin-Rechte beenden', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Passwort eingeben' })).toBeVisible();
+});
+
 test('benennt Kanäle um und ordnet sie Räumen zu', async ({ page }) => {
   await login(page);
   await page.goto('/device/BidCos-RF/LEQ0000001');

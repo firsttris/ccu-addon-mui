@@ -58,6 +58,8 @@ interface Response {
   // auth_response, elevate_response: for changing settings
   adminToken?: string;
   elevated?: boolean;
+  // When the admin rights end (RFC 3339)
+  elevatedUntil?: string;
   requestId?: string;
   // deviceProblems
   devices?: DeviceProblem[];
@@ -159,6 +161,8 @@ export const useWebsocket = () => {
   const [userLevel, setUserLevel] = useState<UserLevel>('');
   // May change settings: password entered recently (admin token)
   const [elevated, setElevated] = useState(false);
+  // When the admin rights end (ms), unknown without authentication
+  const [elevatedUntil, setElevatedUntil] = useState<number>();
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const deviceId = useUniqueDeviceID();
@@ -335,6 +339,7 @@ export const useWebsocket = () => {
     setLoginError(null);
     setUserLevel(response.level ?? '');
     setElevated(response.elevated === true);
+    setElevatedUntil(response.elevatedUntil ? Date.parse(response.elevatedUntil) : undefined);
     setAuthState('authenticated');
     readyRef.current = true;
 
@@ -389,9 +394,26 @@ export const useWebsocket = () => {
         writeToken(response.adminToken, ADMIN_TOKEN_STORAGE_KEY);
       }
       setElevated(true);
+      setElevatedUntil(response.elevatedUntil ? Date.parse(response.elevatedUntil) : undefined);
     },
     [request],
   );
+
+  // Gives up the admin rights before they expire; the server makes the
+  // admin token useless, so a copy of it can't change settings either
+  const endElevation = useCallback(async () => {
+    await request({ type: 'endElevation' }, { queue: false });
+    writeToken(null, ADMIN_TOKEN_STORAGE_KEY);
+    setElevated(false);
+    setElevatedUntil(undefined);
+  }, [request]);
+
+  // Shown as not elevated once the admin token expires
+  useEffect(() => {
+    if (!elevated || elevatedUntil === undefined) return;
+    const timer = setTimeout(() => setElevated(false), Math.max(0, elevatedUntil - Date.now()));
+    return () => clearTimeout(timer);
+  }, [elevated, elevatedUntil]);
 
   const logout = useCallback(async () => {
     // Revoke the token on the server, so a copy of it is useless too
@@ -417,13 +439,13 @@ export const useWebsocket = () => {
 
   // All functions are stable, so this object doesn't change on events
   const actions = useMemo(
-    () => ({ request, subscribe, addEventListener, login, logout, elevate }),
-    [request, subscribe, addEventListener, login, logout, elevate],
+    () => ({ request, subscribe, addEventListener, login, logout, elevate, endElevation }),
+    [request, subscribe, addEventListener, login, logout, elevate, endElevation],
   );
 
   const state = useMemo(
-    () => ({ ...actions, connectionStatus, authState, authRequired, userLevel, elevated, loginError }),
-    [actions, connectionStatus, authState, authRequired, userLevel, elevated, loginError],
+    () => ({ ...actions, connectionStatus, authState, authRequired, userLevel, elevated, elevatedUntil, loginError }),
+    [actions, connectionStatus, authState, authRequired, userLevel, elevated, elevatedUntil, loginError],
   );
 
   return { actions, state };

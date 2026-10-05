@@ -11,7 +11,6 @@ import BracesIcon from '~icons/lucide/braces';
 import PlayIcon from '~icons/lucide/play';
 import HistoryIcon from '~icons/lucide/history';
 import KeyboardIcon from '~icons/lucide/keyboard';
-import ShieldIcon from '~icons/lucide/shield-check';
 import FlameIcon from '~icons/lucide/flame';
 import ChartIcon from '~icons/lucide/chart-line';
 import BellIcon from '~icons/lucide/bell-ring';
@@ -19,6 +18,7 @@ import GatewayIcon from '~icons/lucide/router';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useInbox } from '../../queries';
 import { ElevateDialog } from '../../components/ElevateDialog';
+import { AdminModeBadge } from '../../components/AdminLock';
 import { Button } from '../../components/ui/button';
 import { m } from '../../paraglide/messages';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -173,14 +173,7 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
             </Button>
           </Notice>
         )}
-        {isAdmin && elevated && (
-          <div className="flex justify-end">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-800 dark:text-amber-300">
-              <ShieldIcon className="size-3.5" />
-              {m.ADMIN_MODE()}
-            </span>
-          </div>
-        )}
+        {isAdmin && elevated && <AdminModeBadge />}
         {children}
       </div>
       {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}

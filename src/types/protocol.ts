@@ -44,6 +44,7 @@ export type ServerMessage =
   | SetProgramActiveResponse
   | RevokeSessionResponse
   | LogoutResponse
+  | EndElevationResponse
   | AddLinkResponse
   | RemoveLinkResponse
   | PutLinkParamsetResponse
@@ -324,6 +325,7 @@ export interface Protocol {
   saveRule: SaveRuleCall;
   deleteRule: DeleteRuleCall;
   getDeviceImages: GetDeviceImagesCall;
+  endElevation: EndElevationCall;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -816,6 +818,10 @@ export interface ElevateResponse {
   requestId?: string;
   success: boolean;
   adminToken?: string;
+  /**
+   * RFC 3339 time the admin rights end; absent without an expiry or when not elevated
+   */
+  elevatedUntil?: string;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -5528,6 +5534,33 @@ export interface DeviceImageShape {
   h: number;
 }
 /**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "EndElevationCall".
+ */
+export interface EndElevationCall {
+  request: EndElevationRequest;
+  response: EndElevationResponse;
+}
+/**
+ * Gives up the admin rights before they expire: the admin token of this device stops working
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "EndElevationRequest".
+ */
+export interface EndElevationRequest {
+  type: "endElevation";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "EndElevationResponse".
+ */
+export interface EndElevationResponse {
+  type: "endElevation_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
  * Sent first on every connection
  *
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -5568,6 +5601,10 @@ export interface AuthResponse {
   token?: string;
   error?: string;
   code?: string;
+  /**
+   * RFC 3339 time the admin rights end; absent without an expiry or when not elevated
+   */
+  elevatedUntil?: string;
 }
 /**
  * A failed request; requestId if the request had one

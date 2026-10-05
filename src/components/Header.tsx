@@ -24,6 +24,7 @@ import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useRooms, useServiceMessages, useTrades } from '../queries';
 import { ServiceMessagesSheet } from './ServiceMessages';
 import { AlarmButton, AlarmsSheet } from './Alarms';
+import { AdminLockButton } from './AdminLock';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
@@ -293,6 +294,7 @@ export const Header: React.FC = () => {
           <span className="truncate text-xl leading-tight font-semibold tracking-tight sm:text-2xl">{title}</span>
           <Clock />
         </div>
+        <AdminLockButton />
         <AlarmButton onClick={() => setAlarmsOpen(true)} />
         {problemCount > 0 && (
           <button

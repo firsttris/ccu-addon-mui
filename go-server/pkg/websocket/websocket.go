@@ -563,6 +563,8 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleListDevices(client, requestID)
 	case "elevate":
 		s.handleElevate(client, message)
+	case "endElevation":
+		s.handleEndElevation(client, message)
 	case "rename":
 		s.handleRename(client, message)
 	case "setChannelTile":
@@ -829,9 +831,11 @@ type authResponse struct {
 	// changing settings for a few hours; Elevated says whether it is valid.
 	AdminToken string `json:"adminToken,omitempty"`
 	Elevated   bool   `json:"elevated"`
-	Token      string `json:"token,omitempty"`
-	Error      string `json:"error,omitempty"`
-	Code       string `json:"code,omitempty"`
+	// ElevatedUntil is when the admin rights end (RFC 3339)
+	ElevatedUntil string `json:"elevatedUntil,omitempty"`
+	Token         string `json:"token,omitempty"`
+	Error         string `json:"error,omitempty"`
+	Code          string `json:"code,omitempty"`
 }
 
 // handleAuth checks a stored token. Every client sends this first after
@@ -881,7 +885,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	}
 	s.sendJSON(client, authResponse{
 		Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level,
-		Token: token, Elevated: client.elevated(),
+		Token: token, Elevated: client.elevated(), ElevatedUntil: client.elevatedUntilText(),
 	})
 }
 
@@ -946,7 +950,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 	}
 	s.sendJSON(client, authResponse{
 		Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level,
-		Token: token, AdminToken: adminToken, Elevated: client.elevated(),
+		Token: token, AdminToken: adminToken, Elevated: client.elevated(), ElevatedUntil: client.elevatedUntilText(),
 	})
 }
 
@@ -955,6 +959,41 @@ type elevateResponse struct {
 	RequestID  string `json:"requestId,omitempty"`
 	Success    bool   `json:"success"`
 	AdminToken string `json:"adminToken,omitempty"`
+	// ElevatedUntil is when the admin rights end (RFC 3339)
+	ElevatedUntil string `json:"elevatedUntil,omitempty"`
+}
+
+// elevatedUntilText is when the client's admin rights end, for showing
+// the time left; empty when not elevated or without authentication.
+func (c *Client) elevatedUntilText() string {
+	if !c.elevated() || c.elevatedUntil.Equal(alwaysElevated) {
+		return ""
+	}
+	return c.elevatedUntil.UTC().Format(time.RFC3339)
+}
+
+// handleEndElevation gives up the admin rights of this device before they
+// expire: its admin token stops working, it stays logged in. Other
+// connections of the device reconnect and so drop their admin rights too.
+func (s *Server) handleEndElevation(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+	}
+	_ = json.Unmarshal(message, &msg)
+	if s.auth == nil {
+		s.sendRequestError(client, msg.RequestID, "authentication is disabled", "NOT_AVAILABLE")
+		return
+	}
+	client.elevatedUntil = time.Time{}
+	if id := client.SessionID(); id != "" {
+		s.auth.EndElevation(id)
+		s.disconnectSession(id, client)
+	}
+	if err := s.audit.Record(audit.Entry{User: client.user, Action: "endElevation", Result: rega.SetOK}); err != nil {
+		logger.Error("Failed to write the audit log:", err)
+	}
+	logger.Info(fmt.Sprintf("🔒 User %q gave up the admin rights", client.user))
+	s.sendJSON(client, elevateResponse{Type: "endElevation_response", RequestID: msg.RequestID, Success: true})
 }
 
 // handleElevate checks the password of the logged-in user again and
@@ -990,7 +1029,7 @@ func (s *Server) handleElevate(client *Client, message []byte) {
 		return
 	}
 	client.elevatedUntil = s.auth.AdminTokenExpiry()
-	s.sendJSON(client, elevateResponse{Type: "elevate_response", RequestID: msg.RequestID, Success: true, AdminToken: adminToken})
+	s.sendJSON(client, elevateResponse{Type: "elevate_response", RequestID: msg.RequestID, Success: true, AdminToken: adminToken, ElevatedUntil: client.elevatedUntilText()})
 }
 
 type setDatapointResponse struct {
