@@ -144,12 +144,7 @@ const LinkRow = ({
           {link.name && <span className="text-muted-foreground">„{link.name}“</span>}
         </div>
       )}
-      {open && (
-        <LinkParameters
-          interfaceName={link.interfaceName}
-          link={link}
-        />
-      )}
+      {open && <LinkParameters interfaceName={link.interfaceName} link={link} />}
     </li>
   );
 };

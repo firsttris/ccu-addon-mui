@@ -57,15 +57,22 @@ export const receiverKey = (
     case 'HmIP-RGBW':
       if (deviceOperationMode === undefined) return undefined;
       // 0 RGBW, 1 RGB, 2 tunable white, 3 PWM
-      return ['UNIVERSAL_LIGHT_RECEIVER_RGB(W)', 'UNIVERSAL_LIGHT_RECEIVER_RGB(W)', 'UNIVERSAL_LIGHT_RECEIVER_TW', 'UNIVERSAL_LIGHT_RECEIVER_PWM'][
-        deviceOperationMode
-      ];
+      return [
+        'UNIVERSAL_LIGHT_RECEIVER_RGB(W)',
+        'UNIVERSAL_LIGHT_RECEIVER_RGB(W)',
+        'UNIVERSAL_LIGHT_RECEIVER_TW',
+        'UNIVERSAL_LIGHT_RECEIVER_PWM',
+      ][deviceOperationMode];
     case 'HmIP-DRG-DALI':
       if (maxCapabilities === undefined) return undefined;
       // 0 switch, 1 dimmer, 2 tunable white, 3/4 RGB + tunable white
-      return ['SWITCH_VIRTUAL_RECEIVER', 'UNIVERSAL_LIGHT_RECEIVER_PWM', 'UNIVERSAL_LIGHT_RECEIVER_TW', 'UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI', 'UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI'][
-        maxCapabilities
-      ];
+      return [
+        'SWITCH_VIRTUAL_RECEIVER',
+        'UNIVERSAL_LIGHT_RECEIVER_PWM',
+        'UNIVERSAL_LIGHT_RECEIVER_TW',
+        'UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI',
+        'UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI',
+      ][maxCapabilities];
     case 'HmIP-LSC':
       return 'UNIVERSAL_LIGHT_RECEIVER_LSC';
   }
@@ -119,9 +126,7 @@ export const senderKey = (
 
 export const profilesFor = (table: ProfileTable, receiverType: string, senderType: string, peerType?: string) =>
   (table[receiverType]?.[senderType] ?? []).filter(
-    (profile) =>
-      !peerType ||
-      ((!profile.whitelist || profile.whitelist.includes(peerType)) && !profile.blacklist?.includes(peerType)),
+    (profile) => !peerType || ((!profile.whitelist || profile.whitelist.includes(peerType)) && !profile.blacklist?.includes(peerType)),
   );
 
 const isRange = (value: ProfileValue): value is { default: number; min: number; max: number } => !Array.isArray(value);
@@ -189,17 +194,35 @@ export const encodeHmipTime = (seconds: number): { base: number; factor: number 
 export const BIDCOS_PERMANENT = 111600;
 
 // Choices for times, as the WebUI's time selector (hmip_helper.tcl)
-export const TIME_PRESETS = [0, 0.1, 0.5, 1, 2, 3, 5, 10, 30, 60, 120, 300, 600, 1800, 3600, 7200, 10800, 18000, 28800, 43200, 86400, PERMANENT];
+export const TIME_PRESETS = [
+  0,
+  0.1,
+  0.5,
+  1,
+  2,
+  3,
+  5,
+  10,
+  30,
+  60,
+  120,
+  300,
+  600,
+  1800,
+  3600,
+  7200,
+  10800,
+  18000,
+  28800,
+  43200,
+  86400,
+  PERMANENT,
+];
 
 // Readable names of link parameters and their choices: as the WebUI's
 // profiles for this pair label them, else the translations and the
 // catalog of settings; the long-press ones marked as such
-export const linkParameterNames = (
-  profiles: LinkProfile[],
-  lang: string,
-  t: (key: string) => string,
-  long: string,
-) => {
+export const linkParameterNames = (profiles: LinkProfile[], lang: string, t: (key: string) => string, long: string) => {
   const labels = new Map<string, string>();
   const choices = new Map<string, Record<string, Record<string, string>>>();
   for (const field of profiles.flatMap((p) => p.fields)) {
@@ -213,8 +236,7 @@ export const linkParameterNames = (
     nameOf: (name: string) => {
       const base = name.replace(/^(SHORT|LONG)_/, '');
       const translated = t(name);
-      const label =
-        labels.get(name) ?? (translated !== name ? translated : labels.get(`SHORT_${base}`) ?? parameterLabel(base));
+      const label = labels.get(name) ?? (translated !== name ? translated : (labels.get(`SHORT_${base}`) ?? parameterLabel(base)));
       return name.startsWith('LONG_') ? `${label} (${long})` : label;
     },
     optionOf: (name: string, index: number, option: string) => {

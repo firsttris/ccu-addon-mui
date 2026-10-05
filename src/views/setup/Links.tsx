@@ -323,8 +323,7 @@ export const LinkParameters = ({ interfaceName, link }: { interfaceName: string;
             <ul className="flex list-disc flex-col gap-1 pl-5">
               {changes.map(([name, value]) => (
                 <li key={name}>
-                  <strong>{t(name as TranslationKey)}</strong>:{' '}
-                  {formatParameterValue(description.data[name], current[name], t)} →{' '}
+                  <strong>{t(name as TranslationKey)}</strong>: {formatParameterValue(description.data[name], current[name], t)} →{' '}
                   {formatParameterValue(description.data[name], value, t)}
                 </li>
               ))}
@@ -346,10 +345,7 @@ interface LinksProps {
 export const useLinkChannelInfo = () => {
   const { data: devices = [] } = useDevices();
   return useMemo(
-    () =>
-      new Map(
-        devices.flatMap((d) => (d.channels ?? []).map((channel) => [channel.address, { channel, deviceType: d.type }] as const)),
-      ),
+    () => new Map(devices.flatMap((d) => (d.channels ?? []).map((channel) => [channel.address, { channel, deviceType: d.type }] as const))),
     [devices],
   );
 };
@@ -404,13 +400,8 @@ export const AddLinkForm = ({
     return devices
       .filter((d) => d.interfaceName === interfaceName && d.address !== deviceAddress)
       .flatMap((d) => d.channels ?? [])
-      .filter(
-        (c) =>
-          shareRole(ownChannel.linkSourceRoles, c.linkTargetRoles) ||
-          shareRole(ownChannel.linkTargetRoles, c.linkSourceRoles),
-      );
+      .filter((c) => shareRole(ownChannel.linkSourceRoles, c.linkTargetRoles) || shareRole(ownChannel.linkTargetRoles, c.linkSourceRoles));
   }, [devices, interfaceName, deviceAddress, ownChannel]);
-
 
   const ownChannels = useMemo(() => asChannels(linkable), [asChannels, linkable]);
   const partnerChannels = useMemo(() => asChannels(partners), [asChannels, partners]);
@@ -484,7 +475,6 @@ export const AddLinkForm = ({
           </Row>
         </form>
       )}
-
     </>
   );
 };
