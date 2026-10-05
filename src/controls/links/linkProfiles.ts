@@ -42,11 +42,91 @@ export const loadProfileTable = async (receiverType: string): Promise<ProfileTab
   return load ? { [receiverType]: (await load()).default } : {};
 };
 
+// The table a light receiver's profiles are in, as the WebUI's
+// linkHmIP_UNIVERSAL_LIGHT_RECEIVER.tcl picks it: by the HmIP-RGBW's
+// DEVICE_OPERATION_MODE (channel 0), the HmIP-DRG-DALI channel's
+// UNIVERSAL_LIGHT_MAX_CAPABILITIES, or HmIP-LSC. Other receivers keep their
+// type. undefined while the mode it depends on isn't known yet.
+export const receiverKey = (
+  receiverType: string,
+  receiverDeviceType: string | undefined,
+  { deviceOperationMode, maxCapabilities }: { deviceOperationMode?: number; maxCapabilities?: number },
+) => {
+  if (receiverType !== 'UNIVERSAL_LIGHT_RECEIVER') return receiverType;
+  switch (receiverDeviceType) {
+    case 'HmIP-RGBW':
+      if (deviceOperationMode === undefined) return undefined;
+      // 0 RGBW, 1 RGB, 2 tunable white, 3 PWM
+      return [
+        'UNIVERSAL_LIGHT_RECEIVER_RGB(W)',
+        'UNIVERSAL_LIGHT_RECEIVER_RGB(W)',
+        'UNIVERSAL_LIGHT_RECEIVER_TW',
+        'UNIVERSAL_LIGHT_RECEIVER_PWM',
+      ][deviceOperationMode];
+    case 'HmIP-DRG-DALI':
+      if (maxCapabilities === undefined) return undefined;
+      // 0 switch, 1 dimmer, 2 tunable white, 3/4 RGB + tunable white
+      return [
+        'SWITCH_VIRTUAL_RECEIVER',
+        'UNIVERSAL_LIGHT_RECEIVER_PWM',
+        'UNIVERSAL_LIGHT_RECEIVER_TW',
+        'UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI',
+        'UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI',
+      ][maxCapabilities];
+    case 'HmIP-LSC':
+      return 'UNIVERSAL_LIGHT_RECEIVER_LSC';
+  }
+  return receiverType;
+};
+
+// Senders a light receiver's profiles know under another type
+// (linkHmIP_UNIVERSAL_LIGHT_RECEIVER.tcl)
+const lightSenders: Record<string, string> = {
+  LEVEL_COMMAND_TRANSMITTER_CO2: 'COND_SWITCH_TRANSMITTER',
+  LEVEL_COMMAND_TRANSMITTER_HUMIDITY: 'COND_SWITCH_TRANSMITTER_HUMIDITY',
+  LEVEL_COMMAND_TRANSMITTER_TEMPERATURE: 'COND_SWITCH_TRANSMITTER_TEMPERATURE',
+};
+
+// Senders whose profiles the WebUI picks by the sender channel: an input
+// by its CHANNEL_OPERATION_MODE (easymodes/<RECEIVER>/MULTI_MODE_INPUT_TRANSMITTER.tcl
+// sources MULTI_MODE_INPUT_TRANSMITTER_$mode.tcl, _1_FDC for an HmIP-FDC
+// receiver in mode 1), a rotary control by its channel index
+// (ROTARY_CONTROL_TRANSCEIVER.tcl: ROTARY_CONTROL_TRANSCEIVER_$index.tcl).
+// Returns the key of the receiver's table to use.
+export const senderKey = (
+  table: ProfileTable,
+  receiverType: string,
+  senderType: string,
+  {
+    senderAddress,
+    operationMode,
+    receiverDeviceType,
+    senderDeviceType,
+  }: { senderAddress?: string; operationMode?: number; receiverDeviceType?: string; senderDeviceType?: string },
+) => {
+  const senders = table[receiverType] ?? {};
+  const candidates: string[] = [];
+  if (receiverType.startsWith('UNIVERSAL_LIGHT_RECEIVER_')) {
+    if (lightSenders[senderType]) candidates.push(lightSenders[senderType]);
+    // A key of the HmIP-MOD-RC8 used as switch or contact
+    if (senderType === 'KEY_TRANSCEIVER' && senderDeviceType === 'HmIP-MOD-RC8') {
+      if (operationMode === 2) candidates.push('SWITCH_TRANSCEIVER');
+      if (operationMode === 3) candidates.push('SHUTTER_CONTACT');
+    }
+  }
+  if (senderType === 'MULTI_MODE_INPUT_TRANSMITTER' && operationMode !== undefined) {
+    if (receiverDeviceType === 'HmIP-FDC' && operationMode === 1) candidates.push(`${senderType}_1_FDC`);
+    candidates.push(`${senderType}_${operationMode}`);
+  }
+  if (senderType === 'ROTARY_CONTROL_TRANSCEIVER' && senderAddress?.includes(':')) {
+    candidates.push(`${senderType}_${senderAddress.split(':')[1]}`);
+  }
+  return candidates.find((key) => key in senders) ?? senderType;
+};
+
 export const profilesFor = (table: ProfileTable, receiverType: string, senderType: string, peerType?: string) =>
   (table[receiverType]?.[senderType] ?? []).filter(
-    (profile) =>
-      !peerType ||
-      ((!profile.whitelist || profile.whitelist.includes(peerType)) && !profile.blacklist?.includes(peerType)),
+    (profile) => !peerType || ((!profile.whitelist || profile.whitelist.includes(peerType)) && !profile.blacklist?.includes(peerType)),
   );
 
 const isRange = (value: ProfileValue): value is { default: number; min: number; max: number } => !Array.isArray(value);
@@ -114,17 +194,35 @@ export const encodeHmipTime = (seconds: number): { base: number; factor: number 
 export const BIDCOS_PERMANENT = 111600;
 
 // Choices for times, as the WebUI's time selector (hmip_helper.tcl)
-export const TIME_PRESETS = [0, 0.1, 0.5, 1, 2, 3, 5, 10, 30, 60, 120, 300, 600, 1800, 3600, 7200, 10800, 18000, 28800, 43200, 86400, PERMANENT];
+export const TIME_PRESETS = [
+  0,
+  0.1,
+  0.5,
+  1,
+  2,
+  3,
+  5,
+  10,
+  30,
+  60,
+  120,
+  300,
+  600,
+  1800,
+  3600,
+  7200,
+  10800,
+  18000,
+  28800,
+  43200,
+  86400,
+  PERMANENT,
+];
 
 // Readable names of link parameters and their choices: as the WebUI's
 // profiles for this pair label them, else the translations and the
 // catalog of settings; the long-press ones marked as such
-export const linkParameterNames = (
-  profiles: LinkProfile[],
-  lang: string,
-  t: (key: string) => string,
-  long: string,
-) => {
+export const linkParameterNames = (profiles: LinkProfile[], lang: string, t: (key: string) => string, long: string) => {
   const labels = new Map<string, string>();
   const choices = new Map<string, Record<string, Record<string, string>>>();
   for (const field of profiles.flatMap((p) => p.fields)) {
@@ -138,8 +236,7 @@ export const linkParameterNames = (
     nameOf: (name: string) => {
       const base = name.replace(/^(SHORT|LONG)_/, '');
       const translated = t(name);
-      const label =
-        labels.get(name) ?? (translated !== name ? translated : labels.get(`SHORT_${base}`) ?? parameterLabel(base));
+      const label = labels.get(name) ?? (translated !== name ? translated : (labels.get(`SHORT_${base}`) ?? parameterLabel(base)));
       return name.startsWith('LONG_') ? `${label} (${long})` : label;
     },
     optionOf: (name: string, index: number, option: string) => {

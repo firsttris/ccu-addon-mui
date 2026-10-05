@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
 import ArrowRightIcon from '~icons/lucide/arrow-right';
 import { useChannelList, useDevices, useLinkAction, useLinkParamset, useRooms } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
@@ -8,10 +7,10 @@ import { InterfaceLink } from '../../types/protocol';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import { DeviceImage } from '../../components/DeviceImage';
 import { ListSkeletonItems } from '../../components/ui/skeleton';
-import { detectProfile, loadProfileTable, profilesFor } from '../../controls/links/linkProfiles';
+import { detectProfile } from '../../controls/links/linkProfiles';
 import { getLocale } from '../../paraglide/runtime';
 import { useChannelNames } from './channelNames';
-import { LinkParameters, useLinkChannelInfo } from './Links';
+import { LinkParameters, useLinkChannelInfo, useLinkProfiles } from './Links';
 import { m } from '../../paraglide/messages';
 
 const deviceAddressOf = (address: string) => address.split(':')[0];
@@ -49,18 +48,9 @@ const useNearScreen = <T extends Element>() => {
 // What the link does, in words: the WebUI profile its values fit
 // (get_cur_profile2 in ic_common.tcl), or "own settings"
 const useBehaviour = (link: InterfaceLink, enabled: boolean) => {
-  const channelInfo = useLinkChannelInfo();
   const { description, values } = useLinkParamset(link.interfaceName, link.receiver, link.sender, enabled);
-  const receiverType = channelInfo.get(link.receiver)?.channel.type;
-  const sender = channelInfo.get(link.sender);
-  const { data: table } = useQuery({
-    queryKey: ['linkProfiles', receiverType],
-    queryFn: () => loadProfileTable(receiverType!),
-    staleTime: Infinity,
-    enabled: enabled && !!receiverType,
-  });
-  if (!table || !values.data || !description.data || !receiverType || !sender) return undefined;
-  const profiles = profilesFor(table, receiverType, sender.channel.type, sender.deviceType);
+  const profiles = useLinkProfiles(link.interfaceName, link, enabled);
+  if (!profiles || !values.data || !description.data) return undefined;
   if (profiles.length === 0) return undefined;
   const id = detectProfile(profiles, values.data);
   const profile = profiles.find((p) => p.id === id);
@@ -154,15 +144,7 @@ const LinkRow = ({
           {link.name && <span className="text-muted-foreground">„{link.name}“</span>}
         </div>
       )}
-      {open && (
-        <LinkParameters
-          interfaceName={link.interfaceName}
-          link={link}
-          receiverType={channelInfo.get(link.receiver)?.channel.type}
-          senderType={channelInfo.get(link.sender)?.channel.type}
-          senderDeviceType={channelInfo.get(link.sender)?.deviceType}
-        />
-      )}
+      {open && <LinkParameters interfaceName={link.interfaceName} link={link} />}
     </li>
   );
 };
