@@ -3281,13 +3281,9 @@ export interface CheckFirmwareUpdateResponse {
    */
   directDownload?: boolean;
   /**
-   * Free space on /usr/local in MB
+   * Free space on the CCU's user partition in MB, for information
    */
   freeMb?: number;
-  /**
-   * The space an update needs in MB
-   */
-  requiredMb?: number;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

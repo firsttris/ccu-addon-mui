@@ -249,6 +249,7 @@ dürfen.
 | `CCU_ERROR` | die CCU hat einen Fehler gemeldet |
 | `KEY_MISMATCH`, `KEY_REQUIRED`, `KEY_WRONG`, `KEY_SAME`, `KEY_NOT_ALL_DEVICES`, `WRONG_KEY` | Sicherheitsschlüssel (Anlernen, Werkseinstellungen, Schlüssel ändern, Restore) |
 | `INVALID_BACKUP`, `INVALID_FIRMWARE`, `FIRMWARE_TOO_OLD`, `ADDON_FAILED` | Datei abgelehnt |
+| `FIRMWARE_NOT_STAGED` | kein geprüftes CCU-Update liegt mehr bereit (z. B. nach einem Neustart), erneut herunterladen oder hochladen |
 | `PUSH_FAILED` | Push-Dienst hat abgelehnt |
 
 ## Das Schema

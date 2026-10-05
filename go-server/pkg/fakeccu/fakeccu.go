@@ -47,8 +47,11 @@ type CCU struct {
 	// FirmwareDownloadFile is where CCU.downloadFirmware stores the
 	// downloaded update (FakeFirmwareDownload); empty: the download fails
 	FirmwareDownloadFile string
-	groupMetadata        map[string]string
-	fixture              *Fixture
+	// FirmwareStagedLink, if set, is linked to the checked update like
+	// /usr/local/.firmwareUpdate (action_firmware_upload: ln -sfn)
+	FirmwareStagedLink string
+	groupMetadata      map[string]string
+	fixture            *Fixture
 	// original is the fixture as loaded, for Reset
 	original []byte
 
@@ -1707,6 +1710,7 @@ func (c *CCU) handleFileUpload(w http.ResponseWriter, r *http.Request) {
 	data, _ := io.ReadAll(file)
 	c.mu.Lock()
 	c.tempUpload = string(data)
+	c.calls["WebUI upload "+query.Get("action")]++
 	c.mu.Unlock()
 	// As fileupload.ccc: the page sends the browser on with the temp file
 	_, _ = fmt.Fprintf(w, "<script>var url = '%s?sid=@fakeSession1@';\ndlgPopup.LoadFromFile(url, 'action=%s&filename=%s');</script>",
@@ -1789,15 +1793,35 @@ func (c *CCU) handleMaintenance(w http.ResponseWriter, r *http.Request) {
 		// action_firmware_upload checks the file and links it as
 		// /usr/local/.firmwareUpdate
 		next := "firmware_update_invalid"
+		stage := func(file string) {
+			if c.FirmwareStagedLink != "" {
+				os.Remove(c.FirmwareStagedLink)
+				_ = os.Symlink(file, c.FirmwareStagedLink)
+			}
+		}
+		filename := r.FormValue("filename")
 		if r.FormValue("directDownload") == "true" {
 			// The file CCU.downloadFirmware stored
 			if data, err := os.ReadFile(c.FirmwareDownloadFile); err == nil && strings.Contains(string(data), FakeFirmware) {
 				c.stagedFirmware = string(data)
 				next = "askCreateBackup"
+				stage(c.FirmwareDownloadFile)
+			} else {
+				os.Remove(c.FirmwareDownloadFile)
 			}
-		} else if r.FormValue("filename") == fakeTempFile && strings.Contains(c.tempUpload, FakeFirmware) {
+		} else if filename == fakeTempFile && strings.Contains(c.tempUpload, FakeFirmware) {
 			c.stagedFirmware = c.tempUpload
 			next = "askCreateBackup"
+		} else if data, err := os.ReadFile(filename); filename != fakeTempFile && err == nil {
+			// A file on the CCU's own disk, checked where it is; the WebUI
+			// deletes an invalid one
+			if strings.Contains(string(data), FakeFirmware) {
+				c.stagedFirmware = string(data)
+				next = "askCreateBackup"
+				stage(filename)
+			} else {
+				os.Remove(filename)
+			}
 		}
 		c.tempUpload = ""
 		_, _ = fmt.Fprintf(w, `<script>dlgPopup.LoadFromFile(url, "action=%s");</script>`, next)
@@ -1807,7 +1831,17 @@ func (c *CCU) handleMaintenance(w http.ResponseWriter, r *http.Request) {
 			c.rebooted = true
 		}
 	case "firmware_update_cancel":
+		// Removes the linked file, the link and a direct download
 		c.stagedFirmware = ""
+		if c.FirmwareStagedLink != "" {
+			if target, err := os.Readlink(c.FirmwareStagedLink); err == nil {
+				os.Remove(target)
+			}
+			os.Remove(c.FirmwareStagedLink)
+		}
+		if c.FirmwareDownloadFile != "" {
+			os.Remove(c.FirmwareDownloadFile)
+		}
 	}
 }
 

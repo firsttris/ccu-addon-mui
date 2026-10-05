@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
@@ -28,36 +29,62 @@ const firmwareDownloadTimeout = 30 * time.Minute
 
 const maintenancePage = "/config/cp_maintenance.cgi"
 
-// CheckFirmware uploads a firmware file to the CCU and lets the WebUI check
-// it. Returns the update's licence text in lang (de, en), if it has one.
+// CheckFirmware lets the WebUI check an uploaded firmware file. Returns
+// the update's licence text in lang (de, en), if it has one. A file that
+// was stored on the CCU itself (PrepareFirmwareUpload) is checked in
+// place, otherwise it goes through fileupload.ccc first.
 func (s *Service) CheckFirmware(id, username, password, lang string) (string, error) {
 	s.removeExpiredUploads()
 	path, err := s.uploadPath(id)
 	if err != nil {
 		return "", err
 	}
+	s.mu.Lock()
+	inPlace := s.uploads[id].limit == maxFirmwareSize
+	s.mu.Unlock()
 	sessionID, err := s.login(username, password)
 	if err != nil {
 		return "", err
 	}
 	defer s.logout(sessionID)
-	filename, err := s.fileUpload(sessionID, path, "firmware_file", "firmware_upload", maintenancePage)
-	if err != nil {
-		return "", err
+	filename := path
+	if !inPlace {
+		if filename, err = s.fileUpload(sessionID, path, "firmware_file", "firmware_upload", maintenancePage); err != nil {
+			return "", err
+		}
+		// The CCU has its copy now
+		s.Discard(id)
 	}
-	// The CCU has the file now
-	s.Discard(id)
 	page, err := s.pageAction(sessionID, maintenancePage, url.Values{"action": {"firmware_upload"}, "filename": {filename}, "downloadOnly": {"0"}})
 	if err != nil {
+		// Not checked: the file would stay on the CCU until it reboots
+		os.Remove(filename)
+		s.forget(id)
 		return "", err
 	}
-	if !strings.Contains(page, "action=askCreateBackup") {
-		return "", ErrInvalidFirmware
+	// Linked for the update (or deleted by the WebUI when invalid)
+	s.forget(id)
+	if err := firmwarePageResult(page); err != nil {
+		return "", err
 	}
 	if lang != "en" {
 		lang = "de"
 	}
 	return s.eula(lang), nil
+}
+
+// firmwarePageResult reads action_firmware_upload's answer: on to
+// askCreateBackup, or firmware_update_invalid; anything else (a login page
+// after the session expired) is no verdict on the file
+func firmwarePageResult(page string) error {
+	switch {
+	case strings.Contains(page, "action=askCreateBackup"):
+		return nil
+	case strings.Contains(page, "action=firmware_update_invalid"):
+		return ErrInvalidFirmware
+	default:
+		return errors.New("unexpected answer from the WebUI's firmware check")
+	}
 }
 
 // DownloadFirmware lets the CCU download the newest firmware itself and
@@ -72,7 +99,7 @@ func (s *Service) DownloadFirmware(username, password, lang string, verify func(
 	if err != nil {
 		return "", err
 	}
-	defer s.logout(sessionID)
+	defer func() { s.logout(sessionID) }()
 	var result rpcResponse
 	client := &http.Client{Timeout: firmwareDownloadTimeout}
 	if err := s.callWith(client, "CCU.downloadFirmware", map[string]string{"_session_id_": sessionID}, &result); err != nil {
@@ -86,12 +113,17 @@ func (s *Service) DownloadFirmware(username, password, lang string, verify func(
 			return "", err
 		}
 	}
+	// The download may outlast the WebUI session: a fresh one for the check
+	s.logout(sessionID)
+	if sessionID, err = s.login(username, password); err != nil {
+		return "", err
+	}
 	page, err := s.pageAction(sessionID, maintenancePage, url.Values{"action": {"firmware_upload"}, "directDownload": {"true"}, "downloadOnly": {"0"}})
 	if err != nil {
 		return "", err
 	}
-	if !strings.Contains(page, "action=askCreateBackup") {
-		return "", ErrInvalidFirmware
+	if err := firmwarePageResult(page); err != nil {
+		return "", err
 	}
 	if lang != "en" {
 		lang = "de"

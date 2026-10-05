@@ -57,7 +57,14 @@ const (
 type upload struct {
 	path    string
 	expires time.Time
+	// Where and how large; the backup directory and maxBackupSize unless
+	// set by PrepareUploadTo
+	dir   string
+	limit int64
 }
+
+// The largest CCU firmware file taken (an OpenCCU .img)
+const maxFirmwareSize = 4 << 30
 
 // PrepareUpload returns an id to upload a backup to, once
 func (s *Service) PrepareUpload() (string, error) {
@@ -70,7 +77,21 @@ func (s *Service) PrepareUpload() (string, error) {
 	if s.uploads == nil {
 		s.uploads = map[string]*upload{}
 	}
-	s.uploads[id] = &upload{expires: s.now().Add(uploadLifetime)}
+	s.uploads[id] = &upload{expires: s.now().Add(uploadLifetime), dir: s.dir, limit: maxBackupSize}
+	return id, nil
+}
+
+// PrepareFirmwareUpload is PrepareUpload for a CCU firmware stored in dir
+// on the CCU itself, which the WebUI then checks in place (CheckFirmware):
+// no copy through fileupload.ccc, no RAM disk
+func (s *Service) PrepareFirmwareUpload(dir string) (string, error) {
+	id, err := s.PrepareUpload()
+	if err != nil {
+		return "", err
+	}
+	s.mu.Lock()
+	s.uploads[id].dir, s.uploads[id].limit = dir, maxFirmwareSize
+	s.mu.Unlock()
 	return id, nil
 }
 
@@ -86,25 +107,34 @@ func (s *Service) ServeUpload(w http.ResponseWriter, r *http.Request) {
 	if ok && (up.path != "" || s.now().After(up.expires)) {
 		ok = false
 	}
+	var dir string
+	var limit int64
+	if ok {
+		dir, limit = up.dir, up.limit
+	}
 	s.mu.Unlock()
 	if !ok {
 		http.Error(w, "upload not prepared or already used", http.StatusNotFound)
 		return
 	}
-	if err := os.MkdirAll(s.dir, 0o700); err != nil {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	file, err := os.CreateTemp(s.dir, "mui-restore-*.sbk")
+	pattern := "mui-restore-*.sbk"
+	if limit == maxFirmwareSize {
+		pattern = "mui-firmware-*"
+	}
+	file, err := os.CreateTemp(dir, pattern)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	size, err := io.Copy(file, io.LimitReader(r.Body, maxBackupSize+1))
+	size, err := io.Copy(file, io.LimitReader(r.Body, limit+1))
 	if closeErr := file.Close(); err == nil {
 		err = closeErr
 	}
-	if err == nil && (size == 0 || size > maxBackupSize) {
+	if err == nil && (size == 0 || size > limit) {
 		err = fmt.Errorf("unexpected size %d", size)
 	}
 	if err != nil {
@@ -126,6 +156,14 @@ func (s *Service) uploadPath(id string) (string, error) {
 		return "", ErrUploadNotFound
 	}
 	return up.path, nil
+}
+
+// forget drops an upload without removing its file, which someone else
+// owns now (a staged firmware update)
+func (s *Service) forget(id string) {
+	s.mu.Lock()
+	delete(s.uploads, id)
+	s.mu.Unlock()
 }
 
 // Discard removes an uploaded backup

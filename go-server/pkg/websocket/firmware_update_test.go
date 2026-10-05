@@ -110,7 +110,9 @@ func TestDownloadCcuFirmware(t *testing.T) {
 	defer ccu.Close()
 	ccu.FirmwareDownloadFile = filepath.Join(dir, "firmwareUpdateFile")
 
-	cfg := &config.Config{UserFSDir: dir, FirmwareDownloadFile: ccu.FirmwareDownloadFile, CcuFirmwareReleases: upstream.URL + "/releases"}
+	ccu.FirmwareStagedLink = filepath.Join(dir, ".firmwareUpdate")
+	cfg := &config.Config{UserFSDir: dir, FirmwareDownloadFile: ccu.FirmwareDownloadFile, FirmwareStagedLink: ccu.FirmwareStagedLink,
+		FirmwareUploadDir: filepath.Join(dir, "tmp"), CcuFirmwareReleases: upstream.URL + "/releases"}
 	s := NewServer(cfg, nil)
 	s.SetBackup(backup.New(fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort), filepath.Join(dir, "backups")))
 	client := &Client{send: make(chan []byte, 4), level: auth.LevelAdmin, user: "Admin", elevatedUntil: time.Now().Add(time.Hour)}
@@ -123,17 +125,13 @@ func TestDownloadCcuFirmware(t *testing.T) {
 		return answer
 	}
 
+	// A CCU3's whole user partition is about 2 GB, less than the WebUI's
+	// 2.8 GB hint: the free space is shown, the download not refused
+	free = 1720
 	if m := call(map[string]interface{}{"type": "checkFirmwareUpdate", "requestId": "c"}); m["latest"] != latest || m["directDownload"] != true ||
-		m["freeMb"] != float64(5000) || m["requiredMb"] != float64(2868) {
+		m["freeMb"] != float64(1720) {
 		t.Fatalf("unexpected check: %v", m)
 	}
-
-	// The room OpenCCU wants on /usr/local
-	free = 2000
-	if m := call(map[string]interface{}{"type": "downloadCcuFirmware", "requestId": "d1", "password": "secret"}); m["code"] != "NOT_ENOUGH_SPACE" {
-		t.Fatalf("expected NOT_ENOUGH_SPACE, got %v", m)
-	}
-	free = 5000
 	if m := call(map[string]interface{}{"type": "downloadCcuFirmware", "requestId": "d2", "password": "falsch"}); m["code"] != "INVALID_CREDENTIALS" {
 		t.Fatalf("expected INVALID_CREDENTIALS, got %v", m)
 	}
@@ -144,9 +142,56 @@ func TestDownloadCcuFirmware(t *testing.T) {
 	if n := ccu.CallCount("JSON-RPC CCU.downloadFirmware"); n != 1 {
 		t.Fatalf("expected one download, got %d", n)
 	}
+	// After a reboot /usr/local/tmp is empty and the link dangles: nothing
+	// to install, not a reboot into the recovery system for nothing
+	data, _ := os.ReadFile(ccu.FirmwareDownloadFile)
+	_ = os.Remove(ccu.FirmwareDownloadFile)
+	if m := call(map[string]interface{}{"type": "installCcuFirmware", "requestId": "i0", "password": "secret"}); m["code"] != "FIRMWARE_NOT_STAGED" {
+		t.Fatalf("expected FIRMWARE_NOT_STAGED, got %v", m)
+	}
+	_ = os.WriteFile(ccu.FirmwareDownloadFile, data, 0o644)
 	if m := call(map[string]interface{}{"type": "installCcuFirmware", "requestId": "i", "password": "secret"}); m["success"] != true ||
 		ccu.InstalledFirmware() != fakeccu.FakeFirmwareDownload {
 		t.Fatalf("not installed: %v %q", m, ccu.InstalledFirmware())
+	}
+
+	// An uploaded file is stored on the CCU's partition and checked there,
+	// not copied through fileupload.ccc and the RAM disk
+	upload := func(content string) string {
+		t.Helper()
+		prepared := call(map[string]interface{}{"type": "prepareCcuFirmware", "requestId": "p"})
+		id, _ := prepared["id"].(string)
+		rec := httptest.NewRecorder()
+		s.backup.ServeUpload(rec, httptest.NewRequest(http.MethodPost, "/upload/"+id, strings.NewReader(content)))
+		if rec.Code != http.StatusNoContent {
+			t.Fatalf("upload failed: %d %s", rec.Code, rec.Body.String())
+		}
+		return id
+	}
+	id := upload("zip " + fakeccu.FakeFirmware)
+	if m := call(map[string]interface{}{"type": "checkCcuFirmware", "requestId": "u1", "id": id, "password": "secret"}); m["success"] != true {
+		t.Fatalf("upload check failed: %v", m)
+	}
+	if n := ccu.CallCount("WebUI upload firmware_upload"); n != 0 {
+		t.Fatalf("expected no copy through fileupload.ccc, got %d", n)
+	}
+	target, err := os.Readlink(ccu.FirmwareStagedLink)
+	if err != nil || filepath.Dir(target) != cfg.FirmwareUploadDir {
+		t.Fatalf("expected the update linked in the upload directory, got %q %v", target, err)
+	}
+	if m := call(map[string]interface{}{"type": "cancelCcuFirmware", "requestId": "x", "password": "secret"}); m["success"] != true {
+		t.Fatalf("cancel failed: %v", m)
+	}
+	if _, err := os.Stat(target); !os.IsNotExist(err) {
+		t.Fatal("cancel must remove the staged upload")
+	}
+	// An invalid file is deleted by the WebUI
+	id = upload("no firmware")
+	if m := call(map[string]interface{}{"type": "checkCcuFirmware", "requestId": "u2", "id": id, "password": "secret"}); m["code"] != "INVALID_FIRMWARE" {
+		t.Fatalf("expected INVALID_FIRMWARE, got %v", m)
+	}
+	if entries, _ := os.ReadDir(cfg.FirmwareUploadDir); len(entries) != 0 {
+		t.Fatalf("expected no files left, got %v", entries)
 	}
 
 	// A file that doesn't match the checksum is removed, not installed

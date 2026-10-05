@@ -85,6 +85,14 @@ type Config struct {
 	// FirmwareDownloadFile is where OpenCCU's CCU.downloadFirmware stores
 	// the downloaded update (/usr/local/tmp/firmwareUpdateFile)
 	FirmwareDownloadFile string
+	// FirmwareUploadDir is where an uploaded CCU firmware is stored for the
+	// WebUI to check: on the user partition, where fileupload.ccc puts it
+	// too (mktemp -p /usr/local/tmp); /tmp is a RAM disk on OpenCCU, too
+	// small for an image
+	FirmwareUploadDir string
+	// FirmwareStagedLink points to the update the recovery system installs
+	// (action_firmware_upload: ln -sfn <file> /usr/local/.firmwareUpdate)
+	FirmwareStagedLink string
 	// CcuFirmwareReleases is where OpenCCU's releases and their SHA256
 	// files are (checkFirmwareUpdate.sh)
 	CcuFirmwareReleases string
@@ -154,6 +162,8 @@ func Load() *Config {
 		IDsFile:              getEnv("IDS_FILE", "/var/ids"),
 		UserFSDir:            getEnv("USERFS_DIR", "/usr/local"),
 		FirmwareDownloadFile: getEnv("FIRMWARE_DOWNLOAD_FILE", "/usr/local/tmp/firmwareUpdateFile"),
+		FirmwareUploadDir:    getEnv("FIRMWARE_UPLOAD_DIR", "/usr/local/tmp"),
+		FirmwareStagedLink:   getEnv("FIRMWARE_STAGED_LINK", "/usr/local/.firmwareUpdate"),
 		CcuFirmwareReleases:  getEnv("CCU_FIRMWARE_RELEASES", "https://github.com/openccu/openccu/releases/download"),
 	}
 }

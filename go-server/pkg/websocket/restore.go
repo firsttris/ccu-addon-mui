@@ -74,7 +74,13 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 	response := restoreResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}
 
 	if msgType == "prepareRestore" || msgType == "prepareCcuFirmware" || msgType == "prepareAddonUpload" || msgType == "prepareDeviceFirmwareUpload" {
-		id, err := s.backup.PrepareUpload()
+		var id string
+		var err error
+		if msgType == "prepareCcuFirmware" && onCCU() {
+			id, err = s.backup.PrepareFirmwareUpload(s.cfg.FirmwareUploadDir)
+		} else {
+			id, err = s.backup.PrepareUpload()
+		}
 		if err != nil {
 			finish("CCU_ERROR")
 			s.sendRequestError(client, msg.RequestID, err.Error(), "CCU_ERROR")
@@ -107,9 +113,17 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		var verify func() error
 		if verify, err = s.firmwareDownloadCheck(); err == nil {
 			response.Eula, err = s.backup.DownloadFirmware(username, msg.Password, msg.Language, verify)
+			if err != nil {
+				// Up to the image's size on the CCU's partition until a reboot
+				s.removeUnstagedDownload()
+			}
 		}
 	case "installCcuFirmware":
-		err = s.backup.InstallFirmware(username, msg.Password)
+		if onCCU() && !s.firmwareStaged() {
+			err = errFirmwareNotStaged
+		} else {
+			err = s.backup.InstallFirmware(username, msg.Password)
+		}
 	case "cancelCcuFirmware":
 		err = s.backup.CancelFirmware(username, msg.Password)
 	case "installAddon":
@@ -137,8 +151,8 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 			code = rega.SetNotFound
 		case errors.Is(err, errDirectDownloadUnsupported):
 			code = "NOT_SUPPORTED"
-		case errors.Is(err, errNotEnoughSpace):
-			code = "NOT_ENOUGH_SPACE"
+		case errors.Is(err, errFirmwareNotStaged):
+			code = "FIRMWARE_NOT_STAGED"
 		case errors.Is(err, errFirmwareChecksum):
 			code = "FIRMWARE_CHECKSUM"
 		case errors.Is(err, backup.ErrFirmwareDownloadFailed):
