@@ -11,12 +11,12 @@ RC_DIR=/usr/local/etc/config/rc.d
 WWW_DIR=/usr/local/etc/config/addons/www
 LIGHTTPD_DIR=/usr/local/etc/config/lighttpd
 
-# The server is a static Go binary, one per architecture: ARMv7 for the
-# CCU3 and 32-bit OpenCCU, arm64 and amd64 for 64-bit OpenCCU (Raspberry Pi
-# 4/5, OVA, Docker, LXC)
+# The server is a static Go binary. mui-<version>.tar.gz carries the ARMv7
+# one for the CCU3 and every Raspberry Pi (a 64-bit ARM kernel runs it too),
+# mui-<version>-x86_64.tar.gz the amd64 one for OpenCCU on x86 (OVA, Docker,
+# LXC). The wrong archive ends with "Error (2)" in the WebUI.
 case "$(uname -m)" in
-  armv7*|armv8l) ARCH=arm ;;
-  aarch64|arm64) ARCH=arm64 ;;
+  armv7*|armv8*|aarch64|arm64) ARCH=arm ;;
   x86_64|amd64) ARCH=amd64 ;;
   *) exit 2 ;;
 esac

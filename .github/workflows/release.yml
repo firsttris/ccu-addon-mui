@@ -57,7 +57,7 @@ jobs:
       - name: Upload Release
         uses: ncipollo/release-action@v1.13.0
         with:
-          artifacts: 'mui-${{ steps.packagejson.outputs.current-version }}.tar.gz'
+          artifacts: 'mui-${{ steps.packagejson.outputs.current-version }}.tar.gz,mui-${{ steps.packagejson.outputs.current-version }}-x86_64.tar.gz'
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.packagejson.outputs.current-version }}
           bodyFile: commit_log.txt

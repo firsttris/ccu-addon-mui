@@ -7,8 +7,8 @@ Rechner, Docker oder eine Cloud werden nicht gebraucht.
 ## Voraussetzungen
 
 - **Zentrale**: CCU3 oder OpenCCU (früher RaspberryMatic), auf dem Raspberry Pi wie auf x86 (OVA, Docker,
-  LXC). Das Archiv bringt den Server als statisches Binary für ARMv7, arm64 und amd64 mit; installiert wird
-  das passende.
+  LXC). `mui-<version>.tar.gz` ist für die CCU3 und jeden Raspberry Pi (auch mit 64-bit-OpenCCU),
+  `mui-<version>-x86_64.tar.gz` für OpenCCU auf x86. Das falsche Archiv bricht mit „Error (2)“ ab.
 - **Räume oder Gewerke**: Das Dashboard zeigt Kanäle nach Raum und Gewerk. Ohne Zuordnung erscheint ein
   Gerät nur unter *Alle Geräte*. Zuordnen kannst du direkt im Add-on (siehe [Einrichten](einrichten.md)).
 - **Browser**: aktuelle Versionen von Chrome, Edge, Firefox oder Safari, auf Desktop, Tablet und Handy.
@@ -17,7 +17,7 @@ Rechner, Docker oder eine Cloud werden nicht gebraucht.
 
 1. Die neueste Datei `mui-<version>.tar.gz` von der
    [Releases-Seite](https://github.com/firsttris/ccu-addon-mui/releases/latest) laden. Das Archiv nicht
-   entpacken.
+   entpacken. Für OpenCCU auf x86 (OVA, Docker, LXC) ist es `mui-<version>-x86_64.tar.gz`.
 2. In der WebUI der CCU *Einstellungen → Systemsteuerung → Zusatzsoftware* öffnen, die Datei auswählen und
    *Installieren* klicken. OpenCCU startet das Add-on sofort, ohne Neustart der CCU. Die CCU3 mit der
    Firmware von eQ-3 startet nach jeder Installation neu, das dauert ein paar Minuten.
