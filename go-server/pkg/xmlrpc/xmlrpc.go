@@ -165,10 +165,16 @@ func (s *Server) Start(ctx context.Context) error {
 
 	logger.Debugf("✅ RPC Server created on %s:%d", bindHost, s.cfg.RPCServerPort)
 
-	s.startRegistration(ctx, "BidCos-RF", s.cfg.RPCPort)
-	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort)
+	s.startRegistration(ctx, "BidCos-RF", s.cfg.RPCPort, "")
+	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort, "")
 	if s.cfg.WiredPort > 0 {
-		s.startRegistration(ctx, "BidCos-Wired", s.cfg.WiredPort)
+		s.startRegistration(ctx, "BidCos-Wired", s.cfg.WiredPort, "")
+	}
+	// Heating groups (INT000000x) send their values through the HMServer's
+	// virtual devices, which ReGa registers at /groups as well
+	// (InterfacesList.xml)
+	if s.cfg.VirtualDevicesPort > 0 {
+		s.startRegistration(ctx, "VirtualDevices", s.cfg.VirtualDevicesPort, "/groups")
 	}
 
 	logger.Info("✅ RPC Server started and listening for callbacks from CCU")
@@ -232,8 +238,8 @@ func interfaceIDFor(interfaceName string) string {
 	return fmt.Sprintf("websocket-server-%s", interfaceName)
 }
 
-func (s *Server) newCCUClient(interfaceName string, port int) (*xmlrpc.Client, error) {
-	url := fmt.Sprintf("http://%s:%d", s.cfg.CCUHost, port)
+func (s *Server) newCCUClient(interfaceName string, port int, path string) (*xmlrpc.Client, error) {
+	url := fmt.Sprintf("http://%s:%d%s", s.cfg.CCUHost, port, path)
 
 	// Without timeouts a hanging CCU would block the registration loop forever.
 	var transport http.RoundTripper = &http.Transport{
@@ -262,8 +268,8 @@ func (s *Server) newCCUClient(interfaceName string, port int) (*xmlrpc.Client, e
 	return client, nil
 }
 
-func (s *Server) startRegistration(ctx context.Context, interfaceName string, port int) {
-	client, err := s.newCCUClient(interfaceName, port)
+func (s *Server) startRegistration(ctx context.Context, interfaceName string, port int, path string) {
+	client, err := s.newCCUClient(interfaceName, port, path)
 	if err != nil {
 		logger.Error(fmt.Sprintf("❌ Failed to create XML-RPC client for %s:", interfaceName), err)
 		return

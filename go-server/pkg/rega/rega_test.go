@@ -277,3 +277,17 @@ func TestSetGroupMemberBuildsScript(t *testing.T) {
 		t.Fatalf("unexpected script: %s", gotScript)
 	}
 }
+
+// The text of a string variable stays text, even when it looks like a
+// number or a boolean
+func TestQuoteRegaText(t *testing.T) {
+	for _, value := range []string{"007", "1.50", "true", "Hallo"} {
+		got, err := quoteRegaText(value)
+		if err != nil || got != `"`+value+`"` {
+			t.Fatalf("quoteRegaText(%q) = %q, %v", value, got, err)
+		}
+	}
+	if _, err := quoteRegaText(`a"b`); err == nil {
+		t.Fatal("a quote must be rejected")
+	}
+}

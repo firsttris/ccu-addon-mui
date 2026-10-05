@@ -156,3 +156,45 @@ func TestEndElevationKeepsTheDeviceLoggedIn(t *testing.T) {
 		t.Fatal("the ended admin token must stay invalid after a restart")
 	}
 }
+
+// A device pushed out by a new login is reported, so its open connections
+// can be closed
+func TestEvictedSessionIsReported(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	a := newTestAuthenticator(t, ccu.URL)
+	a.SetLevelFunc(func(string) (string, error) { return LevelUser, nil })
+	if err := a.EnableSessions(filepath.Join(t.TempDir(), "sessions.json")); err != nil {
+		t.Fatal(err)
+	}
+	evicted := make(chan string, 1)
+	a.OnEvict(func(id string) { evicted <- id })
+	now := time.Now()
+	for i := 0; i < maxSessions; i++ {
+		id := newSessionID()
+		used := now.Add(time.Duration(i) * time.Minute)
+		if i == 0 {
+			used = now.Add(-time.Hour)
+		}
+		a.store.sessions[id] = &SessionInfo{ID: id, User: "Admin", Created: used, LastUsed: used}
+	}
+	oldest := ""
+	for id, s := range a.store.sessions {
+		if s.LastUsed.Before(now) {
+			oldest = id
+		}
+	}
+
+	if _, _, err := a.Login("Admin", "secret", "Handy", "192.0.2.1"); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case id := <-evicted:
+		if id != oldest {
+			t.Fatalf("evicted %s, want the longest unused %s", id, oldest)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("eviction not reported")
+	}
+}

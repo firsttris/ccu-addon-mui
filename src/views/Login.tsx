@@ -10,6 +10,7 @@ const errorMessages: Record<string, TranslationKey> = {
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
   TOO_MANY_ATTEMPTS: 'TOO_MANY_ATTEMPTS',
   CCU_UNREACHABLE: 'CCU_UNREACHABLE',
+  CCU_NOT_READY: 'CCU_NOT_READY',
 };
 
 export const Login = () => {

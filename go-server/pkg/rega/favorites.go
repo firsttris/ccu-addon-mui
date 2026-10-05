@@ -104,11 +104,14 @@ func (c *Client) ChangeFavorite(change FavoriteChange) (result, value string, er
 	if err := validateUsername(change.Username); err != nil {
 		return "", "", err
 	}
-	script := strings.ReplaceAll(favoriteChangeScript, "{{ACTION}}", change.Action)
-	script = strings.ReplaceAll(script, "{{USERNAME}}", change.Username)
-	script = strings.ReplaceAll(script, "{{NAME}}", change.Name)
-	script = strings.ReplaceAll(script, "{{LIST_ID}}", strconv.FormatInt(change.ListID, 10))
-	script = strings.ReplaceAll(script, "{{ITEM_ID}}", strconv.FormatInt(change.ItemID, 10))
+	// In one pass: a name containing "{{LIST_ID}}" stays as it is
+	script := strings.NewReplacer(
+		"{{ACTION}}", change.Action,
+		"{{USERNAME}}", change.Username,
+		"{{NAME}}", change.Name,
+		"{{LIST_ID}}", strconv.FormatInt(change.ListID, 10),
+		"{{ITEM_ID}}", strconv.FormatInt(change.ItemID, 10),
+	).Replace(favoriteChangeScript)
 	output, err := c.Execute(script)
 	if err != nil {
 		return "", "", err

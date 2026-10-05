@@ -100,6 +100,11 @@ type Client struct {
 	id   string
 	conn *websocket.Conn
 	send chan []byte
+	// done is closed when the connection is gone. send itself is never
+	// closed: handlers that run in their own goroutine (firmware) may
+	// still answer after the client disconnected.
+	done      chan struct{}
+	closeOnce sync.Once
 
 	mu       sync.Mutex
 	deviceID string
@@ -165,7 +170,30 @@ func newClient(conn *websocket.Conn) *Client {
 		id:   strconv.FormatUint(clientIDCounter.Add(1), 10),
 		conn: conn,
 		send: make(chan []byte, 1024),
+		done: make(chan struct{}),
 	}
+}
+
+// snapshot copies the client for a handler that runs in its own goroutine:
+// it reads user, level and elevation from the copy while the read pump may
+// change them on the original. Replies still go to the same connection.
+func (c *Client) snapshot() *Client {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return &Client{
+		id: c.id, conn: c.conn, send: c.send, done: c.done,
+		deviceID: c.deviceID, sessionID: c.sessionID, sysvars: c.sysvars,
+		device: c.device, source: c.source,
+		authenticated: c.authenticated, user: c.user, level: c.level, elevatedUntil: c.elevatedUntil,
+	}
+}
+
+func (c *Client) close() {
+	c.closeOnce.Do(func() {
+		if c.done != nil {
+			close(c.done)
+		}
+	})
 }
 
 func (c *Client) setSessionID(id string) {
@@ -284,6 +312,9 @@ func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 // can read or control anything.
 func (s *Server) SetAuthenticator(a *auth.Authenticator) {
 	s.auth = a
+	if a != nil {
+		a.OnEvict(func(id string) { s.disconnectSession(id, nil) })
+	}
 }
 
 // SetAuditLog records every change made through the server.
@@ -358,6 +389,9 @@ func (s *Server) Close(ctx context.Context) error {
 	}
 	s.clientsMu.RUnlock()
 
+	if s.backup != nil {
+		s.backup.EndWebUISessions()
+	}
 	return err
 }
 
@@ -374,9 +408,7 @@ func (s *Server) removeClient(client *Client) {
 	s.clientsMu.Lock()
 	if _, ok := s.clients[client]; ok {
 		delete(s.clients, client)
-		// Safe: BroadcastToClients only sends while holding the read lock,
-		// and handler replies run on the read pump, which calls us last.
-		close(client.send)
+		client.close()
 		s.subscriptionMgr.Unsubscribe(client.id)
 		logger.Debug("📝 Unsubscribed device", client.DeviceID())
 	}
@@ -487,14 +519,13 @@ func (s *Server) writePump(client *Client) {
 
 	for {
 		select {
-		case message, ok := <-client.send:
+		case <-client.done:
 			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				// Channel was closed
-				client.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
+			client.conn.WriteMessage(websocket.CloseMessage, []byte{})
+			return
 
+		case message := <-client.send:
+			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := client.conn.WriteMessage(websocket.TextMessage, message); err != nil {
 				logger.Error("WebSocket write error:", err)
 				return
@@ -638,13 +669,15 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice", "listReplaceableDevices", "replaceDevice", "addDeviceBySerial", "setTempKey", "searchWiredDevices", "getInterfaces":
 		s.handlePairing(client, msgType, message)
 	case "createBackup":
-		s.handleCreateBackup(client, message)
+		// Packing /usr/local takes minutes: the client's other requests go
+		// on meanwhile
+		go s.handleCreateBackup(client.snapshot(), message)
 	case "installFirmware":
 		s.handleInstallFirmware(client, message)
 	case "checkDeviceFirmware", "downloadDeviceFirmware", "addDeviceFirmware":
 		// eQ-3 and the HMServer may take minutes: the client's other
 		// requests go on meanwhile
-		go s.handleDeviceFirmware(client, msgType, message)
+		go s.handleDeviceFirmware(client.snapshot(), msgType, message)
 	case "getDeviceFirmware", "getDeviceFirmwareChangelog", "deleteDeviceFirmware":
 		s.handleDeviceFirmware(client, msgType, message)
 	case "getServiceMessages", "acknowledgeServiceMessage", "getAlarmMessages", "acknowledgeAlarmMessage":
@@ -940,6 +973,8 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 			code = "INVALID_CREDENTIALS"
 		case auth.ErrTooManyAttempts:
 			code = "TOO_MANY_ATTEMPTS"
+		case auth.ErrCCUNotReady:
+			code = "CCU_NOT_READY"
 		}
 		logger.Info(fmt.Sprintf("🔒 Login failed for user %q: %v", msg.Username, err))
 		s.sendJSON(client, authResponse{Type: "auth_response", AuthRequired: true, Error: err.Error(), Code: code})
@@ -995,6 +1030,8 @@ func (s *Server) handleEndElevation(client *Client, message []byte) {
 		s.auth.EndElevation(id)
 		s.disconnectSession(id, client)
 	}
+	// The WebUI session kept for heating groups, security and the like
+	s.endWebUISession(client.user)
 	if err := s.audit.Record(audit.Entry{User: client.user, Action: "endElevation", Result: rega.SetOK}); err != nil {
 		logger.Error("Failed to write the audit log:", err)
 	}
@@ -1027,6 +1064,8 @@ func (s *Server) handleElevate(client *Client, message []byte) {
 			code = "INVALID_CREDENTIALS"
 		case auth.ErrTooManyAttempts:
 			code = "TOO_MANY_ATTEMPTS"
+		case auth.ErrCCUNotReady:
+			code = "CCU_NOT_READY"
 		case auth.ErrNotAdmin:
 			code = "FORBIDDEN"
 		}
@@ -1377,7 +1416,10 @@ func (s *Server) handleSessions(client *Client, msgType string, message []byte) 
 	case "logout":
 		if id := client.SessionID(); id != "" {
 			s.auth.Revoke(id)
+			// Other tabs of this device
+			s.disconnectSession(id, client)
 		}
+		s.endWebUISession(client.user)
 		client.watchSysvars(false)
 		s.sendJSON(client, sessionsResponse{Type: "logout_response", RequestID: msg.RequestID, Success: true})
 	case "listSessions":
@@ -1398,6 +1440,13 @@ func (s *Server) handleSessions(client *Client, msgType string, message []byte) 
 			s.disconnectSession(msg.ID, client)
 			return nil, rega.SetOK, nil
 		})
+	}
+}
+
+// endWebUISession logs out the WebUI session kept for a user, if any
+func (s *Server) endWebUISession(user string) {
+	if s.backup != nil && user != "" {
+		s.backup.EndWebUISession(user)
 	}
 }
 
@@ -1572,7 +1621,7 @@ func (s *Server) handleInstallFirmware(client *Client, message []byte) {
 	}
 	// A BidCos update answers only after minutes: the client's other
 	// requests go on meanwhile, as in the WebUI the answer is waited for
-	go s.installFirmware(client, msg.RequestID, msg.InterfaceName, msg.Address)
+	go s.installFirmware(client.snapshot(), msg.RequestID, msg.InterfaceName, msg.Address)
 }
 
 func (s *Server) installFirmware(client *Client, requestID, iface, address string) {
@@ -1820,7 +1869,10 @@ func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
 		entry.Target = fmt.Sprintf("sysvar %d", msg.ID)
 		var value, previous string
 		if value, err = formatValue(msg.Value); err == nil {
-			result, previous, err = s.regaClient.SetSysvar(msg.ID, value)
+			// The app sends numbers and booleans as such; a string is the
+			// text of a string variable
+			_, text := msg.Value.(string)
+			result, previous, err = s.regaClient.SetSysvar(msg.ID, value, text)
 			entry.Previous = previous
 		}
 	}
@@ -2158,6 +2210,8 @@ func formatValue(v interface{}) (string, error) {
 // pump, so the client would never be removed.
 func (s *Server) send(client *Client, message []byte) {
 	select {
+	case <-client.done:
+		// Disconnected: nobody reads the answer any more
 	case client.send <- message:
 	default:
 		logger.Error(fmt.Sprintf("⚠️ Device %s buffer full, dropping response", client.DeviceID()))

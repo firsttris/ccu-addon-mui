@@ -41,6 +41,7 @@
   "INVALID_CREDENTIALS": "Benutzername oder Passwort falsch",
   "TOO_MANY_ATTEMPTS": "Zu viele Fehlversuche, bitte eine Minute warten",
   "CCU_UNREACHABLE": "Die CCU ist nicht erreichbar",
+  "CCU_NOT_READY": "Die CCU startet noch, bitte gleich noch einmal versuchen",
   "CONNECTING": "Verbinde …",
   "CONNECTION_LOST": "Keine Verbindung zur CCU, verbinde neu …",
   "CONNECTED": "Verbunden",

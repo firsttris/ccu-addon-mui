@@ -97,6 +97,9 @@ func (a *Authenticator) startSession(user, device string) string {
 			}
 		}
 		delete(a.store.sessions, oldest.ID)
+		if a.evicted != nil {
+			go a.evicted(oldest.ID)
+		}
 	}
 	id := newSessionID()
 	a.store.sessions[id] = &SessionInfo{ID: id, User: user, Device: device, Created: now, LastUsed: now}
@@ -143,6 +146,14 @@ func (a *Authenticator) Sessions() []SessionInfo {
 	}
 	sort.Slice(list, func(i, j int) bool { return list[i].LastUsed.After(list[j].LastUsed) })
 	return list
+}
+
+// OnEvict sets what happens with a device that is logged out because a new
+// one needs its place: its open connections are closed.
+func (a *Authenticator) OnEvict(f func(id string)) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.evicted = f
 }
 
 // Revoke logs a device out: its tokens stop working.
