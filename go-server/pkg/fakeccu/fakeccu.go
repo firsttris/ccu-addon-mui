@@ -1952,7 +1952,12 @@ func (c *CCU) handleXMLRPC(iface string, w http.ResponseWriter, r *http.Request)
 		_, _ = io.WriteString(w, encodeFault(code, fault))
 		return
 	}
-	_, _ = io.WriteString(w, encodeResponse(result))
+	// The result may hold the fixture's own maps (listDevices, getParamset):
+	// encoded under the lock, as another call may change them meanwhile
+	c.mu.Lock()
+	body := encodeResponse(result)
+	c.mu.Unlock()
+	_, _ = io.WriteString(w, body)
 }
 
 func paramAt(params []interface{}, i int) interface{} {
