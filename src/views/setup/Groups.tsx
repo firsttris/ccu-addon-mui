@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import PlusIcon from '~icons/lucide/plus';
-import { useChannels, useConfigChange, useObjectChange, useRooms, useTrades } from '../../queries';
+import { useChannelList, useConfigChange, useObjectChange, useRooms, useTrades } from '../../queries';
 import ChevronIcon from '~icons/lucide/chevron-right';
 import XIcon from '~icons/lucide/x';
 import { ChannelPicker } from '../../components/ChannelPicker';
@@ -21,7 +21,7 @@ type List = 'rooms' | 'trades';
 // WebUI's room and trade pages (roomchannels.htm, functionchannels.htm)
 const GroupMembers = ({ list, group }: { list: List; group: { id: number; name: string } }) => {
   const { showToast } = useToast();
-  const { data: channels = [] } = useChannels({ all: true });
+  const { data: channels = [] } = useChannelList();
   const change = useConfigChange();
   const [picking, setPicking] = useState(false);
   const isMember = (channel: (typeof channels)[number]) => (channel[list] ?? []).includes(group.id);

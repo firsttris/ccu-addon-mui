@@ -24,6 +24,7 @@ import { GridDashboard, GridTile } from './grid/GridDashboard';
 import { moveSection, orderSections, parseLayout, SavedLayout, SectionLayout } from './grid/tileLayout';
 import ChevronUpIcon from '~icons/lucide/chevron-up';
 import ChevronDownIcon from '~icons/lucide/chevron-down';
+import { isLight as isLightTile, useLightTradeIds } from '../controls/light/isLight';
 
 // --- Tabs of rooms, trades or favorite lists, with a marker that glides
 // to the active one
@@ -121,10 +122,16 @@ const windowTypes = new Set([
 const isOpenWindow = (channel: Channel) =>
   windowTypes.has(channel.type) && ['open', 'tilted'].includes(windowState(channel));
 
-// Switches and dimmers of the "lights" section, on when STATE or LEVEL say so
-const isLight = (channel: Channel) => controlOverrides[channel.type]?.section === 'lights';
-const isLightOn = (channel: Channel) => {
-  if (!isLight(channel)) return false;
+// Dimmers of the "lights" section, and the switches among them that drive
+// a lamp as their tile shows it (isLight: pumps and heaters don't count);
+// on when STATE or LEVEL say so
+const isLight = (channel: Channel, lightTradeIds: Set<number>) => {
+  if (controlOverrides[channel.type]?.section !== 'lights') return false;
+  const dp = channel.datapoints as Record<string, unknown>;
+  return 'LEVEL' in dp || isLightTile(channel, lightTradeIds);
+};
+const isLightOn = (channel: Channel, lightTradeIds: Set<number>) => {
+  if (!isLight(channel, lightTradeIds)) return false;
   const dp = channel.datapoints as Record<string, unknown>;
   return dp.STATE === true || (typeof dp.LEVEL === 'number' && dp.LEVEL > 0) || Number(dp.LEVEL) > 0;
 };
@@ -147,8 +154,9 @@ const Overview = ({ channels }: { channels: Channel[] }) => {
     .filter((c) => controlOverrides[c.type]?.section === 'climate')
     .map((c) => (c.datapoints as Record<string, unknown>).ACTUAL_TEMPERATURE)
     .filter((t): t is number => typeof t === 'number');
-  const switches = channels.filter(isLight);
-  const switchedOn = switches.filter(isLightOn).length;
+  const lightTradeIds = useLightTradeIds();
+  const switches = channels.filter((c) => isLight(c, lightTradeIds));
+  const switchedOn = switches.filter((c) => isLightOn(c, lightTradeIds)).length;
   const windowChannels = channels.filter((c) => windowTypes.has(c.type));
   const openWindows = windowChannels.filter(isOpenWindow);
 
@@ -463,7 +471,8 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, em
     );
   const effects = useEffects();
   const channels = useMemo(() => channelsByType.flatMap(([, list]) => list), [channelsByType]);
-  const lightsOn = channels.filter(isLightOn).length;
+  const lightTradeIds = useLightTradeIds();
+  const lightsOn = channels.filter((c) => isLightOn(c, lightTradeIds)).length;
   const [alarmsOpen, setAlarmsOpen] = useState(false);
   const a = (alpha: number) => Math.min(1, alpha * effects.k).toFixed(3);
 

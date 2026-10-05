@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { useChannels, useDevices, useLinkAction, useLinkParamset, useLinks } from '../../queries';
+import { useChannelList, useDevices, useLinkAction, useLinkParamset, useLinks } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../../i18n/utils';
 import { Channel, DatapointValue, DeviceChannel, Link, ParamsetDescription } from '../../types/types';
@@ -347,7 +347,7 @@ export const AddLinkForm = ({
   const ownChannel = linkable.find((c) => c.address === own);
 
   // The channels as the channel dialog shows them (names, rooms from ReGa)
-  const { data: regaChannels = [] } = useChannels({ all: true });
+  const { data: regaChannels = [] } = useChannelList();
   const asChannels = useMemo(() => {
     const byAddress = new Map(regaChannels.map((c) => [c.address, c]));
     return (list: DeviceChannel[]) =>

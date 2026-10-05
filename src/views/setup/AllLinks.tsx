@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import SearchIcon from '~icons/lucide/search';
-import { useAllLinks, useChannels, useRooms } from '../../queries';
+import { useAllLinks, useChannelList, useRooms } from '../../queries';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
@@ -17,7 +17,7 @@ export const AllLinks = () => {
   usePageTitle(m.LINKS());
   const { data: links = [], isLoading } = useAllLinks();
   const names = useChannelNames();
-  const { data: channels = [] } = useChannels({ all: true });
+  const { data: channels = [] } = useChannelList();
   const { data: rooms = [] } = useRooms();
   const [query, setQuery] = useState('');
   const [room, setRoom] = useState('');

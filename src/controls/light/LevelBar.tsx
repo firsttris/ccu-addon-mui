@@ -13,7 +13,8 @@ interface LevelBarProps {
 }
 
 // Brightness as a bar to drag or tap; the new value is sent once on
-// release, arrow keys change it in 5 % steps.
+// release, arrow keys change it in 5 % steps. A vertical swipe scrolls the
+// page (touch-pan-y) and sends nothing (pointercancel).
 export const LevelBar = ({ label, value, onChange, color = WARM }: LevelBarProps) => {
   const bar = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<number | null>(null);
@@ -61,7 +62,7 @@ export const LevelBar = ({ label, value, onChange, color = WARM }: LevelBarProps
         if (keyTimer.current) clearTimeout(keyTimer.current);
         keyTimer.current = setTimeout(() => commit(next), 600);
       }}
-      className="relative h-7 cursor-ew-resize touch-none overflow-hidden rounded-full bg-muted outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      className="relative h-7 cursor-ew-resize touch-pan-y overflow-hidden rounded-full bg-muted outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
     >
       <div
         className={cn('absolute inset-y-0 left-0 rounded-full', drag === null && 'transition-[width] duration-500')}
