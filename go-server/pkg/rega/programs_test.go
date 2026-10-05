@@ -1,6 +1,12 @@
 package rega
 
 import (
+	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
+
+	"ccu-addon-mui-server/pkg/config"
 	"strings"
 	"testing"
 )
@@ -51,9 +57,18 @@ func TestParseProgram(t *testing.T) {
 
 func TestProgramCodeRoundTrip(t *testing.T) {
 	p, _ := parseProgram(programOutput)
-	code, err := programCode(*p)
+	code, checks, err := programCode(*p)
 	if err != nil {
 		t.Fatal(err)
+	}
+	// Every datapoint found by name is looked up before anything is built
+	for _, want := range []string{
+		"chk = dom.GetObject(2000);\nif (chk) { chkDP = chk.DPByHssDP(\"STATE\"); if (chkDP) { } else { valid = false; } } else { valid = false; }",
+		`chk = dom.GetObject(3000);`,
+	} {
+		if !strings.Contains(checks, want) {
+			t.Errorf("missing check %q in\n%s", want, checks)
+		}
 	}
 	for _, want := range []string{
 		"rule.ElseIfFlag(true);",
@@ -83,7 +98,10 @@ func TestProgramCodeRoundTrip(t *testing.T) {
 
 	// A changed one is written in place
 	p.Rules[0].Groups[0][1].Time.Changed = true
-	code, _ = programCode(*p)
+	code, checks, _ = programCode(*p)
+	if !strings.Contains(checks, "chk = dom.GetObject(1500);\nif (chk) { } else { valid = false; }") {
+		t.Errorf("time module not checked:\n%s", checks)
+	}
 	if !strings.Contains(code, "tm = dom.GetObject(1500);") || !strings.Contains(code, `tm.Time("2007-01-01 19:30:00");`) {
 		t.Errorf("time module not written:\n%s", code)
 	}
@@ -114,7 +132,7 @@ func TestProgramCodeRefusesUnsafeValues(t *testing.T) {
 	for i, mutate := range cases {
 		p := base()
 		mutate(&p)
-		if _, err := programCode(p); err == nil {
+		if _, _, err := programCode(p); err == nil {
 			t.Errorf("case %d: expected an error", i)
 		}
 	}
@@ -135,5 +153,28 @@ func TestParseProgramUsages(t *testing.T) {
 	usages := parseProgramUsages("P\t1201\tRollläden abends\tLEQ0000002:1\nP\t1300\tLicht\tLEQ0000002:1\nP\t1201\tRollläden abends\tLEQ0000002:2\nP\t1201\tRollläden abends\tLEQ0000002:2\n")
 	if len(usages) != 2 || usages[0].ID != 1201 || len(usages[0].Channels) != 2 || usages[1].Name != "Licht" {
 		t.Fatalf("got %+v", usages)
+	}
+}
+
+// A program using a datapoint that no longer exists is refused by ReGa
+// before anything is built; that comes back as ErrProgramReferences
+func TestSaveProgramMissingReference(t *testing.T) {
+	var gotScript string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		gotScript = string(body)
+		_, _ = io.WriteString(w, "MISSING<xml></xml>")
+	}))
+	defer ts.Close()
+	c := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+	p := ProgramDefinition{Name: "P", Rules: []ProgramRule{{ProgramBranch: ProgramBranch{
+		Destinations: []ProgramDestination{{Param: "ivtObjectId", Channel: 5, Datapoint: "STATE", ValueType: "ivtBinary", Value: "true"}},
+	}}}}
+	if _, _, err := c.SaveProgram(p); !errors.Is(err, ErrProgramReferences) {
+		t.Fatalf("SaveProgram = %v", err)
+	}
+	// The checks come before the program object is created
+	if i, j := strings.Index(gotScript, "chk = dom.GetObject(5);"), strings.Index(gotScript, "dom.CreateObject(OT_PROGRAM)"); i < 0 || j < 0 || i > j {
+		t.Fatalf("checks not before the build:\n%s", gotScript)
 	}
 }

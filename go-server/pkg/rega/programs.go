@@ -2,6 +2,7 @@ package rega
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -271,6 +272,7 @@ func (w *scriptWriter) datapointRef(channel int64, name string, id int64) string
 		if !hssNameRegex.MatchString(name) {
 			w.fail(fmt.Errorf("invalid datapoint %q", name))
 		}
+		w.check(fmt.Sprintf("chk = dom.GetObject(%d);\nif (chk) { chkDP = chk.DPByHssDP(\"%s\"); if (chkDP) { } else { valid = false; } } else { valid = false; }", channel, name))
 		return fmt.Sprintf(`dom.GetObject(%d).DPByHssDP("%s").ID()`, channel, name)
 	}
 	return strconv.FormatInt(id, 10)
@@ -310,6 +312,18 @@ func literal(valueType, value string) (string, error) {
 type scriptWriter struct {
 	b   strings.Builder
 	err error
+	// checks run before anything is created: a missing datapoint or time
+	// module would abort the script halfway (null.ID()), see save_program.tcl
+	checks []string
+}
+
+func (w *scriptWriter) check(code string) {
+	for _, c := range w.checks {
+		if c == code {
+			return
+		}
+	}
+	w.checks = append(w.checks, code)
 }
 
 func (w *scriptWriter) line(format string, args ...interface{}) {
@@ -368,6 +382,7 @@ func (w *scriptWriter) timeModule(t *TimeModule) {
 		}
 	}
 	if t.ID > 0 {
+		w.check(fmt.Sprintf("chk = dom.GetObject(%d);\nif (chk) { } else { valid = false; }", t.ID))
 		w.line("tm = dom.GetObject(%d);", t.ID)
 	} else {
 		w.line(`tm = dom.CreateObject(OT_CALENDARDP, "Zeitmodul");`)
@@ -388,10 +403,11 @@ func (w *scriptWriter) timeModule(t *TimeModule) {
 	w.line("cond.RightVal1(tm.ID());")
 }
 
-// programCode writes the HM script that builds the rules on "program".
-func programCode(p ProgramDefinition) (string, error) {
+// programCode writes the HM script that builds the rules on "program", and
+// the checks that must set "valid" before it runs.
+func programCode(p ProgramDefinition) (code, checks string, err error) {
 	if len(p.Rules) == 0 {
-		return "", fmt.Errorf("invalid program: no rule")
+		return "", "", fmt.Errorf("invalid program: no rule")
 	}
 	w := &scriptWriter{}
 	for i, r := range p.Rules {
@@ -441,8 +457,12 @@ func programCode(p ProgramDefinition) (string, error) {
 		w.line("rule.ElseIfFlag(false);")
 		w.branch(*p.Else)
 	}
-	return w.b.String(), w.err
+	return w.b.String(), strings.Join(w.checks, "\n"), w.err
 }
+
+// ErrProgramReferences: the program uses a datapoint or time module that no
+// longer exists; nothing was changed.
+var ErrProgramReferences = errors.New("the program uses a datapoint or time module that doesn't exist")
 
 // SaveProgram writes a program (a new one if its ID is 0) and returns
 // SetOK with its id, or SetNotFound.
@@ -453,7 +473,7 @@ func (c *Client) SaveProgram(p ProgramDefinition) (result string, id int64, err 
 	if strings.Contains(p.Description, "^") || len(p.Description) > 1000 {
 		return "", 0, fmt.Errorf("invalid description")
 	}
-	code, err := programCode(p)
+	code, checks, err := programCode(p)
 	if err != nil {
 		return "", 0, err
 	}
@@ -465,6 +485,7 @@ func (c *Client) SaveProgram(p ProgramDefinition) (result string, id int64, err 
 	script := strings.NewReplacer(
 		"{{DATA}}", string(data),
 		"{{CODE}}", strings.TrimRight(code, "\n"),
+		"{{CHECKS}}", checks,
 		"{{ID}}", strconv.FormatInt(p.ID, 10),
 		"{{NAME}}", p.Name,
 		"{{DESCRIPTION}}", p.Description,
@@ -473,6 +494,9 @@ func (c *Client) SaveProgram(p ProgramDefinition) (result string, id int64, err 
 	output, err := c.Execute(script)
 	if err != nil {
 		return "", 0, err
+	}
+	if strings.TrimSpace(output) == "MISSING" {
+		return "", 0, ErrProgramReferences
 	}
 	result, value, err := resultWithValue(output)
 	if err != nil || result != SetOK {
