@@ -52,6 +52,10 @@ type caller interface {
 
 type Client struct {
 	interfaces map[string]caller
+	// slow: the same interfaces without the 30 s answer timeout, for
+	// updateFirmware, which rfd answers only after the whole transfer
+	// (RFDevice firmware update, minutes; ic_ifacecmd.cgi waits for it)
+	slow map[string]caller
 
 	mu sync.Mutex
 	// Device descriptions by interface and address; they only change with
@@ -92,16 +96,46 @@ func New(cfg *config.Config) (*Client, error) {
 		transport = &basicAuthTransport{username: cfg.CCUUser, password: cfg.CCUPass, base: transport}
 	}
 	transport = &untypedValueTransport{base: transport}
+	var slowTransport http.RoundTripper = &http.Transport{
+		DialContext:           (&net.Dialer{Timeout: 5 * time.Second}).DialContext,
+		ResponseHeaderTimeout: firmwareUpdateTimeout,
+	}
+	if cfg.CCUUser != "" && cfg.CCUPass != "" {
+		slowTransport = &basicAuthTransport{username: cfg.CCUUser, password: cfg.CCUPass, base: slowTransport}
+	}
+	slowTransport = &untypedValueTransport{base: slowTransport}
 
 	callers := map[string]caller{}
+	slow := map[string]caller{}
 	for _, iface := range Interfaces(cfg) {
-		client, err := xmlrpc.NewClient(fmt.Sprintf("http://%s:%d%s", cfg.CCUHost, iface.Port, iface.Path), transport)
+		url := fmt.Sprintf("http://%s:%d%s", cfg.CCUHost, iface.Port, iface.Path)
+		client, err := xmlrpc.NewClient(url, transport)
 		if err != nil {
 			return nil, err
 		}
 		callers[iface.Name] = client
+		if slowClient, err := xmlrpc.NewClient(url, slowTransport); err == nil {
+			slow[iface.Name] = slowClient
+		}
 	}
-	return newClient(callers), nil
+	c := newClient(callers)
+	c.slow = slow
+	return c, nil
+}
+
+// How long a BidCos device firmware update may take (transfer and flash)
+const firmwareUpdateTimeout = 20 * time.Minute
+
+// callSlow is call without the answer timeout (see Client.slow)
+func (c *Client) callSlow(iface, method string, args []interface{}, reply interface{}) error {
+	rpc, ok := c.slow[iface]
+	if !ok {
+		return c.call(iface, method, args, reply)
+	}
+	if err := rpc.Call(method, args, reply); err != nil {
+		return fmt.Errorf("%s %s: %w", iface, method, err)
+	}
+	return nil
 }
 
 // InterfaceNames returns the names of the interfaces, sorted.
@@ -183,14 +217,21 @@ func (c *Client) InstallFirmware(iface, address string) error {
 	if !strings.HasPrefix(device.Type, "HmIPW-") && c.dutyCycleHigh() {
 		return ErrDutyCycleHigh
 	}
-	method := "updateFirmware"
-	if isHmIPInterface(iface) {
-		method = "installFirmware"
-	}
 	var reply interface{}
-	err = c.call(iface, method, []interface{}{address}, &reply)
-	if code := faultCode(err); code == -1 || code == -10 {
+	if isHmIPInterface(iface) {
+		// Starts the update and answers at once
+		err = c.call(iface, "installFirmware", []interface{}{address}, &reply)
+	} else {
+		// Transfers and flashes before it answers
+		err = c.callSlow(iface, "updateFirmware", []interface{}{address}, &reply)
+	}
+	switch faultCode(err) {
+	case -1, -9, -10:
+		// -9: out of range (rfd)
 		return ErrDeviceUnreachable
+	case -8:
+		// rfd: not enough duty cycle left for the transfer
+		return ErrDutyCycleHigh
 	}
 	if err != nil {
 		return err

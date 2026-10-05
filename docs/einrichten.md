@@ -207,7 +207,7 @@ welches Funkmodul die Zentrale mit welchem BidCos-Gerät spricht, mit *Roaming*.
 | **Firewall** | Richtlinie, Zugriff auf XML-RPC, Script-API und mediola, erlaubte Adressen und Ports |
 | **HTTPS-Zertifikat** | eigenes Zertifikat hochladen (wird geprüft) oder zurück zum Standard |
 | **Zusatzsoftware** | installierte Add-ons mit Version und Updates, öffnen, neu starten, deinstallieren; neues Add-on installieren |
-| **Geräte-Firmware** | welche Geräte bei eQ-3 neuere Firmware haben, mit einem Klick direkt auf die CCU laden (ohne Umweg über den Rechner); Firmware auf der CCU mit Version, Mindestversion der CCU und Änderungen; Datei hochladen (für CCUs ohne Internet), entfernen |
+| **Geräte-Firmware** | alle Geräte, für die die CCU ein Update bereit hat, mit Update-Knopf (wie die Firmware-Übersicht der WebUI, auch ohne Internet); welche Geräte bei eQ-3 neuere Firmware haben, mit einem Klick direkt auf die CCU laden (ohne Umweg über den Rechner); Firmware auf der CCU mit Version, Mindestversion der CCU und Änderungen; Datei hochladen (für CCUs ohne Internet), entfernen |
 | **Protokollierung** | Log-Level von HmIP, BidCos und ReGa, Syslog-Server, Logdateien herunterladen |
 | **Backup** | Backup (`.sbk`) erstellen und herunterladen; ein Backup einspielen (hochladen, prüfen, mit Schlüssel falls nötig, Neustart) |
 

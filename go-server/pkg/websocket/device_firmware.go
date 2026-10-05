@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,6 +28,9 @@ import (
 // downloads it and hands it to the HMServer itself.
 
 var deviceFirmwareClient = &http.Client{Timeout: 2 * time.Minute}
+
+// The list of versions has to come within the browser's wait for it
+var deviceFirmwareCatalogClient = &http.Client{Timeout: 25 * time.Second}
 
 // How long eQ-3's list of device firmware is kept
 const deviceFirmwareCatalogLifetime = time.Hour
@@ -93,7 +95,7 @@ func (s *Server) fetchDeviceFirmwareCatalog() ([]DeviceFirmwareVersion, error) {
 	}
 	u := s.cfg.DeviceFirmwareServer + "/firmware/api/firmware/search/DEVICE?product=HM-CCU3&version=" +
 		url.QueryEscape(firmwareVersion())
-	resp, err := deviceFirmwareClient.Get(u)
+	resp, err := deviceFirmwareCatalogClient.Get(u)
 	if err != nil {
 		return nil, err
 	}
@@ -129,28 +131,11 @@ func (s *Server) fetchDeviceFirmwareCatalog() ([]DeviceFirmwareVersion, error) {
 	return versions, nil
 }
 
-// ccuSerial is the CCU's serial number for eQ-3's download, "0" if unknown
-// (CCU.getSerial, webui.js homematic.com.init)
-func (s *Server) ccuSerial() string {
-	file, err := os.Open(s.cfg.IDsFile)
-	if err != nil {
-		return "0"
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		key, value, ok := strings.Cut(scanner.Text(), "=")
-		if ok && strings.TrimSpace(key) == "SerialNumber" && strings.TrimSpace(value) != "" {
-			return strings.TrimSpace(value)
-		}
-	}
-	return "0"
-}
-
 // downloadDeviceFirmware fetches the newest firmware for a device type
-// from eQ-3 (downloadURLServer + "&serial=...&product=...") into a file
+// from eQ-3 (downloadURLServer + "&serial=0&product=..."): OpenCCU sends no
+// serial number (0183-WebUI-ImprovedFirmwareupdateDialog, webui.js)
 func (s *Server) downloadDeviceFirmware(deviceType string) (string, error) {
-	u := s.cfg.DeviceFirmwareServer + "/firmware/download?cmd=download&serial=" + url.QueryEscape(s.ccuSerial()) +
+	u := s.cfg.DeviceFirmwareServer + "/firmware/download?cmd=download&serial=0" +
 		"&product=" + url.QueryEscape(downloadProduct(deviceType))
 	resp, err := deviceFirmwareClient.Get(u)
 	if err != nil {

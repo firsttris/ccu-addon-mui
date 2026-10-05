@@ -193,7 +193,9 @@ func (c *Client) setDeviceID(deviceID string) {
 }
 
 type Server struct {
-	cfg *config.Config
+	// Device firmware updates running, by "<interface> <address>"
+	firmwareUpdates sync.Map
+	cfg             *config.Config
 	// Channels non-administrators may not operate
 	readOnly readOnlyChannels
 	addons   *addons.Service
@@ -639,7 +641,11 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		s.handleCreateBackup(client, message)
 	case "installFirmware":
 		s.handleInstallFirmware(client, message)
-	case "getDeviceFirmware", "checkDeviceFirmware", "getDeviceFirmwareChangelog", "downloadDeviceFirmware", "addDeviceFirmware", "deleteDeviceFirmware":
+	case "checkDeviceFirmware", "downloadDeviceFirmware", "addDeviceFirmware":
+		// eQ-3 and the HMServer may take minutes: the client's other
+		// requests go on meanwhile
+		go s.handleDeviceFirmware(client, msgType, message)
+	case "getDeviceFirmware", "getDeviceFirmwareChangelog", "deleteDeviceFirmware":
 		s.handleDeviceFirmware(client, msgType, message)
 	case "getServiceMessages", "acknowledgeServiceMessage", "getAlarmMessages", "acknowledgeAlarmMessage":
 		s.handleServiceMessages(client, msgType, message)
@@ -1558,9 +1564,25 @@ func (s *Server) handleInstallFirmware(client *Client, message []byte) {
 		s.sendRequestError(client, msg.RequestID, "installFirmware is not available", "NOT_AVAILABLE")
 		return
 	}
-	s.configure(client, msg.RequestID, audit.Entry{Action: "installFirmware", Target: msg.InterfaceName + " " + msg.Address},
+	// One update per device: a second updateFirmware would hit a device
+	// that is in its bootloader for the first
+	if _, running := s.firmwareUpdates.LoadOrStore(msg.InterfaceName+" "+msg.Address, true); running {
+		s.sendRequestError(client, msg.RequestID, "an update of this device is already running", "UPDATE_RUNNING")
+		return
+	}
+	// A BidCos update answers only after minutes: the client's other
+	// requests go on meanwhile, as in the WebUI the answer is waited for
+	go s.installFirmware(client, msg.RequestID, msg.InterfaceName, msg.Address)
+}
+
+func (s *Server) installFirmware(client *Client, requestID, iface, address string) {
+	defer s.firmwareUpdates.Delete(iface + " " + address)
+	s.configure(client, requestID, audit.Entry{Action: "installFirmware", Target: iface + " " + address},
 		func() (interface{}, string, error) {
-			err := s.rpc.InstallFirmware(msg.InterfaceName, msg.Address)
+			err := s.rpc.InstallFirmware(iface, address)
+			if err == nil {
+				s.smokeTestAfterUpdate(iface, address)
+			}
 			switch {
 			case errors.Is(err, ccurpc.ErrDeviceUnreachable):
 				return nil, "DEVICE_UNREACHABLE", nil
@@ -1571,6 +1593,19 @@ func (s *Server) handleInstallFirmware(client *Client, message []byte) {
 			}
 			return nil, rega.SetOK, nil
 		})
+}
+
+// smokeTestAfterUpdate: a smoke detector asks for its self-test after a
+// firmware update, as the WebUI resets it (ic_ifacecmd.cgi: metadata
+// smokeTestDone=false on <address>:1, hintActivateDetectorSelfTest)
+func (s *Server) smokeTestAfterUpdate(iface, address string) {
+	device, err := s.rpc.GetDeviceDescription(iface, address)
+	if err != nil || (device.Type != "HmIP-SWSD" && device.Type != "HmIP-SWSD-2") {
+		return
+	}
+	if err := s.rpc.SetMetadata("HmIP-RF", address+":1", "smokeTestDone", false); err != nil {
+		logger.Error("Failed to reset smokeTestDone:", err)
+	}
 }
 
 // handleObjects creates, renames and deletes rooms, trades and system

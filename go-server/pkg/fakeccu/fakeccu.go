@@ -50,8 +50,11 @@ type CCU struct {
 	// FirmwareStagedLink, if set, is linked to the checked update like
 	// /usr/local/.firmwareUpdate (action_firmware_upload: ln -sfn)
 	FirmwareStagedLink string
-	groupMetadata      map[string]string
-	fixture            *Fixture
+	// FirmwareUpdateDelay: how long updateFirmware takes to answer, as
+	// rfd's does after the whole transfer
+	FirmwareUpdateDelay time.Duration
+	groupMetadata       map[string]string
+	fixture             *Fixture
 	// original is the fixture as loaded, for Reset
 	original []byte
 
@@ -1893,6 +1896,24 @@ func (c *CCU) InstalledAddons() []string {
 }
 
 // InstalledFirmware returns the firmware file the CCU rebooted to install
+// SetDeviceField changes a field of a device description, e.g. the
+// AVAILABLE_FIRMWARE the CCU offers it
+func (c *CCU) SetDeviceField(iface, address, field string, value interface{}) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	data := c.fixture.Interfaces[iface]
+	if data == nil {
+		return false
+	}
+	for _, d := range data.Devices {
+		if d["ADDRESS"] == address {
+			d[field] = value
+			return true
+		}
+	}
+	return false
+}
+
 func (c *CCU) InstalledFirmware() string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -1915,6 +1936,10 @@ func (c *CCU) handleXMLRPC(iface string, w http.ResponseWriter, r *http.Request)
 		return
 	}
 	result, fault := c.call(iface, method, params)
+	if method == "updateFirmware" && c.FirmwareUpdateDelay > 0 {
+		// rfd answers only after transferring and flashing (minutes)
+		time.Sleep(c.FirmwareUpdateDelay)
+	}
 	w.Header().Set("Content-Type", "text/xml")
 	if fault != "" {
 		// "-7:text" sends fault code -7
@@ -2066,7 +2091,8 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 				return nil, "-1:Bootloader in device " + address + " didn't start"
 			}
 			d["FIRMWARE"] = available
-			return []interface{}{true}, ""
+			// rfd answers a plain bool (XmlRpcMethods updateFirmware)
+			return true, ""
 		}
 		return nil, "-2:Unknown instance"
 	case "listReplaceableDevices":

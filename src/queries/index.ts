@@ -205,7 +205,9 @@ export const useInstallFirmware = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ interfaceName, address }: { interfaceName: string; address: string }) => {
-      await request({ type: 'installFirmware', interfaceName, address }, { queue: false });
+      // A BidCos update answers only once the device is flashed (minutes),
+      // as the WebUI waits for updateFirmware
+      await request({ type: 'installFirmware', interfaceName, address }, { queue: false, timeoutMs: 20 * 60 * 1000 });
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['devices'] }),
   });

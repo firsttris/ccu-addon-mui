@@ -19,6 +19,8 @@ import { m } from '../../paraglide/messages';
 import { Panel } from './Panel';
 import { usePasswordRetry } from './usePasswordRetry';
 import { typeUpdates } from './deviceFirmwareUpdates';
+import { Firmware, updateAction } from './Firmware';
+import { useChannelNames } from './channelNames';
 import type { DeviceFirmwareFile } from '../../types/protocol';
 
 export const deviceFirmwareError = (error: Error) => {
@@ -77,16 +79,40 @@ export const DeviceFirmware = () => {
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState<DeviceFirmwareFile | null>(null);
   const [changelog, setChangelog] = useState<DeviceFirmwareFile | null>(null);
+  const names = useChannelNames();
 
   if (!admin) {
     return null;
   }
   const updates = typeUpdates(devices, catalog.data);
+  // Devices the CCU has an update ready for, from their own descriptions
+  // and without eQ-3 (ic_deviceFirmwareOverview.cgi lists every device
+  // with its state and update button)
+  const ready = (devices ?? []).filter((d) => updateAction(d) !== undefined);
 
   return (
     <Panel aria-label={m.DEVFW_TITLE()}>
       <h2>{m.DEVFW_TITLE()}</h2>
       <p>{m.DEVFW_INTRO()}</p>
+
+      {ready.length > 0 && (
+        <>
+          <h3 className="text-sm font-medium">{m.DEVFW_READY()}</h3>
+          <ul aria-label={m.DEVFW_READY()} className="flex flex-col divide-y rounded-lg border">
+            {ready.map((device) => (
+              <li key={device.address} className="flex flex-col gap-2 px-3 py-2.5 text-sm">
+                <span className="font-medium">
+                  {names.get(device.address) ?? device.name ?? device.address}{' '}
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {device.type} · {device.address}
+                  </span>
+                </span>
+                <Firmware device={device} canEdit={elevated} />
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       <h3 className="text-sm font-medium">{m.DEVFW_UPDATES()}</h3>
       {catalog.isPending && (

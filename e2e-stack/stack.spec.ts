@@ -506,6 +506,13 @@ test('installiert ein bereitliegendes Firmware-Update', async ({ page }) => {
   await page.goto('/setup');
 
   // The window contact (HmIP) and two BidCos devices have newer firmware
+  // All of them in the device firmware overview, as in the WebUI
+  // (ic_deviceFirmwareOverview.cgi), without asking eQ-3
+  await page.goto('/setup/system');
+  const ready = page.getByRole('list', { name: 'Update bereit auf der CCU' });
+  await expect(ready.getByRole('listitem')).toHaveCount(3);
+  await expect(ready.getByRole('listitem').filter({ hasText: '0008DA8A9F1234' })).toContainText('1.2.6');
+  await page.goto('/setup');
   await page.getByRole('button', { name: /Nur mit Update \(3\)/ }).click();
   const table = page.getByRole('table', { name: 'Geräte' });
   await expect(table.getByRole('row')).toHaveCount(4);
