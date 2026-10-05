@@ -1,20 +1,13 @@
 import { useState } from 'react';
 import { useWebSocketContext } from '../hooks/useWebsocket';
-import { TranslationKey, useTranslations } from '../i18n/utils';
 import { m } from '../paraglide/messages';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
+import { loginErrorText } from '../lib/errors';
 
-const errorMessages: Record<string, TranslationKey> = {
-  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
-  TOO_MANY_ATTEMPTS: 'TOO_MANY_ATTEMPTS',
-  CCU_UNREACHABLE: 'CCU_UNREACHABLE',
-  CCU_NOT_READY: 'CCU_NOT_READY',
-};
 
 export const Login = () => {
-  const t = useTranslations();
   const { login, loginError, connectionStatus } = useWebSocketContext();
   const [username, setUsername] = useState('Admin');
   const [password, setPassword] = useState('');
@@ -77,7 +70,7 @@ export const Login = () => {
         </div>
         {loginError && (
           <p role="alert" className="text-center text-sm text-destructive">
-            {t(errorMessages[loginError] ?? 'INVALID_CREDENTIALS')}
+            {loginErrorText(loginError)}
           </p>
         )}
         {!connected && <p className="text-center text-sm text-muted-foreground">{m.CONNECTING()}</p>}

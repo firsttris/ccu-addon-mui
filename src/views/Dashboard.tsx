@@ -1,10 +1,11 @@
 import { PlaceDiagrams } from './diagrams/Diagrams';
-import { Fragment as ReactFragment, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { ComponentType, Fragment as ReactFragment, memo, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import ThermometerIcon from '~icons/lucide/thermometer';
 import LightbulbIcon from '~icons/lucide/lightbulb';
 import AppWindowIcon from '~icons/lucide/app-window';
 import { Channel } from '../types/types';
+import { sameItems } from '../hooks/channels';
 import { controlOverrides, SectionId } from '../controls/registry';
 import { ControlComponent } from '../components/ControlComponent';
 import { AlarmBanner, AlarmsSheet } from '../components/Alarms';
@@ -257,7 +258,7 @@ const gridTiles = (group: SectionGroup): GridTile[] => {
           key: `d:${deviceAddress}`,
           minPx: sectionMinPx[override.section ?? 'generic'] ?? minPx,
           channelIds: deviceChannels.map((c) => c.id),
-          element: <override.component channels={deviceChannels} />,
+          element: <DeviceTile component={override.component} channels={deviceChannels} />,
         }))
       : channels.map((channel) => ({
           key: `c:${channel.address}`,
@@ -286,6 +287,15 @@ const sectionGrids: Record<SectionId | 'generic', string> = {
   system: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
   generic: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
 };
+
+// A control for all channels of a device: rendered again only when one of
+// them changed (the list itself is new whenever its section is rebuilt)
+const DeviceTile = memo(
+  function DeviceTile({ component: Component, channels }: { component: ComponentType<{ channels: Channel[] }>; channels: Channel[] }) {
+    return <Component channels={channels} />;
+  },
+  (before, after) => before.component === after.component && sameItems(before.channels, after.channels),
+);
 
 // Groups channels by device (the address before ":"), in order of appearance
 const groupByDevice = (channels: Channel[]) => {
@@ -444,15 +454,22 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, em
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<SavedLayout | null>(null);
   const saved = useMemo(() => parseLayout(layoutJson), [layoutJson]);
-  const groups = useMemo<SectionGroup[]>(
-    () =>
-      freeOrder
-        ? channelsByType.length > 0
-          ? [{ key: FREE, types: channelsByType }]
-          : []
-        : groupIntoSections(channelsByType),
-    [channelsByType, freeOrder],
-  );
+  // Sections whose types an event didn't touch stay the same objects, so
+  // their tiles and grid aren't built again (shareGroups in useChannels)
+  const previousGroups = useRef(new Map<string, SectionGroup>());
+  const groups = useMemo<SectionGroup[]>(() => {
+    const next = freeOrder
+      ? channelsByType.length > 0
+        ? [{ key: FREE, types: channelsByType }]
+        : []
+      : groupIntoSections(channelsByType);
+    const shared = next.map((group) => {
+      const before = previousGroups.current.get(group.key);
+      return before && sameItems(before.types, group.types) ? before : group;
+    });
+    previousGroups.current = new Map(shared.map((group) => [group.key, group]));
+    return shared;
+  }, [channelsByType, freeOrder]);
   const layout = draft ?? saved;
   const sections = orderSections(groups, layout?.order ?? []);
   const change = (next: Partial<SavedLayout>) =>

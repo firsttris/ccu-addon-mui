@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react';
 import { BACKUP_TIMEOUT_MS, download as downloadBackup } from './Backup';
 import UploadIcon from '~icons/lucide/upload';
-import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { getLocale } from '../../paraglide/runtime';
 import { m } from '../../paraglide/messages';
+import { errorText } from '../../lib/errors';
 
 // Uploading and checking an update goes through the WebUI and takes a while
 const FIRMWARE_TIMEOUT_MS = 10 * 60 * 1000;
@@ -16,25 +17,13 @@ const DOWNLOAD_TIMEOUT_MS = 35 * 60 * 1000;
 
 type Step = 'choose' | 'confirm' | 'done';
 
-const errorMessage = (error: unknown) => {
-  const code = error instanceof RequestError ? error.code : undefined;
-  switch (code) {
-    case 'INVALID_CREDENTIALS':
-      return m.INVALID_CREDENTIALS();
-    case 'TOO_MANY_ATTEMPTS':
-      return m.TOO_MANY_ATTEMPTS();
-    case 'INVALID_FIRMWARE':
-      return m.CCUFW_INVALID();
-    case 'FIRMWARE_NOT_STAGED':
-      return m.CCUFW_NOT_STAGED();
-    case 'FIRMWARE_CHECKSUM':
-      return m.CCUFW_CHECKSUM();
-    case 'DOWNLOAD_FAILED':
-      return m.CCUFW_DOWNLOAD_FAILED();
-    default:
-      return `${m.CCUFW_FAILED()}${error instanceof Error ? `: ${error.message}` : ''}`;
-  }
-};
+const errorMessage = (error: unknown) =>
+  errorText(error, m.CCUFW_FAILED, {
+    INVALID_FIRMWARE: m.CCUFW_INVALID,
+    FIRMWARE_NOT_STAGED: m.CCUFW_NOT_STAGED,
+    FIRMWARE_CHECKSUM: m.CCUFW_CHECKSUM,
+    DOWNLOAD_FAILED: m.CCUFW_DOWNLOAD_FAILED,
+  });
 
 // Installing a firmware file on the CCU with the WebUI's own steps
 // (cp_maintenance.cgi): upload and check (firmware_upload), the update's

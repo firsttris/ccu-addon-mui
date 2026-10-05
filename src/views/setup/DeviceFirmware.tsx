@@ -22,22 +22,14 @@ import { typeUpdates } from './deviceFirmwareUpdates';
 import { Firmware, updateAction } from './Firmware';
 import { useChannelNames } from './channelNames';
 import type { DeviceFirmwareFile } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
-export const deviceFirmwareError = (error: Error) => {
-  const code = error instanceof RequestError ? error.code : undefined;
-  switch (code) {
-    case 'INVALID_CREDENTIALS':
-      return m.INVALID_CREDENTIALS();
-    case 'INVALID_FIRMWARE':
-      return m.DEVFW_INVALID();
-    case 'FIRMWARE_NEEDS_NEWER_CCU':
-      return m.DEVFW_NEEDS_NEWER_CCU();
-    case 'UPDATE_SERVER_ERROR':
-      return m.DEVFW_CHECK_FAILED();
-    default:
-      return `${m.CHANGE_FAILED()}: ${error.message}`;
-  }
-};
+export const deviceFirmwareError = (error: Error) =>
+  errorText(error, m.CHANGE_FAILED, {
+    INVALID_FIRMWARE: m.DEVFW_INVALID,
+    FIRMWARE_NEEDS_NEWER_CCU: m.DEVFW_NEEDS_NEWER_CCU,
+    UPDATE_SERVER_ERROR: m.DEVFW_CHECK_FAILED,
+  });
 
 // Loads the newest firmware for a device type from eQ-3 onto the CCU; the
 // password once if the server needs a WebUI session for the HMServer

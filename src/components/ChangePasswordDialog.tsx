@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
+import { useWebSocketActions } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Input } from './ui/input';
 import { passwordAllowed } from '../views/setup/Users';
 import { m } from '../paraglide/messages';
+import { errorText } from '../lib/errors';
 
 // Changes the password of the logged-in user, confirmed with the current
 // one, as users may edit their own account in the WebUI
@@ -39,14 +40,7 @@ export const ChangePasswordDialog = ({ onDone }: { onDone: () => void }) => {
       showToast(m.PW_CHANGED(), 'info');
       onDone();
     } catch (e) {
-      const code = e instanceof RequestError ? e.code : undefined;
-      setError(
-        code === 'INVALID_CREDENTIALS'
-          ? m.PW_WRONG_CURRENT()
-          : code === 'TOO_MANY_ATTEMPTS'
-            ? m.TOO_MANY_ATTEMPTS()
-            : `${m.CHANGE_FAILED()}: ${(e as Error).message}`,
-      );
+      setError(errorText(e, m.CHANGE_FAILED, { INVALID_CREDENTIALS: m.PW_WRONG_CURRENT }));
     } finally {
       setBusy(false);
     }

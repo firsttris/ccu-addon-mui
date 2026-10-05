@@ -1,33 +1,23 @@
 import { useState } from 'react';
 import UploadIcon from '~icons/lucide/upload';
-import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { m } from '../../paraglide/messages';
+import { errorText } from '../../lib/errors';
 
 // Checking and applying a backup goes through the WebUI and takes a while
 const RESTORE_TIMEOUT_MS = 10 * 60 * 1000;
 
 type Step = 'choose' | 'confirm' | 'done';
 
-export const restoreErrorMessage = (error: unknown) => {
-  const code = error instanceof RequestError ? error.code : undefined;
-  switch (code) {
-    case 'INVALID_CREDENTIALS':
-      return m.INVALID_CREDENTIALS();
-    case 'TOO_MANY_ATTEMPTS':
-      return m.TOO_MANY_ATTEMPTS();
-    case 'INVALID_BACKUP':
-      return m.RESTORE_INVALID();
-    case 'WRONG_KEY':
-      return m.RESTORE_WRONG_KEY();
-    case 'FIRMWARE_TOO_OLD':
-      return m.RESTORE_FIRMWARE_TOO_OLD();
-    default:
-      return `${m.RESTORE_FAILED()}${error instanceof Error ? `: ${error.message}` : ''}`;
-  }
-};
+export const restoreErrorMessage = (error: unknown) =>
+  errorText(error, m.RESTORE_FAILED, {
+    INVALID_BACKUP: m.RESTORE_INVALID,
+    WRONG_KEY: m.RESTORE_WRONG_KEY,
+    FIRMWARE_TOO_OLD: m.RESTORE_FIRMWARE_TOO_OLD,
+  });
 
 // Restoring a backup (.sbk) with the WebUI's own steps (cp_security.cgi):
 // upload, check (security key?), apply, reboot. It replaces every setting

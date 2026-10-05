@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Channel } from '../types/types';
-import { applyEvent, groupChannelsByType, isHiddenChannel } from './channels';
+import { applyEvent, groupChannelsByType, isHiddenChannel, shareGroups } from './channels';
 
 const channel = (type: string, address: string, datapoints: Record<string, unknown> = { STATE: false }) =>
   ({
@@ -88,5 +88,21 @@ describe('applyEvent', () => {
     // An event has changed it since: keep that value
     const changed = applyEvent(sent, { channel: 'A:1', datapoint: 'STATE', value: 'other' });
     expect(applyEvent(changed, rollback, { value: true })).toBe(changed);
+  });
+});
+
+describe('shareGroups', () => {
+  it('keeps the groups an event did not touch', () => {
+    const lamp = channel('SWITCH_VIRTUAL_RECEIVER', 'L:4');
+    const blind = channel('BLIND_VIRTUAL_RECEIVER', 'B:4', { LEVEL: 0 });
+    const before = groupChannelsByType([lamp, blind]);
+    const changed = applyEvent([lamp, blind], { channel: 'L:4', datapoint: 'STATE', value: true });
+    const after = shareGroups(before, groupChannelsByType(changed));
+    const blinds = (groups: [string, Channel[]][]) => groups.find(([type]) => type === 'BLIND_VIRTUAL_RECEIVER');
+    const lamps = (groups: [string, Channel[]][]) => groups.find(([type]) => type === 'SWITCH_VIRTUAL_RECEIVER');
+    expect(blinds(after)).toBe(blinds(before));
+    expect(lamps(after)).not.toBe(lamps(before));
+    // Nothing changed: the very same list
+    expect(shareGroups(after, groupChannelsByType(changed))).toBe(after);
   });
 });

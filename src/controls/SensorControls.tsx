@@ -183,6 +183,17 @@ type PmRating = 'PM_GOOD' | 'PM_FAIR' | 'PM_MODERATE' | 'PM_POOR' | 'PM_VERY_POO
 export const pmRating = (pm25: number): PmRating =>
   pm25 <= 10 ? 'PM_GOOD' : pm25 <= 20 ? 'PM_FAIR' : pm25 <= 25 ? 'PM_MODERATE' : pm25 <= 50 ? 'PM_POOR' : pm25 <= 75 ? 'PM_VERY_POOR' : 'PM_EXTREMELY_POOR';
 
+// Static references: a lookup m[key] would put every text into the bundle
+const pmLabel: Record<PmRating, () => string> = {
+  PM_GOOD: m.PM_GOOD,
+  PM_FAIR: m.PM_FAIR,
+  PM_MODERATE: m.PM_MODERATE,
+  PM_POOR: m.PM_POOR,
+  PM_VERY_POOR: m.PM_VERY_POOR,
+  PM_EXTREMELY_POOR: m.PM_EXTREMELY_POOR,
+};
+const soilLabel = { SOIL_DRY: m.SOIL_DRY, SOIL_MOIST: m.SOIL_MOIST, SOIL_WET: m.SOIL_WET };
+
 const pmTone: Record<PmRating, Rating> = {
   PM_GOOD: 'good',
   PM_FAIR: 'fair',
@@ -213,7 +224,7 @@ export const ParticulateMatterControl = ({ channel }: { channel: Channel }) => {
       unit="µg/m³"
       caption="PM2.5"
       rating={rating ? pmTone[rating] : undefined}
-      ratingLabel={rating ? m[rating]() : undefined}
+      ratingLabel={rating ? pmLabel[rating]() : undefined}
       extras={extras}
     />
   );
@@ -239,7 +250,7 @@ export const SoilMoistureControl = ({ channel }: { channel: Channel }) => {
       value={moisture !== undefined ? format(moisture, 0) : '–'}
       unit="%"
       rating={rating === 'SOIL_DRY' ? 'poor' : rating ? 'good' : undefined}
-      ratingLabel={rating ? m[rating]() : undefined}
+      ratingLabel={rating ? soilLabel[rating]() : undefined}
       extras={extras}
     />
   );

@@ -96,3 +96,18 @@ export const applyEvent = (channels: Channel[], event: HmEvent, onlyIfCurrent?: 
   });
   return changed ? nextChannels : channels;
 };
+
+// Whether two lists hold the same items in the same order
+export const sameItems = <T>(a: readonly T[], b: readonly T[]) => a.length === b.length && a.every((item, i) => item === b[i]);
+
+// The grouping of the new channels, reusing the groups of the previous one
+// that didn't change: an event changes one channel, so only its type gets a
+// new list, and the others (and the views built from them) stay as they are.
+export const shareGroups = (previous: [string, Channel[]][], next: [string, Channel[]][]): [string, Channel[]][] => {
+  const old = new Map(previous.map((group) => [group[0], group]));
+  const shared = next.map((group) => {
+    const before = old.get(group[0]);
+    return before && sameItems(before[1], group[1]) ? before : group;
+  });
+  return sameItems(previous, shared) ? previous : shared;
+};
