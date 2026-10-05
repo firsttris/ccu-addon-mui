@@ -310,7 +310,7 @@ func TestFormatValue(t *testing.T) {
 
 func TestSetDatapointRejectsNullValue(t *testing.T) {
 	s := NewServer(nil, nil)
-	client := &Client{send: make(chan []byte, 1)}
+	client := &Client{send: make(chan []byte, 1), level: auth.LevelUser}
 
 	s.handleMessage(client, []byte(`{"type":"setDatapoint","requestId":"r1","interfaceName":"HmIP-RF","address":"000A:4","attribute":"LEVEL","value":null}`))
 
@@ -668,5 +668,14 @@ func TestPutParamsetOnlyForAdministrators(t *testing.T) {
 
 	if len(rpc.calls) != 0 {
 		t.Fatalf("nothing must reach the CCU: %v", rpc.calls)
+	}
+}
+
+// A level ReGa could not tell might be a guest's: no switching
+func TestUnknownLevelMayNotOperate(t *testing.T) {
+	for level, want := range map[string]bool{auth.LevelAdmin: true, auth.LevelUser: true, auth.LevelGuest: false, auth.LevelUnknown: false} {
+		if got := canOperate(level); got != want {
+			t.Errorf("canOperate(%q) = %v", level, got)
+		}
 	}
 }

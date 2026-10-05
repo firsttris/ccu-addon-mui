@@ -31,7 +31,7 @@ const useAcknowledge = () => {
   const { userLevel } = useWebSocketContext();
   return {
     // Like service messages: operating, not for guests
-    allowed: userLevel !== 'guest',
+    allowed: userLevel === 'admin' || userLevel === 'user',
     pending: acknowledge.isPending,
     run: (alarm: AlarmMessage) =>
       acknowledge.mutate(alarm.id, {

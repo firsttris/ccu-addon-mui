@@ -100,7 +100,7 @@ export const ServiceMessagesSheet = ({ open, onOpenChange }: { open: boolean; on
   const { userLevel } = useWebSocketContext();
   const { showToast } = useToast();
   const acknowledge = useAcknowledgeServiceMessage();
-  const canAcknowledge = userLevel !== 'guest';
+  const canAcknowledge = userLevel === 'admin' || userLevel === 'user';
   const texts = useServiceTexts(messages);
 
   const acknowledgeAll = async () => {
