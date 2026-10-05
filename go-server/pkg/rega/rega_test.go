@@ -1,14 +1,18 @@
 package rega
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"ccu-addon-mui-server/pkg/config"
+	"ccu-addon-mui-server/pkg/latin1"
 )
 
 func TestSanitizeRegaValue(t *testing.T) {
@@ -247,16 +251,38 @@ func TestSetNameValidatesAndReturnsPreviousName(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		gotScript = string(body)
-		_, _ = io.WriteString(w, "OK\tHmIP-BSM 0001:1<xml></xml>")
+		// ReGa answers in ISO-8859-1
+		_, _ = io.WriteString(w, "OK\tLicht B\xfcro<xml></xml>")
 	}))
 	defer ts.Close()
 	client = &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
 	result, previous, err := client.SetName("0001:1", "Licht Küche")
-	if err != nil || result != SetOK || previous != "HmIP-BSM 0001:1" {
+	if err != nil || result != SetOK || previous != "Licht Büro" {
 		t.Fatalf("SetName = %q, %q, %v", result, previous, err)
 	}
-	if !strings.Contains(gotScript, `"0001:1"`) || !strings.Contains(gotScript, `Name("Licht Küche")`) {
+	// The script reaches ReGa in ISO-8859-1, as from the WebUI
+	if !strings.Contains(gotScript, `"0001:1"`) || !strings.Contains(gotScript, "Name(\"Licht K\xfcche\")") {
 		t.Fatalf("unexpected script: %s", gotScript)
+	}
+
+	// Text ReGa cannot store is refused before anything is sent
+	gotScript = ""
+	if _, _, err := client.SetName("0001:1", "Preis in €"); !errors.Is(err, latin1.ErrNotLatin1) || gotScript != "" {
+		t.Fatalf("SetName with € = %v, sent %q", err, gotScript)
+	}
+}
+
+// Every script must be sendable to ReGa
+func TestScriptsAreLatin1(t *testing.T) {
+	entries, err := os.ReadDir("scripts")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range entries {
+		data, _ := os.ReadFile(filepath.Join("scripts", entry.Name()))
+		if _, err := latin1.Encode(string(data)); err != nil {
+			t.Errorf("%s: %v", entry.Name(), err)
+		}
 	}
 }
 

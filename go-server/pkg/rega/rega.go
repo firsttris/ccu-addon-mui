@@ -9,12 +9,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode/utf8"
-
-	"golang.org/x/text/encoding/charmap"
-	"golang.org/x/text/transform"
 
 	"ccu-addon-mui-server/pkg/config"
+	"ccu-addon-mui-server/pkg/latin1"
 	"ccu-addon-mui-server/pkg/logger"
 )
 
@@ -56,10 +53,17 @@ func quoteRegaText(value string) (string, error) {
 	return "\"" + value + "\"", nil
 }
 
+// Execute runs an HM script. ReGa works in ISO-8859-1 (see package latin1):
+// the script is sent and the output read in it, so a name written here reads
+// the same in the WebUI. Text with other characters is refused.
 func (c *Client) Execute(script string) (string, error) {
 	url := fmt.Sprintf("%s/rega.exe", c.baseURL)
 
-	req, err := http.NewRequest("POST", url, bytes.NewBufferString(script))
+	encoded, err := latin1.Encode(script)
+	if err != nil {
+		return "", err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewReader(encoded))
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
@@ -85,16 +89,7 @@ func (c *Client) Execute(script string) (string, error) {
 		return "", fmt.Errorf("failed to read response: %w", err)
 	}
 
-	result := string(body)
-
-	if !utf8.Valid(body) {
-		decoder := charmap.ISO8859_1.NewDecoder()
-		utf8Body, err := io.ReadAll(transform.NewReader(bytes.NewReader(body), decoder))
-		if err != nil {
-			return "", fmt.Errorf("failed to decode response: %w", err)
-		}
-		result = string(utf8Body)
-	}
+	result := latin1.Decode(body)
 
 	// rega.exe appends its variables as <xml>...</xml>. Search from the end,
 	// the script output itself may contain "<xml>".

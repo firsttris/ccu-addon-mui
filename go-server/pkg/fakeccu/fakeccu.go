@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"ccu-addon-mui-server/pkg/latin1"
 	"ccu-addon-mui-server/pkg/rega"
 )
 
@@ -216,14 +217,15 @@ func (c *CCU) Close() {
 // --- ReGa -------------------------------------------------------------
 
 func (c *CCU) handleRega(w http.ResponseWriter, r *http.Request) {
+	// ReGa reads and writes ISO-8859-1 (see package latin1)
 	body, _ := io.ReadAll(r.Body)
-	output, err := c.runScript(string(body))
+	output, err := c.runScript(latin1.Decode(body))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	// rega.exe appends its variables
-	_, _ = io.WriteString(w, output+"<xml><exec>/rega.exe</exec></xml>")
+	_, _ = w.Write(toLatin1(output + "<xml><exec>/rega.exe</exec></xml>"))
 }
 
 // FakeRegaBuild is the ReGaHss version the fake reports
@@ -1949,7 +1951,7 @@ func (c *CCU) handleXMLRPC(iface string, w http.ResponseWriter, r *http.Request)
 				code, fault = n, text
 			}
 		}
-		_, _ = io.WriteString(w, encodeFault(code, fault))
+		_, _ = w.Write(toLatin1(encodeFault(code, fault)))
 		return
 	}
 	// The result may hold the fixture's own maps (listDevices, getParamset):
@@ -1957,7 +1959,7 @@ func (c *CCU) handleXMLRPC(iface string, w http.ResponseWriter, r *http.Request)
 	c.mu.Lock()
 	body := encodeResponse(result)
 	c.mu.Unlock()
-	_, _ = io.WriteString(w, body)
+	_, _ = w.Write(toLatin1(body))
 }
 
 func paramAt(params []interface{}, i int) interface{} {
@@ -2363,7 +2365,7 @@ func (c *CCU) sendEvents() {
 				"params":     []interface{}{e.interfaceID, e.address, e.datapoint, e.value},
 			},
 		})
-		resp, err := client.Post(e.url, "text/xml", bytes.NewBufferString(call))
+		resp, err := client.Post(e.url, "text/xml", bytes.NewReader(toLatin1(call)))
 		if err == nil {
 			resp.Body.Close()
 		}

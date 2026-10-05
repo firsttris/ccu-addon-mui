@@ -8,9 +8,14 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode/utf8"
+
+	"ccu-addon-mui-server/pkg/latin1"
 )
 
-// A minimal XML-RPC codec, enough to play the CCU's role in tests.
+// A minimal XML-RPC codec, enough to play the CCU's role in tests. Like
+// libXmlRpc it speaks ISO-8859-1: calls are read as Latin-1 bytes whatever
+// they declare, so text sent in UTF-8 arrives garbled as on a real CCU.
 
 type xmlNode struct {
 	XMLName xml.Name
@@ -29,8 +34,12 @@ func (n *xmlNode) child(name string) *xmlNode {
 
 // decodeCall parses a methodCall into its method name and parameters.
 func decodeCall(r io.Reader) (string, []interface{}, error) {
+	body, err := io.ReadAll(r)
+	if err != nil {
+		return "", nil, err
+	}
 	var call xmlNode
-	decoder := xml.NewDecoder(r)
+	decoder := xml.NewDecoder(strings.NewReader(latin1.Decode(body)))
 	decoder.CharsetReader = func(_ string, input io.Reader) (io.Reader, error) { return input, nil }
 	if err := decoder.Decode(&call); err != nil {
 		return "", nil, err
@@ -151,21 +160,34 @@ func encodeValue(v interface{}) string {
 }
 
 func encodeResponse(v interface{}) string {
-	return `<?xml version="1.0"?><methodResponse><params><param>` + encodeValue(v) + `</param></params></methodResponse>`
+	return `<?xml version="1.0" encoding="iso-8859-1"?><methodResponse><params><param>` + encodeValue(v) + `</param></params></methodResponse>`
 }
 
 func encodeFault(code int, message string) string {
-	return `<?xml version="1.0"?><methodResponse><fault>` +
+	return `<?xml version="1.0" encoding="iso-8859-1"?><methodResponse><fault>` +
 		encodeValue(map[string]interface{}{"faultCode": code, "faultString": message}) +
 		`</fault></methodResponse>`
 }
 
 func encodeCall(method string, params ...interface{}) string {
 	var b strings.Builder
-	b.WriteString(`<?xml version="1.0"?><methodCall><methodName>` + method + `</methodName><params>`)
+	b.WriteString(`<?xml version="1.0" encoding="iso-8859-1"?><methodCall><methodName>` + method + `</methodName><params>`)
 	for _, p := range params {
 		b.WriteString("<param>" + encodeValue(p) + "</param>")
 	}
 	b.WriteString("</params></methodCall>")
 	return b.String()
+}
+
+// toLatin1 is what the CCU sends: text in ISO-8859-1, characters it cannot
+// store as "?"
+func toLatin1(s string) []byte {
+	b := make([]byte, 0, len(s))
+	for _, r := range s {
+		if r > 0xFF || r == utf8.RuneError {
+			r = '?'
+		}
+		b = append(b, byte(r))
+	}
+	return b
 }

@@ -22,6 +22,7 @@ import (
 	_ "github.com/rogpeppe/go-charset/data"
 
 	"ccu-addon-mui-server/pkg/config"
+	"ccu-addon-mui-server/pkg/latin1"
 )
 
 func init() {
@@ -95,7 +96,7 @@ func New(cfg *config.Config) (*Client, error) {
 	if cfg.CCUUser != "" && cfg.CCUPass != "" {
 		transport = &basicAuthTransport{username: cfg.CCUUser, password: cfg.CCUPass, base: transport}
 	}
-	transport = &untypedValueTransport{base: transport}
+	transport = &latin1Transport{base: &untypedValueTransport{base: transport}}
 	var slowTransport http.RoundTripper = &http.Transport{
 		DialContext:           (&net.Dialer{Timeout: 5 * time.Second}).DialContext,
 		ResponseHeaderTimeout: firmwareUpdateTimeout,
@@ -103,7 +104,7 @@ func New(cfg *config.Config) (*Client, error) {
 	if cfg.CCUUser != "" && cfg.CCUPass != "" {
 		slowTransport = &basicAuthTransport{username: cfg.CCUUser, password: cfg.CCUPass, base: slowTransport}
 	}
-	slowTransport = &untypedValueTransport{base: slowTransport}
+	slowTransport = &latin1Transport{base: &untypedValueTransport{base: slowTransport}}
 
 	callers := map[string]caller{}
 	slow := map[string]caller{}
@@ -426,6 +427,44 @@ func (t *untypedValueTransport) RoundTrip(req *http.Request) (*http.Response, er
 	resp.Body = io.NopCloser(bytes.NewReader(body))
 	resp.ContentLength = int64(len(body))
 	return resp, nil
+}
+
+// kolo/xmlrpc writes every call in UTF-8
+const utf8Declaration = `<?xml version="1.0" encoding="UTF-8"?>`
+
+// latin1Transport sends calls in ISO-8859-1, as libXmlRpc does
+// (XmlRpcClient.cpp): rfd and hs485d take the bytes of a string as they are,
+// so a UTF-8 "ü" would be stored as "Ã¼" (link names, metadata, STRING
+// parameters). The answers carry their encoding and are decoded by
+// xmlrpc.CharsetReader. Text with other characters is refused.
+type latin1Transport struct {
+	base http.RoundTripper
+}
+
+func (t *latin1Transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.Body == nil {
+		return t.base.RoundTrip(req)
+	}
+	body, err := io.ReadAll(req.Body)
+	req.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	rest, ok := bytes.CutPrefix(body, []byte(utf8Declaration))
+	if !ok {
+		return nil, fmt.Errorf("unexpected XML-RPC request: %.40q", body)
+	}
+	encoded, err := latin1.Encode(string(rest))
+	if err != nil {
+		return nil, err
+	}
+	encoded = append([]byte(`<?xml version="1.0" encoding="iso-8859-1"?>`), encoded...)
+	// A RoundTripper must not modify the caller's request.
+	clone := req.Clone(req.Context())
+	clone.Body = io.NopCloser(bytes.NewReader(encoded))
+	clone.ContentLength = int64(len(encoded))
+	clone.GetBody = func() (io.ReadCloser, error) { return io.NopCloser(bytes.NewReader(encoded)), nil }
+	return t.base.RoundTrip(clone)
 }
 
 type basicAuthTransport struct {
