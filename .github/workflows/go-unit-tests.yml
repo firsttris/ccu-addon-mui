@@ -11,6 +11,8 @@ on:
       - opened
       - synchronize
       - reopened
+  # The release workflow runs the same tests first
+  workflow_call:
 
 jobs:
   test:
