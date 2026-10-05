@@ -11,6 +11,8 @@ on:
       - main
     paths-ignore:
       - 'README.md'
+  # The release workflow runs the same build and attaches its archives
+  workflow_call:
 
 jobs:
   build:
@@ -42,3 +44,11 @@ jobs:
 
       - name: Build app
         run: npm run build
+
+      # The add-on archives for ARM and x86, to install from a pull request; the release attaches them
+      - name: Upload add-on archives
+        uses: actions/upload-artifact@v4
+        with:
+          name: addon
+          path: mui-*.tar.gz
+          if-no-files-found: error

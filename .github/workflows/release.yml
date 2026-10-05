@@ -1,63 +1,30 @@
-name: Create Release
+name: Release
 
-on: [workflow_dispatch]
+# A tag vX.Y.Z releases that version: the button in "Bump version" (bump.yml) or
+# `npm run release:patch|minor|major` on a checkout creates it. First the full CI (build, Go and
+# Playwright tests), then the shared GitHub release from firsttris/workflows, which checks the tag
+# against package.json and attaches the add-on archives built by build.yml. Run by hand on main:
+# only the checks, nothing is released.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
 jobs:
+  build:
+    uses: ./.github/workflows/build.yml
+
+  go:
+    uses: ./.github/workflows/go-unit-tests.yml
+
+  e2e:
+    uses: ./.github/workflows/playwright-e2e.yml
+
   release:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4.1.1
-        with:
-          fetch-depth: 0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: 'npm'
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go-server/go.mod
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Unit tests
-        run: npm run test:unit
-
-      - name: Go tests
-        run: cd go-server && go vet ./... && go test ./...
-
-      # Committed locally and only pushed once the archive is built, so a
-      # failed build leaves no version bump without a release on main
-      - name: Bump version
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          npm version patch -m "Bump to %s"
-
-      - name: Build app
-        run: npm run build
-
-      - name: Push version
-        run: git push
-
-      - name: Get version
-        id: packagejson
-        uses: martinbeentjes/npm-get-version-action@v1.3.1
-
-      - name: Create Changelog with commits since last release
-        run: |
-          chmod +x ./.github/scripts/get_commits.sh
-          ./.github/scripts/get_commits.sh > commit_log.txt
-
-      - name: Upload Release
-        uses: ncipollo/release-action@v1.13.0
-        with:
-          artifacts: 'mui-${{ steps.packagejson.outputs.current-version }}.tar.gz,mui-${{ steps.packagejson.outputs.current-version }}-x86_64.tar.gz'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.packagejson.outputs.current-version }}
-          bodyFile: commit_log.txt
+    needs: [build, go, e2e]
+    if: startsWith(github.ref, 'refs/tags/v')
+    uses: firsttris/workflows/.github/workflows/github-release.yml@v1
+    with:
+      release-artifact: addon
+    permissions:
+      contents: write

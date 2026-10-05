@@ -213,6 +213,15 @@ Die Stack-Tests in `playwright.stack.config.ts` zeigen, wie man alle Pfade für 
 
 ## Release
 
-Releases baut die CI (`release.yml`, von Hand gestartet): Sie erhöht die Patch-Version, baut App und Server,
-schreibt das Changelog aus den Commits seit der letzten Version und hängt `mui-<version>.tar.gz` an die
-Release. Lokal baut `npm run build` dasselbe Archiv.
+Ein Release startet mit einem Tag `vX.Y.Z`, nach demselben Schema wie in den anderen Projekten
+([firsttris/workflows](https://github.com/firsttris/workflows)). Den Tag legt einer von zwei Wegen an:
+
+- ohne Checkout: Actions → *Bump version* → patch, minor oder major (`bump.yml`). Erhöht die Version in
+  `package.json` und `package-lock.json`, committet sie als `Release vX.Y.Z` auf `main`, taggt und startet
+  `release.yml` auf dem Tag;
+- lokal: `npm run release:patch` (oder `:minor`, `:major`), das per `postversion` Commit und Tag pusht.
+
+`release.yml` lässt dann Build, Go- und Playwright-Tests laufen und legt die Release mit den Archiven
+`mui-<version>.tar.gz` (ARM) und `mui-<version>-x86_64.tar.gz` an, die Notizen erzeugt GitHub aus den
+Pull Requests seit der letzten Version. Lokal baut `npm run build` dieselben Archive, jeder Build in der CI
+hängt sie als Artefakt `addon` an.
