@@ -18,7 +18,9 @@ export const onlineFirmware = (
   if (!versions || !device.updatable || !device.firmware) {
     return undefined;
   }
-  const version = versions.find((v) => v.type === device.type.toLowerCase())?.version;
+  // A type listed twice: the last entry counts, as setDeviceFirmwareVersions
+  // overwrites earlier ones (webui.js)
+  const version = versions.findLast((v) => v.type === device.type.toLowerCase())?.version;
   if (!version) {
     return undefined;
   }

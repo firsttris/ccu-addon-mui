@@ -1073,7 +1073,7 @@ func TestStackServiceMessages(t *testing.T) {
 }
 
 func TestStackFirmwareUpdate(t *testing.T) {
-	_, conn := startStack(t, "ccu")
+	ccu, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 
 	device := func(requestID string) map[string]interface{} {
@@ -1107,6 +1107,21 @@ func TestStackFirmwareUpdate(t *testing.T) {
 	if m := receive(t, conn, byRequestID("q5")); m["success"] != true {
 		t.Fatalf("updateFirmware failed: %v", m)
 	}
+	// While a BidCos update runs (rfd answers only when it is done), the
+	// connection goes on and a second start for the device is refused
+	ccu.FirmwareUpdateDelay = 500 * time.Millisecond
+	ccu.SetDeviceField("BidCos-RF", "LEQ0000001", "AVAILABLE_FIRMWARE", "2.12")
+	send(t, conn, message{"type": "installFirmware", "requestId": "r1", "interfaceName": "BidCos-RF", "address": "LEQ0000001"})
+	send(t, conn, message{"type": "installFirmware", "requestId": "r2", "interfaceName": "BidCos-RF", "address": "LEQ0000001"})
+	if m := receive(t, conn, byRequestID("r2")); m["code"] != "UPDATE_RUNNING" {
+		t.Fatalf("expected UPDATE_RUNNING, got %v", m)
+	}
+	send(t, conn, message{"type": "listDevices", "requestId": "r3"})
+	receive(t, conn, byRequestID("r3"))
+	if m := receive(t, conn, byRequestID("r1")); m["success"] != true {
+		t.Fatalf("updateFirmware failed: %v", m)
+	}
+	ccu.FirmwareUpdateDelay = 0
 	// A sleeping device has to be woken with its key
 	send(t, conn, message{"type": "installFirmware", "requestId": "q6", "interfaceName": "BidCos-RF", "address": "LEQ0000004"})
 	if m := receive(t, conn, byRequestID("q6")); m["code"] != "DEVICE_UNREACHABLE" {
@@ -1115,7 +1130,7 @@ func TestStackFirmwareUpdate(t *testing.T) {
 	send(t, conn, message{"type": "listDevices", "requestId": "q7"})
 	for _, raw := range receive(t, conn, byRequestID("q7"))["devices"].([]interface{}) {
 		d := raw.(map[string]interface{})
-		if d["address"] == "LEQ0000001" && (d["firmware"] != "2.11" || d["availableFirmware"] != nil) {
+		if d["address"] == "LEQ0000001" && (d["firmware"] != "2.12" || d["availableFirmware"] != nil) {
 			t.Fatalf("BidCos firmware not updated: %v", d)
 		}
 		if d["address"] == "LEQ0000004" && d["availableFirmware"] != "1.5" {

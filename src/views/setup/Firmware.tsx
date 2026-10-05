@@ -93,6 +93,9 @@ const installError = (error: Error) => {
   if (error instanceof RequestError && error.code === 'DUTY_CYCLE_HIGH') {
     return m.FIRMWARE_DUTY_CYCLE_HIGH();
   }
+  if (error instanceof RequestError && error.code === 'UPDATE_RUNNING') {
+    return m.FIRMWARE_UPDATE_RUNNING();
+  }
   return `${m.CHANGE_FAILED()}: ${error.message}`;
 };
 
@@ -116,6 +119,17 @@ export const Firmware = ({ device, canEdit }: FirmwareProps) => {
   // Until when the state is reloaded quickly after starting an update
   const [watchUntil, setWatchUntil] = useState(0);
   const watching = watchUntil > 0;
+
+  // A smoke detector wants its self-test after the update (ic_ifacecmd.cgi:
+  // hintActivateDetectorSelfTest, checkSmokeDetectorSelfTest)
+  const smokeDetector = device.type === 'HmIP-SWSD' || device.type === 'HmIP-SWSD-2';
+  const [selfTestHint, setSelfTestHint] = useState(false);
+  useEffect(() => {
+    if (smokeDetector && watching && device.firmwareUpdateState === 'UP_TO_DATE') {
+      setSelfTestHint(true);
+      setWatchUntil(0);
+    }
+  }, [smokeDetector, watching, device.firmwareUpdateState]);
 
   const running = RUNNING_STATES.includes(device.firmwareUpdateState ?? '');
   useEffect(() => {
@@ -146,6 +160,9 @@ export const Firmware = ({ device, canEdit }: FirmwareProps) => {
         )}
       </dl>
       <p role="status">{firmwareStatus(device)}</p>
+      {smokeDetector && watching && device.firmwareUpdateState === 'READY_FOR_UPDATE' && (
+        <p className="text-sm text-muted-foreground">{m.FIRMWARE_PRESS_SYSTEM_BUTTON()}</p>
+      )}
       {canEdit && online && !online.onCcu && (
         <div className="flex flex-wrap items-center gap-3 text-[13px]">
           <span>{m.DEVFW_ONLINE({ version: online.version })}</span>
@@ -199,6 +216,23 @@ export const Firmware = ({ device, canEdit }: FirmwareProps) => {
           }
         >
           <p>{m.INSTALL_FIRMWARE_CONFIRM({ version: device.availableFirmware ?? '' })}</p>
+          {smokeDetector && <p className="text-sm text-muted-foreground">{m.FIRMWARE_PRESS_SYSTEM_BUTTON()}</p>}
+          {installFirmware.isPending && !isHmIP(device) && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {m.FIRMWARE_BIDCOS_RUNNING()}
+            </p>
+          )}
+        </ConfirmDialog>
+      )}
+      {selfTestHint && (
+        <ConfirmDialog
+          title={m.FIRMWARE_UPDATE()}
+          confirmLabel={m.STATUS_OK()}
+          onConfirm={() => setSelfTestHint(false)}
+          onCancel={() => setSelfTestHint(false)}
+        >
+          <p>{m.FIRMWARE_SMOKE_TEST_DONE()}</p>
+          <p className="font-medium">{m.FIRMWARE_SMOKE_TEST()}</p>
         </ConfirmDialog>
       )}
     </>
