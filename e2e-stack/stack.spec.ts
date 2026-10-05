@@ -1416,7 +1416,13 @@ test('legt Heizgruppen an, verschiebt ein Thermostat und löscht sie wieder', as
   await flur.getByRole('button', { name: 'Speichern' }).click();
   await expect(flur).toHaveCount(0);
   const bad = await editGroup('Bad');
-  await bad.getByRole('button', { name: 'Wandthermostat Flur hinzufügen' }).click();
+  // Free thermostats from the channel dialog, with pictures and rooms
+  await bad.getByRole('button', { name: 'Kanäle hinzufügen' }).click();
+  const picker = page.getByRole('dialog', { name: 'Kanäle hinzufügen' });
+  await picker.getByRole('checkbox', { name: /^Wandthermostat Flur/ }).check();
+  await picker.getByRole('button', { name: 'Kanäle hinzufügen' }).click();
+  await expect(picker).toHaveCount(0);
+  await expect(bad.getByRole('list', { name: 'Mitglieder' })).toContainText('Wandthermostat Flur');
   await bad.getByLabel('Einzelbedienung gesperrt').click();
   await bad.getByRole('button', { name: 'Speichern' }).click();
   await expect(bad).toHaveCount(0);
@@ -1430,7 +1436,9 @@ test('legt Heizgruppen an, verschiebt ein Thermostat und löscht sie wieder', as
 
   // Back as before, for a second run
   const back = await editGroup('Heizung Flur');
-  await back.getByRole('button', { name: 'Wandthermostat Flur hinzufügen' }).click();
+  await back.getByRole('button', { name: 'Kanäle hinzufügen' }).click();
+  await page.getByRole('dialog', { name: 'Kanäle hinzufügen' }).getByRole('checkbox', { name: /^Wandthermostat Flur/ }).check();
+  await page.getByRole('dialog', { name: 'Kanäle hinzufügen' }).getByRole('button', { name: 'Kanäle hinzufügen' }).click();
   await back.getByRole('button', { name: 'Speichern' }).click();
   await expect(list.getByRole('list', { name: 'Mitglieder von Heizung Flur' })).toContainText('Wandthermostat Flur');
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import PlusIcon from '~icons/lucide/plus';
 import XIcon from '~icons/lucide/x';
@@ -12,6 +12,10 @@ import { Switch } from '../../components/ui/switch';
 import { Button } from '../../components/ui/button';
 import { m } from '../../paraglide/messages';
 import { useChannelNames } from './channelNames';
+import { useChannels, useDevices, useRooms } from '../../queries';
+import { ChannelPicker } from '../../components/ChannelPicker';
+import { DeviceImage } from '../../components/DeviceImage';
+import type { Channel } from '../../types/types';
 import type { HeatingGroup, HeatingGroupChange } from '../../types/protocol';
 
 type GroupType = HeatingGroupChange['type'];
@@ -55,6 +59,27 @@ export const HeatingGroupEditor = ({ group, onClose }: { group?: HeatingGroup; o
   const removedOwn = [...own].filter((a) => !members.includes(a));
   const leftover = (candidates.data?.leftover ?? []).filter((c) => !own.has(c.id));
   const label = (address: string) => names.get(address) ?? address;
+  const addable = [...removedOwn, ...assignable.map((c) => c.id)];
+  const [picking, setPicking] = useState(false);
+
+  // The members as channels, for the channel dialog and their pictures;
+  // one ReGa doesn't know yet gets a stand-in
+  const { data: regaChannels = [] } = useChannels({ all: true });
+  const { data: devices = [] } = useDevices();
+  const { data: rooms = [] } = useRooms();
+  const channelOf = useMemo(() => {
+    const byAddress = new Map(regaChannels.map((c) => [c.address, c]));
+    return (address: string, index: number) =>
+      byAddress.get(address) ??
+      ({ id: -(index + 1), address, name: names.get(address) ?? address, datapoints: {} } as unknown as Channel);
+  }, [regaChannels, names]);
+  const addableChannels = addable.map(channelOf);
+  const deviceType = (address: string) => devices.find((d) => d.address === address.split(':')[0])?.type;
+  const roomsOf = (address: string) =>
+    (regaChannels.find((c) => c.address === address)?.rooms ?? [])
+      .map((id) => rooms.find((r) => r.id === id)?.name)
+      .filter(Boolean)
+      .join(', ');
   const valid = name.trim() !== '' && !/["\\]/.test(name);
 
   const save = () =>
@@ -135,9 +160,19 @@ export const HeatingGroupEditor = ({ group, onClose }: { group?: HeatingGroup; o
           ) : (
             <ul className="flex flex-col divide-y rounded-lg border" aria-label={m.HG_MEMBERS_TITLE()}>
               {members.map((address) => (
-                <li key={address} className="flex items-center gap-2 px-3 py-1.5 text-sm">
-                  <span className="min-w-0 flex-1 truncate">{label(address)}</span>
-                  <span className="font-mono text-xs text-muted-foreground">{address}</span>
+                <li key={address} className="flex items-center gap-3 px-3 py-2 text-sm">
+                  <DeviceImage
+                    type={deviceType(address)}
+                    size={36}
+                    channel={address.split(':')[1]}
+                    className="shrink-0 rounded-md"
+                  />
+                  <span className="flex min-w-0 flex-1 flex-col leading-tight">
+                    <span className="truncate">{label(address)}</span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {[roomsOf(address), address].filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
                   <Button
                     type="button"
                     variant="ghost"
@@ -152,25 +187,21 @@ export const HeatingGroupEditor = ({ group, onClose }: { group?: HeatingGroup; o
               ))}
             </ul>
           )}
-          {(assignable.length > 0 || removedOwn.length > 0) && (
-            <ul className="flex flex-col rounded-lg border border-dashed" aria-label={m.HG_ADDABLE()}>
-              {[...removedOwn, ...assignable.map((c) => c.id)].map((address) => (
-                <li key={address}>
-                  <button
-                    type="button"
-                    aria-label={m.HG_ADD_MEMBER({ name: label(address) })}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent"
-                    onClick={() => setMembers((list) => [...list, address])}
-                  >
-                    <PlusIcon className="size-4 shrink-0 text-muted-foreground" />
-                    <span className="min-w-0 flex-1 truncate">{label(address)}</span>
-                    <span className="font-mono text-xs text-muted-foreground">{address}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" variant="outline" disabled={addable.length === 0} onClick={() => setPicking(true)}>
+              <PlusIcon />
+              {m.HG_ADD_MEMBERS()}
+            </Button>
+            {candidates.isPending && <span className="text-xs text-muted-foreground">{m.LOADING()}</span>}
+            {candidates.isSuccess && addable.length === 0 && (
+              <span className="text-xs text-muted-foreground">{m.HG_NO_CANDIDATES()}</span>
+            )}
+          </div>
+          {candidates.isError && (
+            <p role="alert" className="text-xs text-destructive">
+              {m.HG_CANDIDATES_FAILED({ error: candidates.error.message })}
+            </p>
           )}
-          {candidates.isPending && <p className="text-xs text-muted-foreground">{m.LOADING()}</p>}
           {leftover.length > 0 && (
             <p className="text-xs text-muted-foreground">
               {m.HG_LEFTOVER({ names: leftover.map((c) => label(c.id)).join(', ') })}
@@ -179,6 +210,21 @@ export const HeatingGroupEditor = ({ group, onClose }: { group?: HeatingGroup; o
         </fieldset>
         {password.field}
       </form>
+      {picking && (
+        <ChannelPicker
+          title={m.HG_ADD_MEMBERS()}
+          channels={addableChannels}
+          chosen={new Set()}
+          includeHidden
+          confirmLabel={m.HG_ADD_MEMBERS()}
+          onConfirm={(ids) => {
+            setPicking(false);
+            const chosen = addableChannels.filter((c) => ids.includes(c.id)).map((c) => c.address);
+            setMembers((list) => [...list, ...chosen.filter((a) => !list.includes(a))]);
+          }}
+          onClose={() => setPicking(false)}
+        />
+      )}
     </ConfirmDialog>
   );
 };
