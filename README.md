@@ -183,7 +183,11 @@ Das klassische **BidCos-Wired** (HMW-Geräte am RS485-Bus) ist angebunden, sobal
 eingerichtet ist, aber noch nicht an echter Wired-Hardware getestet. Gezählt wird gegen den Gerätekatalog der WebUI
 (`DEVDB.tcl`, 535 Typen). Wie, steht in [Geräteunterstützung](docs/geraete.md).
 
-## ⚡ Schneller als die WebUI
+## ⚡ Schnell und schlank
+
+Die App lädt beim ersten Öffnen **400 KB statt 3,1 MB**, bekommt jede Änderung sofort per Push und kommt
+danach aus dem Cache des Browsers. Dahinter läuft **ein Go-Binary mit 10 MB, das rund 15 MB RAM braucht**,
+auf einer CCU3 mit 1 GB RAM, die sich das mit ReGa, den Schnittstellenprozessen und anderen Add-ons teilt.
 
 | | CCU3-WebUI | ccu-addon-mui |
 |---|---|---|
@@ -192,7 +196,15 @@ eingerichtet ist, aber noch nicht an echter Wired-Hardware getestet. Gezählt wi
 | Beim Öffnen | 40 Dateien, 3,1 MB (Prototype, jQuery, Scriptaculous, jqPlot …) | 17 Dateien, 400 KB gzip-gepackt (1,3 MB entpackt), danach aus dem Cache des Service Workers |
 | Server | Tcl-CGIs und ReGa | ein statisches Go-Binary ohne Laufzeit und Abhängigkeiten |
 
-Gemessen an den Quellen der WebUI (`rega/pages/index.htm`, `webui.js`) und am Build dieses Add-ons.
+Viele Add-ons bringen eine Node.js-Laufzeit mit. Auf derselben Maschine (x86) gemessen:
+
+| | Node.js 22, noch ohne eigenen Code | ccu-addon-mui (Go), vollständig |
+|---|---|---|
+| Programm | Laufzeit allein 118 MB, dazu `node_modules` | 10 MB, alles in einer Datei |
+| Arbeitsspeicher | ein leerer HTTP-Server: 46 MB | 14 MB mit allen CCU-Verbindungen, 16 MB mit 10 offenen Apps |
+
+Gemessen an den Quellen der WebUI (`rega/pages/index.htm`, `webui.js`) und am Build dieses Add-ons; der
+Speicher des Servers gegen die Fake-CCU mit `fixtures/demo-ccu.json`.
 Hintergründe in der [Architektur](docs/architektur.md#warum-es-schnell-ist).
 
 ## 📸 Screenshots
