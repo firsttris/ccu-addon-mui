@@ -64,7 +64,9 @@ func number(value interface{}) (float64, bool) {
 	return 0, false
 }
 
-// OnEvent takes a value the CCU sent and evaluates the rules
+// OnEvent takes a value the CCU sent and evaluates the rules. It runs in
+// the CCU's event callback: give NewEngine a notify that doesn't block
+// (Queue).
 func (e *Engine) OnEvent(address, datapoint string, value interface{}) {
 	n, ok := number(value)
 	if !ok {

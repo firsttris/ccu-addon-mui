@@ -116,10 +116,11 @@ func run(ctx context.Context, cfg *config.Config) error {
 		if ruleStore, err := rules.OpenStore(cfg.RulesFile); err != nil {
 			logger.Error("Notification rules disabled:", err)
 		} else {
-			ruleEngine = rules.NewEngine(ruleStore, deviceRPC, func(r rules.Rule) {
+			// Queued: OnEvent runs in the CCU's event callback
+			ruleEngine = rules.NewEngine(ruleStore, deviceRPC, rules.Queue(ctx, func(r rules.Rule) {
 				logger.Info("🔔 Rule \"" + r.Name + "\" notifies")
 				notifier.NotifyRule(r.ID, r.Name, r.Text())
-			})
+			}))
 			wsServer.SetRules(ruleStore, ruleEngine)
 			go ruleEngine.Run(ctx, 30*time.Second)
 		}
