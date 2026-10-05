@@ -1,24 +1,15 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Input } from '../../components/ui/input';
 import { m } from '../../paraglide/messages';
+import { errorText } from '../../lib/errors';
 
 // Installing runs the add-on's own setup on the CCU and may take minutes
 const INSTALL_TIMEOUT_MS = 15 * 60 * 1000;
 
-const errorMessage = (error: unknown) => {
-  const code = error instanceof RequestError ? error.code : undefined;
-  switch (code) {
-    case 'INVALID_CREDENTIALS':
-      return m.INVALID_CREDENTIALS();
-    case 'TOO_MANY_ATTEMPTS':
-      return m.TOO_MANY_ATTEMPTS();
-    default:
-      return `${m.ADDON_INSTALL_FAILED()}${error instanceof Error ? `: ${error.message}` : ''}`;
-  }
-};
+const errorMessage = (error: unknown) => errorText(error, m.ADDON_INSTALL_FAILED);
 
 // Installing an add-on (.tar.gz) with the WebUI's own steps
 // (cp_software.cgi): upload, image_upload, install_go (/bin/install_addon);

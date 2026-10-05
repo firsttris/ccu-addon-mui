@@ -11,6 +11,7 @@ import { Panel } from './Panel';
 import { RestoreBackup, RestoreButton } from './RestoreBackup';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
+import { errorText } from '../../lib/errors';
 
 // Creating a backup packs all of /usr/local on the CCU: that takes a while
 export const BACKUP_TIMEOUT_MS = 5 * 60 * 1000;
@@ -29,19 +30,7 @@ export const download = (url: string, fileName: string) => {
   link.remove();
 };
 
-const errorMessage = (error: unknown) => {
-  const code = error instanceof RequestError ? error.code : undefined;
-  switch (code) {
-    case 'INVALID_CREDENTIALS':
-      return m.INVALID_CREDENTIALS();
-    case 'TOO_MANY_ATTEMPTS':
-      return m.TOO_MANY_ATTEMPTS();
-    case 'TIMEOUT':
-      return m.BACKUP_TIMEOUT();
-    default:
-      return `${m.BACKUP_FAILED()}${error instanceof Error ? `: ${error.message}` : ''}`;
-  }
-};
+const errorMessage = (error: unknown) => errorText(error, m.BACKUP_FAILED, { TIMEOUT: m.BACKUP_TIMEOUT });
 
 // Creates a backup (.sbk) of the CCU with the WebUI's own routine and
 // downloads it. It holds every setting and password, so the password is

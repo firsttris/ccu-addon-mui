@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
 import { AlarmMessage, ServiceMessage, ProgramDefinition } from '../types/protocol';
-import { applyEvent, groupChannelsByType, Value } from '../hooks/channels';
+import { applyEvent, groupChannelsByType, shareGroups, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
 import {
@@ -513,8 +513,15 @@ export const useChannels = (channelsRequest: ChannelsRequest) => {
     }
   }, [addressesKey, subscribe]);
 
-  // Channels the WebUI's option "sichtbar" hides stay out of the views
-  const channelsByType = useMemo(() => groupChannelsByType((channels ?? []).filter((c) => !c.hidden)), [channels]);
+  // Channels the WebUI's option "sichtbar" hides stay out of the views. The
+  // groups an event didn't touch stay the same arrays, so their tiles and
+  // grids don't render again.
+  const previousGroups = useRef<[string, Channel[]][]>([]);
+  const channelsByType = useMemo(() => {
+    const groups = shareGroups(previousGroups.current, groupChannelsByType((channels ?? []).filter((c) => !c.hidden)));
+    previousGroups.current = groups;
+    return groups;
+  }, [channels]);
   return { ...query, channelsByType };
 };
 

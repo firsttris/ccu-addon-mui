@@ -8,8 +8,8 @@ import { useToast } from '../../contexts/ToastContext';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Button } from '../../components/ui/button';
 import { Device } from '../../types/types';
-import { RequestError } from '../../hooks/useWebsocket';
 import { m } from '../../paraglide/messages';
+import { errorText } from '../../lib/errors';
 
 // While the CCU transfers or installs firmware, the state is reloaded now
 // and then: the CCU sends no event for it. Right after an update was
@@ -86,18 +86,12 @@ export const firmwareStatus = (device: Device) => {
   }
 };
 
-const installError = (error: Error) => {
-  if (error instanceof RequestError && error.code === 'DEVICE_UNREACHABLE') {
-    return m.FIRMWARE_DEVICE_UNREACHABLE();
-  }
-  if (error instanceof RequestError && error.code === 'DUTY_CYCLE_HIGH') {
-    return m.FIRMWARE_DUTY_CYCLE_HIGH();
-  }
-  if (error instanceof RequestError && error.code === 'UPDATE_RUNNING') {
-    return m.FIRMWARE_UPDATE_RUNNING();
-  }
-  return `${m.CHANGE_FAILED()}: ${error.message}`;
-};
+const installError = (error: Error) =>
+  errorText(error, m.CHANGE_FAILED, {
+    DEVICE_UNREACHABLE: m.FIRMWARE_DEVICE_UNREACHABLE,
+    DUTY_CYCLE_HIGH: m.FIRMWARE_DUTY_CYCLE_HIGH,
+    UPDATE_RUNNING: m.FIRMWARE_UPDATE_RUNNING,
+  });
 
 interface FirmwareProps {
   device: Device;
