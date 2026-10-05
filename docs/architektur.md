@@ -351,9 +351,13 @@ und schreibt alle 5 Minuten auf den Speicher der CCU.
   die Verbindungen, die den Kanal anzeigen. ReGa wird für Gerätewerte nur beim Öffnen einer Ansicht gefragt.
 - **Keine Seiten vom Server**: Die WebUI lässt ReGa jede Seite als HTML erzeugen. Die App wechselt Seiten im
   Browser und holt nur Daten.
-- **Wenig zu laden, und nur einmal**: 4 Dateien mit 844 KB beim ersten Öffnen statt 40 Dateien mit 3,1 MB. Danach
-  kommt die App aus dem Cache des Service Workers. Große Teile wie die Verknüpfungsvorlagen und die Seiten
-  von *Einrichten* lädt sie erst bei Bedarf.
+- **Wenig zu laden, und nur einmal**: 17 Dateien mit 400 KB (gzip-gepackt, 1,3 MB entpackt) bis zum fertigen
+  Dashboard statt 40 Dateien mit 3,1 MB, die die lighttpd der CCU ungepackt schickt. Danach kommt die App aus dem
+  Cache des Service Workers. Große Teile wie die Verknüpfungsvorlagen und die Seiten von *Einrichten* lädt sie
+  erst bei Bedarf.
+- **Ein kleiner Server**: Das Go-Binary hat 10 MB und braucht rund 15 MB RAM (14 MB mit allen CCU-Verbindungen,
+  16 MB mit 10 offenen Apps, gegen die Fake-CCU gemessen). Ein leerer HTTP-Server unter Node.js 22 braucht
+  allein 46 MB, die Laufzeit 118 MB auf dem Speicher.
 - **Caches, wo die CCU es erlaubt**: Gerätebeschreibungen ändern sich nur mit der Firmware und werden im Server
   gehalten. Auf der App-Seite hält TanStack Query die Daten, sodass ein Zurück sofort da ist.
 - **Gezieltes Rendern**: Ein Event ändert genau ein Objekt im Cache; alle anderen Kacheln bleiben, wie sie sind.
