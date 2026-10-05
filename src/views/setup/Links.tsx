@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
-import { useChannelList, useDevices, useLinkAction, useLinkParamset, useLinks } from '../../queries';
+import { useChannelList, useDevices, useLinkAction, useLinkParamset, useLinks, useParamset } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../../i18n/utils';
 import { Channel, DatapointValue, DeviceChannel, Link, ParamsetDescription } from '../../types/types';
@@ -17,6 +17,7 @@ import {
   ProfileField,
   profilesFor,
   ProfileTable,
+  senderKey,
   profileValues,
   TIME_BASES,
 } from '../../controls/links/linkProfiles';
@@ -132,12 +133,21 @@ const changedFrom = (current: Record<string, DatapointValue>, next: Record<strin
 // The parameters of one link on the receiver's side: a profile of the
 // WebUI with its few settings, or every parameter (expert). Changes are
 // collected, confirmed and saved together.
-export const LinkParameters = ({ interfaceName, link, receiverType, senderType, senderDeviceType }: {
+// An input's CHANNEL_OPERATION_MODE (MASTER), which picks its link
+// profiles as in the WebUI; read only for inputs
+export const useOperationMode = (interfaceName: string, address: string, type: string | undefined, enabled = true) => {
+  const { data } = useParamset(interfaceName, address, 'MASTER', { enabled: enabled && type === 'MULTI_MODE_INPUT_TRANSMITTER' });
+  const mode = data?.CHANNEL_OPERATION_MODE;
+  return typeof mode === 'number' ? mode : undefined;
+};
+
+export const LinkParameters = ({ interfaceName, link, receiverType, senderType, senderDeviceType, receiverDeviceType }: {
   interfaceName: string;
   link: Link;
   receiverType?: string;
   senderType?: string;
   senderDeviceType?: string;
+  receiverDeviceType?: string;
 }) => {
   const t = useTranslations();
   const lang = getLocale();
@@ -148,6 +158,7 @@ export const LinkParameters = ({ interfaceName, link, receiverType, senderType, 
   const [draft, setDraft] = useState<Record<string, DatapointValue>>({});
   const [chosen, setChosen] = useState<number>();
   const [confirming, setConfirming] = useState(false);
+  const operationMode = useOperationMode(interfaceName, link.sender, senderType);
 
   useEffect(() => {
     if (!receiverType) return;
@@ -172,7 +183,15 @@ export const LinkParameters = ({ interfaceName, link, receiverType, senderType, 
   }
   const current = values.data;
   const merged = { ...current, ...draft };
-  const profiles = table && receiverType && senderType ? profilesFor(table, receiverType, senderType, senderDeviceType) : [];
+  const profiles =
+    table && receiverType && senderType
+      ? profilesFor(
+          table,
+          receiverType,
+          senderKey(table, receiverType, senderType, { senderAddress: link.sender, operationMode, receiverDeviceType }),
+          senderDeviceType,
+        )
+      : [];
   const saved = detectProfile(profiles, current);
   const profileId = chosen ?? saved;
   const profile = profiles.find((p) => p.id === profileId);

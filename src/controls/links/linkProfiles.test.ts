@@ -9,6 +9,7 @@ import {
   PERMANENT,
   profilesFor,
   profileValues,
+  senderKey,
 } from './linkProfiles';
 import blindReceiver from './profiles/BLIND_VIRTUAL_RECEIVER.json';
 import floorHeating from './profiles/CLIMATECONTROL_FLOOR_TRANSCEIVER.json';
@@ -38,6 +39,28 @@ describe('linkProfiles', () => {
     const upDown = senders.MULTI_MODE_INPUT_TRANSMITTER_3.find((p) => p.id === 3);
     expect(upDown?.values.LONG_JT_OFF).toEqual([1]);
     expect(upDown?.values.LONG_JT_OFFDELAY).toEqual([4, 8, 3]);
+  });
+
+  it('picks the sender profiles by operation mode and channel, as the WebUI', () => {
+    const table = {
+      SWITCH_VIRTUAL_RECEIVER: {
+        MULTI_MODE_INPUT_TRANSMITTER_1: [],
+        MULTI_MODE_INPUT_TRANSMITTER_1_FDC: [],
+        MULTI_MODE_INPUT_TRANSMITTER_2: [],
+        ROTARY_CONTROL_TRANSCEIVER_2: [],
+        KEY_TRANSCEIVER: [],
+      },
+    };
+    const key = (type: string, opts: Parameters<typeof senderKey>[3]) => senderKey(table, 'SWITCH_VIRTUAL_RECEIVER', type, opts);
+    expect(key('MULTI_MODE_INPUT_TRANSMITTER', { operationMode: 2 })).toBe('MULTI_MODE_INPUT_TRANSMITTER_2');
+    expect(key('MULTI_MODE_INPUT_TRANSMITTER', { operationMode: 1, receiverDeviceType: 'HmIP-FDC' })).toBe(
+      'MULTI_MODE_INPUT_TRANSMITTER_1_FDC',
+    );
+    expect(key('MULTI_MODE_INPUT_TRANSMITTER', { operationMode: 1, receiverDeviceType: 'HmIP-BSM' })).toBe('MULTI_MODE_INPUT_TRANSMITTER_1');
+    // Mode not read (yet) or without a file of its own: the plain type
+    expect(key('MULTI_MODE_INPUT_TRANSMITTER', {})).toBe('MULTI_MODE_INPUT_TRANSMITTER');
+    expect(key('ROTARY_CONTROL_TRANSCEIVER', { senderAddress: '0001:2' })).toBe('ROTARY_CONTROL_TRANSCEIVER_2');
+    expect(key('KEY_TRANSCEIVER', { senderAddress: '0001:2' })).toBe('KEY_TRANSCEIVER');
   });
 
   it('detects the profile whose values fit, like get_cur_profile2', () => {

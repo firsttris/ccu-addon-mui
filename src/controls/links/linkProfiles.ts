@@ -42,6 +42,30 @@ export const loadProfileTable = async (receiverType: string): Promise<ProfileTab
   return load ? { [receiverType]: (await load()).default } : {};
 };
 
+// Senders whose profiles the WebUI picks by the sender channel: an input
+// by its CHANNEL_OPERATION_MODE (easymodes/<RECEIVER>/MULTI_MODE_INPUT_TRANSMITTER.tcl
+// sources MULTI_MODE_INPUT_TRANSMITTER_$mode.tcl, _1_FDC for an HmIP-FDC
+// receiver in mode 1), a rotary control by its channel index
+// (ROTARY_CONTROL_TRANSCEIVER.tcl: ROTARY_CONTROL_TRANSCEIVER_$index.tcl).
+// Returns the key of the receiver's table to use.
+export const senderKey = (
+  table: ProfileTable,
+  receiverType: string,
+  senderType: string,
+  { senderAddress, operationMode, receiverDeviceType }: { senderAddress?: string; operationMode?: number; receiverDeviceType?: string },
+) => {
+  const senders = table[receiverType] ?? {};
+  const candidates: string[] = [];
+  if (senderType === 'MULTI_MODE_INPUT_TRANSMITTER' && operationMode !== undefined) {
+    if (receiverDeviceType === 'HmIP-FDC' && operationMode === 1) candidates.push(`${senderType}_1_FDC`);
+    candidates.push(`${senderType}_${operationMode}`);
+  }
+  if (senderType === 'ROTARY_CONTROL_TRANSCEIVER' && senderAddress?.includes(':')) {
+    candidates.push(`${senderType}_${senderAddress.split(':')[1]}`);
+  }
+  return candidates.find((key) => key in senders) ?? senderType;
+};
+
 export const profilesFor = (table: ProfileTable, receiverType: string, senderType: string, peerType?: string) =>
   (table[receiverType]?.[senderType] ?? []).filter(
     (profile) =>

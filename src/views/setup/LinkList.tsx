@@ -8,10 +8,10 @@ import { InterfaceLink } from '../../types/protocol';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import { DeviceImage } from '../../components/DeviceImage';
 import { ListSkeletonItems } from '../../components/ui/skeleton';
-import { detectProfile, loadProfileTable, profilesFor } from '../../controls/links/linkProfiles';
+import { detectProfile, loadProfileTable, profilesFor, senderKey } from '../../controls/links/linkProfiles';
 import { getLocale } from '../../paraglide/runtime';
 import { useChannelNames } from './channelNames';
-import { LinkParameters, useLinkChannelInfo } from './Links';
+import { LinkParameters, useLinkChannelInfo, useOperationMode } from './Links';
 import { m } from '../../paraglide/messages';
 
 const deviceAddressOf = (address: string) => address.split(':')[0];
@@ -53,6 +53,7 @@ const useBehaviour = (link: InterfaceLink, enabled: boolean) => {
   const { description, values } = useLinkParamset(link.interfaceName, link.receiver, link.sender, enabled);
   const receiverType = channelInfo.get(link.receiver)?.channel.type;
   const sender = channelInfo.get(link.sender);
+  const operationMode = useOperationMode(link.interfaceName, link.sender, sender?.channel.type, enabled);
   const { data: table } = useQuery({
     queryKey: ['linkProfiles', receiverType],
     queryFn: () => loadProfileTable(receiverType!),
@@ -60,7 +61,12 @@ const useBehaviour = (link: InterfaceLink, enabled: boolean) => {
     enabled: enabled && !!receiverType,
   });
   if (!table || !values.data || !description.data || !receiverType || !sender) return undefined;
-  const profiles = profilesFor(table, receiverType, sender.channel.type, sender.deviceType);
+  const key = senderKey(table, receiverType, sender.channel.type, {
+    senderAddress: link.sender,
+    operationMode,
+    receiverDeviceType: channelInfo.get(link.receiver)?.deviceType,
+  });
+  const profiles = profilesFor(table, receiverType, key, sender.deviceType);
   if (profiles.length === 0) return undefined;
   const id = detectProfile(profiles, values.data);
   const profile = profiles.find((p) => p.id === id);
@@ -161,6 +167,7 @@ const LinkRow = ({
           receiverType={channelInfo.get(link.receiver)?.channel.type}
           senderType={channelInfo.get(link.sender)?.channel.type}
           senderDeviceType={channelInfo.get(link.sender)?.deviceType}
+          receiverDeviceType={channelInfo.get(link.receiver)?.deviceType}
         />
       )}
     </li>
