@@ -679,3 +679,16 @@ func TestUnknownLevelMayNotOperate(t *testing.T) {
 		}
 	}
 }
+
+// A panic in a handler is logged, not the end of the server
+func TestRecoveredPanic(t *testing.T) {
+	ran := false
+	recovered("testing", func() {
+		ran = true
+		var m map[string]int
+		m["x"] = 1
+	})
+	if !ran {
+		t.Fatal("not run")
+	}
+}

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"runtime/debug"
 	"slices"
 	"strconv"
 	"strings"
@@ -507,10 +508,22 @@ func (s *Server) readPump(client *Client) {
 
 		// Update read deadline on every message
 		client.conn.SetReadDeadline(time.Now().Add(pongWait))
-		s.handleMessage(client, message)
+		recovered("handling a message", func() { s.handleMessage(client, message) })
 		// Pongs aren't read while a slow request (a backup) runs
 		client.conn.SetReadDeadline(time.Now().Add(pongWait))
 	}
+}
+
+// recovered runs f and logs a panic instead of ending the server: the
+// add-on runs without a supervisor, a crash would stay down until the next
+// restart. The request that panicked gets no answer and times out.
+func recovered(what string, f func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Error(fmt.Sprintf("Panic while %s: %v\n%s", what, r, debug.Stack()))
+		}
+	}()
+	f()
 }
 
 func (s *Server) writePump(client *Client) {
