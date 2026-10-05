@@ -55,7 +55,14 @@ func (s *Store) saveLocked() error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(s.path, raw, 0o600)
+	// Written aside and renamed, as rules.go and diagrams.go do: a power cut
+	// mid-write would otherwise leave a broken file, and with it a new VAPID
+	// key, which makes every browser's subscription useless.
+	tmp := s.path + ".tmp"
+	if err := os.WriteFile(tmp, raw, 0o600); err != nil {
+		return err
+	}
+	return os.Rename(tmp, s.path)
 }
 
 // VAPID returns the key, creating and storing one the first time.
