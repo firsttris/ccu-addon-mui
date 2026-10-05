@@ -675,7 +675,8 @@ func (s *Server) handleCCUEvent(interfaceName, address, datapoint string, value 
 	event := types.NewCCUEvent(interfaceName, address, datapoint, value)
 
 	// Called synchronously so events reach clients in the order the CCU sent
-	// them. The handler only does non-blocking channel sends.
+	// them. The handler must not block (rule notifications are queued,
+	// rules.Queue): the CCU waits for the answer before its next event.
 	s.eventHandler(event)
 
 	logger.Debug("   📤 Event sent to WebSocket handler")
