@@ -1,4 +1,5 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useChannelList, useDevices, useLinkAction, useLinkParamset, useLinks, useParamset } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { TranslationKey, useTranslations } from '../../i18n/utils';
@@ -11,12 +12,13 @@ import {
   decodeHmipTime,
   detectProfile,
   encodeHmipTime,
+  LinkProfile,
   linkParameterNames,
   loadProfileTable,
   PERMANENT,
   ProfileField,
   profilesFor,
-  ProfileTable,
+  receiverKey,
   senderKey,
   profileValues,
   TIME_BASES,
@@ -130,44 +132,64 @@ const FieldRow = ({ label, children }: { label: string; children: ReactNode }) =
 const changedFrom = (current: Record<string, DatapointValue>, next: Record<string, DatapointValue>) =>
   Object.fromEntries(Object.entries(next).filter(([name, value]) => current[name] !== value));
 
+const numberOf = (value: DatapointValue | undefined) => (typeof value === 'number' ? value : undefined);
+
+// The WebUI profiles for a link, picked as the WebUI does: the receiver's
+// table by its mode (receiverKey), the sender's entry by its operation mode
+// or channel (senderKey). undefined while loading. The modes are read from
+// MASTER only for the devices that need them.
+export const useLinkProfiles = (interfaceName: string, link: Link, enabled = true): LinkProfile[] | undefined => {
+  const channelInfo = useLinkChannelInfo();
+  const receiver = channelInfo.get(link.receiver);
+  const sender = channelInfo.get(link.sender);
+  const light = receiver?.channel.type === 'UNIVERSAL_LIGHT_RECEIVER';
+  const rgbw = useParamset(interfaceName, `${link.receiver.split(':')[0]}:0`, 'MASTER', {
+    enabled: enabled && light && receiver?.deviceType === 'HmIP-RGBW',
+  });
+  const dali = useParamset(interfaceName, link.receiver, 'MASTER', {
+    enabled: enabled && light && receiver?.deviceType === 'HmIP-DRG-DALI',
+  });
+  const senderMode = useParamset(interfaceName, link.sender, 'MASTER', {
+    enabled:
+      enabled &&
+      (sender?.channel.type === 'MULTI_MODE_INPUT_TRANSMITTER' ||
+        (sender?.channel.type === 'KEY_TRANSCEIVER' && sender.deviceType === 'HmIP-MOD-RC8')),
+  });
+  const receiverType =
+    receiver &&
+    receiverKey(receiver.channel.type, receiver.deviceType, {
+      deviceOperationMode: numberOf(rgbw.data?.DEVICE_OPERATION_MODE),
+      maxCapabilities: numberOf(dali.data?.UNIVERSAL_LIGHT_MAX_CAPABILITIES),
+    });
+  const { data: table } = useQuery({
+    queryKey: ['linkProfiles', receiverType],
+    queryFn: () => loadProfileTable(receiverType!),
+    staleTime: Infinity,
+    enabled: enabled && !!receiverType,
+  });
+  if (!table || !receiverType || !sender) return undefined;
+  const key = senderKey(table, receiverType, sender.channel.type, {
+    senderAddress: link.sender,
+    operationMode: numberOf(senderMode.data?.CHANNEL_OPERATION_MODE),
+    receiverDeviceType: receiver?.deviceType,
+    senderDeviceType: sender.deviceType,
+  });
+  return profilesFor(table, receiverType, key, sender.deviceType);
+};
+
 // The parameters of one link on the receiver's side: a profile of the
 // WebUI with its few settings, or every parameter (expert). Changes are
 // collected, confirmed and saved together.
-// An input's CHANNEL_OPERATION_MODE (MASTER), which picks its link
-// profiles as in the WebUI; read only for inputs
-export const useOperationMode = (interfaceName: string, address: string, type: string | undefined, enabled = true) => {
-  const { data } = useParamset(interfaceName, address, 'MASTER', { enabled: enabled && type === 'MULTI_MODE_INPUT_TRANSMITTER' });
-  const mode = data?.CHANNEL_OPERATION_MODE;
-  return typeof mode === 'number' ? mode : undefined;
-};
-
-export const LinkParameters = ({ interfaceName, link, receiverType, senderType, senderDeviceType, receiverDeviceType }: {
-  interfaceName: string;
-  link: Link;
-  receiverType?: string;
-  senderType?: string;
-  senderDeviceType?: string;
-  receiverDeviceType?: string;
-}) => {
+export const LinkParameters = ({ interfaceName, link }: { interfaceName: string; link: Link }) => {
   const t = useTranslations();
   const lang = getLocale();
   const { showToast } = useToast();
   const { description, values } = useLinkParamset(interfaceName, link.receiver, link.sender);
   const action = useLinkAction();
-  const [table, setTable] = useState<ProfileTable>();
   const [draft, setDraft] = useState<Record<string, DatapointValue>>({});
   const [chosen, setChosen] = useState<number>();
   const [confirming, setConfirming] = useState(false);
-  const operationMode = useOperationMode(interfaceName, link.sender, senderType);
-
-  useEffect(() => {
-    if (!receiverType) return;
-    let active = true;
-    loadProfileTable(receiverType).then((loaded) => active && setTable(loaded));
-    return () => {
-      active = false;
-    };
-  }, [receiverType]);
+  const loadedProfiles = useLinkProfiles(interfaceName, link);
 
   // A failed request is said, not swallowed: the button would seem to do nothing
   const failed = description.error ?? values.error;
@@ -183,15 +205,7 @@ export const LinkParameters = ({ interfaceName, link, receiverType, senderType, 
   }
   const current = values.data;
   const merged = { ...current, ...draft };
-  const profiles =
-    table && receiverType && senderType
-      ? profilesFor(
-          table,
-          receiverType,
-          senderKey(table, receiverType, senderType, { senderAddress: link.sender, operationMode, receiverDeviceType }),
-          senderDeviceType,
-        )
-      : [];
+  const profiles = loadedProfiles ?? [];
   const saved = detectProfile(profiles, current);
   const profileId = chosen ?? saved;
   const profile = profiles.find((p) => p.id === profileId);
@@ -256,7 +270,7 @@ export const LinkParameters = ({ interfaceName, link, receiverType, senderType, 
           )}
         </div>
       ) : (
-        table && <p className="text-xs text-muted-foreground">{m.LINK_NO_PROFILES()}</p>
+        loadedProfiles && <p className="text-xs text-muted-foreground">{m.LINK_NO_PROFILES()}</p>
       )}
       {shownParameters(description.data).length > 0 && (
         <details open={profiles.length === 0 || profileId === 0} className="group">

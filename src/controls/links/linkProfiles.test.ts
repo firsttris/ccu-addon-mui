@@ -9,6 +9,7 @@ import {
   PERMANENT,
   profilesFor,
   profileValues,
+  receiverKey,
   senderKey,
 } from './linkProfiles';
 import blindReceiver from './profiles/BLIND_VIRTUAL_RECEIVER.json';
@@ -39,6 +40,23 @@ describe('linkProfiles', () => {
     const upDown = senders.MULTI_MODE_INPUT_TRANSMITTER_3.find((p) => p.id === 3);
     expect(upDown?.values.LONG_JT_OFF).toEqual([1]);
     expect(upDown?.values.LONG_JT_OFFDELAY).toEqual([4, 8, 3]);
+  });
+
+  it('picks the light receiver\'s table by device and mode, as linkHmIP_UNIVERSAL_LIGHT_RECEIVER.tcl', () => {
+    expect(receiverKey('SWITCH_VIRTUAL_RECEIVER', 'HmIP-BSM', {})).toBe('SWITCH_VIRTUAL_RECEIVER');
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', {})).toBeUndefined();
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', { deviceOperationMode: 1 })).toBe('UNIVERSAL_LIGHT_RECEIVER_RGB(W)');
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', { deviceOperationMode: 2 })).toBe('UNIVERSAL_LIGHT_RECEIVER_TW');
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', { deviceOperationMode: 3 })).toBe('UNIVERSAL_LIGHT_RECEIVER_PWM');
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-DRG-DALI', { maxCapabilities: 0 })).toBe('SWITCH_VIRTUAL_RECEIVER');
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-DRG-DALI', { maxCapabilities: 4 })).toBe('UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI');
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-LSC', {})).toBe('UNIVERSAL_LIGHT_RECEIVER_LSC');
+    // Light senders under the names the light tables use
+    const lights = { UNIVERSAL_LIGHT_RECEIVER_TW: { COND_SWITCH_TRANSMITTER_HUMIDITY: [], SWITCH_TRANSCEIVER: [] } };
+    expect(senderKey(lights, 'UNIVERSAL_LIGHT_RECEIVER_TW', 'LEVEL_COMMAND_TRANSMITTER_HUMIDITY', {})).toBe('COND_SWITCH_TRANSMITTER_HUMIDITY');
+    expect(senderKey(lights, 'UNIVERSAL_LIGHT_RECEIVER_TW', 'KEY_TRANSCEIVER', { senderDeviceType: 'HmIP-MOD-RC8', operationMode: 2 })).toBe(
+      'SWITCH_TRANSCEIVER',
+    );
   });
 
   it('picks the sender profiles by operation mode and channel, as the WebUI', () => {

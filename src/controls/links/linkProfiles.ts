@@ -42,6 +42,44 @@ export const loadProfileTable = async (receiverType: string): Promise<ProfileTab
   return load ? { [receiverType]: (await load()).default } : {};
 };
 
+// The table a light receiver's profiles are in, as the WebUI's
+// linkHmIP_UNIVERSAL_LIGHT_RECEIVER.tcl picks it: by the HmIP-RGBW's
+// DEVICE_OPERATION_MODE (channel 0), the HmIP-DRG-DALI channel's
+// UNIVERSAL_LIGHT_MAX_CAPABILITIES, or HmIP-LSC. Other receivers keep their
+// type. undefined while the mode it depends on isn't known yet.
+export const receiverKey = (
+  receiverType: string,
+  receiverDeviceType: string | undefined,
+  { deviceOperationMode, maxCapabilities }: { deviceOperationMode?: number; maxCapabilities?: number },
+) => {
+  if (receiverType !== 'UNIVERSAL_LIGHT_RECEIVER') return receiverType;
+  switch (receiverDeviceType) {
+    case 'HmIP-RGBW':
+      if (deviceOperationMode === undefined) return undefined;
+      // 0 RGBW, 1 RGB, 2 tunable white, 3 PWM
+      return ['UNIVERSAL_LIGHT_RECEIVER_RGB(W)', 'UNIVERSAL_LIGHT_RECEIVER_RGB(W)', 'UNIVERSAL_LIGHT_RECEIVER_TW', 'UNIVERSAL_LIGHT_RECEIVER_PWM'][
+        deviceOperationMode
+      ];
+    case 'HmIP-DRG-DALI':
+      if (maxCapabilities === undefined) return undefined;
+      // 0 switch, 1 dimmer, 2 tunable white, 3/4 RGB + tunable white
+      return ['SWITCH_VIRTUAL_RECEIVER', 'UNIVERSAL_LIGHT_RECEIVER_PWM', 'UNIVERSAL_LIGHT_RECEIVER_TW', 'UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI', 'UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI'][
+        maxCapabilities
+      ];
+    case 'HmIP-LSC':
+      return 'UNIVERSAL_LIGHT_RECEIVER_LSC';
+  }
+  return receiverType;
+};
+
+// Senders a light receiver's profiles know under another type
+// (linkHmIP_UNIVERSAL_LIGHT_RECEIVER.tcl)
+const lightSenders: Record<string, string> = {
+  LEVEL_COMMAND_TRANSMITTER_CO2: 'COND_SWITCH_TRANSMITTER',
+  LEVEL_COMMAND_TRANSMITTER_HUMIDITY: 'COND_SWITCH_TRANSMITTER_HUMIDITY',
+  LEVEL_COMMAND_TRANSMITTER_TEMPERATURE: 'COND_SWITCH_TRANSMITTER_TEMPERATURE',
+};
+
 // Senders whose profiles the WebUI picks by the sender channel: an input
 // by its CHANNEL_OPERATION_MODE (easymodes/<RECEIVER>/MULTI_MODE_INPUT_TRANSMITTER.tcl
 // sources MULTI_MODE_INPUT_TRANSMITTER_$mode.tcl, _1_FDC for an HmIP-FDC
@@ -52,10 +90,23 @@ export const senderKey = (
   table: ProfileTable,
   receiverType: string,
   senderType: string,
-  { senderAddress, operationMode, receiverDeviceType }: { senderAddress?: string; operationMode?: number; receiverDeviceType?: string },
+  {
+    senderAddress,
+    operationMode,
+    receiverDeviceType,
+    senderDeviceType,
+  }: { senderAddress?: string; operationMode?: number; receiverDeviceType?: string; senderDeviceType?: string },
 ) => {
   const senders = table[receiverType] ?? {};
   const candidates: string[] = [];
+  if (receiverType.startsWith('UNIVERSAL_LIGHT_RECEIVER_')) {
+    if (lightSenders[senderType]) candidates.push(lightSenders[senderType]);
+    // A key of the HmIP-MOD-RC8 used as switch or contact
+    if (senderType === 'KEY_TRANSCEIVER' && senderDeviceType === 'HmIP-MOD-RC8') {
+      if (operationMode === 2) candidates.push('SWITCH_TRANSCEIVER');
+      if (operationMode === 3) candidates.push('SHUTTER_CONTACT');
+    }
+  }
   if (senderType === 'MULTI_MODE_INPUT_TRANSMITTER' && operationMode !== undefined) {
     if (receiverDeviceType === 'HmIP-FDC' && operationMode === 1) candidates.push(`${senderType}_1_FDC`);
     candidates.push(`${senderType}_${operationMode}`);
