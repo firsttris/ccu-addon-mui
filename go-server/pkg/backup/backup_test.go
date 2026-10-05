@@ -43,3 +43,22 @@ func TestExpiredDownload(t *testing.T) {
 		t.Fatal("expired backup was not removed")
 	}
 }
+
+// Backups and uploads of a previous run don't stay on the user partition
+func TestNewRemovesLeftovers(t *testing.T) {
+	dir := t.TempDir()
+	for _, name := range []string{"mui-backup-1.sbk", "mui-restore-2.sbk", "mui-firmware-3", "other.txt"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte("x"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	New("http://unused", dir)
+	entries, _ := os.ReadDir(dir)
+	var left []string
+	for _, e := range entries {
+		left = append(left, e.Name())
+	}
+	if len(left) != 2 || left[0] != "mui-firmware-3" || left[1] != "other.txt" {
+		t.Fatalf("left in the directory: %v", left)
+	}
+}

@@ -75,8 +75,12 @@ type Config struct {
 	// AuditLogFile records every change made through the add-on; empty
 	// disables it.
 	AuditLogFile string
-	// BackupDir keeps created backups until they are downloaded; on the
-	// CCU /tmp is in RAM, not on the flash memory being backed up.
+	// BackupDir keeps created backups until they are downloaded, and
+	// uploaded backups and add-ons until they are installed. On the CCU it
+	// is /usr/local/tmp/mui-backups: /tmp is a RAM disk, where a backup of
+	// some hundred MB would starve ReGa; the WebUI keeps its backups in
+	// /usr/local/tmp as well (createBackup.sh), which it leaves out of the
+	// backup, and cp_security.cgi only clears the files directly in it.
 	BackupDir string
 	// DeviceFirmwareServer is eQ-3's update server, which lists and serves
 	// the newest device firmware (webui.js homematic.com: m_URLServer,
@@ -158,7 +162,7 @@ func Load() *Config {
 		StatusDir:            getEnv("CCU_STATUS_DIR", "/var/status"),
 		DiagramsFile:         getEnv("DIAGRAMS_FILE", defaultConfigFile("mui-diagrams.json")),
 		DiagramsDir:          getEnv("DIAGRAMS_DIR", defaultDataDir("mui-diagrams")),
-		BackupDir:            getEnv("BACKUP_DIR", filepath.Join(os.TempDir(), "mui-backups")),
+		BackupDir:            getEnv("BACKUP_DIR", defaultBackupDir()),
 		DeviceFirmwareServer: getEnv("DEVICE_FIRMWARE_SERVER", "https://ccu3-update.homematic.com"),
 		UserFSDir:            getEnv("USERFS_DIR", "/usr/local"),
 		FirmwareDownloadFile: getEnv("FIRMWARE_DOWNLOAD_FILE", "/usr/local/tmp/firmwareUpdateFile"),
@@ -234,6 +238,16 @@ func defaultDataDir(name string) string {
 		return ccuDataDir + "/" + name
 	}
 	return name
+}
+
+// defaultBackupDir is on the CCU's user partition, or in the system's
+// temporary directory when running locally.
+func defaultBackupDir() string {
+	const ccuTmpDir = "/usr/local/tmp"
+	if info, err := os.Stat(ccuTmpDir); err == nil && info.IsDir() {
+		return ccuTmpDir + "/mui-backups"
+	}
+	return filepath.Join(os.TempDir(), "mui-backups")
 }
 
 func getEnv(key, defaultValue string) string {

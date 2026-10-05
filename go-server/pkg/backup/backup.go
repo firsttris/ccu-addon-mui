@@ -60,7 +60,15 @@ type Service struct {
 }
 
 // New creates backups via the WebUI at webUIURL and keeps them in dir.
+// Backups and uploads a previous run left in dir are removed: dir is on the
+// CCU's user partition, which a reboot doesn't clear.
 func New(webUIURL, dir string) *Service {
+	for _, pattern := range []string{"mui-backup-*.sbk", "mui-restore-*.sbk"} {
+		leftovers, _ := filepath.Glob(filepath.Join(dir, pattern))
+		for _, path := range leftovers {
+			os.Remove(path)
+		}
+	}
 	return &Service{
 		webUIURL:   strings.TrimSuffix(webUIURL, "/"),
 		httpClient: &http.Client{Timeout: createTimeout},
