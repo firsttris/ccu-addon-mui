@@ -10,6 +10,7 @@ import {
   profilesFor,
   profileValues,
 } from './linkProfiles';
+import blindReceiver from './profiles/BLIND_VIRTUAL_RECEIVER.json';
 import floorHeating from './profiles/CLIMATECONTROL_FLOOR_TRANSCEIVER.json';
 import switchReceiver from './profiles/SWITCH_VIRTUAL_RECEIVER.json';
 
@@ -31,6 +32,14 @@ const description = {
 } as unknown as ParamsetDescription;
 
 describe('linkProfiles', () => {
+  it("imports jump tables set from the file's constants ($ON_DELAY, [subst {...}])", () => {
+    // BLIND_VIRTUAL_RECEIVER/MULTI_MODE_INPUT_TRANSMITTER_3.tcl: set ON_DELAY 1, OFF_DELAY 4, REFOFF 8, ON 3
+    const senders = blindReceiver as unknown as Record<string, LinkProfile[]>;
+    const upDown = senders.MULTI_MODE_INPUT_TRANSMITTER_3.find((p) => p.id === 3);
+    expect(upDown?.values.LONG_JT_OFF).toEqual([1]);
+    expect(upDown?.values.LONG_JT_OFFDELAY).toEqual([4, 8, 3]);
+  });
+
   it('detects the profile whose values fit, like get_cur_profile2', () => {
     expect(detectProfile([on, off], { SHORT_PROFILE_ACTION_TYPE: 1, SHORT_JT_ON: 3, SHORT_ON_TIME_BASE: 2 })).toBe(1);
     expect(detectProfile([on, off], { SHORT_PROFILE_ACTION_TYPE: 1, SHORT_JT_ON: 6 })).toBe(2);
