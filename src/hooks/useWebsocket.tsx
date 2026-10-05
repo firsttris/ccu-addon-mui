@@ -373,6 +373,15 @@ export const useWebsocket = () => {
       );
     } else {
       readyRef.current = false;
+      // Requests already sent get no answer on a lost connection: fail them
+      // now instead of after their timeout (queries retry once reconnected).
+      // Those still queued are sent after the next login.
+      for (const [requestId, pending] of pendingRequestsRef.current) {
+        if (queuedRef.current.has(requestId)) continue;
+        clearTimeout(pending.timeout);
+        pendingRequestsRef.current.delete(requestId);
+        pending.reject(new RequestError('connection lost', 'NOT_CONNECTED'));
+      }
     }
   }, [readyState, sendMessage]);
 
