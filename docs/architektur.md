@@ -44,8 +44,8 @@ flowchart LR
 
 ## Auf der CCU
 
-Das Archiv `mui-<version>.tar.gz` enthält die gebaute App, das Server-Binary und vier Dateien, die die CCU
-für Add-ons erwartet:
+Die Archive `mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz` enthalten die gebaute
+App, das Server-Binary für ihre Architektur und vier Dateien, die die CCU für Add-ons erwartet:
 
 | Datei | Aufgabe |
 |---|---|

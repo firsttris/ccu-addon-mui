@@ -168,7 +168,9 @@ Classic BidCos-Wired (HMW devices on the RS485 bus) is connected once a Wired ga
 
 ## 🚀 Installation
 
-1. Download `mui-<version>.tar.gz` from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases/latest) (OpenCCU on x86: `mui-<version>-x86_64.tar.gz`).
+1. Download the matching archive from the [releases page](https://github.com/firsttris/ccu-addon-mui/releases/latest) (don't unpack it):
+   - **CCU3** and OpenCCU on a **Raspberry Pi** (or another ARM board): `mui-<version>-arm-ccu3-raspi.tar.gz`
+   - OpenCCU on **x86** (VM/OVA for Proxmox, VMware, VirtualBox, Synology; Docker, LXC; mini PC like an Intel NUC): `mui-<version>-x86_64-pc.tar.gz`
 2. Upload and install it in the WebUI under *Settings → Control panel → Additional software*. OpenCCU starts the add-on right away; a CCU3 with eQ-3 firmware reboots for it.
 3. Open **http://&lt;ccu-ip&gt;/addons/mui** and log in with a CCU user.
 

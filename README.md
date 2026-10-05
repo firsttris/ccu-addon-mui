@@ -231,7 +231,9 @@ Mehr Bilder in [Bedienung](docs/bedienung.md) und [Einrichten](docs/einrichten.m
 
 ## 🚀 Installation
 
-1. `mui-<version>.tar.gz` von der [Releases-Seite](https://github.com/firsttris/ccu-addon-mui/releases/latest) laden (für OpenCCU auf x86: `mui-<version>-x86_64.tar.gz`).
+1. Das passende Archiv von der [Releases-Seite](https://github.com/firsttris/ccu-addon-mui/releases/latest) laden (nicht entpacken):
+   - **CCU3** und OpenCCU auf dem **Raspberry Pi** (oder einem anderen ARM-Board): `mui-<version>-arm-ccu3-raspi.tar.gz`
+   - OpenCCU auf **x86** (VM/OVA für Proxmox, VMware, VirtualBox, Synology; Docker, LXC; Mini-PC wie Intel NUC): `mui-<version>-x86_64-pc.tar.gz`
 2. In der WebUI unter *Einstellungen → Systemsteuerung → Zusatzsoftware* hochladen und installieren. OpenCCU startet das Add-on sofort, die CCU3 mit eQ-3-Firmware startet dafür neu.
 3. **http://&lt;IP-der-CCU&gt;/addons/mui** öffnen und mit einem Benutzer der CCU anmelden.
 
