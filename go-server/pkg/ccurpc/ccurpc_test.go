@@ -7,8 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"github.com/kolo/xmlrpc"
+	"time"
 
 	"ccu-addon-mui-server/pkg/latin1"
 )
@@ -37,11 +36,7 @@ func fakeInterface(t *testing.T, responses map[string]string, calls map[string]i
 }
 
 func newTestClient(t *testing.T, url string) *Client {
-	rpc, err := xmlrpc.NewClient(url, &untypedValueTransport{base: http.DefaultTransport})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return newClient(map[string]caller{"HmIP-RF": rpc})
+	return newClient(map[string]caller{"HmIP-RF": newHTTPCaller(url, &untypedValueTransport{base: http.DefaultTransport})})
 }
 
 const channelDescription = `<struct>
@@ -207,11 +202,7 @@ func TestCallsUseLatin1(t *testing.T) {
 		_, _ = io.WriteString(w, xmlResponse("<string>B\xfcro</string>"))
 	}))
 	defer ts.Close()
-	rpc, err := xmlrpc.NewClient(ts.URL, &latin1Transport{base: &untypedValueTransport{base: http.DefaultTransport}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	c := newClient(map[string]caller{"HmIP-RF": rpc})
+	c := newClient(map[string]caller{"HmIP-RF": newHTTPCaller(ts.URL, &latin1Transport{base: &untypedValueTransport{base: http.DefaultTransport}})})
 
 	if err := c.SetMetadata("HmIP-RF", "0001D3C99C3C93:1", "name", "Küche & Bad"); err != nil {
 		t.Fatal(err)
@@ -228,5 +219,51 @@ func TestCallsUseLatin1(t *testing.T) {
 	got = nil
 	if err := c.SetMetadata("HmIP-RF", "0001D3C99C3C93:1", "name", "5 €"); !errors.Is(err, latin1.ErrNotLatin1) || got != nil {
 		t.Fatalf("SetMetadata with € = %v, sent %q", err, got)
+	}
+}
+
+// A slow call doesn't hold up others to the same interface
+func TestCallsRunConcurrently(t *testing.T) {
+	release := make(chan struct{})
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		if strings.Contains(string(body), "SLOW") {
+			<-release
+		}
+		_, _ = io.WriteString(w, xmlResponse("<struct></struct>"))
+	}))
+	defer ts.Close()
+	defer close(release)
+	c := newTestClient(t, ts.URL)
+
+	go func() { _, _ = c.GetParamset("HmIP-RF", "SLOW:1", ParamsetValues) }()
+	time.Sleep(50 * time.Millisecond)
+	done := make(chan error, 1)
+	go func() {
+		_, err := c.GetParamset("HmIP-RF", "FAST:1", ParamsetValues)
+		done <- err
+	}()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("the second call waited for the first")
+	}
+}
+
+// Faults keep their code
+func TestCallFault(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.WriteString(w, `<?xml version="1.0"?><methodResponse><fault><value><struct>`+
+			`<member><name>faultCode</name><value><i4>-7</i4></value></member>`+
+			`<member><name>faultString</name><value>no device</value></member></struct></value></fault></methodResponse>`)
+	}))
+	defer ts.Close()
+	c := newTestClient(t, ts.URL)
+	_, err := c.GetParamset("HmIP-RF", "A:1", ParamsetValues)
+	if faultCode(err) != -7 {
+		t.Fatalf("fault code of %v", err)
 	}
 }
