@@ -44,6 +44,9 @@ type Config struct {
 	PushFile string
 	// WWWDir is the CCU's WebUI directory, for its device pictures
 	WWWDir string
+	// AppDir is where the add-on's app is installed; the server delivers
+	// its assets/ gzip-compressed (assets.go)
+	AppDir string
 	// RulesFile keeps the notification rules
 	RulesFile string
 	// PushSubject is the contact sent to the push services (VAPID "sub")
@@ -142,6 +145,7 @@ func Load() *Config {
 		PushFile:             getEnv("PUSH_FILE", defaultConfigFile("mui-push.json")),
 		RulesFile:            getEnv("RULES_FILE", defaultConfigFile("mui-rules.json")),
 		WWWDir:               getEnv("CCU_WWW_DIR", "/www"),
+		AppDir:               getEnv("APP_DIR", "/usr/local/addons/mui"),
 		PushSubject:          getEnv("PUSH_SUBJECT", "https://github.com/firsttris/ccu-addon-mui"),
 		AddonsDir:            getEnv("ADDONS_DIR", "/etc/config/rc.d"),
 		SyslogConfig:         getEnv("SYSLOG_CONFIG", "/etc/config/syslog"),

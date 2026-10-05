@@ -360,6 +360,7 @@ func (s *Server) Start(ctx context.Context) error {
 		mux.Handle(LogsPath, s.logs)
 	}
 	mux.Handle(DeviceImagePath, s.deviceImageHandler())
+	mux.Handle(AssetsPath, s.assetsHandler())
 
 	s.httpServer = &http.Server{
 		Addr:              fmt.Sprintf("%s:%d", s.cfg.WSBindHost, s.cfg.WSPort),

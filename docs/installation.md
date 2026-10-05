@@ -137,7 +137,7 @@ unter *Zusatzsoftware → Neustart* oder per SSH mit `/usr/local/etc/config/rc.d
 | `/usr/local/addons/mui/` | App, Server (`go-server/ccu-addon-mui-server`) und `update-check.cgi`, über das die CCU nach Updates fragt |
 | `/usr/local/etc/config/addons/www/mui` | Link auf das Add-on-Verzeichnis, darüber liefert die CCU `/addons/mui` aus |
 | `/usr/local/etc/config/rc.d/mui` | Startskript |
-| `/usr/local/etc/config/lighttpd/mui.conf` | Weiterleitung von `/ws/mui` an den Server |
+| `/usr/local/etc/config/lighttpd/mui.conf` | Weiterleitung von `/ws/mui` und `/addons/mui/assets/` (die gzip-gepackten Skripte der App) an den Server |
 | `/usr/local/etc/config/mui.conf` | deine Optionen (optional) |
 | `/usr/local/etc/config/mui-auth.key` | Schlüssel, mit dem die Anmeldungen signiert sind. Löschen meldet alle Geräte ab |
 | `/usr/local/etc/config/mui-sessions.json` | angemeldete Geräte |
@@ -159,6 +159,9 @@ bleiben `mui-sessions.json`, `mui-push.json`, `mui-audit.log`, `mui-diagrams.jso
 `/usr/local/mui-diagrams`, damit eine Neuinstallation Diagramme, Regeln und Verlauf behält. Wer alles entfernen will, löscht sie per SSH.
 
 ## Häufige Probleme
+
+**Weiße Seite beim ersten Öffnen**: Die Skripte der App liefert der Server aus. Läuft er nicht, lädt die App
+gar nicht (später kommt sie aus dem Cache des Service Workers). Add-on unter *Zusatzsoftware* neu starten.
 
 **Roter Balken „Keine Verbindung zur CCU, verbinde neu …“**: Die App erreicht den Server nicht. Die App verbindet sich alle
 3 Sekunden neu. Bleibt der Balken, läuft der Server nicht: Add-on unter *Zusatzsoftware* neu starten und
