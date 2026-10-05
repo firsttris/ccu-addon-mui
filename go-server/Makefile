@@ -30,9 +30,23 @@ build-ccu3:
 	CGO_ENABLED=0 GOOS=$(GOOS_CCU) GOARCH=$(GOARCH_CCU) GOARM=$(GOARM_CCU) \
 		$(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-arm -v
 
+## Build all add-on binaries: ARMv7 (CCU3, 32-bit OpenCCU), arm64 and amd64
+## (64-bit OpenCCU on Raspberry Pi 4/5, OVA, Docker, LXC). update_script
+## installs the one matching uname -m.
+build-addon: build-ccu3
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-arm64 -v
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-amd64 -v
+
 ## Run tests
 test:
 	$(GOTEST) -v ./...
+
+## Build all add-on binaries: ARMv7 (CCU3, 32-bit OpenCCU), arm64 and amd64
+## (64-bit OpenCCU on Raspberry Pi 4/5, OVA, Docker, LXC). update_script
+## installs the one matching uname -m.
+build-addon: build-ccu3
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-arm64 -v
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -o $(BINARY_NAME)-amd64 -v
 
 ## Run tests with coverage and generate reports
 coverage:
@@ -44,7 +58,7 @@ coverage:
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
-	rm -f $(BINARY_NAME)-arm
+	rm -f $(BINARY_NAME)-arm $(BINARY_NAME)-arm64 $(BINARY_NAME)-amd64
 
 ## Download dependencies
 deps:
@@ -60,12 +74,9 @@ size: build build-ccu3
 	@echo "Binary sizes:"
 	@ls -lh $(BINARY_NAME) $(BINARY_NAME)-arm | awk '{print $$9, $$5}'
 
-## Install to addon_installer directory
-install-addon: build-ccu3
-	@echo "Installing Go binary to addon_installer..."
+## Install the binaries to the addon_installer directory
+install-addon: build-addon
 	mkdir -p ../addon_installer/go-server
-	cp $(BINARY_NAME)-arm ../addon_installer/go-server/$(BINARY_NAME)
-	chmod +x ../addon_installer/go-server/$(BINARY_NAME)
-	@echo "✅ Installed to ../addon_installer/go-server/"
+	cp $(BINARY_NAME)-arm $(BINARY_NAME)-arm64 $(BINARY_NAME)-amd64 ../addon_installer/go-server/
 
-.PHONY: all build build-ccu3 test coverage clean deps run size install-addon
+.PHONY: all build build-ccu3 build-addon test coverage clean deps run size install-addon

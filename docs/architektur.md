@@ -51,7 +51,7 @@ für Add-ons erwartet:
 | `lighttpd.conf` | `^/ws/mui` → Proxy auf `127.0.0.1:8088` mit WebSocket-Upgrade; unter `/addons/mui/` jede unbekannte URL auf `index.html` (Routing der App) |
 | `update-check.cgi` | meldet der WebUI die neueste Version auf GitHub |
 
-Der Server ist ein **statisches ARMv7-Binary** (`CGO_ENABLED=0`, `-ldflags="-s -w"`, rund 8,6 MB). Er braucht
+Der Server ist ein **statisches Go-Binary** (`CGO_ENABLED=0`, `-ldflags="-s -w"`, rund 10 MB), im Archiv für ARMv7, arm64 und amd64; `update_script` installiert das passende. Er braucht
 keine Laufzeit und keine Bibliotheken der CCU und läuft daher unabhängig von der Firmware-Version (auf ARM). Welche Dateien er
 anlegt, steht in der [Installation](installation.md#dateien-auf-der-ccu).
 

@@ -1,53 +1,75 @@
 #!/bin/sh
+#
+# Installs or updates the add-on. OpenCCU runs this right after the upload
+# and only reboots when it exits with 10 (/bin/install_addon, patch
+# 0040-WebUI-AddonInstallNoReboot), so the server is (re)started and
+# lighttpd reloaded here; the eQ-3 CCU3 firmware reboots after every add-on
+# install anyway. An exit code other than 0 and 10 shows "Error (n)".
 
 ADDON_DIR=/usr/local/addons/mui
 RC_DIR=/usr/local/etc/config/rc.d
 WWW_DIR=/usr/local/etc/config/addons/www
+LIGHTTPD_DIR=/usr/local/etc/config/lighttpd
 
-mount | grep /usr/local 2>&1 >/dev/null
-if [ $? -eq 1 ]; then
+# The server is a static Go binary, one per architecture: ARMv7 for the
+# CCU3 and 32-bit OpenCCU, arm64 and amd64 for 64-bit OpenCCU (Raspberry Pi
+# 4/5, OVA, Docker, LXC)
+case "$(uname -m)" in
+  armv7*|armv8l) ARCH=arm ;;
+  aarch64|arm64) ARCH=arm64 ;;
+  x86_64|amd64) ARCH=amd64 ;;
+  *) exit 2 ;;
+esac
+BINARY=go-server/ccu-addon-mui-server-$ARCH
+[ -f "$BINARY" ] || exit 2
+
+if ! mount | grep -q " /usr/local "; then
   mount /usr/local
 fi
 
-mkdir -p $ADDON_DIR && chmod -R 755 $ADDON_DIR
+# The archive's file modes are not trusted (tar keeps them on the eQ-3
+# firmware): everything installed is owned by root and only writable by it
+umask 022
 
-# Copy CGI script first (directly to addon root)
-if [ -f update-check.cgi ]; then
-  cp -af update-check.cgi $ADDON_DIR/update-check.cgi
-  chmod +x $ADDON_DIR/update-check.cgi
-fi
+mkdir -p $ADDON_DIR/go-server $RC_DIR $WWW_DIR $LIGHTTPD_DIR
 
-# Copy React app to addon directory
-cp -af dist/* $ADDON_DIR/
+# The app: Vite names its files by content hash, so the old ones are
+# removed instead of piling up with every update
+rm -rf $ADDON_DIR/assets
+cp -R dist/. $ADDON_DIR/
+cp update-check.cgi $ADDON_DIR/update-check.cgi
+[ -f VERSION ] && cp VERSION $ADDON_DIR/
 
-# Cleanup old Node.js server files (migration from old version)
-if [ -d "$ADDON_DIR/node" ]; then
-  rm -rf $ADDON_DIR/node
-fi
-if [ -d "$ADDON_DIR/server" ]; then
-  rm -rf $ADDON_DIR/server
-fi
+# Leftovers of the old Node.js server
+rm -rf $ADDON_DIR/node $ADDON_DIR/server
 
-# Copy Go server binary
-mkdir -p $ADDON_DIR/go-server
-cp -af go-server/ccu-addon-mui-server-arm $ADDON_DIR/go-server/ccu-addon-mui-server
-chmod +x $ADDON_DIR/go-server/ccu-addon-mui-server
+# Copied next to the running binary and renamed over it: writing into a
+# running binary fails ("Text file busy")
+cp "$BINARY" $ADDON_DIR/go-server/ccu-addon-mui-server.new
+mv -f $ADDON_DIR/go-server/ccu-addon-mui-server.new $ADDON_DIR/go-server/ccu-addon-mui-server
+cp rc.d/mui $RC_DIR/mui
+cp lighttpd.conf $LIGHTTPD_DIR/mui.conf
 
-# Create symlink only if it doesn't exist
+chown -R root:root $ADDON_DIR $RC_DIR/mui $LIGHTTPD_DIR/mui.conf 2>/dev/null
+chmod -R u=rwX,go=rX $ADDON_DIR
+chmod 644 $LIGHTTPD_DIR/mui.conf
+chmod 755 $ADDON_DIR/update-check.cgi $ADDON_DIR/go-server/ccu-addon-mui-server $RC_DIR/mui
+
 if [ ! -L $WWW_DIR/mui ]; then
   ln -sf $ADDON_DIR $WWW_DIR/mui
 fi
 
-cp -af rc.d/mui $RC_DIR/
-chmod +x $RC_DIR/mui
+sync
 
-# Copy version file if it exists
-if [ -f VERSION ]; then
-  cp -af VERSION $ADDON_DIR/
+# Let lighttpd pick up mui.conf (the proxy for /ws/mui): reload is a
+# graceful restart, running requests finish
+if [ -x /etc/init.d/S50lighttpd ]; then
+  /etc/init.d/S50lighttpd reload
 fi
 
-cp -af lighttpd.conf /usr/local/etc/config/lighttpd/mui.conf
-
-sync
+# (Re)start the server a little later, in the background: an update
+# installed from the app itself goes through the server, which first
+# passes on the WebUI's answer
+(sleep 3; $RC_DIR/mui restart) </dev/null >/dev/null 2>&1 &
 
 exit 0

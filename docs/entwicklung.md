@@ -61,7 +61,7 @@ reine Oberflächenarbeit.
 | `npm run dev:fake` | Fake-CCU + Server + App |
 | `npm run dev` | Server + App gegen die CCU aus `go-server/.env` |
 | `npm run start:fe:ccu3` | nur App, Proxy auf die CCU |
-| `npm run build` | App bauen, Typen prüfen, Server für ARMv7 bauen, `mui-<version>.tar.gz` packen |
+| `npm run build` | App bauen, Typen prüfen, Server für ARMv7, arm64 und amd64 bauen, `mui-<version>.tar.gz` packen |
 | `npm run generate:protocol` | `src/types/protocol.ts` aus `protocol/schema.json` erzeugen |
 | `npm run export:ccu` | eine echte CCU nur lesend auslesen und als Fixture speichern |
 | `npm test` | Unit-Tests (Vitest) |
