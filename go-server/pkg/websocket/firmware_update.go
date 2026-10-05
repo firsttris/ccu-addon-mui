@@ -98,6 +98,17 @@ func directDownloadPlatform() string {
 	return platform
 }
 
+// firmwareSpaceCheck: an OpenCCU update needs the room on /usr/local
+// however the file gets there; the WebUI greys out the direct download
+// and the upload alike below it (cp_maintenance.cgi). Not checked where
+// the WebUI doesn't (containers, an original CCU3 firmware).
+func (s *Server) firmwareSpaceCheck() error {
+	if directDownloadPlatform() != "" && freeMB(s.cfg.UserFSDir) < firmwareRequiredMB {
+		return errNotEnoughSpace
+	}
+	return nil
+}
+
 var sha256Regex = regexp.MustCompile(`^([0-9a-fA-F]{64})\b`)
 
 // firmwareDownloadCheck prepares downloadCcuFirmware: enough room, and
@@ -110,8 +121,8 @@ func (s *Server) firmwareDownloadCheck() (func() error, error) {
 	if platform == "" || current == "" {
 		return nil, errDirectDownloadUnsupported
 	}
-	if freeMB(s.cfg.UserFSDir) < firmwareRequiredMB {
-		return nil, errNotEnoughSpace
+	if err := s.firmwareSpaceCheck(); err != nil {
+		return nil, err
 	}
 	latest, err := latestFirmware(current)
 	if err != nil {

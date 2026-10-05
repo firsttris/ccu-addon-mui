@@ -133,7 +133,15 @@ func TestDownloadCcuFirmware(t *testing.T) {
 	if m := call(map[string]interface{}{"type": "downloadCcuFirmware", "requestId": "d1", "password": "secret"}); m["code"] != "NOT_ENOUGH_SPACE" {
 		t.Fatalf("expected NOT_ENOUGH_SPACE, got %v", m)
 	}
+	// Uploading a downloaded file needs the same room (cp_maintenance.cgi
+	// greys out both): refused before the browser sends it
+	if m := call(map[string]interface{}{"type": "prepareCcuFirmware", "requestId": "p1"}); m["code"] != "NOT_ENOUGH_SPACE" {
+		t.Fatalf("expected NOT_ENOUGH_SPACE for an upload, got %v", m)
+	}
 	free = 5000
+	if m := call(map[string]interface{}{"type": "prepareCcuFirmware", "requestId": "p2"}); m["success"] != true {
+		t.Fatalf("expected the upload to be prepared with enough room, got %v", m)
+	}
 	if m := call(map[string]interface{}{"type": "downloadCcuFirmware", "requestId": "d2", "password": "falsch"}); m["code"] != "INVALID_CREDENTIALS" {
 		t.Fatalf("expected INVALID_CREDENTIALS, got %v", m)
 	}

@@ -83,6 +83,7 @@ const FirmwareUpdate = ({ current }: { current: string }) => {
               required: ((result.requiredMb ?? 0) / 1024).toFixed(1),
             })}
           </span>
+          {tooLittleRoom && <span className="max-w-md text-xs text-muted-foreground">{m.CCUFW_SPACE_HINT()}</span>}
         </>
       ) : (
         <span className="text-xs text-muted-foreground">{m.FW_UPDATE_HINT()}</span>
