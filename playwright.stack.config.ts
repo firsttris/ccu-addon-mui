@@ -44,7 +44,7 @@ export default defineConfig({
       timeout: 120000,
     },
     {
-      command: `mkdir -p ${stateDir} && cp fixtures/syslog ${stateDir}/syslog && cp fixtures/time.conf fixtures/ntpclient ${stateDir}/ && cd go-server && go run .`,
+      command: `mkdir -p ${stateDir}/tmp && cp fixtures/syslog ${stateDir}/syslog && cp fixtures/time.conf fixtures/ntpclient ${stateDir}/ && cd go-server && go run .`,
       port: 28088,
       reuseExistingServer: false,
       timeout: 120000,
@@ -77,7 +77,13 @@ export default defineConfig({
         CCU_STATUS_DIR: path.join(stateDir, 'status'),
         // The fake CCU also stands in for eQ-3's update server
         DEVICE_FIRMWARE_SERVER: FAKE_CCU_URL,
-        IDS_FILE: path.join(stateDir, 'ids'),
+        // Nothing outside the state directory: not the host's /usr/local
+        // or a go-server/mui-push.json of a local run
+        PUSH_FILE: path.join(stateDir, 'push.json'),
+        USERFS_DIR: stateDir,
+        FIRMWARE_UPLOAD_DIR: path.join(stateDir, 'tmp'),
+        FIRMWARE_DOWNLOAD_FILE: path.join(stateDir, 'tmp', 'firmwareUpdateFile'),
+        FIRMWARE_STAGED_LINK: path.join(stateDir, '.firmwareUpdate'),
       },
     },
     {

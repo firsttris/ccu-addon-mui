@@ -60,9 +60,9 @@ anlegt, steht in der [Installation](installation.md#dateien-auf-der-ccu).
 ```
 go-server/
   main.go              Start: Konfiguration, Dienste verdrahten, Shutdown
-  pkg/websocket        WebSocket-Server, Dispatcher für 133 Nachrichtentypen, Rechte, Audit-Aufrufe,
+  pkg/websocket        WebSocket-Server, Dispatcher für 151 Nachrichtentypen, Rechte, Audit-Aufrufe,
                        HTTP-Endpunkte für Backup, Upload und Logs
-  pkg/rega             ReGa: 55 HM-Script-Vorlagen (embed), Ausführen, Parsen, Validieren
+  pkg/rega             ReGa: 58 HM-Script-Vorlagen (embed), Ausführen, Parsen, Validieren
   pkg/ccurpc           XML-RPC-Client zu BidCos-RF, HmIP-RF, VirtualDevices; Cache für Beschreibungen
   pkg/xmlrpc           XML-RPC-Server für die Events der CCU, Anmeldung und Überwachung
   pkg/subscriptions    welche Verbindung welche Kanäle sieht
@@ -73,13 +73,16 @@ go-server/
   pkg/settings         Dateien in /etc/config: Netzwerk, Firewall, Zertifikat, LAN-Gateways, rega.conf …
   pkg/diagrams         eigene Diagramme: Definitionen, Aufzeichnung, Abfrage
   pkg/push             Web Push (RFC 8291/8292) nur mit der Standardbibliothek
+  pkg/rules            Benachrichtigungsregeln ohne Programm (Push)
+  pkg/devimages        Gerätebilder der WebUI (DEVDB.tcl) mit markiertem Kanal
+  pkg/sysinfo          Systeminformationen wie help.cgi: Hardware, Speicher, Last, Temperatur, Netzwerk
   pkg/addons, logs, heatinggroups, config, logger, types
   pkg/fakeccu          eine nachgebaute CCU für Tests und Entwicklung
   cmd/fakeccu          startet die Fake-CCU mit einer Fixture
   cmd/ccu-export       liest eine echte CCU aus und schreibt eine Fixture
 ```
 
-18.150 Zeilen Go, dazu 6.887 Zeilen Tests. Abhängigkeiten: `gorilla/websocket`, `kolo/xmlrpc` und für
+21.944 Zeilen Go, dazu 8.607 Zeilen Tests. Abhängigkeiten: `gorilla/websocket`, `kolo/xmlrpc` und für
 ISO-8859-1 `go-charset` bzw. `x/text`, mehr nicht.
 
 **Startablauf** (`main.go`): Konfiguration aus Umgebungsvariablen laden, ReGa-Client und WebSocket-Server
@@ -97,7 +100,7 @@ Schnittstelle nimmt, folgt den Quellen der WebUI in OpenCCU.
 Die Logikschicht der CCU kennt Räume, Gewerke, Kanäle mit Namen, Systemvariablen, Programme, Favoriten,
 Benutzer und das Systemprotokoll. Der Server schickt ihr HM-Script per `POST /rega.exe`:
 
-- **55 Vorlagen** in `pkg/rega/scripts/*.tcl` (die Endung ist historisch, Inhalt ist HM-Script), ins Binary
+- **58 Vorlagen** in `pkg/rega/scripts/*.tcl` (die Endung ist historisch, Inhalt ist HM-Script), ins Binary
   eingebettet. Platzhalter wie `{{ADDRESS}}` werden ersetzt.
 - Die Skripte geben **tabulatorgetrennte Zeilen** aus, das JSON baut Go. So muss im Skript nichts maskiert
   werden.
@@ -183,7 +186,7 @@ Neustart, Herunterfahren und abgesicherter Modus (nach `SaveSystem` in ReGa; fü
 | PWA | vite-plugin-pwa (Workbox), Push über einen eigenen Service-Worker-Teil |
 | Build | Vite |
 
-22.653 Zeilen TypeScript ohne Tests und generierten Code.
+28.817 Zeilen TypeScript ohne Tests und generierten Code.
 
 ```
 src/
@@ -356,10 +359,10 @@ und schreibt alle 5 Minuten auf den Speicher der CCU.
 
 | | Zeilen |
 |---|---:|
-| Go-Server | 18.150 |
-| Go-Tests | 6.887 |
-| App (TypeScript, ohne Tests und generierten Code) | 22.653 |
-| Unit-Tests der App | 1.247 |
-| End-to-End-Tests | 3.352 |
-| Protokoll-Schema | 11.002 |
-| HM-Script-Vorlagen | 1.383 |
+| Go-Server | 21.944 |
+| Go-Tests | 8.607 |
+| App (TypeScript, ohne Tests und generierten Code) | 28.817 |
+| Unit-Tests der App | 2.073 |
+| End-to-End-Tests | 4.496 |
+| Protokoll-Schema | 12.790 |
+| HM-Script-Vorlagen | 1.475 |

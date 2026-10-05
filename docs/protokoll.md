@@ -1,7 +1,7 @@
 # API: WebSocket-Protokoll
 
 App und Server sprechen über eine WebSocket-Verbindung mit JSON-Nachrichten. Dieses Dokument beschreibt
-die Regeln und listet alle 133 Nachrichtentypen. Maßgeblich ist das Schema `protocol/schema.json`; daraus
+die Regeln und listet alle 151 Nachrichtentypen. Maßgeblich ist das Schema `protocol/schema.json`; daraus
 entstehen die Typen der App, und die Go-Tests prüfen jede Nachricht des Servers dagegen.
 
 ## Verbindung
@@ -101,6 +101,7 @@ die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wi
 | Anmeldung | `auth` | Gespeichertes Token prüfen und erneuern, Admin-Token übernehmen | ohne Login |
 | | `login` | Mit CCU-Benutzer anmelden, liefert Token und Admin-Token | ohne Login |
 | | `elevate` | Passwort erneut prüfen, liefert ein 8-h-Admin-Token | alle (nur Admin erfolgreich) |
+| | `endElevation` | Admin-Rechte vorzeitig beenden: das Admin-Token dieses Geräts verfällt, die Anmeldung bleibt | alle |
 | | `logout` | Eigene Session widerrufen | alle |
 | | `listSessions` | Angemeldete Geräte auflisten | Admin+T |
 | | `revokeSession` | Gerät abmelden, Verbindungen schließen | Admin+T (A) |
@@ -240,6 +241,7 @@ dürfen.
 |---|---|
 | `AUTH_REQUIRED`, `LOGIN_REQUIRED` | nicht angemeldet bzw. Token ungültig |
 | `INVALID_CREDENTIALS`, `TOO_MANY_ATTEMPTS`, `CCU_UNREACHABLE` | Anmeldung fehlgeschlagen, gesperrt, CCU nicht erreichbar |
+| `CCU_NOT_READY` | die CCU startet noch (ReGa antwortet 503); zählt nicht als Fehlversuch |
 | `FORBIDDEN` | Stufe reicht nicht (Gast schaltet, Nicht-Admin richtet ein) |
 | `ELEVATION_REQUIRED` | Admin-Token fehlt oder ist abgelaufen |
 | `PASSWORD_REQUIRED` | die Aktion braucht eine WebUI-Sitzung, Passwort nötig |
@@ -250,6 +252,10 @@ dürfen.
 | `KEY_MISMATCH`, `KEY_REQUIRED`, `KEY_WRONG`, `KEY_SAME`, `KEY_NOT_ALL_DEVICES`, `WRONG_KEY` | Sicherheitsschlüssel (Anlernen, Werkseinstellungen, Schlüssel ändern, Restore) |
 | `INVALID_BACKUP`, `INVALID_FIRMWARE`, `FIRMWARE_TOO_OLD`, `ADDON_FAILED` | Datei abgelehnt |
 | `FIRMWARE_NOT_STAGED` | kein geprüftes CCU-Update liegt mehr bereit (z. B. nach einem Neustart), erneut herunterladen oder hochladen |
+| `DOWNLOAD_FAILED`, `FIRMWARE_CHECKSUM` | CCU-Update: Download von GitHub fehlgeschlagen, SHA256-Prüfsumme passt nicht |
+| `FIRMWARE_NEEDS_NEWER_CCU`, `UPDATE_SERVER_ERROR` | Geräte-Firmware: braucht eine neuere CCU-Version, eQ-3-Server nicht erreichbar |
+| `UPDATE_RUNNING`, `DEVICE_UNREACHABLE`, `DUTY_CYCLE_HIGH` | Geräte-Update: läuft schon für dieses Gerät, Gerät nicht erreichbar, Duty Cycle zu hoch |
+| `SYNTAX_ERROR` | Skript testen: das HM-Script hat einen Syntaxfehler |
 | `PUSH_FAILED` | Push-Dienst hat abgelehnt |
 
 ## Das Schema

@@ -177,7 +177,7 @@ zu bedienen. Dieses Add-on ersetzt sie durch eine moderne App, die auf der Zentr
 | … mit eigener Kachel für jede Funktion | **427** (90 %) | |
 | … mit eigener Kachel für die Hauptfunktion | **453** (96 %) | Rest: [generische Kachel](docs/geraete.md#generische-kachel) |
 | **Direktverknüpfungs-Vorlagen** | 722 Profile für die 7 häufigsten Empfänger | alle anderen im Expertenmodus |
-| **Automatisierte Tests** | über 470 | Unit, Go, End-to-End gegen eine Fake-CCU: [Tests](docs/tests.md) |
+| **Automatisierte Tests** | über 600 | Unit, Go, End-to-End gegen eine Fake-CCU: [Tests](docs/tests.md) |
 
 Das klassische **BidCos-Wired** (HMW-Geräte am RS485-Bus) ist angebunden, sobald ein Wired-Gateway
 eingerichtet ist, aber noch nicht an echter Wired-Hardware getestet. Gezählt wird gegen den Gerätekatalog der WebUI
@@ -241,7 +241,7 @@ Optionen wie `AUTH_MODE` und Deinstallation stehen in der [Installation](docs/in
 | [Geräteunterstützung](docs/geraete.md) | Welche Geräte welche Kachel bekommen, Zahlen, was noch fehlt |
 | [Vergleich mit der CCU3-WebUI](docs/vergleich-ccu3.md) | Funktion für Funktion: vorhanden, fehlt, besser |
 | [Architektur](docs/architektur.md) | Aufbau, Datenfluss, Schnittstellen der CCU, Entscheidungen |
-| [API: WebSocket-Protokoll](docs/protokoll.md) | die API des Add-ons: Nachrichten, Anmeldung, Events, Fehlercodes, alle 133 Nachrichtentypen |
+| [API: WebSocket-Protokoll](docs/protokoll.md) | die API des Add-ons: Nachrichten, Anmeldung, Events, Fehlercodes, alle 151 Nachrichtentypen |
 | [Sicherheit](docs/sicherheit.md) | Anmeldung, Tokens, Rechte, Audit-Log |
 | [Tests](docs/tests.md) | Unit, Go, Fake-CCU, End-to-End, Screenshots, CI |
 | [Entwicklung](docs/entwicklung.md) | Lokale Umgebung, Befehle, Protokoll erweitern, Übersetzungen, Release |

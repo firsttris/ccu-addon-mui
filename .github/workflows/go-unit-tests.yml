@@ -33,8 +33,12 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
+      - name: Vet and format
+        run: go vet ./... && test -z "$(gofmt -l .)"
+
+      # -race: several handlers run in their own goroutines
       - name: Run unit tests with coverage
-        run: go test ./... -covermode=atomic -coverprofile=coverage.out
+        run: go test -race ./... -covermode=atomic -coverprofile=coverage.out
 
       - name: Print coverage summary
         run: go tool cover -func=coverage.out

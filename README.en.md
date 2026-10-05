@@ -161,8 +161,8 @@ This add-on replaces it with a modern app that runs on the central unit itself:
 | | |
 |---|---|
 | Features of the WebUI | **97 %** (64 of 66), see [comparison](docs/vergleich-ccu3.md) |
-| Device types | **all 476** on HmIP, HmIP Wired, BidCos-RF and BidCos-Wired can be controlled; 350 (74 %) have a dedicated tile for every function, 443 (93 %) for their main function |
-| Automated tests | more than 470 (unit, Go, end-to-end against a fake CCU) |
+| Device types | **all 472** on HmIP, HmIP Wired, BidCos-RF and BidCos-Wired can be controlled; 427 (90 %) have a dedicated tile for every function, 453 (96 %) for their main function |
+| Automated tests | more than 600 (unit, Go, end-to-end against a fake CCU) |
 
 Classic BidCos-Wired (HMW devices on the RS485 bus) is connected once a Wired gateway is set up, but not yet tested on real Wired hardware.
 
