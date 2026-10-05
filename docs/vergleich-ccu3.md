@@ -151,7 +151,7 @@ Entwicklerwerkzeug *devconfig*.
 |---|---|---|
 | Gerätewerte | Jeder offene Tab ruft alle 3 s `/esp/system.htm?action=UpdateUI` auf, ein ReGa-Skript über alle angezeigten Kanäle (`iseRefresher`, `iseRefrCycle = 3` in `webui.js`) | Die CCU meldet jede Änderung per XML-RPC an den Server, der sie per WebSocket nur an die Geräte schickt, die den Kanal anzeigen. Keine Abfrage für Gerätewerte |
 | Seitenwechsel | ReGa erzeugt jede Seite als HTML (`.htm`, `.fn`) | Die App wechselt im Browser und lädt nur die Daten |
-| Beim Öffnen | 40 Skripte und Stylesheets, 3,1 MB (`rega/pages/index.htm`: Prototype, jQuery, jQuery UI, Scriptaculous, jqPlot, Knockout, `webui.js` mit 1,9 MB) | 4 Dateien, 844 KB; die Verknüpfungsvorlagen (3,6 MB) erst, wenn man sie braucht. Danach kommt alles aus dem Cache des Service Workers |
+| Beim Öffnen | 40 Skripte und Stylesheets, 3,1 MB (`rega/pages/index.htm`: Prototype, jQuery, jQuery UI, Scriptaculous, jqPlot, Knockout, `webui.js` mit 1,9 MB) | 17 Dateien bis zum fertigen Dashboard, 400 KB gzip-gepackt (1,3 MB entpackt); die Verknüpfungsvorlagen (3,6 MB, gepackt 160 KB) erst, wenn man sie braucht. Danach kommt alles aus dem Cache des Service Workers |
 | Server | Tcl-CGIs, ReGa | ein statisches Go-Binary (rund 10 MB, für ARMv7 und x86), keine Laufzeit wie Node.js oder Java |
 
 Systemvariablen meldet die CCU nicht per Event. Die fragt das Add-on alle 5 Sekunden ab, solange eine App sie zeigt, Alarme alle

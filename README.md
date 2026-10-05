@@ -189,7 +189,7 @@ eingerichtet ist, aber noch nicht an echter Wired-Hardware getestet. Gezählt wi
 |---|---|---|
 | Gerätewerte | jeder offene Tab fragt alle **3 s** ein ReGa-Skript ab (`iseRefresher`) | **Push**: die CCU meldet Änderungen per XML-RPC, der Server verteilt sie per WebSocket nur an die Geräte, die den Kanal anzeigen |
 | Seitenwechsel | ReGa rendert jede Seite als HTML | App wechselt im Browser, lädt nur Daten |
-| Beim Öffnen | 40 Dateien, 3,1 MB (Prototype, jQuery, Scriptaculous, jqPlot …) | 4 Dateien, 844 KB, danach aus dem Cache des Service Workers |
+| Beim Öffnen | 40 Dateien, 3,1 MB (Prototype, jQuery, Scriptaculous, jqPlot …) | 17 Dateien, 400 KB gzip-gepackt (1,3 MB entpackt), danach aus dem Cache des Service Workers |
 | Server | Tcl-CGIs und ReGa | ein statisches Go-Binary ohne Laufzeit und Abhängigkeiten |
 
 Gemessen an den Quellen der WebUI (`rega/pages/index.htm`, `webui.js`) und am Build dieses Add-ons.
