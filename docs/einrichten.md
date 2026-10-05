@@ -11,7 +11,11 @@ WebUI sie gebaut ist.
 
 Einrichten dürfen nur **Administratoren** der CCU. Ändern geht nur mit einem gültigen **Admin-Token**:
 Nach der Anmeldung gilt es 8 Stunden, danach fragt die App beim nächsten Speichern einmal nach dem
-Passwort. Oben rechts zeigt das Abzeichen *Admin-Modus*, dass es gültig ist.
+Passwort. Solange es gilt, zeigt die Kopfzeile auf jeder Seite *Admin-Modus* mit der Restzeit.
+
+Wer nur kurz etwas ändert, beendet die Admin-Rechte danach mit einem Klick darauf (oder mit
+*Admin-Rechte beenden* in Einrichten). Das Admin-Token wird dabei auch auf dem Server ungültig, das
+Gerät bleibt angemeldet und kann weiter bedienen. Für die nächste Änderung reicht wieder das Passwort.
 
 Einige Aktionen brauchen zusätzlich eine Sitzung der WebUI, weil die CCU sie nur dort anbietet, zum
 Beispiel Backup, Firewall und Sicherheitsstufe. Dann fragt die App das Passwort einmal ab und hält die

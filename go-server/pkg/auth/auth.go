@@ -84,6 +84,8 @@ type Session struct {
 	// Scope is ScopeOperate (long-lived) or ScopeAdmin (short-lived)
 	Scope     string
 	ExpiresAt time.Time
+	// IssuedAt: admin tokens from before EndElevation stop working
+	IssuedAt time.Time
 	// ID of the logged-in device (see EnableSessions); empty without
 	ID string
 }
@@ -240,7 +242,7 @@ func (a *Authenticator) Verify(token string) (Session, error) {
 	if a.now().After(time.Unix(claims.ExpiresAt, 0)) {
 		return Session{}, ErrInvalidToken
 	}
-	return Session{User: claims.User, Level: claims.Level, Scope: claims.Scope, ExpiresAt: time.Unix(claims.ExpiresAt, 0), ID: claims.ID}, nil
+	return Session{User: claims.User, Level: claims.Level, Scope: claims.Scope, ExpiresAt: time.Unix(claims.ExpiresAt, 0), IssuedAt: time.UnixMilli(claims.IssuedAt), ID: claims.ID}, nil
 }
 
 // IssueAdminToken returns a short-lived token for setting up, for a session
@@ -260,7 +262,7 @@ func (a *Authenticator) VerifyAdmin(token, user string) (time.Time, bool) {
 	if err != nil || session.Scope != ScopeAdmin || session.User != user || session.Level != LevelAdmin {
 		return time.Time{}, false
 	}
-	if session.ID != "" && !a.checkSession(&session, "") {
+	if session.ID != "" && (!a.checkSession(&session, "") || a.elevationEnded(session)) {
 		return time.Time{}, false
 	}
 	return session.ExpiresAt, true
@@ -313,6 +315,9 @@ type tokenClaims struct {
 	Scope     string `json:"s,omitempty"`
 	ID        string `json:"id,omitempty"`
 	ExpiresAt int64  `json:"exp"`
+	// IssuedAt in milliseconds, so an admin token issued right after
+	// EndElevation is told apart from the ended one
+	IssuedAt int64 `json:"iat,omitempty"`
 }
 
 func (a *Authenticator) issueToken(session Session) string {
@@ -320,7 +325,8 @@ func (a *Authenticator) issueToken(session Session) string {
 	if session.Scope == ScopeAdmin {
 		lifetime = adminTokenLifetime
 	}
-	data, _ := json.Marshal(tokenClaims{User: session.User, Level: session.Level, Scope: session.Scope, ID: session.ID, ExpiresAt: a.now().Add(lifetime).Unix()})
+	now := a.now()
+	data, _ := json.Marshal(tokenClaims{User: session.User, Level: session.Level, Scope: session.Scope, ID: session.ID, ExpiresAt: now.Add(lifetime).Unix(), IssuedAt: now.UnixMilli()})
 	payload := base64.RawURLEncoding.EncodeToString(data)
 	return payload + "." + a.sign(payload)
 }

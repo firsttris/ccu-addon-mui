@@ -576,6 +576,34 @@ func TestStackAdminTokenForSettings(t *testing.T) {
 	if ccu.CallCount("HmIP-RF putParamset") != 1 {
 		t.Fatalf("expected one putParamset, got %d", ccu.CallCount("HmIP-RF putParamset"))
 	}
+	if until, _ := elevate["elevatedUntil"].(string); until == "" {
+		t.Fatalf("expected when the admin rights end: %v", elevate)
+	}
+
+	// Locked again before the admin token expires: the device stays logged
+	// in, its other connection is closed and the admin token is useless
+	send(t, again, message{"type": "endElevation", "requestId": "q5"})
+	if m := receive(t, again, byRequestID("q5")); m["success"] != true {
+		t.Fatalf("endElevation failed: %v", m)
+	}
+	if m := put(again, "q6"); m["code"] != "ELEVATION_REQUIRED" {
+		t.Fatalf("expected ELEVATION_REQUIRED after endElevation, got %v", m)
+	}
+	_ = tablet.SetReadDeadline(time.Now().Add(5 * time.Second))
+	for {
+		if _, _, err := tablet.ReadMessage(); err != nil {
+			break
+		}
+	}
+	third, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer third.Close()
+	send(t, third, message{"type": "auth", "token": token, "adminToken": elevate["adminToken"]})
+	if m := receive(t, third, func(m message) bool { return m["type"] == "auth_response" }); m["success"] != true || m["elevated"] != false {
+		t.Fatalf("expected logged in without admin rights: %v", m)
+	}
 }
 
 func TestStackRenameAndAssignRooms(t *testing.T) {

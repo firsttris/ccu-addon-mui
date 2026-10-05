@@ -47,7 +47,8 @@ Passwort wie in der WebUI. Das Add-on prüft das Passwort bei der CCU und speich
 - **Rechte wie in der CCU**: Gäste sehen nur, Benutzer bedienen, Administratoren dürfen zusätzlich
   einrichten. Kanäle, die in der CCU nicht als *bedienbar* markiert sind, schalten nur Administratoren.
 - **Admin-Modus**: Für Einstellungen braucht ein Administrator ein Admin-Token. Es gilt 8 Stunden ab
-  der Anmeldung. Danach fragt die App beim nächsten Speichern noch einmal nach dem Passwort.
+  der Anmeldung. Danach fragt die App beim nächsten Speichern noch einmal nach dem Passwort. Früher
+  beenden: Klick auf *Admin-Modus* in der Kopfzeile, angemeldet bleibt man.
 - **Abmelden**: im Menü. Ein verlorenes Tablet meldest du unter *Einrichten → Angemeldete Geräte* ab.
 
 Details zu Tokens und Rechten stehen in [Sicherheit](sicherheit.md).
