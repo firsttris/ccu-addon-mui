@@ -26,5 +26,14 @@ jobs:
     uses: firsttris/workflows/.github/workflows/github-release.yml@v1
     with:
       release-artifact: addon
+      notes: |
+        ## Welches Archiv?
+
+        Das Archiv nicht entpacken, sondern in der WebUI unter *Einstellungen → Systemsteuerung → Zusatzsoftware* installieren.
+
+        - **`mui-*-arm-ccu3-raspi.tar.gz`** (ARM): CCU3, OpenCCU auf Raspberry Pi 2/3/4/5 und auf ARM-Boards wie Tinkerboard oder ODROID
+        - **`mui-*-x86_64-pc.tar.gz`** (x86_64): OpenCCU als VM (OVA für Proxmox, VMware, VirtualBox, Synology), als Docker- oder LXC-Container auf einem NAS oder Server, oder direkt installiert auf einem Mini-PC wie einem Intel NUC
+
+        Das falsche Archiv bricht bei der Installation mit „Error (2)“ ab.
     permissions:
       contents: write
