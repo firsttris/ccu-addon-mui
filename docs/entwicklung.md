@@ -61,7 +61,7 @@ reine Oberflächenarbeit.
 | `npm run dev:fake` | Fake-CCU + Server + App |
 | `npm run dev` | Server + App gegen die CCU aus `go-server/.env` |
 | `npm run start:fe:ccu3` | nur App, Proxy auf die CCU |
-| `npm run build` | App bauen, Typen prüfen, Server für ARMv7 und amd64 bauen, `mui-<version>.tar.gz` (ARM) und `mui-<version>-x86_64.tar.gz` packen |
+| `npm run build` | App bauen, Typen prüfen, Server für ARMv7 und amd64 bauen, `mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz` packen |
 | `npm run generate:protocol` | `src/types/protocol.ts` aus `protocol/schema.json` erzeugen |
 | `npm run export:ccu` | eine echte CCU nur lesend auslesen und als Fixture speichern |
 | `npm test` | Unit-Tests (Vitest) |
@@ -223,6 +223,6 @@ Ein Release startet mit einem Tag `vX.Y.Z`, nach demselben Schema wie in den and
 - lokal: `npm run release:patch` (oder `:minor`, `:major`), das per `postversion` Commit und Tag pusht.
 
 `release.yml` lässt dann Build, Go- und Playwright-Tests laufen und legt die Release mit den Archiven
-`mui-<version>.tar.gz` (ARM) und `mui-<version>-x86_64.tar.gz` an, die Notizen erzeugt GitHub aus den
+`mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz` an, die Notizen erzeugt GitHub aus den
 Pull Requests seit der letzten Version. Lokal baut `npm run build` dieselben Archive, jeder Build in der CI
 hängt sie als Artefakt `addon` an.
