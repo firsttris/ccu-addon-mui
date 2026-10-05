@@ -1192,7 +1192,11 @@ test('spielt eine CCU-Firmware mit Lizenzbedingungen ein', async ({ page }) => {
   const install = dialog.getByRole('button', { name: 'Installieren und neu starten' });
   await expect(install).toBeDisabled();
   await dialog.getByLabel('Ich akzeptiere die Lizenzbedingungen').check();
+  // A backup first, ticked as in the WebUI (askCreateBackup)
+  await expect(dialog.getByLabel('Vorher ein Backup erstellen und herunterladen')).toBeChecked();
+  const backup = page.waitForEvent('download');
   await install.click();
+  expect((await backup).suggestedFilename()).toMatch(/\.sbk$/);
   await expect(dialog.getByRole('status')).toContainText('installiert die Firmware');
 });
 

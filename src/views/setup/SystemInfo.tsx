@@ -59,29 +59,41 @@ const FirmwareUpdate = ({ current }: { current: string }) => {
   if (result === 'failed') {
     return <span className="text-xs text-muted-foreground">{m.ADDONS_CHECK_FAILED()}</span>;
   }
-  if (!isNewerVersion(result.latest, current)) {
+  const newer = isNewerVersion(result.latest, current);
+  if (!result.directDownload && !newer) {
     return <span className="text-xs text-muted-foreground">{m.ADDONS_CURRENT()}</span>;
   }
-  const tooLittleRoom = result.directDownload && (result.freeMb ?? 0) < (result.requiredMb ?? 0);
   return (
     <span className="flex flex-col items-start gap-1">
-      <Badge variant="secondary">{m.ADDONS_NEWER({ version: result.latest })}</Badge>
+      {newer ? (
+        <Badge variant="secondary">{m.ADDONS_NEWER({ version: result.latest })}</Badge>
+      ) : (
+        <span className="text-xs text-muted-foreground">{m.ADDONS_CURRENT()}</span>
+      )}
       {result.directDownload ? (
         <>
-          <Button
-            type="button"
-            className="h-7"
-            disabled={!elevated || tooLittleRoom}
-            onClick={() => setDownloading(true)}
-          >
+          {/* Both ways of cp_maintenance.cgi: the CCU downloads and installs
+              (performDirectDownload), or the file from GitHub's latest
+              release, uploaded with "Firmware einspielen" */}
+          <Button type="button" className="h-7" disabled={!elevated} onClick={() => setDownloading(true)}>
             <DownloadIcon />
             {m.CCUFW_DOWNLOAD_TITLE()}
           </Button>
-          <span className={cn('text-xs', tooLittleRoom ? 'font-medium text-destructive' : 'text-muted-foreground')}>
-            {m.CCUFW_FREE_SPACE({
-              free: ((result.freeMb ?? 0) / 1024).toFixed(1),
-              required: ((result.requiredMb ?? 0) / 1024).toFixed(1),
-            })}
+          {result.freeMb !== undefined && (
+            <span className="text-xs text-muted-foreground">
+              {m.CCUFW_FREE_SPACE({ free: (result.freeMb / 1024).toFixed(1) })}
+            </span>
+          )}
+          <span className="text-xs text-muted-foreground">
+            {m.CCUFW_GITHUB_HINT()}:{' '}
+            <a
+              href="https://github.com/openccu/openccu/releases/latest"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-foreground underline underline-offset-4"
+            >
+              {m.CCUFW_GITHUB()}
+            </a>
           </span>
         </>
       ) : (

@@ -7664,11 +7664,7 @@
         },
         "freeMb": {
           "type": "integer",
-          "description": "Free space on /usr/local in MB"
-        },
-        "requiredMb": {
-          "type": "integer",
-          "description": "The space an update needs in MB"
+          "description": "Free space on the CCU's user partition in MB, for information"
         }
       },
       "required": [

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"syscall"
@@ -61,20 +62,19 @@ type firmwareUpdateResponse struct {
 	Current   string `json:"current"`
 	Latest    string `json:"latest"`
 	// The CCU can download the update itself (downloadCcuFirmware), and
-	// the room it has for it
+	// the room it has on its user partition, for information: the WebUI's
+	// 2.8 GB (cp_maintenance.cgi, USERFSFREE_MB_REQ) is more than a CCU3's
+	// whole partition, and updates there work with less; whether the
+	// update fits is checked by the recovery system (fwinstall.sh: the
+	// unpacked image must fit into what is left after the download)
 	DirectDownload bool `json:"directDownload"`
 	FreeMB         int  `json:"freeMb,omitempty"`
-	RequiredMB     int  `json:"requiredMb,omitempty"`
 }
-
-// The room an OpenCCU update needs on /usr/local (cp_maintenance.cgi:
-// USERFSFREE_MB_REQ 2867.2)
-const firmwareRequiredMB = 2868
 
 var (
 	errDirectDownloadUnsupported = errors.New("this CCU can't download its firmware itself")
-	errNotEnoughSpace            = errors.New("not enough free space for the update")
 	errFirmwareChecksum          = errors.New("the downloaded firmware does not match its SHA256 checksum")
+	errFirmwareNotStaged         = errors.New("no checked firmware is ready to install")
 )
 
 // freeMB is the free space of a directory in MB
@@ -109,9 +109,6 @@ func (s *Server) firmwareDownloadCheck() (func() error, error) {
 	current := firmwareVersion()
 	if platform == "" || current == "" {
 		return nil, errDirectDownloadUnsupported
-	}
-	if freeMB(s.cfg.UserFSDir) < firmwareRequiredMB {
-		return nil, errNotEnoughSpace
 	}
 	latest, err := latestFirmware(current)
 	if err != nil {
@@ -173,7 +170,34 @@ func (s *Server) handleFirmwareUpdate(client *Client, requestID string) {
 	response := firmwareUpdateResponse{Type: "checkFirmwareUpdate_response", RequestID: requestID, Current: current, Latest: latest}
 	if directDownloadPlatform() != "" && s.backup != nil {
 		response.DirectDownload = true
-		response.FreeMB, response.RequiredMB = freeMB(s.cfg.UserFSDir), firmwareRequiredMB
+		response.FreeMB = freeMB(s.cfg.UserFSDir)
 	}
 	s.sendJSON(client, response)
+}
+
+// onCCU: the server runs on the CCU itself (it has the firmware's /VERSION),
+// not on a PC that talks to a CCU over the network
+func onCCU() bool {
+	return firmwareVersion() != ""
+}
+
+// removeUnstagedDownload removes what CCU.downloadFirmware left after a
+// failed direct download; one the WebUI linked for the update stays
+func (s *Server) removeUnstagedDownload() {
+	if target, err := filepath.EvalSymlinks(s.cfg.FirmwareStagedLink); err == nil && target == s.cfg.FirmwareDownloadFile {
+		return
+	}
+	os.Remove(s.cfg.FirmwareDownloadFile)
+}
+
+// firmwareStaged: the link the recovery system installs from points to an
+// existing file; after a reboot /usr/local/tmp is empty (S06InitSystem)
+// and the link dangles
+func (s *Server) firmwareStaged() bool {
+	target, err := filepath.EvalSymlinks(s.cfg.FirmwareStagedLink)
+	if err != nil {
+		return false
+	}
+	info, err := os.Stat(target)
+	return err == nil && (info.Mode().IsRegular() || info.IsDir())
 }

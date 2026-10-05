@@ -13,14 +13,14 @@ import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 
 // Creating a backup packs all of /usr/local on the CCU: that takes a while
-const BACKUP_TIMEOUT_MS = 5 * 60 * 1000;
+export const BACKUP_TIMEOUT_MS = 5 * 60 * 1000;
 
 const sizeFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 1 });
 const formatSize = (bytes: number) =>
   bytes >= 1024 * 1024 ? `${sizeFormat.format(bytes / 1024 / 1024)} MB` : `${sizeFormat.format(bytes / 1024)} kB`;
 
 // The server hands out a backup once, under a random address
-const download = (url: string, fileName: string) => {
+export const download = (url: string, fileName: string) => {
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName;

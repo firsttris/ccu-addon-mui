@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { BACKUP_TIMEOUT_MS, download as downloadBackup } from './Backup';
 import UploadIcon from '~icons/lucide/upload';
 import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
@@ -24,8 +25,8 @@ const errorMessage = (error: unknown) => {
       return m.TOO_MANY_ATTEMPTS();
     case 'INVALID_FIRMWARE':
       return m.CCUFW_INVALID();
-    case 'NOT_ENOUGH_SPACE':
-      return m.CCUFW_NOT_ENOUGH_SPACE();
+    case 'FIRMWARE_NOT_STAGED':
+      return m.CCUFW_NOT_STAGED();
     case 'FIRMWARE_CHECKSUM':
       return m.CCUFW_CHECKSUM();
     case 'DOWNLOAD_FAILED':
@@ -49,8 +50,19 @@ export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; 
   const [password, setPassword] = useState('');
   const [eula, setEula] = useState('');
   const [accepted, setAccepted] = useState(false);
+  const [backupFirst, setBackupFirst] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Closed while the CCU was still downloading or checking: what it then
+  // stages for the update is removed again (firmware_update_cancel)
+  const closedRef = useRef(false);
+  const cancelLater = () => {
+    if (closedRef.current) {
+      request({ type: 'cancelCcuFirmware', password }, { queue: false }).catch(() => undefined);
+      return true;
+    }
+    return false;
+  };
 
   const check = async () => {
     if (download) {
@@ -61,6 +73,7 @@ export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; 
           { type: 'downloadCcuFirmware', password, language: getLocale() === 'en' ? 'en' : 'de' },
           { queue: false, timeoutMs: DOWNLOAD_TIMEOUT_MS },
         );
+        if (cancelLater()) return;
         setEula(checked.eula ?? '');
         setStep('confirm');
       } catch (e) {
@@ -81,6 +94,7 @@ export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; 
         { type: 'checkCcuFirmware', id: prepared.id, password, language: getLocale() === 'en' ? 'en' : 'de' },
         { queue: false, timeoutMs: FIRMWARE_TIMEOUT_MS },
       );
+      if (cancelLater()) return;
       setEula(checked.eula ?? '');
       setStep('confirm');
     } catch (e) {
@@ -94,6 +108,11 @@ export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; 
     setBusy(true);
     setError(null);
     try {
+      // As the WebUI offers before the update (askCreateBackup, ticked)
+      if (backupFirst) {
+        const backup = await request({ type: 'createBackup', password }, { queue: false, timeoutMs: BACKUP_TIMEOUT_MS });
+        downloadBackup(backup.url, backup.fileName);
+      }
       await request({ type: 'installCcuFirmware', password }, { queue: false, timeoutMs: FIRMWARE_TIMEOUT_MS });
       setStep('done');
     } catch (e) {
@@ -105,6 +124,7 @@ export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; 
 
   // A checked file waits on the CCU: removed again when cancelled
   const cancel = () => {
+    closedRef.current = true;
     if (step === 'confirm') {
       request({ type: 'cancelCcuFirmware', password }, { queue: false }).catch(() => undefined);
     }
@@ -136,6 +156,10 @@ export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; 
       >
         <div className="flex flex-col gap-3">
           <p>{m.CCUFW_CONFIRM({ name: download ? `OpenCCU ${download}` : (file?.name ?? '') })}</p>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={backupFirst} onChange={(e) => setBackupFirst(e.target.checked)} />
+            {m.CCUFW_BACKUP_FIRST()}
+          </label>
           {eula && (
             <>
               <pre
