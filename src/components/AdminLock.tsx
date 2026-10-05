@@ -66,30 +66,3 @@ export const AdminLockButton = () => {
     </button>
   );
 };
-
-// The admin mode in setting up, with ending it (without authentication
-// there is no expiry and nothing to end)
-export const AdminModeBadge = () => {
-  const { active, elevatedUntil, busy, end } = useAdminLock();
-  const now = useMinuteTick();
-  return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-800 dark:text-amber-300">
-        <ShieldIcon className="size-3.5" />
-        {m.ADMIN_MODE()}
-        {active && elevatedUntil !== undefined && ` · ${timeLeft(elevatedUntil, now)}`}
-      </span>
-      {active && (
-        <button
-          type="button"
-          onClick={end}
-          disabled={busy}
-          className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium hover:bg-accent disabled:opacity-60"
-        >
-          <LockIcon className="size-3.5" />
-          {m.ADMIN_END()}
-        </button>
-      )}
-    </div>
-  );
-};

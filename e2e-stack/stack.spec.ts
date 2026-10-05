@@ -204,15 +204,15 @@ test('beendet die Admin-Rechte vor Ablauf, angemeldet bleibt man', async ({ page
   await expect(page.getByRole('button', { name: 'Passwort eingeben' })).toBeVisible();
   await expect(page.getByRole('button', { name: /^Admin-Rechte beenden/ })).toHaveCount(0);
 
-  // The password brings them back; in setting up they can be ended too
+  // The password brings them back; in setting up only the header ends them
   await page.getByRole('button', { name: 'Passwort eingeben' }).click();
   const dialog = page.getByRole('dialog', { name: 'Passwort eingeben' });
   await dialog.getByLabel('Passwort').fill('secret');
   await dialog.getByRole('button', { name: 'Bestätigen' }).click();
   await expect(dialog).toHaveCount(0);
   await page.goto('/setup/');
-  await expect(page.getByText(/^Admin-Modus · noch \d+ h$/)).toBeVisible();
-  await page.getByRole('button', { name: 'Admin-Rechte beenden', exact: true }).click();
+  await expect(page.getByRole('button', { name: /^Admin-Rechte beenden/ })).toHaveCount(1);
+  await lock.click();
   await expect(page.getByRole('button', { name: 'Passwort eingeben' })).toBeVisible();
 });
 

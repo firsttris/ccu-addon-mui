@@ -18,7 +18,6 @@ import GatewayIcon from '~icons/lucide/router';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useInbox } from '../../queries';
 import { ElevateDialog } from '../../components/ElevateDialog';
-import { AdminModeBadge } from '../../components/AdminLock';
 import { Button } from '../../components/ui/button';
 import { m } from '../../paraglide/messages';
 import { Skeleton } from '../../components/ui/skeleton';
@@ -173,7 +172,6 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
             </Button>
           </Notice>
         )}
-        {isAdmin && elevated && <AdminModeBadge />}
         {children}
       </div>
       {elevating && <ElevateDialog onDone={() => setElevating(false)} onCancel={() => setElevating(false)} />}
