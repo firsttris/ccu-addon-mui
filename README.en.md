@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="docs/banner.png" alt="ccu-addon-mui: thermostat, direct link, program and push alarm" width="900">
-
 **The complete WebUI of your Homematic central unit, rebuilt.**<br>
 Control, configure, link and program, live and on every device:
 an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
@@ -40,25 +38,129 @@ This add-on replaces it with a modern app that runs on the central unit itself:
 
 ## ✨ Features
 
-- **Dashboard** for rooms, trades, favourites and all devices, with dedicated tiles for thermostats, floor
-  heating, lights, dimmers, colour lights, blinds, windows, locks, garage doors, detectors, sirens, climate
-  and weather sensors, buttons, energy meters and access control. Every other device gets a tile built from
-  its device description. Tiles can be arranged by drag and drop.
-- **Alarms and service messages** live, with **push notifications** to your phone.
-- **Week program editors** for thermostats and actuators, heating groups.
-- **Charts** for any datapoint or system variable, without a microSD card.
-- **Program editor** with all time controls and a script tester, system variables, virtual keys,
-  system log.
-- **Device setup**: pairing (also HmIP KEY/SGTIN), settings with proper controls and transfer status,
-  direct links with the WebUI's 722 profiles, firmware updates, function test, device replacement.
-- **Central unit**: users and rights, backup and restore, CCU firmware, add-ons, time and location,
-  network, firewall, HTTPS certificate, SSH, security key and level, LAN gateways, logging, factory reset.
+**What the CCU3 doesn't have**
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 📱 Mobile first, as an app
+- Built for phone, tablet and wall, installable as an app (PWA)
+- Light and dark, screen stays on (WakeLock)
+- Live over WebSocket instead of polling every 3 seconds
+
+</td>
+<td width="50%" valign="top">
+
+### 🧩 Arrange tiles freely
+- Drag & drop, per section and favourites list
+- Stored in the CCU, the same on every device
+- Tiles show what is going on, with gestures instead of forms
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🔔 Notification rules
+- “Window open for 15 minutes and cold”, “water detected”, “door opened at night”
+- No program and no e-mail add-on needed
+- Alarms and service messages as **push** to your phone
+
+</td>
+<td width="50%" valign="top">
+
+### 📈 Diagrams
+- Any datapoint and system variable, no microSD card
+- Zoom, statistics, cost for energy meters, CSV export
+- As a tile in the room
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🩺 Device health
+- Battery voltage with cut-off, reception both ways
+- Last message and reachability of all devices on one page
+- Most urgent first
+
+</td>
+<td width="50%" valign="top">
+
+### 🔐 Security
+- See logged-in devices and log them out one by one
+- Admin rights only with a fresh password, ended again with one click
+- Audit log of every change with old and new value
+
+</td>
+</tr>
+</table>
+
+**Everything from the WebUI**
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🏠 Operate
+- Rooms, functions, favourites and *All devices* with key figures
+- Own tiles for thermostat, light, blinds, lock, detectors, energy and more
+- Every other device gets a tile from its device description
+
+</td>
+<td width="50%" valign="top">
+
+### 🔥 Heating
+- Thermostat with dial, boost and modes
+- Week program as a timeline, copy to weekdays
+- Create and change heating groups
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🛠️ Set up devices
+- Pairing (HmIP with KEY/SGTIN, BidCos by serial number), inbox
+- Settings with fitting controls, transfer with status
+- Device pictures, function test, firmware, device replacement
+
+</td>
+<td width="50%" valign="top">
+
+### 🔗 Direct links
+- “Who controls whom” with device pictures and rooms
+- 722 profiles of the WebUI, e.g. *staircase light*
+- Expert mode with all parameters
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### ⚙️ Programs
+- *If / Else if / Else* with all time controls and astro times
+- System variables, virtual keys, system log
+- Test scripts with syntax check and output
+
+</td>
+<td width="50%" valign="top">
+
+### 🖥️ Manage the CCU
+- Users and rights, backup and restore
+- CCU firmware, add-ons, time, network, firewall, HTTPS
+- SSH, security key, LAN gateways, logging
+
+</td>
+</tr>
+</table>
 
 ## 📊 Status compared to the CCU3 WebUI
 
 | | |
 |---|---|
-| Features of the WebUI | **88 %** (58 of 66), see [comparison](docs/vergleich-ccu3.md) |
+| Features of the WebUI | **97 %** (64 of 66), see [comparison](docs/vergleich-ccu3.md) |
 | Device types | **all 476** on HmIP, HmIP Wired, BidCos-RF and BidCos-Wired can be controlled; 350 (74 %) have a dedicated tile for every function, 443 (93 %) for their main function |
 | Automated tests | more than 470 (unit, Go, end-to-end against a fake CCU) |
 

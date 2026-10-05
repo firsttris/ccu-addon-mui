@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="docs/banner.png" alt="ccu-addon-mui: Thermostat, Direktverknüpfung, Programm und Push-Alarm" width="900">
-
 **Die komplette WebUI deiner Homematic-Zentrale, neu gebaut.**<br>
 Bedienen, einrichten, verknüpfen und programmieren, live und auf jedem Gerät:
 ein Add-on für CCU3 und OpenCCU, das die alte WebUI im Alltag ersetzt.
@@ -52,39 +50,129 @@ zu bedienen. Dieses Add-on ersetzt sie durch eine moderne App, die auf der Zentr
 
 ## ✨ Funktionen
 
-- **Dashboard**: Räume, Gewerke, Favoriten und *Alle Geräte*, mit Kennzahlen (Innentemperatur,
-  eingeschaltete Lichter, offene Fenster), Abschnitten nach Art und eigenen Kacheln für Thermostate,
-  Fußbodenheizung, Licht, Dimmer, Farblicht, Rollläden und Jalousien mit Lamellen, Fenster, Türschlösser,
-  Garagentore, Rauch-, Wasser- und Bewegungsmelder, Sirenen, Klima- und Wettersensoren, Taster,
-  Energiezähler und Zutrittskontrolle. Jedes andere Gerät bekommt eine passende Kachel aus seiner
-  Gerätebeschreibung.
-- **Kacheln anordnen** per Drag & Drop, gespeichert in der CCU und damit auf allen Geräten gleich.
-- **Meldungen**: Alarme und Servicemeldungen live im Kopf der App, bestätigen mit einem Tipp, auf Wunsch
-  als **Push-Benachrichtigung** aufs Handy.
-- **Heizen**: Thermostat mit Drehregler, Boost, Modi und ein **Wochenprogramm-Editor** mit Zeitleiste,
-  Kopieren auf Werktage und Profilen. Wochenprogramme für Schalt-, Dimm- und Rollladenaktoren.
-  Heizgruppen anlegen und ändern.
-- **Diagramme**, besser als in der WebUI: Jeder Datenpunkt und jede Systemvariable lässt sich aufzeichnen,
-  ohne microSD-Karte, mit Zoom, Statistik, Kosten für Energiezähler, CSV-Export und als Kachel im Raum.
-- **Programme**: Editor mit *Wenn / Sonst wenn / Sonst*, allen Zeitsteuerungen, Astro-Zeiten, Werten aus
-  Systemvariablen und **Skript testen** mit Syntaxprüfung und Ausgabe.
-- **Systemvariablen**, **virtuelle Taster** und das **Systemprotokoll**.
-- **Geräte einrichten**: Anlernen (auch HmIP mit KEY/SGTIN und BidCos per Seriennummer), Posteingang,
-  Einstellungen mit **passenden Bedienelementen** statt Zahlenfeldern und Übertragung aufs Gerät mit
-  Statusanzeige, umbenennen, Räume und Gewerke, Funktionstest, Firmware-Updates, Gerätetausch, löschen.
-- **Direktverknüpfungen** mit den Vorlagen der WebUI (722 Profile, z. B. *Dimmer: ein/aus & heller/dunkler*)
-  oder im Expertenmodus mit allen Parametern.
-- **Zentrale verwalten**: Benutzer und Rechte, Backup und Wiederherstellung, CCU-Firmware, Zusatzsoftware,
-  Zeit und Standort, Netzwerk, Firewall, HTTPS-Zertifikat, SSH, Sicherheitsschlüssel, Sicherheitsstufe,
-  LAN-Gateways, Protokollierung, Neustart und Werkseinstellungen.
-- **Mehr als die WebUI**: angemeldete Geräte sehen und abmelden (verlorenes Tablet), Audit-Log aller
-  Änderungen, Bildschirm bleibt an (WakeLock), Deutsch und Englisch, hell und dunkel.
+**Was es auf der CCU3 nicht gibt**
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 📱 Mobile first, als App
+- Für Handy, Tablet und Wand gebaut, als App installierbar (PWA)
+- Hell und dunkel, Bildschirm bleibt an (WakeLock)
+- Live per WebSocket statt Abfrage alle 3 Sekunden
+
+</td>
+<td width="50%" valign="top">
+
+### 🧩 Kacheln frei anordnen
+- Per Drag & Drop, je Abschnitt und Favoritenliste
+- Gespeichert in der CCU, auf allen Geräten gleich
+- Kacheln zeigen, was los ist, mit Gesten statt Formularen
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🔔 Benachrichtigungsregeln
+- „Fenster seit 15 Minuten offen und kalt“, „Wasser erkannt“, „Tür nachts geöffnet“
+- Ohne Programm und ohne E-Mail-Add-on
+- Alarme und Servicemeldungen als **Push** aufs Handy
+
+</td>
+<td width="50%" valign="top">
+
+### 📈 Diagramme
+- Jeder Datenpunkt und jede Systemvariable, ohne microSD-Karte
+- Zoom, Statistik, Kosten für Energiezähler, CSV-Export
+- Als Kachel im Raum
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🩺 Geräte-Gesundheit
+- Batteriespannung mit Abschaltgrenze, Empfang in beide Richtungen
+- Letzte Meldung und Erreichbarkeit aller Geräte auf einer Seite
+- Die dringendsten oben
+
+</td>
+<td width="50%" valign="top">
+
+### 🔐 Sicherheit
+- Angemeldete Geräte sehen und einzeln abmelden
+- Admin-Rechte nur mit frischem Passwort, mit einem Klick wieder beenden
+- Audit-Log jeder Änderung mit altem und neuem Wert
+
+</td>
+</tr>
+</table>
+
+**Alles aus der WebUI**
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 🏠 Bedienen
+- Räume, Gewerke, Favoriten und *Alle Geräte* mit Kennzahlen
+- Eigene Kacheln für Thermostat, Licht, Rollladen, Schloss, Melder, Energie und mehr
+- Jedes andere Gerät bekommt eine Kachel aus seiner Gerätebeschreibung
+
+</td>
+<td width="50%" valign="top">
+
+### 🔥 Heizen
+- Thermostat mit Drehregler, Boost und Modi
+- Wochenprogramm als Zeitleiste, Kopieren auf Werktage
+- Heizgruppen anlegen und ändern
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🛠️ Geräte einrichten
+- Anlernen (HmIP mit KEY/SGTIN, BidCos per Seriennummer), Posteingang
+- Einstellungen mit passenden Bedienelementen, Übertragung mit Status
+- Gerätebilder, Funktionstest, Firmware, Gerätetausch
+
+</td>
+<td width="50%" valign="top">
+
+### 🔗 Direktverknüpfungen
+- „Wer steuert wen“ mit Gerätebildern und Räumen
+- 722 Vorlagen der WebUI, z. B. *Treppenhauslicht*
+- Expertenmodus mit allen Parametern
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### ⚙️ Programme
+- *Wenn / Sonst wenn / Sonst* mit allen Zeitsteuerungen und Astro-Zeiten
+- Systemvariablen, virtuelle Taster, Systemprotokoll
+- Skript testen mit Syntaxprüfung und Ausgabe
+
+</td>
+<td width="50%" valign="top">
+
+### 🖥️ Zentrale verwalten
+- Benutzer und Rechte, Backup und Wiederherstellung
+- CCU-Firmware, Zusatzsoftware, Zeit, Netzwerk, Firewall, HTTPS
+- SSH, Sicherheitsschlüssel, LAN-Gateways, Protokollierung
+
+</td>
+</tr>
+</table>
 
 ## 📊 Stand gegenüber der CCU3-WebUI
 
 | | Stand | |
 |---|---|---|
-| **Funktionen der WebUI** | **95 %** (63 von 66) | Was fehlt: [Vergleich mit der CCU3-WebUI](docs/vergleich-ccu3.md) |
+| **Funktionen der WebUI** | **97 %** (64 von 66) | Was fehlt: [Vergleich mit der CCU3-WebUI](docs/vergleich-ccu3.md) |
 | **Gerätetypen bedienbar** | **alle 472** an HmIP, HmIP Wired, BidCos-RF und BidCos-Wired | jedes Gerät, das die CCU kennt |
 | … mit eigener Kachel für jede Funktion | **427** (90 %) | |
 | … mit eigener Kachel für die Hauptfunktion | **453** (96 %) | Rest: [generische Kachel](docs/geraete.md#generische-kachel) |
