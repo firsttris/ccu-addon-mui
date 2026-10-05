@@ -203,6 +203,7 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `ADDONS_DIR`, `SYSLOG_CONFIG`, `LOG_DIR`, `TIME_CONF_FILE`, `NTP_CLIENT_FILE`, `TZ_FILE`, `GROUPS_FILE` | Pfade der CCU | Zusatzsoftware, Logs, Uhr, Heizgruppen |
 | `DEVICE_FIRMWARE_SERVER` | `https://ccu3-update.homematic.com` | eQ-3-Updateserver für Geräte-Firmware |
 | `CCU_WWW_DIR` | `/www` | Dateien der WebUI (Gerätebilder, Texte der Servicemeldungen) |
+| `APP_DIR` | `/usr/local/addons/mui` | die installierte App; `assets/` liefert der Server gzip-gepackt aus |
 | `USERFS_DIR`, `FIRMWARE_DOWNLOAD_FILE` | `/usr/local`, `/usr/local/tmp/firmwareUpdateFile` | Freier Speicher und Ziel des CCU-Firmware-Downloads |
 | `FIRMWARE_UPLOAD_DIR`, `FIRMWARE_STAGED_LINK` | `/usr/local/tmp`, `/usr/local/.firmwareUpdate` | Hochgeladene CCU-Updates und der Link, über den die WebUI das geprüfte Update bereitstellt |
 | `CCU_FIRMWARE_RELEASES` | `https://github.com/openccu/openccu/releases/download` | Releases mit SHA256-Dateien |

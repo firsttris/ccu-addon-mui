@@ -33,7 +33,10 @@ flowchart LR
 ```
 
 - **lighttpd**, der Webserver der CCU, liefert die App aus (`/addons/mui/…`) und leitet `/ws/mui` an den
-  Go-Server weiter. Damit gelten für das Add-on dieselbe Adresse, dasselbe Zertifikat und dieselbe Firewall
+  Go-Server weiter. Die Skripte und Styles (`/addons/mui/assets/`) liegen nur gzip-gepackt auf der CCU
+  (`scripts/compress-assets.mjs`, 5,1 MB → 0,6 MB); lighttpd hat kein Kompressionsmodul, deshalb leitet es
+  auch diesen Pfad an den Go-Server, der die Dateien unverändert mit `Content-Encoding: gzip` schickt
+  (`pkg/websocket/assets.go`). Damit gelten für das Add-on dieselbe Adresse, dasselbe Zertifikat und dieselbe Firewall
   wie für die WebUI.
 - Der **Go-Server** lauscht nur auf `127.0.0.1`, ist also von außen nicht direkt erreichbar. Er spricht mit
   den Diensten der CCU über deren eigene Schnittstellen und meldet sich bei den Funkdiensten für Events an.

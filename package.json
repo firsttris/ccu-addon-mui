@@ -37,7 +37,7 @@
     "version:current": "node -p -e \"require('./package.json').version\"",
     "write:version": "echo $(npm run version:current --silent) > addon_installer/VERSION",
     "build:go-server": "cd go-server && make install-addon",
-    "copy:build": "npm run build:go-server && mkdir -p addon_installer/dist && cp -r dist/ccu-addon-mui/* addon_installer/dist && npm run write:version",
+    "copy:build": "npm run build:go-server && mkdir -p addon_installer/dist && cp -r dist/ccu-addon-mui/* addon_installer/dist && node scripts/compress-assets.mjs && npm run write:version",
     "tar:gz": "V=$(npm run version:current --silent) && T='tar --owner=0 --group=0 --mode=u=rwX,go=rX -cz' && $T -f mui-$V.tar.gz --exclude=./go-server/ccu-addon-mui-server-amd64 -C addon_installer . && $T -f mui-$V-x86_64.tar.gz --exclude=./go-server/ccu-addon-mui-server-arm -C addon_installer ."
   },
   "private": true,
