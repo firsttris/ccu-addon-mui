@@ -1,6 +1,7 @@
 package ccurpc
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -8,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/kolo/xmlrpc"
+
+	"ccu-addon-mui-server/pkg/latin1"
 )
 
 // xmlResponse wraps a value as XML-RPC response, as the CCU sends it.
@@ -193,5 +196,37 @@ func TestGetParamsetReturnsValues(t *testing.T) {
 	values, err := client.GetParamset("HmIP-RF", "A:1", ParamsetValues)
 	if err != nil || values["STATE"] != true || values["LEVEL"] != 0.5 {
 		t.Fatalf("GetParamset = %v, %v", values, err)
+	}
+}
+
+// Calls go out in ISO-8859-1, as from libXmlRpc, and answers in it are read
+func TestCallsUseLatin1(t *testing.T) {
+	var got []byte
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got, _ = io.ReadAll(r.Body)
+		_, _ = io.WriteString(w, xmlResponse("<string>B\xfcro</string>"))
+	}))
+	defer ts.Close()
+	rpc, err := xmlrpc.NewClient(ts.URL, &latin1Transport{base: &untypedValueTransport{base: http.DefaultTransport}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := newClient(map[string]caller{"HmIP-RF": rpc})
+
+	if err := c.SetMetadata("HmIP-RF", "0001D3C99C3C93:1", "name", "Küche & Bad"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(string(got), `<?xml version="1.0" encoding="iso-8859-1"?>`) || !strings.Contains(string(got), "<string>K\xfcche &amp; Bad</string>") {
+		t.Fatalf("unexpected call: %q", got)
+	}
+
+	var reply string
+	if err := c.call("HmIP-RF", "getMetadata", []interface{}{"0001D3C99C3C93:1", "name"}, &reply); err != nil || reply != "Büro" {
+		t.Fatalf("getMetadata = %q, %v", reply, err)
+	}
+
+	got = nil
+	if err := c.SetMetadata("HmIP-RF", "0001D3C99C3C93:1", "name", "5 €"); !errors.Is(err, latin1.ErrNotLatin1) || got != nil {
+		t.Fatalf("SetMetadata with € = %v, sent %q", err, got)
 	}
 }
