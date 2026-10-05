@@ -19,8 +19,10 @@ const STEP = 5;
 const button = 'press flex h-11 items-center justify-center rounded-xl border bg-background/60 hover:bg-accent [&_svg]:size-5';
 
 // The window is a vertical slider: tap or drag anywhere in it to set the
-// height. The shutter follows the finger; the new level is sent once on
-// release (one radio telegram instead of one per pixel).
+// height. The shutter follows the pointer; the new level is sent once on
+// release (one radio telegram instead of one per pixel). On a touch screen
+// a tap sets the height and a swipe scrolls the page: the window lies in a
+// scrolling page, a swipe across it must not move the shutter.
 export const BlindsControl = ({ channel }: ControlProps) => {
   const setDataPoint = useSetDataPoint();
   const effects = useEffects();
@@ -44,7 +46,14 @@ export const BlindsControl = ({ channel }: ControlProps) => {
     return Math.round(((1 - fraction) * 100) / STEP) * STEP;
   };
 
+  // A finger on the window: a tap if it lifts there, a scroll if the
+  // browser takes over (pointercancel)
+  const touchStart = useRef<number | null>(null);
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'touch') {
+      touchStart.current = event.pointerId;
+      return;
+    }
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
     setDragLevel(levelAt(event.clientY));
@@ -52,11 +61,22 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (dragLevel !== null) setDragLevel(levelAt(event.clientY));
   };
-  const onPointerUp = () => {
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (touchStart.current === event.pointerId) {
+      touchStart.current = null;
+      const tapped = levelAt(event.clientY);
+      if (tapped !== level) send(tapped);
+      return;
+    }
     if (dragLevel !== null) {
       if (dragLevel !== level) send(dragLevel);
       setDragLevel(null);
     }
+  };
+  // Scrolling or an interrupted drag sends nothing
+  const onPointerCancel = () => {
+    touchStart.current = null;
+    setDragLevel(null);
   };
   const onKeyDown = (event: React.KeyboardEvent) => {
     const next =
@@ -104,9 +124,9 @@ export const BlindsControl = ({ channel }: ControlProps) => {
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
+          onPointerCancel={onPointerCancel}
           onKeyDown={onKeyDown}
-          className="relative min-h-[168px] w-32 shrink-0 self-stretch cursor-ns-resize touch-none overflow-hidden rounded-[10px] border-[3px] border-zinc-400 bg-[linear-gradient(180deg,#bfe3fb_0%,#9fd2f5_55%,#86c3ee_100%)] transition-shadow duration-500 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:border-zinc-700 dark:bg-[linear-gradient(180deg,#2a4a6b_0%,#1a3350_55%,#142a40_100%)]"
+          className="relative min-h-[168px] w-32 shrink-0 self-stretch cursor-ns-resize touch-pan-y overflow-hidden rounded-[10px] border-[3px] border-zinc-400 bg-[linear-gradient(180deg,#bfe3fb_0%,#9fd2f5_55%,#86c3ee_100%)] transition-shadow duration-500 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:border-zinc-700 dark:bg-[linear-gradient(180deg,#2a4a6b_0%,#1a3350_55%,#142a40_100%)]"
           style={
             effects.on && shown > 0
               ? { boxShadow: `0 0 ${28 * effects.k}px -4px rgba(125,211,252,${a(0.35 * open)})` }

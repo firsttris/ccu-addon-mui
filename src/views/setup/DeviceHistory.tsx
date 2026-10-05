@@ -1,6 +1,6 @@
 import { useQueries } from '@tanstack/react-query';
 import { useWebSocketActions } from '../../hooks/useWebsocket';
-import { useChannels } from '../../queries';
+import { useChannelList } from '../../queries';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { datapointLabel, formatEntryValue, formatTime } from '../History';
 import { defaultLang } from '../../i18n/utils';
@@ -82,7 +82,7 @@ const unitOf = (datapoint: string) =>
 // stand-in for the WebUI's diagrams, which need the HMServer.
 export const DeviceHistory = ({ address }: { address: string }) => {
   const { request } = useWebSocketActions();
-  const { data: allChannels } = useChannels({ all: true });
+  const { data: allChannels } = useChannelList();
   const logged = (allChannels ?? []).filter((c) => c.address.startsWith(`${address}:`) && c.logged);
   const histories = useQueries({
     queries: logged.map((channel) => ({

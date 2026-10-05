@@ -83,9 +83,10 @@ export default defineConfig(({ command, mode, isPreview }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        // The direct link profiles (1.5 MB) are loaded when needed, in the
-        // setup area only, not installed on every device
-        globIgnores: ['**/linkProfiles-*.js'],
+        // The direct link profiles (several MB, one chunk per receiver
+        // type, named in build.rollupOptions) are loaded when needed, in
+        // the setup area only, not installed on every device
+        globIgnores: ['**/linkProfile-*.js'],
         // Push notifications (public/push-sw.js)
         importScripts: ['push-sw.js'],
       },
@@ -128,6 +129,16 @@ export default defineConfig(({ command, mode, isPreview }) => ({
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
+    },
+    rollupOptions: {
+      output: {
+        // Direct link profiles (src/controls/links/profiles/*.json) get a
+        // prefix, so the service worker leaves them out (globIgnores)
+        chunkFileNames: (chunk) =>
+          chunk.facadeModuleId?.includes('/controls/links/profiles/')
+            ? 'assets/linkProfile-[name]-[hash].js'
+            : 'assets/[name]-[hash].js',
+      },
     },
   },
 }));

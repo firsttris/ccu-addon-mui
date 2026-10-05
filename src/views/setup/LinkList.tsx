@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import ArrowRightIcon from '~icons/lucide/arrow-right';
-import { useChannels, useDevices, useLinkAction, useLinkParamset, useRooms } from '../../queries';
+import { useChannelList, useDevices, useLinkAction, useLinkParamset, useRooms } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
 import { InterfaceLink } from '../../types/protocol';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
@@ -181,7 +181,7 @@ interface LinkListProps {
 // rooms and what the link does
 export const LinkList = ({ links, isLoading, device, added }: LinkListProps) => {
   const { data: devices = [] } = useDevices();
-  const { data: channels = [] } = useChannels({ all: true });
+  const { data: channels = [] } = useChannelList();
   const { data: rooms = [] } = useRooms();
   const names = useChannelNames();
   const action = useLinkAction();

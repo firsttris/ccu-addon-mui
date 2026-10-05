@@ -12,7 +12,7 @@ import { Switch } from '../../components/ui/switch';
 import { Button } from '../../components/ui/button';
 import { m } from '../../paraglide/messages';
 import { useChannelNames } from './channelNames';
-import { useChannels, useDevices, useRooms } from '../../queries';
+import { useChannelList, useDevices, useRooms } from '../../queries';
 import { ChannelPicker } from '../../components/ChannelPicker';
 import { DeviceImage } from '../../components/DeviceImage';
 import type { Channel } from '../../types/types';
@@ -64,7 +64,7 @@ export const HeatingGroupEditor = ({ group, onClose }: { group?: HeatingGroup; o
 
   // The members as channels, for the channel dialog and their pictures;
   // one ReGa doesn't know yet gets a stand-in
-  const { data: regaChannels = [] } = useChannels({ all: true });
+  const { data: regaChannels = [] } = useChannelList();
   const { data: devices = [] } = useDevices();
   const { data: rooms = [] } = useRooms();
   const channelOf = useMemo(() => {
