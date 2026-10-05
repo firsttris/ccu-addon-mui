@@ -19,7 +19,7 @@ die [README](../README.md).
 | | |
 |---|---|
 | [Architektur](architektur.md) | Aufbau auf der CCU, Go-Server und App, Schnittstellen der CCU, Datenfluss, Events, Entscheidungen, warum es schnell ist |
-| [API: WebSocket-Protokoll](protokoll.md) | Die API des Add-ons: Nachrichtenhülle, Anmeldung, Abos und Events, Fehlercodes, alle 133 Nachrichtentypen, HTTP-Endpunkte, Schema |
+| [API: WebSocket-Protokoll](protokoll.md) | Die API des Add-ons: Nachrichtenhülle, Anmeldung, Abos und Events, Fehlercodes, alle 151 Nachrichtentypen, HTTP-Endpunkte, Schema |
 | [Sicherheit](sicherheit.md) | Anmeldung mit CCU-Benutzern, Tokens, Rechte, Sperre, Audit-Log, was nie gespeichert wird |
 | [Tests](tests.md) | Testpyramide, Vitest, Go, Fake-CCU, Playwright mit Mock und gegen den Stack, Screenshot-Vergleich, CI |
 | [Entwicklung](entwicklung.md) | Lokale Umgebung, Befehle, Projektstruktur, Protokoll erweitern, Übersetzungen, Konventionen, Release |

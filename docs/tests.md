@@ -8,14 +8,14 @@ echten Server und eine nachgebaute CCU.
 
 | Ebene | Was echt ist | Was nachgebaut ist | Tests | in der CI |
 |---|---|---|---:|:---:|
-| **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 199 in 30 Dateien | ✅ |
-| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 209 Testfunktionen in 48 Dateien | ✅ |
+| **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 255 in 42 Dateien | ✅ |
+| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 245 Testfunktionen in 59 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests | – | gegen `protocol/schema.json` | ✅ |
-| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 25 + 2 | ✅ |
-| **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 65 | ✅ |
-| **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 60 | lokal |
+| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 34 + 2 | ✅ |
+| **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 74 | ✅ |
+| **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 72 | lokal |
 
-Zusammen über 470 Tests, dazu 60 Screenshot-Vergleiche.
+Zusammen über 600 Tests, dazu 72 Screenshot-Vergleiche.
 
 ```mermaid
 flowchart LR
@@ -27,12 +27,12 @@ flowchart LR
 
 ## Die Fake-CCU
 
-Herzstück der Tests ist `go-server/pkg/fakeccu`, eine CCU zum Mitnehmen (gut 3.000 Zeilen Go). Sie lädt
+Herzstück der Tests ist `go-server/pkg/fakeccu`, eine CCU zum Mitnehmen (gut 3.700 Zeilen Go). Sie lädt
 eine **Fixture** (`fixtures/demo-ccu.json`: 3 Räume, 2 Gewerke, 36 Kanäle, Benutzer `Admin`/`secret` und
 `Gast`/`gast`, Gerätebeschreibungen und Paramsets für BidCos-RF und HmIP-RF, Systemvariablen, Programme,
 Favoriten, ein Gerät im Posteingang) und startet fünf Server:
 
-- **ReGa**: erkennt jedes Skript des Servers an seiner Vorlage, denn sie macht aus jeder der 55 Vorlagen
+- **ReGa**: erkennt jedes Skript des Servers an seiner Vorlage, denn sie macht aus jeder der 58 Vorlagen
   einen regulären Ausdruck, liest die eingesetzten Werte heraus und antwortet wie `rega.exe`. Einen
   HM-Script-Interpreter braucht es dafür nicht.
 - **XML-RPC** für BidCos-RF, HmIP-RF, VirtualDevices und BidCos-Wired: Gerätebeschreibungen, Paramsets, Anlernen,
@@ -73,7 +73,7 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
 
 - **Pakete**: ReGa (Skripte, Parser, Validierung, Programm-Code), XML-RPC-Client und -Server, Anmeldung und
   Tokens, Einstellungen, Diagramme, Push, Audit, Add-ons, Logs …
-- **Integration** (`go-server/integration_test.go`, 58 Tests): startet die Fake-CCU auf freien Ports und den
+- **Integration** (`go-server/integration_test.go`, 64 Tests): startet die Fake-CCU auf freien Ports und den
   **echten** Server mit temporären Dateien, wartet auf die Anmeldung für Events und spricht dann über einen
   WebSocket-Client mit ihm: anmelden, schalten, Events, Rechte, Admin-Token, Paramsets, Anlernen,
   Verknüpfungen, Programme, Backup …
@@ -105,7 +105,7 @@ temporären Verzeichnis) und Vite. Jeder Test setzt die Fake-CCU zurück, meldet
 und bedient die App wie ein Mensch. Die Kette ist echt: Browser → Vite-Proxy → Go-Server → Fake-CCU und die
 Events zurück.
 
-Die 65 Tests decken praktisch jede Funktion von *Einrichten* ab, zum Beispiel:
+Die 74 Tests decken praktisch jede Funktion von *Einrichten* ab, zum Beispiel:
 
 - Licht schalten und Live-Events von einem anderen „Gerät“, Geräteprobleme, Dimmer
 - Geräteeinstellungen mit Vorschau und Übertragungsstatus, Gastrechte, abgelaufenes Admin-Token
@@ -123,8 +123,8 @@ Die 65 Tests decken praktisch jede Funktion von *Einrichten* ab, zum Beispiel:
 
 `npm run test:visual` · Baselines erneuern: `npm run test:visual:update`
 
-Zehn Ansichten (Räume, Gewerke, Kacheln aller Art, Anmeldung, Meldungen, Menü) in drei Größen (Handy,
-Tablet hoch und quer), hell und dunkel, mit fester Uhrzeit und Sprache: 60 Bilder unter
+Zwölf Ansichten (Räume, Gewerke, Kacheln aller Art, Anmeldung, Meldungen, Menü) in drei Größen (Handy,
+Tablet hoch und quer), hell und dunkel, mit fester Uhrzeit und Sprache: 72 Bilder unter
 `e2e/visual.spec.ts-snapshots`. Weil Schriften auf jedem Rechner etwas anders gerendert werden, laufen sie
 nur mit `VISUAL=1` und nicht in der CI. Nach Änderungen an der Darstellung werden die Baselines bewusst neu
 erzeugt und im Pull Request mitgeliefert.

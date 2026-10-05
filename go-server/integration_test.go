@@ -94,8 +94,6 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	ccu.ConfigDir = cfg.ConfigDir
 	// The fake also stands in for eQ-3's update server
 	cfg.DeviceFirmwareServer = cfg.WebUIURL
-	cfg.IDsFile = filepath.Join(t.TempDir(), "ids")
-	_ = os.WriteFile(cfg.IDsFile, []byte("BidCoS-Address=0x1234\nSerialNumber=NEQ1234567\n"), 0o644)
 	cfg.StatusDir = "../fixtures/status"
 	for _, name := range []string{"netconfig", "firewall.conf", "rfd.conf"} {
 		if data, err := os.ReadFile("../fixtures/" + name); err == nil {

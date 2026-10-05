@@ -118,10 +118,10 @@ Legende: ✅ vorhanden · ➕ vorhanden und deutlich mehr als in der WebUI · �
 | Status und Bedienung | 10 | 10 |
 | Programme und Verknüpfungen | 6 | 6 |
 | Geräte | 13 | 13 |
-| Benutzer | 4 | 7 |
-| Systemsteuerung | 20 | 25 |
+| Benutzer | 6 | 7 |
+| Systemsteuerung | 24 | 25 |
 | Schnittstellen | 5 | 5 |
-| **Summe** | **58** | **66** |
+| **Summe** | **64** | **66** |
 
 Nicht mitgezählt sind die Display-Einstellungen (gibt es nur auf CCU1/CCU2) und das versteckte
 Entwicklerwerkzeug *devconfig*.
@@ -151,8 +151,8 @@ Entwicklerwerkzeug *devconfig*.
 |---|---|---|
 | Gerätewerte | Jeder offene Tab ruft alle 3 s `/esp/system.htm?action=UpdateUI` auf, ein ReGa-Skript über alle angezeigten Kanäle (`iseRefresher`, `iseRefrCycle = 3` in `webui.js`) | Die CCU meldet jede Änderung per XML-RPC an den Server, der sie per WebSocket nur an die Geräte schickt, die den Kanal anzeigen. Keine Abfrage für Gerätewerte |
 | Seitenwechsel | ReGa erzeugt jede Seite als HTML (`.htm`, `.fn`) | Die App wechselt im Browser und lädt nur die Daten |
-| Beim Öffnen | 40 Skripte und Stylesheets, 3,1 MB (`rega/pages/index.htm`: Prototype, jQuery, jQuery UI, Scriptaculous, jqPlot, Knockout, `webui.js` mit 1,9 MB) | 4 Dateien, 844 KB; die Verknüpfungsvorlagen (1,5 MB) erst, wenn man sie braucht. Danach kommt alles aus dem Cache des Service Workers |
+| Beim Öffnen | 40 Skripte und Stylesheets, 3,1 MB (`rega/pages/index.htm`: Prototype, jQuery, jQuery UI, Scriptaculous, jqPlot, Knockout, `webui.js` mit 1,9 MB) | 4 Dateien, 844 KB; die Verknüpfungsvorlagen (3,6 MB) erst, wenn man sie braucht. Danach kommt alles aus dem Cache des Service Workers |
 | Server | Tcl-CGIs, ReGa | ein statisches Go-Binary (rund 10 MB, für ARMv7, arm64 und amd64), keine Laufzeit wie Node.js oder Java |
 
-Systemvariablen meldet die CCU nicht per Event. Die fragt das Add-on alle 10 Sekunden ab, Alarme alle
+Systemvariablen meldet die CCU nicht per Event. Die fragt das Add-on alle 5 Sekunden ab, solange eine App sie zeigt, Alarme alle
 15 Sekunden und Servicemeldungen jede Minute, zusätzlich sofort, wenn sich ein Wartungswert ändert.

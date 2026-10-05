@@ -83,7 +83,8 @@ go-server/           Server, Fake-CCU, CCU-Export
 fixtures/            Daten für Fake-CCU und Tests
 e2e/, e2e-stack/     Playwright-Tests
 addon_installer/     Dateien, die ins Add-on-Archiv kommen (Startskript, lighttpd, update_script)
-scripts/             import-link-profiles.mjs (Verknüpfungsvorlagen aus OpenCCU-Base)
+scripts/             import-link-profiles.mjs (Verknüpfungsvorlagen aus OpenCCU-Base),
+                     import-service-texts.mjs (Texte der Servicemeldungen aus OpenCCU-Base)
 docs/                diese Dokumentation
 ```
 
@@ -192,17 +193,18 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `REGA_PORT` | `8183` bei `localhost`, sonst `8181` | ReGa |
 | `SYSVAR_INTERVAL` | `5` | Sekunden zwischen zwei Abfragen der Systemvariablen, solange eine App sie zeigt |
 | `RPC_PORT`, `HMIP_PORT`, `VIRTUAL_DEVICES_PORT` | bei `localhost` aus `/etc/config/InterfacesList.xml` (sonst `32001`, `32010`, `39292`), aus dem LAN `2001`, `2010`, `9292` | Funkdienste |
-| `WIRED_PORT` | bei `localhost` aus `InterfacesList.xml` (nur mit Wired-Gateway), sonst `0` (aus) | BidCos-Wired (hs485d), aus dem LAN `2000` |
+| `WIRED_PORT` | bei `localhost` aus `InterfacesList.xml` (nur mit Wired-Gateway), sonst `0` (aus) | BidCos-Wired (hs485d); aus dem LAN von Hand setzen, meist `2000` |
 | `CCU_WEBUI_URL` | `http://<CCU_HOST>` | WebUI für JSON-RPC und CGI-Seiten |
 | `AUTH_MODE` | `ccu` | `none` schaltet die Anmeldung ab |
-| `AUTH_KEY_FILE`, `SESSIONS_FILE`, `AUDIT_LOG_FILE`, `PUSH_FILE`, `DIAGRAMS_FILE` | unter `/usr/local/etc/config` | Dateien des Add-ons |
+| `AUTH_KEY_FILE`, `SESSIONS_FILE`, `AUDIT_LOG_FILE`, `PUSH_FILE`, `DIAGRAMS_FILE`, `RULES_FILE` | unter `/usr/local/etc/config` | Dateien des Add-ons |
 | `DIAGRAMS_DIR` | `/usr/local/mui-diagrams` | Diagrammwerte |
 | `BACKUP_DIR` | `$TMPDIR/mui-backups` | Backups bis zum Download, Uploads |
 | `CCU_CONFIG_DIR`, `CCU_STATUS_DIR` | `/etc/config`, `/var/status` | Konfiguration der CCU |
 | `ADDONS_DIR`, `SYSLOG_CONFIG`, `LOG_DIR`, `TIME_CONF_FILE`, `NTP_CLIENT_FILE`, `TZ_FILE`, `GROUPS_FILE` | Pfade der CCU | Zusatzsoftware, Logs, Uhr, Heizgruppen |
 | `DEVICE_FIRMWARE_SERVER` | `https://ccu3-update.homematic.com` | eQ-3-Updateserver für Geräte-Firmware |
-| `IDS_FILE` | `/var/ids` | Seriennummer der CCU für den Firmware-Download |
+| `CCU_WWW_DIR` | `/www` | Dateien der WebUI (Gerätebilder, Texte der Servicemeldungen) |
 | `USERFS_DIR`, `FIRMWARE_DOWNLOAD_FILE` | `/usr/local`, `/usr/local/tmp/firmwareUpdateFile` | Freier Speicher und Ziel des CCU-Firmware-Downloads |
+| `FIRMWARE_UPLOAD_DIR`, `FIRMWARE_STAGED_LINK` | `/usr/local/tmp`, `/usr/local/.firmwareUpdate` | Hochgeladene CCU-Updates und der Link, über den die WebUI das geprüfte Update bereitstellt |
 | `CCU_FIRMWARE_RELEASES` | `https://github.com/openccu/openccu/releases/download` | Releases mit SHA256-Dateien |
 | `PUSH_SUBJECT` | GitHub-URL | Kontakt in Push-Anfragen |
 | `DEBUG` | `false` | ausführliches Log |
