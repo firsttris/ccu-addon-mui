@@ -198,7 +198,7 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `AUTH_MODE` | `ccu` | `none` schaltet die Anmeldung ab |
 | `AUTH_KEY_FILE`, `SESSIONS_FILE`, `AUDIT_LOG_FILE`, `PUSH_FILE`, `DIAGRAMS_FILE`, `RULES_FILE` | unter `/usr/local/etc/config` | Dateien des Add-ons |
 | `DIAGRAMS_DIR` | `/usr/local/mui-diagrams` | Diagrammwerte |
-| `BACKUP_DIR` | `$TMPDIR/mui-backups` | Backups bis zum Download, Uploads |
+| `BACKUP_DIR` | `/usr/local/tmp/mui-backups` auf der CCU, sonst `$TMPDIR/mui-backups` | Backups bis zum Download, Uploads |
 | `CCU_CONFIG_DIR`, `CCU_STATUS_DIR` | `/etc/config`, `/var/status` | Konfiguration der CCU |
 | `ADDONS_DIR`, `SYSLOG_CONFIG`, `LOG_DIR`, `TIME_CONF_FILE`, `NTP_CLIENT_FILE`, `TZ_FILE`, `GROUPS_FILE` | Pfade der CCU | Zusatzsoftware, Logs, Uhr, Heizgruppen |
 | `DEVICE_FIRMWARE_SERVER` | `https://ccu3-update.homematic.com` | eQ-3-Updateserver für Geräte-Firmware |
