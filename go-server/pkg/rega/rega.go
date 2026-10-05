@@ -43,8 +43,13 @@ func sanitizeRegaValue(value string) (string, error) {
 	if value == "true" || value == "false" || numberRegex.MatchString(value) {
 		return value, nil
 	}
-	// ReGa has no reliable escape sequences inside string literals, so
-	// characters that could end the literal are rejected instead of escaped.
+	return quoteRegaText(value)
+}
+
+// quoteRegaText writes a string literal. ReGa has no reliable escape
+// sequences inside string literals, so characters that could end the
+// literal are rejected instead of escaped.
+func quoteRegaText(value string) (string, error) {
 	if strings.ContainsAny(value, "\"\\\r\n") {
 		return "", fmt.Errorf("value contains unsupported characters")
 	}

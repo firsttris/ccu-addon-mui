@@ -222,7 +222,7 @@ func TestRegistrationRetriesInitUntilCCUIsReady(t *testing.T) {
 
 	s := newTestServer(ts.URL)
 	ctx, cancel := context.WithCancel(context.Background())
-	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort)
+	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort, "")
 
 	waitFor(t, "successful init", func() bool { return ccu.count("init") >= 4 })
 
@@ -244,7 +244,7 @@ func TestRegistrationPingsAndReinitsWhenCCUGoesQuiet(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort)
+	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort, "")
 
 	// The fake CCU never sends callbacks, so the server has to ping and,
 	// without a PONG, register again (long before reinitAfter).
@@ -265,7 +265,7 @@ func TestRegistrationKeptWhenPingIsAnswered(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort)
+	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort, "")
 
 	waitFor(t, "several pings", func() bool { return ccu.count("ping") >= 3 })
 	if n := ccu.count("init"); n != 1 {
@@ -284,7 +284,7 @@ func TestRegistrationStaysQuietWhileEventsArrive(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort)
+	s.startRegistration(ctx, "HmIP-RF", s.cfg.HmIPPort, "")
 	waitFor(t, "init", func() bool { return ccu.count("init") == 1 })
 
 	for i := 0; i < 30; i++ {

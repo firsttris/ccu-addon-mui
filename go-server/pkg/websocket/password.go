@@ -71,6 +71,7 @@ func (s *Server) handleChangePassword(client *Client, message []byte) {
 	for _, session := range s.auth.Sessions() {
 		if session.User == client.user && session.ID != current {
 			s.auth.Revoke(session.ID)
+			s.disconnectSession(session.ID, nil)
 		}
 	}
 	finish(rega.SetOK, "")

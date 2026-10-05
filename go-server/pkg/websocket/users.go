@@ -134,6 +134,8 @@ func (s *Server) logOutUser(user string) {
 	for _, session := range s.auth.Sessions() {
 		if session.User == user {
 			s.auth.Revoke(session.ID)
+			s.disconnectSession(session.ID, nil)
 		}
 	}
+	s.endWebUISession(user)
 }

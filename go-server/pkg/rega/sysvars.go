@@ -131,9 +131,16 @@ func (c *Client) GetSysvars() ([]Sysvar, error) {
 }
 
 // SetSysvar sets a system variable and returns SetOK with the previous
-// value, or SetNotFound.
-func (c *Client) SetSysvar(id int64, value string) (result, previous string, err error) {
-	regaValue, err := sanitizeRegaValue(value)
+// value, or SetNotFound. text: the value is a string variable's text, which
+// is always written as a string literal, even when it looks like a number
+// ("007") or a boolean.
+func (c *Client) SetSysvar(id int64, value string, text bool) (result, previous string, err error) {
+	var regaValue string
+	if text {
+		regaValue, err = quoteRegaText(value)
+	} else {
+		regaValue, err = sanitizeRegaValue(value)
+	}
 	if err != nil {
 		return "", "", err
 	}

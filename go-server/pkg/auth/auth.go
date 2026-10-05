@@ -40,6 +40,7 @@ const (
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrTooManyAttempts    = errors.New("too many failed logins, try again later")
+	ErrCCUNotReady        = errors.New("the CCU is not ready yet, try again in a moment")
 	ErrInvalidToken       = errors.New("invalid or expired token")
 )
 
@@ -100,6 +101,9 @@ type Authenticator struct {
 	mu       sync.Mutex
 	attempts map[string]*attempts
 	store    *sessionStore
+	// evicted is told about a device that was logged out to make room
+	// for a new one (OnEvict)
+	evicted func(id string)
 }
 
 // New loads the signing key from keyFile, creating it on first start.
@@ -420,6 +424,12 @@ func (a *Authenticator) verifyWithCCU(username, password string) (bool, error) {
 	var login rpcResponse
 	if err := a.call("Session.login", map[string]string{"username": username, "password": password}, &login); err != nil {
 		return false, err
+	}
+	// 503: ReGa isn't ready yet (the CCU is starting). Not a wrong
+	// password, so it must not count towards the lockout
+	// (api/methods/session/login.tcl)
+	if login.Error != nil && login.Error.Code == 503 {
+		return false, ErrCCUNotReady
 	}
 	sessionID, ok := login.Result.(string)
 	if login.Error != nil || !ok || sessionID == "" {

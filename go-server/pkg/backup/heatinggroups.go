@@ -88,6 +88,36 @@ func (s *Service) groupSession(username, password string) (string, error) {
 	return "", ErrSessionRequired
 }
 
+// EndWebUISession logs the kept WebUI session of a user out of the CCU:
+// when the user gives up the admin rights or is logged out. The next
+// change asks for the password again.
+func (s *Service) EndWebUISession(username string) {
+	s.groupSessionsOnce.Do(func() { s.groupSessions = &groupSessions{sessions: map[string]string{}} })
+	s.groupSessions.mu.Lock()
+	sessionID := s.groupSessions.sessions[username]
+	delete(s.groupSessions.sessions, username)
+	s.groupSessions.mu.Unlock()
+	if sessionID != "" {
+		s.logout(sessionID)
+	}
+}
+
+// EndWebUISessions logs all kept WebUI sessions out, when the server stops:
+// the CCU only has a few session slots.
+func (s *Service) EndWebUISessions() {
+	s.groupSessionsOnce.Do(func() { s.groupSessions = &groupSessions{sessions: map[string]string{}} })
+	s.groupSessions.mu.Lock()
+	ids := make([]string, 0, len(s.groupSessions.sessions))
+	for user, id := range s.groupSessions.sessions {
+		ids = append(ids, id)
+		delete(s.groupSessions.sessions, user)
+	}
+	s.groupSessions.mu.Unlock()
+	for _, id := range ids {
+		s.logout(id)
+	}
+}
+
 func (s *Service) forgetGroupSession(username string) {
 	s.groupSessions.mu.Lock()
 	defer s.groupSessions.mu.Unlock()

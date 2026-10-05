@@ -106,7 +106,11 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 	case "checkRestore":
 		response.NeedsKey, err = s.backup.CheckRestore(msg.ID, username, msg.Password)
 	case "restoreBackup":
+		disarm := armRestoreReboot()
 		err = s.backup.Restore(msg.ID, username, msg.Password, msg.Key)
+		if err != nil {
+			disarm()
+		}
 	case "checkCcuFirmware":
 		response.Eula, err = s.backup.CheckFirmware(msg.ID, username, msg.Password, msg.Language)
 	case "downloadCcuFirmware":

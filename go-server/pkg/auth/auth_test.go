@@ -29,6 +29,10 @@ func fakeCCU(t *testing.T, logouts *int) *httptest.Server {
 				_, _ = w.Write([]byte(`{"version":"1.1","result":"abc123","error":null}`))
 				return
 			}
+			if req.Params["username"] == "Booting" {
+				_, _ = w.Write([]byte(`{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":503,"message":"service not available"}}`))
+				return
+			}
 			_, _ = w.Write([]byte(`{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":501,"message":"invalid credentials or too many sessions"}}`))
 		case "Session.logout":
 			*logouts++
@@ -320,6 +324,20 @@ func TestAutoLoginOnlyForUsersAndGuests(t *testing.T) {
 	for _, user := range []string{"Admin", "Unbekannt", ""} {
 		if _, _, err := a.AutoLogin(user, "tablet"); err == nil {
 			t.Errorf("AutoLogin(%q) succeeded", user)
+		}
+	}
+}
+
+// While the CCU starts, ReGa answers 503: that is no wrong password and
+// must not lock the user out
+func TestCCUNotReadyDoesNotCountAsFailure(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	a := newTestAuthenticator(t, ccu.URL)
+	for i := 0; i < maxFailures+2; i++ {
+		if _, _, err := a.Login("Booting", "secret", "test", "192.0.2.1"); err != ErrCCUNotReady {
+			t.Fatalf("attempt %d: got %v, want ErrCCUNotReady", i, err)
 		}
 	}
 }

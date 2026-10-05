@@ -447,14 +447,30 @@ func TestRemoveClientUnsubscribesOnlyThatConnection(t *testing.T) {
 
 	s.removeClient(tabB)
 
-	if _, ok := <-tabB.send; ok {
-		t.Fatal("expected send channel of removed client to be closed")
+	select {
+	case <-tabB.done:
+	default:
+		t.Fatal("expected the removed client to be marked done")
 	}
 	if got := s.subscriptionMgr.GetSubscriptions(tabA.id); len(got) != 1 {
 		t.Fatalf("expected tab A to keep its subscription, got %v", got)
 	}
 	// Removing twice must not panic on the closed channel.
 	s.removeClient(tabB)
+}
+
+// A handler running in its own goroutine (a BidCos firmware update takes
+// minutes) may answer after the browser went away: that must not panic.
+func TestSendAfterDisconnect(t *testing.T) {
+	s := NewServer(nil, nil)
+	client := newClient(nil)
+	s.clients[client] = true
+	running := client.snapshot()
+	s.removeClient(client)
+
+	for i := 0; i < 2000; i++ {
+		s.send(running, []byte(`{}`))
+	}
 }
 
 func assertErrorMessageContains(t *testing.T, msg []byte, want string) {
