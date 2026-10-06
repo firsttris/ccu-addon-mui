@@ -1869,13 +1869,13 @@ test('setzt die Zentrale erst nach Bestätigung auf Werkseinstellungen zurück',
   await dialog.getByLabel('Zur Bestätigung „ZURÜCKSETZEN“ eingeben').fill('ZURÜCKSETZEN');
   await confirm.click();
 
-  // The WebUI session and, if one is set, the security key (set by an
-  // earlier test) are asked for
+  // The password (always, for a reset) and, if one is set, the security
+  // key (set by an earlier test) are asked for, then both fields show
   const started = panel.getByRole('alert');
   for (let i = 0; i < 3; i++) {
     const passwordField = dialog.getByLabel('Passwort', { exact: true });
     const keyField = dialog.getByLabel('System-Sicherheitsschlüssel');
-    await expect(started.or(passwordField).or(keyField)).toBeVisible();
+    await expect(started.or(passwordField).or(keyField).first()).toBeVisible();
     if (await started.isVisible()) break;
     if (await keyField.isVisible()) {
       await keyField.fill('falsch');
