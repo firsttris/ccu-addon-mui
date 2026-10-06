@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { RADIUS, CENTER_X, CENTER_Y, ROTATE_ANGLE } from './constants';
+import { RADIUS, CENTER_X, CENTER_Y, ROTATE_ANGLE, DEFAULT_RANGE, TemperatureRange } from './constants';
 import { createArcPath, polarToCartesian } from './utils';
 import { useTemperatureConversion } from './hooks/useTemperatureConversion';
 import { useDragInteraction } from './hooks/useDragInteraction';
@@ -17,6 +17,8 @@ interface ThermostatDialProps {
   demand: boolean;
   onTemperatureChange: (temp: number) => void;
   onInteractionEnd: (temp: number) => void;
+  // The device's range (TEMPERATURE_MINIMUM/MAXIMUM)
+  range?: TemperatureRange;
 }
 
 // The arc: target temperature (thick, draggable), actual temperature (thin
@@ -30,13 +32,15 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
   demand,
   onTemperatureChange,
   onInteractionEnd,
+  range = DEFAULT_RANGE,
 }) => {
   const glowId = useId();
   const effects = useEffects();
-  const { tempToAngle } = useTemperatureConversion();
+  const { tempToAngle } = useTemperatureConversion(range);
   const { isDragging, svgRef, handlePointerDown, handlePointerMove, handlePointerUp } = useDragInteraction({
     onTemperatureChange,
     onInteractionEnd,
+    range,
   });
 
   const currentAngle = tempToAngle(currentTemperature);
@@ -57,8 +61,8 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
       viewBox="0 0 260 260"
       role="slider"
       aria-label={`${m.TARGET_TEMPERATURE()} ${label}`}
-      aria-valuemin={5}
-      aria-valuemax={30}
+      aria-valuemin={range.min}
+      aria-valuemax={range.max}
       aria-valuenow={localTarget}
       className={`absolute inset-0 size-full touch-none overflow-visible select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onPointerDown={handlePointerDown}

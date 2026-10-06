@@ -1,5 +1,5 @@
 import { Channel, DatapointValue, HeatingClimateControlTransceiverChannel } from '../types/types';
-import { useSetDataPoint } from '../queries';
+import { useParamset, useSetDataPoint } from '../queries';
 import RadiatorThermostatIcon from '~icons/mui/radiator-thermostat';
 import WallThermostatIcon from '~icons/mui/wall-thermostat';
 import { Tile } from '../components/Tile';
@@ -10,6 +10,7 @@ import { TemperatureDisplay } from './ThermostatControl/TemperatureDisplay';
 import { ControlButtons } from './ThermostatControl/ControlButtons';
 import { ThermostatIconButtons } from './ThermostatControl/ThermostatIconButtons';
 import { useThermostatState } from './ThermostatControl/hooks/useThermostatState';
+import { temperatureRange } from './ThermostatControl/constants';
 import { WeekProfileSheet } from './ThermostatControl/profile/WeekProfileSheet';
 import { useState } from 'react';
 import { m } from '../paraglide/messages';
@@ -47,10 +48,14 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
         ? Math.round(datapoints.LEVEL * 100)
         : undefined;
 
+  // The device's own limits, as the WebUI reads them (MASTER of the channel)
+  const master = useParamset(channel.interfaceName, channel.address, 'MASTER', { enabled: !bidcos });
+  const range = temperatureRange(bidcos ? undefined : master.data);
+
   const setDataPoint = useSetDataPoint();
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const { localTarget, updateLocalTarget, commitTemperatureChange, decreaseTemperature, increaseTemperature } =
-    useThermostatState({ targetTemperature, channel, datapoint: bidcos ? 'SET_TEMPERATURE' : 'SET_POINT_TEMPERATURE' });
+    useThermostatState({ targetTemperature, channel, datapoint: bidcos ? 'SET_TEMPERATURE' : 'SET_POINT_TEMPERATURE', range });
 
   const color = boostMode ? BOOST_COLOR : getTemperatureColor(localTarget);
   const currentColor = getTemperatureColor(currentTemperature);
@@ -61,15 +66,16 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
 
   // Off: 4.5 °C, which the thermostats take as "off" (frost protection). For
   // HmIP in manual mode as the WebUI does (webui.js onClickModeOFF: SET_POINT_MODE
-  // and CONTROL_MODE 1, SET_POINT_TEMPERATURE offTemp 4.5), else the next
-  // switching time of the week profile turns the heating back on.
+  // and CONTROL_MODE 1, SET_POINT_TEMPERATURE off: 4.5, or the device's
+  // minimum if that is higher), else the next switching time of the week
+  // profile turns the heating back on.
   const handlePowerOff = () => {
     if (bidcos) {
       set('SET_TEMPERATURE', OFF_TEMPERATURE);
       return;
     }
     set('CONTROL_MODE', 1);
-    set('SET_POINT_TEMPERATURE', OFF_TEMPERATURE);
+    set('SET_POINT_TEMPERATURE', range.off);
   };
 
   const handleToggleMode = () => {
@@ -118,6 +124,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
 
         <div className="relative aspect-square w-full max-w-[220px]">
           <ThermostatDial
+            range={range}
             label={channel.name}
             currentTemperature={currentTemperature}
             localTarget={localTarget}

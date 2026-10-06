@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSetDataPoint } from '../../../queries';
-import { MIN_TEMP, MAX_TEMP, STEP } from '../constants';
+import { DEFAULT_RANGE, STEP, TemperatureRange } from '../constants';
 import { Channel } from '../../../types/types';
 
 interface UseThermostatStateProps {
@@ -8,9 +8,15 @@ interface UseThermostatStateProps {
   channel: Channel;
   // HmIP: SET_POINT_TEMPERATURE, BidCos: SET_TEMPERATURE
   datapoint?: string;
+  range?: TemperatureRange;
 }
 
-export const useThermostatState = ({ targetTemperature, channel, datapoint = 'SET_POINT_TEMPERATURE' }: UseThermostatStateProps) => {
+export const useThermostatState = ({
+  targetTemperature,
+  channel,
+  datapoint = 'SET_POINT_TEMPERATURE',
+  range = DEFAULT_RANGE,
+}: UseThermostatStateProps) => {
   const setDataPoint = useSetDataPoint();
   const [localTarget, setLocalTarget] = useState(targetTemperature);
   const lastUserInteractionRef = useRef<number>(0);
@@ -60,13 +66,13 @@ export const useThermostatState = ({ targetTemperature, channel, datapoint = 'SE
   useEffect(() => flushCommit, []);
 
   const decreaseTemperature = () => {
-    const newTemp = Math.max(MIN_TEMP, localTarget - STEP);
+    const newTemp = Math.max(range.min, localTarget - STEP);
     updateLocalTarget(newTemp);
     commitTemperatureChange(newTemp);
   };
 
   const increaseTemperature = () => {
-    const newTemp = Math.min(MAX_TEMP, localTarget + STEP);
+    const newTemp = Math.min(range.max, localTarget + STEP);
     updateLocalTarget(newTemp);
     commitTemperatureChange(newTemp);
   };
