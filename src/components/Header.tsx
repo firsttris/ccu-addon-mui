@@ -31,6 +31,7 @@ import { cn } from '../lib/utils';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './ui/sheet';
 import { Switch } from './ui/switch';
+import { useWakeLock, useWakeLockSetting, wakeLockAvailable } from './WakeLock';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
 
@@ -81,7 +82,17 @@ const effectLevels: { level: EffectsLevel; label: () => string }[] = [
   { level: 'strong', label: m.EFFECTS_STRONG },
 ];
 
-const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
+const NavMenu = ({
+  open,
+  onOpenChange,
+  keepScreenOn,
+  setKeepScreenOn,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  keepScreenOn: boolean;
+  setKeepScreenOn: (on: boolean) => void;
+}) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const effects = useEffects();
@@ -160,6 +171,17 @@ const NavMenu = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: b
               </Label>
               <Switch id="dark-mode" checked={theme.mode === 'dark'} onCheckedChange={toggleTheme} />
             </div>
+            {wakeLockAvailable() && (
+              <div className="flex flex-col px-3 pb-1">
+                <div className="flex h-11 items-center justify-between">
+                  <Label htmlFor="keep-screen-on" className="text-[15px] font-normal">
+                    {m.KEEP_SCREEN_ON()}
+                  </Label>
+                  <Switch id="keep-screen-on" checked={keepScreenOn} onCheckedChange={setKeepScreenOn} />
+                </div>
+                <span className="text-xs text-muted-foreground">{m.KEEP_SCREEN_ON_HINT()}</span>
+              </div>
+            )}
             <div className="flex flex-col gap-2 px-3 pt-1">
               <span id="effects-label" className="text-[15px]">
                 {m.EFFECTS()}
@@ -267,6 +289,8 @@ export const Header: React.FC = () => {
   const title = usePageTitleValue();
   const effects = useEffects();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [keepScreenOn, setKeepScreenOn] = useWakeLockSetting();
+  useWakeLock(keepScreenOn);
   const [problemsOpen, setProblemsOpen] = useState(false);
   const [alarmsOpen, setAlarmsOpen] = useState(false);
   const { connectionStatus } = useWebSocketContext();
@@ -329,7 +353,7 @@ export const Header: React.FC = () => {
           {m.CONNECTION_LOST()}
         </div>
       )}
-      <NavMenu open={menuOpen} onOpenChange={setMenuOpen} />
+      <NavMenu open={menuOpen} onOpenChange={setMenuOpen} keepScreenOn={keepScreenOn} setKeepScreenOn={setKeepScreenOn} />
       <ServiceMessagesSheet open={problemsOpen} onOpenChange={setProblemsOpen} />
       <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
     </header>

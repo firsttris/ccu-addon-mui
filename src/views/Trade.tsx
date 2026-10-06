@@ -7,7 +7,7 @@ import { m } from '../paraglide/messages';
 export const Trade: React.FC = () => {
   const { tradeId } = useParams({ from: '/trade/$tradeId' });
   const { data: trades = [] } = useTrades();
-  const { channelsByType, isLoading } = useChannels({ tradeId });
+  const { channelsByType, isLoading, error, refetch } = useChannels({ tradeId });
   usePageTitle(trades.find((trade) => String(trade.id) === tradeId)?.name ?? m.TRADES());
 
   return (
@@ -16,6 +16,8 @@ export const Trade: React.FC = () => {
       layoutId={Number(tradeId)}
       channelsByType={channelsByType}
       isLoading={isLoading}
+      error={error}
+      onRetry={() => refetch()}
     />
   );
 };

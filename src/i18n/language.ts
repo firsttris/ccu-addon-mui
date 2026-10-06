@@ -1,4 +1,4 @@
-import { overwriteGetLocale } from '../paraglide/runtime';
+import { getLocale, overwriteGetLocale } from '../paraglide/runtime';
 
 // The language chosen per CCU user, as the WebUI keeps it (User.getLanguage,
 // User.setLanguage: 0 automatic, 1 German, 2 English). It is cached on the
@@ -25,6 +25,9 @@ if (appliedLanguage !== 0) {
   const locale = locales[appliedLanguage];
   overwriteGetLocale(() => locale);
 }
+// The page's language, for screen readers, hyphenation and the browser's
+// translation offer (index.html starts with "de")
+document.documentElement.lang = getLocale();
 
 // Keeps a choice on this device and reloads if it differs from the one in use
 export const applyLanguage = (choice: LanguageChoice) => {

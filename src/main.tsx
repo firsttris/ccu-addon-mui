@@ -28,30 +28,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
-const requestWakeLock = async () => {
-  try {
-    const wakeLock = await navigator.wakeLock.request('screen');
-    wakeLock.addEventListener('release', () => {
-      console.log('Wake Lock wurde freigegeben.');
-    });
-  } catch (err) {
-    console.error('Wake Lock konnte nicht angefordert werden:', err);
-  }
-};
-
-// The Wake Lock API only exists in a secure context (HTTPS or localhost).
-if ('wakeLock' in navigator) {
-  requestWakeLock();
-  // The browser releases the lock whenever the page is hidden (tab switch,
-  // screen off), so request it again when it becomes visible.
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      requestWakeLock();
-    }
-  });
-} else {
-  console.info('Wake Lock nicht verfügbar (nur über HTTPS).');
-}
+// Keeping the screen on: components/WakeLock, a setting in the menu
 
 const queryClient = new QueryClient({
   defaultOptions: {

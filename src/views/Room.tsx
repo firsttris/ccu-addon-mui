@@ -12,7 +12,7 @@ export const LAST_ROOM_KEY = 'last-room';
 export const Room = () => {
   const { roomId } = useParams({ from: '/room/$roomId' });
   const { data: rooms = [] } = useRooms();
-  const { channelsByType, isLoading } = useChannels({ roomId });
+  const { channelsByType, isLoading, error, refetch } = useChannels({ roomId });
   usePageTitle(rooms.find((room) => String(room.id) === roomId)?.name ?? m.ROOMS());
 
   useEffect(() => {
@@ -30,6 +30,8 @@ export const Room = () => {
       layoutId={Number(roomId)}
       channelsByType={channelsByType}
       isLoading={isLoading}
+      error={error}
+      onRetry={() => refetch()}
     />
   );
 };

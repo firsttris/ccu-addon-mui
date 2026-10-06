@@ -3,19 +3,25 @@ import { Header } from '../components/Header';
 import { PageTitleProvider } from '../contexts/PageTitleContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { Login } from '../views/Login';
+import { UpdatePrompt } from '../components/UpdatePrompt';
 
 const RootComponent = () => {
   const { authState } = useWebSocketContext();
 
-  return authState === 'loginRequired' ? (
-    <Login />
-  ) : (
-    <PageTitleProvider>
-      <Header />
-      <main>
-        <Outlet />
-      </main>
-    </PageTitleProvider>
+  return (
+    <>
+      {authState === 'loginRequired' ? (
+        <Login />
+      ) : (
+        <PageTitleProvider>
+          <Header />
+          <main>
+            <Outlet />
+          </main>
+        </PageTitleProvider>
+      )}
+      <UpdatePrompt />
+    </>
   );
 };
 
