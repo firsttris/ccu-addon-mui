@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import MinusIcon from '~icons/lucide/minus';
 import PlusIcon from '~icons/lucide/plus';
 import ScissorsIcon from '~icons/lucide/scissors';
@@ -211,13 +211,22 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
   const [confirming, setConfirming] = useState(false);
   const [elevating, setElevating] = useState(false);
 
+  // Start over each time the sheet opens, not when the active profile
+  // changes meanwhile (an event, or "use this profile"): that would throw
+  // away the edits
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (open) {
-      setProfile(activeProfile && activeProfile <= Math.max(profiles, 1) ? activeProfile : 1);
+    if (open && !wasOpen.current) {
+      setProfile(activeProfile ?? 1);
       setDraft(null);
       setSelectedDay(todayIndex());
     }
-  }, [open, activeProfile, profiles]);
+    wasOpen.current = open;
+  }, [open, activeProfile]);
+  // A profile the device doesn't have (known once its description is in)
+  useEffect(() => {
+    if (profiles > 0 && profile > profiles) setProfile(1);
+  }, [profile, profiles]);
 
   const stored = useMemo(() => (values && profiles > 0 ? readWeek(values, profile, slots) : null), [values, profile, slots, profiles]);
   const week = draft ?? stored;
