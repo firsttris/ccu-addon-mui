@@ -106,6 +106,9 @@ type Client struct {
 	// still answer after the client disconnected.
 	done      chan struct{}
 	closeOnce sync.Once
+	// reads holds a slot per reading request running beside the read pump
+	// (parallelReads)
+	reads chan struct{}
 
 	mu       sync.Mutex
 	deviceID string
@@ -170,10 +173,11 @@ func configureError(c *Client) (code, message string) {
 
 func newClient(conn *websocket.Conn) *Client {
 	return &Client{
-		id:   strconv.FormatUint(clientIDCounter.Add(1), 10),
-		conn: conn,
-		send: make(chan []byte, 1024),
-		done: make(chan struct{}),
+		id:    strconv.FormatUint(clientIDCounter.Add(1), 10),
+		conn:  conn,
+		send:  make(chan []byte, 1024),
+		done:  make(chan struct{}),
+		reads: make(chan struct{}, maxParallelReads),
 	}
 }
 
@@ -592,6 +596,42 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		return
 	}
 
+	// (Clients built in tests without a reads channel stay sequential.)
+	if parallelReads[msgType] && client.reads != nil {
+		// Reading requests don't wait for each other: a slow history or
+		// link list doesn't hold up switching a light. At most
+		// maxParallelReads per connection; the read pump waits for a free
+		// slot, so a flood of requests stays bounded.
+		client.reads <- struct{}{}
+		snap := client.snapshot()
+		go func() {
+			defer func() { <-client.reads }()
+			recovered("handling a message", func() { s.dispatch(snap, msgType, requestID, message) })
+		}()
+		return
+	}
+	s.dispatch(client, msgType, requestID, message)
+}
+
+// parallelReads are the requests that only read: they neither change the
+// CCU nor the connection's state (login, elevation, subscriptions, the
+// sysvar watch of getSysvars), so they may run beside the others. Everything
+// else is handled in order, as sent: the thermostat's "off" sends
+// CONTROL_MODE before SET_POINT_TEMPERATURE.
+var parallelReads = map[string]bool{
+	"getRooms": true, "getTrades": true, "getChannels": true,
+	"getDeviceProblems": true, "getDeviceHealth": true, "listDevices": true,
+	"getParamsetDescription": true, "getParamset": true,
+	"getSystemInfo": true, "getDiagramData": true, "getHeatingGroups": true,
+	"getVirtualKeys": true, "getDevicePrograms": true, "getHistory": true,
+	"getLinks": true, "getLinkParamsetDescription": true, "getLinkParamset": true, "getAllLinks": true,
+	"getDeviceImages": true, "getPrograms": true, "getProgram": true,
+	"getServiceMessages": true, "getAlarmMessages": true, "getFavorites": true,
+}
+
+const maxParallelReads = 4
+
+func (s *Server) dispatch(client *Client, msgType, requestID string, message []byte) {
 	switch msgType {
 	case "subscribe":
 		s.handleSubscribe(client, message)

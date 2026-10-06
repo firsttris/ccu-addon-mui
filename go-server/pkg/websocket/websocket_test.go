@@ -708,3 +708,58 @@ func TestBroadcastClosesClientWithFullBuffer(t *testing.T) {
 		t.Fatal("slow client not closed")
 	}
 }
+
+func TestSlowReadsDoNotHoldUpOtherRequests(t *testing.T) {
+	release := make(chan struct{})
+	regaServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		<-release
+		_, _ = io.WriteString(w, "C\t1\tA:1\tSWITCH_VIRTUAL_RECEIVER\tHmIP-RF\tLicht\r\nD\tSTATE\t2\tfalse\r\n")
+	}))
+	defer regaServer.Close()
+	defer close(release)
+
+	host, port, _ := net.SplitHostPort(regaServer.Listener.Addr().String())
+	portNum, _ := strconv.Atoi(port)
+	s := NewServer(nil, rega.NewClient(&config.Config{CCUHost: host, RegaPort: portNum}))
+	client := &Client{send: make(chan []byte, 8), done: make(chan struct{}), reads: make(chan struct{}, maxParallelReads)}
+
+	for i := 0; i < maxParallelReads; i++ {
+		s.handleMessage(client, []byte(fmt.Sprintf(`{"type":"getChannels","requestId":"r%d","deviceId":"dev-1","roomId":"1"}`, i)))
+	}
+	// The reads hang on the CCU; a request in order is answered anyway
+	s.handleMessage(client, []byte(`{"type":"setDatapoint","requestId":"w"}`))
+	var first map[string]interface{}
+	select {
+	case data := <-client.send:
+		_ = json.Unmarshal(data, &first)
+	case <-time.After(2 * time.Second):
+		t.Fatal("the write waited for the reads")
+	}
+	if first["requestId"] != "w" {
+		t.Fatalf("expected the write's answer first, got %v", first)
+	}
+
+	// A fifth read waits for a free slot
+	fifth := make(chan struct{})
+	go func() {
+		s.handleMessage(client, []byte(`{"type":"getChannels","requestId":"r4","deviceId":"dev-1","roomId":"1"}`))
+		close(fifth)
+	}()
+	select {
+	case <-fifth:
+		t.Fatal("more reads than maxParallelReads ran at once")
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	release <- struct{}{}
+	<-fifth
+	seen := map[string]bool{}
+	for len(seen) < maxParallelReads+1 {
+		if len(seen) < maxParallelReads {
+			release <- struct{}{}
+		}
+		var m map[string]interface{}
+		_ = json.Unmarshal(<-client.send, &m)
+		seen[m["requestId"].(string)] = true
+	}
+}
