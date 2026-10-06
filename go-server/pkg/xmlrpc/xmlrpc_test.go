@@ -432,3 +432,52 @@ func TestDeviceChangesAreReported(t *testing.T) {
 		t.Fatalf("expected %v, got %v", want, changes)
 	}
 }
+
+func TestListDevicesAnswersWithReportedDevices(t *testing.T) {
+	s := NewServer(&config.Config{}, func(*types.CCUEvent) {})
+	call := func(body string) string {
+		rec := httptest.NewRecorder()
+		s.handleXMLRPC(rec, httptest.NewRequest(http.MethodPost, "/", strings.NewReader(body)))
+		return rec.Body.String()
+	}
+	listed := func(id string) map[string]int {
+		t.Helper()
+		var reply []map[string]interface{}
+		if err := xmlrpc.Response(call(`<?xml version="1.0"?><methodCall><methodName>listDevices</methodName><params>
+<param><value>` + id + `</value></param></params></methodCall>`)).Unmarshal(&reply); err != nil {
+			t.Fatal(err)
+		}
+		got := map[string]int{}
+		for _, d := range reply {
+			got[d["ADDRESS"].(string)] = int(d["VERSION"].(int64))
+		}
+		return got
+	}
+
+	// Nothing reported yet: the interface sends all its devices
+	if got := listed("websocket-server-HmIP-RF"); len(got) != 0 {
+		t.Fatalf("expected no devices, got %v", got)
+	}
+	call(`<?xml version="1.0"?><methodCall><methodName>newDevices</methodName><params>
+<param><value>websocket-server-HmIP-RF</value></param>
+<param><value><array><data>
+  <value><struct><member><name>ADDRESS</name><value>000A</value></member><member><name>VERSION</name><value><i4>12</i4></value></member>
+    <member><name>TYPE</name><value>HmIP-eTRV-2</value></member></struct></value>
+  <value><struct><member><name>ADDRESS</name><value><string>000A:1</string></value></member><member><name>VERSION</name><value><int>12</int></value></member></struct></value>
+</data></array></value></param>
+</params></methodCall>`)
+	// Next init: only what changed is sent again
+	if got := listed("websocket-server-HmIP-RF"); len(got) != 2 || got["000A"] != 12 || got["000A:1"] != 12 {
+		t.Fatalf("unexpected devices: %v", got)
+	}
+	if got := listed("websocket-server-BidCos-RF"); len(got) != 0 {
+		t.Fatalf("devices of another interface: %v", got)
+	}
+	call(`<?xml version="1.0"?><methodCall><methodName>deleteDevices</methodName><params>
+<param><value>websocket-server-HmIP-RF</value></param>
+<param><value><array><data><value>000A:1</value></data></array></value></param>
+</params></methodCall>`)
+	if got := listed("websocket-server-HmIP-RF"); len(got) != 1 || got["000A"] != 12 {
+		t.Fatalf("deleted device still listed: %v", got)
+	}
+}

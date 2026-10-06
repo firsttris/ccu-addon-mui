@@ -26,8 +26,6 @@ import {
 const DEVICE_PROBLEMS_REFRESH_MS = 5 * 60 * 1000;
 // The health page: batteries, radio and reachability of all devices
 const DEVICE_HEALTH_REFRESH_MS = 60 * 1000;
-// Also reloaded when a device reports a change of its status
-const SERVICE_MESSAGES_REFRESH_MS = 60 * 1000;
 const SET_DATAPOINT_TIMEOUT_MS = 15000;
 
 export const useRooms = ({ enabled = true }: { enabled?: boolean } = {}) => {
@@ -264,7 +262,7 @@ export const useSysvars = () => {
       const startedAt = recent.time();
       const sysvars = (await request({ type: 'getSysvars' })).sysvars ?? [];
       // A push that came in meanwhile is newer than the answer
-      return (recent.sysvarsSince(startedAt) ?? sysvars) as Sysvar[];
+      return (recent.listSince('sysvars', startedAt) ?? sysvars) as Sysvar[];
     },
   });
 };
@@ -662,26 +660,35 @@ export const useObjectChange = () => {
 };
 
 // The CCU's service messages (unreachable, battery, sticky messages, error
-// codes, settings waiting for the device, ...)
+// codes, settings waiting for the device, ...). Loaded once; the server then
+// sends them when they change ('serviceMessages'): it reads them again after
+// device events of their datapoints, once for all apps.
 export const useServiceMessages = () => {
-  const { request } = useWebSocketActions();
+  const { request, recent } = useWebSocketActions();
   return useQuery({
     queryKey: ['serviceMessages'],
-    queryFn: async () => ((await request({ type: 'getServiceMessages' })).messages ?? []) as ServiceMessage[],
-    refetchInterval: SERVICE_MESSAGES_REFRESH_MS,
+    queryFn: async () => {
+      const startedAt = recent.time();
+      const messages = (await request({ type: 'getServiceMessages' })).messages ?? [];
+      return (recent.listSince('serviceMessages', startedAt) ?? messages) as ServiceMessage[];
+    },
+    staleTime: Infinity,
   });
 };
 
-// Triggered alarm variables not yet acknowledged. ReGa sends no events
-// for system variables, so they are read again every few seconds.
-const ALARMS_REFRESH_MS = 15000;
-
+// Triggered alarm variables not yet acknowledged. ReGa sends no events for
+// system variables: the server reads them every 15 s for all apps and sends
+// them when they change ('alarmMessages').
 export const useAlarmMessages = () => {
-  const { request } = useWebSocketActions();
+  const { request, recent } = useWebSocketActions();
   return useQuery({
     queryKey: ['alarmMessages'],
-    queryFn: async () => ((await request({ type: 'getAlarmMessages' })).alarms ?? []) as AlarmMessage[],
-    refetchInterval: ALARMS_REFRESH_MS,
+    queryFn: async () => {
+      const startedAt = recent.time();
+      const alarms = (await request({ type: 'getAlarmMessages' })).alarms ?? [];
+      return (recent.listSince('alarmMessages', startedAt) ?? alarms) as AlarmMessage[];
+    },
+    staleTime: Infinity,
   });
 };
 

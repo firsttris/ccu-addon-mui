@@ -103,6 +103,33 @@ func TestParseChannelsStatus(t *testing.T) {
 	}
 }
 
+func TestParseChannelsStatusOncePerDevice(t *testing.T) {
+	// get_channels.tcl writes the S lines with the device's first channel
+	// only; the others refer to the maintenance channel with an A line
+	output := "" +
+		"C\t1\t0001D3C99C3C93:1\tSWITCH_VIRTUAL_RECEIVER\tHmIP-RF\tLicht\r\n" +
+		"A\t0001D3C99C3C93:0\r\n" +
+		"S\t0001D3C99C3C93:0\tUNREACH\tfalse\r\n" +
+		"C\t2\t000A9D89A7AF25:1\tHEATING_CLIMATECONTROL_TRANSCEIVER\tHmIP-RF\tFlur\r\n" +
+		"A\t000A9D89A7AF25:0\r\n" +
+		"C\t3\t0001D3C99C3C93:2\tSWITCH_VIRTUAL_RECEIVER\tHmIP-RF\tLicht 2\r\n" +
+		"A\t0001D3C99C3C93:0\r\n"
+
+	got := parseChannels(output)
+	if len(got) != 3 {
+		t.Fatalf("expected 3 channels, got %+v", got)
+	}
+	for _, i := range []int{0, 2} {
+		if got[i].StatusAddress != "0001D3C99C3C93:0" || !reflect.DeepEqual(got[i].Status, map[string]bool{"UNREACH": false}) {
+			t.Fatalf("channel %d: unexpected status %q %+v", i, got[i].StatusAddress, got[i].Status)
+		}
+	}
+	// A maintenance channel without battery or reachability isn't watched
+	if got[1].StatusAddress != "" || got[1].Status != nil {
+		t.Fatalf("expected no status: %+v", got[1])
+	}
+}
+
 func TestParseDeviceProblems(t *testing.T) {
 	output := "" +
 		"P\t000A9D89A7AF25\tfalse\ttrue\t4658\tOG\tWandthermostat OG Flur, Anbau\r\n" +

@@ -39,7 +39,9 @@ interface Response {
     | 'deviceProblems'
     | 'paramsetDescription'
     | 'paramset'
-    | 'sysvars';
+    | 'sysvars'
+    | 'alarmMessages'
+    | 'serviceMessages';
   error?: string;
   code?: string;
   rooms?: Room[];
@@ -67,6 +69,8 @@ interface Response {
   // getInstallMode
   seconds?: number;
   sysvars?: unknown[];
+  alarms?: unknown[];
+  messages?: unknown[];
   sessions?: unknown[];
   links?: unknown[];
   programs?: unknown[];
@@ -253,8 +257,17 @@ export const useWebsocket = () => {
           return;
         // System variables changed (the server reads them for all apps)
         case 'sysvars':
-          recentRef.current.setSysvars(response.sysvars ?? []);
+          recentRef.current.setList('sysvars', response.sysvars ?? []);
           queryClient.setQueryData(['sysvars'], response.sysvars);
+          return;
+        // Alarms and service messages changed (read for all apps, too)
+        case 'alarmMessages':
+          recentRef.current.setList('alarmMessages', response.alarms ?? []);
+          queryClient.setQueryData(['alarmMessages'], response.alarms);
+          return;
+        case 'serviceMessages':
+          recentRef.current.setList('serviceMessages', response.messages ?? []);
+          queryClient.setQueryData(['serviceMessages'], response.messages);
           return;
         case 'error':
           if (response.code === 'AUTH_REQUIRED') {
@@ -521,9 +534,9 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
         queryClient.setQueriesData<Channel[]>({ queryKey: ['channels'] }, (channels) =>
           channels ? applyEvent(channels, event) : channels,
         );
-        // A device's status changed: the service messages follow
+        // A device's status changed. The service messages follow from the
+        // server ('serviceMessages', read once for all apps).
         if (SERVICE_DATAPOINTS.has(event.datapoint)) {
-          queryClient.invalidateQueries({ queryKey: ['serviceMessages'] });
           queryClient.invalidateQueries({ queryKey: ['deviceProblems'] });
         }
       }),

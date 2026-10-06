@@ -1,6 +1,8 @@
 ! Writes one line per channel and per datapoint, tab separated:
 !   C <id> <address> <type> <interfaceName> <name>
-!   S <statusChannelAddress> <type> <value>   battery/reachability of the device
+!   A <statusChannelAddress>                 the device's maintenance channel
+!   S <statusChannelAddress> <type> <value>   battery/reachability of the device,
+!                                            once per device (its first channel)
 !   D <type> <valueType> <value>
 !   M <roomIds> <tradeIds>                   comma separated
 !   T <tile>                                 light or switch, if chosen in the add-on
@@ -12,6 +14,8 @@
 string objectId = "{{OBJECT_ID}}";
 string channelId;
 string datapointId;
+! Devices whose S lines were written, as "\t<id>\t<id>...\t"
+string statusDevices = "\t";
 boolean allChannels = (objectId == "ALL");
 
 object parentObject = dom.GetObject(objectId);
@@ -74,15 +78,21 @@ if (parentObject) {
                 boolean usable = (channelObject.UserAccessRights(iulOtherThanAdmin) == iarFullAccess);
                 WriteLine("F\t" # channelObject.Visible() # "\t" # usable # "\t" # channelObject.ChnArchive() # "\t" # channelObject.ChnAESActive());
 
-                ! Battery and reachability are reported on the device's maintenance channel 0
+                ! Battery and reachability are reported on the device's maintenance channel 0,
+                ! the same for all its channels: read once per device
                 if (deviceObject) {
                     object statusChannel = dom.GetObject(deviceObject.Channels().GetAt(0));
                     if (statusChannel) {
-                        foreach (datapointId, statusChannel.DPs().EnumUsedIDs()) {
-                            object statusDatapoint = dom.GetObject(datapointId);
-                            string statusType = statusDatapoint.HssType();
-                            if ((statusType == "LOW_BAT") || (statusType == "LOWBAT") || (statusType == "UNREACH")) {
-                                WriteLine("S\t" # statusChannel.Address() # "\t" # statusType # "\t" # statusDatapoint.Value());
+                        WriteLine("A\t" # statusChannel.Address());
+                        string deviceKey = "\t" # deviceObject.ID() # "\t";
+                        if (statusDevices.Find(deviceKey) < 0) {
+                            statusDevices = statusDevices # deviceObject.ID() # "\t";
+                            foreach (datapointId, statusChannel.DPs().EnumUsedIDs()) {
+                                object statusDatapoint = dom.GetObject(datapointId);
+                                string statusType = statusDatapoint.HssType();
+                                if ((statusType == "LOW_BAT") || (statusType == "LOWBAT") || (statusType == "UNREACH")) {
+                                    WriteLine("S\t" # statusChannel.Address() # "\t" # statusType # "\t" # statusDatapoint.Value());
+                                }
                             }
                         }
                     }

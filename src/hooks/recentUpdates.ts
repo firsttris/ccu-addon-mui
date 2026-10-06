@@ -1,7 +1,8 @@
 import { Channel, HmEvent } from '../types/types';
 import { applyEvent } from './channels';
 
-// What the server pushed lately: events and system variables. A list
+// What the server pushed lately: events, and whole lists (system variables,
+// alarms, service messages). A list
 // requested before a push may be answered with older values (the server
 // read them first); replaying what came in meanwhile keeps the newer ones,
 // instead of showing a stale value until the next event.
@@ -14,7 +15,7 @@ const KEEP_MS = 60000;
 
 export class RecentUpdates {
   private events: { at: number; event: HmEvent }[] = [];
-  private sysvars?: { at: number; sysvars: unknown[] };
+  private lists = new Map<string, { at: number; list: unknown[] }>();
 
   constructor(private now: () => number = Date.now) {}
 
@@ -29,8 +30,9 @@ export class RecentUpdates {
     this.events.push({ at, event });
   }
 
-  setSysvars(sysvars: unknown[]) {
-    this.sysvars = { at: this.now(), sysvars };
+  // A list the server sent unasked, by its query key ('sysvars' ...)
+  setList(key: string, list: unknown[]) {
+    this.lists.set(key, { at: this.now(), list });
   }
 
   // The channels as answered for a request started at startedAt, with the
@@ -41,10 +43,10 @@ export class RecentUpdates {
       .reduce((list, entry) => applyEvent(list, entry.event) as C[], channels);
   }
 
-  // The system variables pushed after startedAt, if any: they are newer than
-  // the answer to a request started then. (Both come from ReGa itself, so
-  // no grace time.)
-  sysvarsSince(startedAt: number): unknown[] | undefined {
-    return this.sysvars && this.sysvars.at >= startedAt ? this.sysvars.sysvars : undefined;
+  // The list pushed after startedAt, if any: it is newer than the answer to
+  // a request started then. (Both come from ReGa itself, so no grace time.)
+  listSince(key: string, startedAt: number): unknown[] | undefined {
+    const pushed = this.lists.get(key);
+    return pushed && pushed.at >= startedAt ? pushed.list : undefined;
   }
 }

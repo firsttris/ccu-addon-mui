@@ -66,6 +66,8 @@ type Server struct {
 
 	registrations sync.WaitGroup
 
+	known knownDevices
+
 	checkInterval  time.Duration
 	pingAfter      time.Duration
 	pongTimeout    time.Duration
@@ -445,6 +447,9 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 	case "updateDevice", "deleteDevices":
 		s.dispatchDeviceChange(call.MethodName, call.Params.Param)
 		response = s.serializeMethodResponse("")
+	case "newDevices":
+		s.handleNewDevices(call.Params.Param)
+		response = s.serializeMethodResponse("")
 	case "listDevices":
 		response = s.handleListDevices(&call)
 	case "init":
@@ -534,6 +539,8 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 			s.dispatchEvent(params)
 		case "updateDevice", "deleteDevices":
 			s.dispatchDeviceChange(methodName, rawParams)
+		case "newDevices":
+			s.handleNewDevices(rawParams)
 		}
 	}
 
@@ -593,6 +600,9 @@ func (s *Server) dispatchDeviceChange(method string, params []param) {
 		}
 	}
 
+	if method == "deleteDevices" {
+		s.known.remove(interfaceID, addresses)
+	}
 	for _, address := range addresses {
 		logger.Debugf("   🔄 %s: %s %s", method, interfaceName, address)
 		if s.deviceChange != nil {
@@ -603,20 +613,32 @@ func (s *Server) dispatchDeviceChange(method string, params []param) {
 
 func (s *Server) handleSystemListMethods() string {
 	logger.Debug("📋 system.listMethods called by CCU")
-	methods := []string{"system.listMethods", "system.multicall", "listDevices", "init", "event", "updateDevice", "deleteDevices"}
+	methods := []string{"system.listMethods", "system.multicall", "listDevices", "newDevices", "init", "event", "updateDevice", "deleteDevices"}
 	logger.Debugf("   Returning methods: %v", methods)
 	return s.serializeArrayResponse(methods)
 }
 
 func (s *Server) handleListDevices(call *methodCall) string {
 	logger.Debug("📱 listDevices called by CCU")
+	id := ""
 	if len(call.Params.Param) > 0 {
-		if id, ok := s.extractValue(&call.Params.Param[0].Value).(string); ok {
-			s.markSeen(id)
-		}
+		id, _ = s.extractValue(&call.Params.Param[0].Value).(string)
+		s.markSeen(id)
 	}
-	logger.Debug("   Returning empty device list")
-	return s.serializeArrayResponse([]string{})
+	return s.known.response(id)
+}
+
+// handleNewDevices notes the devices the interface reported, so the next
+// init doesn't send them again (knownDevices). The descriptions themselves
+// are read when needed (ccurpc).
+func (s *Server) handleNewDevices(params []param) {
+	interfaceID, versions := newDeviceVersions(params)
+	if interfaceID == "" {
+		return
+	}
+	s.markSeen(interfaceID)
+	logger.Debugf("📱 newDevices: %d from %s", len(versions), interfaceID)
+	s.known.add(interfaceID, versions)
 }
 
 func (s *Server) extractValue(v *value) interface{} {

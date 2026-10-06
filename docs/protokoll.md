@@ -83,6 +83,11 @@ sie für alle solchen Verbindungen gemeinsam alle 5 Sekunden und schickt bei ein
 die ganze Liste: `{"type": "sysvars", "sysvars": [ … ]}` (ohne `requestId`, wie die Antwort auf
 `getSysvars`). Nach dem Abmelden endet das.
 
+Ebenso Alarme und Servicemeldungen: Nach `getAlarmMessages` schickt der Server bei einer Änderung
+`{"type": "alarmMessages", "alarms": [ … ]}` (gelesen alle 15 Sekunden), nach `getServiceMessages`
+`{"type": "serviceMessages", "messages": [ … ]}`. Die Servicemeldungen liest er kurz nach einem Event
+eines Wartungswerts (`UNREACH`, `LOW_BAT`, `CONFIG_PENDING` …) neu, sonst alle 5 Minuten.
+
 ## Rechte
 
 | Kürzel | Wer darf |

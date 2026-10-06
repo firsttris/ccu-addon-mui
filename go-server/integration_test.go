@@ -1070,6 +1070,25 @@ func TestStackServiceMessages(t *testing.T) {
 	}
 }
 
+func TestStackServiceMessagesFollowEvents(t *testing.T) {
+	ccu, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+
+	send(t, conn, message{"type": "getServiceMessages", "requestId": "q1"})
+	if messages := receive(t, conn, byRequestID("q1"))["messages"].([]interface{}); len(messages) != 3 {
+		t.Fatalf("unexpected service messages: %v", messages)
+	}
+	// The battery runs low: the server reads the messages again after the
+	// event and sends them, the app doesn't ask
+	if err := ccu.SetValue("HmIP-RF", "0000DBE9A5C1F2:0", "LOW_BAT", true); err != nil {
+		t.Fatal(err)
+	}
+	pushed := receive(t, conn, func(m message) bool { return m["type"] == "serviceMessages" })
+	if messages := pushed["messages"].([]interface{}); len(messages) != 4 {
+		t.Fatalf("expected the new message, got %v", messages)
+	}
+}
+
 func TestStackFirmwareUpdate(t *testing.T) {
 	ccu, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
