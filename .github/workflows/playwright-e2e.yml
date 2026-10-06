@@ -9,18 +9,22 @@ on:
   pull_request:
     branches:
       - main
-    types:
-      - opened
-      - synchronize
-      - reopened
+    types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:
       - 'README.md'
   # The release workflow runs the same tests first
   workflow_call:
 
+# A new push to a pull request cancels its outdated run; runs on main and tags finish
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   e2e-frontend-mocked:
     name: Frontend E2E
+    # Draft pull requests do not build; "Ready for review" starts the run
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
 
     steps:
@@ -72,6 +76,7 @@ jobs:
 
   e2e-stack:
     name: Stack E2E (fake CCU)
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
 
     steps:
