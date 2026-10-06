@@ -131,7 +131,7 @@ case "$1" in
         # The server's own data (config.go): sessions, push subscriptions
         # with the VAPID private key, rules, diagrams, audit log, and the
         # backups waiting for download; with their .tmp and rotated copies
-        for f in mui-sessions.json mui-push.json mui-rules.json mui-diagrams.json mui-audit.log; do
+        for f in mui-sessions.json mui-push.json mui-rules.json mui-rules-state.json mui-diagrams.json mui-audit.log; do
             rm -f /usr/local/etc/config/$f /usr/local/etc/config/$f.tmp /usr/local/etc/config/$f.1
         done
         rm -rf /usr/local/mui-diagrams /usr/local/tmp/mui-backups

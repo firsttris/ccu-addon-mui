@@ -121,6 +121,9 @@ func run(ctx context.Context, cfg *config.Config) error {
 				logger.Info("🔔 Rule \"" + r.Name + "\" notifies")
 				notifier.NotifyRule(r.ID, r.Name, r.Text())
 			}))
+			if err := ruleEngine.KeepState(strings.TrimSuffix(cfg.RulesFile, ".json") + "-state.json"); err != nil {
+				logger.Error("Rules: reading the state failed:", err)
+			}
 			wsServer.SetRules(ruleStore, ruleEngine)
 			go ruleEngine.Run(ctx, 30*time.Second)
 		}

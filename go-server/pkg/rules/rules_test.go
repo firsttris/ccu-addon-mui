@@ -160,3 +160,42 @@ func TestStoreKeepsRules(t *testing.T) {
 		t.Fatalf("want ErrNotFound, got %v", err)
 	}
 }
+
+// A rule that notified doesn't notify again after a restart while its
+// conditions still hold
+func TestFiredRulesSurviveARestart(t *testing.T) {
+	rule := window(0)
+	values := fakeValues{
+		"003660C9930AB6:1": {"STATE": 1},
+		"000A9D89A7AF25:1": {"ACTUAL_TEMPERATURE": 16.5},
+	}
+	e, sent, _ := setup(t, rule, values)
+	statePath := filepath.Join(t.TempDir(), "rules-state.json")
+	if err := e.KeepState(statePath); err != nil {
+		t.Fatal(err)
+	}
+	e.Evaluate()
+	if len(*sent) != 1 {
+		t.Fatalf("want one notification, got %v", *sent)
+	}
+
+	// Restarted: a new engine with the same rules and state
+	restarted := NewEngine(e.store, values, func(r Rule) { *sent = append(*sent, r.Name) })
+	restarted.now = e.now
+	if err := restarted.KeepState(statePath); err != nil {
+		t.Fatal(err)
+	}
+	// An event before the other value is read leaves the state alone
+	restarted.OnEvent("003660C9930AB6:1", "STATE", 1)
+	restarted.Evaluate()
+	if len(*sent) != 1 {
+		t.Fatalf("notified again after the restart: %v", *sent)
+	}
+
+	// Stops holding, holds again: a new notification
+	restarted.OnEvent("003660C9930AB6:1", "STATE", 0)
+	restarted.OnEvent("003660C9930AB6:1", "STATE", 1)
+	if len(*sent) != 2 {
+		t.Fatalf("want a new notification, got %v", *sent)
+	}
+}
