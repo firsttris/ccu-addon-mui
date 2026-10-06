@@ -7,6 +7,8 @@ const device = (fields: Partial<Device>): Device => ({
   type: 'HmIP-WRC2',
   address: '000855699C4F38',
   paramsets: [],
+  index: 0,
+  flags: 1,
   version: 1,
   firmware: '1.6.2',
   updatable: true,

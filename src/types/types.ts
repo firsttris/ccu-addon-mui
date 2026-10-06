@@ -1,3 +1,10 @@
+import type * as P from './protocol';
+
+// What crosses the WebSocket is typed in protocol.ts, generated from
+// protocol/schema.json; the types below that the schema has are aliases of
+// it, so the two can't drift apart. Kept here: what the schema doesn't say,
+// e.g. the datapoints per channel type.
+
 export enum ChannelType {
   SWITCH_VIRTUAL_RECEIVER = 'SWITCH_VIRTUAL_RECEIVER',
   BLIND_VIRTUAL_RECEIVER = 'BLIND_VIRTUAL_RECEIVER',
@@ -89,10 +96,7 @@ export type KeymaticDatapoint = {
 
 // Battery and reachability of the device, reported on its maintenance
 // channel (statusAddress, e.g. "000A9D89A7AF25:0")
-export type ChannelStatus = {
-  LOW_BAT?: boolean;
-  UNREACH?: boolean;
-};
+export type ChannelStatus = P.ChannelStatus;
 
 interface BaseChannel {
   id: number;
@@ -164,7 +168,7 @@ export type KnownChannel =
 export type Channel = KnownChannel | GenericChannel;
 
 // CCU user level from the login, "" if unknown. Not enforced yet.
-export type UserLevel = 'admin' | 'user' | 'guest' | '';
+export type UserLevel = P.UserLevel;
 
 export interface Room {
   name: string;
@@ -182,14 +186,7 @@ export interface HmEvent {
   value: string | number | boolean;
 }
 
-export interface DeviceProblem {
-  address: string;
-  name: string;
-  roomId?: number;
-  roomName?: string;
-  lowBat: boolean;
-  unreach: boolean;
-}
+export type DeviceProblem = P.DeviceProblem;
 
 // Paramset descriptions from the CCU's XML-RPC interfaces (see the
 // HomeMatic XML-RPC documentation, ParameterDescription)
@@ -198,69 +195,20 @@ export type ParameterType = 'FLOAT' | 'INTEGER' | 'BOOL' | 'ENUM' | 'STRING' | '
 export const Operation = { READ: 1, WRITE: 2, EVENT: 4 } as const;
 export const ParameterFlag = { VISIBLE: 0x01, INTERNAL: 0x02, SERVICE: 0x08 } as const;
 
-export interface ParameterDescription {
-  type: ParameterType;
-  operations: number;
-  flags: number;
-  default?: DatapointValue;
-  min?: DatapointValue;
-  max?: DatapointValue;
-  unit?: string;
-  tabOrder: number;
-  control?: string;
-  valueList?: string[];
-  special?: { id: string; value: DatapointValue }[];
-}
+export type ParameterDescription = P.ParameterDescription;
 
-export type ParamsetDescription = Record<string, ParameterDescription>;
+export type ParamsetDescription = P.ParamsetDescription;
 
 // A logged-in device
-export interface SessionInfo {
-  id: string;
-  user: string;
-  device: string;
-  created: string;
-  lastUsed: string;
-  current: boolean;
-}
+export type SessionInfo = P.SessionInfo;
 
 // A system variable of the CCU
-export interface Sysvar {
-  id: number;
-  name: string;
-  visible: boolean;
-  kind: 'bool' | 'alarm' | 'number' | 'enum' | 'string';
-  unit?: string;
-  min?: number;
-  max?: number;
-  value: DatapointValue;
-  falseName?: string;
-  trueName?: string;
-  valueList?: string[];
-  // The info text (DPInfo)
-  description?: string;
-  // The channel it belongs to
-  channel?: number;
-}
+export type Sysvar = P.Sysvar;
 
-export interface Program {
-  id: number;
-  name: string;
-  active: boolean;
-  visible: boolean;
-  // Users other than administrators may run it ("bedienbar")
-  operate: boolean;
-  // A system-internal program, listed on request as in the WebUI
-  internal?: boolean;
-}
+export type Program = P.Program;
 
 // A paired device waiting in the CCU's inbox
-export interface InboxDevice {
-  address: string;
-  type: string;
-  interfaceName: string;
-  name: string;
-}
+export type InboxDevice = P.InboxDevice;
 
 // A device (not a channel) as listed by the CCU's interfaces
 export interface DeviceChannel {
@@ -272,34 +220,7 @@ export interface DeviceChannel {
   linkTargetRoles?: string[];
 }
 
-export interface Device {
-  interfaceName: string;
-  // Name from ReGa
-  name?: string;
-  type: string;
-  address: string;
-  children?: string[];
-  paramsets: string[];
-  version: number;
-  firmware?: string;
-  // Newer firmware the CCU has for the device, and (HmIP) how far its
-  // update is: UP_TO_DATE, NEW_FIRMWARE_AVAILABLE, DELIVER_FIRMWARE_IMAGE,
-  // READY_FOR_UPDATE, DO_UPDATE_PENDING, PERFORMING_UPDATE and for access
-  // points the LIVE_ states
-  availableFirmware?: string;
-  firmwareUpdateState?: string;
-  // The device can get a firmware update (UPDATABLE)
-  updatable?: boolean;
-  channels?: DeviceChannel[];
-  // BidCos-RF: the radio module serving the device, and whether it may
-  // change to another
-  interface?: string;
-  roaming?: boolean;
-}
+export type Device = P.Device;
 
 // A direct link: the sender channel controls the receiver channel
-export interface Link {
-  sender: string;
-  receiver: string;
-  name?: string;
-}
+export type Link = P.Link;
