@@ -257,10 +257,15 @@ export const useDeviceFirmwareChanged = () => {
 // reads them for all apps and sends a 'sysvars' message when they change
 // (useWebsocket puts it into this query).
 export const useSysvars = () => {
-  const { request } = useWebSocketActions();
+  const { request, recent } = useWebSocketActions();
   return useQuery({
     queryKey: ['sysvars'],
-    queryFn: async () => ((await request({ type: 'getSysvars' })).sysvars ?? []) as Sysvar[],
+    queryFn: async () => {
+      const startedAt = recent.time();
+      const sysvars = (await request({ type: 'getSysvars' })).sysvars ?? [];
+      // A push that came in meanwhile is newer than the answer
+      return (recent.sysvarsSince(startedAt) ?? sysvars) as Sysvar[];
+    },
   });
 };
 
@@ -483,11 +488,15 @@ export type ChannelsRequest = { roomId: string } | { tradeId: string } | { favor
 // The channels of a room, a trade, a favorite list or all devices, kept up to date by
 // events, grouped by type in display order.
 export const useChannels = (channelsRequest: ChannelsRequest) => {
-  const { request, subscribe } = useWebSocketActions();
+  const { request, subscribe, recent } = useWebSocketActions();
   const query = useQuery({
     queryKey: ['channels', channelsRequest],
-    queryFn: async () =>
-      (await request({ type: 'getChannels', ...channelsRequest })).channels ?? [],
+    queryFn: async () => {
+      const startedAt = recent.time();
+      const channels = (await request({ type: 'getChannels', ...channelsRequest })).channels ?? [];
+      // Events that came in meanwhile are newer than the answer
+      return recent.channelsSince(channels, startedAt);
+    },
     // Events only arrive for the channels shown; a cached list of another
     // room is shown right away but reloaded.
     staleTime: 0,

@@ -14,6 +14,7 @@ import { Channel, DeviceProblem, HmEvent, Room, Trade, UserLevel } from './../ty
 import { useUniqueDeviceID } from './useUniqueDeviceID';
 import { useToast } from '../contexts/ToastContext';
 import { applyEvent } from './channels';
+import { RecentUpdates } from './recentUpdates';
 import type { Protocol } from '../types/protocol';
 import { m } from '../paraglide/messages';
 
@@ -84,6 +85,27 @@ export class RequestError extends Error {
     this.code = code;
   }
 }
+
+// Asking again gets the same answer: the request was refused or is wrong.
+// NOT_CONNECTED: the connection was lost; all queries are loaded again after
+// the next login anyway.
+const FINAL_ERRORS = new Set([
+  'NOT_CONNECTED',
+  'AUTH_REQUIRED',
+  'FORBIDDEN',
+  'ELEVATION_REQUIRED',
+  'INVALID_REQUEST',
+  'INVALID_MESSAGE',
+  'INVALID_VALUE',
+  'NOT_SUPPORTED',
+  'NOT_AVAILABLE',
+  'NOT_FOUND',
+]);
+
+// Whether TanStack Query tries a failed query again: twice for a timeout
+// or a CCU error, not for an answer that won't change
+export const shouldRetry = (failureCount: number, error: unknown) =>
+  failureCount < 2 && !(error instanceof RequestError && error.code !== undefined && FINAL_ERRORS.has(error.code));
 
 export interface RequestOptions {
   // false: fail right away instead of waiting for the connection. For
@@ -177,6 +199,8 @@ export const useWebsocket = () => {
   const nextRequestIdRef = useRef(0);
   const pendingRequestsRef = useRef(new Map<string, PendingRequest>());
   const eventListenersRef = useRef(new Set<EventListener>());
+  // For lists requested while pushes came in (recentUpdates.ts)
+  const recentRef = useRef(new RecentUpdates());
 
   // The channels events are wanted for. The server keeps one list per
   // connection, so it is sent again after every (re)connect.
@@ -216,6 +240,7 @@ export const useWebsocket = () => {
       }
 
       if (response.event) {
+        recentRef.current.addEvent(response.event);
         for (const listener of eventListenersRef.current) {
           listener(response.event);
         }
@@ -228,6 +253,7 @@ export const useWebsocket = () => {
           return;
         // System variables changed (the server reads them for all apps)
         case 'sysvars':
+          recentRef.current.setSysvars(response.sysvars ?? []);
           queryClient.setQueryData(['sysvars'], response.sysvars);
           return;
         case 'error':
@@ -448,7 +474,7 @@ export const useWebsocket = () => {
 
   // All functions are stable, so this object doesn't change on events
   const actions = useMemo(
-    () => ({ request, subscribe, addEventListener, login, logout, elevate, endElevation }),
+    () => ({ request, subscribe, addEventListener, recent: recentRef.current, login, logout, elevate, endElevation }),
     [request, subscribe, addEventListener, login, logout, elevate, endElevation],
   );
 

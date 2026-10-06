@@ -4,7 +4,7 @@ import './i18n/language';
 import * as ReactDOM from 'react-dom/client';
 import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WebSocketProvider } from './hooks/useWebsocket';
+import { WebSocketProvider, shouldRetry } from './hooks/useWebsocket';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { EffectsProvider } from './contexts/EffectsContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -60,7 +60,7 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000,
       // A wall tablet regains focus all the time
       refetchOnWindowFocus: false,
-      retry: 2,
+      retry: shouldRetry,
     },
   },
 });
