@@ -8,13 +8,8 @@ import { m } from '../paraglide/messages';
 import {
   Channel,
   DatapointValue,
-  Device,
   HmEvent,
-  InboxDevice,
-  Link,
-  ParamsetDescription,
   Program,
-  SessionInfo,
   Sysvar,
 } from '../types/types';
 
@@ -76,7 +71,7 @@ export const useParamsetDescription = (
     queryKey: ['paramsetDescription', interfaceName, address, paramsetKey],
     queryFn: async () =>
       ((await request({ type: 'getParamsetDescription', interfaceName, address, paramsetKey }))
-        .description ?? {}) as ParamsetDescription,
+        .description ?? {}),
     staleTime: Infinity,
     // Not every interface has descriptions (e.g. CUxD); show the raw values
     retry: false,
@@ -109,7 +104,7 @@ export const useDevices = () => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['devices'],
-    queryFn: async () => ((await request({ type: 'listDevices' })).devices ?? []) as unknown as Device[],
+    queryFn: async () => (await request({ type: 'listDevices' })).devices ?? [],
   });
 };
 
@@ -168,7 +163,7 @@ export const useInbox = ({ poll = false, enabled = true }: { poll?: boolean; ena
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['inbox'],
-    queryFn: async () => ((await request({ type: 'getInbox' })).devices ?? []) as unknown as InboxDevice[],
+    queryFn: async () => (await request({ type: 'getInbox' })).devices ?? [],
     refetchInterval: poll ? 3000 : false,
     enabled,
     retry: false,
@@ -271,7 +266,7 @@ export const usePrograms = () => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['programs'],
-    queryFn: async () => ((await request({ type: 'getPrograms' })).programs ?? []) as Program[],
+    queryFn: async () => (await request({ type: 'getPrograms' })).programs ?? [],
   });
 };
 
@@ -331,7 +326,7 @@ export const useLinks = (interfaceName: string, address: string) => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['links', interfaceName, address],
-    queryFn: async () => ((await request({ type: 'getLinks', interfaceName, address })).links ?? []) as Link[],
+    queryFn: async () => (await request({ type: 'getLinks', interfaceName, address })).links ?? [],
     retry: false,
   });
 };
@@ -354,7 +349,7 @@ export const useLinkParamset = (interfaceName: string, receiver: string, sender:
     queryKey: ['linkParamsetDescription', interfaceName, receiver, sender],
     queryFn: async () =>
       ((await request({ type: 'getLinkParamsetDescription', interfaceName, address: receiver, partner: sender }))
-        .description ?? {}) as ParamsetDescription,
+        .description ?? {}),
     staleTime: Infinity,
     retry: false,
     enabled,
@@ -398,7 +393,7 @@ export const useSessions = ({ enabled }: { enabled: boolean }) => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['sessions'],
-    queryFn: async () => ((await request({ type: 'listSessions' })).sessions ?? []) as SessionInfo[],
+    queryFn: async () => (await request({ type: 'listSessions' })).sessions ?? [],
     enabled,
     retry: false,
   });
