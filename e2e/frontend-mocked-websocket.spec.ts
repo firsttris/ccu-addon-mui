@@ -164,10 +164,10 @@ test('meldet einen fehlgeschlagenen Befehl und nimmt die Änderung zurück', asy
   await page.goto('/room/1');
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
 
-  await page.evaluate(() => (window as MockWindow).__wsMock?.failNextSet('UNREACH'));
+  await page.evaluate(() => (window as MockWindow).__wsMock?.failNextSet('FORBIDDEN'));
   await page.getByText('Wohnzimmer Licht').click();
 
-  await expect(page.getByRole('alert')).toHaveText(/Device not reachable|Gerät nicht erreichbar/);
+  await expect(page.getByRole('alert')).toHaveText(/Guests may not control devices|Gäste dürfen keine Geräte bedienen/);
 
   // Rolled back to "off": the next click tries to switch on again
   await page.getByText('Wohnzimmer Licht').click();

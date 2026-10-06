@@ -553,7 +553,6 @@ const currentValue = (queryClient: QueryClient, address: string, datapoint: stri
 
 const setErrorMessages: Record<string, TranslationKey> = {
   NOT_CONNECTED: 'NOT_CONNECTED',
-  UNREACH: 'SET_UNREACH',
   TIMEOUT: 'SET_TIMEOUT',
   FORBIDDEN: 'SET_FORBIDDEN',
 };

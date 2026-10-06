@@ -331,12 +331,11 @@ func (c *Client) SetGroupMember(groupID, channelID int64, member bool) (string, 
 const (
 	SetOK       = "OK"
 	SetNotFound = "NOT_FOUND"
-	SetUnreach  = "UNREACH"
 )
 
-// SetDatapoint sets a datapoint and returns SetOK, SetNotFound or
-// SetUnreach (the device is unreachable, so nothing was sent), and with
-// SetOK the value the datapoint had before.
+// SetDatapoint sets a datapoint and returns SetOK or SetNotFound, and with
+// SetOK the value the datapoint had before. An unreachable device is sent
+// to as well, as the WebUI does (set_datapoint.tcl).
 func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (result, previous string, err error) {
 	// Validate identifiers to prevent script injection
 	if !safeIdentifierRegex.MatchString(interfaceName) || !safeIdentifierRegex.MatchString(address) || !safeIdentifierRegex.MatchString(attribute) {
@@ -348,12 +347,8 @@ func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (
 		return "", "", err
 	}
 
-	// Battery and reachability are on the device's channel 0
-	deviceAddress, _, _ := strings.Cut(address, ":")
-
 	script := strings.ReplaceAll(setDatapointScript, "{{INTERFACE}}", interfaceName)
 	script = strings.ReplaceAll(script, "{{ADDRESS}}", address)
-	script = strings.ReplaceAll(script, "{{DEVICE_ADDRESS}}", deviceAddress)
 	script = strings.ReplaceAll(script, "{{ATTRIBUTE}}", attribute)
 	script = strings.ReplaceAll(script, "{{VALUE}}", regaValue)
 	output, err := c.Execute(script)
@@ -363,7 +358,7 @@ func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (
 
 	result, previous, _ = strings.Cut(strings.TrimRight(output, "\r\n"), "\t")
 	switch result {
-	case SetOK, SetNotFound, SetUnreach:
+	case SetOK, SetNotFound:
 		return result, previous, nil
 	default:
 		return "", "", fmt.Errorf("unexpected response from ReGa: %q", output)

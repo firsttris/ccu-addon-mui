@@ -337,7 +337,9 @@ func TestStackLoginReadAndControl(t *testing.T) {
 	}
 }
 
-func TestStackRefusesUnreachableDevice(t *testing.T) {
+// As the WebUI (setDpState): a command also goes to a device marked
+// unreachable, UNREACH of HmIP battery devices is often stale
+func TestStackSendsToUnreachableDevice(t *testing.T) {
 	ccu, conn := startStack(t, "none")
 	send(t, conn, message{"type": "auth"})
 	receive(t, conn, func(m message) bool { return m["type"] == "auth_response" })
@@ -347,8 +349,8 @@ func TestStackRefusesUnreachableDevice(t *testing.T) {
 	}
 	send(t, conn, message{"type": "setDatapoint", "requestId": "1", "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true})
 	m := receive(t, conn, func(m message) bool { return m["type"] == "setDatapoint_response" })
-	if m["success"] != false || m["code"] != "UNREACH" {
-		t.Fatalf("expected UNREACH, got %v", m)
+	if m["success"] != true {
+		t.Fatalf("expected the command to be sent, got %v", m)
 	}
 }
 

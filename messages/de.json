@@ -53,7 +53,6 @@
   "CONNECTION_LOST": "Keine Verbindung zur CCU, verbinde neu …",
   "CONNECTED": "Verbunden",
   "NOT_CONNECTED": "Keine Verbindung, Befehl nicht gesendet",
-  "SET_UNREACH": "Gerät nicht erreichbar, Befehl nicht gesendet",
   "SET_FAILED": "Befehl fehlgeschlagen",
   "SET_TIMEOUT": "Keine Antwort von der CCU",
   "SET_FORBIDDEN": "Gäste dürfen keine Geräte bedienen",

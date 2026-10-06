@@ -231,9 +231,9 @@ func TestSetDatapointReturnsPreviousValue(t *testing.T) {
 		t.Fatalf("unexpected script: %s", gotScript)
 	}
 
-	output = "UNREACH"
-	if result, _, err := client.SetDatapoint("HmIP-RF", "A:1", "STATE", "true"); err != nil || result != SetUnreach {
-		t.Fatalf("SetDatapoint = %q, %v", result, err)
+	// Sent to an unreachable device too, as the WebUI does
+	if strings.Contains(gotScript, ".UNREACH") {
+		t.Fatalf("the script must not refuse unreachable devices: %s", gotScript)
 	}
 }
 
