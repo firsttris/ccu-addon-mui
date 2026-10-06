@@ -197,7 +197,7 @@ export const Favorite = () => {
   const { favoriteId } = useParams({ from: '/favorite/$favoriteId' });
   const { data: favorites } = useFavorites();
   const favorite = favorites?.find((f) => String(f.id) === favoriteId);
-  const { channelsByType, isLoading } = useChannels({ favoriteId });
+  const { channelsByType, isLoading, error, refetch } = useChannels({ favoriteId });
   const canEdit = useCanEdit();
   const { edit } = useSearch({ from: '/favorite/$favoriteId' });
   const navigate = useNavigate();
@@ -249,6 +249,8 @@ export const Favorite = () => {
         // A list the user put together: arranged freely, in its order
         freeOrder={favorite?.items.filter((item) => item.type === 'CHANNEL').map((item) => item.id) ?? []}
         isLoading={isLoading || !favorites}
+        error={error}
+        onRetry={() => refetch()}
         extra={favorite && hasLogic ? <LogicItems favorite={favorite} /> : undefined}
         empty={m.FAVORITE_EMPTY()}
       />

@@ -81,7 +81,9 @@ export default defineConfig(({ command, mode, isPreview }) => ({
       },
     }),
     VitePWA({
-      registerType: 'autoUpdate',
+      // A new version waits until the user reloads (components/UpdatePrompt):
+      // reloading on its own would drop a program or layout being edited
+      registerType: 'prompt',
       workbox: {
         // The direct link profiles (several MB, one chunk per receiver
         // type, named in build.rollupOptions) are loaded when needed, in

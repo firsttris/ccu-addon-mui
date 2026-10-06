@@ -5,7 +5,7 @@ import { m } from '../paraglide/messages';
 
 // All devices, also those not assigned to a room or trade
 export const AllDevices = () => {
-  const { channelsByType, isLoading } = useChannels({ all: true });
+  const { channelsByType, isLoading, error, refetch } = useChannels({ all: true });
   usePageTitle(m.ALL_DEVICES());
-  return <Dashboard channelsByType={channelsByType} isLoading={isLoading} />;
+  return <Dashboard channelsByType={channelsByType} isLoading={isLoading} error={error} onRetry={() => refetch()} />;
 };

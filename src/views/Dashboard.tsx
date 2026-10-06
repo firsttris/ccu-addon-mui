@@ -441,6 +441,9 @@ interface DashboardProps {
   layoutId?: number;
   channelsByType: [string, Channel[]][];
   isLoading?: boolean;
+  // Loading failed: shown with a retry instead of "no devices"
+  error?: Error | null;
+  onRetry?: () => void;
   // Shown after the sections (a favorite list's variables and programs)
   extra?: ReactNode;
   // Instead of "no channels" when there is nothing to show
@@ -450,7 +453,7 @@ interface DashboardProps {
   freeOrder?: number[];
 }
 
-export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, empty, freeOrder }: DashboardProps) => {
+export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, onRetry, extra, empty, freeOrder }: DashboardProps) => {
   const { userLevel } = useWebSocketContext();
   const { data: layoutJson } = useLayout(layoutId);
   const setLayout = useSetLayout();
@@ -571,7 +574,19 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, extra, em
       {isLoading && channelsByType.length === 0 && <TileSkeletonGrid />}
       {layoutId !== undefined && <PlaceDiagrams place={layoutId} />}
       {extra}
-      {!isLoading && channelsByType.length === 0 && !extra && (
+      {!isLoading && channelsByType.length === 0 && error && (
+        <div role="alert" className="flex flex-col items-center gap-3 py-12 text-center text-muted-foreground">
+          <p>
+            {m.CHANNELS_LOAD_FAILED()}: {error.message}
+          </p>
+          {onRetry && (
+            <Button variant="outline" onClick={onRetry}>
+              {m.RETRY()}
+            </Button>
+          )}
+        </div>
+      )}
+      {!isLoading && channelsByType.length === 0 && !error && !extra && (
         <p className="py-12 text-center text-muted-foreground">{empty ?? m.NO_CHANNELS()}</p>
       )}
     </div>
