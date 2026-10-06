@@ -1,4 +1,5 @@
 import { getLocale } from '../../paraglide/runtime';
+import webUILabels from './parameterLabels.json';
 
 // Readable names and groups for the settings (MASTER parameters) devices
 // commonly have. The CCU only gives technical names; these follow the
@@ -159,14 +160,18 @@ export const humanize = (name: string) => {
   return words.charAt(0).toUpperCase() + words.slice(1);
 };
 
-// The readable name of a parameter: from the catalog, else the technical
-// name made readable
+// The readable name of a parameter: from the catalog, else the WebUI's
+// (parameterLabels.json, its webui.js elvST table, imported by
+// scripts/import-parameter-labels.mjs), else the technical name made
+// readable. The catalog comes first: the WebUI names pairs alike ("Wert der
+// Fahrzeit" for both directions), the catalog tells them apart.
 export const parameterLabel = (name: string) => {
+  const de = getLocale() === 'de';
   const known = catalog[name];
   if (known) {
-    return getLocale() === 'de' ? known.de : known.en;
+    return de ? known.de : known.en;
   }
-  return humanize(name);
+  return (webUILabels as Record<'de' | 'en', Record<string, string>>)[de ? 'de' : 'en'][name] ?? humanize(name);
 };
 
 export const GROUP_ORDER: ParameterGroup[] = ['operation', 'heating', 'switching', 'radio', 'other', 'schedule', 'expert'];
