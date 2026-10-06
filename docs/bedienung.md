@@ -64,8 +64,9 @@ gemischt hatten, verwirft die App einmalig.
 ## Die Kacheln
 
 Jede Kachel zeigt den Zustand so, dass man ihn ohne Lesen erkennt, und reagiert sofort. Die App schaltet
-optimistisch und nimmt die Änderung zurück, wenn die CCU sie ablehnt, z. B. weil das Gerät nicht
-erreichbar ist. Dann erscheint ein Hinweis.
+optimistisch und nimmt die Änderung zurück, wenn die CCU sie ablehnt. Dann erscheint ein Hinweis. Ein
+Gerät, das als nicht erreichbar gilt, bekommt den Befehl trotzdem, wie in der WebUI: Oft ist die Meldung
+veraltet, und gerade der Befehl holt es zurück. Die Kachel zeigt es dann grau mit „Nicht erreichbar“.
 
 | Kachel | Bedienung |
 |---|---|

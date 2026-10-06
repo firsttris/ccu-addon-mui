@@ -110,8 +110,9 @@ Benutzer und das Systemprotokoll. Der Server schickt ihr HM-Script per `POST /re
 - **Ablehnen statt maskieren**: HM-Script hat keine verlässlichen Escapes. Bezeichner müssen
   `^[a-zA-Z0-9_:.-]+$` entsprechen, IDs sind Zahlen, Namen dürfen keine Anführungszeichen, Backslashes oder
   Zeilenumbrüche enthalten. Alles andere lehnt der Server ab, bevor ein Skript entsteht.
-- **Werte schreiben** läuft über ReGa (`State()`), wie in der WebUI. Das Skript prüft vorher, ob das Gerät
-  erreichbar ist, und meldet den alten Wert fürs Audit-Log.
+- **Werte schreiben** läuft über ReGa (`State()`), wie in der WebUI, auch an ein Gerät, das als nicht
+  erreichbar gilt (bei HmIP-Batteriegeräten ist `UNREACH` oft veraltet). Das Skript meldet den alten Wert
+  fürs Audit-Log.
 - Eigene Daten legt das Add-on als **Metadaten** an ReGa-Objekten ab, wie die WebUI mit
   `Interface.setMetadata`: das Kachel-Layout an Raum, Gewerk oder Favoritenliste, die Kachelart am Kanal.
   Dadurch gehören sie zur CCU, landen im Backup und gelten auf allen Geräten.
@@ -289,8 +290,9 @@ sequenceDiagram
 1. Die Kachel zeigt den neuen Zustand und sendet `setDatapoint`.
 2. Der Server prüft die Rechte (Gäste dürfen nicht, Kanäle ohne *bedienbar* nur Administratoren), den Wert
    und den Bezeichner.
-3. ReGa setzt den Wert, wenn das Gerät erreichbar ist, und meldet den alten Wert.
-4. Audit-Eintrag, Antwort an die App. Bei Fehler (`UNREACH`, `FORBIDDEN` …) nimmt die App die Änderung zurück.
+3. ReGa setzt den Wert, wie in der WebUI auch bei einem als nicht erreichbar gemeldeten Gerät, und meldet
+   den alten Wert.
+4. Audit-Eintrag, Antwort an die App. Bei Fehler (`FORBIDDEN`, `NOT_FOUND` …) nimmt die App die Änderung zurück.
 5. Das Gerät bestätigt, die CCU schickt das Event, alle anderen offenen Geräte sehen die Änderung.
 
 ### Geräteeinstellungen speichern

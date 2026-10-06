@@ -53,7 +53,6 @@
   "CONNECTION_LOST": "No connection to the CCU, reconnecting …",
   "CONNECTED": "Connected",
   "NOT_CONNECTED": "No connection, command not sent",
-  "SET_UNREACH": "Device not reachable, command not sent",
   "SET_FAILED": "Command failed",
   "SET_TIMEOUT": "No response from the CCU",
   "SET_FORBIDDEN": "Guests may not control devices",

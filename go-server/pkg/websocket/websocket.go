@@ -1225,8 +1225,6 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		entry.Previous = previous
 		record(rega.SetOK)
 		s.sendJSON(client, setDatapointResponse{Type: "setDatapoint_response", RequestID: msg.RequestID, Success: true})
-	case rega.SetUnreach:
-		fail("UNREACH", "device is not reachable")
 	default:
 		fail("NOT_FOUND", "datapoint not found")
 	}
