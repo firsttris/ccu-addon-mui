@@ -70,6 +70,12 @@ export type EnergyMeterDatapoint = {
   ENERGY_COUNTER?: number; // Wh
   GAS_FLOW?: number; // m³/h
   GAS_VOLUME?: number; // m³
+  // Measuring plugs and switches (HmIP-PSM, HM-ES-PMSw1); units as in the
+  // device descriptions (rf_es_pmsw.xml, the HmIP paramset descriptions)
+  ENERGY_COUNTER_FEED_IN?: number; // Wh
+  VOLTAGE?: number; // V
+  CURRENT?: number; // mA
+  FREQUENCY?: number; // Hz
 };
 
 export type KeymaticDatapoint = {

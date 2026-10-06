@@ -37,6 +37,15 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const isRadiatorThermostat = bidcos ? channel.type === 'CLIMATECONTROL_RT_TRANSCEIVER' : datapoints.VALVE_STATE !== undefined;
   const manualMode = bidcos ? datapoints.CONTROL_MODE === 1 : datapoints.SET_POINT_MODE === 1;
   const boostMode = bidcos ? datapoints.CONTROL_MODE === 3 : datapoints.BOOST_MODE === true;
+  // Holiday mode until a set time (the WebUI's "Urlaubsmodus", its party dialog)
+  // (webui.js iseThermostat_2ndGen: CONTROL_MODE 2; HmIP SET_POINT_MODE 2)
+  const holidayMode = bidcos ? datapoints.CONTROL_MODE === 2 : datapoints.SET_POINT_MODE === 2;
+  // The WebUI offers boost for every climate channel that has it
+  // (heating_control.fn), wall thermostats too
+  const canBoost = 'BOOST_MODE' in datapoints;
+  // BidCos: comfort and lowering temperature at a touch, if the device has
+  // both actions (heating_control.fn, HEATING_CONTROL.COMFORT/LOWERING)
+  const canComfortLowering = bidcos && 'COMFORT_MODE' in datapoints && 'LOWERING_MODE' in datapoints;
   // Valve opening of a radiator thermostat in percent
   const valve = !isRadiatorThermostat
     ? undefined
@@ -91,7 +100,12 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
     ? { text: m.BOOST(), className: 'bg-orange-500/15 text-orange-700 dark:text-orange-300' }
     : windowOpen
       ? { text: m.WINDOW_OPEN(), className: 'bg-blue-500/15 text-blue-700 dark:text-blue-300' }
-      : { text: manualMode ? m.MANUAL() : m.AUTO(), className: 'bg-muted text-muted-foreground' };
+      : holidayMode
+        ? { text: m.HOLIDAY_MODE(), className: 'bg-violet-500/15 text-violet-700 dark:text-violet-300' }
+        : // Below 5 °C the thermostat is off (webui.js: no mode shown then)
+          targetTemperature < 5
+          ? { text: m.OFF(), className: 'bg-muted text-muted-foreground' }
+          : { text: manualMode ? m.MANUAL() : m.AUTO(), className: 'bg-muted text-muted-foreground' };
 
   const kind = isRadiatorThermostat
     ? [m.RADIATOR_THERMOSTAT(), valve !== undefined ? m.VALVE({ percent: valve }) : undefined].filter(Boolean).join(' · ')
@@ -143,8 +157,10 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
           />
           <ThermostatIconButtons
             manualMode={manualMode}
-            isRadiatorThermostat={isRadiatorThermostat}
+            canBoost={canBoost}
             boostMode={boostMode}
+            onComfort={canComfortLowering ? () => set('COMFORT_MODE', true) : undefined}
+            onLowering={canComfortLowering ? () => set('LOWERING_MODE', true) : undefined}
             onPowerOff={handlePowerOff}
             onToggleMode={handleToggleMode}
             onToggleBoost={handleToggleBoost}

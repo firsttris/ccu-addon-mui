@@ -2,17 +2,22 @@ import PowerIcon from '~icons/lucide/power';
 import CalendarIcon from '~icons/lucide/calendar-clock';
 import HandIcon from '~icons/lucide/hand';
 import FlameIcon from '~icons/lucide/flame';
+import SunIcon from '~icons/lucide/sun';
+import MoonIcon from '~icons/lucide/moon';
 import { useEffects } from '../../contexts/EffectsContext';
 import { m } from '../../paraglide/messages';
 import { cn } from '../../lib/utils';
 
 interface ThermostatIconButtonsProps {
   manualMode: boolean;
-  isRadiatorThermostat: boolean;
+  canBoost: boolean;
   boostMode: boolean;
   onPowerOff: () => void;
   onToggleMode: () => void;
   onToggleBoost: () => void;
+  // BidCos: comfort and lowering temperature
+  onComfort?: () => void;
+  onLowering?: () => void;
 }
 
 const iconButton =
@@ -20,11 +25,13 @@ const iconButton =
 
 export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
   manualMode,
-  isRadiatorThermostat,
+  canBoost,
   boostMode,
   onPowerOff,
   onToggleMode,
   onToggleBoost,
+  onComfort,
+  onLowering,
 }) => {
   const effects = useEffects();
   return (
@@ -40,7 +47,17 @@ export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
       >
         {manualMode ? <HandIcon /> : <CalendarIcon />}
       </button>
-      {isRadiatorThermostat && (
+      {onComfort && (
+        <button className={iconButton} onClick={onComfort} title={m.COMFORT_TEMPERATURE()} aria-label={m.COMFORT_TEMPERATURE()}>
+          <SunIcon />
+        </button>
+      )}
+      {onLowering && (
+        <button className={iconButton} onClick={onLowering} title={m.LOWERING_TEMPERATURE()} aria-label={m.LOWERING_TEMPERATURE()}>
+          <MoonIcon />
+        </button>
+      )}
+      {canBoost && (
         <button
           className={cn(iconButton, boostMode && 'bg-orange-500/15 text-orange-600 hover:text-orange-600 dark:text-orange-300')}
           onClick={onToggleBoost}

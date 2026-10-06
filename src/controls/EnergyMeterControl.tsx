@@ -9,6 +9,9 @@ import { m } from '../paraglide/messages';
 // All channels of one HmIP-ESI: channel 1 has the current power or gas flow,
 // channels 2-4 the meter readings. Which values are set depends on the
 // connected sensor, so gas and electricity are detected from the values.
+// Also the meter channel of a measuring plug or switch (HmIP-PSM,
+// HM-ES-PMSw1): power, energy, and voltage, current and frequency as the
+// WebUI shows them (powermeter.fn).
 interface EnergyMeterControlProps {
   channels: EnergyMeterChannel[];
 }
@@ -47,8 +50,22 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({ chann
   const energyCounters = sorted.filter((c) => isSet(c.datapoints.ENERGY_COUNTER));
   const gasCounters = sorted.filter((c) => isSet(c.datapoints.GAS_VOLUME));
 
-  const isElectricity = energyCounters.length > 0 || isSet(power);
-  const isGas = gasCounters.length > 0 || isSet(gasFlow);
+  const value = (datapoint: 'VOLTAGE' | 'CURRENT' | 'FREQUENCY' | 'ENERGY_COUNTER_FEED_IN') =>
+    sorted.find((c) => typeof c.datapoints[datapoint] === 'number')?.datapoints[datapoint];
+  const voltage = value('VOLTAGE');
+  const current = value('CURRENT');
+  const frequency = value('FREQUENCY');
+  const feedIn = value('ENERGY_COUNTER_FEED_IN');
+
+  // Only the HmIP-ESI has gas values: without them it is electricity, even
+  // a new meter at 0 or a plug that is switched off
+  const hasGas = gasFlow !== undefined || sorted.some((c) => c.datapoints.GAS_VOLUME !== undefined);
+  const isElectricity = hasGas
+    ? energyCounters.length > 0 || isSet(power)
+    : power !== undefined || sorted.some((c) => c.datapoints.ENERGY_COUNTER !== undefined);
+  const isGas = hasGas && (gasCounters.length > 0 || isSet(gasFlow));
+  // Meter readings shown: the ones set, or the first one of a new meter
+  const readings = energyCounters.length > 0 || hasGas ? energyCounters : sorted.filter((c) => c.datapoints.ENERGY_COUNTER !== undefined).slice(0, 1);
 
   // Channel names default to "HmIP-ESI <address>"; show the first one
   const name = sorted[0]?.name ?? '';
@@ -66,7 +83,7 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({ chann
               {m.ELECTRICITY()}
             </Kind>
             <MainValue>{format(power ?? 0, 0)} W</MainValue>
-            {energyCounters.map((channel, index) => (
+            {readings.map((channel, index) => (
               <Row key={channel.address}>
                 <span>
                   {m.METER_READING()}
@@ -75,6 +92,30 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({ chann
                 <span>{format((channel.datapoints.ENERGY_COUNTER ?? 0) / 1000, 1)} kWh</span>
               </Row>
             ))}
+            {feedIn !== undefined && (
+              <Row>
+                <span>{m.FEED_IN()}</span>
+                <span>{format(feedIn / 1000, 1)} kWh</span>
+              </Row>
+            )}
+            {voltage !== undefined && (
+              <Row>
+                <span>{m.VOLTAGE()}</span>
+                <span>{format(voltage, 1)} V</span>
+              </Row>
+            )}
+            {current !== undefined && (
+              <Row>
+                <span>{m.ELECTRIC_CURRENT()}</span>
+                <span>{format(current, 0)} mA</span>
+              </Row>
+            )}
+            {frequency !== undefined && (
+              <Row>
+                <span>{m.FREQUENCY()}</span>
+                <span>{format(frequency, 1)} Hz</span>
+              </Row>
+            )}
           </Section>
         )}
 
