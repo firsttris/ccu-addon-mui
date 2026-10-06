@@ -1,5 +1,5 @@
 import { PlaceDiagrams } from './diagrams/Diagrams';
-import { ComponentType, Fragment as ReactFragment, memo, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { ComponentType, Fragment as ReactFragment, memo, ReactNode, Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import ThermometerIcon from '~icons/lucide/thermometer';
 import LightbulbIcon from '~icons/lucide/lightbulb';
@@ -14,7 +14,7 @@ import { useEffects } from '../contexts/EffectsContext';
 import { TranslationKey, useTranslations } from '../i18n/utils';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
-import { TileSkeletonGrid } from '../components/ui/skeleton';
+import { TileSkeleton, TileSkeletonGrid } from '../components/ui/skeleton';
 import { cn } from '../lib/utils';
 import LayoutGridIcon from '~icons/lucide/layout-grid';
 import { useLayout, useSetLayout } from '../queries';
@@ -292,7 +292,11 @@ const sectionGrids: Record<SectionId | 'generic', string> = {
 // them changed (the list itself is new whenever its section is rebuilt)
 const DeviceTile = memo(
   function DeviceTile({ component: Component, channels }: { component: ComponentType<{ channels: Channel[] }>; channels: Channel[] }) {
-    return <Component channels={channels} />;
+    return (
+      <Suspense fallback={<TileSkeleton />}>
+        <Component channels={channels} />
+      </Suspense>
+    );
   },
   (before, after) => before.component === after.component && sameItems(before.channels, after.channels),
 );

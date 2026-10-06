@@ -53,6 +53,17 @@ export const PanelSkeleton = ({ lines = 3, className }: { lines?: number; classN
 );
 
 // Placeholder tiles of a dashboard section
+// A tile while its code loads
+export const TileSkeleton = () => (
+  <div aria-hidden className="flex h-40 flex-col justify-between rounded-2xl border bg-card p-3.5">
+    <Skeleton className="size-9 rounded-xl" />
+    <div className="flex flex-col gap-2">
+      <Skeleton className="h-4 w-1/2" />
+      <Skeleton className="h-3 w-1/3" />
+    </div>
+  </div>
+);
+
 export const TileSkeletonGrid = ({ tiles = 6 }: { tiles?: number }) => (
   <section role="status" aria-label={m.LOADING()} className="flex flex-col gap-3">
     <Skeleton className="h-6 w-40" />

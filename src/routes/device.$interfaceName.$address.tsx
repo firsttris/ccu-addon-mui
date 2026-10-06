@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { DEVICE_TABS, DeviceSettings, DeviceTab } from '../views/setup/DeviceSettings';
+import { DeviceSettings } from '../views/setup/DeviceSettings';
+import { DEVICE_TABS, DeviceTab } from '../views/setup/deviceTabs';
 import { SetupShell } from '../views/setup/SetupShell';
 
 export const Route = createFileRoute('/device/$interfaceName/$address')({

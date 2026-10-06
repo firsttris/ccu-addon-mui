@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { Channel } from "../types/types";
-// The registry first, as in the app (queries import it, InputControl them)
+// The registry first, as in the app (queries import it them)
 import { controlOverrides } from "./registry";
-import { contactOpen, inputMode, InputControl } from "./InputControl";
+import { contactOpen, inputMode } from "./InputControl";
 
 const input = (datapoints: Record<string, unknown>, mode?: number) =>
   ({
@@ -20,7 +20,7 @@ describe("InputControl", () => {
     expect(controlOverrides.MULTI_MODE_INPUT_TRANSMITTER).toMatchObject({
       per: "channel",
       section: "inputs",
-      component: InputControl,
+      component: expect.objectContaining({ tileName: 'InputControl' }),
     });
   });
 
