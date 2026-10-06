@@ -42,6 +42,49 @@ func freePort(t *testing.T) int {
 	}
 }
 
+// startServer runs the server with free ports and connects to it. A port
+// freePort found free may be taken again before the server listens on it
+// (the kernel hands it to an outgoing connection): the server then stops
+// at once (address already in use) and is started again with new ports.
+func startServer(t *testing.T, cfg *config.Config) *websocket.Conn {
+	t.Helper()
+	// Whatever else took the port may accept and never answer
+	dialer := websocket.Dialer{HandshakeTimeout: 2 * time.Second}
+	var err error
+	for attempt := 0; attempt < 3; attempt++ {
+		cfg.WSPort, cfg.RPCServerPort = freePort(t), freePort(t)
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+			if err := run(ctx, cfg); err != nil {
+				t.Error(err)
+			}
+		}()
+		url := fmt.Sprintf("ws://127.0.0.1:%d/", cfg.WSPort)
+	dial:
+		for i := 0; i < 50; i++ {
+			var conn *websocket.Conn
+			if conn, _, err = dialer.Dial(url, nil); err == nil {
+				t.Cleanup(func() {
+					cancel()
+					<-done
+				})
+				return conn
+			}
+			select {
+			case <-done:
+				break dial // stopped: try new ports
+			case <-time.After(50 * time.Millisecond):
+			}
+		}
+		cancel()
+		<-done
+	}
+	t.Fatalf("server did not start: %v", err)
+	return nil
+}
+
 // startStack runs the fake CCU and the real server against it and returns
 // a connected WebSocket client.
 func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
@@ -57,13 +100,11 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 	t.Cleanup(ccu.Close)
 
 	cfg := &config.Config{
-		WSPort:             freePort(t),
 		WSBindHost:         "127.0.0.1",
 		RPCPort:            ccu.InterfacePorts["BidCos-RF"],
 		HmIPPort:           ccu.InterfacePorts["HmIP-RF"],
 		VirtualDevicesPort: ccu.InterfacePorts["VirtualDevices"],
 		WiredPort:          ccu.InterfacePorts["BidCos-Wired"],
-		RPCServerPort:      freePort(t),
 		CCUHost:            "127.0.0.1",
 		CallbackHost:       "127.0.0.1",
 		RegaPort:           ccu.RegaPort,
@@ -101,32 +142,9 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		}
 	}
 	auditLogs[ccu] = cfg.AuditLogFile
+
+	conn := startServer(t, cfg)
 	wsPorts[ccu] = cfg.WSPort
-
-	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		if err := run(ctx, cfg); err != nil {
-			t.Error(err)
-		}
-	}()
-	t.Cleanup(func() {
-		cancel()
-		<-done
-	})
-
-	url := fmt.Sprintf("ws://127.0.0.1:%d/", cfg.WSPort)
-	var conn *websocket.Conn
-	for i := 0; i < 50; i++ {
-		if conn, _, err = websocket.DefaultDialer.Dial(url, nil); err == nil {
-			break
-		}
-		time.Sleep(50 * time.Millisecond)
-	}
-	if err != nil {
-		t.Fatalf("server did not start: %v", err)
-	}
 	t.Cleanup(func() { conn.Close() })
 
 	// Wait until the server registered with the interfaces, so events arrive
