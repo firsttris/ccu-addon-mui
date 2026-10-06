@@ -89,6 +89,13 @@ export default defineConfig(({ command, mode, isPreview }) => ({
         // type, named in build.rollupOptions) are loaded when needed, in
         // the setup area only, not installed on every device
         globIgnores: ['**/linkProfile-*.js'],
+        // Pages the app doesn't render: the WebUI's Zusatzsoftware opens
+        // update-check.cgi?cmd=download (cp_software.cgi), which lighttpd
+        // runs as CGI and which redirects to the release on GitHub. Without
+        // this the service worker answers every navigation in /addons/mui/
+        // with index.html, and the app shows "Not Found". Workbox matches
+        // the path with its query.
+        navigateFallbackDenylist: [/\.cgi(\?|$)/],
         // Push notifications (public/push-sw.js)
         importScripts: ['push-sw.js'],
       },
