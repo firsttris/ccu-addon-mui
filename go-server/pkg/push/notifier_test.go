@@ -73,6 +73,16 @@ func TestNotifierSendsOnlyNews(t *testing.T) {
 		t.Fatalf("expected the alarm again, got %d", len(got))
 	}
 
+	// Lists that come back empty once don't make everything new
+	saved := *messages
+	messages.alarms, messages.service = nil, nil
+	n.Poll()
+	*messages = saved
+	n.Poll()
+	if len(got) != 3 {
+		t.Fatalf("an empty list made old messages new: %d", len(got))
+	}
+
 	// The key and subscriptions survive a restart
 	again, _ := OpenStore(store.path)
 	v2, _ := again.VAPID("mailto:test@example.com")
@@ -93,4 +103,35 @@ func TestServiceTextsFallBackToTheWebUI(t *testing.T) {
 			t.Errorf("text(%q, %q) = %q, want %q", c.language, c.key, got, c.want)
 		}
 	}
+}
+
+// Without subscriptions for alarms or service messages ReGa isn't asked
+func TestNotifierIdleWithoutSubscribers(t *testing.T) {
+	store, err := OpenStore(filepath.Join(t.TempDir(), "push.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	vapid, _ := store.VAPID("mailto:test@example.com")
+	messages := &countingMessages{}
+	n := NewNotifier(store, vapid, messages)
+	n.Poll()
+	if messages.calls != 0 {
+		t.Fatalf("ReGa asked %d times without subscribers", messages.calls)
+	}
+	_ = store.Put(Entry{Subscription: Subscription{Endpoint: "https://push.example/1"}, Alarms: true})
+	n.Poll()
+	if messages.calls == 0 {
+		t.Fatal("ReGa not asked with a subscriber")
+	}
+}
+
+type countingMessages struct{ calls int }
+
+func (c *countingMessages) GetAlarmMessages() ([]rega.AlarmMessage, error) {
+	c.calls++
+	return nil, nil
+}
+func (c *countingMessages) GetServiceMessages() ([]rega.ServiceMessage, error) {
+	c.calls++
+	return nil, nil
 }

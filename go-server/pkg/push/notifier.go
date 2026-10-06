@@ -40,14 +40,21 @@ type Notifier struct {
 	messages Messages
 	client   *http.Client
 
-	mu   sync.Mutex
-	seen map[string]bool
+	mu sync.Mutex
+	// The messages known and when they were last seen. Kept for a while
+	// after they disappear: a list that comes back empty once (ReGa busy)
+	// must not make every message new again.
+	seen map[string]time.Time
 	// The first poll only learns what is there already
 	primed bool
+	now    func() time.Time
 }
 
+// How long a message that is gone stays known
+const seenLifetime = 24 * time.Hour
+
 func NewNotifier(store *Store, vapid *VAPID, messages Messages) *Notifier {
-	return &Notifier{store: store, vapid: vapid, messages: messages, client: &http.Client{Timeout: 15 * time.Second}, seen: map[string]bool{}}
+	return &Notifier{store: store, vapid: vapid, messages: messages, client: &http.Client{Timeout: 15 * time.Second}, seen: map[string]time.Time{}, now: time.Now}
 }
 
 // PublicKey is the key browsers subscribe with.
@@ -127,6 +134,18 @@ func serviceNotification(language string, m rega.ServiceMessage) Notification {
 
 // Poll looks for new alarms and service messages once.
 func (n *Notifier) Poll() {
+	// Nobody to tell: no ReGa scripts every 30 s. Once someone subscribes,
+	// the first poll learns again what is there.
+	wanted := false
+	for _, entry := range n.store.All() {
+		wanted = wanted || entry.Alarms || entry.Service
+	}
+	if !wanted {
+		n.mu.Lock()
+		n.seen, n.primed = map[string]time.Time{}, false
+		n.mu.Unlock()
+		return
+	}
 	alarms, err := n.messages.GetAlarmMessages()
 	if err != nil {
 		logger.Error("Push: reading alarms failed:", err)
@@ -138,25 +157,31 @@ func (n *Notifier) Poll() {
 		return
 	}
 	n.mu.Lock()
-	seen := map[string]bool{}
+	now := n.now()
+	known := func(key string) bool {
+		_, ok := n.seen[key]
+		n.seen[key] = now
+		return ok
+	}
 	var newAlarms []rega.AlarmMessage
 	var newService []rega.ServiceMessage
 	for _, a := range alarms {
 		// Triggered again: a higher counter
-		key := fmt.Sprintf("a:%d:%d", a.ID, a.Counter)
-		seen[key] = true
-		if n.primed && !n.seen[key] {
+		if !known(fmt.Sprintf("a:%d:%d", a.ID, a.Counter)) && n.primed {
 			newAlarms = append(newAlarms, a)
 		}
 	}
 	for _, m := range service {
-		key := fmt.Sprintf("s:%d:%s", m.ID, m.Timestamp)
-		seen[key] = true
-		if n.primed && !n.seen[key] {
+		if !known(fmt.Sprintf("s:%d:%s", m.ID, m.Timestamp)) && n.primed {
 			newService = append(newService, m)
 		}
 	}
-	n.seen, n.primed = seen, true
+	for key, at := range n.seen {
+		if now.Sub(at) > seenLifetime {
+			delete(n.seen, key)
+		}
+	}
+	n.primed = true
 	n.mu.Unlock()
 
 	for _, entry := range n.store.All() {
