@@ -161,8 +161,17 @@ export const ProgramEditor = () => {
   const [confirm, setConfirm] = useState<'save' | 'delete' | null>(null);
   usePageTitle(isNew ? m.NEW_PROGRAM() : draft?.name || m.EDIT_PROGRAM());
 
+  // The program the draft was taken from. A reloaded program (after a
+  // reconnect, or from the cache first) only replaces an untouched draft:
+  // unsaved changes stay. Another program (saved as new) always does.
+  const [base, setBase] = useState<ProgramDefinition>();
   useEffect(() => {
-    if (loaded) setDraft(loaded);
+    if (loaded && (draft === base || base?.id !== loaded.id)) {
+      setDraft(loaded);
+      setBase(loaded);
+    }
+    // Only when a program was loaded, not on every edit
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
 
   if (isError) {
@@ -181,6 +190,8 @@ export const ProgramEditor = () => {
         onSuccess: (response) => {
           setConfirm(null);
           showToast(m.SAVED(), 'info');
+          // Saved: the program reloaded now may replace the draft again
+          setBase(draft);
           const savedId = 'id' in response ? response.id : undefined;
           if (isNew && savedId) navigate({ to: '/program/$programId', params: { programId: String(savedId) }, replace: true });
         },
