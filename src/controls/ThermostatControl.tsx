@@ -177,7 +177,8 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
         open={scheduleOpen}
         onOpenChange={setScheduleOpen}
         interfaceName={channel.interfaceName}
-        address={channel.address}
+        // BidCos thermostats keep it in the device's MASTER paramset
+        address={bidcos ? channel.address.split(':')[0] : channel.address}
         name={channel.name}
         activeProfile={typeof datapoints.ACTIVE_PROFILE === 'number' ? datapoints.ACTIVE_PROFILE : undefined}
       />

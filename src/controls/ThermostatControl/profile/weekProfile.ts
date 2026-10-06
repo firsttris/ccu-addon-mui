@@ -6,6 +6,13 @@ import { DatapointValue, ParamsetDescription } from '../../../types/types';
 // P<profile>_TEMPERATURE_<DAY>_<slot> (°C). A slot runs from the previous
 // end time (or midnight) to its own; the slot ending at 24:00 is the last,
 // the ones after it are unused.
+//
+// BidCos thermostats keep theirs in the device's MASTER paramset: the wall
+// thermostat HM-TC-IT-WM with the same names (P1-P3, which one runs set by
+// WEEK_PROGRAM_POINTER 0-2, rf_tc_it_wm-w-eu.xml), the radiator thermostat
+// HM-CC-RT-DN one profile without the prefix: ENDTIME_<DAY>_<slot>,
+// TEMPERATURE_<DAY>_<slot> (rf_cc_rt_dn.xml). Profile 0 stands for that
+// one here.
 
 export const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'] as const;
 export type Day = (typeof DAYS)[number];
@@ -24,21 +31,29 @@ export interface Slot {
 export type DayProfile = Slot[];
 export type WeekProfile = Record<Day, DayProfile>;
 
-const endName = (profile: number, day: Day, slot: number) => `P${profile}_ENDTIME_${day}_${slot}`;
-const temperatureName = (profile: number, day: Day, slot: number) => `P${profile}_TEMPERATURE_${day}_${slot}`;
+const prefix = (profile: number) => (profile === 0 ? '' : `P${profile}_`);
+const endName = (profile: number, day: Day, slot: number) => `${prefix(profile)}ENDTIME_${day}_${slot}`;
+const temperatureName = (profile: number, day: Day, slot: number) => `${prefix(profile)}TEMPERATURE_${day}_${slot}`;
 
-// The profiles (1, 2, ...) and slots per day a description offers
+// The profiles (1, 2, ...) and slots per day a description offers.
+// prefixed: false for the one profile without "P<n>_" (profile 0).
 export const profileLayout = (description: ParamsetDescription | undefined) => {
   let profiles = 0;
   let slots = 0;
+  let unprefixedSlots = 0;
   for (const name of Object.keys(description ?? {})) {
     const match = /^P(\d+)_ENDTIME_MONDAY_(\d+)$/.exec(name);
     if (match) {
       profiles = Math.max(profiles, Number(match[1]));
       slots = Math.max(slots, Number(match[2]));
     }
+    const plain = /^ENDTIME_MONDAY_(\d+)$/.exec(name);
+    if (plain) unprefixedSlots = Math.max(unprefixedSlots, Number(plain[1]));
   }
-  return { profiles, slots };
+  if (profiles === 0 && unprefixedSlots > 0) {
+    return { profiles: 1, slots: unprefixedSlots, prefixed: false };
+  }
+  return { profiles, slots, prefixed: true };
 };
 
 // The used slots of one day: up to and including the one ending at 24:00.

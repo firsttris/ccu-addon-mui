@@ -43,8 +43,25 @@ const monday = {
 
 describe('week profile', () => {
   it('finds the profiles and slots of a description', () => {
-    expect(profileLayout(description)).toEqual({ profiles: 2, slots: 13 });
-    expect(profileLayout({})).toEqual({ profiles: 0, slots: 0 });
+    expect(profileLayout(description)).toEqual({ profiles: 2, slots: 13, prefixed: true });
+    expect(profileLayout({})).toEqual({ profiles: 0, slots: 0, prefixed: true });
+  });
+
+  it("reads the HM-CC-RT-DN's one profile without the P1_ prefix (profile 0)", () => {
+    const plain = Object.fromEntries(
+      Array.from({ length: 13 }, (_, i) => [
+        [`ENDTIME_MONDAY_${i + 1}`, { type: 'INTEGER' }],
+        [`TEMPERATURE_MONDAY_${i + 1}`, { type: 'FLOAT' }],
+      ]).flat(),
+    ) as unknown as ParamsetDescription;
+    expect(profileLayout(plain)).toEqual({ profiles: 1, slots: 13, prefixed: false });
+    const values: Record<string, number> = Object.fromEntries(
+      Object.entries(monday).map(([name, value]) => [name.replace(/^P1_/, ''), value as number]),
+    );
+    expect(readDay(values, 0, 'MONDAY', 13)).toEqual(readDay(monday, 1, 'MONDAY', 13));
+    const week = readWeek(values, 0, 13);
+    week.MONDAY = setSlotTemperature(week.MONDAY, 1, 22);
+    expect(changedValues(values, 0, week, 13)).toMatchObject({ TEMPERATURE_MONDAY_2: 22 });
   });
 
   it('reads the used slots of a day', () => {
