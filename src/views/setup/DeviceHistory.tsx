@@ -3,7 +3,7 @@ import { useWebSocketActions } from '../../hooks/useWebsocket';
 import { useChannelList } from '../../queries';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { datapointLabel, formatEntryValue, formatTime } from '../History';
-import { defaultLang } from '../../i18n/utils';
+import { defaultLang } from '../../i18n/locale';
 import { m } from '../../paraglide/messages';
 import type { HistoryEntry } from '../../types/protocol';
 

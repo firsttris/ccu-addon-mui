@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import { EnergyMeterChannel } from '../types/types';
 import ZapIcon from '~icons/lucide/zap';
 import FlameIcon from '~icons/lucide/flame';
-import { defaultLang } from '../i18n/utils';
+import { defaultLang } from '../i18n/locale';
 import { Tile } from '../components/Tile';
 import { m } from '../paraglide/messages';
 

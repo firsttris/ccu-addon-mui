@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import SearchIcon from '~icons/lucide/search';
 import { useDevices, useRooms } from '../queries';
 import { Channel } from '../types/types';
-import { useTranslations, type TranslationKey } from '../i18n/utils';
+import { channelTypeName } from '../i18n/channelTypeNames';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
@@ -55,10 +55,9 @@ export const ChannelPicker = ({
   single = false,
   includeHidden = false,
 }: ChannelPickerProps) => {
-  const t = useTranslations();
   // The channel type in words; types without a translation made readable
   const typeLabel = (type: string) => {
-    const label = t(type as TranslationKey);
+    const label = channelTypeName(type);
     return label === type ? humanize(type) : label;
   };
   const { data: devices = [] } = useDevices();
@@ -106,7 +105,7 @@ export const ChannelPicker = ({
         a.type.localeCompare(b.type) ||
         a.name.localeCompare(b.name),
     );
-  }, [channels, devices, rooms, query, onlyUnassigned, unassigned, chosen, t, includeHidden]);
+  }, [channels, devices, rooms, query, onlyUnassigned, unassigned, chosen, includeHidden]);
   // The channel pointed at, marked in its device's picture
   const [pointed, setPointed] = useState<string | undefined>();
 

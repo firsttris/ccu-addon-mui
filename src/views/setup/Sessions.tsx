@@ -1,7 +1,7 @@
 import { Panel } from './Panel';
 import { useRevokeSession, useSessions } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
-import { defaultLang } from '../../i18n/utils';
+import { defaultLang } from '../../i18n/locale';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { m } from '../../paraglide/messages';
 import { TableSkeletonRows } from '../../components/ui/skeleton';

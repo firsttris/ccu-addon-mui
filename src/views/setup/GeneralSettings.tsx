@@ -7,7 +7,7 @@ import { Switch } from '../../components/ui/switch';
 import { Button } from '../../components/ui/button';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
-import { defaultLang } from '../../i18n/utils';
+import { defaultLang } from '../../i18n/locale';
 import { Panel } from './Panel';
 import { m } from '../../paraglide/messages';
 import type { EnergyPrice, InfoLed } from '../../types/protocol';

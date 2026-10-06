@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { TableSkeletonRows } from '../components/ui/skeleton';
 import { useToast } from '../contexts/ToastContext';
 import { usePageTitle } from '../contexts/PageTitleContext';
-import { defaultLang } from '../i18n/utils';
+import { defaultLang } from '../i18n/locale';
 import { humanize } from '../controls/generic/parameters';
 import { m } from '../paraglide/messages';
 import type { HistoryEntry } from '../types/protocol';
