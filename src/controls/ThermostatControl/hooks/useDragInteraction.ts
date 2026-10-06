@@ -1,19 +1,20 @@
 import { useState, useCallback, useRef } from 'react';
-import { CENTER_X, CENTER_Y, ROTATE_ANGLE, MAX_ANGLE } from '../constants';
+import { CENTER_X, CENTER_Y, ROTATE_ANGLE, MAX_ANGLE, TemperatureRange } from '../constants';
 import { useTemperatureConversion } from './useTemperatureConversion';
 
 interface UseDragInteractionProps {
   onTemperatureChange: (temp: number) => void;
   onInteractionEnd: (temp: number) => void;
+  range?: TemperatureRange;
 }
 
-export const useDragInteraction = ({ onTemperatureChange, onInteractionEnd }: UseDragInteractionProps) => {
+export const useDragInteraction = ({ onTemperatureChange, onInteractionEnd, range }: UseDragInteractionProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   // The value of the last move: pointerup can fire before React has
   // rendered that move, so the localTarget prop may still be one step behind.
   const lastTempRef = useRef<number | null>(null);
-  const { angleToTemp } = useTemperatureConversion();
+  const { angleToTemp } = useTemperatureConversion(range);
 
   const updateTemperatureFromPosition = useCallback((clientX: number, clientY: number) => {
     if (!svgRef.current) return;
