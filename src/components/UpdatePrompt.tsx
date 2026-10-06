@@ -23,7 +23,7 @@ export const UpdatePrompt = () => {
       role="status"
       className="fixed inset-x-3 bottom-3 z-50 mx-auto flex max-w-md items-center gap-3 rounded-xl border bg-card p-3 text-sm shadow-lg"
     >
-      <span className="flex-1">{m.UPDATE_AVAILABLE()}</span>
+      <span className="flex-1">{m.APP_UPDATE_AVAILABLE()}</span>
       <Button size="sm" onClick={() => updateServiceWorker(true)}>
         {m.UPDATE_RELOAD()}
       </Button>

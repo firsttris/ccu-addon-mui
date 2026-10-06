@@ -100,6 +100,8 @@ export type ServerMessage =
   | GetAddonsResponse
   | AddonActionResponse
   | CheckAddonUpdateResponse
+  | CheckSelfUpdateResponse
+  | InstallSelfUpdateResponse
   | ChangePasswordResponse
   | GetDeviceProgramsResponse
   | GetVirtualKeysResponse
@@ -253,6 +255,8 @@ export interface Protocol {
   getAddons: GetAddonsCall;
   addonAction: AddonActionCall;
   checkAddonUpdate: CheckAddonUpdateCall;
+  checkSelfUpdate: CheckSelfUpdateCall;
+  installSelfUpdate: InstallSelfUpdateCall;
   changePassword: ChangePasswordCall;
   getDevicePrograms: GetDeviceProgramsCall;
   getVirtualKeys: GetVirtualKeysCall;
@@ -3011,6 +3015,75 @@ export interface CheckAddonUpdateResponse {
    * the newest version the add-on's update URL names
    */
   latest: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckSelfUpdateCall".
+ */
+export interface CheckSelfUpdateCall {
+  request: CheckSelfUpdateRequest;
+  response: CheckSelfUpdateResponse;
+}
+/**
+ * the newest release of this add-on on GitHub (administrators)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckSelfUpdateRequest".
+ */
+export interface CheckSelfUpdateRequest {
+  type: "checkSelfUpdate";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "CheckSelfUpdateResponse".
+ */
+export interface CheckSelfUpdateResponse {
+  type: "checkSelfUpdate_response";
+  requestId?: string;
+  /**
+   * the installed version (VERSION file), empty if unknown
+   */
+  current: string;
+  /**
+   * the version of the newest release
+   */
+  latest: string;
+  /**
+   * the release has a checked archive for this CCU and installSelfUpdate can install it here
+   */
+  installable: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallSelfUpdateCall".
+ */
+export interface InstallSelfUpdateCall {
+  request: InstallSelfUpdateRequest;
+  response: InstallSelfUpdateResponse;
+}
+/**
+ * downloads the newest release, checks its SHA256 checksum and runs its update_script, without rebooting the CCU; the server restarts a few seconds after the answer (elevated administrators)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallSelfUpdateRequest".
+ */
+export interface InstallSelfUpdateRequest {
+  type: "installSelfUpdate";
+  requestId?: string;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "InstallSelfUpdateResponse".
+ */
+export interface InstallSelfUpdateResponse {
+  type: "installSelfUpdate_response";
+  requestId?: string;
+  success: boolean;
+  /**
+   * the version installed
+   */
+  version: string;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

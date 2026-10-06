@@ -35,9 +35,15 @@ Zusatzsoftware* im Add-on selbst.
 
 ## Aktualisieren
 
-Die CCU prüft unter *Zusatzsoftware* selbst, ob es eine neue Version gibt (das Add-on fragt dazu die
-neueste Release auf GitHub ab). Aktualisiert wird wie bei der Installation: neue `tar.gz` hochladen,
-installieren. Einstellungen, angemeldete Geräte, Diagramme und Push-Abos bleiben erhalten, weil sie
+Am einfachsten in der App: *Einrichten → System*, neben der Add-on-Version *Auf Update prüfen* und bei
+einer neuen Version *Update installieren* (Administratoren, nach erneuter Eingabe des Passworts). Der
+Server lädt das passende Archiv der neuesten Release von GitHub, prüft es gegen die SHA256-Prüfsumme, die
+GitHub dazu angibt, und führt dessen `update_script` aus. Die CCU startet dafür nicht neu, auch die CCU3
+nicht; nur die App ist ein paar Sekunden weg und bietet danach *Neu laden* an.
+
+Über die WebUI geht es weiter wie bei der Installation: Die CCU prüft unter *Zusatzsoftware* selbst, ob es
+eine neue Version gibt (das Add-on fragt dazu die neueste Release auf GitHub ab), dann neue `tar.gz`
+hochladen und installieren. Die CCU3 mit eQ-3-Firmware startet dabei neu. Einstellungen, angemeldete Geräte, Diagramme und Push-Abos bleiben erhalten, weil sie
 außerhalb des Add-on-Verzeichnisses liegen (siehe [Dateien auf der CCU](#dateien-auf-der-ccu)).
 
 ## Anmelden

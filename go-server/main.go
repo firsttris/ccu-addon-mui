@@ -21,6 +21,7 @@ import (
 	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/rules"
+	"ccu-addon-mui-server/pkg/selfupdate"
 	"ccu-addon-mui-server/pkg/settings"
 	"ccu-addon-mui-server/pkg/types"
 	"ccu-addon-mui-server/pkg/websocket"
@@ -98,6 +99,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 
 	// The add-ons; this one's rc.d script is "mui" (addon_installer/rc.d)
 	wsServer.SetAddons(addons.New(cfg.AddonsDir, "mui", cfg.WebUIURL))
+	wsServer.SetSelfUpdate(selfupdate.New(cfg.AddonReleaseURL, cfg.AddonUpdateDir))
 	wsServer.SetLogs(logs.New(cfg.SyslogConfig, cfg.LogDir))
 	websocket.SetClockFiles(cfg.TimeConfFile, cfg.NTPClientFile, cfg.TZFile)
 	websocket.SetGroupsFile(cfg.GroupsFile)
