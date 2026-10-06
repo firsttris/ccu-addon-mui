@@ -107,6 +107,11 @@ type Config struct {
 	// CcuFirmwareReleases is where OpenCCU's releases and their SHA256
 	// files are (checkFirmwareUpdate.sh)
 	CcuFirmwareReleases string
+	// AddonReleaseURL is the newest release of this add-on (GitHub's API),
+	// AddonUpdateDir where it is unpacked to update without a reboot: the
+	// user partition, as /bin/install_addon does (/usr/local/tmp)
+	AddonReleaseURL string
+	AddonUpdateDir  string
 }
 
 func Load() *Config {
@@ -175,6 +180,8 @@ func Load() *Config {
 		FirmwareUploadDir:    getEnv("FIRMWARE_UPLOAD_DIR", "/usr/local/tmp"),
 		FirmwareStagedLink:   getEnv("FIRMWARE_STAGED_LINK", "/usr/local/.firmwareUpdate"),
 		CcuFirmwareReleases:  getEnv("CCU_FIRMWARE_RELEASES", "https://github.com/openccu/openccu/releases/download"),
+		AddonReleaseURL:      getEnv("ADDON_RELEASE_URL", "https://api.github.com/repos/firsttris/ccu-addon-mui/releases/latest"),
+		AddonUpdateDir:       getEnv("ADDON_UPDATE_DIR", "/usr/local/tmp"),
 	}
 }
 

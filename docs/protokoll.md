@@ -201,6 +201,8 @@ eines Wartungswerts (`UNREACH`, `LOW_BAT`, `CONFIG_PENDING` …) neu, sonst alle
 | | `saveUser`, `deleteUser` | Benutzer anlegen, ändern oder löschen (nicht sich selbst löschen, eigene Stufe und eigenen Namen nicht ändern) | Admin+T (A) |
 | Add-ons | `getAddons`, `checkAddonUpdate` | Zusatzsoftware und Update-Prüfung | Admin |
 | | `addonAction` | `restart`/`uninstall` eines Add-ons | Admin+T (A) |
+| | `checkSelfUpdate` | Neueste Release dieses Add-ons auf GitHub, installierte Version, ob sie sich hier installieren lässt | Admin |
+| | `installSelfUpdate` | Neueste Release laden, SHA256 prüfen, ihr `update_script` ausführen, ohne CCU-Neustart; der Server startet danach neu | Admin+T (A) |
 | Sicherheit | `getSecurity` | SSH, Auth, HTTPS-Redirect, Session-Timeout, Sicherheitsstufe | Admin |
 | | `setSecurity` | SSH (+Passwort), Auth, HTTPS-Redirect | Admin+T (A)(PW) |
 | | `setSecurityLevel` | LOW/MEDIUM/HIGH über `CCU.setSecurityLevel` | Admin+T (A)(PW) |
@@ -258,6 +260,7 @@ dürfen.
 | `INVALID_BACKUP`, `INVALID_FIRMWARE`, `FIRMWARE_TOO_OLD`, `ADDON_FAILED` | Datei abgelehnt |
 | `FIRMWARE_NOT_STAGED` | kein geprüftes CCU-Update liegt mehr bereit (z. B. nach einem Neustart), erneut herunterladen oder hochladen |
 | `DOWNLOAD_FAILED`, `FIRMWARE_CHECKSUM` | CCU-Update: Download von GitHub fehlgeschlagen, SHA256-Prüfsumme passt nicht |
+| `CHECKSUM` | Add-on-Update: SHA256-Prüfsumme des Downloads passt nicht, nichts installiert (`DOWNLOAD_FAILED`, `ADDON_FAILED`, `UPDATE_RUNNING` wie oben, hier für das Add-on) |
 | `FIRMWARE_NEEDS_NEWER_CCU`, `UPDATE_SERVER_ERROR` | Geräte-Firmware: braucht eine neuere CCU-Version, eQ-3-Server nicht erreichbar |
 | `UPDATE_RUNNING`, `DEVICE_UNREACHABLE`, `DUTY_CYCLE_HIGH` | Geräte-Update: läuft schon für dieses Gerät, Gerät nicht erreichbar, Duty Cycle zu hoch |
 | `SYNTAX_ERROR` | Skript testen: das HM-Script hat einen Syntaxfehler |

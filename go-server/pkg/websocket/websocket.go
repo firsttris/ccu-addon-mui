@@ -30,6 +30,7 @@ import (
 	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/rules"
+	"ccu-addon-mui-server/pkg/selfupdate"
 	"ccu-addon-mui-server/pkg/settings"
 	"ccu-addon-mui-server/pkg/subscriptions"
 	"ccu-addon-mui-server/pkg/types"
@@ -267,6 +268,8 @@ type Server struct {
 	rpc DeviceRPC
 	// Creates CCU backups; nil without a WebUI to create them
 	backup *backup.Service
+	// Updates this add-on from its GitHub release; nil disables it
+	selfUpdate *selfupdate.Updater
 
 	// eQ-3's list of the newest device firmware, kept for a while
 	deviceFirmwareCatalog deviceFirmwareCatalog
@@ -348,6 +351,11 @@ const BackupPath = "/ws/mui/backup/"
 // SetAddons enables the add-on list (Zusatzsoftware).
 func (s *Server) SetAddons(service *addons.Service) {
 	s.addons = service
+}
+
+// SetSelfUpdate enables updating this add-on without a reboot.
+func (s *Server) SetSelfUpdate(updater *selfupdate.Updater) {
+	s.selfUpdate = updater
 }
 
 func (s *Server) SetPush(store *push.Store, notifier *push.Notifier) {
@@ -711,6 +719,12 @@ func (s *Server) dispatch(client *Client, msgType, requestID string, message []b
 		s.handleUsers(client, msgType, message)
 	case "getAddons", "addonAction", "checkAddonUpdate":
 		s.handleAddons(client, msgType, message)
+	case "checkSelfUpdate":
+		s.handleCheckSelfUpdate(client, requestID)
+	case "installSelfUpdate":
+		// Download and install take a while: the client's other requests
+		// go on meanwhile
+		go s.handleInstallSelfUpdate(client.snapshot(), requestID)
 	case "startComTest", "pollComTest":
 		s.handleComTest(client, msgType, message)
 	case "getVirtualKeys":

@@ -174,6 +174,8 @@ Classic BidCos-Wired (HMW devices on the RS485 bus) is connected once a Wired ga
 2. Upload and install it in the WebUI under *Settings → Control panel → Additional software*. OpenCCU starts the add-on right away; a CCU3 with eQ-3 firmware reboots for it.
 3. Open **http://&lt;ccu-ip&gt;/addons/mui** and log in with a CCU user.
 
+Later updates are installed by the app itself, without rebooting the CCU (*Setup → System → Check for update*).
+
 ## 🔧 Development
 
 ```bash

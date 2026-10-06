@@ -19,6 +19,7 @@ import { DialogButton } from '../../components/ConfirmDialog';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { CcuFirmwareButton, CcuFirmwareUpload } from './CcuFirmwareUpload';
 import { DeviceFirmware } from './DeviceFirmware';
+import { AddonSelfUpdate } from './AddonSelfUpdate';
 import { isNewerVersion } from '../../utils/version';
 import { Button } from '../../components/ui/button';
 import DownloadIcon from '~icons/lucide/circle-arrow-down';
@@ -143,7 +144,10 @@ const Versions = () => {
       <h2>{m.SYSTEM()}</h2>
       <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
         <dt className="text-muted-foreground">{m.ADDON_VERSION()}</dt>
-        <dd>{data.addonVersion || import.meta.env.VITE_APP_VERSION || '–'}</dd>
+        <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {data.addonVersion || import.meta.env.VITE_APP_VERSION || '–'}
+          <AddonSelfUpdate current={data.addonVersion || import.meta.env.VITE_APP_VERSION || ''} />
+        </dd>
         <dt className="text-muted-foreground">{m.FIRMWARE_VERSION()}</dt>
         <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {data.firmwareVersion || '–'}

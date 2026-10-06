@@ -227,6 +227,12 @@
     "checkAddonUpdate": {
       "$ref": "#/definitions/CheckAddonUpdateCall"
     },
+    "checkSelfUpdate": {
+      "$ref": "#/definitions/CheckSelfUpdateCall"
+    },
+    "installSelfUpdate": {
+      "$ref": "#/definitions/InstallSelfUpdateCall"
+    },
     "changePassword": {
       "$ref": "#/definitions/ChangePasswordCall"
     },
@@ -529,6 +535,8 @@
     "getAddons",
     "addonAction",
     "checkAddonUpdate",
+    "checkSelfUpdate",
+    "installSelfUpdate",
     "changePassword",
     "getDevicePrograms",
     "getVirtualKeys",
@@ -3201,6 +3209,12 @@
         },
         {
           "$ref": "#/definitions/CheckAddonUpdateResponse"
+        },
+        {
+          "$ref": "#/definitions/CheckSelfUpdateResponse"
+        },
+        {
+          "$ref": "#/definitions/InstallSelfUpdateResponse"
         },
         {
           "$ref": "#/definitions/ChangePasswordResponse"
@@ -7135,6 +7149,128 @@
         },
         "response": {
           "$ref": "#/definitions/CheckAddonUpdateResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "CheckSelfUpdateRequest": {
+      "type": "object",
+      "description": "the newest release of this add-on on GitHub (administrators)",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "checkSelfUpdate"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "CheckSelfUpdateResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "checkSelfUpdate_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "current": {
+          "type": "string",
+          "description": "the installed version (VERSION file), empty if unknown"
+        },
+        "latest": {
+          "type": "string",
+          "description": "the version of the newest release"
+        },
+        "installable": {
+          "type": "boolean",
+          "description": "the release has a checked archive for this CCU and installSelfUpdate can install it here"
+        }
+      },
+      "required": [
+        "type",
+        "current",
+        "latest",
+        "installable"
+      ],
+      "additionalProperties": false
+    },
+    "CheckSelfUpdateCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/CheckSelfUpdateRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/CheckSelfUpdateResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "InstallSelfUpdateRequest": {
+      "type": "object",
+      "description": "downloads the newest release, checks its SHA256 checksum and runs its update_script, without rebooting the CCU; the server restarts a few seconds after the answer (elevated administrators)",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "installSelfUpdate"
+        },
+        "requestId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "InstallSelfUpdateResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "installSelfUpdate_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        },
+        "version": {
+          "type": "string",
+          "description": "the version installed"
+        }
+      },
+      "required": [
+        "type",
+        "success",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "InstallSelfUpdateCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/InstallSelfUpdateRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/InstallSelfUpdateResponse"
         }
       },
       "required": [

@@ -237,7 +237,7 @@ Mehr Bilder in [Bedienung](docs/bedienung.md) und [Einrichten](docs/einrichten.m
 2. In der WebUI unter *Einstellungen → Systemsteuerung → Zusatzsoftware* hochladen und installieren. OpenCCU startet das Add-on sofort, die CCU3 mit eQ-3-Firmware startet dafür neu.
 3. **http://&lt;IP-der-CCU&gt;/addons/mui** öffnen und mit einem Benutzer der CCU anmelden.
 
-Danach als App auf den Startbildschirm legen. Updates meldet die CCU unter *Zusatzsoftware*. HTTPS,
+Danach als App auf den Startbildschirm legen. Updates installiert die App selbst, ohne Neustart der CCU (*Einrichten → System → Auf Update prüfen*). HTTPS,
 Optionen wie `AUTH_MODE` und Deinstallation stehen in der [Installation](docs/installation.md).
 
 > [!NOTE]
