@@ -30,16 +30,29 @@ if (parentObject) {
             object interfaceObject = dom.GetObject(channelObject.Interface());
             object deviceObject = dom.GetObject(channelObject.Device());
 
+            boolean skip = false;
+
+            ! ReGa's own pseudo channels ("StateVariables" and "Communication"
+            ! of the Gateway device) are of type channel with ChnNumber() -1,
+            ! an empty address and no interface: even reading their channel
+            ! number logs "invalid Address" in the CCU's log, and their
+            ! missing interface stops the iteration with a ScriptRuntimeError.
+            ! Skipped first, so nothing else is read from them.
+            if (!interfaceObject) {
+                skip = true;
+            }
+
             ! For all devices, skip the maintenance channels (their status is
             ! written as S lines) and the virtual remote keys of the CCU itself.
-            boolean skip = false;
             if (allChannels) {
-                if (channelObject.ChnNumber() == 0) {
-                    skip = true;
-                }
-                if (deviceObject) {
-                    if ((deviceObject.HssType() == "HM-RCV-50") || (deviceObject.HssType() == "HmIP-RCV-50")) {
+                if (!skip) {
+                    if (channelObject.ChnNumber() == 0) {
                         skip = true;
+                    }
+                    if (deviceObject) {
+                        if ((deviceObject.HssType() == "HM-RCV-50") || (deviceObject.HssType() == "HmIP-RCV-50")) {
+                            skip = true;
+                        }
                     }
                 }
             }
