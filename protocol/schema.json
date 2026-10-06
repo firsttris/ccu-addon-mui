@@ -2914,6 +2914,48 @@
       "additionalProperties": false,
       "description": "Sent unasked to connections that loaded the system variables (getSysvars) when they changed; the whole list. System variables send no events, the server reads them every few seconds"
     },
+    "AlarmMessagesMessage": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "alarmMessages"
+        },
+        "alarms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AlarmMessage"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "alarms"
+      ],
+      "additionalProperties": false,
+      "description": "Sent unasked to connections that loaded the alarms (getAlarmMessages) when they changed; the whole list. The server reads them every 15 s while an app shows them"
+    },
+    "ServiceMessagesMessage": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "serviceMessages"
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ServiceMessage"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "messages"
+      ],
+      "additionalProperties": false,
+      "description": "Sent unasked to connections that loaded the service messages (getServiceMessages) when they changed; the whole list. The server reads them again after an event of a service datapoint (UNREACH, LOW_BAT ...) and every 5 minutes"
+    },
     "ServerMessage": {
       "description": "Every message the server sends",
       "anyOf": [
@@ -2928,6 +2970,12 @@
         },
         {
           "$ref": "#/definitions/SysvarsMessage"
+        },
+        {
+          "$ref": "#/definitions/AlarmMessagesMessage"
+        },
+        {
+          "$ref": "#/definitions/ServiceMessagesMessage"
         },
         {
           "$ref": "#/definitions/GetRoomsResponse"

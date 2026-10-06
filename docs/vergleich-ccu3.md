@@ -155,4 +155,4 @@ Entwicklerwerkzeug *devconfig*.
 | Server | Tcl-CGIs, ReGa | ein statisches Go-Binary (rund 10 MB, für ARMv7 und x86), keine Laufzeit wie Node.js oder Java. Rund 15 MB RAM: 14 MB mit allen CCU-Verbindungen, 16 MB mit 10 offenen Apps; zum Vergleich braucht ein leerer HTTP-Server unter Node.js 22 schon 46 MB |
 
 Systemvariablen meldet die CCU nicht per Event. Die fragt das Add-on alle 5 Sekunden ab, solange eine App sie zeigt, Alarme alle
-15 Sekunden und Servicemeldungen jede Minute, zusätzlich sofort, wenn sich ein Wartungswert ändert.
+15 Sekunden; jeweils einmal für alle Apps. Servicemeldungen liest es kurz nach einem Event eines Wartungswerts neu, sonst alle 5 Minuten.

@@ -230,8 +230,12 @@ flowchart TB
 - **Systemvariablen** melden keine Events. Der Server liest sie alle 5 s, einmal für alle Apps, die sie
   zeigen, und schickt die Liste nur bei einer Änderung (`sysvars`). Vorher fragte jede App selbst alle 10 s;
   ReGa arbeitet Skripte nacheinander ab, mit mehreren Tablets bremste das WebUI und Programme.
-- **Was die CCU sonst nicht meldet**, fragt die App ab: Alarme alle 15 s, Servicemeldungen jede Minute,
-  Geräteprobleme alle 5 Minuten.
+- **Alarme und Servicemeldungen** führt ReGa, und ReGa schickt keine Events (die kommen per XML-RPC nur von
+  den Interface-Prozessen, für Datenpunkte der Geräte). Der Server liest sie ebenfalls einmal für alle Apps
+  und schickt sie bei einer Änderung (`alarmMessages`, `serviceMessages`): Alarme alle 15 s, Servicemeldungen
+  kurz nach einem Event eines Wartungswerts (`UNREACH`, `LOW_BAT` …) und sonst alle 5 Minuten. Der
+  Push-Dienst nutzt dieselben Ergebnisse.
+- **Geräteprobleme** fragt die App alle 5 Minuten ab und nach einem Event eines Wartungswerts.
 
 ### Kacheln
 

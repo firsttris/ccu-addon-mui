@@ -123,10 +123,13 @@ const MaxChannelMode = 5
 // parseChannels parses the output of get_channels.tcl.
 func parseChannels(output string) []Channel {
 	isRecord := func(line string) bool {
-		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t") || strings.HasPrefix(line, "T\t") || strings.HasPrefix(line, "F\t") || strings.HasPrefix(line, "O\t")
+		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "A\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t") || strings.HasPrefix(line, "T\t") || strings.HasPrefix(line, "F\t") || strings.HasPrefix(line, "O\t")
 	}
 
 	channels := []Channel{}
+	// Battery and reachability by maintenance channel: written once per
+	// device, they apply to all its channels
+	status := map[string]map[string]bool{}
 	for _, fields := range splitRecords(output, isRecord) {
 		switch fields[0] {
 		case "C":
@@ -145,21 +148,25 @@ func parseChannels(output string) []Channel {
 				Name:          rejoin(fields, 5),
 				Datapoints:    map[string]interface{}{},
 			})
+		case "A":
+			if len(fields) < 2 || len(channels) == 0 {
+				continue
+			}
+			channels[len(channels)-1].StatusAddress = fields[1]
 		case "S":
 			if len(fields) < 4 || len(channels) == 0 {
 				continue
 			}
+			channels[len(channels)-1].StatusAddress = fields[1]
 			value, err := strconv.ParseBool(fields[3])
 			if err != nil {
 				// Never reported by the device
 				continue
 			}
-			channel := &channels[len(channels)-1]
-			if channel.Status == nil {
-				channel.Status = map[string]bool{}
+			if status[fields[1]] == nil {
+				status[fields[1]] = map[string]bool{}
 			}
-			channel.StatusAddress = fields[1]
-			channel.Status[normalizeStatusType(fields[2])] = value
+			status[fields[1]][normalizeStatusType(fields[2])] = value
 		case "M":
 			if len(fields) < 3 || len(channels) == 0 {
 				continue
@@ -196,6 +203,22 @@ func parseChannels(output string) []Channel {
 			}
 			channel := &channels[len(channels)-1]
 			channel.Datapoints[fields[1]] = parseValue(fields[2], rejoin(fields, 3))
+		}
+	}
+	for i := range channels {
+		channel := &channels[i]
+		if channel.StatusAddress == "" {
+			continue
+		}
+		reported := status[channel.StatusAddress]
+		if len(reported) == 0 {
+			// Neither battery nor reachability: no maintenance channel to watch
+			channel.StatusAddress = ""
+			continue
+		}
+		channel.Status = make(map[string]bool, len(reported))
+		for statusType, value := range reported {
+			channel.Status[statusType] = value
 		}
 	}
 	return channels

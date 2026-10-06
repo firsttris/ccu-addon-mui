@@ -49,16 +49,17 @@ describe('RecentUpdates', () => {
     expect(recent.channelsSince(answer, recent.time())).toBe(answer);
   });
 
-  it('prefers system variables pushed during the request', () => {
+  it('prefers a list pushed during the request', () => {
     const c = clock();
     const recent = new RecentUpdates(c.at);
-    recent.setSysvars(['before']);
+    recent.setList('sysvars', ['before']);
     c.now += 10;
     const startedAt = recent.time();
-    expect(recent.sysvarsSince(startedAt)).toBeUndefined();
+    expect(recent.listSince('sysvars', startedAt)).toBeUndefined();
     c.now += 10;
-    recent.setSysvars(['pushed']);
-    expect(recent.sysvarsSince(startedAt)).toEqual(['pushed']);
+    recent.setList('sysvars', ['pushed']);
+    expect(recent.listSince('sysvars', startedAt)).toEqual(['pushed']);
+    expect(recent.listSince('alarmMessages', startedAt)).toBeUndefined();
   });
 });
 

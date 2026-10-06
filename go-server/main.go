@@ -108,7 +108,8 @@ func run(ctx context.Context, cfg *config.Config) error {
 	} else if vapid, err := store.VAPID(cfg.PushSubject); err != nil {
 		logger.Error("Push notifications disabled:", err)
 	} else {
-		notifier := push.NewNotifier(store, vapid, regaClient)
+		// The alarms and service messages the apps' watch read anyway
+		notifier := push.NewNotifier(store, vapid, wsServer.MessageSource(15*time.Second))
 		wsServer.SetPush(store, notifier)
 		go notifier.Run(ctx, 30*time.Second)
 
@@ -145,9 +146,12 @@ func run(ctx context.Context, cfg *config.Config) error {
 		sysvarInterval = 5 * time.Second
 	}
 	go wsServer.RunSysvarWatch(ctx, sysvarInterval)
+	// Alarms and service messages, likewise
+	go wsServer.RunMessageWatch(ctx)
 
 	rpcServer := xmlrpc.NewServer(cfg, func(event *types.CCUEvent) {
 		wsServer.RecordEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
+		wsServer.ServiceEvent(event.Event.Datapoint)
 		if ruleEngine != nil {
 			ruleEngine.OnEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
 		}

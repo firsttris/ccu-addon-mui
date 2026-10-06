@@ -991,6 +991,8 @@ func (c *CCU) getChannels(objectID string) string {
 	}
 
 	var b strings.Builder
+	// S lines once per device, with its first channel listed
+	statusWritten := map[string]bool{}
 	for _, ch := range channels {
 		fmt.Fprintf(&b, "C\t%d\t%s\t%s\t%s\t%s\n", ch.ID, ch.Address, ch.Type, ch.Interface, ch.Name)
 		fmt.Fprintf(&b, "M\t%s\t%s\n", memberOf(c.fixture.Rooms, ch.ID), memberOf(c.fixture.Trades, ch.ID))
@@ -1002,9 +1004,13 @@ func (c *CCU) getChannels(objectID string) string {
 			fmt.Fprintf(&b, "O\t%d\n", *ch.Mode)
 		}
 		if status := c.channelByAddress(ch.Interface, deviceAddress(ch.Address)+":0"); status != nil {
-			for _, dp := range []string{"LOW_BAT", "LOWBAT", "UNREACH"} {
-				if v, ok := status.Datapoints[dp]; ok {
-					fmt.Fprintf(&b, "S\t%s\t%s\t%s\n", status.Address, dp, formatValue(v))
+			fmt.Fprintf(&b, "A\t%s\n", status.Address)
+			if !statusWritten[status.Address] {
+				statusWritten[status.Address] = true
+				for _, dp := range []string{"LOW_BAT", "LOWBAT", "UNREACH"} {
+					if v, ok := status.Datapoints[dp]; ok {
+						fmt.Fprintf(&b, "S\t%s\t%s\t%s\n", status.Address, dp, formatValue(v))
+					}
 				}
 			}
 		}

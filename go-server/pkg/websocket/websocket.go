@@ -118,6 +118,9 @@ type Client struct {
 	// sysvars: the connection gets the system variables when they change
 	// (sysvars.go)
 	sysvars bool
+	// alarms, service: the connection gets the alarms or the service
+	// messages when they change (messages_watch.go)
+	alarms, service bool
 
 	// device describes the browser, from the User-Agent
 	device string
@@ -246,6 +249,7 @@ type Server struct {
 	clientsMu   sync.RWMutex
 	// The system variables last sent to the connections (sysvars.go)
 	lastSysvars     []byte
+	messages        messageWatch
 	sysvarsMu       sync.Mutex
 	subscriptionMgr *subscriptions.Manager
 	httpServer      *http.Server
@@ -602,6 +606,14 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		// link list doesn't hold up switching a light. At most
 		// maxParallelReads per connection; the read pump waits for a free
 		// slot, so a flood of requests stays bounded.
+		// Watches belong to the connection, not to the copy the request
+		// runs with
+		switch msgType {
+		case "getAlarmMessages":
+			client.watchMessages(true)
+		case "getServiceMessages":
+			client.watchMessages(false)
+		}
 		client.reads <- struct{}{}
 		snap := client.snapshot()
 		go func() {
@@ -970,6 +982,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	if err != nil {
 		client.authenticated = false
 		client.watchSysvars(false)
+		client.unwatchMessages()
 		s.sendJSON(client, authResponse{Type: "auth_response", AuthRequired: true, Code: "LOGIN_REQUIRED"})
 		return
 	}
@@ -1324,21 +1337,40 @@ func (s *Server) handleListDevices(client *Client, requestID string) {
 		s.sendRequestError(client, requestID, "listDevices is not available", "NOT_AVAILABLE")
 		return
 	}
-	// Names live in ReGa; without them the list still works
+	// The interfaces and ReGa (names) are asked at the same time: each
+	// listDevices takes a while on a CCU with many devices
+	interfaces := s.rpc.InterfaceNames()
+	lists := make([][]ccurpc.DeviceDescription, len(interfaces))
 	var names map[string]string
+	var wg sync.WaitGroup
 	if s.regaClient != nil {
-		var err error
-		if names, err = s.regaClient.GetDeviceNames(); err != nil {
-			logger.Debugf("getDeviceNames: %v", err)
-		}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			var err error
+			// Without the names the list still works
+			if names, err = s.regaClient.GetDeviceNames(); err != nil {
+				logger.Debugf("getDeviceNames: %v", err)
+			}
+		}()
 	}
+	for i, iface := range interfaces {
+		wg.Add(1)
+		go func(i int, iface string) {
+			defer wg.Done()
+			list, err := s.rpc.ListDevices(iface)
+			if err != nil {
+				logger.Debugf("listDevices %s: %v", iface, err)
+				return
+			}
+			lists[i] = list
+		}(i, iface)
+	}
+	wg.Wait()
+
 	devices := []Device{}
-	for _, iface := range s.rpc.InterfaceNames() {
-		list, err := s.rpc.ListDevices(iface)
-		if err != nil {
-			logger.Debugf("listDevices %s: %v", iface, err)
-			continue
-		}
+	for i, iface := range interfaces {
+		list := lists[i]
 		channels := map[string][]ccurpc.DeviceDescription{}
 		for _, d := range list {
 			if d.Parent != "" {
@@ -1480,6 +1512,7 @@ func (s *Server) handleSessions(client *Client, msgType string, message []byte) 
 		}
 		s.endWebUISession(client.user)
 		client.watchSysvars(false)
+		client.unwatchMessages()
 		s.sendJSON(client, sessionsResponse{Type: "logout_response", RequestID: msg.RequestID, Success: true})
 	case "listSessions":
 		if code, errorMsg := configureError(client); code != "" {
@@ -1603,19 +1636,21 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 	}
 	switch msgType {
 	case "getServiceMessages":
-		messages, err := s.regaClient.GetServiceMessages()
+		messages, err := s.readServiceMessages(0)
 		if err != nil {
 			s.sendRequestError(client, msg.RequestID, "getServiceMessages failed: "+err.Error(), "CCU_ERROR")
 			return
 		}
+		client.watchMessages(false)
 		s.sendJSON(client, serviceMessagesResponse{Type: "getServiceMessages_response", RequestID: msg.RequestID, Messages: s.hideStickyUnreach(messages)})
 		return
 	case "getAlarmMessages":
-		alarms, err := s.regaClient.GetAlarmMessages()
+		alarms, err := s.readAlarms(0)
 		if err != nil {
 			s.sendRequestError(client, msg.RequestID, "getAlarmMessages failed: "+err.Error(), "CCU_ERROR")
 			return
 		}
+		client.watchMessages(true)
 		s.sendJSON(client, alarmMessagesResponse{Type: "getAlarmMessages_response", RequestID: msg.RequestID, Alarms: alarms})
 		return
 	}

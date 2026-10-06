@@ -23,6 +23,8 @@ export type ServerMessage =
   | ErrorResponse
   | EventMessage
   | SysvarsMessage
+  | AlarmMessagesMessage
+  | ServiceMessagesMessage
   | GetRoomsResponse
   | GetTradesResponse
   | GetChannelsResponse
@@ -5643,4 +5645,24 @@ export interface EventMessage {
 export interface SysvarsMessage {
   type: "sysvars";
   sysvars: Sysvar[];
+}
+/**
+ * Sent unasked to connections that loaded the alarms (getAlarmMessages) when they changed; the whole list. The server reads them every 15 s while an app shows them
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "AlarmMessagesMessage".
+ */
+export interface AlarmMessagesMessage {
+  type: "alarmMessages";
+  alarms: AlarmMessage[];
+}
+/**
+ * Sent unasked to connections that loaded the service messages (getServiceMessages) when they changed; the whole list. The server reads them again after an event of a service datapoint (UNREACH, LOW_BAT ...) and every 5 minutes
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "ServiceMessagesMessage".
+ */
+export interface ServiceMessagesMessage {
+  type: "serviceMessages";
+  messages: ServiceMessage[];
 }
