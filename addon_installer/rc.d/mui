@@ -128,6 +128,13 @@ case "$1" in
         stop
         rm -rf $ADDON_DIR
         rm -f $LOG_FILE $LOG_FILE.old $CONFIG_FILE $AUTH_KEY_FILE
+        # The server's own data (config.go): sessions, push subscriptions
+        # with the VAPID private key, rules, diagrams, audit log, and the
+        # backups waiting for download; with their .tmp and rotated copies
+        for f in mui-sessions.json mui-push.json mui-rules.json mui-diagrams.json mui-audit.log; do
+            rm -f /usr/local/etc/config/$f /usr/local/etc/config/$f.tmp /usr/local/etc/config/$f.1
+        done
+        rm -rf /usr/local/mui-diagrams /usr/local/tmp/mui-backups
         # The proxy for /ws/mui and the link the WebUI serves /addons/mui from
         rm -f /usr/local/etc/config/lighttpd/mui.conf /usr/local/etc/config/addons/www/mui
         if [ -x /etc/init.d/S50lighttpd ]; then
