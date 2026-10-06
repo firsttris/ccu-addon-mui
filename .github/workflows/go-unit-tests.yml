@@ -7,16 +7,20 @@ on:
   pull_request:
     branches:
       - main
-    types:
-      - opened
-      - synchronize
-      - reopened
+    types: [opened, synchronize, reopened, ready_for_review]
   # The release workflow runs the same tests first
   workflow_call:
+
+# A new push to a pull request cancels its outdated run; runs on main and tags finish
+concurrency:
+  group: go-tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
     name: Run Go tests
+    # Draft pull requests do not build; "Ready for review" starts the run
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
 
     defaults:

@@ -9,13 +9,21 @@ on:
   pull_request:
     branches:
       - main
+    types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:
       - 'README.md'
   # The release workflow runs the same build and attaches its archives
   workflow_call:
 
+# A new push to a pull request cancels its outdated run; runs on main and tags finish
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build:
+    # Draft pull requests do not build; "Ready for review" starts the run
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
 
     steps:
