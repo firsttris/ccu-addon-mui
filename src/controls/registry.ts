@@ -1,52 +1,72 @@
-import { ComponentType } from 'react';
+import { ComponentType, lazy } from 'react';
 import { Channel, ChannelType } from '../types/types';
-import { FloorControl } from './FloorControl';
-import { SwitchControl } from './SwitchControl';
-import { BlindsControl } from './BlindsControl';
-import { ThermostatControl } from './ThermostatControl';
-import { DoorControl, DoorLockControl } from './DoorControl';
-import { EnergyMeterControl } from './EnergyMeterControl';
-import { WindowControl } from './WindowControl';
-import { ClimateSensorControl } from './ClimateSensorControl';
-import { DimmerControl } from './DimmerControl';
-import { DualWhiteColorControl, RgbwColorControl, RgbwProgramControl } from './BidcosLightControls';
-import { AcousticSignalControl, SignalControl } from './SoundControls';
-import { ColorLightControl } from './ColorLightControl';
-import { ButtonsControl } from './ButtonsControl';
-import { MotionDetectorControl, SirenControl, SmokeDetectorControl, WaterDetectorControl } from './DetectorControls';
-import { GarageDoorControl } from './GarageDoorControl';
-import { AccessControl, AccessPointControl } from './AccessControls';
-import { InputControl } from './InputControl';
-import { ServoControl } from './ServoControl';
-import { AcousticDisplayControl, Rc19DisplayControl } from './DisplayControls';
-import {
-  DistanceControl,
-  FillingLevelControl,
-  MeterSensorControl,
-  PassageDetectorControl,
-} from './MeterSensorControls';
-import { SwitchControl as AlarmOutputControl } from './SwitchControl';
-import { AutoRelockControl, DoorStateControl, FloorOutputControl, LockStateControl } from './SideChannelControls';
-import {
-  BrightnessControl,
-  Co2Control,
-  Co2LevelControl,
-  ParticulateMatterControl,
-  PowerMainsControl,
-  RainSensorControl,
-  SoilMoistureControl,
-  TiltSensorControl,
-} from './SensorControls';
-import {
-  AkkuControl,
-  FlowMeterControl,
-  ValveControl,
-  WaterFlowControl,
-  WaterPressureControl,
-  WaterSwitchControl,
-  WindowDriveControl,
-  WinmaticControl,
-} from './WaterControls';
+
+// The tiles are loaded when a page shows one, not with the app: they are
+// most of its code, and a room with lights only needs the light tiles.
+// Each module is loaded once, by whichever of its tiles comes first.
+// The props differ per tile; channelControl and deviceControl say which
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyTile = ComponentType<any>;
+// tileName: which tile it is, for tests and debugging
+const tile = (load: () => Promise<Record<string, unknown>>, name: string): AnyTile & { tileName: string } =>
+  Object.assign(
+    lazy(async () => ({ default: (await load())[name] as AnyTile })),
+    { tileName: name },
+  );
+
+const FloorControl = tile(() => import('./FloorControl'), 'FloorControl');
+const SwitchControl = tile(() => import('./SwitchControl'), 'SwitchControl');
+const BlindsControl = tile(() => import('./BlindsControl'), 'BlindsControl');
+const ThermostatControl = tile(() => import('./ThermostatControl'), 'ThermostatControl');
+const DoorControl = tile(() => import('./DoorControl'), 'DoorControl');
+const DoorLockControl = tile(() => import('./DoorControl'), 'DoorLockControl');
+const EnergyMeterControl = tile(() => import('./EnergyMeterControl'), 'EnergyMeterControl');
+const WindowControl = tile(() => import('./WindowControl'), 'WindowControl');
+const ClimateSensorControl = tile(() => import('./ClimateSensorControl'), 'ClimateSensorControl');
+const DimmerControl = tile(() => import('./DimmerControl'), 'DimmerControl');
+const DualWhiteColorControl = tile(() => import('./BidcosLightControls'), 'DualWhiteColorControl');
+const RgbwColorControl = tile(() => import('./BidcosLightControls'), 'RgbwColorControl');
+const RgbwProgramControl = tile(() => import('./BidcosLightControls'), 'RgbwProgramControl');
+const AcousticSignalControl = tile(() => import('./SoundControls'), 'AcousticSignalControl');
+const SignalControl = tile(() => import('./SoundControls'), 'SignalControl');
+const ColorLightControl = tile(() => import('./ColorLightControl'), 'ColorLightControl');
+const ButtonsControl = tile(() => import('./ButtonsControl'), 'ButtonsControl');
+const MotionDetectorControl = tile(() => import('./DetectorControls'), 'MotionDetectorControl');
+const SirenControl = tile(() => import('./DetectorControls'), 'SirenControl');
+const SmokeDetectorControl = tile(() => import('./DetectorControls'), 'SmokeDetectorControl');
+const WaterDetectorControl = tile(() => import('./DetectorControls'), 'WaterDetectorControl');
+const GarageDoorControl = tile(() => import('./GarageDoorControl'), 'GarageDoorControl');
+const AccessControl = tile(() => import('./AccessControls'), 'AccessControl');
+const AccessPointControl = tile(() => import('./AccessControls'), 'AccessPointControl');
+const InputControl = tile(() => import('./InputControl'), 'InputControl');
+const ServoControl = tile(() => import('./ServoControl'), 'ServoControl');
+const AcousticDisplayControl = tile(() => import('./DisplayControls'), 'AcousticDisplayControl');
+const Rc19DisplayControl = tile(() => import('./DisplayControls'), 'Rc19DisplayControl');
+const DistanceControl = tile(() => import('./MeterSensorControls'), 'DistanceControl');
+const FillingLevelControl = tile(() => import('./MeterSensorControls'), 'FillingLevelControl');
+const MeterSensorControl = tile(() => import('./MeterSensorControls'), 'MeterSensorControl');
+const PassageDetectorControl = tile(() => import('./MeterSensorControls'), 'PassageDetectorControl');
+const AlarmOutputControl = tile(() => import('./SwitchControl'), 'SwitchControl');
+const AutoRelockControl = tile(() => import('./SideChannelControls'), 'AutoRelockControl');
+const DoorStateControl = tile(() => import('./SideChannelControls'), 'DoorStateControl');
+const FloorOutputControl = tile(() => import('./SideChannelControls'), 'FloorOutputControl');
+const LockStateControl = tile(() => import('./SideChannelControls'), 'LockStateControl');
+const BrightnessControl = tile(() => import('./SensorControls'), 'BrightnessControl');
+const Co2Control = tile(() => import('./SensorControls'), 'Co2Control');
+const Co2LevelControl = tile(() => import('./SensorControls'), 'Co2LevelControl');
+const ParticulateMatterControl = tile(() => import('./SensorControls'), 'ParticulateMatterControl');
+const PowerMainsControl = tile(() => import('./SensorControls'), 'PowerMainsControl');
+const RainSensorControl = tile(() => import('./SensorControls'), 'RainSensorControl');
+const SoilMoistureControl = tile(() => import('./SensorControls'), 'SoilMoistureControl');
+const TiltSensorControl = tile(() => import('./SensorControls'), 'TiltSensorControl');
+const AkkuControl = tile(() => import('./WaterControls'), 'AkkuControl');
+const FlowMeterControl = tile(() => import('./WaterControls'), 'FlowMeterControl');
+const ValveControl = tile(() => import('./WaterControls'), 'ValveControl');
+const WaterFlowControl = tile(() => import('./WaterControls'), 'WaterFlowControl');
+const WaterPressureControl = tile(() => import('./WaterControls'), 'WaterPressureControl');
+const WaterSwitchControl = tile(() => import('./WaterControls'), 'WaterSwitchControl');
+const WindowDriveControl = tile(() => import('./WaterControls'), 'WindowDriveControl');
+const WinmaticControl = tile(() => import('./WaterControls'), 'WinmaticControl');
 
 // Sections of the dashboard, in the order they are shown
 export type SectionId =
@@ -77,19 +97,13 @@ export type ControlOverride =
     | { per: 'device'; component: ComponentType<{ channels: Channel[] }> }
   ) & { section: SectionId };
 
-const channelControl = <T extends Channel>(
-  section: SectionId,
-  component: ComponentType<{ channel: T }>,
-): ControlOverride => ({
+const channelControl = <T extends Channel>(section: SectionId, component: ComponentType<{ channel: T }>): ControlOverride => ({
   per: 'channel',
   section,
   component: component as ComponentType<{ channel: Channel }>,
 });
 
-const deviceControl = <T extends Channel>(
-  section: SectionId,
-  component: ComponentType<{ channels: T[] }>,
-): ControlOverride => ({
+const deviceControl = <T extends Channel>(section: SectionId, component: ComponentType<{ channels: T[] }>): ControlOverride => ({
   per: 'device',
   section,
   component: component as ComponentType<{ channels: Channel[] }>,

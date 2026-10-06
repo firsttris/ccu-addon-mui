@@ -1,23 +1,23 @@
 import { describe, expect, it } from 'vitest';
 // The registry first, as in the app (queries import it, the controls them)
 import { controlOverrides } from './registry';
-import {
-  BrightnessControl,
-  co2Rating,
-  measured,
-  pmRating,
-  RainSensorControl,
-  soilRating,
-  TiltSensorControl,
-  tiltReading,
-} from './SensorControls';
+import { co2Rating, measured, pmRating, soilRating, tiltReading } from './SensorControls';
 import { m } from '../paraglide/messages';
 
 describe('sensor tiles', () => {
   it('are registered for their channel types', () => {
-    expect(controlOverrides.RAIN_DETECTION_TRANSMITTER).toMatchObject({ section: 'sensors', component: RainSensorControl });
-    expect(controlOverrides.LUXMETER).toMatchObject({ section: 'sensors', component: BrightnessControl });
-    expect(controlOverrides.ACCELERATION_TRANSCEIVER).toMatchObject({ section: 'security', component: TiltSensorControl });
+    expect(controlOverrides.RAIN_DETECTION_TRANSMITTER).toMatchObject({
+      section: 'sensors',
+      component: expect.objectContaining({ tileName: 'RainSensorControl' }),
+    });
+    expect(controlOverrides.LUXMETER).toMatchObject({
+      section: 'sensors',
+      component: expect.objectContaining({ tileName: 'BrightnessControl' }),
+    });
+    expect(controlOverrides.ACCELERATION_TRANSCEIVER).toMatchObject({
+      section: 'security',
+      component: expect.objectContaining({ tileName: 'TiltSensorControl' }),
+    });
   });
 
   // *_STATUS: NORMAL is 0, anything else (UNKNOWN, OVERFLOW …) is no value

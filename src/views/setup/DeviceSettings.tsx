@@ -65,14 +65,8 @@ import { Firmware } from "./Firmware";
 import { PanelSkeleton } from "../../components/ui/skeleton";
 import { m } from "../../paraglide/messages";
 
-export const DEVICE_TABS = [
-  "channels",
-  "links",
-  "programs",
-  "history",
-  "maintenance",
-] as const;
-export type DeviceTab = (typeof DEVICE_TABS)[number];
+import { DEVICE_TABS, type DeviceTab } from "./deviceTabs";
+export { DEVICE_TABS, type DeviceTab };
 
 const Section = (props: HTMLAttributes<HTMLElement>) => <Panel {...props} />;
 
