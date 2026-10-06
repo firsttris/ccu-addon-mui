@@ -8,12 +8,11 @@
 package rules
 
 import (
+	"ccu-addon-mui-server/pkg/atomicfile"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -121,14 +120,7 @@ type Store struct {
 // OpenStore reads the rules; a missing file means none
 func OpenStore(path string) (*Store, error) {
 	s := &Store{path: path, rules: []Rule{}}
-	data, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return s, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(data, &s.rules); err != nil {
+	if err := atomicfile.ReadJSON(path, &s.rules); err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
 	return s, nil
@@ -195,15 +187,7 @@ func (s *Store) Delete(id string) (Rule, error) {
 }
 
 func (s *Store) write(rules []Rule) error {
-	data, err := json.MarshalIndent(rules, "", "  ")
-	if err != nil {
-		return err
-	}
-	tmp := s.path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
-		return err
-	}
-	return os.Rename(tmp, s.path)
+	return atomicfile.WriteJSON(s.path, rules, 0o600)
 }
 
 func newID() string {

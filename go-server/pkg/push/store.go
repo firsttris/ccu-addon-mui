@@ -1,9 +1,7 @@
 package push
 
 import (
-	"encoding/json"
-	"errors"
-	"os"
+	"ccu-addon-mui-server/pkg/atomicfile"
 	"sync"
 	"time"
 )
@@ -38,31 +36,16 @@ type Store struct {
 
 func OpenStore(path string) (*Store, error) {
 	s := &Store{path: path}
-	raw, err := os.ReadFile(path)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
+	if err := atomicfile.ReadJSON(path, &s.data); err != nil {
 		return nil, err
-	}
-	if len(raw) > 0 {
-		if err := json.Unmarshal(raw, &s.data); err != nil {
-			return nil, err
-		}
 	}
 	return s, nil
 }
 
 func (s *Store) saveLocked() error {
-	raw, err := json.MarshalIndent(s.data, "", "  ")
-	if err != nil {
-		return err
-	}
-	// Written aside and renamed, as rules.go and diagrams.go do: a power cut
-	// mid-write would otherwise leave a broken file, and with it a new VAPID
-	// key, which makes every browser's subscription useless.
-	tmp := s.path + ".tmp"
-	if err := os.WriteFile(tmp, raw, 0o600); err != nil {
-		return err
-	}
-	return os.Rename(tmp, s.path)
+	// A broken file would mean a new VAPID key, which makes every
+	// browser's subscription useless (atomicfile)
+	return atomicfile.WriteJSON(s.path, s.data, 0o600)
 }
 
 // VAPID returns the key, creating and storing one the first time.

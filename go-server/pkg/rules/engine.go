@@ -2,13 +2,11 @@ package rules
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
-	"os"
 	"strconv"
 	"sync"
 	"time"
 
+	"ccu-addon-mui-server/pkg/atomicfile"
 	"ccu-addon-mui-server/pkg/logger"
 )
 
@@ -49,15 +47,8 @@ func (e *Engine) KeepState(path string) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.statePath = path
-	data, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
 	var st state
-	if err := json.Unmarshal(data, &st); err != nil {
+	if err := atomicfile.ReadJSON(path, &st); err != nil {
 		return err
 	}
 	for id, since := range st.Fired {
@@ -76,14 +67,7 @@ func (e *Engine) saveState() {
 	for id := range e.fired {
 		st.Fired[id] = e.since[id]
 	}
-	data, _ := json.Marshal(st)
-	tmp := e.statePath + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err == nil {
-		err = os.Rename(tmp, e.statePath)
-		if err != nil {
-			logger.Error("Rules: saving the state failed:", err)
-		}
-	} else {
+	if err := atomicfile.WriteJSON(e.statePath, st, 0o600); err != nil {
 		logger.Error("Rules: saving the state failed:", err)
 	}
 }
