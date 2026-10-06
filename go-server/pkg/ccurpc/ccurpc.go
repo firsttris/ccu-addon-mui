@@ -46,7 +46,7 @@ var (
 	ErrInvalidParamset  = fmt.Errorf("invalid paramset key")
 )
 
-// caller is the part of *xmlrpc.Client used here, replaceable in tests.
+// caller makes an XML-RPC call (httpCaller), replaceable in tests.
 type caller interface {
 	Call(method string, args interface{}, reply interface{}) error
 }
@@ -110,14 +110,8 @@ func New(cfg *config.Config) (*Client, error) {
 	slow := map[string]caller{}
 	for _, iface := range Interfaces(cfg) {
 		url := fmt.Sprintf("http://%s:%d%s", cfg.CCUHost, iface.Port, iface.Path)
-		client, err := xmlrpc.NewClient(url, transport)
-		if err != nil {
-			return nil, err
-		}
-		callers[iface.Name] = client
-		if slowClient, err := xmlrpc.NewClient(url, slowTransport); err == nil {
-			slow[iface.Name] = slowClient
-		}
+		callers[iface.Name] = newHTTPCaller(url, transport)
+		slow[iface.Name] = newHTTPCaller(url, slowTransport)
 	}
 	c := newClient(callers)
 	c.slow = slow
