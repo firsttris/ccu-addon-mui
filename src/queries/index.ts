@@ -4,7 +4,7 @@ import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
 import { AlarmMessage, ServiceMessage, ProgramDefinition } from '../types/protocol';
 import { applyEvent, groupChannelsByType, shareGroups, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
-import { TranslationKey, useTranslations } from '../i18n/utils';
+import { m } from '../paraglide/messages';
 import {
   Channel,
   DatapointValue,
@@ -551,10 +551,12 @@ const currentValue = (queryClient: QueryClient, address: string, datapoint: stri
   return undefined;
 };
 
-const setErrorMessages: Record<string, TranslationKey> = {
-  NOT_CONNECTED: 'NOT_CONNECTED',
-  TIMEOUT: 'SET_TIMEOUT',
-  FORBIDDEN: 'SET_FORBIDDEN',
+// Functions, not keys: a lookup by key (i18n/utils) would put every text of
+// the app in the start bundle
+const setErrorMessages: Record<string, () => string> = {
+  NOT_CONNECTED: m.NOT_CONNECTED,
+  TIMEOUT: m.SET_TIMEOUT,
+  FORBIDDEN: m.SET_FORBIDDEN,
 };
 
 interface SetDatapoint {
@@ -571,7 +573,6 @@ export const useSetDataPoint = () => {
   const queryClient = useQueryClient();
   const { request } = useWebSocketActions();
   const { showToast } = useToast();
-  const t = useTranslations();
 
   const { mutate } = useMutation({
     mutationFn: async ({ interfaceName, address, attribute, value }: SetDatapoint) => {
@@ -598,7 +599,7 @@ export const useSetDataPoint = () => {
         );
       }
       const code = error instanceof RequestError ? error.code : undefined;
-      showToast(t(setErrorMessages[code ?? ''] ?? 'SET_FAILED'));
+      showToast((setErrorMessages[code ?? ''] ?? m.SET_FAILED)());
     },
   });
 

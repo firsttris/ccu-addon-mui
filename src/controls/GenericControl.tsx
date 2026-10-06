@@ -1,7 +1,7 @@
 import { DatapointValue, GenericChannel, ParamsetDescription } from '../types/types';
 import { useParamsetDescription, useSetDataPoint } from '../queries';
 import { ParamsetView, shownParameters } from './generic/ParamsetView';
-import { defaultLang } from '../i18n/utils';
+import { defaultLang } from '../i18n/locale';
 import { WebUILink } from '../components/WebUILink';
 import { Tile } from '../components/Tile';
 import { m } from '../paraglide/messages';

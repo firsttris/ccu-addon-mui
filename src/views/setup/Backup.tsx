@@ -6,7 +6,7 @@ import { ElevateDialog } from '../../components/ElevateDialog';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { useToast } from '../../contexts/ToastContext';
-import { defaultLang } from '../../i18n/utils';
+import { defaultLang } from '../../i18n/locale';
 import { Panel } from './Panel';
 import { RestoreBackup, RestoreButton } from './RestoreBackup';
 import { PanelSkeleton } from '../../components/ui/skeleton';

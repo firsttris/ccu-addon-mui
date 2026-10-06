@@ -1,5 +1,4 @@
 import { m } from '../paraglide/messages';
-import { getLocale } from '../paraglide/runtime';
 
 // Texts live in messages/<locale>.json and are compiled by Paraglide JS
 // into typed functions: use m.KEY() for fixed texts. A missing translation
@@ -7,8 +6,9 @@ import { getLocale } from '../paraglide/runtime';
 
 export type TranslationKey = keyof typeof m;
 
-// The language in use, e.g. for number and date formats
-export const defaultLang = getLocale();
+// The language in use (i18n/locale; imported from there where no lookup by
+// runtime keys is needed)
+export { defaultLang } from './locale';
 
 const messages = m as unknown as Record<string, (() => string) | undefined>;
 

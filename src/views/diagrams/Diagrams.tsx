@@ -17,7 +17,7 @@ import { Button } from '../../components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { PanelSkeleton, Skeleton } from '../../components/ui/skeleton';
 import { Panel } from '../setup/Panel';
-import { defaultLang } from '../../i18n/utils';
+import { defaultLang } from '../../i18n/locale';
 import { m } from '../../paraglide/messages';
 import { cn } from '../../lib/utils';
 import { TimeChart, formatSeriesValue, formatValue } from './TimeChart';

@@ -11,7 +11,7 @@ import { ControlComponent } from '../components/ControlComponent';
 import { AlarmBanner, AlarmsSheet } from '../components/Alarms';
 import { windowState } from '../controls/WindowControl';
 import { useEffects } from '../contexts/EffectsContext';
-import { TranslationKey, useTranslations } from '../i18n/utils';
+import { channelTypeName } from '../i18n/channelTypeNames';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { TileSkeleton, TileSkeletonGrid } from '../components/ui/skeleton';
@@ -357,10 +357,9 @@ interface SectionProps {
 }
 
 const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, order }: SectionProps) => {
-  const t = useTranslations();
   const free = group.key === FREE;
   // Types without a translation (shown by GenericControl) keep the CCU's name
-  const title = group.section ? sectionTitles[group.section]() : free ? '' : t(group.types[0][0] as TranslationKey);
+  const title = group.section ? sectionTitles[group.section]() : free ? '' : channelTypeName(group.types[0][0]);
   const id = `section-${group.key.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
   const count = group.types.reduce((sum, [, channels]) => sum + channels.length, 0);
   const tiles = useMemo(() => {

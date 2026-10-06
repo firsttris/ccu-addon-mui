@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { defaultLang } from '../../i18n/utils';
+import { defaultLang } from '../../i18n/locale';
 import { useEffects } from '../../contexts/EffectsContext';
 import { m } from '../../paraglide/messages';
 import { nearest, niceTicks, timeTicks, DAY, type Bar, type ChartPoint, type RenderSeries } from './chart';
