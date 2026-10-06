@@ -456,8 +456,11 @@ func (s *Server) BroadcastToClients(event *types.CCUEvent) {
 				logger.Debugf("   ✅ Sent to device %s", client.DeviceID())
 			}
 		default:
-			logger.Error(fmt.Sprintf("   ⚠️ Device %s buffer full, dropping message", client.DeviceID()))
+			// Without this event the app would show a stale value for good:
+			// close the connection, the app reconnects and reloads everything
+			logger.Error(fmt.Sprintf("   ⚠️ Device %s buffer full, dropping message and closing the connection", client.DeviceID()))
 			droppedCount++
+			client.close()
 		}
 	}
 

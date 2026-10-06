@@ -692,3 +692,19 @@ func TestRecoveredPanic(t *testing.T) {
 		t.Fatal("not run")
 	}
 }
+
+// A client too slow for the events is disconnected, so the app reconnects
+// and reloads instead of showing stale values
+func TestBroadcastClosesClientWithFullBuffer(t *testing.T) {
+	s := NewServer(nil, nil)
+	slow := &Client{id: "1", send: make(chan []byte), deviceID: "dev-1", done: make(chan struct{})}
+	s.clients[slow] = true
+	s.subscriptionMgr.Subscribe(slow.id, []string{"A:1"})
+
+	s.BroadcastToClients(&types.CCUEvent{Event: types.Event{Channel: "A:1", Datapoint: "STATE", Value: true}})
+	select {
+	case <-slow.done:
+	default:
+		t.Fatal("slow client not closed")
+	}
+}

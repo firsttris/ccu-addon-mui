@@ -182,7 +182,7 @@ func (a *Authenticator) Login(username, password, device, source string) (Sessio
 	}
 	session := Session{User: username, Level: a.lookupLevel(username)}
 	a.mu.Lock()
-	session.ID = a.startSession(username, device)
+	session.ID = a.startSession(username, device, false)
 	a.mu.Unlock()
 	return session, a.issueToken(session), nil
 }
@@ -197,7 +197,7 @@ func (a *Authenticator) AutoLogin(username, device string) (Session, string, err
 	}
 	session := Session{User: username, Level: level}
 	a.mu.Lock()
-	session.ID = a.startSession(username, device)
+	session.ID = a.startSession(username, device, true)
 	a.mu.Unlock()
 	return session, a.issueToken(session), nil
 }

@@ -2,6 +2,9 @@ package rules
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -29,6 +32,60 @@ type Engine struct {
 	fired map[string]bool
 	// Channels whose values were read or failed recently
 	loaded map[string]time.Time
+	// Where the rules that notified are kept across restarts, "" for not
+	statePath string
+}
+
+// state is what survives a restart: the rules that notified and since when
+// their conditions hold. Written only when a rule notifies or stops
+// holding after it did, so the flash isn't worn by every event.
+type state struct {
+	Fired map[string]time.Time `json:"fired"`
+}
+
+// KeepState keeps the rules that notified in path (next to the rules), so
+// a restart doesn't notify them again while they still hold.
+func (e *Engine) KeepState(path string) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.statePath = path
+	data, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	var st state
+	if err := json.Unmarshal(data, &st); err != nil {
+		return err
+	}
+	for id, since := range st.Fired {
+		e.since[id] = since
+		e.fired[id] = true
+	}
+	return nil
+}
+
+// saveState writes the rules that notified; e.mu must be held.
+func (e *Engine) saveState() {
+	if e.statePath == "" {
+		return
+	}
+	st := state{Fired: map[string]time.Time{}}
+	for id := range e.fired {
+		st.Fired[id] = e.since[id]
+	}
+	data, _ := json.Marshal(st)
+	tmp := e.statePath + ".tmp"
+	if err := os.WriteFile(tmp, data, 0o600); err == nil {
+		err = os.Rename(tmp, e.statePath)
+		if err != nil {
+			logger.Error("Rules: saving the state failed:", err)
+		}
+	} else {
+		logger.Error("Rules: saving the state failed:", err)
+	}
 }
 
 // How long a failed read of a channel's values waits before the next try
@@ -178,6 +235,7 @@ func (e *Engine) evaluate(loadMissing bool) {
 	now := e.now()
 	var due []Rule
 	e.mu.Lock()
+	changed := false
 	active := map[string]bool{}
 	for _, r := range rules {
 		if !r.Enabled {
@@ -185,14 +243,22 @@ func (e *Engine) evaluate(loadMissing bool) {
 		}
 		active[r.ID] = true
 		ok := inWindow(r, now)
+		unknown := false
 		for _, c := range r.Conditions {
 			value, known := e.current[c.Key()]
-			if !known || !holds(c, value) {
+			if !known {
+				unknown = true
+			} else if !holds(c, value) {
 				ok = false
-				break
 			}
 		}
+		// A value not read yet (just after a start) leaves the rule as it
+		// is, unless another one already says the conditions don't hold
+		if ok && unknown {
+			continue
+		}
 		if !ok {
+			changed = changed || e.fired[r.ID]
 			delete(e.since, r.ID)
 			delete(e.fired, r.ID)
 			continue
@@ -204,15 +270,20 @@ func (e *Engine) evaluate(loadMissing bool) {
 		}
 		if !e.fired[r.ID] && now.Sub(start) >= time.Duration(r.Minutes)*time.Minute {
 			e.fired[r.ID] = true
+			changed = true
 			due = append(due, r)
 		}
 	}
 	// Changed or deleted rules start over
 	for id := range e.since {
 		if !active[id] {
+			changed = changed || e.fired[id]
 			delete(e.since, id)
 			delete(e.fired, id)
 		}
+	}
+	if changed {
+		e.saveState()
 	}
 	e.mu.Unlock()
 	for _, r := range due {
@@ -223,8 +294,12 @@ func (e *Engine) evaluate(loadMissing bool) {
 // Reset forgets a rule's state, after it was changed
 func (e *Engine) Reset(id string) {
 	e.mu.Lock()
+	wasFired := e.fired[id]
 	delete(e.since, id)
 	delete(e.fired, id)
+	if wasFired {
+		e.saveState()
+	}
 	e.mu.Unlock()
 }
 
