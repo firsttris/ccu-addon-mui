@@ -213,25 +213,45 @@ func (s *Server) Unregister(ctx context.Context) error {
 	}
 
 	s.clientsMu.Lock()
-	defer s.clientsMu.Unlock()
+	clients := make(map[string]*xmlrpc.Client, len(s.clients))
+	for name, client := range s.clients {
+		clients[name] = client
+	}
+	s.clientsMu.Unlock()
 
 	// The CCU identifies a registration by its callback URL; init(url, "")
 	// removes it. An empty URL would not match any registration.
 	callbackURL := s.callbackURL()
 
-	for interfaceName, client := range s.clients {
-		interfaceID := fmt.Sprintf("websocket-server-%s", interfaceName)
-		logger.Info("📤 Unregistering", interfaceID, "...")
-
-		var result interface{}
-		if err := client.Call("init", []interface{}{callbackURL, ""}, &result); err != nil {
-			logger.Error(fmt.Sprintf("❌ Failed to unregister %s:", interfaceName), err)
-		} else {
-			logger.Info(fmt.Sprintf("✅ Unregistered %s", interfaceID))
-		}
+	// All at once and no longer than the context allows: one call to a CCU
+	// that doesn't answer takes up to 35 s (dial and answer timeout), one
+	// after the other they held up the shutdown for minutes.
+	var wg sync.WaitGroup
+	for interfaceName, client := range clients {
+		wg.Add(1)
+		go func(interfaceName string, client *xmlrpc.Client) {
+			defer wg.Done()
+			interfaceID := interfaceIDFor(interfaceName)
+			logger.Info("📤 Unregistering", interfaceID, "...")
+			var result interface{}
+			if err := client.Call("init", []interface{}{callbackURL, ""}, &result); err != nil {
+				logger.Error(fmt.Sprintf("❌ Failed to unregister %s:", interfaceName), err)
+			} else {
+				logger.Info(fmt.Sprintf("✅ Unregistered %s", interfaceID))
+			}
+		}(interfaceName, client)
 	}
-
-	return nil
+	unregistered := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(unregistered)
+	}()
+	select {
+	case <-unregistered:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func interfaceIDFor(interfaceName string) string {

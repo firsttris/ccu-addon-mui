@@ -118,6 +118,35 @@ func TestUnregisterSendsCallbackURL(t *testing.T) {
 	}
 }
 
+// A CCU that doesn't answer doesn't hold up the shutdown beyond its context
+func TestUnregisterKeepsToTheContext(t *testing.T) {
+	release := make(chan struct{})
+	ccu := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		<-release
+	}))
+	defer ccu.Close()
+	defer close(release)
+
+	s := NewServer(&config.Config{CallbackHost: "127.0.0.1", RPCServerPort: 9099}, nil)
+	for _, name := range []string{"BidCos-RF", "HmIP-RF"} {
+		client, err := xmlrpc.NewClient(ccu.URL, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s.clients[name] = client
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	if err := s.Unregister(ctx); err == nil {
+		t.Fatal("expected the context's error")
+	}
+	if elapsed := time.Since(start); elapsed > time.Second {
+		t.Fatalf("Unregister took %v", elapsed)
+	}
+}
+
 func TestMulticallDeliversEventsInOrder(t *testing.T) {
 	var got []interface{}
 	s := NewServer(&config.Config{}, func(e *types.CCUEvent) {
