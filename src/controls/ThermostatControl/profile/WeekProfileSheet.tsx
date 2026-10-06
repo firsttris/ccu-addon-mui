@@ -202,7 +202,15 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
   const { data: values } = useParamset(interfaceName, address, 'MASTER', { enabled: open });
   const putParamset = usePutParamset();
   const setDataPoint = useSetDataPoint();
-  const { profiles, slots } = useMemo(() => profileLayout(description), [description]);
+  const { profiles, slots, prefixed } = useMemo(() => profileLayout(description), [description]);
+  // BidCos wall thermostats choose the profile in their MASTER paramset
+  // (WEEK_PROGRAM_POINTER 0-2), not with ACTIVE_PROFILE
+  const pointer = description !== undefined && 'WEEK_PROGRAM_POINTER' in description;
+  const runningProfile = pointer
+    ? typeof values?.WEEK_PROGRAM_POINTER === 'number'
+      ? values.WEEK_PROGRAM_POINTER + 1
+      : undefined
+    : activeProfile;
 
   const [profile, setProfile] = useState(activeProfile ?? 1);
   const [selectedDay, setSelectedDay] = useState(todayIndex());
@@ -228,11 +236,13 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
     if (profiles > 0 && profile > profiles) setProfile(1);
   }, [profile, profiles]);
 
-  const stored = useMemo(() => (values && profiles > 0 ? readWeek(values, profile, slots) : null), [values, profile, slots, profiles]);
+  // The names of the HM-CC-RT-DN's one profile have no "P1_" (profile 0)
+  const key = prefixed ? profile : 0;
+  const stored = useMemo(() => (values && profiles > 0 ? readWeek(values, key, slots) : null), [values, key, slots, profiles]);
   const week = draft ?? stored;
   const changes = useMemo(
-    () => (week && values ? changedValues(values, profile, week, slots) : {}),
-    [week, values, profile, slots],
+    () => (week && values ? changedValues(values, key, week, slots) : {}),
+    [week, values, key, slots],
   );
   const changeCount = Object.keys(changes).length;
   const day: Day = DAYS[selectedDay];
@@ -312,15 +322,27 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
                       )}
                     >
                       {m.PROFILE_N({ n })}
-                      {activeProfile === n && <span className="size-1.5 rounded-full bg-green-500" aria-label={m.ACTIVE_PROFILE()} />}
+                      {runningProfile === n && <span className="size-1.5 rounded-full bg-green-500" aria-label={m.ACTIVE_PROFILE()} />}
                     </button>
                   ))}
                 </div>
-                {activeProfile !== undefined && activeProfile !== profile && userLevel !== 'guest' && (
+                {runningProfile !== undefined && runningProfile !== profile && (pointer ? canEdit : userLevel !== 'guest') && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
+                      if (pointer) {
+                        // A setting of the device: through putParamset, like the WebUI's
+                        // device parameters (tc_it_dev_master.tcl)
+                        putParamset.mutate(
+                          { interfaceName, address, values: { WEEK_PROGRAM_POINTER: profile - 1 } },
+                          {
+                            onSuccess: () => showToast(m.PROFILE_ACTIVATED(), 'info'),
+                            onError: (error) => showToast(`${m.SAVE_FAILED()}: ${error.message}`),
+                          },
+                        );
+                        return;
+                      }
                       setDataPoint(interfaceName, address, 'ACTIVE_PROFILE', profile);
                       showToast(m.PROFILE_ACTIVATED(), 'info');
                     }}
