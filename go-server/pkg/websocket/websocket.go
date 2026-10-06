@@ -147,10 +147,12 @@ func (c *Client) setSession(user, level string) {
 	c.elevatedUntil = time.Time{}
 }
 
-// canOperate: everyone but guests may switch devices. An unknown level (it
-// could not be read) is allowed, as before levels were checked.
+// canOperate: users and administrators may switch devices, guests not. An
+// unknown level (ReGa could not tell it at login) is refused too: it might
+// be a guest. The level is looked up again on the next connect
+// (Authenticator.Refresh).
 func canOperate(level string) bool {
-	return level != auth.LevelGuest
+	return level == auth.LevelUser || level == auth.LevelAdmin
 }
 
 // configureError says why a client may not change settings, or "" if it
