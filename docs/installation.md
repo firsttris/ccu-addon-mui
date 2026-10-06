@@ -147,7 +147,7 @@ unter *Zusatzsoftware → Neustart* oder per SSH mit `/usr/local/etc/config/rc.d
 | `/usr/local/etc/config/mui-diagrams.json` | Diagramme |
 | `/usr/local/etc/config/mui-rules.json` | Benachrichtigungsregeln |
 | `/usr/local/mui-diagrams/` | aufgezeichnete Werte (Minutenwerte 60 Tage, Stundenwerte unbegrenzt) |
-| `/var/log/mui-websocket-server.log` | Log des Servers (im RAM; ist es beim Start größer als 1 MB, wird es zu `.old`) |
+| `/var/log/mui-websocket-server.log` | Log des Servers (im RAM; wird es größer als 1 MB, beim Start oder im Betrieb, kommt es nach `.old`) |
 
 Die Dateien unter `/usr/local/etc/config` sind Teil jedes CCU-Backups. Die Minutenwerte der Diagramme
 sind davon ausgenommen, damit Backups klein bleiben.

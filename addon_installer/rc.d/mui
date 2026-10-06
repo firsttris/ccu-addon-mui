@@ -34,7 +34,8 @@ start() {
         . $CONFIG_FILE
         set +a
     fi
-    $GO_BIN >> $LOG_FILE 2>&1 &
+    # The server turns its log over too while running (logger.RotateAt)
+    LOG_FILE=$LOG_FILE LOG_MAX_BYTES=$LOG_MAX_BYTES $GO_BIN >> $LOG_FILE 2>&1 &
     echo $! > $PID_FILE
     echo "MUI WebSocket Server started (PID: $(cat $PID_FILE))"
 }

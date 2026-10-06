@@ -763,3 +763,17 @@ func TestSlowReadsDoNotHoldUpOtherRequests(t *testing.T) {
 		seen[m["requestId"].(string)] = true
 	}
 }
+
+func TestExecSafe(t *testing.T) {
+	for _, ok := range []string{"", "geheim123", "a<b>c|d", "Passwort&", "2x>"} {
+		if !execSafe(ok) {
+			t.Errorf("%q refused", ok)
+		}
+	}
+	// Tcl's exec would redirect or pipe these instead of passing them on
+	for _, bad := range []string{">x", ">>x", "<x", "|cmd", "2>x", "&"} {
+		if execSafe(bad) {
+			t.Errorf("%q accepted", bad)
+		}
+	}
+}

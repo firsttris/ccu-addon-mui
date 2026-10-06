@@ -37,6 +37,16 @@ type securityResponse struct {
 // An SNMP user name: one word, as setSNMPUser.sh passes it to snmpd
 var snmpUserRegex = regexp.MustCompile(`^[A-Za-z0-9._-]{1,32}$`)
 
+// execSafe says whether Tcl's exec passes the value on as it is. The WebUI's
+// setsshpassword.tcl ("exec echo $passwd | mkpasswd") and setsnmpenabled.tcl
+// ("exec -- setSNMPUser.sh $user $pass") hand passwords to exec, which takes
+// a word starting with <, > or | (also 2>) as a redirection or pipe, and a
+// last "&" as running in the background: a password like ">x" would set an
+// empty SSH password. The WebUI doesn't check this.
+func execSafe(value string) bool {
+	return value != "&" && !strings.HasPrefix(value, "2>") && !strings.ContainsAny(value[:min(len(value), 1)], "<>|")
+}
+
 // After a change of authentication or HTTPS redirect lighttpd restarts,
 // which ends the connections through it: after the answer
 var restartLighttpdDelay = time.Second
@@ -109,7 +119,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		}
 		if msg.SNMP {
 			// setSNMPUser.sh writes the password in quotes into snmpd.conf
-			if !snmpUserRegex.MatchString(msg.SNMPUser) || len(msg.SNMPPassword) < 8 || strings.ContainsAny(msg.SNMPPassword, "\"\\\r\n") {
+			if !snmpUserRegex.MatchString(msg.SNMPUser) || len(msg.SNMPPassword) < 8 || strings.ContainsAny(msg.SNMPPassword, "\"\\\r\n") || !execSafe(msg.SNMPPassword) {
 				s.recordAudit(entry, "INVALID_VALUE")
 				s.sendRequestError(client, msg.RequestID, "a user and a password of at least 8 characters are needed", "INVALID_VALUE")
 				return
@@ -193,7 +203,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 			s.sendRequestError(client, msg.RequestID, errorMsg, code)
 			return
 		}
-		if strings.ContainsAny(msg.SSHPassword, "\r\n") {
+		if strings.ContainsAny(msg.SSHPassword, "\r\n") || !execSafe(msg.SSHPassword) {
 			s.recordAudit(entry, "INVALID_VALUE")
 			s.sendRequestError(client, msg.RequestID, "invalid SSH password", "INVALID_VALUE")
 			return
@@ -257,6 +267,13 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		if code, errorMsg := configureError(client); code != "" {
 			s.recordAudit(entry, code)
 			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+			return
+		}
+		// Irreversible: the password every time, not only a recent one
+		// (elevation) or a kept WebUI session
+		if msg.Password == "" {
+			s.recordAudit(entry, "PASSWORD_REQUIRED")
+			s.sendRequestError(client, msg.RequestID, "enter the password to reset the CCU", "PASSWORD_REQUIRED")
 			return
 		}
 		if err := s.backup.CheckFactoryReset(client.user, msg.Password, msg.Key); err != nil {

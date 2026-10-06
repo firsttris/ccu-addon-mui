@@ -30,7 +30,8 @@ func (c *Client) SetChannelOption(id int64, option string, value bool) (result, 
 // GetReadOnlyChannels returns the addresses of the channels
 // non-administrators may not operate.
 func (c *Client) GetReadOnlyChannels() (map[string]bool, error) {
-	output, err := c.Execute(getReadOnlyChannelsScript)
+	// Cut short, the list would leave channels operable
+	output, err := c.ExecuteComplete(getReadOnlyChannelsScript)
 	if err != nil {
 		return nil, err
 	}
