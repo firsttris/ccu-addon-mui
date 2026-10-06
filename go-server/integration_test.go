@@ -1126,7 +1126,10 @@ func TestStackFirmwareUpdate(t *testing.T) {
 	}
 	// While a BidCos update runs (rfd answers only when it is done), the
 	// connection goes on and a second start for the device is refused
-	ccu.FirmwareUpdateDelay = 500 * time.Millisecond
+	// Long enough that listDevices is answered first also on a busy CI
+	// runner (with -race); receive drops what doesn't match, so the
+	// update's answer is looked for on the way
+	ccu.FirmwareUpdateDelay = 2 * time.Second
 	ccu.SetDeviceField("BidCos-RF", "LEQ0000001", "AVAILABLE_FIRMWARE", "2.12")
 	send(t, conn, message{"type": "installFirmware", "requestId": "r1", "interfaceName": "BidCos-RF", "address": "LEQ0000001"})
 	send(t, conn, message{"type": "installFirmware", "requestId": "r2", "interfaceName": "BidCos-RF", "address": "LEQ0000001"})
@@ -1134,7 +1137,9 @@ func TestStackFirmwareUpdate(t *testing.T) {
 		t.Fatalf("expected UPDATE_RUNNING, got %v", m)
 	}
 	send(t, conn, message{"type": "listDevices", "requestId": "r3"})
-	receive(t, conn, byRequestID("r3"))
+	if m := receive(t, conn, func(m message) bool { return m["requestId"] == "r3" || m["requestId"] == "r1" }); m["requestId"] != "r3" {
+		t.Fatalf("listDevices waited for the firmware update: %v", m)
+	}
 	if m := receive(t, conn, byRequestID("r1")); m["success"] != true {
 		t.Fatalf("updateFirmware failed: %v", m)
 	}
