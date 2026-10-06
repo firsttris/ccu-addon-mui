@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 	"time"
@@ -196,5 +197,48 @@ func TestEvictedSessionIsReported(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("eviction not reported")
+	}
+}
+
+// Automatic logins reuse their device's session, keep to their own share
+// and never push out a device that logged in with a password
+func TestAutoLoginSessionsStayInTheirShare(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	a := newTestAuthenticator(t, ccu.URL)
+	a.SetLevelFunc(func(string) (string, error) { return LevelUser, nil })
+	if err := a.EnableSessions(filepath.Join(t.TempDir(), "sessions.json")); err != nil {
+		t.Fatal(err)
+	}
+	admin, _, err := a.Login("Admin", "secret", "Tablet", "192.0.2.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	first, _, err := a.AutoLogin("Gast", "Wandtablet")
+	if err != nil {
+		t.Fatal(err)
+	}
+	again, _, _ := a.AutoLogin("Gast", "Wandtablet")
+	if again.ID != first.ID {
+		t.Fatal("the same device got a second session")
+	}
+	for i := 0; i < 50; i++ {
+		if _, _, err := a.AutoLogin("Gast", fmt.Sprintf("Gerät %d", i)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	auto := 0
+	for _, s := range a.store.sessions {
+		if s.Auto {
+			auto++
+		}
+	}
+	if auto != maxAutoSessions {
+		t.Fatalf("%d automatic sessions, want %d", auto, maxAutoSessions)
+	}
+	if _, ok := a.store.sessions[admin.ID]; !ok {
+		t.Fatal("automatic logins pushed out the administrator's device")
 	}
 }
