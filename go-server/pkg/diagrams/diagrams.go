@@ -9,13 +9,11 @@
 package diagrams
 
 import (
+	"ccu-addon-mui-server/pkg/atomicfile"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -132,14 +130,7 @@ type Store struct {
 // OpenStore reads the diagrams; a missing file means none
 func OpenStore(path string) (*Store, error) {
 	s := &Store{path: path, diagrams: []Diagram{}}
-	data, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
-		return s, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-	if err := json.Unmarshal(data, &s.diagrams); err != nil {
+	if err := atomicfile.ReadJSON(path, &s.diagrams); err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
 	return s, nil
@@ -228,20 +219,7 @@ func (s *Store) Delete(id string) (Diagram, error) {
 }
 
 func (s *Store) write(diagrams []Diagram) error {
-	data, err := json.MarshalIndent(diagrams, "", "  ")
-	if err != nil {
-		return err
-	}
-	if dir := filepath.Dir(s.path); dir != "" {
-		if err := os.MkdirAll(dir, 0o755); err != nil {
-			return err
-		}
-	}
-	tmp := s.path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o644); err != nil {
-		return err
-	}
-	return os.Rename(tmp, s.path)
+	return atomicfile.WriteJSON(s.path, diagrams, 0o644)
 }
 
 func newID() string {

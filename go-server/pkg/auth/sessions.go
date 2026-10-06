@@ -1,11 +1,9 @@
 package auth
 
 import (
+	"ccu-addon-mui-server/pkg/atomicfile"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
-	"errors"
-	"os"
 	"sort"
 	"time"
 )
@@ -46,17 +44,12 @@ type sessionStore struct {
 // tokens can only be revoked all at once by replacing the key.
 func (a *Authenticator) EnableSessions(path string) error {
 	store := &sessionStore{path: path, sessions: map[string]*SessionInfo{}}
-	data, err := os.ReadFile(path)
-	if err == nil {
-		var list []*SessionInfo
-		if err := json.Unmarshal(data, &list); err != nil {
-			return err
-		}
-		for _, s := range list {
-			store.sessions[s.ID] = s
-		}
-	} else if !errors.Is(err, os.ErrNotExist) {
+	var list []*SessionInfo
+	if err := atomicfile.ReadJSON(path, &list); err != nil {
 		return err
+	}
+	for _, s := range list {
+		store.sessions[s.ID] = s
 	}
 	a.mu.Lock()
 	a.store = store
@@ -77,15 +70,7 @@ func (s *sessionStore) save() error {
 		list = append(list, session)
 	}
 	sort.Slice(list, func(i, j int) bool { return list[i].Created.Before(list[j].Created) })
-	data, err := json.MarshalIndent(list, "", "  ")
-	if err != nil {
-		return err
-	}
-	tmp := s.path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
-		return err
-	}
-	return os.Rename(tmp, s.path)
+	return atomicfile.WriteJSON(s.path, list, 0o600)
 }
 
 // startSession registers a new device; a.mu must be held. auto: by the
