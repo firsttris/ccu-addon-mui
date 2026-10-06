@@ -356,13 +356,23 @@ func (c *Client) GetParamsetDescription(iface, address, paramsetKey string) (Par
 		return nil, err
 	}
 
-	// Channels of the same device type have the same descriptions
+	// Channels of the same device type have the same descriptions, by
+	// version
 	_, channel, _ := strings.Cut(address, ":")
 	deviceType := device.ParentType
 	if deviceType == "" {
 		deviceType = device.Type
 	}
-	cacheKey := strings.Join([]string{iface, deviceType, device.Type, channel, fmt.Sprint(device.Version), paramsetKey}, "|")
+	// and firmware: a newer firmware can bring parameters of its own while
+	// the description's VERSION stays. The firmware is the device's, known
+	// from listDevices (channels have none of their own).
+	firmware := device.Firmware
+	if parent, _, isChannel := strings.Cut(address, ":"); isChannel {
+		c.mu.Lock()
+		firmware = c.devices[iface+"|"+parent].Firmware
+		c.mu.Unlock()
+	}
+	cacheKey := strings.Join([]string{iface, deviceType, device.Type, channel, fmt.Sprint(device.Version), firmware, paramsetKey}, "|")
 
 	c.mu.Lock()
 	description, ok := c.paramsetDescriptions[cacheKey]
