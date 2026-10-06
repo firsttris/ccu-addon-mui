@@ -29,6 +29,9 @@ import (
 
 func main() {
 	cfg := config.Load()
+	if cfg.LogFile != "" {
+		logger.RotateAt(cfg.LogFile, cfg.LogMaxBytes)
+	}
 	logger.LogStartupInfo(cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())

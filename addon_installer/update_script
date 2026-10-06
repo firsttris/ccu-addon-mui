@@ -5,6 +5,10 @@
 # 0040-WebUI-AddonInstallNoReboot), so the server is (re)started and
 # lighttpd reloaded here; the eQ-3 CCU3 firmware reboots after every add-on
 # install anyway. An exit code other than 0 and 10 shows "Error (n)".
+#
+# A step that fails (e.g. a full /usr/local) ends the install with its code,
+# instead of reporting success over a half copied add-on.
+set -e
 
 ADDON_DIR=/usr/local/addons/mui
 RC_DIR=/usr/local/etc/config/rc.d
@@ -23,8 +27,10 @@ esac
 BINARY=go-server/ccu-addon-mui-server-$ARCH
 [ -f "$BINARY" ] || exit 2
 
+# A separate partition on the CCU; on OpenCCU in Docker or LXC /usr/local
+# is a plain directory and mount fails, which is fine
 if ! mount | grep -q " /usr/local "; then
-  mount /usr/local
+  mount /usr/local 2>/dev/null || true
 fi
 
 # The archive's file modes are not trusted (tar keeps them on the eQ-3
@@ -50,7 +56,8 @@ mv -f $ADDON_DIR/go-server/ccu-addon-mui-server.new $ADDON_DIR/go-server/ccu-add
 cp rc.d/mui $RC_DIR/mui
 cp lighttpd.conf $LIGHTTPD_DIR/mui.conf
 
-chown -R root:root $ADDON_DIR $RC_DIR/mui $LIGHTTPD_DIR/mui.conf 2>/dev/null
+# Not every file system knows owners (VFAT on some setups)
+chown -R root:root $ADDON_DIR $RC_DIR/mui $LIGHTTPD_DIR/mui.conf 2>/dev/null || true
 chmod -R u=rwX,go=rX $ADDON_DIR
 chmod 644 $LIGHTTPD_DIR/mui.conf
 chmod 755 $ADDON_DIR/update-check.cgi $ADDON_DIR/go-server/ccu-addon-mui-server $RC_DIR/mui
@@ -64,7 +71,9 @@ sync
 # Let lighttpd pick up mui.conf (the proxy for /ws/mui): reload is a
 # graceful restart, running requests finish
 if [ -x /etc/init.d/S50lighttpd ]; then
-  /etc/init.d/S50lighttpd reload
+  # The add-on is installed by now; without the reload the proxy follows
+  # on the next restart
+  /etc/init.d/S50lighttpd reload || true
 fi
 
 # (Re)start the server a little later, in the background: an update

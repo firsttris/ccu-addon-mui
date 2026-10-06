@@ -27,7 +27,7 @@ type HealthValue struct {
 
 // GetDeviceHealth reads the maintenance values of all devices
 func (c *Client) GetDeviceHealth() ([]DeviceHealth, error) {
-	output, err := c.Execute(getDeviceHealthScript)
+	output, err := c.executeWithin(getDeviceHealthScript, longScriptTimeout)
 	if err != nil {
 		return nil, err
 	}

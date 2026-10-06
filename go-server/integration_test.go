@@ -2836,14 +2836,20 @@ func TestStackFactoryReset(t *testing.T) {
 	if m := receive(t, conn, byRequestID("r2")); m["code"] != "KEY_REQUIRED" {
 		t.Fatalf("without key: %v", m)
 	}
-	send(t, conn, message{"type": "factoryReset", "requestId": "r3", "key": "falsch"})
+	// The WebUI session from r2 is kept, but the reset asks for the
+	// password every time
+	send(t, conn, message{"type": "factoryReset", "requestId": "r2b", "key": "Schluessel1"})
+	if m := receive(t, conn, byRequestID("r2b")); m["code"] != "PASSWORD_REQUIRED" {
+		t.Fatalf("reset without the password again: %v", m)
+	}
+	send(t, conn, message{"type": "factoryReset", "requestId": "r3", "key": "falsch", "password": "secret"})
 	if m := receive(t, conn, byRequestID("r3")); m["code"] != "KEY_WRONG" {
 		t.Fatalf("wrong key: %v", m)
 	}
 	if ccu.FactoryResetDone() {
 		t.Fatal("reset with a wrong key")
 	}
-	send(t, conn, message{"type": "factoryReset", "requestId": "r4", "key": "Schluessel1"})
+	send(t, conn, message{"type": "factoryReset", "requestId": "r4", "key": "Schluessel1", "password": "secret"})
 	if m := receive(t, conn, byRequestID("r4")); m["success"] != true {
 		t.Fatalf("reset: %v", m)
 	}

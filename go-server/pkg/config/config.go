@@ -57,6 +57,10 @@ type Config struct {
 	// (the WebUI's Zentralen-Wartung)
 	SyslogConfig string
 	LogDir       string
+	// LogFile is the server's own log (its stderr, see rc.d/mui), turned
+	// over at LogMaxBytes; "" leaves it alone
+	LogFile     string
+	LogMaxBytes int64
 	// The clock's files (the WebUI's cp_time.cgi)
 	TimeConfFile  string
 	NTPClientFile string
@@ -154,6 +158,8 @@ func Load() *Config {
 		AddonsDir:            getEnv("ADDONS_DIR", "/etc/config/rc.d"),
 		SyslogConfig:         getEnv("SYSLOG_CONFIG", "/etc/config/syslog"),
 		LogDir:               getEnv("LOG_DIR", "/var/log"),
+		LogFile:              getEnv("LOG_FILE", ""),
+		LogMaxBytes:          int64(getEnvInt("LOG_MAX_BYTES", 1<<20)),
 		TimeConfFile:         getEnv("TIME_CONF_FILE", "/etc/config/time.conf"),
 		NTPClientFile:        getEnv("NTP_CLIENT_FILE", "/etc/config/ntpclient"),
 		TZFile:               getEnv("TZ_FILE", "/etc/config/TZ"),

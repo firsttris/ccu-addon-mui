@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/latin1"
@@ -315,5 +316,48 @@ func TestQuoteRegaText(t *testing.T) {
 	}
 	if _, err := quoteRegaText(`a"b`); err == nil {
 		t.Fatal("a quote must be rejected")
+	}
+}
+
+func TestExecuteCompleteRejectsCutOutput(t *testing.T) {
+	answer := ""
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		if !strings.HasSuffix(string(body), "WriteLine(\""+EndMarker+"\");\n") {
+			t.Errorf("end marker not written last: %q", body)
+		}
+		_, _ = io.WriteString(w, answer+"<xml><exec>/rega.exe</exec></xml>")
+	}))
+	defer ts.Close()
+	client := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+
+	answer = "A:1\r\nB:2\r\n" + EndMarker + "\r\n"
+	if got, err := client.ExecuteComplete("x"); err != nil || got != "A:1\r\nB:2\r\n" {
+		t.Fatalf("expected the output without the marker, got %q %v", got, err)
+	}
+	// ReGa stopped at an error after the first line
+	answer = "A:1\r\n"
+	if _, err := client.ExecuteComplete("x"); err == nil {
+		t.Fatal("cut output accepted")
+	}
+	if _, err := client.GetReadOnlyChannels(); err == nil {
+		t.Fatal("cut read-only list accepted")
+	}
+}
+
+func TestExecuteGivesUpAfterItsTimeout(t *testing.T) {
+	release := make(chan struct{})
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		<-release
+	}))
+	defer ts.Close()
+	defer close(release)
+	client := &Client{cfg: &config.Config{}, httpClient: ts.Client(), baseURL: ts.URL}
+	start := time.Now()
+	if _, err := client.executeWithin("x", 50*time.Millisecond); err == nil {
+		t.Fatal("expected a timeout")
+	}
+	if time.Since(start) > 2*time.Second {
+		t.Fatal("waited past the timeout")
 	}
 }

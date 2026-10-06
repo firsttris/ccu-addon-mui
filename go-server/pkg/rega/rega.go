@@ -2,6 +2,7 @@ package rega
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,13 +26,20 @@ var safeIdentifierRegex = regexp.MustCompile(`^[a-zA-Z0-9_:.-]+$`)
 var objectIDRegex = regexp.MustCompile(`^[0-9]{1,10}$`)
 var numberRegex = regexp.MustCompile(`^-?[0-9]+\.?[0-9]*$`)
 
+// How long a script may take: most read or change one object. Those going
+// through all devices take longer on a CCU with many of them, but stay below
+// the app's 20 s for an answer (REQUEST_TIMEOUT_MS).
+const (
+	scriptTimeout     = 10 * time.Second
+	longScriptTimeout = 18 * time.Second
+)
+
 func NewClient(cfg *config.Config) *Client {
 	return &Client{
 		cfg: cfg,
-		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
-		},
-		baseURL: fmt.Sprintf("http://%s:%d", cfg.CCUHost, cfg.RegaPort),
+		// Timeouts per script (executeWithin)
+		httpClient: &http.Client{},
+		baseURL:    fmt.Sprintf("http://%s:%d", cfg.CCUHost, cfg.RegaPort),
 	}
 }
 
@@ -57,13 +65,19 @@ func quoteRegaText(value string) (string, error) {
 // the script is sent and the output read in it, so a name written here reads
 // the same in the WebUI. Text with other characters is refused.
 func (c *Client) Execute(script string) (string, error) {
+	return c.executeWithin(script, scriptTimeout)
+}
+
+func (c *Client) executeWithin(script string, timeout time.Duration) (string, error) {
 	url := fmt.Sprintf("%s/rega.exe", c.baseURL)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
 	encoded, err := latin1.Encode(script)
 	if err != nil {
 		return "", err
 	}
-	req, err := http.NewRequest("POST", url, bytes.NewReader(encoded))
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(encoded))
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
@@ -98,6 +112,27 @@ func (c *Client) Execute(script string) (string, error) {
 	}
 
 	return result, nil
+}
+
+// EndMarker is written last by scripts run with ExecuteComplete
+const EndMarker = "MUI-END"
+
+// ExecuteComplete runs one of the add-on's scripts whose output must be
+// complete. ReGa stops a script at a runtime error and still answers 200
+// with what it wrote so far: a cut list would pass as the whole one (e.g.
+// fewer read-only channels, so non-administrators could operate them). The
+// script gets a last line written after everything else; without it the
+// output is an error.
+func (c *Client) ExecuteComplete(script string) (string, error) {
+	output, err := c.Execute(script + "\nWriteLine(\"" + EndMarker + "\");\n")
+	if err != nil {
+		return "", err
+	}
+	trimmed := strings.TrimRight(output, "\r\n ")
+	if !strings.HasSuffix(trimmed, EndMarker) {
+		return "", fmt.Errorf("script stopped before its end")
+	}
+	return strings.TrimSuffix(trimmed, EndMarker), nil
 }
 
 func (c *Client) TestConnection() error {
@@ -157,7 +192,7 @@ func (c *Client) GetChannels(objectID string) ([]Channel, error) {
 // GetAllChannels returns the channels of all devices, also those in no room
 // or trade. Maintenance channels and the CCU's virtual keys are left out.
 func (c *Client) GetAllChannels() ([]Channel, error) {
-	output, err := c.Execute(strings.ReplaceAll(getChannelsScript, "{{OBJECT_ID}}", "ALL"))
+	output, err := c.executeWithin(strings.ReplaceAll(getChannelsScript, "{{OBJECT_ID}}", "ALL"), longScriptTimeout)
 	if err != nil {
 		return nil, err
 	}

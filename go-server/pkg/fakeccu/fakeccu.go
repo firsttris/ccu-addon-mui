@@ -219,10 +219,16 @@ func (c *CCU) Close() {
 func (c *CCU) handleRega(w http.ResponseWriter, r *http.Request) {
 	// ReGa reads and writes ISO-8859-1 (see package latin1)
 	body, _ := io.ReadAll(r.Body)
-	output, err := c.runScript(latin1.Decode(body))
+	// rega.ExecuteComplete: the script's last line writes the end marker
+	endLine := "\nWriteLine(\"" + rega.EndMarker + "\");\n"
+	script, complete := strings.CutSuffix(latin1.Decode(body), endLine)
+	output, err := c.runScript(script)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+	if complete {
+		output += rega.EndMarker + "\r\n"
 	}
 	// rega.exe appends its variables
 	_, _ = w.Write(toLatin1(output + "<xml><exec>/rega.exe</exec></xml>"))
