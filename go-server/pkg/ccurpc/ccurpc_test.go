@@ -155,6 +155,32 @@ func TestSameDeviceTypeSharesParamsetDescriptions(t *testing.T) {
 	}
 }
 
+// Devices of a type with different firmware don't share descriptions
+func TestFirmwareSeparatesParamsetDescriptions(t *testing.T) {
+	calls := map[string]int{}
+	device := func(address, firmware string) string {
+		return `<value><struct><member><name>ADDRESS</name><value>` + address + `</value></member><member><name>TYPE</name><value>HmIP-BSM</value></member><member><name>FIRMWARE</name><value>` + firmware + `</value></member><member><name>VERSION</name><value><i4>12</i4></value></member></struct></value>` +
+			`<value><struct><member><name>ADDRESS</name><value>` + address + `:1</value></member><member><name>TYPE</name><value>SWITCH_VIRTUAL_RECEIVER</value></member><member><name>PARENT_TYPE</name><value>HmIP-BSM</value></member><member><name>VERSION</name><value><i4>12</i4></value></member></struct></value>`
+	}
+	ccu := fakeInterface(t, map[string]string{
+		"listDevices":            `<array><data>` + device("A", "1.0.0") + device("B", "1.4.2") + device("C", "1.4.2") + `</data></array>`,
+		"getParamsetDescription": valuesDescription,
+	}, calls)
+	defer ccu.Close()
+	client := newTestClient(t, ccu.URL)
+	if _, err := client.ListDevices("HmIP-RF"); err != nil {
+		t.Fatal(err)
+	}
+	for _, address := range []string{"A:1", "B:1", "C:1"} {
+		if _, err := client.GetParamsetDescription("HmIP-RF", address, ParamsetValues); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if calls["getParamsetDescription"] != 2 {
+		t.Fatalf("expected one description per firmware, got %v", calls)
+	}
+}
+
 func TestValidation(t *testing.T) {
 	client := newClient(map[string]caller{})
 	if _, err := client.GetParamset("HmIP-RF", "A:1", ParamsetValues); err != ErrUnknownInterface && !strings.Contains(err.Error(), "unknown interface") {
