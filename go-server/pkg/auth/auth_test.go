@@ -68,6 +68,22 @@ func TestLoginIssuesVerifiableTokenAndLogsOutOfCCU(t *testing.T) {
 	}
 }
 
+func TestLoginIgnoresSpacesAroundUsername(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	a := newTestAuthenticator(t, ccu.URL)
+
+	_, token, err := a.Login("Admin ", "secret", "test", "192.0.2.1")
+	if err != nil {
+		t.Fatalf("Login: %v", err)
+	}
+	session, err := a.Verify(token)
+	if err != nil || session.User != "Admin" {
+		t.Fatalf("Verify = %+v, %v", session, err)
+	}
+}
+
 func TestLoginRejectsWrongPassword(t *testing.T) {
 	logouts := 0
 	ccu := fakeCCU(t, &logouts)
