@@ -144,8 +144,9 @@ export const useInstallMode = (interfaceName: string, { enabled = true }: { enab
     queryKey: ['installMode', interfaceName],
     queryFn: async () => {
       const response = await request({ type: 'getInstallMode', interfaceName });
-      // BidCos-RF: a device that failed for another security key
-      return { seconds: response.seconds ?? 0, keyMismatch: response.keyMismatch };
+      // BidCos-RF: a device that failed for another security key; HmIP-RF
+      // on openccu-lite: how the system pairs
+      return { seconds: response.seconds ?? 0, keyMismatch: response.keyMismatch, hmip: response.hmip };
     },
     refetchInterval: (query) => ((query.state.data?.seconds ?? 0) > 0 ? 1000 : false),
     retry: false,

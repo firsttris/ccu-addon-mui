@@ -152,6 +152,8 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"api": "meta", "version": 1, "format": 1, "implementation": "fakeccu",
 			"capabilities": map[string]interface{}{"state": true, "history": true, "apis": map[string]int{"meta": 1, "rpc": 1, "system": 1, "auth": 1}},
+			// The local key mode: new HmIP devices pair with their label only
+			"hmip": map[string]interface{}{"keyserver_mode": "LOCAL", "device_keys": 2, "offline_pairing": false},
 		})
 		return
 	case r.URL.Path == "/api/auth/v1/state":

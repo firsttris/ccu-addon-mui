@@ -1103,6 +1103,7 @@
   "LGW_BUILTIN": "Zentrale",
   "PAIR_LOCAL": "Anlernen ohne Internetzugang (mit KEY und SGTIN)",
   "PAIR_LOCAL_HINT": "Nur dieses Gerät wird angelernt, mit dem Schlüssel vom Aufkleber des Geräts statt vom Keyserver. Bindestriche dürfen mit eingegeben werden.",
+  "PAIR_LOCAL_KEYS": "Dieses System fragt den Keyserver von eQ-3 nicht (lokaler Schlüsselmodus). Neue HmIP-Geräte deshalb mit SGTIN und KEY vom Aufkleber anlernen; ohne geht es nur für Geräte, deren Schlüssel schon im System liegt ({count}).",
   "PAIR_LOCAL_START": "Lokal anlernen",
   "PAIR_SERIAL": "Seriennummer",
   "PAIR_SERIAL_START": "Mit Seriennummer anlernen",

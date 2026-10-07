@@ -57,3 +57,10 @@ test('zeigt auf openccu-lite, wo Automationen und Systemeinstellungen liegen', a
   await expect(page).toHaveURL(/\/setup\/links$/);
 });
 
+
+test('zeigt im lokalen Schlüsselmodus, wie HmIP-Geräte anzulernen sind', async ({ page }) => {
+  await page.goto('/setup/pairing');
+  await expect(page.getByRole('note')).toContainText(/SGTIN/);
+  // The pairing with the label's key is open right away
+  await expect(page.getByText('SGTIN', { exact: true })).toBeVisible();
+});

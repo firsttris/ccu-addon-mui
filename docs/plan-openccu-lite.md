@@ -38,6 +38,8 @@ Wie sich MUI auf openccu-lite verhält, wo es anders ist als auf der CCU:
   nur `STICKY_UNREACH` und `STICKY_SABOTAGE` (per `setValue`, wie auf der CCU); die anderen enden, wenn das
   Gerät es meldet, und die App bietet dafür kein Bestätigen an.
 - **Diagramme:** neue Reihen beginnen mit dem aktuellen Wert, ohne Import aus einem Systemprotokoll.
+- **HmIP anlernen:** Im lokalen Schlüsselmodus (`hmip.keyserver_mode` LOCAL) fragt das System den Keyserver
+  von eQ-3 nie; der Anlerndialog sagt das und öffnet gleich das Anlernen mit SGTIN und KEY vom Aufkleber.
 - **Eigene Daten** (Layouts, Favoriten, Sprache, Diagramme) liegen in `DATA_DIR`. Die Layouts hängen am Pfad
   eines Raums; verschiebt man ihn in openccu-lite, zieht MUI sie über occulites Change-Stream mit
   (`node.moved`), für die Räume darunter auch, und löscht sie mit dem Raum (`node.deleted`).

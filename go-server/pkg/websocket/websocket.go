@@ -2000,6 +2000,15 @@ type pairingResponse struct {
 	// BidCos-RF: a device that failed to pair in install mode for another
 	// system security key (getKeyMismatchDevice)
 	KeyMismatch string `json:"keyMismatch,omitempty"`
+	// HmIP-RF on openccu-lite: how the system pairs, so the dialog offers
+	// what works
+	HmIP *home.HmIPPairing `json:"hmip,omitempty"`
+}
+
+// hmipPairing is a home model that knows how the system pairs HmIP devices
+// (openccu-lite)
+type hmipPairing interface {
+	HmIPPairing() (*home.HmIPPairing, error)
 }
 
 // handlePairing: pairing (install mode), the inbox of new devices and
@@ -2077,6 +2086,13 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 				// As cp_add_device.cgi action_get_install_status; the CCU
 				// forgets the device once it is read
 				response.KeyMismatch, _ = s.rpc.KeyMismatchDevice(msg.InterfaceName, true)
+			}
+			if source, ok := s.home.(hmipPairing); ok && msg.InterfaceName == "HmIP-RF" {
+				if pairing, err := source.HmIPPairing(); err == nil {
+					response.HmIP = pairing
+				} else {
+					logger.Debugf("Reading how HmIP devices pair: %v", err)
+				}
 			}
 		} else {
 			devices, err := s.home.GetInbox()

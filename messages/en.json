@@ -1103,6 +1103,7 @@
   "LGW_BUILTIN": "Central unit",
   "PAIR_LOCAL": "Pair without internet access (with KEY and SGTIN)",
   "PAIR_LOCAL_HINT": "Only this device is paired, with the key from its label instead of the key server. Dashes may be entered.",
+  "PAIR_LOCAL_KEYS": "This system never asks eQ-3's key server (local key mode). Pair new HmIP devices with the SGTIN and KEY from their label; without them only devices whose key the system already holds pair ({count}).",
   "PAIR_LOCAL_START": "Pair locally",
   "PAIR_SERIAL": "Serial number",
   "PAIR_SERIAL_START": "Pair by serial number",

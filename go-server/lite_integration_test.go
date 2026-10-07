@@ -589,6 +589,12 @@ func TestLiteLimits(t *testing.T) {
 		t.Fatal("no service message but sticky ones")
 	}
 
+	// HmIP pairing says the system's key mode, so the dialog offers what works
+	m = liteCall(t, conn, map[string]interface{}{"type": "getInstallMode", "interfaceName": "HmIP-RF"})
+	if hmip, _ := m["hmip"].(map[string]interface{}); hmip["keyserverMode"] != "LOCAL" || hmip["offlinePairing"] != false || hmip["deviceKeys"] != 2.0 {
+		t.Fatalf("getInstallMode HmIP-RF: %v", m)
+	}
+
 	// Elevating: administrators are, nobody else
 	if m := liteCall(t, conn, map[string]interface{}{"type": "elevate", "password": ""}); m["success"] != true {
 		t.Fatalf("admin elevate: %v", m)

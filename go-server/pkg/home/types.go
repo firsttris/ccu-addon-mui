@@ -155,3 +155,13 @@ type VirtualKey struct {
 	// How many programs use the key
 	Programs int `json:"programs"`
 }
+
+// HmIPPairing is how the system pairs HmIP devices (openccu-lite's
+// GET /api/meta/v1/version "hmip"): with LOCAL eQ-3's key server is never
+// asked, so a device pairs only with the SGTIN and key from its label, or
+// when its key is one of the system's device keys
+type HmIPPairing struct {
+	KeyserverMode  string `json:"keyserverMode"`
+	DeviceKeys     int    `json:"deviceKeys"`
+	OfflinePairing bool   `json:"offlinePairing"`
+}

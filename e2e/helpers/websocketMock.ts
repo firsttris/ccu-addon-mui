@@ -933,6 +933,28 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         return;
       }
 
+      // Pairing: not in install mode; openccu-lite in the local key mode
+      if (message.type === 'getInstallMode') {
+        delayedBroadcast({
+          type: 'getInstallMode_response',
+          success: true,
+          seconds: 0,
+          ...(lite && message.interfaceName === 'HmIP-RF'
+            ? { hmip: { keyserverMode: 'LOCAL', deviceKeys: 2, offlinePairing: false } }
+            : {}),
+          requestId: message.requestId,
+        });
+        return;
+      }
+      if (message.type === 'getInbox') {
+        delayedBroadcast({ type: 'getInbox_response', success: true, devices: [], requestId: message.requestId });
+        return;
+      }
+      if (message.type === 'getInterfaces') {
+        delayedBroadcast({ type: 'getInterfaces_response', success: true, interfaces: ['HmIP-RF', 'BidCos-RF'], requestId: message.requestId });
+        return;
+      }
+
       if (message.type === 'getServiceMessages') {
         delayedBroadcast({ type: 'getServiceMessages_response', messages: serviceMessages, requestId: message.requestId });
         return;

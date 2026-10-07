@@ -1223,6 +1223,27 @@ export interface GetInstallModeResponse {
    * BidCos-RF: a device that failed to pair for another system security key
    */
   keyMismatch?: string;
+  hmip?: HmIPPairing;
+}
+/**
+ * HmIP-RF on openccu-lite: how the system pairs (GET /api/meta/v1/version hmip). LOCAL asks eQ-3's key server never: a device pairs only with the SGTIN and key from its label, or when its key is one of the system's device keys
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "HmIPPairing".
+ */
+export interface HmIPPairing {
+  /**
+   * LOCAL, KEYSERVER or KEYSERVER_LOCAL
+   */
+  keyserverMode: string;
+  /**
+   * How many device keys the system holds
+   */
+  deviceKeys: number;
+  /**
+   * false on LOCAL: a device whose key is not on the system cannot pair without its label's key
+   */
+  offlinePairing: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

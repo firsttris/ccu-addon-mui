@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"ccu-addon-mui-server/pkg/home"
 )
 
 // Snapshot is the metadata store as GET /api/meta/v1/snapshot answers it
@@ -96,4 +98,26 @@ func (c *Client) RenameNode(ctx context.Context, path, name string) error {
 func (c *Client) DeleteNode(ctx context.Context, path string) error {
 	enum, rest, _ := strings.Cut(path, "/")
 	return c.do(ctx, http.MethodDelete, "/api/meta/v1/enums/"+url.PathEscape(enum)+"/nodes/"+rest+"?members=detach", "", nil, nil)
+}
+
+// HmIPPairing reads how the system pairs HmIP devices from
+// GET /api/meta/v1/version (docs/meta-api.md "Feature detection"); nil
+// when the system is older and does not say
+func (h *Home) HmIPPairing() (*home.HmIPPairing, error) {
+	var answer struct {
+		HmIP *struct {
+			KeyserverMode  string `json:"keyserver_mode"`
+			DeviceKeys     int    `json:"device_keys"`
+			OfflinePairing bool   `json:"offline_pairing"`
+		} `json:"hmip"`
+	}
+	ctx, cancel := h.context()
+	defer cancel()
+	if err := h.client.do(ctx, http.MethodGet, "/api/meta/v1/version", "", nil, &answer); err != nil {
+		return nil, err
+	}
+	if answer.HmIP == nil {
+		return nil, nil
+	}
+	return &home.HmIPPairing{KeyserverMode: answer.HmIP.KeyserverMode, DeviceKeys: answer.HmIP.DeviceKeys, OfflinePairing: answer.HmIP.OfflinePairing}, nil
 }
