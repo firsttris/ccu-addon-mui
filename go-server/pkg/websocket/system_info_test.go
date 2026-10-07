@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/sysinfo"
 )
 
@@ -39,5 +41,40 @@ func TestSystemInfoHelpFacts(t *testing.T) {
 	system, _ := m["system"].(map[string]interface{})
 	if m["product"] != "raspmatic_rpi4" || m["platform"] != "rpi4" || system == nil || system["load"] != "0.10 0.20 0.30" {
 		t.Fatalf("help facts: %v", m)
+	}
+}
+
+// moduleRPC records which interfaces are asked for their radio modules
+type moduleRPC struct {
+	fakeDeviceRPC
+	asked []string
+}
+
+func (f *moduleRPC) InterfaceNames() []string {
+	return []string{"BidCos-RF", "BidCos-Wired", "HmIP-RF", "VirtualDevices"}
+}
+
+func (f *moduleRPC) ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error) {
+	f.asked = append(f.asked, iface)
+	return []ccurpc.RadioInterface{{Address: iface}}, nil
+}
+
+// The radio modules come from the interfaces the WebUI asks
+// (showAllInterfaces in webui.js), not from the groups server, whose fault
+// the CCU logs in hmserver.log
+func TestSystemInfoRadioModules(t *testing.T) {
+	rpc := &moduleRPC{}
+	s := NewServer(nil, nil)
+	s.SetDeviceRPC(rpc)
+	client := &Client{send: make(chan []byte, 1), level: auth.LevelAdmin}
+	s.handleSystemInfo(client, "i")
+	var m struct {
+		RadioInterfaces []struct {
+			InterfaceName string `json:"interfaceName"`
+		} `json:"radioInterfaces"`
+	}
+	_ = json.Unmarshal(<-client.send, &m)
+	if strings.Join(rpc.asked, ",") != "BidCos-RF,BidCos-Wired,HmIP-RF" || len(m.RadioInterfaces) != 3 {
+		t.Fatalf("asked %v, got %+v", rpc.asked, m)
 	}
 }
