@@ -82,7 +82,10 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
   Räume, Gewerke), Sitzungen, Zustandsspeicher, Event-Stream, Servicemeldungen und Heizgruppen. Die
   Integrationstests in `go-server/lite_integration_test.go` starten den Lite-Server dagegen: Anmeldung über
   das Gate, Räume und Kanäle, Schalten mit dem Event aus dem Stream, Umbenennen, Layouts, Favoriten,
-  Posteingang, Heizgruppen, virtuelle Taster, Servicemeldungen, Gesundheit, Regeln und Push.
+  Posteingang, Heizgruppen, virtuelle Taster, Servicemeldungen, Gesundheit, Regeln und Push, dazu von
+  Geräten geerbte Räume (`TestLiteInheritedRooms`) und was dort anders geht (`TestLiteLimits`: Diagramm
+  ohne Systemprotokoll, Sprache in `DATA_DIR`, nur Sticky-Meldungen bestätigen, `elevate` nur für
+  Administratoren).
 - **Protokoll-Vertrag**: Die Hilfsfunktion, die Nachrichten des Servers liest, prüft **jede** gegen
   `protocol/schema.json`. Ein eigener Test stellt sicher, dass das Schema unbekannte Felder ablehnt.
 
@@ -104,8 +107,9 @@ Sirene, Zutritt, Eingänge, Sensoren für Regen, Licht, CO₂, Feinstaub, Boden,
 Erreichbarkeit, Meldungen, Alarme, Favoriten, Startseite, Kacheln anordnen, die generische Kachel und
 *Alle Geräte*. `auth.spec.ts` prüft Anmeldung, Token über einen Neustart hinweg und Abmelden. `lite.spec.ts`
 lässt den Mock als openccu-lite antworten (`installWebSocketMock(page, { lite: true })`) und prüft, dass
-die App Programme, Systemvariablen, Alarme und die Systemeinstellungen ausblendet und stattdessen auf
-Automationen und die Seiten von openccu-lite verweist.
+die App Programme, Systemvariablen, Alarme und die Systemeinstellungen ausblendet, nicht danach fragt und
+stattdessen auf Automationen und die Seiten von openccu-lite verweist. `lite-session.spec.ts` prüft, dass eine
+abgelaufene Sitzung zur Anmeldung von openccu-lite führt statt ins eigene Login-Formular.
 
 `npm run test:e2e:coverage` misst dabei die Abdeckung des Frontend-Codes (nyc, Bericht unter
 `coverage/playwright`).

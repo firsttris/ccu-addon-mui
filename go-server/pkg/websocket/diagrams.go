@@ -45,7 +45,7 @@ func (s *Server) RunSysvarRecording(ctx context.Context, interval time.Duration)
 }
 
 func (s *Server) recordSysvars() {
-	if s.diagrams == nil || s.recorder == nil {
+	if s.diagrams == nil || s.recorder == nil || !s.capabilities.Sysvars {
 		return
 	}
 	wanted := false
@@ -228,9 +228,13 @@ func (s *Server) saveDiagram(client *Client, requestID string, d diagrams.Diagra
 const historyImportPages = 10
 
 // startSeries fills new series: with the values the system protocol has of
-// logged channels and with the current value
+// logged channels and with the current value. Without a system protocol
+// (openccu-lite) only with the current value.
 func (s *Server) startSeries(added []diagrams.Series) {
-	channels, err := s.regaClient.GetAllChannels()
+	if s.home == nil {
+		return
+	}
+	channels, err := s.home.GetAllChannels()
 	if err != nil {
 		logger.Error("Failed to read the channels for the diagrams:", err)
 		channels = nil
@@ -249,7 +253,7 @@ func (s *Server) startSeries(added []diagrams.Series) {
 			continue
 		}
 		var samples []diagrams.Sample
-		for page := 0; page < historyImportPages; page++ {
+		for page := 0; s.capabilities.History && page < historyImportPages; page++ {
 			entries, total, err := s.regaClient.GetHistory(page*500, 500, ch.ID)
 			if err != nil {
 				logger.Error("Failed to read the system protocol for the diagrams:", err)

@@ -3,6 +3,7 @@ package occulite
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -56,12 +57,17 @@ func TestCheckSession(t *testing.T) {
 	}))
 	defer server.Close()
 	c := New(server.URL, "")
-	if s, ok := c.CheckSession(context.Background(), "SESSIONAAAAAAAAAAAAAAAAAAAA"); !ok || s.User != "anna" || s.Level != LevelConfigure {
-		t.Fatalf("session: %+v %v", s, ok)
+	if s, err := c.CheckSession(context.Background(), "SESSIONAAAAAAAAAAAAAAAAAAAA"); err != nil || s.User != "anna" || s.Level != LevelConfigure {
+		t.Fatalf("session: %+v %v", s, err)
 	}
 	for _, value := range []string{"", "olt_token", "forged"} {
-		if _, ok := c.CheckSession(context.Background(), value); ok {
-			t.Fatalf("%q accepted", value)
+		if _, err := c.CheckSession(context.Background(), value); !errors.Is(err, ErrNoSession) {
+			t.Fatalf("%q: %v", value, err)
 		}
+	}
+	// occulited not answering is no logout
+	server.Close()
+	if _, err := c.CheckSession(context.Background(), "SESSIONAAAAAAAAAAAAAAAAAAAA"); err == nil || errors.Is(err, ErrNoSession) {
+		t.Fatalf("unreachable: %v", err)
 	}
 }

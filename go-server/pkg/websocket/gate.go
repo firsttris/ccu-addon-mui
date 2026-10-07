@@ -1,7 +1,10 @@
 package websocket
 
 import (
+	"context"
+	"errors"
 	"net/http"
+	"time"
 
 	"ccu-addon-mui-server/pkg/auth"
 	"ccu-addon-mui-server/pkg/logger"
@@ -15,9 +18,17 @@ type GateSession struct {
 	Level string
 }
 
-// GateFunc tells from the WebSocket upgrade who is logged in; ok is false
-// without a valid session
-type GateFunc func(r *http.Request) (session GateSession, ok bool)
+// ErrNoSession: the request carries no valid session of the platform (none,
+// expired, logged out). Any other error of a GateFunc means the platform
+// could not tell.
+var ErrNoSession = errors.New("no session of the system")
+
+// GateFunc tells from the WebSocket upgrade who is logged in
+type GateFunc func(r *http.Request) (GateSession, error)
+
+// How often an open connection's session is checked again: a logout in the
+// platform must end it, not only the next connect
+var gateRecheck = time.Minute
 
 // SetGate makes the platform's login decide who is logged in, instead of
 // this add-on's own (openccu-lite). Its administrators are always elevated:
@@ -26,10 +37,12 @@ func (s *Server) SetGate(gate GateFunc) {
 	s.gate = gate
 }
 
-// gateLogin answers auth from the session the gate let through
+// gateLogin answers auth from the session the gate let through. Without
+// one (it expired) the app's own login would never succeed: SESSION_REQUIRED
+// sends it to the platform's login instead.
 func (s *Server) gateLogin(client *Client) {
 	if !client.gateOK {
-		s.sendAuth(client, authResponse{Type: "auth_response", AuthRequired: true, Code: "LOGIN_REQUIRED", Error: "no session of the system"})
+		s.sendAuth(client, authResponse{Type: "auth_response", Code: "SESSION_REQUIRED", Error: "no session of the system"})
 		return
 	}
 	client.setSession(client.gateSession.User, client.gateSession.Level)
@@ -42,4 +55,37 @@ func (s *Server) gateLogin(client *Client) {
 	s.sendAuth(client, authResponse{
 		Type: "auth_response", Success: true, User: client.user, Level: client.level, Elevated: client.elevated(),
 	})
+}
+
+// watchGate checks the session of an open connection again every
+// gateRecheck and closes the connection when it ended or now belongs to
+// someone else or another level; the app reconnects and gets
+// SESSION_REQUIRED. A platform that cannot tell keeps the connection.
+func (s *Server) watchGate(client *Client, r *http.Request) {
+	request := r.Clone(context.Background())
+	ticker := time.NewTicker(gateRecheck)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-client.done:
+			return
+		case <-ticker.C:
+			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+			session, err := s.gate(request.WithContext(ctx))
+			cancel()
+			switch {
+			case errors.Is(err, ErrNoSession):
+				logger.Info("🔒 Session of the system ended, closing the connection of " + client.DeviceID())
+			case err != nil:
+				logger.Debugf("Checking the session of the system: %v", err)
+				continue
+			case session != client.gateSession:
+				logger.Info("🔒 Session of the system changed, closing the connection of " + client.DeviceID())
+			default:
+				continue
+			}
+			client.close()
+			return
+		}
+	}
 }

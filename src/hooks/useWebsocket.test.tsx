@@ -162,4 +162,12 @@ describe('useWebsocket', () => {
     fromServer({ type: 'auth_response', success: false, code: 'LOGIN_REQUIRED', authRequired: true });
     expect(hook.result.current.state.authState).toBe('loginRequired');
   });
+
+  it("sends to the platform's login when its session expired", () => {
+    const { hook, open } = setup();
+    open();
+    fromServer({ type: 'auth_response', success: false, code: 'SESSION_REQUIRED' });
+    expect(hook.result.current.state.authState).toBe('sessionRequired');
+    expect(hook.result.current.state.authRequired).toBe(false);
+  });
 });

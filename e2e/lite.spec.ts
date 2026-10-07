@@ -28,11 +28,17 @@ test('blendet auf openccu-lite Programme, Systemvariablen und Systemeinstellunge
   // Device firmware is on openccu-lite's Updates page
   await expect(page.getByRole('region', { name: /^(Geräte-Firmware|Device firmware)$/ })).toHaveCount(0);
 
+  // A favorite list would show system variables and programs
+  await page.goto('/favorite/1300');
+  await expect(page.getByRole('main')).toBeVisible();
+
   // Nothing asks for what is not there
   const sent = await page.evaluate(() =>
     ((window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string }> } }).__wsMock?.sentMessages() ?? []).map((m) => m.type),
   );
   expect(sent).not.toContain('getAlarmMessages');
+  expect(sent).not.toContain('getSysvars');
+  expect(sent).not.toContain('getPrograms');
 });
 
 test('zeigt auf openccu-lite, wo Automationen und Systemeinstellungen liegen', async ({ page }) => {

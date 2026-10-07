@@ -530,13 +530,20 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	client.device = deviceLabel(r.UserAgent())
 	client.source = clientAddress(r)
 	if s.gate != nil {
-		client.gateSession, client.gateOK = s.gate(r)
+		session, err := s.gate(r)
+		if err != nil && !errors.Is(err, ErrNoSession) {
+			logger.Error("Checking the session of the system:", err)
+		}
+		client.gateSession, client.gateOK = session, err == nil
 	}
 
 	s.addClient(client)
 
 	go s.writePump(client)
 	go s.readPump(client)
+	if client.gateOK {
+		go s.watchGate(client, r)
+	}
 }
 
 func (s *Server) readPump(client *Client) {
@@ -1123,6 +1130,17 @@ func (s *Server) handleElevate(client *Client, message []byte) {
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_MESSAGE")
+		return
+	}
+	if s.gate != nil {
+		// The platform's administrators are elevated already (gate.go),
+		// nobody else is
+		if client.gateSession.Level != auth.LevelAdmin {
+			s.sendRequestError(client, msg.RequestID, "only administrators may change settings", "FORBIDDEN")
+			return
+		}
+		client.elevatedUntil = alwaysElevated
+		s.sendJSON(client, elevateResponse{Type: "elevate_response", RequestID: msg.RequestID, Success: true})
 		return
 	}
 	if s.auth == nil {

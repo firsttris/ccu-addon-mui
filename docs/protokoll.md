@@ -79,7 +79,9 @@ und Nachrichten für diese Teile beantwortet der Server mit `unknown message typ
 
 Auf openccu-lite meldet occulites Gate die Sitzung am WebSocket-Upgrade. `auth` und `login` antworten dort
 ohne Token mit dem Benutzer und der Stufe von openccu-lite (`authRequired: false`); ohne Sitzung kommt
-`LOGIN_REQUIRED`.
+`SESSION_REQUIRED`, und die App schickt zur Anmeldung von openccu-lite (`/login`), weil ihr eigenes
+Login-Formular dort nie gelingen kann. `acknowledgeServiceMessage` antwortet dort für alles außer
+`STICKY_*` mit `NOT_SUPPORTED`: occulites Servicemeldungen enden, wenn das Gerät es meldet.
 
 Format und Prüfung der Tokens stehen in [Sicherheit](sicherheit.md).
 

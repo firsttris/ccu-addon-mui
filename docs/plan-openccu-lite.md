@@ -30,6 +30,28 @@ Abweichungen vom Plan:
   er dort nicht: Der Verteiler schickt keine Anfrage an die CCU-Handler, deren Dateien gar nicht mitgebaut
   werden. Ganz heraus käme er erst, wenn auch die übrigen gemeinsamen Handler hinter Schnittstellen liegen.
 
+## Code-Review und was daraus wurde
+
+Ein Review des PRs ([#191](https://github.com/firsttris/ccu-addon-mui/pull/191), zwei Durchgänge) fand
+14 Punkte. Umgesetzt im Commit „Review-Findings zu openccu-lite umgesetzt“, die Funktionsfehler jeweils mit Test:
+
+| # | Finding | Umsetzung |
+|---|---|---|
+| A1 | `saveDiagram` lief auf openccu-lite in einen nil-ReGa-Client (Panic, keine Antwort) | Kanäle der neuen Reihen aus `home.Source`; der Import aus dem Systemprotokoll nur mit `capabilities.history`, Systemvariablen-Reihen nur mit `capabilities.sysvars`. Test `TestLiteLimits`. |
+| A2 | Raum/Gewerk-Zuordnung ignorierte die Räume, die ein Kanal von seinem Gerät erbt | `setGroupMember` geht von den angezeigten (ggf. geerbten) Räumen aus und macht sie zu den eigenen des Kanals; dazu `meta.mui.ownEnums`, damit „aus dem letzten Raum nehmen“ hält und nicht wieder die Räume des Geräts zeigt. Test `TestLiteInheritedRooms`. |
+| A3 | Servicemeldungen außer `STICKY_*` ließen sich nicht quittieren (NOT_FOUND) | occulites Meldungen sind nur lesbar (`docs/system-api.md`, `GET /service-messages`); sie enden, wenn das Gerät es meldet. Der Server antwortet dafür `NOT_SUPPORTED`, die App zeigt „Bestätigen“ auf openccu-lite nur bei Sticky-Meldungen. |
+| A4 | Sprachprofile wurden nach `/etc/config/userprofiles` geschrieben | Auf openccu-lite unter `DATA_DIR/userprofiles`. |
+| A5 | Abgelaufene openccu-lite-Sitzung führte in das eigene, dort nutzlose Login-Formular | Neuer Code `SESSION_REQUIRED`; die App zeigt „Sitzung abgelaufen“ mit Link auf occulites `/login` (im ganzen Fenster). E2E `e2e/lite-session.spec.ts`. |
+| B1 | Die Sitzung wurde nur beim WebSocket-Upgrade geprüft | Jede offene Verbindung prüft sie jede Minute neu und schließt sich, wenn sie endet oder einem anderen Benutzer/einer anderen Stufe gehört. Ist occulited nur nicht erreichbar, bleibt sie offen (`CheckSession` unterscheidet „keine Sitzung“ von „Fehler“). Test `TestWatchGate`. |
+| B2 | `elevate` meldete auf openccu-lite jedem Erfolg | Nur Administratoren, sonst `FORBIDDEN`. |
+| C1 | `getSysvars`/`getPrograms` wurden auf openccu-lite trotzdem gesendet | `useSysvars`/`usePrograms` fragen nur mit der Fähigkeit (`useCapabilities()`); die Auswahllisten in Favoriten- und Diagramm-Editor bleiben damit ohne diese Einträge. E2E prüft, dass nichts gesendet wird. |
+| D1 | Zweiter Raum mit langem Namen bekam eine Knoten-ID über 32 Zeichen | Erst Suffix, dann kürzen (`uniqueSlug`). Test `TestUniqueSlug`. |
+| E1 | `defaultName` las für jeden unbenannten Kanal alle Geräte neu (quadratisch) | Nimmt den Gerätetyp aus der schon gelesenen Beschreibung. |
+| E2 | `getChannels` eines Raums baute alle Kanäle und filterte danach | Filtert die Gerätebeschreibungen zuerst und baut nur die Mitglieder, wie das ReGa-Script der CCU. |
+| E3 | N+1 bei Heizgruppen | **Nicht umgesetzt:** `GET /groups` liefert nur `{id, name, type, type_label, device, ref}` (occulited `docs/system-api.md`); Mitglieder, `device_name` und `forbid_single_operation` gibt es nur pro Gruppe. |
+| F1 | Toter `regaClient`-Zweig in `virtual_keys.go` | Entfernt; die virtuellen Taster kommen immer aus `home.Source`. |
+| F2 | Falscher Dateiverweis im Kommentar | `src/hooks/capabilities.ts`. |
+
 ## Weitere Module auf openccu-lite
 
 Die Idee von MUI ist eine komplette Oberfläche für die Zentrale. Auf der CCU ersetzt es die WebUI fast
@@ -54,7 +76,7 @@ sich nachrüsten:
 | LAN-Gateways, Funkmodul-Einstellungen | `/api/system/v1/radio/…` | `system:write` | ohne die Firmware des Funkmoduls (`power`) |
 | Statusleuchte | `/api/system/v1/led` | `led` | |
 | Diagramme aus der Historie | `/api/rpc/v1/history` | `rpc:read` | letzte 500 Werte je Datenpunkt, nur für occulites Liste von Datenpunkten |
-| Kanaloptionen (sichtbar, bedienbar) | eigener Namensraum `meta.mui` | `meta:write` | gibt es auf openccu-lite nicht, MUI müsste sie selbst führen |
+| Kanaloptionen (sichtbar, bedienbar) | eigener Namensraum `meta.mui` | `meta:write` | gibt es auf openccu-lite nicht, MUI müsste sie selbst führen; `meta.mui` nutzt MUI bisher nur für `ownEnums` (Räume eines Kanals) |
 | Favoriten gemeinsam mit occulites Bedien-App | Enum `favorite` | `meta:write` | dort eine Liste je Konto, MUI kennt mehrere |
 
 ### Nur über die Sitzung eines Administrators
@@ -79,6 +101,9 @@ Ohne ReGa fehlen die Grundlagen; keine API, auch keine gesperrte:
   Datenpunkten, geprüft bei jedem Event) und könnten um Aktionen erweitert werden, etwa „schalte Kanal X“.
   Das wäre ein eigenes, größeres Modul.
 - **Funktest** (`Device.startComTest` der ReGa); zu prüfen, ob ihn die Funkdienste direkt anbieten.
+- **Servicemeldungen bestätigen**, außer den Sticky-Meldungen: occulites Meldungen sind ein Abbild der
+  Wartungsdatenpunkte, sie enden, wenn das Gerät es meldet. `STICKY_UNREACH` und `STICKY_SABOTAGE` setzt
+  MUI wie die CCU per `setValue` zurück.
 - **Gerätebilder**: Sie liegen bei der CCU in den Dateien der WebUI. Mitliefern ginge nur mit Klärung der
   Rechte an den Bildern von eQ-3.
 
@@ -191,7 +216,8 @@ Systemvariablen-Reihen und ohne Import aus der ReGa-Historie), Sitzungen.
 - Favoriten: Lite hat ein Enum `favorite` mit einem Knoten pro Benutzerkonto und die Reihenfolge in
   `meta.occulite.order`. Das nutzen wir, dann sieht der Nutzer in occulites App und bei uns dieselben
   Favoriten.
-- Sprache pro Benutzer: aus `/etc/config/userprofiles` in unser eigenes Verzeichnis.
+- Sprache pro Benutzer: aus `/etc/config/userprofiles` in unser eigenes Verzeichnis
+  (`DATA_DIR/userprofiles`).
 - Systeminfo: `/VERSION` plus `GET /api/meta/v1/version`, ohne ReGa-Build.
 - Selbst-Update: auf Lite ausblenden und auf die Add-on-Seite von occulited verweisen (`/addons`).
 
@@ -218,7 +244,11 @@ Katalog. Direktverknüpfungen bleiben, die laufen zwischen den Geräten und deck
   prüft ihn mit `GET http://127.0.0.1/api/auth/v1/state` (`Authorization: Bearer <Wert>`) und übernimmt
   Benutzer und Stufe.
 - Stufen von Lite auf unsere: `read` → guest, `operate` → user, `configure` und `administer` → admin. Die
-  Admin-Bestätigung per Passwort („elevate“) entfällt auf Lite, das regelt occulites Stufe.
+  Admin-Bestätigung per Passwort („elevate“) entfällt auf Lite, das regelt occulites Stufe: Administratoren
+  sind immer bestätigt, alle anderen bekommen `FORBIDDEN`.
+- Offene Verbindungen prüfen die Sitzung jede Minute neu; ein Abmelden in openccu-lite beendet sie. Ohne
+  gültige Sitzung antwortet der Server `SESSION_REQUIRED`, und die App schickt zu occulites `/login`
+  statt ihr eigenes Login-Formular zu zeigen.
 - Für eigene API-Aufrufe ohne Benutzer (Events, Servicemeldungen im Hintergrund) nutzen wir das Add-on-Token
   `/run/occulite/addon-tokens/mui.api` mit den Rechten aus dem Manifest.
 - Dem Header trauen wir nur auf Lite. Auf der CCU kann ihn jeder Client selbst setzen.
@@ -309,8 +339,8 @@ den bestehenden Tests absichern.
 2. Teilen wir uns die Favoriten mit seiner Bedien-App über das `favorite`-Enum, oder lieber getrennt?
 3. Ab welcher Stufe darf man Namen und Räume ändern? `meta-api.md` sagt Administrator, `system-api.md` sagt
    `configure`.
-4. Wie bestätigt man eine Servicemeldung auf Lite? Es gibt keinen eigenen Endpunkt, nur `setValue` auf den
-   Datenpunkt.
+4. ~~Wie bestätigt man eine Servicemeldung auf Lite?~~ Geklärt aus occulites Doku: Die Meldungen sind nur
+   lesbar; Sticky-Meldungen per `setValue` auf den Datenpunkt, die anderen enden von selbst.
 5. Brauchen die HmIP-Anlernmethoden über die lokalen Ports eine besondere Freigabe, oder geht dort alles wie
    auf der CCU?
 6. Wann rechnet er mit einer stabilen Version, und gibt es ein Testsystem (OVA oder LXC), das wir in CI
@@ -327,5 +357,8 @@ den bestehenden Tests absichern.
   können sich noch ändern. Deshalb erst die Schritte 1 bis 3, die auch ohne Lite etwas taugen.
 - **Doppelte Pflege** bei Funktionen der Klasse B: Jede Änderung an Räumen, Namen oder Servicemeldungen
   braucht beide Umsetzungen. Die Schnittstelle und Tests für beide Varianten halten das im Rahmen.
+- **Räume am Gerät:** occulited erlaubt Räume auch am Geräteobjekt. MUI zeigt sie an den Kanälen, solange
+  ein Kanal keine eigenen hat; ändert man die Räume eines Kanals in MUI, werden sie seine eigenen
+  (`meta.mui.ownEnums`). Ob occulites eigene Seiten das genauso sehen, ist nicht geprüft.
 - **Neue Geräte ohne Namen** wirken auf Lite zunächst unfertig. Ein guter Vorschlag beim Anlernen (Typ und
   Raum) gleicht das aus.
