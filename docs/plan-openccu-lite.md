@@ -278,7 +278,9 @@ Katalog. Direktverknüpfungen bleiben, die laufen zwischen den Geräten und deck
     "ui": { "session_header": true },
     "runtime": {
       "daemon": true,
-      "api_scopes": ["meta:write", "rpc:configure", "system:read", "system:write"],
+      "needs": ["rfd", "hmipserver", "hs485d"],
+      "start": "early",
+      "api_scopes": ["meta:write", "rpc:read", "system:write"],
       "note": { "de": "Spricht mit rfd, HMIPServer und hs485d über die lokalen Ports.", "en": "Talks to rfd, HMIPServer and hs485d on the local ports." }
     }
   }
