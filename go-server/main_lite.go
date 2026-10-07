@@ -39,6 +39,8 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 		return platformHooks{}, fmt.Errorf("reading the add-on's data: %w", err)
 	}
 	wsServer.SetHome(homeModel)
+	// Layouts follow their rooms and functions when they are moved
+	go homeModel.FollowMeta(ctx)
 	// Heating groups through occulited, which names their devices itself
 	wsServer.SetGroupService(occulite.NewGroups(client))
 

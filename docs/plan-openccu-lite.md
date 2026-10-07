@@ -38,7 +38,9 @@ Wie sich MUI auf openccu-lite verhält, wo es anders ist als auf der CCU:
   nur `STICKY_UNREACH` und `STICKY_SABOTAGE` (per `setValue`, wie auf der CCU); die anderen enden, wenn das
   Gerät es meldet, und die App bietet dafür kein Bestätigen an.
 - **Diagramme:** neue Reihen beginnen mit dem aktuellen Wert, ohne Import aus einem Systemprotokoll.
-- **Eigene Daten** (Layouts, Favoriten, Sprache, Diagramme) liegen in `DATA_DIR`.
+- **Eigene Daten** (Layouts, Favoriten, Sprache, Diagramme) liegen in `DATA_DIR`. Die Layouts hängen am Pfad
+  eines Raums; verschiebt man ihn in openccu-lite, zieht MUI sie über occulites Change-Stream mit
+  (`node.moved`), für die Räume darunter auch, und löscht sie mit dem Raum (`node.deleted`).
 - **lighttpd-Fragment:** occulited übernimmt es nur, wenn jede Direktive auf einer Zeile steht (seine
   Prüfung liest einen Wert bis zum Zeilenende). Das hat erst der Test auf der echten VM gezeigt; ein Test
   im Repo hält es jetzt so.
