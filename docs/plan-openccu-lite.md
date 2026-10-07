@@ -30,7 +30,7 @@ Abweichungen vom Plan:
   er dort nicht: Der Verteiler schickt keine Anfrage an die CCU-Handler, deren Dateien gar nicht mitgebaut
   werden. Ganz heraus käme er erst, wenn auch die übrigen gemeinsamen Handler hinter Schnittstellen liegen.
 
-## Was MUI auf openccu-lite noch könnte
+## Weitere Module auf openccu-lite
 
 Die Idee von MUI ist eine komplette Oberfläche für die Zentrale. Auf der CCU ersetzt es die WebUI fast
 ganz; auf openccu-lite fehlen bisher Module, teils weil wir sie noch nicht gebaut haben, teils weil
@@ -317,7 +317,7 @@ den bestehenden Tests absichern.
    nutzen können?
 7. Darf ein Add-on, das sich als komplette Oberfläche versteht, Benutzer, Backup oder Neustart mit der
    Sitzung des angemeldeten Administrators aufrufen, oder soll das bei occulites eigenen Seiten bleiben?
-   (Abschnitt *Was MUI auf openccu-lite noch könnte*)
+   (Abschnitt *Weitere Module auf openccu-lite*)
 8. Mit welchen IDs führt `/api/system/v1/groups` die Mitglieder einer Heizgruppe? Wir nehmen die
    Kanaladressen an, wie beim HMServer.
 
