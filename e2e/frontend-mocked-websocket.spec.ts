@@ -904,6 +904,18 @@ test('verschiebt beim Anordnen ganze Bereiche, die Kacheln bleiben in ihrem Bere
   await expect(headings.nth(1)).toHaveText(first!);
 });
 
+test('bietet das Anordnen auf dem Handy im Menü an', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/room/1');
+  await expect(page.getByRole('main').getByRole('heading', { level: 2 }).first()).toBeVisible();
+  // The header has no room for it on phones
+  await expect(page.getByRole('button', { name: /^(Anordnen|Arrange)$/ })).toHaveCount(0);
+  await page.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^(Fertig|Done)$/ })).toBeVisible();
+});
+
 test('bedient die Farb- und Weißkanäle der BidCos-LED-Controller', async ({ page }) => {
   await page.goto('/devices');
   // Color 132 of 0..199 is a hue of 239° (rgbw.fn)

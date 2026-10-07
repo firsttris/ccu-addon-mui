@@ -20,6 +20,7 @@ import LayoutGridIcon from '~icons/lucide/layout-grid';
 import { useLayout, useSetLayout } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
+import { usePageArrange } from '../contexts/PageTitleContext';
 import { Button } from '../components/ui/button';
 import { GridDashboard, GridTile } from './grid/GridDashboard';
 import { moveSection, orderSections, parseLayout, SavedLayout, SectionLayout } from './grid/tileLayout';
@@ -481,6 +482,9 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, on
   const change = (next: Partial<SavedLayout>) =>
     setDraft({ v: 2, order: sections.map((g) => g.key), sections: {}, ...layout, ...next });
   const canArrange = layoutId !== undefined && userLevel !== 'guest' && channelsByType.length > 0;
+  // The button to start sits in the header (on phones in the menu); while
+  // arranging, the bar below has the hint, reset and done
+  usePageArrange(canArrange && !editing, () => setEditing(true));
   const store = (layout: string, after: () => void) =>
     setLayout.mutate(
       { id: layoutId ?? 0, layout },
@@ -519,20 +523,18 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, on
       <AlarmBanner onShowAll={() => setAlarmsOpen(true)} />
       <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
       <Overview channels={channels} />
-      {canArrange && (
+      {canArrange && editing && (
         <div className="-mt-2 flex flex-wrap items-center justify-end gap-2">
-          {editing && <span className="mr-auto text-sm text-muted-foreground">{m.LAYOUT_HINT()}</span>}
-          {editing && saved && (
+          <span className="mr-auto text-sm text-muted-foreground">{m.LAYOUT_HINT()}</span>
+          {saved && (
             <Button variant="ghost" size="sm" onClick={() => store('', () => setEditing(false))}>
               {m.LAYOUT_RESET()}
             </Button>
           )}
           <Button
-            variant={editing ? 'default' : 'outline'}
             size="sm"
             disabled={setLayout.isPending}
             onClick={() => {
-              if (!editing) return setEditing(true);
               if (!draft) return setEditing(false);
               store(JSON.stringify(draft), () => {
                 setEditing(false);
@@ -541,7 +543,7 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, on
             }}
           >
             <LayoutGridIcon />
-            {editing ? m.LAYOUT_DONE() : m.LAYOUT_ARRANGE()}
+            {m.LAYOUT_DONE()}
           </Button>
         </div>
       )}
