@@ -100,11 +100,10 @@ func (s *Server) handleSystemInfo(client *Client, requestID string) {
 		response.System = &info
 	}
 	if s.rpc != nil {
-		// Only the radio interfaces know their radio modules: the groups
-		// server (VirtualDevices) answers listBidcosInterfaces with a fault
-		// the CCU logs as an error in hmserver.log, and the wired interface
-		// has no radio modules (like refreshDeviceFirmware)
-		for _, iface := range []string{"BidCos-RF", "HmIP-RF"} {
+		// The interfaces the WebUI asks for their modules (showAllInterfaces
+		// in webui.js): the groups server (VirtualDevices) answers
+		// listBidcosInterfaces with a fault the CCU logs in hmserver.log
+		for _, iface := range []string{"BidCos-RF", "BidCos-Wired", "HmIP-RF"} {
 			modules, err := s.rpc.ListBidcosInterfaces(iface)
 			if err != nil {
 				continue

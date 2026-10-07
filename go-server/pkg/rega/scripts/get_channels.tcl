@@ -44,15 +44,13 @@ if (parentObject) {
 
             ! For all devices, skip the maintenance channels (their status is
             ! written as S lines) and the virtual remote keys of the CCU itself.
-            if (allChannels) {
-                if (!skip) {
-                    if (channelObject.ChnNumber() == 0) {
+            if (allChannels && (!skip)) {
+                if (channelObject.ChnNumber() == 0) {
+                    skip = true;
+                }
+                if (deviceObject) {
+                    if ((deviceObject.HssType() == "HM-RCV-50") || (deviceObject.HssType() == "HmIP-RCV-50")) {
                         skip = true;
-                    }
-                    if (deviceObject) {
-                        if ((deviceObject.HssType() == "HM-RCV-50") || (deviceObject.HssType() == "HmIP-RCV-50")) {
-                            skip = true;
-                        }
                     }
                 }
             }
