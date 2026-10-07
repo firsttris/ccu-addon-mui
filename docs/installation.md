@@ -97,8 +97,8 @@ die App-Dateien aus dem Service Worker; über das Netz gehen nur noch die Daten.
 - **Desktop (Chrome, Edge)**: Installieren-Symbol rechts in der Adressleiste.
 
 Nach einem Update des Add-ons lädt jede offene App die neue Version im Hintergrund, sobald sie wieder mit
-der CCU verbunden ist. Sie übernimmt sie beim nächsten Wechsel der Seite oder mit *Neu laden* unten, nie
-mitten im Bearbeiten.
+der CCU verbunden ist, und zeigt unten *Neu laden*. Erst ein Tipp darauf übernimmt sie, damit nichts mitten
+im Bearbeiten neu lädt.
 
 ### Wandtablet
 

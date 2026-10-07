@@ -6,17 +6,18 @@
 const registration = () =>
   navigator.serviceWorker?.getRegistration().catch(() => undefined) ?? Promise.resolve(undefined);
 
-// Looks for a new version now; UpdatePrompt takes it over once it is
+// Looks for a new version now; UpdatePrompt offers to reload once it is
 // installed
 export const lookForNewApp = () =>
   registration()
     .then((r) => r?.update())
     .catch(() => undefined);
 
-// Switches to the version installed on the server and reloads: the new
-// service worker takes over (SKIP_WAITING, which the generated worker of
-// registerType 'prompt' listens for) and the page loads from it. Without a
-// service worker (dev, http without localhost) a reload is all it takes.
+// Switches to the version installed on the server and reloads, as "Reload"
+// in UpdatePrompt does: the new service worker takes over (SKIP_WAITING,
+// which the generated worker of registerType 'prompt' listens for) and the
+// page loads from it. Without a service worker (dev, http without
+// localhost) a reload is all it takes.
 export const reloadToNewApp = async () => {
   const r = await registration();
   await r?.update().catch(() => undefined);
