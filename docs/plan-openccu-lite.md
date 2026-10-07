@@ -23,8 +23,9 @@ Offen:
   mit dem Eintrag
   `{"git": "https://github.com/firsttris/ccu-addon-mui", "manifest": "addon_installer/openccu-lite.json"}`.
   Das System liest das Manifest an der neuesten Release, also erst nach einer Release mit dieser Datei.
-- [ ] Die offenen Fragen an Sebastian (unten), vor allem Layouts pro Raum, gemeinsame Favoriten und die
-  Stufe für Namen und Räume.
+- [x] Die Fragen an Sebastian sind beantwortet und umgesetzt (unten). Offen und für eigene PRs danach:
+  Änderungen mit der Sitzung des Nutzers an die API, `lite-rpc` statt der lokalen Ports, eventuell die erste
+  Favoritenliste mit occulites Bedien-App teilen.
 
 Wie sich MUI auf openccu-lite verhält, wo es anders ist als auf der CCU:
 
@@ -66,7 +67,7 @@ openccu-lite sie einem Add-on nicht erlaubt. Was ein Add-on dort darf, legen die
 Tokens fest: Es bekommt, was sein Manifest unter `runtime.api_scopes` verlangt, aber **nie** `auth:admin`,
 `power`, `backup`, `radio:keys` oder `*` (occulited `docs/system-api.md`, „Scopes“).
 
-### Möglich, aber noch nicht gebaut
+### Ginge mit Add-on-Rechten, ist aber nicht geplant
 
 Diese Module gingen mit Rechten, die ein Add-on bekommen kann. Wir haben sie bisher weggelassen, weil
 openccu-lite dafür eigene Seiten hat und wir dorthin verlinken. Für eine komplette Oberfläche ließen sie
@@ -85,11 +86,12 @@ sich nachrüsten:
 | Kanaloptionen (sichtbar, bedienbar) | eigener Namensraum `meta.mui` | `meta:write` | gibt es auf openccu-lite nicht, MUI müsste sie selbst führen |
 | Favoriten gemeinsam mit occulites Bedien-App | Enum `favorite` | `meta:write` | dort eine Liste je Konto, MUI kennt mehrere |
 
-### Nur über die Sitzung eines Administrators
+### Bleibt bei openccu-lite
 
-Diese APIs gibt es, ein Add-on-Token bekommt das Recht dafür aber nie. Der Server könnte sie mit der
-Sitzung des angemeldeten Administrators aufrufen (`X-Occulite-Session`), das umginge aber die Grenze, die
-openccu-lite bewusst zieht. Vorher mit Sebastian klären:
+Diese APIs gibt es, ein Add-on-Token bekommt das Recht dafür aber nie. Technisch ginge es mit der Sitzung
+des angemeldeten Administrators, Sebastian möchte es aber bei den Seiten des Systems lassen: Dort hängen die
+Sicherheitsschritte (Bestätigungen, Prüfung vor dem Wiederherstellen, das Warten auf den Neustart), die man
+nicht an zwei Stellen pflegen soll. MUI verlinkt dorthin.
 
 | Modul | occulites API | Recht |
 |---|---|---|
@@ -342,30 +344,41 @@ den bestehenden Tests absichern.
 9. **Release und Katalog.** Test auf einer echten Lite-VM, Release mit Lite-Paketen und `.sha256`, PR in
    occulites Katalog.
 
-## Offene Fragen an Sebastian
+## Fragen an Sebastian und seine Antworten
 
-1. Sollen Layouts in unserer eigenen Datei liegen, oder gibt es einen Platz in der Metadata API für Daten
-   pro Raum? Knoten haben bisher kein `meta`-Feld.
-2. Teilen wir uns die Favoriten mit seiner Bedien-App über das `favorite`-Enum, oder lieber getrennt?
-3. Ab welcher Stufe darf man Namen und Räume ändern? `meta-api.md` sagt Administrator, `system-api.md` sagt
-   `configure`.
-4. ~~Wie bestätigt man eine Servicemeldung auf Lite?~~ Geklärt aus occulites Doku: Die Meldungen sind nur
-   lesbar; Sticky-Meldungen per `setValue` auf den Datenpunkt, die anderen enden von selbst.
-5. Brauchen die HmIP-Anlernmethoden über die lokalen Ports eine besondere Freigabe, oder geht dort alles wie
-   auf der CCU?
-6. Wann rechnet er mit einer stabilen Version, und gibt es ein Testsystem (OVA oder LXC), das wir in CI
-   nutzen können?
-7. Darf ein Add-on, das sich als komplette Oberfläche versteht, Benutzer, Backup oder Neustart mit der
-   Sitzung des angemeldeten Administrators aufrufen, oder soll das bei occulites eigenen Seiten bleiben?
-   (Abschnitt *Weitere Module auf openccu-lite*)
-8. Mit welchen IDs führt `/api/system/v1/groups` die Mitglieder einer Heizgruppe? Wir nehmen die
-   Kanaladressen an, wie beim HMServer.
-9. Räume am Geräteobjekt: Gelten sie in occulites eigenen Seiten auch für die Kanäle des Geräts? MUI zeigt
-   sie an den Kanälen, solange ein Kanal keine eigenen hat, und merkt sich in `meta.mui.ownEnums`, wenn ein
-   Kanal eigene bekommen hat. Ein gemeinsamer Weg wäre besser als ein MUI-eigener.
-10. Würde occulited mehrzeilige Direktiven im lighttpd-Fragment annehmen? Seine Prüfung liest einen Wert nur
-    bis zum Zeilenende und lehnt das ganze Fragment sonst ab; im Journal steht der Grund, für Add-on-Autoren
-    ist das aber leicht zu übersehen.
+Beantwortet im Kommentar zu [#191](https://github.com/firsttris/ccu-addon-mui/pull/191). Wünsche an
+openccu-lite und occulited gehen als Issue in dessen Repository.
+
+1. **Layouts pro Raum:** Knoten haben kein `meta`, das Format ist für Version 1 fest; die eigene Datei ist
+   richtig. Verschiebt man einen Raum, meldet der Change-Stream `node.moved` mit `from` und `to`.
+   *Umgesetzt:* MUI zieht die Layouts damit mit.
+2. **Favoriten:** Das `favorite`-Enum hat genau einen Knoten pro Konto, die Reihenfolge steht in
+   `meta.occulite.order`; eigene Knoten dort anlegen geht nicht. Mehrere benannte Listen kennt das Format
+   nicht. *Stand:* MUI behält seine eigene Datei. Die erste Liste eines Kontos auf dessen Knoten abzubilden,
+   wäre möglich, ist aber offen.
+3. **Stufe für Namen und Räume:** `configure` (der Satz in `meta-api.md` war veraltet). Aber `configure` hat
+   weder `rpc:admin` noch `system:write`. *Umgesetzt:* Geräte löschen, ersetzen, aktualisieren und
+   Heizgruppen ändern nur für `administer`. Offen: Änderungen mit der Sitzung des Nutzers an die API
+   schicken, damit das System die Stufe prüft und das Journal den Nutzer nennt.
+4. **Servicemeldungen bestätigen:** aus occulites Doku geklärt; die Meldungen sind nur lesbar, Sticky-Meldungen
+   per `setValue`, die anderen enden von selbst.
+5. **HmIP-Anlernen über die lokalen Ports:** keine Freigabe nötig. Der Schlüsselmodus steht in
+   `GET /api/meta/v1/version` (`hmip`). *Umgesetzt:* Der Anlerndialog richtet sich danach. Sebastian rät,
+   statt der lokalen Ports `lite-rpc` zu nutzen, das spart Subscriber auf den eQ-3-Prozessen. *Offen.*
+6. **Stabile Version und CI:** Termin gibt es noch keinen; ein Image in QEMU wie in `lite-vm.yml` empfiehlt
+   er selbst.
+7. **Benutzer, Backup, Neustart über die Sitzung eines Administrators:** soll bei den Seiten des Systems
+   bleiben (Abschnitt *Bleibt bei openccu-lite*).
+8. **Heizgruppen-Mitglieder:** IDs von hmipserver, nicht durchweg Kanaladressen; so zurückschicken, wie die
+   API sie liefert. *Geprüft:* Server und App reichen sie unverändert durch.
+9. **Räume am Geräteobjekt:** Sie gelten in occulites App nicht für die Kanäle. *Umgesetzt:* MUI liest
+   ebenfalls nur die Räume am Kanal.
+10. **Mehrzeilige Direktiven im lighttpd-Fragment:** ein Bug in occulited, er behebt ihn und meldet eine
+    Ablehnung künftig bei der Installation. Die einzeilige Fassung bleibt richtig.
+
+Zum Manifest: `"start": "early"`, `hs485d` in `needs` und nur die Rechte, die MUI ruft (`meta:write`,
+`rpc:read`, `system:write`). *Umgesetzt.* Den Katalog-PR nimmt er, sobald die Release mit
+`openccu-lite.json` draußen ist.
 
 ## Risiken
 
