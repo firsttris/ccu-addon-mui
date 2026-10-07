@@ -164,6 +164,9 @@ func (a *Authenticator) lookupLevel(username string) string {
 // device describes the device logging in, for the list of logged-in
 // devices.
 func (a *Authenticator) Login(username, password, device, source string) (Session, string, error) {
+	// Autocomplete likes to add a space after the name. The WebUI drops it
+	// before logging in (login.htm: tmp.replace(' ','')), so do we
+	username = strings.TrimSpace(username)
 	if err := a.checkLockout(username, source); err != nil {
 		return Session{}, "", err
 	}
