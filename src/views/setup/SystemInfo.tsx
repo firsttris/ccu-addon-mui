@@ -17,6 +17,7 @@ import { m } from '../../paraglide/messages';
 import { cn } from '../../lib/utils';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { LiteSystemLinks } from './LiteHints';
 import { CcuFirmwareButton, CcuFirmwareUpload } from './CcuFirmwareUpload';
 import { DeviceFirmware } from './DeviceFirmware';
 import { AddonSelfUpdate } from './AddonSelfUpdate';
@@ -111,6 +112,7 @@ export const SystemInfo = () => {
   return (
     <>
       <Versions />
+      {!capabilities.system && <LiteSystemLinks />}
       <Help />
       {capabilities.system && <SystemSettings />}
       <GeneralSettings />
@@ -159,8 +161,12 @@ const Versions = () => {
         <dt className="text-muted-foreground">{m.ADDON_VERSION()}</dt>
         <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {data.addonVersion || import.meta.env.VITE_APP_VERSION || '–'}
-          {capabilities.selfUpdate && (
+          {capabilities.selfUpdate ? (
             <AddonSelfUpdate current={data.addonVersion || import.meta.env.VITE_APP_VERSION || ''} />
+          ) : (
+            <a href="/addons" target="_top" className="text-xs text-muted-foreground underline underline-offset-4">
+              {m.LITE_ADDON_UPDATE()}
+            </a>
           )}
         </dd>
         <dt className="text-muted-foreground">{m.FIRMWARE_VERSION()}</dt>

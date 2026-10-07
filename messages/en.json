@@ -1496,5 +1496,16 @@
   "PICKER_CHOOSE_ONE": "Tap a channel",
   "PICKER_CHOOSE_CHANNEL": "Choose a channel …",
   "ONLY_ON_CCU": "Only available when the add-on runs on the CCU itself (the setting is in files of the CCU). Until then in the old WebUI:",
-  "LINK_CHANNEL": "Channel (trigger or receiver)"
+  "LINK_CHANNEL": "Channel (trigger or receiver)",
+  "LITE_SYSTEM_TITLE": "openccu-lite",
+  "LITE_SYSTEM_HINT": "Network, firewall, users, backup, updates and add-ons are managed by openccu-lite itself.",
+  "LITE_NETWORK": "Network",
+  "LITE_BACKUP": "Backup",
+  "LITE_UPDATES": "Updates and device firmware",
+  "LITE_LOG": "Log",
+  "LITE_ADDON_UPDATE": "Updates through openccu-lite's add-ons page",
+  "LITE_AUTOMATION_TITLE": "Automations",
+  "LITE_AUTOMATION_HINT": "openccu-lite has no programs or system variables: automations run in a system of their own there, such as Node-RED (RedMatic), Home Assistant or ioBroker.",
+  "LITE_AUTOMATION_LINKS": "Simple sequences like “a button switches a light” run without the central unit as direct links.",
+  "LITE_NODE_RED": "Open Node-RED (RedMatic)"
 }

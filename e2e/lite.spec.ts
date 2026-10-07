@@ -34,3 +34,20 @@ test('blendet auf openccu-lite Programme, Systemvariablen und Systemeinstellunge
   );
   expect(sent).not.toContain('getAlarmMessages');
 });
+
+test('zeigt auf openccu-lite, wo Automationen und Systemeinstellungen liegen', async ({ page }) => {
+  await page.goto('/setup/system');
+  const system = page.getByRole('region', { name: 'openccu-lite' });
+  await expect(system.getByRole('link', { name: /^(Netzwerk|Network)$/ })).toHaveAttribute('href', '/system/network');
+  await expect(system.getByRole('link', { name: /^(Sicherung|Backup)$/ })).toHaveAttribute('target', '_top');
+  // The add-on is updated through openccu-lite's add-ons page
+  await expect(page.getByRole('link', { name: /Zusatzsoftware von openccu-lite|openccu-lite's add-ons page/ })).toHaveAttribute('href', '/addons');
+
+  // Programs: where automations go instead
+  await page.getByRole('navigation', { name: /^(Einrichten|Setup)$/ }).getByRole('link', { name: /^(Automationen|Automations)$/ }).click();
+  const automation = page.getByRole('region', { name: /^(Automationen|Automations)$/ });
+  await expect(automation.getByRole('link', { name: /Node-RED/ })).toHaveAttribute('href', '/addons/red/');
+  await automation.getByRole('link', { name: /^(Direktverknüpfungen|Direct links)$/ }).click();
+  await expect(page).toHaveURL(/\/setup\/links$/);
+});
+
