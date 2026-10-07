@@ -213,6 +213,7 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `USERFS_DIR`, `FIRMWARE_DOWNLOAD_FILE` | `/usr/local`, `/usr/local/tmp/firmwareUpdateFile` | Freier Speicher und Ziel des CCU-Firmware-Downloads |
 | `FIRMWARE_UPLOAD_DIR`, `FIRMWARE_STAGED_LINK` | `/usr/local/tmp`, `/usr/local/.firmwareUpdate` | Hochgeladene CCU-Updates und der Link, über den die WebUI das geprüfte Update bereitstellt |
 | `CCU_FIRMWARE_RELEASES` | `https://github.com/openccu/openccu/releases/download` | Releases mit SHA256-Dateien |
+| `ADDON_RELEASE_URL`, `ADDON_UPDATE_DIR` | GitHub-API der neuesten Release, `/usr/local/tmp` | Update des Add-ons ohne Neustart der CCU: woher die neue Version kommt und wo sie ausgepackt wird |
 | `PUSH_SUBJECT` | GitHub-URL | Kontakt in Push-Anfragen |
 | `DEBUG` | `false` | ausführliches Log |
 

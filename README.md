@@ -59,7 +59,7 @@ was sie schon kann, bleibt. Alles in einer App, vom Lichtschalter bis zum Progra
 
 ### 📱 Mobile first, als App
 - Für Handy, Tablet und Wand gebaut, als App installierbar (PWA)
-- Hell und dunkel, Bildschirm bleibt an (WakeLock)
+- Hell und dunkel, Bildschirm anlassen per Schalter (WakeLock)
 - Live per WebSocket statt Abfrage alle 3 Sekunden
 
 </td>

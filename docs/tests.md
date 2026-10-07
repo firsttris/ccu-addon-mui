@@ -8,8 +8,8 @@ echten Server und eine nachgebaute CCU.
 
 | Ebene | Was echt ist | Was nachgebaut ist | Tests | in der CI |
 |---|---|---|---:|:---:|
-| **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 255 in 42 Dateien | ✅ |
-| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 245 Testfunktionen in 59 Dateien | ✅ |
+| **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 299 in 54 Dateien | ✅ |
+| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 289 Testfunktionen in 69 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests | – | gegen `protocol/schema.json` | ✅ |
 | **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 34 + 2 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 74 | ✅ |
