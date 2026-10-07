@@ -114,16 +114,21 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
 
 ## E. Performance
 
-### E1. `defaultName()` ruft pro unbenanntem Kanal `h.channels()` auf (quadratisch)
-- **Datei:** `go-server/pkg/occulite/home.go:359`
-- **Problem:** `GetAllChannels` iteriert `h.channels()`; für jeden Kanal ohne
-  Metadaten-Objekt (alle frisch gepairten) ruft `channel()` → `defaultName()` erneut
-  `h.channels()` auf, das alle Device-Descriptions aller Interfaces neu durchläuft und
-  `h.interfaces` unter dem Lock neu zuweist.
-- **Szenario:** 150 unbenannte Kanäle × 3 Interfaces → ~450 `listDevices`-XML-RPC-Calls
-  pro `getChannels`; `GetChannels(objectID)` wiederholt das pro Raum.
-- **Fix:** Die bereits berechnete Kanalliste (oder eine Type-Lookup-Map) an
-  `defaultName` übergeben.
+### E1. Snapshot und `listDevices` werden pro Request neu geholt (kein Cache)
+- **Datei:** `go-server/pkg/occulite/home.go:75-79` (Snapshot), `:313-336` (`channels()`),
+  `:343` (`interfaceOf`), `:353` (`channelByID`), `main_lite.go:118-121`
+- **Problem:** Jeder Aufruf von GetRooms/GetTrades/GetChannels/GetAllChannels/SetName/
+  SetGroupMember holt den kompletten `GET /api/meta/v1/snapshot` neu und ruft
+  `ListDevices` auf jedem Interface (`ccurpc.ListDevices` cached nicht, es füllt nur den
+  Description-Cache). `channelByID` (SetGroupMember) und `interfaceOf` bei Cache-Miss
+  listen ebenfalls alle Geräte. Die Geräte-Events (`newDevices`/`deleteDevices`/
+  `updateDevice`) aus dem SSE-Stream erreichen nur `deviceRPC.Forget`, nicht `Home`.
+  `/api/meta/v1/events/sse?since=<revision>` wird gar nicht abonniert.
+- **Hinweis:** Die ursprüngliche Formulierung (`defaultName` ruft `h.channels()` auf)
+  war falsch; `defaultName` ist ein reiner Map-Lookup im Snapshot.
+- **Fix:** Snapshot einmal laden und per `/api/meta/v1/events/sse?since=` aktuell
+  halten; Device-Liste in `Home` cachen und über die Device-Events invalidieren.
+  Dann sind Raum-/Kanal-Anfragen reine In-Memory-Filter.
 
 ### E2. `GetChannels(objectID)` baut alle Kanäle des Homes und filtert erst danach
 - **Datei:** `go-server/pkg/occulite/home.go:473`
@@ -162,7 +167,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
 1. A1, A2, A3, A4, A5 (Funktionsfehler auf lite)
 2. B1, B2 (Auth)
 3. C1, D1
-4. E1, E2, E3 (Performance; E1 zuerst, ist der größte Hebel)
+4. E1, E2, E3 (Performance; E1 zuerst, ist der größte Hebel; E3 ist API-bedingt, nur parallelisieren)
 5. F1, F2
 
 Nach jedem Block: `go build ./...` + `go test ./...` im `go-server`, Frontend-Lint/Typecheck.
