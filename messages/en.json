@@ -45,7 +45,7 @@
   "USERNAME": "Username",
   "PASSWORD": "Password",
   "LOGIN_HINT": "Log in with a user of your CCU. This device stays logged in.",
-  "INVALID_CREDENTIALS": "Wrong username or password",
+  "INVALID_CREDENTIALS": "Wrong username or password (both are case-sensitive) – or the CCU has too many open sessions. In that case close open WebUI tabs and try again.",
   "TOO_MANY_ATTEMPTS": "Too many failed attempts, please wait a minute",
   "CCU_UNREACHABLE": "The CCU cannot be reached",
   "CCU_NOT_READY": "The CCU is still starting, please try again in a moment",

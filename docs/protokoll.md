@@ -248,7 +248,7 @@ dürfen.
 | Code | Bedeutung |
 |---|---|
 | `AUTH_REQUIRED`, `LOGIN_REQUIRED` | nicht angemeldet bzw. Token ungültig |
-| `INVALID_CREDENTIALS`, `TOO_MANY_ATTEMPTS`, `CCU_UNREACHABLE` | Anmeldung fehlgeschlagen, gesperrt, CCU nicht erreichbar |
+| `INVALID_CREDENTIALS`, `TOO_MANY_ATTEMPTS`, `CCU_UNREACHABLE` | Anmeldung fehlgeschlagen (falsches Passwort oder zu viele offene CCU-Sitzungen, die CCU unterscheidet das nicht), gesperrt, CCU nicht erreichbar |
 | `CCU_NOT_READY` | die CCU startet noch (ReGa antwortet 503); zählt nicht als Fehlversuch |
 | `FORBIDDEN` | Stufe reicht nicht (Gast schaltet, Nicht-Admin richtet ein) |
 | `ELEVATION_REQUIRED` | Admin-Token fehlt oder ist abgelaufen |

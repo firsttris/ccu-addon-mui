@@ -38,7 +38,9 @@ const (
 )
 
 var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
+	// The CCU answers both with the same error 501 (the WebUI's
+	// api/methods/session/login.tcl), so the message names both
+	ErrInvalidCredentials = errors.New("invalid credentials or too many CCU sessions")
 	ErrTooManyAttempts    = errors.New("too many failed logins, try again later")
 	ErrCCUNotReady        = errors.New("the CCU is not ready yet, try again in a moment")
 	ErrInvalidToken       = errors.New("invalid or expired token")
