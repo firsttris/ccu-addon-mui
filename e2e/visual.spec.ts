@@ -1,4 +1,5 @@
-import { expect, Page, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './helpers/coverageTest';
 import { installWebSocketMock } from './helpers/websocketMock';
 
 // Screenshot baselines, so changes to the look are seen and intended.
