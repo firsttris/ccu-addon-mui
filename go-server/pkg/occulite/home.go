@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"hash/fnv"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -37,8 +38,10 @@ type Home struct {
 	store  *store
 
 	mu sync.Mutex
-	// The last value of every datapoint by channel address
+	// The last value of every datapoint by channel address, and since when
+	// it has it (Unix seconds)
 	values map[string]map[string]interface{}
+	since  map[string]map[string]int64
 	// Channels whose values were read once (HmIP and virtual channels
 	// answer from the process's cache; BidCos would ask the device)
 	read map[string]bool
@@ -57,7 +60,8 @@ func NewHome(client *Client, rpc RPC, dataDir string) (*Home, error) {
 	}
 	return &Home{
 		client: client, rpc: rpc, store: s,
-		values: map[string]map[string]interface{}{}, read: map[string]bool{}, interfaces: map[string]string{},
+		values: map[string]map[string]interface{}{}, since: map[string]map[string]int64{},
+		read: map[string]bool{}, interfaces: map[string]string{},
 	}, nil
 }
 
@@ -91,7 +95,11 @@ func (h *Home) Seed(entries []StateEntry) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	for _, e := range entries {
-		h.setLocked(e.Address, e.Datapoint, e.Value)
+		at, err := time.Parse(time.RFC3339, e.LC)
+		if err != nil {
+			at = time.Now()
+		}
+		h.setLocked(e.Address, e.Datapoint, e.Value, at)
 	}
 }
 
@@ -99,14 +107,19 @@ func (h *Home) Seed(entries []StateEntry) {
 func (h *Home) OnEvent(address, datapoint string, value interface{}) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	h.setLocked(address, datapoint, value)
+	if previous, ok := h.values[address][datapoint]; ok && reflect.DeepEqual(previous, value) {
+		return
+	}
+	h.setLocked(address, datapoint, value, time.Now())
 }
 
-func (h *Home) setLocked(address, datapoint string, value interface{}) {
+func (h *Home) setLocked(address, datapoint string, value interface{}, at time.Time) {
 	if h.values[address] == nil {
 		h.values[address] = map[string]interface{}{}
+		h.since[address] = map[string]int64{}
 	}
 	h.values[address][datapoint] = value
+	h.since[address][datapoint] = at.Unix()
 }
 
 func (h *Home) value(address, datapoint string) (interface{}, bool) {
@@ -430,7 +443,7 @@ func (h *Home) readValues(ch channelInfo) {
 	defer h.mu.Unlock()
 	for key, value := range values {
 		if _, known := h.values[ch.desc.Address][key]; !known {
-			h.setLocked(ch.desc.Address, key, value)
+			h.setLocked(ch.desc.Address, key, value, time.Now())
 		}
 	}
 }

@@ -233,6 +233,8 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 		c.handleLiteEvents(w, r)
 	case strings.HasPrefix(r.URL.Path, "/api/meta/v1/enums/"):
 		c.handleLiteNodes(w, r)
+	case r.URL.Path == "/api/system/v1/service-messages" && r.Method == http.MethodGet:
+		c.handleLiteServiceMessages(w)
 	case strings.HasPrefix(r.URL.Path, "/api/system/v1/groups"):
 		c.handleLiteGroups(w, r)
 	default:
@@ -515,4 +517,20 @@ func (c *CCU) handleLiteGroups(w http.ResponseWriter, r *http.Request) {
 	default:
 		apiError(w, http.StatusMethodNotAllowed, "method", r.Method)
 	}
+}
+
+// The service messages occulited collects: the active maintenance
+// datapoints of the fixture's channels 0, as the CCU's list has them
+func (c *CCU) handleLiteServiceMessages(w http.ResponseWriter) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	messages := []map[string]interface{}{}
+	for _, m := range c.serviceMessages() {
+		device := deviceAddress(m.channel.Address)
+		messages = append(messages, map[string]interface{}{
+			"interface": m.channel.Interface, "address": device, "channel": m.channel.Address, "key": m.datapoint,
+			"value": m.channel.Datapoints[m.datapoint], "since": "2026-01-15T09:00:00Z", "seen": "2026-01-15T09:00:00Z",
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{"count": len(messages), "messages": messages, "swept": true, "errors": []string{}})
 }
