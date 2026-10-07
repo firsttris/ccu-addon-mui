@@ -1,6 +1,7 @@
 package rega
 
 import (
+	"ccu-addon-mui-server/pkg/home"
 	"strconv"
 	"strings"
 )
@@ -12,48 +13,9 @@ const (
 	valueTypeInteger = "16"
 )
 
-// NamedObject is a room or a trade.
-type NamedObject struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-}
+type NamedObject = home.NamedObject
 
-type Channel struct {
-	ID            int64                  `json:"id"`
-	Address       string                 `json:"address"`
-	Name          string                 `json:"name"`
-	Type          string                 `json:"type"`
-	InterfaceName string                 `json:"interfaceName"`
-	Datapoints    map[string]interface{} `json:"datapoints"`
-
-	// StatusAddress is the device's maintenance channel (":0"), which
-	// reports Status (LOW_BAT, UNREACH) and sends the events for it.
-	StatusAddress string          `json:"statusAddress,omitempty"`
-	Status        map[string]bool `json:"status,omitempty"`
-
-	// Rooms and Trades are the ids of the rooms and trades the channel
-	// belongs to.
-	Rooms  []int64 `json:"rooms,omitempty"`
-	Trades []int64 `json:"trades,omitempty"`
-
-	// Tile is the tile chosen for the channel in the add-on ("light" or
-	// "switch"), stored as ReGa metadata; empty lets the app decide.
-	Tile string `json:"tile,omitempty"`
-
-	// Mode is what an input channel (MULTI_MODE_INPUT_TRANSMITTER) is wired
-	// to, as the WebUI stores it (metadata "channelMode"): 0 off, 1 key,
-	// 2 switch, 3 contact, 4 level, 5 condition (translate.lang.
-	// channelDescription.js); nil when not set, which means key.
-	Mode *int `json:"mode,omitempty"`
-
-	// The WebUI's channel options: Hidden (not visible), ReadOnly (not
-	// usable by non-administrators), Logged (in the system protocol)
-	Hidden   bool `json:"hidden,omitempty"`
-	ReadOnly bool `json:"readOnly,omitempty"`
-	Logged   bool `json:"logged,omitempty"`
-	// Secured transmission (AES), the WebUI's "Übertragungsmodus"
-	AES bool `json:"aes,omitempty"`
-}
+type Channel = home.Channel
 
 // parseIDs parses a comma separated list of ids.
 func parseIDs(s string) []int64 {
@@ -232,14 +194,7 @@ func normalizeStatusType(statusType string) string {
 	return statusType
 }
 
-type DeviceProblem struct {
-	Address  string `json:"address"`
-	Name     string `json:"name"`
-	RoomID   int64  `json:"roomId,omitempty"`
-	RoomName string `json:"roomName,omitempty"`
-	LowBat   bool   `json:"lowBat"`
-	Unreach  bool   `json:"unreach"`
-}
+type DeviceProblem = home.DeviceProblem
 
 // parseDeviceProblems parses the output of get_device_problems.tcl.
 func parseDeviceProblems(output string) []DeviceProblem {

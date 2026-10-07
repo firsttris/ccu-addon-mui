@@ -13,7 +13,7 @@ func TestParseFavorites(t *testing.T) {
 		"L\t1002\tLeer\n" +
 		"L\tbroken\n"
 	want := []Favorite{
-		{ID: 1001, Name: "Abends", Items: []FavoriteItem{{1234, "CHANNEL"}, {950, "SYSVAR"}, {1500, "PROGRAM"}}},
+		{ID: 1001, Name: "Abends", Items: []FavoriteItem{{ID: 1234, Type: "CHANNEL"}, {ID: 950, Type: "SYSVAR"}, {ID: 1500, Type: "PROGRAM"}}},
 		{ID: 1002, Name: "Leer", Items: []FavoriteItem{}},
 	}
 	if got := parseFavorites(output); !reflect.DeepEqual(got, want) {

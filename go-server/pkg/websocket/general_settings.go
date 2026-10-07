@@ -114,7 +114,7 @@ func (s *Server) hideStickyUnreach(messages []rega.ServiceMessage) []rega.Servic
 			continue
 		}
 		go func(id int64) {
-			if _, _, err := s.regaClient.AcknowledgeServiceMessage(id); err != nil {
+			if _, _, err := s.home.AcknowledgeServiceMessage(id); err != nil {
 				logger.Error("Failed to acknowledge a sticky unreach message:", err)
 			}
 		}(m.ID)

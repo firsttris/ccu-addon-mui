@@ -2,6 +2,7 @@ package rega
 
 import (
 	"bytes"
+	"ccu-addon-mui-server/pkg/home"
 	"context"
 	"fmt"
 	"io"
@@ -233,13 +234,7 @@ func (c *Client) GetDeviceNames() (map[string]string, error) {
 	return names, nil
 }
 
-// InboxDevice is a paired device not yet accepted in the CCU.
-type InboxDevice struct {
-	Address       string `json:"address"`
-	Type          string `json:"type"`
-	InterfaceName string `json:"interfaceName"`
-	Name          string `json:"name"`
-}
+type InboxDevice = home.InboxDevice
 
 // GetInbox returns the devices in the inbox.
 func (c *Client) GetInbox() ([]InboxDevice, error) {
@@ -329,8 +324,8 @@ func (c *Client) SetGroupMember(groupID, channelID int64, member bool) (string, 
 
 // Results of SetDatapoint
 const (
-	SetOK       = "OK"
-	SetNotFound = "NOT_FOUND"
+	SetOK       = home.SetOK
+	SetNotFound = home.SetNotFound
 )
 
 // SetDatapoint sets a datapoint and returns SetOK or SetNotFound, and with
