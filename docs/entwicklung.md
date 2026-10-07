@@ -215,6 +215,7 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `AUTH_MODE` | `ccu` | `none` schaltet die Anmeldung ab |
 | `AUTH_KEY_FILE`, `SESSIONS_FILE`, `AUDIT_LOG_FILE`, `PUSH_FILE`, `DIAGRAMS_FILE`, `RULES_FILE`, `TILES_FILE` | unter `/usr/local/etc/config` | Dateien des Add-ons |
 | `DIAGRAMS_DIR` | `/usr/local/mui-diagrams` | Diagrammwerte |
+| `DATA_DIR` | – | ein Verzeichnis für alle Dateien des Add-ons und die Diagrammwerte; auf openccu-lite `/usr/local/etc/config/addons/mui`, weil das Add-on dort nur in eigene Verzeichnisse schreiben darf. Einzeln gesetzte Pfade gehen vor |
 | `BACKUP_DIR` | `/usr/local/tmp/mui-backups` auf der CCU, sonst `$TMPDIR/mui-backups` | Backups bis zum Download, Uploads |
 | `CCU_CONFIG_DIR`, `CCU_STATUS_DIR` | `/etc/config`, `/var/status` | Konfiguration der CCU |
 | `ADDONS_DIR`, `SYSLOG_CONFIG`, `LOG_DIR`, `TIME_CONF_FILE`, `NTP_CLIENT_FILE`, `TZ_FILE`, `GROUPS_FILE` | Pfade der CCU | Zusatzsoftware, Logs, Uhr, Heizgruppen |
