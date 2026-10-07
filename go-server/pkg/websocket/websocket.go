@@ -1735,13 +1735,17 @@ func (s *Server) handleInstallFirmware(client *Client, message []byte) {
 
 func (s *Server) installFirmware(client *Client, requestID, iface, address string) {
 	rpc := s.rpcFor(client)
-	defer s.firmwareUpdates.Delete(iface + " " + address)
-	s.configure(client, requestID, audit.Entry{Action: "installFirmware", Target: iface + " " + address},
+	key := iface + " " + address
+	defer s.firmwareUpdates.Delete(key)
+	s.configure(client, requestID, audit.Entry{Action: "installFirmware", Target: key},
 		func() (interface{}, string, error) {
 			if code, _ := s.systemAdminError(client); code != "" {
 				return nil, code, nil
 			}
 			err := rpc.InstallFirmware(iface, address)
+			// Free the device before the answer goes out: a start sent
+			// right after it would otherwise still get UPDATE_RUNNING
+			s.firmwareUpdates.Delete(key)
 			if err == nil {
 				s.smokeTestAfterUpdate(client, iface, address)
 			}
