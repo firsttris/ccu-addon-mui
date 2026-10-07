@@ -48,3 +48,7 @@ go-server/.env
 !.vscode/extensions.json
 .DS_Store
 Thumbs.db
+
+# scripts/lite-vm-test.sh
+lite-vm-out/
+lite-image/

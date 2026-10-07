@@ -10,7 +10,9 @@ Die Schritte 1 bis 8 sind umgesetzt und mit Tests gegen die Fake-CCU im Lite-Mod
 (`go test -tags lite ./...`, `e2e/lite.spec.ts`); der Branch baut beide Pakete. Offen ist nur, was ein
 echtes openccu-lite braucht:
 
-- [ ] Test auf einer echten openccu-lite-VM (OVA) nach der Checkliste unten (Abschnitt *Tests*).
+- [ ] Test auf einer echten openccu-lite-VM: automatisch in `lite-vm.yml` (Installation, Anmeldung über das
+  Gate, Neustart, Update, Journal, Abmelden; ohne Funkmodul), dazu einmal von Hand mit Funk-Hardware nach der
+  Checkliste unten (Abschnitt *Tests*).
 - [ ] Release mit den Lite-Paketen und ihren `.sha256` (der Build erzeugt beides).
 - [ ] Pull Request auf occulites [`catalog/catalog.json`](https://github.com/hobbyquaker/occulited/blob/master/catalog/catalog.json)
   mit dem Eintrag
