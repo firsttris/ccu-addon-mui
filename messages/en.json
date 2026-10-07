@@ -1514,5 +1514,16 @@
   "UPDATE_DONE_TITLE": "Update done",
   "UPDATE_DONE": "MUI {version} is installed and running.",
   "UPDATE_OLD_APP_TITLE": "Still the old app",
-  "UPDATE_OLD_APP": "{version} is installed on the CCU, but {running} is still running here. \"Reload now\" takes over the new version."
+  "UPDATE_OLD_APP": "{version} is installed on the CCU, but {running} is still running here. \"Reload now\" takes over the new version.",
+  "LITE_SYSTEM_TITLE": "openccu-lite",
+  "LITE_SYSTEM_HINT": "Network, firewall, users, backup, updates and add-ons are managed by openccu-lite itself.",
+  "LITE_NETWORK": "Network",
+  "LITE_BACKUP": "Backup",
+  "LITE_UPDATES": "Updates and device firmware",
+  "LITE_LOG": "Log",
+  "LITE_ADDON_UPDATE": "Updates through openccu-lite's add-ons page",
+  "LITE_AUTOMATION_TITLE": "Automations",
+  "LITE_AUTOMATION_HINT": "openccu-lite has no programs or system variables: automations run in a system of their own there, such as Node-RED (RedMatic), Home Assistant or ioBroker.",
+  "LITE_AUTOMATION_LINKS": "Simple sequences like “a button switches a light” run without the central unit as direct links.",
+  "LITE_NODE_RED": "Open Node-RED (RedMatic)"
 }

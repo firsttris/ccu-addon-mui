@@ -19,11 +19,26 @@ export const storedLanguage = (): LanguageChoice => {
   }
 };
 
+// openccu-lite opens the app in its frame with its own language
+// (?lang=de|en, ccu-addon-howto docs/11-openccu-lite.md "Embedding"); a
+// choice made here still wins
+const shellLanguage = (): 'de' | 'en' | null => {
+  try {
+    const lang = new URLSearchParams(window.location.search).get('lang');
+    return lang === 'de' || lang === 'en' ? lang : null;
+  } catch {
+    return null;
+  }
+};
+
 // The choice in use since the app started
 export const appliedLanguage = storedLanguage();
 if (appliedLanguage !== 0) {
   const locale = locales[appliedLanguage];
   overwriteGetLocale(() => locale);
+} else {
+  const shell = shellLanguage();
+  if (shell) overwriteGetLocale(() => shell);
 }
 // The page's language, for screen readers, hyphenation and the browser's
 // translation offer (index.html starts with "de")

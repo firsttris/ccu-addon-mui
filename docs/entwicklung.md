@@ -261,6 +261,10 @@ Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go 
   (`/api/system/v1/service-messages`); eine Sticky-Meldung bestätigt der Server, indem er sie am Gerät
   zurücksetzt. Geräteprobleme und Geräte-Gesundheit kommen aus den Werten der Wartungskanäle. Alarme gibt
   es ohne ReGa nicht; Push-Benachrichtigungen und Regeln laufen unverändert.
+- **Hinweise statt Lücken:** Statt der Programme zeigt die App auf openccu-lite, wo Automationen dort laufen
+  (Node-RED unter `/addons/red/`, die Zusatzsoftware, Direktverknüpfungen), und unter *System* Links auf
+  occulites eigene Seiten (`src/views/setup/LiteHints.tsx`). In occulites Rahmen übernimmt sie dessen
+  Hell/Dunkel und Sprache (`?theme=`, `?lang=`, `postMessage` `openccu-lite:theme`).
 - **Anmeldung:** Auf openccu-lite meldet occulites Gate vor `/addons/` die Sitzung im Header
   `X-Occulite-Session`, auch am WebSocket-Upgrade. Deshalb verbindet sich die App installiert mit
   `/addons/mui/ws`.

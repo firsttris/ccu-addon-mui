@@ -966,6 +966,18 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         return;
       }
 
+      if (message.type === 'getSystemInfo') {
+        delayedBroadcast({
+          type: 'getSystemInfo_response',
+          success: true,
+          addonVersion: '1.0.0',
+          firmwareVersion: '3.83.6',
+          radioInterfaces: [],
+          requestId: message.requestId,
+        });
+        return;
+      }
+
       if (message.type === 'getDiagrams') {
         delayedBroadcast({ type: 'getDiagrams_response', diagrams: [], requestId: message.requestId });
         return;

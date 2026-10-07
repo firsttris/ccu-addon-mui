@@ -141,12 +141,11 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
                 {m.SYSVARS()}
               </Link>
             )}
-            {capabilities.programs && (
-              <Link to="/programs" className={navLink}>
-                <PlayIcon />
-                {m.PROGRAMS()}
-              </Link>
-            )}
+            <Link to="/programs" className={navLink}>
+              <PlayIcon />
+              {/* openccu-lite: where automations go there instead */}
+              {capabilities.programs ? m.PROGRAMS() : m.LITE_AUTOMATION_TITLE()}
+            </Link>
             <Link to="/virtual-keys" className={navLink}>
               <KeyboardIcon />
               {m.VKEYS_TITLE()}
