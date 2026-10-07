@@ -30,6 +30,58 @@ Abweichungen vom Plan:
   er dort nicht: Der Verteiler schickt keine Anfrage an die CCU-Handler, deren Dateien gar nicht mitgebaut
   werden. Ganz heraus käme er erst, wenn auch die übrigen gemeinsamen Handler hinter Schnittstellen liegen.
 
+## Was MUI auf openccu-lite noch könnte
+
+Die Idee von MUI ist eine komplette Oberfläche für die Zentrale. Auf der CCU ersetzt es die WebUI fast
+ganz; auf openccu-lite fehlen bisher Module, teils weil wir sie noch nicht gebaut haben, teils weil
+openccu-lite sie einem Add-on nicht erlaubt. Was ein Add-on dort darf, legen die Rechte (Scopes) seines
+Tokens fest: Es bekommt, was sein Manifest unter `runtime.api_scopes` verlangt, aber **nie** `auth:admin`,
+`power`, `backup`, `radio:keys` oder `*` (occulited `docs/system-api.md`, „Scopes“).
+
+### Möglich, aber noch nicht gebaut
+
+Diese Module gingen mit Rechten, die ein Add-on bekommen kann. Wir haben sie bisher weggelassen, weil
+openccu-lite dafür eigene Seiten hat und wir dorthin verlinken. Für eine komplette Oberfläche ließen sie
+sich nachrüsten:
+
+| Modul | occulites API | Recht | Hinweis |
+|---|---|---|---|
+| Netzwerk, Firewall, Zeit, SSH | `/api/system/v1/network`, `/firewall`, `/time`, … | `system:write` | Fernzugriff (klassisches RPC) ebenso |
+| Zertifikat, HTTPS | `/api/system/v1/certificate` | `system:write` | inkl. ACME |
+| Gerätefirmware laden und verteilen | `/api/system/v1/firmware` | `system:write` | heute nur Link auf occulites Update-Seite |
+| Zusatzsoftware: Liste, Installieren, Updates, Katalog | `/api/system/v1/addons` | `addons:write` | |
+| Protokoll (Journal) | `/api/system/v1/log` | `logs:read` | auch das eigene Log des Add-ons |
+| LAN-Gateways, Funkmodul-Einstellungen | `/api/system/v1/radio/…` | `system:write` | ohne die Firmware des Funkmoduls (`power`) |
+| Statusleuchte | `/api/system/v1/led` | `led` | |
+| Diagramme aus der Historie | `/api/rpc/v1/history` | `rpc:read` | letzte 500 Werte je Datenpunkt, nur für occulites Liste von Datenpunkten |
+| Kanaloptionen (sichtbar, bedienbar) | eigener Namensraum `meta.mui` | `meta:write` | gibt es auf openccu-lite nicht, MUI müsste sie selbst führen |
+| Favoriten gemeinsam mit occulites Bedien-App | Enum `favorite` | `meta:write` | dort eine Liste je Konto, MUI kennt mehrere |
+
+### Nur über die Sitzung eines Administrators
+
+Diese APIs gibt es, ein Add-on-Token bekommt das Recht dafür aber nie. Der Server könnte sie mit der
+Sitzung des angemeldeten Administrators aufrufen (`X-Occulite-Session`), das umginge aber die Grenze, die
+openccu-lite bewusst zieht. Vorher mit Sebastian klären:
+
+| Modul | occulites API | Recht |
+|---|---|---|
+| Benutzerverwaltung (Konten, Stufen, Passkeys, OIDC, API-Tokens) | `/api/auth/v1/users`, `/tokens`, `/config` | `auth:admin` |
+| Backup erstellen und herunterladen | `/api/system/v1/backup` | `backup` |
+| Wiederherstellen, Firmware-Update der Zentrale, Neustart, Herunterfahren | `/api/system/v1/…` | `power` |
+| HmIP-Geräteschlüssel, lokaler Schlüsselmodus | `/api/system/v1/radio/hmip/…` | `radio:keys` |
+
+### Gibt es auf openccu-lite nicht
+
+Ohne ReGa fehlen die Grundlagen; keine API, auch keine gesperrte:
+
+- **Programme und Systemvariablen**, **Alarme** und das **Systemprotokoll** der ReGa. Ein Ersatz wäre eine
+  eigene Automatisierung in MUI: Die Benachrichtigungsregeln laufen schon ohne ReGa (Bedingungen auf
+  Datenpunkten, geprüft bei jedem Event) und könnten um Aktionen erweitert werden, etwa „schalte Kanal X“.
+  Das wäre ein eigenes, größeres Modul.
+- **Funktest** (`Device.startComTest` der ReGa); zu prüfen, ob ihn die Funkdienste direkt anbieten.
+- **Gerätebilder**: Sie liegen bei der CCU in den Dateien der WebUI. Mitliefern ginge nur mit Klärung der
+  Rechte an den Bildern von eQ-3.
+
 ## Worum es geht
 
 openccu-lite ist ein Fork von OpenCCU ohne ReGaHSS. Der Funk-Stack (`rfd`, `hs485d`, `HMIPServer`) bleibt,
@@ -263,6 +315,11 @@ den bestehenden Tests absichern.
    auf der CCU?
 6. Wann rechnet er mit einer stabilen Version, und gibt es ein Testsystem (OVA oder LXC), das wir in CI
    nutzen können?
+7. Darf ein Add-on, das sich als komplette Oberfläche versteht, Benutzer, Backup oder Neustart mit der
+   Sitzung des angemeldeten Administrators aufrufen, oder soll das bei occulites eigenen Seiten bleiben?
+   (Abschnitt *Was MUI auf openccu-lite noch könnte*)
+8. Mit welchen IDs führt `/api/system/v1/groups` die Mitglieder einer Heizgruppe? Wir nehmen die
+   Kanaladressen an, wie beim HMServer.
 
 ## Risiken
 
