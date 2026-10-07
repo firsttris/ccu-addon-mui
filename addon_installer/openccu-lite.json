@@ -8,13 +8,35 @@
   },
   "homepage": "https://github.com/firsttris/ccu-addon-mui",
   "licence": "MIT",
-  "release": { "github": "firsttris/ccu-addon-mui", "asset": "mui-{version}-{arch}-lite.tar.gz" },
-  "requires": { "architectures": ["aarch64", "x86_64"] },
-  "ui": { "icon": "dist/icon.svg", "session_header": true },
+  "release": {
+    "github": "firsttris/ccu-addon-mui",
+    "asset": "mui-{version}-{arch}-lite.tar.gz"
+  },
+  "requires": {
+    "architectures": [
+      "aarch64",
+      "x86_64"
+    ]
+  },
+  "ui": {
+    "icon": "dist/icon.svg",
+    "session_header": true
+  },
   "runtime": {
     "daemon": true,
-    "needs": ["rfd", "hmipserver"],
-    "api_scopes": ["meta:write", "rpc:configure", "system:read", "system:write"],
+    "needs": [
+      "rfd",
+      "hmipserver"
+    ],
+    "api_scopes": [
+      "meta:read",
+      "meta:write",
+      "rpc:read",
+      "rpc:operate",
+      "rpc:configure",
+      "system:read",
+      "system:write"
+    ],
     "note": {
       "de": "Spricht mit rfd, HMIPServer und hs485d über die lokalen Ports und mit occulited über dessen API (Namen, Räume, Servicemeldungen, Heizgruppen, Gerätefirmware).",
       "en": "Talks to rfd, HMIPServer and hs485d on the local ports and to occulited through its API (names, rooms, service messages, heating groups, device firmware)."

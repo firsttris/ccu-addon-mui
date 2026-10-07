@@ -114,7 +114,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 	// Alarms and service messages send no events either
 	go wsServer.RunMessageWatch(ctx)
 
-	rpcServer := xmlrpc.NewServer(cfg, func(event *types.CCUEvent) {
+	handleEvent := func(event *types.CCUEvent) {
 		platform.onEvent(event)
 		wsServer.RecordEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
 		wsServer.ServiceEvent(event.Event.Datapoint)
@@ -122,12 +122,21 @@ func run(ctx context.Context, cfg *config.Config) error {
 			ruleEngine.OnEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
 		}
 		wsServer.BroadcastToClients(event)
-	})
+	}
 	// Descriptions change with new firmware or re-pairing
-	rpcServer.SetDeviceChangeHandler(func(interfaceName, address string) {
+	deviceChanged := func(interfaceName, address string) {
 		deviceAddress, _, _ := strings.Cut(address, ":")
 		deviceRPC.Forget(interfaceName, deviceAddress)
-	})
+	}
+	// The platform's event stream (openccu-lite), or a callback server the
+	// interface processes report to (init)
+	var rpcServer *xmlrpc.Server
+	if platform.events != nil {
+		go platform.events(ctx, handleEvent, deviceChanged)
+	} else {
+		rpcServer = xmlrpc.NewServer(cfg, handleEvent)
+		rpcServer.SetDeviceChangeHandler(deviceChanged)
+	}
 
 	go func() {
 		if err := wsServer.Start(ctx); err != nil {
@@ -136,12 +145,14 @@ func run(ctx context.Context, cfg *config.Config) error {
 		}
 	}()
 
-	go func() {
-		if err := rpcServer.Start(ctx); err != nil {
-			logger.Error("Failed to start XML-RPC server:", err)
-			cancel()
-		}
-	}()
+	if rpcServer != nil {
+		go func() {
+			if err := rpcServer.Start(ctx); err != nil {
+				logger.Error("Failed to start XML-RPC server:", err)
+				cancel()
+			}
+		}()
+	}
 
 	platform.started()
 
@@ -153,16 +164,20 @@ func run(ctx context.Context, cfg *config.Config) error {
 
 	// The registration loops stopped with ctx, so they can't re-register
 	// after unregistering.
-	if err := rpcServer.Unregister(shutdownCtx); err != nil {
-		logger.Error("Error unregistering RPC clients:", err)
+	if rpcServer != nil {
+		if err := rpcServer.Unregister(shutdownCtx); err != nil {
+			logger.Error("Error unregistering RPC clients:", err)
+		}
 	}
 
 	if err := wsServer.Close(shutdownCtx); err != nil {
 		logger.Error("Error closing WebSocket server:", err)
 	}
 
-	if err := rpcServer.Close(shutdownCtx); err != nil {
-		logger.Error("Error closing RPC server:", err)
+	if rpcServer != nil {
+		if err := rpcServer.Close(shutdownCtx); err != nil {
+			logger.Error("Error closing RPC server:", err)
+		}
 	}
 
 	logger.Info("✅ Shutdown complete")
@@ -173,6 +188,9 @@ func run(ctx context.Context, cfg *config.Config) error {
 // common run: recording its own diagram series, seeing every event, and a
 // step once the servers listen. Any may be nil.
 type platformHooks struct {
+	// events delivers the interfaces' events instead of the callback
+	// server, until ctx ends
+	events         func(ctx context.Context, handle func(*types.CCUEvent), deviceChanged func(iface, address string))
 	recordDiagrams func(ctx context.Context)
 	event          func(event *types.CCUEvent)
 	start          func()

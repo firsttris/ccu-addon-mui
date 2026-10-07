@@ -244,6 +244,15 @@ Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go 
   Alarme, Benutzer, die Systemeinstellungen der WebUI). Die Handler-Dateien dafür tragen `//go:build !lite`.
   Das Hausmodell (Räume, Gewerke, Kanäle, Namen) liegt hinter `home.Source`: auf der CCU `pkg/rega`, auf
   openccu-lite `pkg/occulite`.
+- **Werte und Events:** Auf openccu-lite meldet sich der Server nicht per `init` als Callback-Server an.
+  Er liest beim Start den Zustandsspeicher (`/api/rpc/v1/state`) und folgt ab dort dem Event-Stream
+  (`/api/rpc/v1/events`), der nach einer Unterbrechung das Verpasste nachholt; meldet er `resync`, liest
+  der Server den Zustandsspeicher neu. Geschaltet wird weiter direkt über XML-RPC an den lokalen Ports.
+- **Eigene Daten:** Kachel-Layouts, die Kachelwahl je Kanal, der Modus von Eingangskanälen und die
+  Favoritenlisten liegen auf openccu-lite in `mui-lite.json` im Datenverzeichnis, weil es keine ReGa für
+  sie gibt. Räume, Gewerke und Namen ändert der Server in occulites Metadaten-Speicher; Räume heißen dort
+  Pfade (`room/eg/wohnzimmer`), Kanäle `HmIP-RF.<Adresse>`, und die App bekommt daraus feste Zahlen-IDs
+  (`occulite.ID`).
 - **Anmeldung:** Auf openccu-lite meldet occulites Gate vor `/addons/` die Sitzung im Header
   `X-Occulite-Session`, auch am WebSocket-Upgrade. Deshalb verbindet sich die App installiert mit
   `/addons/mui/ws`.
