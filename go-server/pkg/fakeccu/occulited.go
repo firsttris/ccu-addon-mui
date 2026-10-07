@@ -1,6 +1,7 @@
 package fakeccu
 
 import (
+	"bytes"
 	"encoding/base32"
 	"encoding/json"
 	"fmt"
@@ -182,6 +183,11 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(data)
 	case strings.HasPrefix(r.URL.Path, "/api/meta/v1/objects/") && r.Method == http.MethodPatch:
+		if user, _, _, ok := c.liteSession(r); ok {
+			c.mu.Lock()
+			c.calls["meta PATCH "+user]++
+			c.mu.Unlock()
+		}
 		ref, err := url.PathUnescape(strings.TrimPrefix(r.URL.EscapedPath(), "/api/meta/v1/objects/"))
 		if err != nil || !strings.Contains(ref, ".") {
 			apiError(w, http.StatusBadRequest, "invalid", "bad ref")
@@ -229,6 +235,8 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 		store.Revision++
 		w.Header().Set("ETag", fmt.Sprint(store.Revision))
 		writeJSON(w, http.StatusOK, object)
+	case strings.HasPrefix(r.URL.Path, "/api/rpc/v1/xmlrpc/") && r.Method == http.MethodPost:
+		c.handleLiteRPC(w, r)
 	case r.URL.Path == "/api/rpc/v1/state" && r.Method == http.MethodGet:
 		c.handleLiteState(w)
 	case r.URL.Path == "/api/rpc/v1/events" && r.Method == http.MethodGet:
@@ -570,4 +578,55 @@ func (c *CCU) virtualKeyDevices(iface string) []map[string]interface{} {
 		}
 	}
 	return devices
+}
+
+var liteMethodName = regexp.MustCompile(`<methodName>\s*([^<\s]+)\s*</methodName>`)
+
+// liteRPCTier is the level a lite-rpc call needs (occulited
+// docs/lite-rpc-methods.json, abridged): 1 read, 2 operate, 3 configure,
+// 4 administer
+func liteRPCTier(method string) int {
+	switch method {
+	case "deleteDevice", "replaceDevice", "installFirmware", "updateFirmware", "changeKey", "changeDevice", "resetDevice", "restoreConfigToDevice":
+		return 4
+	case "setValue":
+		return 2
+	}
+	for _, prefix := range []string{"get", "list", "ping", "rssiInfo", "system.", "refreshDeployedDeviceFirmwareList"} {
+		if strings.HasPrefix(method, prefix) {
+			return 1
+		}
+	}
+	return 3
+}
+
+var liteLevelRank = map[string]int{"read": 1, "operate": 2, "configure": 3, "administer": 4}
+
+// lite-rpc: POST /api/rpc/v1/xmlrpc/{interface} forwards one XML-RPC call to
+// the interface process when the credential's level allows the method; a
+// refusal is a fault -1 over 200, as occulited answers it. The add-on's
+// token passes every tier here.
+func (c *CCU) handleLiteRPC(w http.ResponseWriter, r *http.Request) {
+	iface := strings.TrimPrefix(r.URL.Path, "/api/rpc/v1/xmlrpc/")
+	if _, ok := c.InterfacePorts[iface]; !ok {
+		apiError(w, http.StatusNotFound, "unknown-interface", iface)
+		return
+	}
+	body, _ := io.ReadAll(r.Body)
+	method := ""
+	if m := liteMethodName.FindSubmatch(body); m != nil {
+		method = string(m[1])
+	}
+	user, level, _, _ := c.liteSession(r)
+	c.mu.Lock()
+	c.calls["lite-rpc "+iface+" "+method]++
+	c.calls["lite-rpc "+user+" "+method]++
+	c.mu.Unlock()
+	if level != "" && liteLevelRank[level] < liteRPCTier(method) {
+		w.Header().Set("Content-Type", "text/xml")
+		_, _ = w.Write(toLatin1(encodeFault(-1, method+" needs a higher level than "+level)))
+		return
+	}
+	r.Body = io.NopCloser(bytes.NewReader(body))
+	c.handleXMLRPC(iface, w, r)
 }

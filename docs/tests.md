@@ -86,7 +86,8 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
   Posteingang, Heizgruppen, virtuelle Taster, Servicemeldungen, Gesundheit, Regeln und Push, dazu von
   Geräten geerbte Räume (`TestLiteInheritedRooms`) und was dort anders geht (`TestLiteLimits`: Diagramm
   ohne Systemprotokoll, Sprache in `DATA_DIR`, nur Sticky-Meldungen bestätigen, `elevate` nur für
-  Administratoren).
+  Administratoren). `TestLiteCallsWithTheUsersSession` prüft, dass die Funkdienste über `lite-rpc` gehen und
+  Änderungen mit der Sitzung des Nutzers.
 - **Protokoll-Vertrag**: Die Hilfsfunktion, die Nachrichten des Servers liest, prüft **jede** gegen
   `protocol/schema.json`. Ein eigener Test stellt sicher, dass das Schema unbekannte Felder ablehnt.
 

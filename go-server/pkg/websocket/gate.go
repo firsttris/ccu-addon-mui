@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"ccu-addon-mui-server/pkg/auth"
+	"ccu-addon-mui-server/pkg/ccurpc"
+	"ccu-addon-mui-server/pkg/home"
 	"ccu-addon-mui-server/pkg/logger"
 )
 
@@ -16,6 +18,9 @@ import (
 type GateSession struct {
 	User  string
 	Level string
+	// Value is the session itself (X-Occulite-Session): the credential
+	// for what this user changes through the platform's APIs
+	Value string
 	// Administrator: the platform's highest level (openccu-lite's
 	// administer). Its configure level is this add-on's admin too, but may
 	// not delete, replace or update devices nor change heating groups
@@ -106,4 +111,30 @@ func (s *Server) watchGate(client *Client, r *http.Request) {
 			return
 		}
 	}
+}
+
+// sessionRPC is a device RPC that can make its calls with another
+// credential (ccurpc on openccu-lite, through lite-rpc)
+type sessionRPC interface {
+	WithToken(token string) *ccurpc.Client
+}
+
+// rpcFor is the device RPC for what client asks: on openccu-lite with the
+// user's session, so that the system checks the user's level for every
+// call and its journal names the user (Sebastian in #191); else the
+// server's own
+func (s *Server) rpcFor(client *Client) DeviceRPC {
+	if r, ok := s.rpc.(sessionRPC); ok && client != nil && client.gateSession.Value != "" {
+		return r.WithToken(client.gateSession.Value)
+	}
+	return s.rpc
+}
+
+// homeFor is the home model as client acts on it: on openccu-lite with the
+// user's session (occulite.Home.ForSession)
+func (s *Server) homeFor(client *Client) home.Source {
+	if h, ok := s.home.(interface{ ForSession(string) home.Source }); ok && client != nil && client.gateSession.Value != "" {
+		return h.ForSession(client.gateSession.Value)
+	}
+	return s.home
 }

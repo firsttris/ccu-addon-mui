@@ -20,6 +20,9 @@ type ownData struct {
 	Modes     map[string]int   `json:"modes,omitempty"`
 	Favorites []favoriteList   `json:"favorites,omitempty"`
 	NextID    int64            `json:"nextId,omitempty"`
+	// The last revision of the metadata change stream seen, so that a
+	// restart resumes there and moves in between still reach the layouts
+	MetaRevision int64 `json:"metaRevision,omitempty"`
 }
 
 type favoriteList struct {

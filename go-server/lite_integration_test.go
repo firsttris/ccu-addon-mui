@@ -609,3 +609,29 @@ func TestLiteLimits(t *testing.T) {
 		t.Fatalf("guest elevated: %v", m)
 	}
 }
+
+// What a user changes goes with the user's session through occulited's
+// APIs (lite-rpc, the metadata API), what the server does by itself with
+// the add-on's token; nothing talks to the interface processes' own ports
+func TestLiteCallsWithTheUsersSession(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+	if m := liteCall(t, conn, map[string]interface{}{"type": "setDatapoint", "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true}); m["success"] != true {
+		t.Fatalf("setDatapoint: %v", m)
+	}
+	if m := liteCall(t, conn, map[string]interface{}{"type": "rename", "address": "LEQ0000001:1", "name": "Deckenlicht"}); m["success"] != true {
+		t.Fatalf("rename: %v", m)
+	}
+	if n := stack.ccu.CallCount("lite-rpc Admin setValue"); n != 1 {
+		t.Fatalf("setValue with the user's session: %d", n)
+	}
+	if n := stack.ccu.CallCount("meta PATCH Admin"); n != 1 {
+		t.Fatalf("rename with the user's session: %d", n)
+	}
+	// Every call reached the interface through lite-rpc, none on its port
+	for _, call := range []string{"BidCos-RF setValue", "BidCos-RF listDevices", "HmIP-RF listDevices"} {
+		if direct, proxied := stack.ccu.CallCount(call), stack.ccu.CallCount("lite-rpc "+call); direct == 0 || direct != proxied {
+			t.Fatalf("%s: %d calls, %d through lite-rpc", call, direct, proxied)
+		}
+	}
+}

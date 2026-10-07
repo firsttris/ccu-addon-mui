@@ -187,7 +187,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		var id int
 		var err error
 		if s.groups != nil {
-			id, err = s.groups.Save(change)
+			id, err = s.groupsFor(client).Save(change)
 		} else {
 			id, err = s.backup.SaveHeatingGroup(client.user, msg.Password, change)
 		}
@@ -237,7 +237,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		entry.Target = previous.Name
 		entry.Previous = *previous
 		if s.groups != nil {
-			err := s.groups.Delete(msg.ID)
+			err := s.groupsFor(client).Delete(msg.ID)
 			if err != nil {
 				s.groupChangeFailed(client, msg.RequestID, entry, err)
 				return
@@ -328,4 +328,18 @@ func (s *Server) groupChangeError(client *Client) (string, string) {
 		return code, message
 	}
 	return s.systemAdminError(client)
+}
+
+// SetGroupSessions gives the heating groups a user changes: with the
+// user's session, so the system checks the user's level (openccu-lite)
+func (s *Server) SetGroupSessions(forSession func(session string) GroupService) {
+	s.groupSessions = forSession
+}
+
+// groupsFor are the heating groups as client changes them
+func (s *Server) groupsFor(client *Client) GroupService {
+	if s.groupSessions != nil && client.gateSession.Value != "" {
+		return s.groupSessions(client.gateSession.Value)
+	}
+	return s.groups
 }

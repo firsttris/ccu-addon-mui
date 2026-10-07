@@ -31,13 +31,13 @@
     ],
     "start": "early",
     "api_scopes": [
-      "meta:write",
-      "rpc:read",
-      "system:write"
+      "meta:read",
+      "rpc:operate",
+      "system:read"
     ],
     "note": {
-      "de": "Spricht mit rfd, HMIPServer und hs485d über die lokalen Ports und mit occulited über dessen API (Namen, Räume, Zustandsspeicher und Events, Servicemeldungen, Heizgruppen).",
-      "en": "Talks to rfd, HMIPServer and hs485d on the local ports and to occulited through its API (names, rooms, state store and events, service messages, heating groups)."
+      "de": "Spricht mit rfd, HMIPServer und hs485d über lite-rpc und mit occulited über dessen API. Änderungen eines Benutzers gehen mit dessen Sitzung; das Token deckt nur, was das Add-on selbst tut (Metadaten und Servicemeldungen lesen, Zustandsspeicher und Events, Sticky-Meldungen zurücksetzen).",
+      "en": "Talks to rfd, HMIPServer and hs485d through lite-rpc and to occulited through its API. A user's changes go with that user's session; the token covers only what the add-on does by itself (reading metadata and service messages, the state store and events, resetting sticky messages)."
     }
   }
 }

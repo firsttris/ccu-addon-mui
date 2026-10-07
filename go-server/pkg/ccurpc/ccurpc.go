@@ -57,7 +57,14 @@ type Client struct {
 	// updateFirmware, which rfd answers only after the whole transfer
 	// (RFDevice firmware update, minutes; ic_ifacecmd.cgi waits for it)
 	slow map[string]caller
+	// proxy: the calls go through openccu-lite's lite-rpc (proxy.go)
+	proxy *proxy
 
+	// The descriptions, shared by the clients of one system (WithToken)
+	*descriptions
+}
+
+type descriptions struct {
 	mu sync.Mutex
 	// Device descriptions by interface and address; they only change with
 	// a firmware update or re-pairing (see Forget).
@@ -145,9 +152,11 @@ func (c *Client) InterfaceNames() []string {
 
 func newClient(callers map[string]caller) *Client {
 	return &Client{
-		interfaces:           callers,
-		devices:              map[string]DeviceDescription{},
-		paramsetDescriptions: map[string]ParamsetDescription{},
+		interfaces: callers,
+		descriptions: &descriptions{
+			devices:              map[string]DeviceDescription{},
+			paramsetDescriptions: map[string]ParamsetDescription{},
+		},
 	}
 }
 

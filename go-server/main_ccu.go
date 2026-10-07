@@ -22,6 +22,11 @@ import (
 	"ccu-addon-mui-server/pkg/websocket"
 )
 
+// newDeviceRPC: a CCU's interface processes answer XML-RPC on their ports
+func newDeviceRPC(cfg *config.Config) *ccurpc.Client {
+	return ccurpc.New(cfg)
+}
+
 // setupPlatform connects a CCU3 or OpenCCU: the ReGa for the home model,
 // programs and system variables, the CCU's users for the login, and the
 // WebUI's system settings

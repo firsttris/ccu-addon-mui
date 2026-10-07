@@ -58,6 +58,7 @@ type logsDownloadResponse struct {
 // Wartung and hands out a download of the log files, for administrators
 // (changes and downloads elevated, with audit log).
 func (s *Server) handleLogging(client *Client, msgType string, message []byte) {
+	rpc := s.rpcFor(client)
 	var msg struct {
 		RequestID string `json:"requestId"`
 		loggingSettings
@@ -80,7 +81,7 @@ func (s *Server) handleLogging(client *Client, msgType string, message []byte) {
 		current := loggingSettings{Host: stored.Host, RFD: stored.RFD, HmIP: stored.HmIP, Rega: stored.Rega}
 		// The running levels, as the WebUI shows them
 		if s.rpc != nil {
-			if level, err := s.rpc.LogLevel("BidCos-RF"); err == nil {
+			if level, err := rpc.LogLevel("BidCos-RF"); err == nil {
 				current.RFD = level
 			}
 		}
@@ -98,7 +99,7 @@ func (s *Server) handleLogging(client *Client, msgType string, message []byte) {
 					return nil, "", err
 				}
 				if old.RFD != next.RFD && s.rpc != nil {
-					if err := s.rpc.SetLogLevel("BidCos-RF", next.RFD); err != nil {
+					if err := rpc.SetLogLevel("BidCos-RF", next.RFD); err != nil {
 						logger.Error("Failed to set the rfd log level:", err)
 					}
 				}

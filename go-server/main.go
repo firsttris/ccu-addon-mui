@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"ccu-addon-mui-server/pkg/audit"
-	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/diagrams"
 	"ccu-addon-mui-server/pkg/logger"
@@ -54,7 +53,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 	wsServer := websocket.NewServer(cfg, nil)
 	wsServer.SetAuditLog(audit.New(cfg.AuditLogFile))
 
-	deviceRPC := ccurpc.New(cfg)
+	deviceRPC := newDeviceRPC(cfg)
 	wsServer.SetDeviceRPC(deviceRPC)
 
 	// What differs between a CCU and openccu-lite (main_ccu.go,

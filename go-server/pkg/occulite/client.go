@@ -23,6 +23,20 @@ type Client struct {
 	// minted anew at every start
 	TokenFile string
 	HTTP      *http.Client
+	// bearer replaces the add-on's token: a user's session (WithBearer)
+	bearer string
+}
+
+// WithBearer is the same client calling with a user's session instead of
+// the add-on's token: the system checks that user's level, and its journal
+// names the user (Sebastian in #191)
+func (c *Client) WithBearer(session string) *Client {
+	if session == "" {
+		return c
+	}
+	user := *c
+	user.bearer = session
+	return &user
 }
 
 // New returns a client for occulited at baseURL
@@ -54,7 +68,14 @@ func (e *Error) Error() string {
 	return text
 }
 
+// Token is the add-on's token, read from its file every time: occulited
+// may mint a new one
+func (c *Client) Token() string { return c.token() }
+
 func (c *Client) token() string {
+	if c.bearer != "" {
+		return c.bearer
+	}
 	if c.TokenFile == "" {
 		return ""
 	}

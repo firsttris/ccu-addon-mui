@@ -128,3 +128,12 @@ func (g *Groups) Save(change backup.GroupChange) (int, error) {
 func (g *Groups) Delete(id int) error {
 	return g.call(http.MethodDelete, fmt.Sprintf("/%d", id), nil, nil)
 }
+
+// ForSession are the heating groups changed by a user: with the user's
+// session, so the system checks the user's level (system:write)
+func (g *Groups) ForSession(session string) *Groups {
+	if session == "" {
+		return g
+	}
+	return &Groups{client: g.client.WithBearer(session)}
+}

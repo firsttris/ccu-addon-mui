@@ -24,6 +24,19 @@ import (
 // test), and occulited has the system settings and installs the add-ons
 var liteCapabilities = websocket.Capabilities{}
 
+// newDeviceRPC: on openccu-lite the interface processes are reached through
+// occulited's lite-rpc, with the add-on's token for what the server does by
+// itself and the user's session for what a user changes (Sebastian in
+// #191: the system checks every call, and no subscriber of the add-on's
+// own on the eQ-3 processes)
+func newDeviceRPC(cfg *config.Config) *ccurpc.Client {
+	names := []string{}
+	for _, iface := range ccurpc.Interfaces(cfg) {
+		names = append(names, iface.Name)
+	}
+	return ccurpc.NewProxy(cfg.OcculiteURL, names, occulite.New(cfg.OcculiteURL, cfg.OcculiteTokenFile).Token)
+}
+
 // setupPlatform connects openccu-lite: occulited's metadata API for the
 // home model and its session gate for the login
 // (ccu-addon-howto docs/11-openccu-lite.md)
@@ -42,7 +55,9 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 	// Layouts follow their rooms and functions when they are moved
 	go homeModel.FollowMeta(ctx)
 	// Heating groups through occulited, which names their devices itself
-	wsServer.SetGroupService(occulite.NewGroups(client))
+	groups := occulite.NewGroups(client)
+	wsServer.SetGroupService(groups)
+	wsServer.SetGroupSessions(func(session string) websocket.GroupService { return groups.ForSession(session) })
 
 	// The gate in front of /addons/ adds the session to the WebSocket
 	// upgrade; occulited tells whose it is
@@ -55,7 +70,7 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 			return websocket.GateSession{}, err
 		}
 		return websocket.GateSession{
-			User: session.User, Level: occulite.AddonLevel(session.Level),
+			User: session.User, Level: occulite.AddonLevel(session.Level), Value: session.SID,
 			Administrator: session.Level == occulite.LevelAdminister,
 		}, nil
 	})

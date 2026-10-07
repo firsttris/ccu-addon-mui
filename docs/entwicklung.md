@@ -247,13 +247,17 @@ Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go 
 - **Werte und Events:** Auf openccu-lite meldet sich der Server nicht per `init` als Callback-Server an.
   Er liest beim Start den Zustandsspeicher (`/api/rpc/v1/state`) und folgt ab dort dem Event-Stream
   (`/api/rpc/v1/events`), der nach einer Unterbrechung das Verpasste nachholt; meldet er `resync`, liest
-  der Server den Zustandsspeicher neu. Geschaltet wird weiter direkt über XML-RPC an den lokalen Ports.
+  der Server den Zustandsspeicher neu. Die Funkdienste erreicht er über occulites `lite-rpc`
+  (`ccurpc.NewProxy`, XML-RPC unter `/api/rpc/v1/xmlrpc/<Interface>`), nicht über ihre lokalen Ports. Was
+  ein Nutzer auslöst, geht mit dessen Sitzung (`Client.WithToken`, `Home.ForSession`), alles andere mit dem
+  Token des Add-ons.
 - **Eigene Daten:** Kachel-Layouts, die Kachelwahl je Kanal, der Modus von Eingangskanälen und die
   Favoritenlisten liegen auf openccu-lite in `mui-lite.json` im Datenverzeichnis, weil es keine ReGa für
   sie gibt. Räume, Gewerke und Namen ändert der Server in occulites Metadaten-Speicher; Räume heißen dort
   Pfade (`room/eg/wohnzimmer`), Kanäle `HmIP-RF.<Adresse>`, und die App bekommt daraus feste Zahlen-IDs
   (`occulite.ID`).
-- **Geräteverwaltung:** Anlernen, Paramsets und Direktverknüpfungen laufen wie auf der CCU über XML-RPC.
+- **Geräteverwaltung:** Anlernen, Paramsets und Direktverknüpfungen laufen wie auf der CCU über XML-RPC,
+  hier durch `lite-rpc`.
   Einen Posteingang hat openccu-lite nicht: Neu sind dort die Geräte ohne Eintrag im Metadaten-Speicher,
   *Übernehmen* legt ihn mit dem Namen `<Typ> <Adresse>` an. Heizgruppen gehen über occulites
   `/api/system/v1/groups` (`occulite.Groups`), Gerätefirmware lädt und verteilt occulite selbst.

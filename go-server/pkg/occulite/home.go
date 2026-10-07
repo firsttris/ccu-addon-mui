@@ -33,10 +33,16 @@ type RPC interface {
 // the interface processes, their values from the state store and the event
 // stream, and what the CCU kept as ReGa metadata in a file of its own.
 type Home struct {
-	unsupported
+	// Who calls: the add-on itself, or a user (ForSession)
 	client *Client
 	rpc    RPC
-	store  *store
+	*homeState
+}
+
+// homeState is what all views of the home model share
+type homeState struct {
+	unsupported
+	store *store
 
 	mu sync.Mutex
 	// The last value of every datapoint by channel address, and since when
@@ -59,11 +65,32 @@ func NewHome(client *Client, rpc RPC, dataDir string) (*Home, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Home{
-		client: client, rpc: rpc, store: s,
+	return &Home{client: client, rpc: rpc, homeState: &homeState{
+		store:  s,
 		values: map[string]map[string]interface{}{}, since: map[string]map[string]int64{},
 		read: map[string]bool{}, interfaces: map[string]string{},
-	}, nil
+	}}, nil
+}
+
+// userRPC is an RPC that can call with a user's session (ccurpc through
+// lite-rpc)
+type userRPC interface {
+	WithToken(token string) *ccurpc.Client
+}
+
+// ForSession is the home model acting for a user: occulited's APIs and the
+// interface processes are called with the user's session, so the system
+// checks the user's level and names the user in its journal. It shares
+// the values and the add-on's own data.
+func (h *Home) ForSession(session string) home.Source {
+	if session == "" {
+		return h
+	}
+	rpc := h.rpc
+	if r, ok := h.rpc.(userRPC); ok {
+		rpc = r.WithToken(session)
+	}
+	return &Home{client: h.client.WithBearer(session), rpc: rpc, homeState: h.homeState}
 }
 
 const callTimeout = 15 * time.Second

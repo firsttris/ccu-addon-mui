@@ -65,6 +65,43 @@ func TestLayoutsFollowTheirRooms(t *testing.T) {
 			t.Fatalf("layout %d: %q, want %q (%v)", id, got[id], layout, got)
 		}
 	}
+	if h.store.data.MetaRevision != 9 {
+		t.Fatalf("kept revision %d", h.store.data.MetaRevision)
+	}
+}
+
+// After a restart FollowMeta asks from the revision it kept; a resync (the
+// server no longer has those events) moves the revision on and keeps the
+// layouts, which may belong to favorite lists
+func TestFollowMetaStartsFromTheKeptRevision(t *testing.T) {
+	asked := make(chan string, 4)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		asked <- r.URL.Query().Get("since")
+		w.Header().Set("Content-Type", "text/event-stream")
+		fmt.Fprint(w, "data: {\"revision\":2000,\"kind\":\"resync\"}\n\n")
+	}))
+	defer server.Close()
+	dir := t.TempDir()
+	h, _ := NewHome(New(server.URL, ""), nil, dir)
+	h.store.data.Layouts[900001] = "favorites"
+	h.keepRevision(12)
+
+	h, _ = NewHome(New(server.URL, ""), nil, dir)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go h.FollowMeta(ctx)
+	if first := <-asked; first != "12" {
+		t.Fatalf("first since %q", first)
+	}
+	if again := <-asked; again != "2000" {
+		t.Fatalf("after the resync since %q", again)
+	}
+	var revision int64
+	var layout string
+	h.store.read(func(data *ownData) { revision, layout = data.MetaRevision, data.Layouts[900001] })
+	if revision != 2000 || layout != "favorites" {
+		t.Fatalf("revision %d, layout %q", revision, layout)
+	}
 }
 
 // FollowMeta asks again from the last revision after the stream ended

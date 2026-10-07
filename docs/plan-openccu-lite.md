@@ -23,9 +23,9 @@ Offen:
   mit dem Eintrag
   `{"git": "https://github.com/firsttris/ccu-addon-mui", "manifest": "addon_installer/openccu-lite.json"}`.
   Das System liest das Manifest an der neuesten Release, also erst nach einer Release mit dieser Datei.
-- [x] Die Fragen an Sebastian sind beantwortet und umgesetzt (unten). Offen und für eigene PRs danach:
-  Änderungen mit der Sitzung des Nutzers an die API, `lite-rpc` statt der lokalen Ports, eventuell die erste
-  Favoritenliste mit occulites Bedien-App teilen.
+- [x] Die Fragen an Sebastian sind beantwortet und umgesetzt (unten), auch seine Empfehlungen: `lite-rpc`
+  statt der lokalen Ports, Änderungen mit der Sitzung des Nutzers, `import` und `resync` im Change-Stream.
+  Die Favoriten bleiben bewusst MUIs eigene (Antwort 2).
 
 Wie sich MUI auf openccu-lite verhält, wo es anders ist als auf der CCU:
 
@@ -259,8 +259,12 @@ Katalog. Direktverknüpfungen bleiben, die laufen zwischen den Geräten und deck
 - Offene Verbindungen prüfen die Sitzung jede Minute neu; ein Abmelden in openccu-lite beendet sie. Ohne
   gültige Sitzung antwortet der Server `SESSION_REQUIRED`, und die App schickt zu occulites `/login`
   statt ihr eigenes Login-Formular zu zeigen.
-- Für eigene API-Aufrufe ohne Benutzer (Events, Servicemeldungen im Hintergrund) nutzen wir das Add-on-Token
-  `/run/occulite/addon-tokens/mui.api` mit den Rechten aus dem Manifest.
+- **Wessen Rechte:** Was ein Nutzer auslöst (Schalten, Umbenennen, Räume, Paramsets, Anlernen, Heizgruppen),
+  schickt der Server mit dessen Sitzung an occulited, also an `lite-rpc` und die Metadaten- und System-API.
+  So prüft das System selbst, was das Konto darf, und sein Journal nennt den Nutzer statt des Add-ons. Das
+  Add-on-Token `/run/occulite/addon-tokens/mui.api` braucht der Server nur für das, was er selbst tut:
+  Metadaten, Zustandsspeicher, Events und Servicemeldungen lesen, Sticky-Meldungen zurücksetzen. Darum
+  verlangt das Manifest nur `meta:read`, `rpc:operate` und `system:read`.
 - Dem Header trauen wir nur auf Lite. Auf der CCU kann ihn jeder Client selbst setzen.
 
 ## Paket für Lite
@@ -286,8 +290,8 @@ Katalog. Direktverknüpfungen bleiben, die laufen zwischen den Geräten und deck
       "daemon": true,
       "needs": ["rfd", "hmipserver", "hs485d"],
       "start": "early",
-      "api_scopes": ["meta:write", "rpc:read", "system:write"],
-      "note": { "de": "Spricht mit rfd, HMIPServer und hs485d über die lokalen Ports.", "en": "Talks to rfd, HMIPServer and hs485d on the local ports." }
+      "api_scopes": ["meta:read", "rpc:operate", "system:read"],
+      "note": { "de": "Spricht mit rfd, HMIPServer und hs485d über lite-rpc …", "en": "Talks to rfd, HMIPServer and hs485d through lite-rpc …" }
     }
   }
   ```
@@ -303,9 +307,11 @@ Katalog. Direktverknüpfungen bleiben, die laufen zwischen den Geräten und deck
   WebSockets gehen durch.
 - **Einbettung:** occulites Oberfläche zeigt uns im iframe und hängt `?theme=…&lang=…` an. Wir übernehmen
   Hell/Dunkel und Sprache daraus und hören auf `postMessage` `openccu-lite:theme`.
-- **Interfaces:** Die Ports kommen schon heute aus `/etc/config/InterfacesList.xml`, die Rückrufe an
-  127.0.0.1 funktionieren auf Lite. Neu ist das Warten beim Start: `init` nach 1, 2, 4 und 8 s wiederholen,
-  dann alle 15 s, und das ohne Warnungen im Log, solange der Funk-Dienst noch nicht da ist.
+- **Interfaces:** Die Funkdienste erreicht der Server über occulites `lite-rpc`
+  (`/api/rpc/v1/xmlrpc/<Interface>`), nicht über ihre lokalen Ports; welche es gibt, steht in
+  `/etc/config/InterfacesList.xml`. Ein `init` als Callback-Server braucht es nicht: Werte und Events kommen
+  aus occulites Zustandsspeicher und Event-Stream. Das spart den eQ-3-Prozessen einen Subscriber, und occulited
+  sieht jeden Aufruf mit dem Nutzer, der ihn auslöst.
 - **Katalog:** ein PR auf occulites `catalog/catalog.json` mit unserem Repository und dem Pfad zum Manifest.
 
 ## Tests
@@ -351,20 +357,27 @@ openccu-lite und occulited gehen als Issue in dessen Repository.
 
 1. **Layouts pro Raum:** Knoten haben kein `meta`, das Format ist für Version 1 fest; die eigene Datei ist
    richtig. Verschiebt man einen Raum, meldet der Change-Stream `node.moved` mit `from` und `to`.
-   *Umgesetzt:* MUI zieht die Layouts damit mit.
+   *Umgesetzt:* MUI zieht die Layouts damit mit. Die letzte Revision steht in `mui-lite.json`, nach einem
+   Neustart holt der Server so die Verschiebungen nach, die er verpasst hat. Bei `resync` (so alte Events
+   hat occulited nicht mehr) und `import` (ein Backup ersetzt den Speicher) lässt sich nichts nachholen; die
+   Layouts bleiben dann, wo sie sind, denn ein zurückgespieltes Backup bringt die alten Pfade mit.
 2. **Favoriten:** Das `favorite`-Enum hat genau einen Knoten pro Konto, die Reihenfolge steht in
    `meta.occulite.order`; eigene Knoten dort anlegen geht nicht. Mehrere benannte Listen kennt das Format
-   nicht. *Stand:* MUI behält seine eigene Datei. Die erste Liste eines Kontos auf dessen Knoten abzubilden,
-   wäre möglich, ist aber offen.
+   nicht. *Entschieden:* MUI behält seine eigene Datei. In MUI pflegt jeder Bediener seine Listen, im
+   Metadaten-Speicher dürfte er das nicht: Mitgliedschaften sind Änderungen am Objekt und brauchen
+   `configure`. Die erste Liste dort abzubilden, hieße also, sie mit dem Add-on-Token für den Nutzer zu
+   schreiben, und genau das soll MUI nach Antwort 3 nicht. Gäbe occulited einem Konto das Schreiben am
+   eigenen `favorite`-Knoten frei, wäre das Teilen eine kleine Änderung.
 3. **Stufe für Namen und Räume:** `configure` (der Satz in `meta-api.md` war veraltet). Aber `configure` hat
    weder `rpc:admin` noch `system:write`. *Umgesetzt:* Geräte löschen, ersetzen, aktualisieren und
-   Heizgruppen ändern nur für `administer`. Offen: Änderungen mit der Sitzung des Nutzers an die API
-   schicken, damit das System die Stufe prüft und das Journal den Nutzer nennt.
+   Heizgruppen ändern nur für `administer`. Und alles, was ein Nutzer ändert, geht mit dessen Sitzung an
+   die API: Das System prüft die Stufe selbst, und sein Journal nennt den Nutzer (Abschnitt *Anmeldung*).
 4. **Servicemeldungen bestätigen:** aus occulites Doku geklärt; die Meldungen sind nur lesbar, Sticky-Meldungen
    per `setValue`, die anderen enden von selbst.
 5. **HmIP-Anlernen über die lokalen Ports:** keine Freigabe nötig. Der Schlüsselmodus steht in
    `GET /api/meta/v1/version` (`hmip`). *Umgesetzt:* Der Anlerndialog richtet sich danach. Sebastian rät,
-   statt der lokalen Ports `lite-rpc` zu nutzen, das spart Subscriber auf den eQ-3-Prozessen. *Offen.*
+   statt der lokalen Ports `lite-rpc` zu nutzen, das spart Subscriber auf den eQ-3-Prozessen. *Umgesetzt:*
+   Alle Aufrufe an die Funkdienste gehen über `lite-rpc`.
 6. **Stabile Version und CI:** Termin gibt es noch keinen; ein Image in QEMU wie in `lite-vm.yml` empfiehlt
    er selbst.
 7. **Benutzer, Backup, Neustart über die Sitzung eines Administrators:** soll bei den Seiten des Systems
@@ -377,7 +390,8 @@ openccu-lite und occulited gehen als Issue in dessen Repository.
     Ablehnung künftig bei der Installation. Die einzeilige Fassung bleibt richtig.
 
 Zum Manifest: `"start": "early"`, `hs485d` in `needs` und nur die Rechte, die MUI ruft (`meta:write`,
-`rpc:read`, `system:write`). *Umgesetzt.* Den Katalog-PR nimmt er, sobald die Release mit
+`rpc:read`, `system:write`). *Umgesetzt*, und seit die Änderungen mit der Sitzung des Nutzers gehen, braucht
+das Token noch weniger: `meta:read`, `rpc:operate`, `system:read`. Den Katalog-PR nimmt er, sobald die Release mit
 `openccu-lite.json` draußen ist.
 
 ## Risiken

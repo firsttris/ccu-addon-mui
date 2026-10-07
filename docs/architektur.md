@@ -103,7 +103,8 @@ Servicemeldungen) hinter `home.Source` mit der ReGa (`pkg/rega`) bzw. occulites 
 Heizgruppen hinter `GroupService`, die Anmeldung hinter dem Gate von openccu-lite. Was nur eine CCU hat,
 verteilt `dispatch_ccu.go`, und die Dateien dafür bauen nur ins CCU-Paket. Auf openccu-lite kommen die
 Events statt über einen Callback-Server über occulites Event-Stream, der Verpasstes nachholt, und die Werte
-beim Start aus dessen Zustandsspeicher. Die App ist für beide gleich; der Server sagt ihr bei der Anmeldung,
+beim Start aus dessen Zustandsspeicher; die Funkdienste erreicht der Server über occulites `lite-rpc`, mit
+der Sitzung des Nutzers, der etwas ändert. Die App ist für beide gleich; der Server sagt ihr bei der Anmeldung,
 was es gibt.
 
 ## Schnittstellen der CCU

@@ -81,6 +81,7 @@ type systemInfoResponse struct {
 // handleSystemInfo: versions and the radio modules with their duty cycle,
 // for administrators.
 func (s *Server) handleSystemInfo(client *Client, requestID string) {
+	rpc := s.rpcFor(client)
 	if client.level != auth.LevelAdmin {
 		s.sendRequestError(client, requestID, "only administrators may see system information", "FORBIDDEN")
 		return
@@ -105,7 +106,7 @@ func (s *Server) handleSystemInfo(client *Client, requestID string) {
 		// in webui.js): the groups server (VirtualDevices) answers
 		// listBidcosInterfaces with a fault the CCU logs in hmserver.log
 		for _, iface := range []string{"BidCos-RF", "BidCos-Wired", "HmIP-RF"} {
-			modules, err := s.rpc.ListBidcosInterfaces(iface)
+			modules, err := rpc.ListBidcosInterfaces(iface)
 			if err != nil {
 				continue
 			}
