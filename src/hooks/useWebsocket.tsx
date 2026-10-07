@@ -16,6 +16,7 @@ import { useToast } from '../contexts/ToastContext';
 import { applyEvent } from './channels';
 import { RecentUpdates } from './recentUpdates';
 import type { Protocol } from '../types/protocol';
+import { Capabilities, CCU_CAPABILITIES, Platform } from './capabilities';
 import { m } from '../paraglide/messages';
 
 // The transport: WebSocket connection, login, and requests answered by
@@ -63,6 +64,9 @@ interface Response {
   elevated?: boolean;
   // When the admin rights end (RFC 3339)
   elevatedUntil?: string;
+  // auth_response: what the add-on runs on and what it can do there
+  platform?: Platform;
+  capabilities?: Capabilities;
   requestId?: string;
   // deviceProblems
   devices?: DeviceProblem[];
@@ -190,6 +194,9 @@ export const useWebsocket = () => {
   // When the admin rights end (ms), unknown without authentication
   const [elevatedUntil, setElevatedUntil] = useState<number>();
   const [loginError, setLoginError] = useState<string | null>(null);
+  // A CCU until the server says otherwise
+  const [platform, setPlatform] = useState<Platform>('ccu');
+  const [capabilities, setCapabilities] = useState<Capabilities>(CCU_CAPABILITIES);
 
   const deviceId = useUniqueDeviceID();
   const { showToast } = useToast();
@@ -379,6 +386,8 @@ export const useWebsocket = () => {
     setUserLevel(response.level ?? '');
     setElevated(response.elevated === true);
     setElevatedUntil(response.elevatedUntil ? Date.parse(response.elevatedUntil) : undefined);
+    if (response.platform) setPlatform(response.platform);
+    if (response.capabilities) setCapabilities(response.capabilities);
     setAuthState('authenticated');
     readyRef.current = true;
 
@@ -492,8 +501,30 @@ export const useWebsocket = () => {
   );
 
   const state = useMemo(
-    () => ({ ...actions, connectionStatus, authState, authRequired, userLevel, elevated, elevatedUntil, loginError }),
-    [actions, connectionStatus, authState, authRequired, userLevel, elevated, elevatedUntil, loginError],
+    () => ({
+      ...actions,
+      connectionStatus,
+      authState,
+      authRequired,
+      userLevel,
+      elevated,
+      elevatedUntil,
+      loginError,
+      platform,
+      capabilities,
+    }),
+    [
+      actions,
+      connectionStatus,
+      authState,
+      authRequired,
+      userLevel,
+      elevated,
+      elevatedUntil,
+      loginError,
+      platform,
+      capabilities,
+    ],
   );
 
   return { actions, state };

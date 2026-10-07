@@ -5676,6 +5676,55 @@ export interface AuthResponse {
    * RFC 3339 time the admin rights end; absent without an expiry or when not elevated
    */
   elevatedUntil?: string;
+  /**
+   * What the add-on runs on: a CCU3/OpenCCU or openccu-lite (without ReGa and WebUI); sent when the login succeeded
+   */
+  platform?: "ccu" | "lite";
+  capabilities?: Capabilities;
+}
+/**
+ * Which parts of the app the platform has; the app hides the others
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "Capabilities".
+ */
+export interface Capabilities {
+  /**
+   * ReGa programs and scripts
+   */
+  programs: boolean;
+  /**
+   * System variables
+   */
+  sysvars: boolean;
+  /**
+   * Alarm messages (alarm system variables)
+   */
+  alarms: boolean;
+  /**
+   * The system protocol (ReGa history)
+   */
+  history: boolean;
+  /**
+   * The CCU's system settings: time, network, firewall, security, certificate, logging, backup, CCU firmware, add-ons, LAN gateways, restart
+   */
+  system: boolean;
+  /**
+   * The CCU's users
+   */
+  users: boolean;
+  /**
+   * Updating this add-on from the app
+   */
+  selfUpdate: boolean;
+  /**
+   * The ReGa's channel options (visible, operable, logged)
+   */
+  channelOptions: boolean;
+  /**
+   * The communication test
+   */
+  comTest: boolean;
 }
 /**
  * A failed request; requestId if the request had one
