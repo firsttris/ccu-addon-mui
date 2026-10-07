@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { defaultLayout, defaultWidth, moveSection, orderSections, parseLayout, responsiveLayouts, rowsFor, toSaved } from './tileLayout';
+import { defaultLayout, defaultWidth, flowLayout, moveSection, orderSections, parseLayout, responsiveLayouts, rowsFor, toSaved } from './tileLayout';
 
 const tiles = [
   { key: 'c:A:1', minPx: 150 },
@@ -42,6 +42,38 @@ describe('tileLayout', () => {
     expect(own.map((t) => t.h)).toEqual([rowsFor(300), rowsFor(300), rowsFor(330)]);
     const equal = responsiveLayouts(tiles, undefined, heights, 1376, true).lg!;
     expect(equal.map((t) => t.h)).toEqual([rowsFor(330), rowsFor(330), rowsFor(330)]);
+  });
+
+  it('flows tiles in their order, each row as tall as its tallest tile', () => {
+    const layout = [
+      { i: 'b', x: 30, y: 0, w: 30, h: 20 },
+      { i: 'a', x: 0, y: 0, w: 30, h: 10 },
+      // A gap before it is closed
+      { i: 'c', x: 30, y: 40, w: 30, h: 5 },
+    ];
+    expect(flowLayout(layout, 60).map(({ i, x, y }) => ({ i, x, y }))).toEqual([
+      { i: 'b', x: 30, y: 0 },
+      { i: 'a', x: 0, y: 0 },
+      { i: 'c', x: 0, y: 20 },
+    ]);
+  });
+
+  it('puts a dragged tile among the others in its row instead of pushing them down', () => {
+    const row = [
+      { i: 'a', x: 0, y: 0, w: 20, h: 10 },
+      { i: 'b', x: 20, y: 0, w: 20, h: 10 },
+      { i: 'c', x: 40, y: 0, w: 20, h: 10 },
+    ];
+    const at = (i: string, x: number, y: number) => {
+      const out = flowLayout(row.map((t) => (t.i === i ? { ...t, x, y, moved: true } : t)), 60);
+      return [...out].sort((p, q) => p.y - q.y || p.x - q.x).map((t) => `${t.i}${t.y}`);
+    };
+    // c dragged onto a: they swap places, b moves aside
+    expect(at('c', 0, 0)).toEqual(['c0', 'a0', 'b0']);
+    // a dragged a bit down onto c's place: still in the row
+    expect(at('a', 38, 3)).toEqual(['b0', 'a0', 'c0']);
+    // Below the last row: at the end, in the row where it still fits
+    expect(at('a', 0, 12)).toEqual(['b0', 'c0', 'a0']);
   });
 
   it('stores positions and widths only, and reads them back', () => {

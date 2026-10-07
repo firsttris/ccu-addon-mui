@@ -1,4 +1,4 @@
-import type { Layout, LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
+import type { Compactor, Layout, LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
 
 // Layout of the dashboard's tiles when arranged by hand. Every section
 // (lights, heating, ...) is a grid of its own: tiles move within it, and the
@@ -135,6 +135,47 @@ export const responsiveLayouts = (
     );
   }
   return result;
+};
+
+// Tiles flow left to right in their order and wrap at the edge, as in the
+// sections' own grids; each row is as tall as its tallest tile. A tile
+// dragged onto others takes its place among them (they move aside in the
+// row) instead of pushing them down: it goes before the first tile whose
+// middle is not left of its own, in the row its middle is over.
+// (react-grid-layout's wrapCompactor makes every row one grid row tall.)
+export const flowLayout = (layout: Layout, cols: number): Layout => {
+  const byPosition = (a: LayoutItem, b: LayoutItem) => a.y - b.y || a.x - b.x;
+  const order = layout.filter((t) => !t.moved).sort(byPosition);
+  for (const dragged of layout.filter((t) => t.moved)) {
+    const cx = dragged.x + dragged.w / 2;
+    const cy = dragged.y + dragged.h / 2;
+    const at = order.findIndex((t) => t.y > cy || (cy < t.y + t.h && t.x + t.w / 2 >= cx));
+    order.splice(at < 0 ? order.length : at, 0, dragged);
+  }
+  const placed = new Map<string, LayoutItem>();
+  let x = 0;
+  let y = 0;
+  let rowHeight = 0;
+  for (const t of order) {
+    const w = Math.min(t.w, cols);
+    if (x > 0 && x + w > cols) {
+      x = 0;
+      y += rowHeight;
+      rowHeight = 0;
+    }
+    placed.set(t.i, { ...t, x, y, w, moved: false });
+    x += w;
+    rowHeight = Math.max(rowHeight, t.h);
+  }
+  return layout.map((t) => placed.get(t.i)!);
+};
+
+// Overlapping while dragging: nothing is pushed away, flowLayout puts every
+// tile in its place
+export const flowCompactor: Compactor = {
+  type: 'wrap',
+  allowOverlap: true,
+  compact: flowLayout,
 };
 
 // What is stored: position and width (heights come from the content)

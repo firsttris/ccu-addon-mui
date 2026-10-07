@@ -4,7 +4,7 @@ import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import { cn } from '../../lib/utils';
-import { BREAKPOINTS, BreakpointName, COLS, MARGIN, responsiveLayouts, ROW_HEIGHT, SectionLayout, TileSpec, toSaved } from './tileLayout';
+import { BREAKPOINTS, BreakpointName, COLS, flowCompactor, MARGIN, responsiveLayouts, ROW_HEIGHT, SectionLayout, TileSpec, toSaved } from './tileLayout';
 
 export interface GridTile extends TileSpec {
   element: ReactNode;
@@ -85,6 +85,7 @@ export const GridDashboard = ({
           rowHeight={ROW_HEIGHT}
           margin={[MARGIN, MARGIN]}
           containerPadding={[MARGIN, MARGIN]}
+          compactor={flowCompactor}
           // Only the grip starts a drag: elsewhere a touch scrolls the page,
           // on a tablet the tiles cover most of it
           dragConfig={{ enabled: editing, handle: '.tile-drag-handle' }}
