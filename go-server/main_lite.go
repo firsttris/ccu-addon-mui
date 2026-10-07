@@ -52,7 +52,10 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 		if err != nil {
 			return websocket.GateSession{}, err
 		}
-		return websocket.GateSession{User: session.User, Level: occulite.AddonLevel(session.Level)}, nil
+		return websocket.GateSession{
+			User: session.User, Level: occulite.AddonLevel(session.Level),
+			Administrator: session.Level == occulite.LevelAdminister,
+		}, nil
 	})
 	logger.Info("🔒 Authentication: openccu-lite sessions (" + cfg.OcculiteURL + ")")
 

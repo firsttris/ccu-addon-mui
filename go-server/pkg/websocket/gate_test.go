@@ -80,3 +80,31 @@ func TestWatchGate(t *testing.T) {
 		t.Fatal("still open after the session ended")
 	}
 }
+
+// On openccu-lite configure is this add-on's admin, but deleting, replacing
+// and updating devices and changing heating groups stay administer's, as in
+// the system itself
+func TestSystemAdminOnly(t *testing.T) {
+	s := NewServer(nil, nil)
+	configure := &Client{level: auth.LevelAdmin, elevatedUntil: alwaysElevated, gateOK: true, gateSession: GateSession{User: "anna", Level: auth.LevelAdmin}}
+	administer := &Client{level: auth.LevelAdmin, elevatedUntil: alwaysElevated, gateOK: true, gateSession: GateSession{User: "otto", Level: auth.LevelAdmin, Administrator: true}}
+
+	// A CCU has no such level
+	if code, _ := s.groupChangeError(configure); code != "" {
+		t.Fatalf("without a gate: %s", code)
+	}
+	s.SetGate(func(*http.Request) (GateSession, error) { return GateSession{}, ErrNoSession })
+	if code, _ := s.groupChangeError(configure); code != "FORBIDDEN" {
+		t.Fatalf("configure: %q", code)
+	}
+	if code, _ := s.systemAdminError(configure.snapshot()); code != "FORBIDDEN" {
+		t.Fatalf("configure, snapshot: %q", code)
+	}
+	if code, _ := s.groupChangeError(administer); code != "" {
+		t.Fatalf("administer: %q", code)
+	}
+	// The firmware update runs on a snapshot of the client
+	if code, _ := s.systemAdminError(administer.snapshot()); code != "" {
+		t.Fatalf("administer, snapshot: %q", code)
+	}
+}

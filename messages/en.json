@@ -1518,6 +1518,7 @@
   "LITE_SESSION_EXPIRED": "Session expired",
   "LITE_SESSION_EXPIRED_HINT": "Your openccu-lite session has expired. Sign in there again to keep using MUI.",
   "LITE_SIGN_IN": "Sign in to openccu-lite",
+  "NOT_PERMITTED": "You do not have the rights for this. On openccu-lite only the system's administrators may delete, replace or update devices and change heating groups.",
   "LITE_SYSTEM_TITLE": "openccu-lite",
   "LITE_SYSTEM_HINT": "Network, firewall, users, backup, updates and add-ons are managed by openccu-lite itself.",
   "LITE_NETWORK": "Network",

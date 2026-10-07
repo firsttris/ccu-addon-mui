@@ -10,6 +10,9 @@ const passwordErrors: Record<string, Text> = {
   TOO_MANY_ATTEMPTS: m.TOO_MANY_ATTEMPTS,
   CCU_UNREACHABLE: m.CCU_UNREACHABLE,
   CCU_NOT_READY: m.CCU_NOT_READY,
+  // A change the account's level does not allow (on openccu-lite: one that
+  // needs the system's administrator)
+  FORBIDDEN: m.NOT_PERMITTED,
 };
 
 export const errorCode = (error: unknown) => (error instanceof RequestError ? error.code : undefined);

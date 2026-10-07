@@ -1518,6 +1518,7 @@
   "LITE_SESSION_EXPIRED": "Sitzung abgelaufen",
   "LITE_SESSION_EXPIRED_HINT": "Deine Anmeldung bei openccu-lite ist abgelaufen. Melde dich dort wieder an, um MUI weiter zu nutzen.",
   "LITE_SIGN_IN": "Bei openccu-lite anmelden",
+  "NOT_PERMITTED": "Dafür fehlen dir die Rechte. Auf openccu-lite dürfen Geräte löschen, ersetzen, aktualisieren und Heizgruppen nur Administratoren des Systems.",
   "LITE_SYSTEM_TITLE": "openccu-lite",
   "LITE_SYSTEM_HINT": "Netzwerk, Firewall, Benutzer, Sicherung, Updates und Zusatzsoftware verwaltet openccu-lite selbst.",
   "LITE_NETWORK": "Netzwerk",

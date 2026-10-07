@@ -200,7 +200,7 @@ func (c *Client) snapshot() *Client {
 	return &Client{
 		id: c.id, conn: c.conn, send: c.send, done: c.done,
 		deviceID: c.deviceID, sessionID: c.sessionID, sysvars: c.sysvars,
-		device: c.device, source: c.source,
+		device: c.device, source: c.source, gateSession: c.gateSession, gateOK: c.gateOK,
 		authenticated: c.authenticated, user: c.user, level: c.level, elevatedUntil: c.elevatedUntil,
 	}
 }
@@ -1732,6 +1732,9 @@ func (s *Server) installFirmware(client *Client, requestID, iface, address strin
 	defer s.firmwareUpdates.Delete(iface + " " + address)
 	s.configure(client, requestID, audit.Entry{Action: "installFirmware", Target: iface + " " + address},
 		func() (interface{}, string, error) {
+			if code, _ := s.systemAdminError(client); code != "" {
+				return nil, code, nil
+			}
 			err := s.rpc.InstallFirmware(iface, address)
 			if err == nil {
 				s.smokeTestAfterUpdate(iface, address)
@@ -2148,6 +2151,9 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 	case "replaceDevice":
 		entry.Value = map[string]interface{}{"replaces": msg.OldAddress}
 		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			if code, _ := s.systemAdminError(client); code != "" {
+				return nil, code, nil
+			}
 			if err := s.rpc.ReplaceDevice(msg.InterfaceName, msg.OldAddress, msg.Address); err != nil {
 				return nil, "", err
 			}
@@ -2165,6 +2171,9 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 		}
 		entry.Value = map[string]interface{}{"reset": msg.Reset, "force": msg.Force}
 		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+			if code, _ := s.systemAdminError(client); code != "" {
+				return nil, code, nil
+			}
 			if err := s.rpc.DeleteDevice(msg.InterfaceName, msg.Address, flags); err != nil {
 				return nil, "", err
 			}

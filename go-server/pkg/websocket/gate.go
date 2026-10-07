@@ -16,6 +16,11 @@ import (
 type GateSession struct {
 	User  string
 	Level string
+	// Administrator: the platform's highest level (openccu-lite's
+	// administer). Its configure level is this add-on's admin too, but may
+	// not delete, replace or update devices nor change heating groups
+	// (systemAdminError).
+	Administrator bool
 }
 
 // ErrNoSession: the request carries no valid session of the platform (none,
@@ -35,6 +40,19 @@ var gateRecheck = time.Minute
 // the platform asks for the password itself.
 func (s *Server) SetGate(gate GateFunc) {
 	s.gate = gate
+}
+
+// systemAdminError says why a client may not delete, replace or update
+// devices or change heating groups on openccu-lite, or "" if it may. The
+// system keeps them to administer: they need rpc:admin and system:write,
+// which configure lacks (occulited docs/lite-rpc-methods.json,
+// docs/system-api.md "Scopes"), and the add-on must not let an account do
+// more than the system does.
+func (s *Server) systemAdminError(c *Client) (code, message string) {
+	if s.gate == nil || c.gateSession.Administrator {
+		return "", ""
+	}
+	return "FORBIDDEN", "only the system's administrators may do this"
 }
 
 // gateLogin answers auth from the session the gate let through. Without

@@ -246,7 +246,9 @@ Katalog. Direktverknüpfungen bleiben, die laufen zwischen den Geräten und deck
 - Das Gate hängt den Header `X-Occulite-Session` an jede Anfrage, auch an den WebSocket-Upgrade. Der Server
   prüft ihn mit `GET http://127.0.0.1/api/auth/v1/state` (`Authorization: Bearer <Wert>`) und übernimmt
   Benutzer und Stufe.
-- Stufen von Lite auf unsere: `read` → guest, `operate` → user, `configure` und `administer` → admin. Die
+- Stufen von Lite auf unsere: `read` → guest, `operate` → user, `configure` und `administer` → admin.
+  Geräte löschen, ersetzen und aktualisieren sowie Heizgruppen ändern bleibt `administer` vorbehalten, wie im
+  System (`rpc:admin`, `system:write`; laut Sebastian in #191). Die
   Admin-Bestätigung per Passwort („elevate“) entfällt auf Lite, das regelt occulites Stufe: Administratoren
   sind immer bestätigt, alle anderen bekommen `FORBIDDEN`.
 - Offene Verbindungen prüfen die Sitzung jede Minute neu; ein Abmelden in openccu-lite beendet sie. Ohne

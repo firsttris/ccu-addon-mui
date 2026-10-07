@@ -149,7 +149,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		g := msg.Group
 		g.Name = strings.TrimSpace(g.Name)
 		entry := audit.Entry{User: client.user, Action: "saveHeatingGroup", Target: g.Name, Value: g}
-		if code, errorMsg := configureError(client); code != "" {
+		if code, errorMsg := s.groupChangeError(client); code != "" {
 			s.recordAudit(entry, code)
 			s.sendRequestError(client, msg.RequestID, errorMsg, code)
 			return
@@ -217,7 +217,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		s.sendJSON(client, heatingGroupSavedResponse{Type: "saveHeatingGroup_response", RequestID: msg.RequestID, Success: true, ID: id})
 	case "deleteHeatingGroup":
 		entry := audit.Entry{User: client.user, Action: "deleteHeatingGroup", Target: strconv.Itoa(msg.ID)}
-		if code, errorMsg := configureError(client); code != "" {
+		if code, errorMsg := s.groupChangeError(client); code != "" {
 			s.recordAudit(entry, code)
 			s.sendRequestError(client, msg.RequestID, errorMsg, code)
 			return
@@ -319,4 +319,13 @@ func containsString(list []string, value string) bool {
 		}
 	}
 	return false
+}
+
+// groupChangeError: administrators with a recent password; on openccu-lite
+// the system's administrators only
+func (s *Server) groupChangeError(client *Client) (string, string) {
+	if code, message := configureError(client); code != "" {
+		return code, message
+	}
+	return s.systemAdminError(client)
 }
