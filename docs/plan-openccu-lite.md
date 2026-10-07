@@ -6,13 +6,18 @@ einer Codebasis.
 
 ## Stand der Umsetzung
 
-Die Schritte 1 bis 8 sind umgesetzt und mit Tests gegen die Fake-CCU im Lite-Modus abgesichert
-(`go test -tags lite ./...`, `e2e/lite.spec.ts`); der Branch baut beide Pakete. Offen ist nur, was ein
-echtes openccu-lite braucht:
+Die Schritte 1 bis 8 sind umgesetzt, der Branch baut beide Pakete. Getestet ist es auf zwei Wegen:
 
-- [ ] Test auf einer echten openccu-lite-VM: automatisch in `lite-vm.yml` (Installation, Anmeldung über das
-  Gate, Neustart, Update, Journal, Abmelden; ohne Funkmodul), dazu einmal von Hand mit Funk-Hardware nach der
-  Checkliste unten (Abschnitt *Tests*).
+- **Gegen die Fake-Lite** (`go test -tags lite ./...`, `e2e/lite.spec.ts`): was MUI aus occulites APIs
+  macht, Fall für Fall.
+- **Auf einem echten openccu-lite** (`lite-vm.yml`): das Release-Image in einer VM, das Paket über occulites
+  Add-on-API installiert, dann Anmeldung über das Gate, Lesen, Raum und Sprache über Neustart und Update,
+  Journal und Abmelden. Ohne Funkmodul, also ohne Geräte ([tests.md](tests.md#auf-einer-openccu-lite-vm)).
+
+Offen:
+
+- [ ] Ein Test mit Funk-Hardware nach der Checkliste unten (Abschnitt *Tests*): Anlernen, Schalten, Werte,
+  Heizgruppen.
 - [ ] Release mit den Lite-Paketen und ihren `.sha256` (der Build erzeugt beides).
 - [ ] Pull Request auf occulites [`catalog/catalog.json`](https://github.com/hobbyquaker/occulited/blob/master/catalog/catalog.json)
   mit dem Eintrag
@@ -20,6 +25,24 @@ echtes openccu-lite braucht:
   Das System liest das Manifest an der neuesten Release, also erst nach einer Release mit dieser Datei.
 - [ ] Die offenen Fragen an Sebastian (unten), vor allem Layouts pro Raum, gemeinsame Favoriten und die
   Stufe für Namen und Räume.
+
+Wie sich MUI auf openccu-lite verhält, wo es anders ist als auf der CCU:
+
+- **Anmeldung:** über occulites Sitzung. Offene Verbindungen prüfen sie jede Minute neu, ein Abmelden in
+  openccu-lite beendet sie. Ist die Sitzung abgelaufen, schickt die App zu occulites `/login`.
+  Administratoren müssen ihr Passwort nicht noch einmal eingeben, alle anderen dürfen keine Einstellungen
+  ändern.
+- **Räume am Gerät:** occulited erlaubt Räume auch am Geräteobjekt. MUI zeigt sie an den Kanälen, solange
+  ein Kanal keine eigenen hat; ändert man die Räume eines Kanals in MUI, werden sie seine eigenen
+  (`meta.mui.ownEnums`).
+- **Servicemeldungen:** occulites Meldungen sind ein Abbild der Wartungsdatenpunkte. Bestätigen lassen sich
+  nur `STICKY_UNREACH` und `STICKY_SABOTAGE` (per `setValue`, wie auf der CCU); die anderen enden, wenn das
+  Gerät es meldet, und die App bietet dafür kein Bestätigen an.
+- **Diagramme:** neue Reihen beginnen mit dem aktuellen Wert, ohne Import aus einem Systemprotokoll.
+- **Eigene Daten** (Layouts, Favoriten, Sprache, Diagramme) liegen in `DATA_DIR`.
+- **lighttpd-Fragment:** occulited übernimmt es nur, wenn jede Direktive auf einer Zeile steht (seine
+  Prüfung liest einen Wert bis zum Zeilenende). Das hat erst der Test auf der echten VM gezeigt; ein Test
+  im Repo hält es jetzt so.
 
 Abweichungen vom Plan:
 
@@ -31,28 +54,6 @@ Abweichungen vom Plan:
 - **Im Lite-Binary** steckt noch der ReGa-Client, weil `websocket.Server` ihn als Feld kennt. Erreichbar ist
   er dort nicht: Der Verteiler schickt keine Anfrage an die CCU-Handler, deren Dateien gar nicht mitgebaut
   werden. Ganz heraus käme er erst, wenn auch die übrigen gemeinsamen Handler hinter Schnittstellen liegen.
-
-## Code-Review und was daraus wurde
-
-Ein Review des PRs ([#191](https://github.com/firsttris/ccu-addon-mui/pull/191), zwei Durchgänge) fand
-14 Punkte. Umgesetzt im Commit „Review-Findings zu openccu-lite umgesetzt“, die Funktionsfehler jeweils mit Test:
-
-| # | Finding | Umsetzung |
-|---|---|---|
-| A1 | `saveDiagram` lief auf openccu-lite in einen nil-ReGa-Client (Panic, keine Antwort) | Kanäle der neuen Reihen aus `home.Source`; der Import aus dem Systemprotokoll nur mit `capabilities.history`, Systemvariablen-Reihen nur mit `capabilities.sysvars`. Test `TestLiteLimits`. |
-| A2 | Raum/Gewerk-Zuordnung ignorierte die Räume, die ein Kanal von seinem Gerät erbt | `setGroupMember` geht von den angezeigten (ggf. geerbten) Räumen aus und macht sie zu den eigenen des Kanals; dazu `meta.mui.ownEnums`, damit „aus dem letzten Raum nehmen“ hält und nicht wieder die Räume des Geräts zeigt. Test `TestLiteInheritedRooms`. |
-| A3 | Servicemeldungen außer `STICKY_*` ließen sich nicht quittieren (NOT_FOUND) | occulites Meldungen sind nur lesbar (`docs/system-api.md`, `GET /service-messages`); sie enden, wenn das Gerät es meldet. Der Server antwortet dafür `NOT_SUPPORTED`, die App zeigt „Bestätigen“ auf openccu-lite nur bei Sticky-Meldungen. |
-| A4 | Sprachprofile wurden nach `/etc/config/userprofiles` geschrieben | Auf openccu-lite unter `DATA_DIR/userprofiles`. |
-| A5 | Abgelaufene openccu-lite-Sitzung führte in das eigene, dort nutzlose Login-Formular | Neuer Code `SESSION_REQUIRED`; die App zeigt „Sitzung abgelaufen“ mit Link auf occulites `/login` (im ganzen Fenster). E2E `e2e/lite-session.spec.ts`. |
-| B1 | Die Sitzung wurde nur beim WebSocket-Upgrade geprüft | Jede offene Verbindung prüft sie jede Minute neu und schließt sich, wenn sie endet oder einem anderen Benutzer/einer anderen Stufe gehört. Ist occulited nur nicht erreichbar, bleibt sie offen (`CheckSession` unterscheidet „keine Sitzung“ von „Fehler“). Test `TestWatchGate`. |
-| B2 | `elevate` meldete auf openccu-lite jedem Erfolg | Nur Administratoren, sonst `FORBIDDEN`. |
-| C1 | `getSysvars`/`getPrograms` wurden auf openccu-lite trotzdem gesendet | `useSysvars`/`usePrograms` fragen nur mit der Fähigkeit (`useCapabilities()`); die Auswahllisten in Favoriten- und Diagramm-Editor bleiben damit ohne diese Einträge. E2E prüft, dass nichts gesendet wird. |
-| D1 | Zweiter Raum mit langem Namen bekam eine Knoten-ID über 32 Zeichen | Erst Suffix, dann kürzen (`uniqueSlug`). Test `TestUniqueSlug`. |
-| E1 | `defaultName` las für jeden unbenannten Kanal alle Geräte neu (quadratisch) | Nimmt den Gerätetyp aus der schon gelesenen Beschreibung. |
-| E2 | `getChannels` eines Raums baute alle Kanäle und filterte danach | Filtert die Gerätebeschreibungen zuerst und baut nur die Mitglieder, wie das ReGa-Script der CCU. |
-| E3 | N+1 bei Heizgruppen | **Nicht umgesetzt:** `GET /groups` liefert nur `{id, name, type, type_label, device, ref}` (occulited `docs/system-api.md`); Mitglieder, `device_name` und `forbid_single_operation` gibt es nur pro Gruppe. |
-| F1 | Toter `regaClient`-Zweig in `virtual_keys.go` | Entfernt; die virtuellen Taster kommen immer aus `home.Source`. |
-| F2 | Falscher Dateiverweis im Kommentar | `src/hooks/capabilities.ts`. |
 
 ## Weitere Module auf openccu-lite
 
@@ -359,8 +360,7 @@ den bestehenden Tests absichern.
   können sich noch ändern. Deshalb erst die Schritte 1 bis 3, die auch ohne Lite etwas taugen.
 - **Doppelte Pflege** bei Funktionen der Klasse B: Jede Änderung an Räumen, Namen oder Servicemeldungen
   braucht beide Umsetzungen. Die Schnittstelle und Tests für beide Varianten halten das im Rahmen.
-- **Räume am Gerät:** occulited erlaubt Räume auch am Geräteobjekt. MUI zeigt sie an den Kanälen, solange
-  ein Kanal keine eigenen hat; ändert man die Räume eines Kanals in MUI, werden sie seine eigenen
-  (`meta.mui.ownEnums`). Ob occulites eigene Seiten das genauso sehen, ist nicht geprüft.
+- **Räume am Gerät:** Ob occulites eigene Seiten Räume am Gerät genauso an die Kanäle vererben wie MUI,
+  ist nicht geprüft.
 - **Neue Geräte ohne Namen** wirken auf Lite zunächst unfertig. Ein guter Vorschlag beim Anlernen (Typ und
   Raum) gleicht das aus.
