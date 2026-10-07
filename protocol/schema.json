@@ -2825,6 +2825,17 @@
         "elevatedUntil": {
           "type": "string",
           "description": "RFC 3339 time the admin rights end; absent without an expiry or when not elevated"
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "ccu",
+            "lite"
+          ],
+          "description": "What the add-on runs on: a CCU3/OpenCCU or openccu-lite (without ReGa and WebUI); sent when the login succeeded"
+        },
+        "capabilities": {
+          "$ref": "#/definitions/Capabilities"
         }
       },
       "required": [
@@ -13009,6 +13020,60 @@
         "response"
       ],
       "additionalProperties": false
+    },
+    "Capabilities": {
+      "type": "object",
+      "properties": {
+        "programs": {
+          "type": "boolean",
+          "description": "ReGa programs and scripts"
+        },
+        "sysvars": {
+          "type": "boolean",
+          "description": "System variables"
+        },
+        "alarms": {
+          "type": "boolean",
+          "description": "Alarm messages (alarm system variables)"
+        },
+        "history": {
+          "type": "boolean",
+          "description": "The system protocol (ReGa history)"
+        },
+        "system": {
+          "type": "boolean",
+          "description": "The CCU's system settings: time, network, firewall, security, certificate, logging, backup, CCU firmware, add-ons, LAN gateways, restart"
+        },
+        "users": {
+          "type": "boolean",
+          "description": "The CCU's users"
+        },
+        "selfUpdate": {
+          "type": "boolean",
+          "description": "Updating this add-on from the app"
+        },
+        "channelOptions": {
+          "type": "boolean",
+          "description": "The ReGa's channel options (visible, operable, logged)"
+        },
+        "comTest": {
+          "type": "boolean",
+          "description": "The communication test"
+        }
+      },
+      "required": [
+        "programs",
+        "sysvars",
+        "alarms",
+        "history",
+        "system",
+        "users",
+        "selfUpdate",
+        "channelOptions",
+        "comTest"
+      ],
+      "additionalProperties": false,
+      "description": "Which parts of the app the platform has; the app hides the others"
     }
   }
 }

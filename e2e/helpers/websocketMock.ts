@@ -17,6 +17,9 @@ type Message = {
 export type WebSocketMockOptions = {
   // Like the go-server with AUTH_MODE=ccu: only Admin/secret can log in
   requireLogin?: boolean;
+  // Answer as openccu-lite: no ReGa, no WebUI, so no programs, system
+  // variables, alarms or system settings
+  lite?: boolean;
 };
 
 export const VALID_TOKEN = 'test-token';
@@ -33,11 +36,29 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
   await page.exposeFunction('__mockProtocol', (json: string) => {
     recorded.push(JSON.parse(json));
   });
-  await page.addInitScript(({ requireLogin, validToken }) => {
+  await page.addInitScript(({ requireLogin, validToken, lite }) => {
     const record = (message: unknown) =>
       (window as Window & { __mockProtocol?: (json: string) => void }).__mockProtocol?.(JSON.stringify(message));
 
     type AnyPayload = Record<string, unknown>;
+
+    // What the login tells about the platform (platform.go)
+    const platform = lite
+      ? {
+          platform: 'lite',
+          capabilities: {
+            programs: false,
+            sysvars: false,
+            alarms: false,
+            history: false,
+            system: false,
+            users: false,
+            selfUpdate: false,
+            channelOptions: false,
+            comTest: false,
+          },
+        }
+      : {};
 
     const rooms = [
       { id: 1, name: 'Wohnzimmer' },
@@ -879,13 +900,13 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
       if (message.type === 'auth') {
         if (!requireLogin) {
-          delayedBroadcast({ type: 'auth_response', success: true, authRequired: false, level: 'admin', elevated: true });
+          delayedBroadcast({ type: 'auth_response', success: true, authRequired: false, level: 'admin', elevated: true, ...platform });
           return;
         }
         state.authenticated = message.token === validToken;
         delayedBroadcast(
           state.authenticated
-            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken, elevated: false }
+            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken, elevated: false, ...platform }
             : { type: 'auth_response', success: false, authRequired: true, code: 'LOGIN_REQUIRED', elevated: false },
         );
         return;
@@ -895,7 +916,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         state.authenticated = message.username === 'Admin' && message.password === 'secret';
         delayedBroadcast(
           state.authenticated
-            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken, elevated: false }
+            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken, elevated: false, ...platform }
             : { type: 'auth_response', success: false, authRequired: true, code: 'INVALID_CREDENTIALS', elevated: false },
         );
         return;
@@ -1232,5 +1253,5 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         broadcast({ type: 'sysvars', sysvars });
       },
     };
-  }, { requireLogin: options.requireLogin === true, validToken: VALID_TOKEN });
+  }, { requireLogin: options.requireLogin === true, validToken: VALID_TOKEN, lite: options.lite === true });
 };

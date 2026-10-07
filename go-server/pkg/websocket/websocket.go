@@ -25,10 +25,10 @@ import (
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/diagrams"
+	"ccu-addon-mui-server/pkg/home"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
-	"ccu-addon-mui-server/pkg/home"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/rules"
 	"ccu-addon-mui-server/pkg/selfupdate"
@@ -252,9 +252,9 @@ type Server struct {
 	regaClient  *rega.Client
 	// The home model: rooms, trades, channels, names, favorites, service
 	// messages (the ReGa on a CCU)
-	home home.Source
-	clients     map[*Client]bool
-	clientsMu   sync.RWMutex
+	home      home.Source
+	clients   map[*Client]bool
+	clientsMu sync.RWMutex
 	// The system variables last sent to the connections (sysvars.go)
 	lastSysvars []byte
 	messages    messageWatch
@@ -286,6 +286,10 @@ type Server struct {
 
 	// audit records every change; nil disables it
 	audit *audit.Log
+
+	// What the add-on runs on (platform.go)
+	platform     string
+	capabilities Capabilities
 }
 
 // DeviceRPC is the part of ccurpc.Client the server uses.
@@ -329,6 +333,8 @@ func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 		regaClient:      regaClient,
 		clients:         make(map[*Client]bool),
 		subscriptionMgr: subscriptions.NewManager(),
+		platform:        PlatformCCU,
+		capabilities:    CCUCapabilities,
 	}
 	// A nil client must stay a nil interface
 	if regaClient != nil {
@@ -983,6 +989,9 @@ type authResponse struct {
 	Token         string `json:"token,omitempty"`
 	Error         string `json:"error,omitempty"`
 	Code          string `json:"code,omitempty"`
+	// What the add-on runs on and what it can do there (platform.go)
+	Platform     string        `json:"platform,omitempty"`
+	Capabilities *Capabilities `json:"capabilities,omitempty"`
 }
 
 // handleAuth checks a stored token. Every client sends this first after
@@ -1001,7 +1010,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 		// Without authentication everyone can do everything
 		client.setSession("", auth.LevelAdmin)
 		client.elevatedUntil = alwaysElevated
-		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin, Elevated: true})
+		s.sendAuth(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin, Elevated: true})
 		return
 	}
 
@@ -1020,7 +1029,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 		client.authenticated = false
 		client.watchSysvars(false)
 		client.unwatchMessages()
-		s.sendJSON(client, authResponse{Type: "auth_response", AuthRequired: true, Code: "LOGIN_REQUIRED"})
+		s.sendAuth(client, authResponse{Type: "auth_response", AuthRequired: true, Code: "LOGIN_REQUIRED"})
 		return
 	}
 
@@ -1031,7 +1040,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 			client.elevatedUntil = expiry
 		}
 	}
-	s.sendJSON(client, authResponse{
+	s.sendAuth(client, authResponse{
 		Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level,
 		Token: token, Elevated: client.elevated(), ElevatedUntil: client.elevatedUntilText(),
 	})
@@ -1070,7 +1079,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 	if s.auth == nil {
 		client.setSession("", auth.LevelAdmin)
 		client.elevatedUntil = alwaysElevated
-		s.sendJSON(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin, Elevated: true})
+		s.sendAuth(client, authResponse{Type: "auth_response", Success: true, Level: auth.LevelAdmin, Elevated: true})
 		return
 	}
 
@@ -1086,7 +1095,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 			code = "CCU_NOT_READY"
 		}
 		logger.Info(fmt.Sprintf("🔒 Login failed for user %q: %v", msg.Username, err))
-		s.sendJSON(client, authResponse{Type: "auth_response", AuthRequired: true, Error: err.Error(), Code: code})
+		s.sendAuth(client, authResponse{Type: "auth_response", AuthRequired: true, Error: err.Error(), Code: code})
 		return
 	}
 
@@ -1098,7 +1107,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 	if err == nil {
 		client.elevatedUntil = s.auth.AdminTokenExpiry()
 	}
-	s.sendJSON(client, authResponse{
+	s.sendAuth(client, authResponse{
 		Type: "auth_response", Success: true, AuthRequired: true, User: session.User, Level: session.Level,
 		Token: token, AdminToken: adminToken, Elevated: client.elevated(), ElevatedUntil: client.elevatedUntilText(),
 	})

@@ -93,7 +93,7 @@ export const DeviceSettings = () => {
   const t = useTranslations();
   const { showToast } = useToast();
   const { request } = useWebSocketActions();
-  const { userLevel, elevated } = useWebSocketContext();
+  const { userLevel, elevated, capabilities } = useWebSocketContext();
   const isAdmin = userLevel === "admin";
   const canEdit = isAdmin && elevated;
   const [elevating, setElevating] = useState(false);
@@ -351,8 +351,8 @@ export const DeviceSettings = () => {
   const tabs = [
     { id: "channels" as const, label: m.DEVICE_TAB_CHANNELS(), shown: true },
     { id: "links" as const, label: m.LINKS(), shown: canEdit && hasLinks },
-    { id: "programs" as const, label: m.PROGRAMS(), shown: true },
-    { id: "history" as const, label: m.DEVHIST(), shown: !!device },
+    { id: "programs" as const, label: m.PROGRAMS(), shown: capabilities.programs },
+    { id: "history" as const, label: m.DEVHIST(), shown: !!device && capabilities.history },
     {
       id: "maintenance" as const,
       label: m.DEVICE_TAB_MAINTENANCE(),
@@ -660,7 +660,7 @@ export const DeviceSettings = () => {
             <h2>{m.FIRMWARE()}</h2>
             <Firmware device={device} canEdit={canEdit} />
           </Section>
-          {userLevel === "admin" && (
+          {userLevel === "admin" && capabilities.comTest && (
             <Section aria-label={m.COMTEST()}>
               <h2>{m.COMTEST()}</h2>
               <ComTest address={address} />

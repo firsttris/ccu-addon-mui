@@ -100,7 +100,7 @@ const NavMenu = ({
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const effects = useEffects();
-  const { authRequired, logout, userLevel } = useWebSocketContext();
+  const { authRequired, logout, userLevel, capabilities } = useWebSocketContext();
   // Loaded when the menu is first opened, then kept in the query cache
   const { data: rooms = [] } = useRooms({ enabled: open });
   const { data: trades = [] } = useTrades({ enabled: open });
@@ -158,12 +158,16 @@ const NavMenu = ({
             <NavLink icon={<ListIcon />} onClick={() => go(() => navigate({ to: '/devices' }))}>
               {m.ALL_DEVICES()}
             </NavLink>
-            <NavLink icon={<BracesIcon />} onClick={() => go(() => navigate({ to: '/sysvars' }))}>
-              {m.SYSVARS()}
-            </NavLink>
-            <NavLink icon={<PlayIcon />} onClick={() => go(() => navigate({ to: '/programs' }))}>
-              {m.PROGRAMS()}
-            </NavLink>
+            {capabilities.sysvars && (
+              <NavLink icon={<BracesIcon />} onClick={() => go(() => navigate({ to: '/sysvars' }))}>
+                {m.SYSVARS()}
+              </NavLink>
+            )}
+            {capabilities.programs && (
+              <NavLink icon={<PlayIcon />} onClick={() => go(() => navigate({ to: '/programs' }))}>
+                {m.PROGRAMS()}
+              </NavLink>
+            )}
             <NavLink icon={<ChartIcon />} onClick={() => go(() => navigate({ to: '/diagrams' }))}>
               {m.DIAGRAMS()}
             </NavLink>

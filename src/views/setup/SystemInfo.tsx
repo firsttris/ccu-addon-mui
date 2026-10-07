@@ -104,28 +104,40 @@ const FirmwareUpdate = ({ current }: { current: string }) => {
   );
 };
 
-export const SystemInfo = () => (
-  <>
-    <Versions />
-    <Help />
-    <SystemSettings />
-    <GeneralSettings />
-    <Network />
-    <Security />
-    <Firewall />
-    <Certificate />
-    <Addons />
-    <DeviceFirmware />
-    <Logging />
-    <Backup />
-  </>
-);
+export const SystemInfo = () => {
+  // On openccu-lite its own interface has the system settings
+  const { capabilities } = useWebSocketContext();
+  return (
+    <>
+      <Versions />
+      <Help />
+      {capabilities.system && <SystemSettings />}
+      <GeneralSettings />
+      {capabilities.system && (
+        <>
+          <Network />
+          <Security />
+          <Firewall />
+          <Certificate />
+          <Addons />
+        </>
+      )}
+      <DeviceFirmware />
+      {capabilities.system && (
+        <>
+          <Logging />
+          <Backup />
+        </>
+      )}
+    </>
+  );
+};
 
 // Versions and the radio modules with their duty cycle
 const Versions = () => {
   usePageTitle(m.SETUP());
   const { data, isError } = useSystemInfo();
-  const { elevated } = useWebSocketContext();
+  const { elevated, capabilities } = useWebSocketContext();
   const [uploading, setUploading] = useState(false);
   if (isError) {
     return null;
@@ -145,13 +157,15 @@ const Versions = () => {
         <dt className="text-muted-foreground">{m.ADDON_VERSION()}</dt>
         <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {data.addonVersion || import.meta.env.VITE_APP_VERSION || '–'}
-          <AddonSelfUpdate current={data.addonVersion || import.meta.env.VITE_APP_VERSION || ''} />
+          {capabilities.selfUpdate && (
+            <AddonSelfUpdate current={data.addonVersion || import.meta.env.VITE_APP_VERSION || ''} />
+          )}
         </dd>
         <dt className="text-muted-foreground">{m.FIRMWARE_VERSION()}</dt>
         <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {data.firmwareVersion || '–'}
-          {data.firmwareVersion && <FirmwareUpdate current={data.firmwareVersion} />}
-          <CcuFirmwareButton disabled={!elevated} onClick={() => setUploading(true)} />
+          {capabilities.system && data.firmwareVersion && <FirmwareUpdate current={data.firmwareVersion} />}
+          {capabilities.system && <CcuFirmwareButton disabled={!elevated} onClick={() => setUploading(true)} />}
         </dd>
         {data.product && (
           <>

@@ -53,3 +53,27 @@ func TestHandlersUseTheHomeSource(t *testing.T) {
 		t.Fatalf("not renamed: %v", stub.renamed)
 	}
 }
+
+// The login says what the add-on runs on, so the app hides what is missing
+func TestAuthResponseNamesThePlatform(t *testing.T) {
+	answer := func(s *Server) map[string]interface{} {
+		client := &Client{send: make(chan []byte, 1)}
+		s.handleMessage(client, []byte(`{"type":"auth"}`))
+		var m map[string]interface{}
+		_ = json.Unmarshal(<-client.send, &m)
+		return m
+	}
+	m := answer(NewServer(nil, nil))
+	capabilities, _ := m["capabilities"].(map[string]interface{})
+	if m["platform"] != "ccu" || capabilities["programs"] != true || capabilities["system"] != true {
+		t.Fatalf("CCU: %v", m)
+	}
+
+	lite := NewServer(nil, nil)
+	lite.SetPlatform(PlatformLite, Capabilities{})
+	m = answer(lite)
+	capabilities, _ = m["capabilities"].(map[string]interface{})
+	if m["platform"] != "lite" || capabilities["programs"] != false || capabilities["sysvars"] != false {
+		t.Fatalf("lite: %v", m)
+	}
+}
