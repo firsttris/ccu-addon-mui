@@ -38,6 +38,9 @@ type CCU struct {
 	// WebUI port instead of the WebUI (occulited.go)
 	Lite bool
 	lite *liteStore
+	// The event stream's messages and who follows it (occulited.go)
+	liteEvents  []liteEvent
+	liteStreams map[chan liteEvent]bool
 	// ConfigDir is the fake /etc/config, for the security settings
 	// flag files (sshEnabled, authEnabled, httpsRedirectEnabled)
 	ConfigDir string
@@ -1319,6 +1322,9 @@ func (c *CCU) setDatapoint(values map[string]string) string {
 // setValue changes a datapoint and sends the event; c.mu must be held.
 func (c *CCU) setValue(ch *Channel, datapoint string, value interface{}) {
 	ch.Datapoints[datapoint] = value
+	if c.Lite {
+		c.publishLite("event", map[string]interface{}{"interface": ch.Interface, "address": ch.Address, "key": datapoint, "value": value})
+	}
 	for id, url := range c.callbacks[ch.Interface] {
 		c.events <- callbackEvent{url: url, interfaceID: id, address: ch.Address, datapoint: datapoint, value: value}
 	}

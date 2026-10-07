@@ -193,3 +193,149 @@ func TestLiteDeviceNames(t *testing.T) {
 		t.Fatalf("names: %s", data)
 	}
 }
+
+// adminConn is a connection logged in as the fixture's administrator
+func (s *liteStack) adminConn(t *testing.T) *websocket.Conn {
+	t.Helper()
+	conn, err := s.dial(fakeccu.LiteSession("Admin"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { conn.Close() })
+	liteCall(t, conn, map[string]interface{}{"type": "auth"})
+	return conn
+}
+
+func findByName(t *testing.T, list interface{}, name string) map[string]interface{} {
+	t.Helper()
+	items, _ := list.([]interface{})
+	for _, item := range items {
+		if m := item.(map[string]interface{}); m["name"] == name {
+			return m
+		}
+	}
+	t.Fatalf("%q not in %v", name, list)
+	return nil
+}
+
+// Rooms and functions are occulited's enums; a room's channels come from
+// the interface processes, named by the metadata store, with values from
+// the state store
+func TestLiteRoomsAndChannels(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+
+	m := liteCall(t, conn, map[string]interface{}{"type": "getRooms"})
+	room := findByName(t, m["rooms"], "Wohnzimmer")
+	findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getTrades"})["trades"], "Licht")
+
+	m = liteCall(t, conn, map[string]interface{}{"type": "getChannels", "roomId": fmt.Sprint(int64(room["id"].(float64)))})
+	channels, _ := m["channels"].([]interface{})
+	var light map[string]interface{}
+	for _, c := range channels {
+		if c.(map[string]interface{})["address"] == "LEQ0000001:1" {
+			light = c.(map[string]interface{})
+		}
+	}
+	if light == nil {
+		t.Fatalf("LEQ0000001:1 not in the room: %v", m)
+	}
+	if light["interfaceName"] != "BidCos-RF" || light["statusAddress"] != "LEQ0000001:0" {
+		t.Fatalf("channel: %v", light)
+	}
+	if _, ok := light["datapoints"].(map[string]interface{})["STATE"]; !ok {
+		t.Fatalf("no STATE: %v", light)
+	}
+}
+
+// Switching goes to the interface process; its event comes back through
+// openccu-lite's event stream, not a callback server
+func TestLiteSwitchAndEvent(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+	if err := conn.WriteJSON(map[string]interface{}{"type": "subscribe", "deviceId": "test", "channels": []string{"LEQ0000001:1"}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := conn.WriteJSON(map[string]interface{}{"type": "setDatapoint", "requestId": "set", "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true}); err != nil {
+		t.Fatal(err)
+	}
+	// The event may come before the answer
+	answered, evented := false, false
+	deadline := time.Now().Add(10 * time.Second)
+	for !(answered && evented) {
+		var message map[string]interface{}
+		_ = conn.SetReadDeadline(deadline)
+		if err := conn.ReadJSON(&message); err != nil {
+			t.Fatalf("answered %v, event %v: %v", answered, evented, err)
+		}
+		if message["requestId"] == "set" {
+			if message["success"] != true {
+				t.Fatalf("setDatapoint: %v", message)
+			}
+			answered = true
+		}
+		if event, ok := message["event"].(map[string]interface{}); ok && event["channel"] == "LEQ0000001:1" && event["datapoint"] == "STATE" && event["value"] == true {
+			evented = true
+		}
+	}
+}
+
+// Rooms, names, layouts and favorite lists change in occulited's store or
+// the add-on's own file
+func TestLiteChanges(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+
+	if m := liteCall(t, conn, map[string]interface{}{"type": "createGroup", "list": "rooms", "name": "Gäste-WC"}); m["success"] != true {
+		t.Fatalf("createGroup: %v", m)
+	}
+	room := findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getRooms"})["rooms"], "Gäste-WC")
+	roomID := int64(room["id"].(float64))
+
+	channel := map[string]interface{}{}
+	for _, c := range liteCall(t, conn, map[string]interface{}{"type": "getChannels", "all": true})["channels"].([]interface{}) {
+		if c.(map[string]interface{})["address"] == "LEQ0000001:1" {
+			channel = c.(map[string]interface{})
+		}
+	}
+	channelID := int64(channel["id"].(float64))
+	if m := liteCall(t, conn, map[string]interface{}{"type": "setGroupMember", "groupId": roomID, "channelId": channelID, "member": true}); m["success"] != true {
+		t.Fatalf("setGroupMember: %v", m)
+	}
+	m := liteCall(t, conn, map[string]interface{}{"type": "getChannels", "roomId": fmt.Sprint(roomID)})
+	if channels, _ := m["channels"].([]interface{}); len(channels) != 1 {
+		t.Fatalf("room's channels: %v", m)
+	}
+
+	if m := liteCall(t, conn, map[string]interface{}{"type": "rename", "address": "LEQ0000001:1", "name": "Deckenlicht"}); m["success"] != true {
+		t.Fatalf("rename: %v", m)
+	}
+	m = liteCall(t, conn, map[string]interface{}{"type": "getChannels", "roomId": fmt.Sprint(roomID)})
+	if m["channels"].([]interface{})[0].(map[string]interface{})["name"] != "Deckenlicht" {
+		t.Fatalf("not renamed: %v", m)
+	}
+
+	if m := liteCall(t, conn, map[string]interface{}{"type": "setLayout", "id": roomID, "layout": `{"v":2}`}); m["success"] != true {
+		t.Fatalf("setLayout: %v", m)
+	}
+	if m := liteCall(t, conn, map[string]interface{}{"type": "getLayout", "id": roomID}); m["layout"] != `{"v":2}` {
+		t.Fatalf("getLayout: %v", m)
+	}
+
+	m = liteCall(t, conn, map[string]interface{}{"type": "createFavorite", "name": "Abends"})
+	if m["success"] != true {
+		t.Fatalf("createFavorite: %v", m)
+	}
+	favorite := findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getFavorites"})["favorites"], "Abends")
+	if m := liteCall(t, conn, map[string]interface{}{"type": "addFavoriteItem", "id": favorite["id"], "itemId": channelID}); m["success"] != true {
+		t.Fatalf("addFavoriteItem: %v", m)
+	}
+	m = liteCall(t, conn, map[string]interface{}{"type": "getChannels", "favoriteId": fmt.Sprint(int64(favorite["id"].(float64)))})
+	if channels, _ := m["channels"].([]interface{}); len(channels) != 1 {
+		t.Fatalf("favorite's channels: %v", m)
+	}
+
+	if m := liteCall(t, conn, map[string]interface{}{"type": "deleteGroup", "list": "rooms", "id": roomID}); m["success"] != true {
+		t.Fatalf("deleteGroup: %v", m)
+	}
+}

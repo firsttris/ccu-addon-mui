@@ -9,7 +9,9 @@ import (
 	"net/url"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // The fake's openccu-lite: occulited's metadata and auth APIs, built from
@@ -225,8 +227,166 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 		store.Revision++
 		w.Header().Set("ETag", fmt.Sprint(store.Revision))
 		writeJSON(w, http.StatusOK, object)
+	case r.URL.Path == "/api/rpc/v1/state" && r.Method == http.MethodGet:
+		c.handleLiteState(w)
+	case r.URL.Path == "/api/rpc/v1/events" && r.Method == http.MethodGet:
+		c.handleLiteEvents(w, r)
+	case strings.HasPrefix(r.URL.Path, "/api/meta/v1/enums/"):
+		c.handleLiteNodes(w, r)
 	default:
 		apiError(w, http.StatusNotFound, "not_found", r.Method+" "+r.URL.Path)
+	}
+}
+
+type liteEvent struct {
+	id   int
+	kind string
+	data []byte
+}
+
+// publishLite adds a message to the event stream; c.mu is held
+func (c *CCU) publishLite(kind string, data interface{}) {
+	encoded, _ := json.Marshal(data)
+	event := liteEvent{id: len(c.liteEvents) + 1, kind: kind, data: encoded}
+	c.liteEvents = append(c.liteEvents, event)
+	for stream := range c.liteStreams {
+		select {
+		case stream <- event:
+		default:
+		}
+	}
+}
+
+// The state store: every value of the fixture's channels
+func (c *CCU) handleLiteState(w http.ResponseWriter) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	entries := []map[string]interface{}{}
+	for _, ch := range c.fixture.Channels {
+		for key, value := range ch.Datapoints {
+			entries = append(entries, map[string]interface{}{
+				"interface": ch.Interface, "address": ch.Address, "datapoint": key, "value": value,
+				"lc": c.Started.Format(time.RFC3339), "confirmed": true, "source": "event",
+			})
+		}
+	}
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"entries": entries, "total": len(entries), "unconfirmed": 0,
+		"event_id": fmt.Sprintf("fake-%d", len(c.liteEvents)),
+	})
+}
+
+// The event stream (SSE), replayed from Last-Event-ID
+func (c *CCU) handleLiteEvents(w http.ResponseWriter, r *http.Request) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "no streaming", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.WriteHeader(http.StatusOK)
+	write := func(e liteEvent) {
+		fmt.Fprintf(w, "id: fake-%d\nevent: %s\ndata: %s\n\n", e.id, e.kind, e.data)
+		flusher.Flush()
+	}
+	fmt.Fprint(w, ": connected\n\n")
+	stream := make(chan liteEvent, 256)
+	c.mu.Lock()
+	last, _ := strconv.Atoi(strings.TrimPrefix(r.Header.Get("Last-Event-ID"), "fake-"))
+	missed := append([]liteEvent{}, c.liteEvents[min(last, len(c.liteEvents)):]...)
+	if c.liteStreams == nil {
+		c.liteStreams = map[chan liteEvent]bool{}
+	}
+	c.liteStreams[stream] = true
+	c.mu.Unlock()
+	defer func() {
+		c.mu.Lock()
+		delete(c.liteStreams, stream)
+		c.mu.Unlock()
+	}()
+	for _, e := range missed {
+		write(e)
+	}
+	flusher.Flush()
+	for {
+		select {
+		case <-r.Context().Done():
+			return
+		case e := <-stream:
+			write(e)
+		case <-time.After(15 * time.Second):
+			fmt.Fprint(w, ": ping\n\n")
+			flusher.Flush()
+		}
+	}
+}
+
+// Rooms and functions: POST /enums/{enum}/nodes, PATCH and DELETE
+// /enums/{enum}/nodes/{path}
+func (c *CCU) handleLiteNodes(w http.ResponseWriter, r *http.Request) {
+	rest := strings.TrimPrefix(r.URL.Path, "/api/meta/v1/enums/")
+	enumID, nodePath, _ := strings.Cut(rest, "/nodes")
+	nodePath = strings.TrimPrefix(nodePath, "/")
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	store := c.store()
+	enum := store.Enums[enumID]
+	if enum == nil {
+		apiError(w, http.StatusNotFound, "not_found", "no enum "+enumID)
+		return
+	}
+	index := -1
+	for i, node := range enum.Tree {
+		if node.ID == nodePath {
+			index = i
+		}
+	}
+	var body struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+	switch r.Method {
+	case http.MethodPost:
+		for _, node := range enum.Tree {
+			if node.ID == body.ID {
+				apiError(w, http.StatusConflict, "duplicate", body.ID)
+				return
+			}
+		}
+		enum.Tree = append(enum.Tree, liteNode{ID: body.ID, Name: body.Name})
+		store.Revision++
+		writeJSON(w, http.StatusCreated, map[string]string{"path": enumID + "/" + body.ID})
+	case http.MethodPatch:
+		if index < 0 {
+			apiError(w, 422, "unknown-path", nodePath)
+			return
+		}
+		if body.Name != "" {
+			enum.Tree[index].Name = body.Name
+		}
+		store.Revision++
+		writeJSON(w, http.StatusOK, enum.Tree[index])
+	case http.MethodDelete:
+		if index < 0 {
+			apiError(w, 422, "unknown-path", nodePath)
+			return
+		}
+		path := enumID + "/" + nodePath
+		enum.Tree = append(enum.Tree[:index], enum.Tree[index+1:]...)
+		for _, object := range store.Objects {
+			kept := object.Enums[:0]
+			for _, e := range object.Enums {
+				if e != path {
+					kept = append(kept, e)
+				}
+			}
+			object.Enums = kept
+		}
+		store.Revision++
+		w.WriteHeader(http.StatusNoContent)
+	default:
+		apiError(w, http.StatusMethodNotAllowed, "method", r.Method)
 	}
 }
 

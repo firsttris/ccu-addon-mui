@@ -75,3 +75,25 @@ func (e Enum) Walk(enumID string, fn func(path string, node Node, depth int)) {
 	}
 	walk(enumID, e.Tree, 0)
 }
+
+// CreateNode adds a node to an enum (parent "" for a root node)
+func (c *Client) CreateNode(ctx context.Context, enum, parent, id, name string) error {
+	body := map[string]interface{}{"id": id, "name": name, "parent": nil}
+	if parent != "" {
+		body["parent"] = parent
+	}
+	return c.do(ctx, http.MethodPost, "/api/meta/v1/enums/"+url.PathEscape(enum)+"/nodes", "", body, nil)
+}
+
+// RenameNode renames the node at path (<enum>/<id>/…)
+func (c *Client) RenameNode(ctx context.Context, path, name string) error {
+	enum, rest, _ := strings.Cut(path, "/")
+	return c.do(ctx, http.MethodPatch, "/api/meta/v1/enums/"+url.PathEscape(enum)+"/nodes/"+rest, "", map[string]string{"name": name}, nil)
+}
+
+// DeleteNode deletes the node at path and its subtree; its members lose
+// it
+func (c *Client) DeleteNode(ctx context.Context, path string) error {
+	enum, rest, _ := strings.Cut(path, "/")
+	return c.do(ctx, http.MethodDelete, "/api/meta/v1/enums/"+url.PathEscape(enum)+"/nodes/"+rest+"?members=detach", "", nil, nil)
+}
