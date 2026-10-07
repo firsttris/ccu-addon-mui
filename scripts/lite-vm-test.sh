@@ -49,7 +49,7 @@ diagnose() {
   for query in 'q=lighttpd' 'q=mui' 'unit=addon-mui' 'unit=lighttpd'; do
     say "log $query:"
     curl -s --max-time 20 -H "$AUTH" "$BASE/api/system/v1/log?$query&limit=60" \
-      | grep -o '"message":"[^"]*"' | sed 's/^"message":"//; s/"$//; s/^/  | /' | tail -60
+      | grep -oE '"message":"([^"\\]|\\.)*"' | sed 's/^"message":"//; s/"$//; s/\\"/"/g; s/^/  | /' | tail -60
   done
   say "--- end of diagnosis"
 }
