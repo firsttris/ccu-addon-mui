@@ -781,7 +781,7 @@
   "SELF_UPDATE_RUNNING": "Wird installiert …",
   "SELF_UPDATE_CONFIRM": "Version {version} wird von GitHub geladen, geprüft und installiert. Die CCU startet dafür nicht neu, nur diese App ist danach ein paar Sekunden nicht erreichbar.",
   "SELF_UPDATE_WAIT": "Bitte warten, das dauert meist unter einer Minute.",
-  "SELF_UPDATE_DONE": "Version {version} ist installiert. Die App verbindet sich gleich neu; sobald unten „Neu laden“ erscheint, die neue Version damit übernehmen.",
+  "SELF_UPDATE_DONE": "Version {version} ist installiert. Die App wird neu geladen …",
   "SELF_UPDATE_INSTALLED": "Version {version} installiert",
   "SELF_UPDATE_FAILED": "Das Update ist fehlgeschlagen",
   "SELF_UPDATE_CHECKSUM": "Der Download war fehlerhaft (Prüfsumme stimmt nicht). Es wurde nichts installiert, bitte erneut versuchen.",

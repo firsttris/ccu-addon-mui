@@ -6,7 +6,7 @@ import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { isNewerVersion } from '../../utils/version';
 import { errorText } from '../../lib/errors';
-import { lookForNewApp } from '../../lib/appUpdate';
+import { reloadToNewApp } from '../../lib/appUpdate';
 import { m } from '../../paraglide/messages';
 import type { CheckSelfUpdateResponse } from '../../types/protocol';
 
@@ -53,9 +53,9 @@ export const AddonSelfUpdate = ({ current }: { current: string }) => {
       setConfirming(false);
       setInstalled(answer.version);
       setDoneOpen(true);
-      // The update script replaced the app's files: the service worker
-      // finds the new version now, and UpdatePrompt offers to reload
-      void lookForNewApp();
+      // The update script replaced the app's files: switch to them right
+      // away, nothing is being edited here
+      void reloadToNewApp();
     } catch (e) {
       setError(installError(e));
     } finally {

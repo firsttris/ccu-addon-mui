@@ -6,7 +6,7 @@
 const registration = () =>
   navigator.serviceWorker?.getRegistration().catch(() => undefined) ?? Promise.resolve(undefined);
 
-// Looks for a new version now; UpdatePrompt offers to reload once it is
+// Looks for a new version now; UpdatePrompt takes it over once it is
 // installed
 export const lookForNewApp = () =>
   registration()
@@ -26,6 +26,9 @@ export const reloadToNewApp = async () => {
     return;
   }
   navigator.serviceWorker.addEventListener('controllerchange', () => location.reload(), { once: true });
+  // Installing the new files hangs (lost connection): reload anyway, the
+  // service worker then tries again in the background
+  setTimeout(() => location.reload(), 60 * 1000);
   const takeOver = () => {
     if (worker.state === 'installed') worker.postMessage({ type: 'SKIP_WAITING' });
     // The download of the new files failed: the reload tries again
