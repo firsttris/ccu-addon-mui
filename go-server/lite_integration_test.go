@@ -395,3 +395,62 @@ func TestLiteHeatingGroups(t *testing.T) {
 		t.Fatalf("not deleted: %v", groups)
 	}
 }
+
+// Service messages are occulited's; a sticky one ends by setting it false
+// on the device. The device health comes from the maintenance values.
+func TestLiteServiceMessagesAndHealth(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+	m := liteCall(t, conn, map[string]interface{}{"type": "getServiceMessages"})
+	var sticky map[string]interface{}
+	for _, item := range m["messages"].([]interface{}) {
+		if message := item.(map[string]interface{}); message["type"] == "STICKY_UNREACH" && message["address"] == "0000DBE9A5C1F2" {
+			sticky = message
+		}
+	}
+	if sticky == nil {
+		t.Fatalf("no STICKY_UNREACH: %v", m)
+	}
+	if m := liteCall(t, conn, map[string]interface{}{"type": "acknowledgeServiceMessage", "id": sticky["id"]}); m["success"] != true {
+		t.Fatalf("acknowledge: %v", m)
+	}
+	for _, item := range liteCall(t, conn, map[string]interface{}{"type": "getServiceMessages"})["messages"].([]interface{}) {
+		if message := item.(map[string]interface{}); message["type"] == "STICKY_UNREACH" && message["address"] == "0000DBE9A5C1F2" {
+			t.Fatalf("still there: %v", message)
+		}
+	}
+
+	m = liteCall(t, conn, map[string]interface{}{"type": "getDeviceHealth"})
+	for _, item := range m["devices"].([]interface{}) {
+		device := item.(map[string]interface{})
+		if device["address"] != "0000DBE9A5C1F2" {
+			continue
+		}
+		values := device["values"].(map[string]interface{})
+		if values["RSSI_DEVICE"].(map[string]interface{})["value"] != -62.0 {
+			t.Fatalf("health: %v", device)
+		}
+		return
+	}
+	t.Fatalf("0000DBE9A5C1F2 not in the health list: %v", m)
+}
+
+// Notification rules and push need no ReGa: they work from the interfaces'
+// values and events and the add-on's own files
+func TestLiteRulesAndPush(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+	rule := map[string]interface{}{"name": "Licht an", "enabled": true, "minutes": 0, "message": "Licht ist an",
+		"conditions": []interface{}{map[string]interface{}{
+			"channelId": 1, "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "datapoint": "STATE", "op": "eq", "value": 1,
+		}}}
+	if m := liteCall(t, conn, map[string]interface{}{"type": "saveRule", "rule": rule}); m["success"] != true {
+		t.Fatalf("saveRule: %v", m)
+	}
+	if rules, _ := liteCall(t, conn, map[string]interface{}{"type": "getRules"})["rules"].([]interface{}); len(rules) != 1 {
+		t.Fatalf("getRules: %v", rules)
+	}
+	if m := liteCall(t, conn, map[string]interface{}{"type": "getPush"}); m["type"] == "error" {
+		t.Fatalf("getPush: %v", m)
+	}
+}

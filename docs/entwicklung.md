@@ -257,6 +257,10 @@ Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go 
   Einen Posteingang hat openccu-lite nicht: Neu sind dort die Geräte ohne Eintrag im Metadaten-Speicher,
   *Übernehmen* legt ihn mit dem Namen `<Typ> <Adresse>` an. Heizgruppen gehen über occulites
   `/api/system/v1/groups` (`occulite.Groups`), Gerätefirmware lädt und verteilt occulite selbst.
+- **Servicemeldungen und Gesundheit:** Die Servicemeldungen sammelt occulited selbst
+  (`/api/system/v1/service-messages`); eine Sticky-Meldung bestätigt der Server, indem er sie am Gerät
+  zurücksetzt. Geräteprobleme und Geräte-Gesundheit kommen aus den Werten der Wartungskanäle. Alarme gibt
+  es ohne ReGa nicht; Push-Benachrichtigungen und Regeln laufen unverändert.
 - **Anmeldung:** Auf openccu-lite meldet occulites Gate vor `/addons/` die Sitzung im Header
   `X-Occulite-Session`, auch am WebSocket-Upgrade. Deshalb verbindet sich die App installiert mit
   `/addons/mui/ws`.
