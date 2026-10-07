@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test';
-import { protocolViolations, Recorded } from './protocol';
+import { protocolViolations } from './protocol';
 
 type Message = {
   type: string;
@@ -21,24 +21,21 @@ export type WebSocketMockOptions = {
 
 export const VALID_TOKEN = 'test-token';
 
-// What the mock and the app sent each other, per page, across reloads
-const recordings = new WeakMap<Page, Recorded[]>();
+// What the mock sent the app, per page, across reloads
+const recordings = new WeakMap<Page, unknown[]>();
 
 // The messages of the page that don't match protocol/schema.json
 export const mockProtocolViolations = (page: Page) => protocolViolations(recordings.get(page) ?? []);
 
 export const installWebSocketMock = async (page: Page, options: WebSocketMockOptions = {}) => {
-  const recorded: Recorded[] = [];
+  const recorded: unknown[] = [];
   recordings.set(page, recorded);
-  await page.exposeFunction('__mockProtocol', (direction: Recorded['direction'], json: string) => {
-    recorded.push({ direction, message: JSON.parse(json) });
+  await page.exposeFunction('__mockProtocol', (json: string) => {
+    recorded.push(JSON.parse(json));
   });
   await page.addInitScript(({ requireLogin, validToken }) => {
-    const record = (direction: 'server' | 'client', message: unknown) =>
-      (window as Window & { __mockProtocol?: (d: string, json: string) => void }).__mockProtocol?.(
-        direction,
-        JSON.stringify(message),
-      );
+    const record = (message: unknown) =>
+      (window as Window & { __mockProtocol?: (json: string) => void }).__mockProtocol?.(JSON.stringify(message));
 
     type AnyPayload = Record<string, unknown>;
 
@@ -863,7 +860,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
     });
 
     const broadcast = (payload: AnyPayload) => {
-      record('server', payload);
+      record(payload);
       for (const socket of state.sockets as MockWebSocket[]) {
         socket.dispatchMessage(payload);
       }
@@ -1179,9 +1176,6 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       send(data: string) {
         try {
           const parsed = JSON.parse(data) as Message;
-          // The mock replaces every WebSocket, also Vite's own (HMR): only
-          // the app's connection speaks the protocol
-          if (this.url.includes('/ws/mui')) record('client', parsed);
           handleClientMessage(parsed);
         } catch {
           // Ignore invalid payloads to keep mock resilient in tests.

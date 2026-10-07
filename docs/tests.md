@@ -10,7 +10,7 @@ echten Server und eine nachgebaute CCU.
 |---|---|---|---:|:---:|
 | **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 299 in 54 Dateien | ✅ |
 | **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 289 Testfunktionen in 69 Dateien | ✅ |
-| **Protokoll** | jede Nachricht des Servers in den Go-Tests, jede Nachricht zwischen App und Mock in den E2E-Tests | – | gegen `protocol/schema.json` | ✅ |
+| **Protokoll** | jede Nachricht des Servers in den Go-Tests, jede Nachricht des Mocks an die App in den E2E-Tests | – | gegen `protocol/schema.json` | ✅ |
 | **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 34 + 2 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 74 | ✅ |
 | **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 72 | ✅ |
@@ -88,10 +88,10 @@ Die App läuft im Vite-Dev-Server und in echtem Chromium; nur `window.WebSocket`
 (`e2e/helpers/websocketMock.ts`), der Anfragen im Browser beantwortet und über `window.__wsMock` steuerbar
 ist: Events auslösen, das nächste Schalten scheitern lassen, Alarme setzen, gesendete Nachrichten prüfen.
 
-Damit der Mock nicht unbemerkt vom echten Server abweicht, zeichnet er jede Nachricht in beide Richtungen
-auf, und nach jedem Test prüft `e2e/helpers/protocol.ts` sie gegen `protocol/schema.json`, wie die Go-Tests
-die Nachrichten des Servers: Antworten des Mocks (zugeordnet über die `requestId` der Anfrage) und Anfragen
-der App. Weicht etwas ab, schlägt der Test fehl und nennt Nachricht und Feld.
+Damit der Mock nicht unbemerkt vom echten Server abweicht, zeichnet er jede Nachricht an die App auf, und
+nach jedem Test prüft `e2e/helpers/protocol.ts` sie gegen `ServerMessage` in `protocol/schema.json`, wie die
+Go-Tests die Nachrichten des Servers. Weicht eine Antwort oder Push-Nachricht ab, schlägt der Test fehl und
+nennt die Nachricht.
 
 Abgedeckt sind die Kacheln (Licht, Dimmer, Farblicht, Rollladen, Türschloss nur mit Geste, Fenster, Melder,
 Sirene, Zutritt, Eingänge, Sensoren für Regen, Licht, CO₂, Feinstaub, Boden, Neigung und Netzausfall, Bewässerung, Fensterantriebe, Thermostate, Energie), Events und Event-Schübe, Rücknahme bei Fehlern, Batterie und
