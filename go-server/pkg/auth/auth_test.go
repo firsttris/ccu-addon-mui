@@ -355,7 +355,7 @@ func TestOtherCCUErrorIsNotInvalidCredentials(t *testing.T) {
 	a := newTestAuthenticator(t, ccu.URL)
 	for i := 0; i < maxFailures+2; i++ {
 		_, _, err := a.Login("Broken", "secret", "test", "192.0.2.1")
-		if err == nil || err == ErrInvalidCredentials || err == ErrTooManyAttempts || !strings.Contains(err.Error(), "error 500: internal error") {
+		if err == nil || err == ErrInvalidCredentials || err == ErrTooManyAttempts || !strings.Contains(err.Error(), "500 internal error") {
 			t.Fatalf("attempt %d: got %v, want the CCU's error", i, err)
 		}
 	}

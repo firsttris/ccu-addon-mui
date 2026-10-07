@@ -427,24 +427,20 @@ func (a *Authenticator) verifyWithCCU(username, password string) (bool, error) {
 	if err := a.call("Session.login", map[string]string{"username": username, "password": password}, &login); err != nil {
 		return false, err
 	}
-	// 503: ReGa isn't ready yet (the CCU is starting). Not a wrong
-	// password, so it must not count towards the lockout
-	// (api/methods/session/login.tcl)
-	if login.Error != nil && login.Error.Code == 503 {
-		return false, ErrCCUNotReady
-	}
-	// 501 is the only answer for wrong credentials (and too many
-	// sessions). Any other error isn't the user's password: say what the
-	// CCU answered, for the log
-	if login.Error != nil && login.Error.Code != 501 {
-		return false, fmt.Errorf("CCU login failed: error %d: %s", login.Error.Code, login.Error.Message)
-	}
+	// The answers of the WebUI's api/methods/session/login.tcl
 	if login.Error != nil {
-		return false, nil
+		switch login.Error.Code {
+		case 501: // wrong credentials or too many sessions, ReGa doesn't say which
+			return false, nil
+		case 503: // ReGa is starting: not the user's fault, no lockout
+			return false, ErrCCUNotReady
+		default:
+			return false, fmt.Errorf("CCU login failed: %d %s", login.Error.Code, login.Error.Message)
+		}
 	}
-	sessionID, ok := login.Result.(string)
-	if !ok || sessionID == "" {
-		return false, fmt.Errorf("CCU login failed: unexpected answer %v", login.Result)
+	sessionID, _ := login.Result.(string)
+	if sessionID == "" {
+		return false, errors.New("CCU login failed: no session")
 	}
 
 	var logout rpcResponse
