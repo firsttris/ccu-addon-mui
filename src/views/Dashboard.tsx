@@ -508,7 +508,8 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, on
           start: () => setEditing(true),
           done: () => (draft ? store(JSON.stringify(draft), finish) : finish()),
           cancel: finish,
-          reset: saved ? () => store('', finish) : undefined,
+          // Once something is moved, or an arrangement is saved
+          reset: saved ? () => store('', finish) : draft ? finish : undefined,
         }
       : null,
   );

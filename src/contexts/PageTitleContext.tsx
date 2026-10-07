@@ -9,7 +9,7 @@ export interface PageArrange {
   start: () => void;
   done: () => void;
   cancel: () => void;
-  // Back to the automatic arrangement, once one is saved
+  // Back to the automatic arrangement, once tiles are moved or saved
   reset?: () => void;
 }
 

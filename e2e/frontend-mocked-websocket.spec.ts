@@ -707,6 +707,8 @@ test('ordnet die Kacheln eines Raums per Drag & Drop an', async ({ page }) => {
   await page.mouse.move(box.x + 420, box.y + 30, { steps: 10 });
   await page.mouse.up();
   await expect.poll(async () => (await page.locator(`[data-tile-key="${key}"]`).boundingBox())!.x).toBeGreaterThan(box.x + 100);
+  // Once moved, the automatic arrangement is offered before anything is saved
+  await expect(page.getByRole('button', { name: /^(Automatisch anordnen|Arrange automatically)$/ })).toBeVisible();
 
   await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
   const stored = await page.evaluate(() =>
