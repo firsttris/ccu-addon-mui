@@ -96,8 +96,9 @@ die App-Dateien aus dem Service Worker; über das Netz gehen nur noch die Daten.
 - **iOS / iPadOS (Safari)**: Teilen → *Zum Home-Bildschirm*.
 - **Desktop (Chrome, Edge)**: Installieren-Symbol rechts in der Adressleiste.
 
-Nach einem Update des Add-ons lädt die installierte App die neue Version im Hintergrund und zeigt unten
-*Neu laden*. Erst ein Tipp darauf übernimmt sie, damit nichts mitten im Bearbeiten neu lädt.
+Nach einem Update des Add-ons lädt jede offene App die neue Version im Hintergrund, sobald sie wieder mit
+der CCU verbunden ist, und zeigt unten *Neu laden*. Erst ein Tipp darauf übernimmt sie, damit nichts mitten
+im Bearbeiten neu lädt.
 
 ### Wandtablet
 
