@@ -74,6 +74,37 @@ jobs:
           path: coverage/playwright/
           if-no-files-found: ignore
 
+  visual:
+    name: Screenshots
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    # The baselines come from this image: the same fonts and rendering on
+    # every run (e2e/visual.spec.ts). Keep its version at the one of
+    # @playwright/test in package.json; "Update screenshots" uses it too.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compare the screenshots
+        run: npx playwright test visual --reporter=github,line
+        env:
+          VISUAL: '1'
+
+      - name: Upload the differences
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-differences
+          path: test-results/
+          if-no-files-found: ignore
+
   e2e-stack:
     name: Stack E2E (fake CCU)
     if: ${{ !github.event.pull_request.draft }}

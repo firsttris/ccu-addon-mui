@@ -1,0 +1,62 @@
+name: Update screenshots
+
+# Renews screenshots on the chosen branch and commits them: the baselines of
+# e2e/visual.spec.ts, in the image the "Screenshots" check compares in, and
+# the pictures of the documentation (npm run docs:screenshots). Run it after
+# a change to the look on purpose, then push again (a commit of this
+# workflow doesn't start the checks).
+on:
+  workflow_dispatch:
+    inputs:
+      what:
+        description: Which screenshots
+        type: choice
+        options: [both, tests, docs]
+        default: both
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up Go
+        if: inputs.what != 'tests'
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go-server/go.mod
+          cache-dependency-path: go-server/go.sum
+
+      - name: Take the test screenshots
+        if: inputs.what != 'docs'
+        run: npx playwright test visual --update-snapshots --reporter=line
+        env:
+          VISUAL: '1'
+
+      - name: Take the documentation pictures
+        if: inputs.what != 'tests'
+        run: npm run docs:screenshots -- --reporter=line
+
+      - name: Commit what changed
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/visual.spec.ts-snapshots docs/screenshot-*.png
+          if git diff --cached --quiet; then
+            echo "The screenshots are up to date."
+          else
+            git commit -m "Screenshots erneuert (${{ inputs.what }})"
+            git push
+          fi

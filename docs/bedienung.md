@@ -199,7 +199,7 @@ in die Vergangenheit und Zoom durch Ziehen. Unter jedem Diagramm stehen der aktu
 Minimum und Maximum, bei Energiezählern auch die Kosten zum hinterlegten Strom- oder Gaspreis. *Als CSV
 exportieren* lädt die Werte herunter.
 
-<img src="screenshot-diagramme.png" alt="Diagramm mit Temperatur und Luftfeuchte über eine Woche, darunter der Fensterzustand" width="900">
+<img src="screenshot-diagramme.png" alt="Diagramm mit Temperatur und Luftfeuchte über eine Woche" width="900">
 
 Anders als in der WebUI zeichnet das Add-on selbst auf und kann deshalb **jeden** Datenpunkt und jede
 Systemvariable darstellen, ohne microSD-Karte:

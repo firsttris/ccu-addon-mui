@@ -13,7 +13,7 @@ echten Server und eine nachgebaute CCU.
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests | – | gegen `protocol/schema.json` | ✅ |
 | **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 34 + 2 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 74 | ✅ |
-| **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 72 | lokal |
+| **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 72 | ✅ |
 
 Zusammen über 600 Tests, dazu 72 Screenshot-Vergleiche.
 
@@ -126,8 +126,24 @@ Die 74 Tests decken praktisch jede Funktion von *Einrichten* ab, zum Beispiel:
 Zwölf Ansichten (Räume, Gewerke, Kacheln aller Art, Anmeldung, Meldungen, Menü) in drei Größen (Handy,
 Tablet hoch und quer), hell und dunkel, mit fester Uhrzeit und Sprache: 72 Bilder unter
 `e2e/visual.spec.ts-snapshots`. Weil Schriften auf jedem Rechner etwas anders gerendert werden, laufen sie
-nur mit `VISUAL=1` und nicht in der CI. Nach Änderungen an der Darstellung werden die Baselines bewusst neu
-erzeugt und im Pull Request mitgeliefert.
+nur mit `VISUAL=1`, in der CI (Check *Screenshots*) im Docker-Image `mcr.microsoft.com/playwright`, aus dem
+auch die Baselines stammen. Nach einer gewollten Änderung der Darstellung erneuert der Workflow *Update
+screenshots* (Actions, manuell, auf dem Branch des Pull Requests) die Baselines im selben Image und committet
+sie. Lokal geht das mit Docker:
+
+```bash
+docker run --rm --ipc=host -v "$PWD":/work -w /work -e VISUAL=1 \
+  mcr.microsoft.com/playwright:v1.63.0-noble npx playwright test visual -u
+```
+
+Damit jeder Lauf dasselbe Bild liefert, wartet der Test, bis die App keine Anfragen mehr stellt und die Seite
+ihre Höhe behält, und nimmt die ganze Seite in einem passend hohen Fenster auf statt mit `fullPage`. Nur *Alle
+Geräte* lässt 500 abweichende Pixel zu: Das Leuchten der vielen aktiven Kacheln kommt bei jedem Lauf etwas
+anders heraus.
+
+Die Bilder der Dokumentation (`docs/screenshot-*.png`) nimmt `npm run docs:screenshots` neu auf: die
+Kacheln aus dem Mock (`e2e/docs-screenshots.spec.ts`), die Einrichten-Seiten aus der Fake-CCU
+(`e2e-stack/docs-screenshots.spec.ts`). Derselbe Workflow kann auch sie erneuern.
 
 ## CI
 
