@@ -30,7 +30,29 @@ TIMINGS="$OUT/timings.txt"
 : > "$TIMINGS"
 
 say() { printf '%s %s\n' "$(date +%T)" "$*"; }
-fail() { say "FAIL: $*"; exit 1; }
+fail() { say "FAIL: $*"; diagnose; exit 1; }
+
+# What the system says about the add-on, into the job's log: a failure here
+# cannot be reproduced without the VM
+diagnose() {
+  [ -n "${AUTH:-}" ] || return 0
+  local jar="$WORK/diag.jar"
+  say "--- diagnosis"
+  say "nav: $(curl -s --max-time 10 -H "$AUTH" "$BASE/api/system/v1/nav" | head -c 3000)"
+  say "addons: $(curl -s --max-time 10 -H "$AUTH" "$BASE/api/system/v1/addons" | head -c 3000)"
+  say "service: $(curl -s --max-time 10 -H "$AUTH" "$BASE/api/system/v1/services" | grep -o '{[^{}]*addon-mui[^{}]*}' | head -c 1500)"
+  curl -s --max-time 10 -c "$jar" -o /dev/null -X POST -H 'Content-Type: application/json' \
+    -d "{\"username\":\"$USER_NAME\",\"password\":\"$PASSWORD\"}" "$BASE/api/auth/v1/login"
+  for path in /addons/mui/ /addons/mui/index.html /addons/mui/assets/ /addons/mui/ws; do
+    say "GET $path with a session: HTTP $(curl -s --max-time 10 -b "$jar" -o "$WORK/diag.body" -w '%{http_code}' "$BASE$path") $(head -c 200 "$WORK/diag.body" | tr '\n' ' ')"
+  done
+  for query in 'q=lighttpd' 'q=mui' 'unit=addon-mui' 'unit=lighttpd'; do
+    say "log $query:"
+    curl -s --max-time 20 -H "$AUTH" "$BASE/api/system/v1/log?$query&limit=60" \
+      | grep -o '"message":"[^"]*"' | sed 's/^"message":"//; s/"$//; s/^/  | /' | tail -60
+  done
+  say "--- end of diagnosis"
+}
 # the duration of each step, for the job summary
 step() {
   local now; now=$(date +%s)
