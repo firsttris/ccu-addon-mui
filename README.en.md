@@ -26,17 +26,6 @@ an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
 A new interface, built for your phone. New features like push, charts and rules. Everything in one app,
 from the light switch to the program.
 
-- **Everything in one place**: control rooms, trades and favourites, and just as well pair devices,
-  transfer settings, create direct links, write programs, make backups and install firmware.
-- **Live instead of polling**: every device change reaches every open screen over WebSocket within
-  milliseconds. The WebUI polls each open tab every 3 seconds.
-- **Made for hand and wall**: tiles that show what is going on, gestures instead of forms, light and dark,
-  installable as an app.
-- **As secure as the CCU**: log in with the CCU's users and their rights, a short-lived admin token for
-  settings, an audit log of every change.
-- **Built after the original**: every feature follows the WebUI sources of
-  [OpenCCU](https://github.com/OpenCCU/OpenCCU-Base) and uses only the CCU's own interfaces.
-
 ## ✨ Features
 
 **What the CCU3 doesn't have**

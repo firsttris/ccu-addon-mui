@@ -36,19 +36,6 @@ ein Add-on für CCU3 und OpenCCU, das die alte WebUI im Alltag ersetzt.
 Neue Oberfläche, gebaut fürs Handy. Neue Funktionen wie Push, Diagramme und Regeln. Alles in einer App,
 vom Lichtschalter bis zum Programm.
 
-- **Alles an einem Ort**: Räume, Gewerke und Favoriten bedienen, und genauso Geräte anlernen,
-  Einstellungen übertragen, Direktverknüpfungen anlegen, Programme schreiben, Backups ziehen, Firmware
-  einspielen. Für den Alltag musst du die alte WebUI nicht mehr öffnen.
-- **Live statt Abfrage**: Jede Änderung eines Geräts kommt über WebSocket in Millisekunden auf jedem
-  offenen Gerät an. Die WebUI fragt dagegen jeden offenen Tab alle 3 Sekunden ab.
-- **Für Hand und Wand gemacht**: Kacheln, die zeigen, was los ist (Lampe leuchtet, Rollladen fährt,
-  Fenster steht offen), mit Gesten statt Formularen, hell oder dunkel, als App installierbar.
-- **Genauso sicher wie die CCU**: Anmeldung mit den CCU-Benutzern und deren Rechten, kurzlebiges
-  Admin-Token für Einstellungen, Protokoll jeder Änderung.
-- **Nach dem Original gebaut**: Jede Funktion folgt den Quellen der WebUI aus
-  [OpenCCU](https://github.com/OpenCCU/OpenCCU-Base). Datenpunkte, Skripte und Abläufe sind die der CCU.
-  Das Add-on spricht nur deren eigene Schnittstellen und verändert nichts an der Zentrale.
-
 ## ✨ Funktionen
 
 **Was es auf der CCU3 nicht gibt**
