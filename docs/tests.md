@@ -138,7 +138,8 @@ sie. Lokal geht das mit Docker:
 
 ```bash
 docker run --rm --ipc=host -v "$PWD":/work -w /work -e VISUAL=1 \
-  mcr.microsoft.com/playwright:v1.63.0-noble npx playwright test visual -u
+  mcr.microsoft.com/playwright:v$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")-noble \
+  npx playwright test visual -u
 ```
 
 Damit jeder Lauf dasselbe Bild liefert, wartet der Test, bis die App keine Anfragen mehr stellt und die Seite
@@ -156,7 +157,7 @@ Kacheln aus dem Mock (`e2e/docs-screenshots.spec.ts`), die Einrichten-Seiten aus
 |---|---|---|
 | `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Unit-Tests, Build mit Typprüfung (`vite build && tsc`), Go-Build für ARM und x86, die `tar.gz`-Archive als Artefakt `addon` |
 | `go-unit-tests.yml` | Push und Pull Request auf `main` | `go test ./...` mit Coverage-Bericht als Artefakt |
-| `playwright-e2e.yml` | Push und Pull Request auf `main` | E2E mit Mock inkl. Anmeldung (mit Frontend-Coverage) und E2E gegen den Stack, Berichte als Artefakte |
+| `playwright-e2e.yml` | Push und Pull Request auf `main` | Im Docker-Image `mcr.microsoft.com/playwright` (Version aus der `package-lock.json`, kein Browser-Download): E2E mit Mock inkl. Anmeldung (4 Worker, mit Frontend-Coverage), Screenshot-Vergleich und E2E gegen den Stack auf zwei Runnern (`--shard`), Berichte als Artefakte |
 | `release.yml` | Tag `vX.Y.Z` | Die drei Workflows oben, dann die Release mit den Archiven und erzeugten Notizen |
 | `bump.yml` | von Hand | Version erhöhen, Tag `vX.Y.Z` anlegen und `release.yml` darauf starten |
 

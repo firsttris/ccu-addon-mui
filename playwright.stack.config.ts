@@ -21,8 +21,11 @@ export const FAKE_CCU_URL = `http://127.0.0.1:${fakeCCU.webui}`;
 
 export default defineConfig({
   testDir: './e2e-stack',
-  // All tests share the fake CCU's state
-  fullyParallel: false,
+  // All tests share the fake CCU's state, so one worker runs them one after
+  // the other. fullyParallel only lets --shard split single tests (the CI
+  // runs two shards, each with its own stack); every test resets the fake
+  // CCU first (resetFakeCCU), so none depends on another.
+  fullyParallel: true,
   workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
