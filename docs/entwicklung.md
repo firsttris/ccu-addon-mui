@@ -69,7 +69,8 @@ reine Oberflächenarbeit.
 | `npm run test:go` | Go-Tests |
 | `npm run test:e2e` | Playwright mit Mock-WebSocket |
 | `npm run test:stack` | Playwright gegen Go-Server + Fake-CCU |
-| `npm run test:visual` | Screenshot-Vergleich (`:update` erneuert die Bilder) |
+| `npm run test:visual` | Screenshot-Vergleich (`:update` erneuert die Bilder; in der CI im Playwright-Image) |
+| `npm run docs:screenshots` | die Bilder in `docs/` neu aufnehmen (Mock und Fake-CCU) |
 
 Mehr zu den Tests in [Tests](tests.md).
 
