@@ -1,13 +1,14 @@
 # Entwicklung
 
-Alles, was man braucht, um am Add-on zu arbeiten: lokale Umgebung, Befehle, Aufbau des Repositorys und die
-üblichen Handgriffe wie eine neue Nachricht, eine neue Kachel oder ein neuer Text.
+Hier findest du alles, was du brauchst, um am Add-on zu arbeiten: die lokale Umgebung, die wichtigsten
+Befehle, den Aufbau des Repositorys und die üblichen Handgriffe, etwa für eine neue Nachricht, eine neue
+Kachel oder einen neuen Text.
 
 ## Voraussetzungen
 
 - **Node.js** 22.12 oder neuer
-- **Go** 1.27 oder neuer (für Server, Fake-CCU und Stack-Tests)
-- für die E2E-Tests einmal `npm run test:e2e:install` (Chromium für Playwright)
+- **Go** 1.27 oder neuer (für den Server, die Fake-CCU und die Stack-Tests)
+- für die E2E-Tests einmal `npm run test:e2e:install`, das installiert Chromium für Playwright
 
 ```bash
 git clone https://github.com/firsttris/ccu-addon-mui.git
@@ -23,9 +24,10 @@ npm install
 npm run dev:fake
 ```
 
-Startet Fake-CCU (mit `fixtures/demo-ccu.json`), Go-Server und Vite zusammen. Die App läuft auf
-**http://localhost:4200**, Anmeldung `Admin` / `secret` (oder `Gast` / `gast`). Alles lässt sich gefahrlos
-ausprobieren, auch Werkseinstellungen. Ein Gerät einen Wert melden lassen:
+Das startet die Fake-CCU (mit `fixtures/demo-ccu.json`), den Go-Server und Vite zusammen. Die App läuft
+dann auf **http://localhost:4200**, du meldest dich mit `Admin` / `secret` an (oder mit `Gast` / `gast`).
+Hier kannst du alles gefahrlos ausprobieren, sogar die Werkseinstellungen. Willst du sehen, wie die App
+reagiert, wenn ein Gerät einen Wert meldet, geht das so:
 
 ```bash
 curl -X POST http://127.0.0.1:18080/fake/set \
@@ -41,9 +43,9 @@ cp go-server/.env.example go-server/.env
 npm run dev
 ```
 
-Der Go-Server läuft dann auf deinem Rechner und spricht über das Netz mit der CCU. Die CCU muss deinen
-Rechner auf Port 9099 erreichen, sonst kommen keine Events an. Mit Strg+C beendet, meldet sich der Server
-bei der CCU wieder ab.
+Der Go-Server läuft dann auf deinem Rechner und spricht über das Netz mit deiner CCU. Damit Events
+ankommen, muss die CCU deinen Rechner auf Port 9099 erreichen können. Wenn du den Server mit Strg+C
+beendest, meldet er sich bei der CCU wieder ab.
 
 ### Nur die App, gegen das installierte Add-on
 
@@ -51,8 +53,8 @@ bei der CCU wieder ab.
 npm run start:fe:ccu3
 ```
 
-Vite leitet `/ws/mui` an die CCU weiter (Adresse in `vite.config.mts`, `proxyTargets.ccu3`). Praktisch für
-reine Oberflächenarbeit.
+Vite leitet `/ws/mui` an die CCU weiter, deren Adresse steht in `vite.config.mts` unter
+`proxyTargets.ccu3`. Das ist praktisch, wenn du nur an der Oberfläche arbeitest.
 
 ## Befehle
 
@@ -71,7 +73,7 @@ reine Oberflächenarbeit.
 | `npm run test:stack` | Playwright gegen Go-Server + Fake-CCU |
 | `npm run test:visual` | Screenshot-Vergleich (`:update` erneuert die Bilder) |
 
-Mehr zu den Tests in [Tests](tests.md).
+Mehr zu den Tests findest du unter [Tests](tests.md).
 
 ## Aufbau des Repositorys
 
@@ -90,66 +92,70 @@ docs/                diese Dokumentation
 
 ## Konventionen
 
-- **Nach den OpenCCU-Quellen bauen.** Jede Funktion, die die CCU betrifft, wird in den Quellen der WebUI
-  nachgeschlagen und nicht aus dem Gedächtnis gebaut:
-  [OpenCCU](https://github.com/OpenCCU/OpenCCU) (gepatchte WebUI-Dateien unter
-  `buildroot-external/package/openccu-base/rootfs-patches/*/rootfs/www/`) und
-  [OpenCCU-Base](https://github.com/OpenCCU/OpenCCU-Base) (die ganze WebUI: `www/webui/webui.js`,
-  `www/config/easymodes/**`, `www/rega/esp/controls/*.fn`). Am einfachsten flach klonen:
-  `git clone --depth 1 https://github.com/OpenCCU/OpenCCU-Base`. Datenpunkte, Werte-Listen, ReGa-Skripte
-  und XML-RPC-Aufrufe kommen von dort.
-- **Die Quelle nennen**: in Kommentaren und Commit-Nachrichten, wo sie ein Detail entscheidet, z. B. „wie in der
-  WebUI `door_opener.fn`“.
-- **Texte** der Oberfläche auf Deutsch und Englisch, kurz und ohne Fachjargon, wo es geht.
-- **Ein Feature, ein Pull Request.** Gemergt wird, wenn die CI grün ist.
-- **Keine Geheimnisse ins Repository**: keine privaten Schlüssel, keine Passwörter. Testzertifikate erzeugen
-  die Tests zur Laufzeit.
+- **Nach den OpenCCU-Quellen bauen.** Bevor du eine Funktion baust, die die CCU betrifft, schau nach, wie
+  die WebUI sie umsetzt. Die CCU hat viele Eigenheiten, und ihre Quellen sind die verlässlichste Referenz:
+  [OpenCCU](https://github.com/OpenCCU/OpenCCU) mit den gepatchten Dateien der WebUI unter
+  `buildroot-external/package/openccu-base/rootfs-patches/*/rootfs/www/`, und
+  [OpenCCU-Base](https://github.com/OpenCCU/OpenCCU-Base) mit der ganzen WebUI (`www/webui/webui.js`,
+  `www/config/easymodes/**`, `www/rega/esp/controls/*.fn`). Am einfachsten klonst du sie flach:
+  `git clone --depth 1 https://github.com/OpenCCU/OpenCCU-Base`. Dort findest du Datenpunkte,
+  Wertelisten, ReGa-Skripte und XML-RPC-Aufrufe.
+- **Die Quelle nennen.** Wenn eine Quelle ein Detail entscheidet, schreib sie in den Kommentar oder die
+  Commit-Nachricht, zum Beispiel „wie in der WebUI `door_opener.fn`“. So kann später jeder nachvollziehen,
+  warum etwas so ist.
+- **Texte** der Oberfläche gibt es auf Deutsch und Englisch. Halte sie kurz und vermeide Fachjargon, wo es
+  geht.
+- **Ein Feature, ein Pull Request.** Kleine PRs lassen sich leichter prüfen. Gemergt wird, wenn die CI grün
+  ist.
+- **Keine Geheimnisse ins Repository**, also keine privaten Schlüssel und keine Passwörter. Die
+  Testzertifikate erzeugen die Tests selbst, während sie laufen.
 
 ## Eine neue Nachricht
 
-1. **Schema**: In `protocol/schema.json` unter `properties` einen Eintrag `"meinTyp": {"$ref":
-   "#/definitions/MeinTypCall"}` anlegen und unter `definitions` `MeinTypCall` mit `request` und `response`
-   sowie die Definitionen `MeinTypRequest` und `MeinTypResponse`. Die Antwort zusätzlich in
-   `ServerMessage` aufnehmen. Alle Objekte mit `"additionalProperties": false`.
+1. **Schema**: Leg in `protocol/schema.json` unter `properties` einen Eintrag
+   `"meinTyp": {"$ref": "#/definitions/MeinTypCall"}` an. Unter `definitions` kommen dazu `MeinTypCall` mit
+   `request` und `response` sowie die Definitionen `MeinTypRequest` und `MeinTypResponse`. Nimm die Antwort
+   außerdem in `ServerMessage` auf. Alle Objekte bekommen `"additionalProperties": false`.
 2. **Typen erzeugen**: `npm run generate:protocol`.
-3. **Server**: In `go-server/pkg/websocket/websocket.go` den Typ im Dispatcher `handleMessage` eintragen und
-   einen Handler schreiben. Einrichtungsaktionen laufen über `configure(...)`: Rechte prüfen, ausführen,
-   Audit schreiben, antworten. Für Bedienaktionen `canOperate` verwenden.
-4. **Fake-CCU**: Braucht die Aktion etwas Neues von der CCU (ein Skript, eine XML-RPC-Methode, eine CGI-Seite),
-   in `go-server/pkg/fakeccu` nachbilden. Neue ReGa-Vorlagen erkennt die Fake-CCU automatisch an ihrem Text;
-   die Antwort kommt als neuer Fall in `runScript` (`fakeccu.go`).
-5. **App**: Query oder Mutation in `src/queries/index.ts`, die `request('meinTyp', …)` aufruft; die Typen
-   kommen aus dem Schema.
-6. **Tests**: Go-Integrationstest in `go-server/integration_test.go` (er prüft die Antwort automatisch gegen
-   das Schema) und, wenn es eine sichtbare Funktion ist, ein Stack-Test in `e2e-stack/stack.spec.ts`.
+3. **Server**: Trag den Typ in `go-server/pkg/websocket/websocket.go` im Dispatcher `handleMessage` ein und
+   schreib einen Handler dafür. Für Einstellungen gibt es `configure(...)`: Es prüft die Rechte, führt die
+   Aktion aus, schreibt ins Audit-Log und antwortet. Für das Bedienen von Geräten nimmst du `canOperate`.
+4. **Fake-CCU**: Braucht die Aktion etwas Neues von der CCU, etwa ein Skript, eine XML-RPC-Methode oder eine
+   CGI-Seite, bildest du es in `go-server/pkg/fakeccu` nach. Neue ReGa-Vorlagen erkennt die Fake-CCU von
+   selbst an ihrem Text, du ergänzt nur die Antwort als neuen Fall in `runScript` (`fakeccu.go`).
+5. **App**: Schreib in `src/queries/index.ts` eine Query oder Mutation, die `request('meinTyp', …)` aufruft.
+   Die Typen kommen aus dem Schema.
+6. **Tests**: Ein Go-Integrationstest in `go-server/integration_test.go` prüft die Antwort automatisch gegen
+   das Schema. Ist es eine sichtbare Funktion, gehört noch ein Stack-Test in `e2e-stack/stack.spec.ts` dazu.
 
 ## Eine Kachel für ein neues Gerät
 
-1. Den Kanaltyp und seine Datenpunkte nachschlagen: Gerätebeschreibung in OpenCCU-Base
+1. Schlag den Kanaltyp und seine Datenpunkte nach: in der Gerätebeschreibung in OpenCCU-Base
    (`opt/HMServer/HMIPServer.jar` → `de/eq3/cbcs/devicedescription/…` für HmIP, `firmware/rftypes/*.xml` für
-   BidCos) und die Bedienung in der WebUI (`www/rega/esp/controls/*.fn`).
-2. Die Kachel unter `src/controls/` bauen. Werte setzen mit `useSetDataPoint`, gemeinsame Bausteine in
-   `src/components/Tile.tsx` und `Gestures.tsx`.
-3. In `src/controls/registry.ts` den Kanaltyp eintragen, mit Abschnitt und `per: 'channel'` oder `'device'`.
-4. Einen Kanal mit den echten Datenpunkten in den Mock (`e2e/helpers/websocketMock.ts`) aufnehmen und einen
-   Test in `e2e/frontend-mocked-websocket.spec.ts` schreiben. Für neue Darstellungen die Screenshots
-   erneuern.
+   BidCos) und wie die WebUI das Gerät bedient (`www/rega/esp/controls/*.fn`).
+2. Bau die Kachel unter `src/controls/`. Werte setzt du mit `useSetDataPoint`, gemeinsame Bausteine findest
+   du in `src/components/Tile.tsx` und `Gestures.tsx`.
+3. Trag den Kanaltyp in `src/controls/registry.ts` ein, mit Abschnitt und `per: 'channel'` oder
+   `'device'`.
+4. Nimm einen Kanal mit den echten Datenpunkten in den Mock (`e2e/helpers/websocketMock.ts`) auf und schreib
+   einen Test in `e2e/frontend-mocked-websocket.spec.ts`. Sieht etwas neu aus, erneuere auch die Screenshots.
 
-Echte Daten liefert ein Export der eigenen CCU:
+Echte Daten bekommst du über einen Export deiner eigenen CCU:
 
 ```bash
 npm run export:ccu -- -o ../fixtures/meine-ccu.json -anonymize
 ```
 
-Der Export liest nur (Räume, Gewerke, Kanäle mit Werten, Gerätebeschreibungen und Paramsets). `-anonymize`
-ersetzt Namen von Räumen, Gewerken und Geräten. Passwörter lassen sich nicht exportieren; die Fixture
-bekommt `Admin` / `secret`. Mit `go run ./cmd/fakeccu -fixture …` (in `go-server/`) läuft die eigene CCU dann
-als Fake.
+Der Export ändert nichts an deiner CCU, er liest nur: Räume, Gewerke, Kanäle mit ihren Werten,
+Gerätebeschreibungen und Paramsets. Mit `-anonymize` werden die Namen von Räumen, Gewerken und Geräten
+ersetzt, damit du die Datei teilen kannst. Passwörter lassen sich nicht exportieren, die Fixture bekommt
+deshalb `Admin` / `secret`. Mit `go run ./cmd/fakeccu -fixture …` (in `go-server/`) läuft deine eigene CCU
+dann als Fake.
 
 ## Texte und Übersetzungen
 
-Texte stehen in `messages/de.json` und `messages/en.json` (gleiche Schlüssel, der Test
-`src/i18n/messages.test.ts` prüft das). Paraglide JS macht daraus typisierte Funktionen:
+Die Texte stehen in `messages/de.json` und `messages/en.json`. Beide Dateien haben dieselben Schlüssel, der
+Test `src/i18n/messages.test.ts` passt darauf auf. Paraglide JS macht daraus typisierte Funktionen:
 
 ```tsx
 import { m } from '../paraglide/messages';
@@ -157,25 +163,25 @@ import { m } from '../paraglide/messages';
 <span>{m.MOTION_MINUTES_AGO({ minutes: 3 })}</span>
 ```
 
-Vite übersetzt beim Start und bei Änderungen selbst. Von Hand:
+Vite übersetzt die Texte beim Start und bei jeder Änderung selbst. Brauchst du es einmal von Hand:
 
 ```bash
 npx paraglide-js compile --project ./project.inlang --outdir ./src/paraglide \
   --emit-ts-declarations --strategy preferredLanguage baseLocale
 ```
 
-Geschweifte Klammern in Texten sind Platzhalter, also `{name}` nur für Variablen verwenden. Die Sprache
-folgt dem Browser, Rückfall ist Englisch.
+Geschweifte Klammern in Texten sind Platzhalter, nimm `{name}` also nur für Variablen. Die Sprache richtet
+sich nach dem Browser, sonst ist es Englisch.
 
 ## Verknüpfungsvorlagen aktualisieren
 
-Die Profile der Direktverknüpfungen kommen aus den Easymodes der WebUI:
+Die Profile der Direktverknüpfungen stammen aus den Easymodes der WebUI:
 
 ```bash
 node scripts/import-link-profiles.mjs /pfad/zu/OpenCCU-Base
 ```
 
-Das Skript liest `www/config/easymodes/<Empfänger>/<Sender>.tcl` samt Übersetzungen und schreibt
+Das Skript liest `www/config/easymodes/<Empfänger>/<Sender>.tcl` samt Übersetzungen und schreibt daraus
 `src/controls/links/linkProfiles.json`.
 
 ## Umgebungsvariablen
@@ -210,19 +216,21 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `PUSH_SUBJECT` | GitHub-URL | Kontakt in Push-Anfragen |
 | `DEBUG` | `false` | ausführliches Log |
 
-Die Stack-Tests in `playwright.stack.config.ts` zeigen, wie man alle Pfade für eine Testumgebung umbiegt.
+Wie man alle Pfade für eine Testumgebung umbiegt, siehst du an den Stack-Tests in
+`playwright.stack.config.ts`.
 
 ## Release
 
-Ein Release startet mit einem Tag `vX.Y.Z`, nach demselben Schema wie in den anderen Projekten
-([firsttris/workflows](https://github.com/firsttris/workflows)). Den Tag legt einer von zwei Wegen an:
+Ein Release beginnt mit einem Tag `vX.Y.Z`, nach demselben Schema wie in den anderen Projekten
+([firsttris/workflows](https://github.com/firsttris/workflows)). Den Tag kannst du auf zwei Wegen anlegen:
 
-- ohne Checkout: Actions → *Bump version* → patch, minor oder major (`bump.yml`). Erhöht die Version in
-  `package.json` und `package-lock.json`, committet sie als `Release vX.Y.Z` auf `main`, taggt und startet
-  `release.yml` auf dem Tag;
-- lokal: `npm run release:patch` (oder `:minor`, `:major`), das per `postversion` Commit und Tag pusht.
+- **ohne Checkout**: unter Actions → *Bump version* → patch, minor oder major (`bump.yml`). Das erhöht die
+  Version in `package.json` und `package-lock.json`, committet sie als `Release vX.Y.Z` auf `main`, setzt den
+  Tag und startet `release.yml` darauf.
+- **lokal**: mit `npm run release:patch` (oder `:minor`, `:major`). Commit und Tag werden dann per
+  `postversion` gepusht.
 
-`release.yml` lässt dann Build, Go- und Playwright-Tests laufen und legt die Release mit den Archiven
-`mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz` an, die Notizen erzeugt GitHub aus den
-Pull Requests seit der letzten Version. Lokal baut `npm run build` dieselben Archive, jeder Build in der CI
-hängt sie als Artefakt `addon` an.
+`release.yml` lässt anschließend Build, Go- und Playwright-Tests laufen und legt die Release mit den
+Archiven `mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz` an. Die Notizen erzeugt
+GitHub aus den Pull Requests seit der letzten Version. Lokal baut `npm run build` dieselben Archive, und
+jeder Build in der CI hängt sie als Artefakt `addon` an.
