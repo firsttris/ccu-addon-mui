@@ -10,9 +10,6 @@ vi.mock('../../hooks/useWebsocket', async (importOriginal) => ({
   useWebSocketContext: () => ({ elevated }),
 }));
 
-const reloadToNewApp = vi.fn();
-vi.mock('../../lib/appUpdate', () => ({ reloadToNewApp: () => reloadToNewApp() }));
-
 const { AddonSelfUpdate } = await import('./AddonSelfUpdate');
 const { RequestError } = await import('../../hooks/useWebsocket');
 
@@ -22,7 +19,6 @@ const installButton = () => screen.findByRole('button', { name: /Install update|
 describe('AddonSelfUpdate', () => {
   beforeEach(() => {
     request.mockReset();
-    reloadToNewApp.mockReset();
     elevated = true;
   });
 
@@ -47,8 +43,6 @@ describe('AddonSelfUpdate', () => {
     fireEvent.click(buttons[buttons.length - 1]);
     await waitFor(() => expect(screen.getByRole('status').textContent).toMatch(/1\.0\.5/));
     expect(request).toHaveBeenLastCalledWith({ type: 'installSelfUpdate' }, expect.objectContaining({ queue: false }));
-    // Switches to the new app right away
-    expect(reloadToNewApp).toHaveBeenCalled();
   });
 
   it('needs the password entered again to install', async () => {

@@ -781,7 +781,7 @@
   "SELF_UPDATE_RUNNING": "Installing …",
   "SELF_UPDATE_CONFIRM": "Version {version} is downloaded from GitHub, checked and installed. The CCU does not restart for it, only this app is unavailable for a few seconds afterwards.",
   "SELF_UPDATE_WAIT": "Please wait, this usually takes less than a minute.",
-  "SELF_UPDATE_DONE": "Version {version} is installed. The app is reloading …",
+  "SELF_UPDATE_DONE": "Version {version} is installed. The app reconnects in a moment; once “Reload” appears at the bottom, use it to switch to the new version.",
   "SELF_UPDATE_INSTALLED": "Version {version} installed",
   "SELF_UPDATE_FAILED": "The update failed",
   "SELF_UPDATE_CHECKSUM": "The download was corrupted (checksum mismatch). Nothing was installed, please try again.",
