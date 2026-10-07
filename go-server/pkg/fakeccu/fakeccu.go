@@ -2195,6 +2195,10 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 				}
 			}
 		}
+		if c.Lite {
+			// The central's own virtual keys, as rfd and HMIPServer list them
+			return append(append([]map[string]interface{}{}, data.Devices...), c.virtualKeyDevices(iface)...), ""
+		}
 		return data.Devices, ""
 	case "setBidcosInterface":
 		roaming := 0
@@ -2233,6 +2237,9 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 	case "getParamsetDescription":
 		address, key := stringParam(params, 0), stringParam(params, 1)
 		description, ok := data.ParamsetDescriptions[address][key]
+		if !ok && c.Lite && isVirtualKey(address) && key == "VALUES" {
+			description, ok = virtualKeyValues, true
+		}
 		if !ok && strings.Contains(key, ":") {
 			// Link parameters: the same for every partner
 			description, ok = data.ParamsetDescriptions[address]["LINK"]

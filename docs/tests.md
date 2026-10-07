@@ -9,7 +9,7 @@ echten Server und eine nachgebaute CCU.
 | Ebene | Was echt ist | Was nachgebaut ist | Tests | in der CI |
 |---|---|---|---:|:---:|
 | **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 301 in 55 Dateien | ✅ |
-| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU), openccu-lite (Fake-Lite) | 308 Testfunktionen in 74 Dateien | ✅ |
+| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU), openccu-lite (Fake-Lite) | 309 Testfunktionen in 74 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests, jede Nachricht des Mocks an die App in den E2E-Tests | – | gegen `protocol/schema.json` | ✅ |
 | **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 34 + 2 + 2 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 74 | ✅ |
@@ -82,7 +82,7 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
   Räume, Gewerke), Sitzungen, Zustandsspeicher, Event-Stream, Servicemeldungen und Heizgruppen. Die
   Integrationstests in `go-server/lite_integration_test.go` starten den Lite-Server dagegen: Anmeldung über
   das Gate, Räume und Kanäle, Schalten mit dem Event aus dem Stream, Umbenennen, Layouts, Favoriten,
-  Posteingang, Heizgruppen, Servicemeldungen, Gesundheit, Regeln und Push.
+  Posteingang, Heizgruppen, virtuelle Taster, Servicemeldungen, Gesundheit, Regeln und Push.
 - **Protokoll-Vertrag**: Die Hilfsfunktion, die Nachrichten des Servers liest, prüft **jede** gegen
   `protocol/schema.json`. Ein eigener Test stellt sicher, dass das Schema unbekannte Felder ablehnt.
 

@@ -534,3 +534,38 @@ func (c *CCU) handleLiteServiceMessages(w http.ResponseWriter) {
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{"count": len(messages), "messages": messages, "swept": true, "errors": []string{}})
 }
+
+// virtualKeyValues: a virtual key's VALUES (PRESS_SHORT, PRESS_LONG)
+var virtualKeyValues = map[string]interface{}{
+	"PRESS_SHORT": map[string]interface{}{"TYPE": "ACTION", "OPERATIONS": 6, "FLAGS": 1, "DEFAULT": false},
+	"PRESS_LONG":  map[string]interface{}{"TYPE": "ACTION", "OPERATIONS": 6, "FLAGS": 1, "DEFAULT": false},
+}
+
+// virtualKeyDevices are the central's HM-RCV-50 and HmIP-RCV-50 with the
+// fixture's virtual keys as their channels; c.mu is held
+func (c *CCU) virtualKeyDevices(iface string) []map[string]interface{} {
+	var devices []map[string]interface{}
+	byParent := map[string][]string{}
+	for _, ch := range c.fixture.Channels {
+		if ch.Interface == iface && isVirtualKey(ch.Address) {
+			parent, _, _ := strings.Cut(ch.Address, ":")
+			byParent[parent] = append(byParent[parent], ch.Address)
+		}
+	}
+	for parent, children := range byParent {
+		kind := "HM-RCV-50"
+		if parent == "HmIP-RCV-1" {
+			kind = "HmIP-RCV-50"
+		}
+		devices = append(devices, map[string]interface{}{"ADDRESS": parent, "TYPE": kind, "CHILDREN": children, "PARAMSETS": []interface{}{"MASTER"}, "FLAGS": 1, "VERSION": 1})
+		for _, address := range children {
+			_, index, _ := strings.Cut(address, ":")
+			n, _ := strconv.Atoi(index)
+			devices = append(devices, map[string]interface{}{
+				"ADDRESS": address, "TYPE": "VIRTUAL_KEY", "PARENT": parent, "PARENT_TYPE": kind,
+				"INDEX": n, "FLAGS": 1, "VERSION": 1, "PARAMSETS": []interface{}{"MASTER", "VALUES", "LINK"},
+			})
+		}
+	}
+	return devices
+}

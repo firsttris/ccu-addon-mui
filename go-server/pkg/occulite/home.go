@@ -308,8 +308,9 @@ func (h *Home) channels() []channelInfo {
 		}
 		for _, d := range descriptions {
 			interfaces[d.Address] = iface
-			// flags: 1 visible, 2 internal
-			if d.Parent == "" || d.Index == 0 || d.Flags&1 == 0 || d.Flags&2 != 0 {
+			// flags: 1 visible, 2 internal; the central's virtual keys are
+			// not channels of the home (getVirtualKeys lists them)
+			if d.Parent == "" || d.Index == 0 || d.Flags&1 == 0 || d.Flags&2 != 0 || isCentral(d.ParentType) {
 				continue
 			}
 			list = append(list, channelInfo{iface: iface, desc: d})
@@ -776,4 +777,39 @@ func (h *Home) AcceptDevice(address string) (string, error) {
 		return home.SetOK, nil
 	}
 	return home.SetNotFound, nil
+}
+
+// isCentral: the central's own device, whose channels are its virtual keys
+func isCentral(deviceType string) bool {
+	return deviceType == "HM-RCV-50" || deviceType == "HmIP-RCV-50"
+}
+
+// GetVirtualKeys lists the central's virtual keys: the channels of its
+// HM-RCV-50 and HmIP-RCV-50, named from the metadata store. openccu-lite
+// has no programs, so none uses them.
+func (h *Home) GetVirtualKeys() ([]home.VirtualKey, error) {
+	snapshot, err := h.snapshot()
+	if err != nil {
+		return nil, err
+	}
+	keys := []home.VirtualKey{}
+	for _, iface := range h.rpc.InterfaceNames() {
+		descriptions, err := h.rpc.ListDevices(iface)
+		if err != nil {
+			continue
+		}
+		for _, d := range descriptions {
+			if d.Parent == "" || d.Index == 0 || !isCentral(d.ParentType) {
+				continue
+			}
+			ref := Ref(iface, d.Address)
+			name := snapshot.Objects[ref].Name
+			if name == "" {
+				name = d.ParentType + " " + d.Address
+			}
+			keys = append(keys, home.VirtualKey{ID: ID(ref), Address: d.Address, InterfaceName: iface, Name: name})
+		}
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i].Address < keys[j].Address })
+	return keys, nil
 }

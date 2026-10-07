@@ -454,3 +454,25 @@ func TestLiteRulesAndPush(t *testing.T) {
 		t.Fatalf("getPush: %v", m)
 	}
 }
+
+// The central's virtual keys come from the interface processes, named in
+// the metadata store, and are pressed like any channel
+func TestLiteVirtualKeys(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+	m := liteCall(t, conn, map[string]interface{}{"type": "getVirtualKeys"})
+	key := findByName(t, m["keys"], "Alles aus")
+	if key["address"] != "BidCoS-RF:1" || key["interfaceName"] != "BidCos-RF" {
+		t.Fatalf("key: %v", key)
+	}
+	findByName(t, m["keys"], "Gute Nacht")
+	if m := liteCall(t, conn, map[string]interface{}{"type": "setDatapoint", "interfaceName": "BidCos-RF", "address": "BidCoS-RF:1", "attribute": "PRESS_SHORT", "value": true}); m["success"] != true {
+		t.Fatalf("press: %v", m)
+	}
+	// Not tiles of the home
+	for _, c := range liteCall(t, conn, map[string]interface{}{"type": "getChannels", "all": true})["channels"].([]interface{}) {
+		if c.(map[string]interface{})["address"] == "BidCoS-RF:1" {
+			t.Fatal("virtual key among the channels")
+		}
+	}
+}

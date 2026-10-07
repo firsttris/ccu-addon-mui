@@ -41,8 +41,6 @@ func (s *Server) dispatchPlatform(client *Client, msgType, requestID string, mes
 		go s.handleInstallSelfUpdate(client.snapshot(), requestID)
 	case "startComTest", "pollComTest":
 		s.handleComTest(client, msgType, message)
-	case "getVirtualKeys":
-		s.handleVirtualKeys(client, requestID)
 	case "getDevicePrograms":
 		s.handleDevicePrograms(client, message)
 	case "getHistory", "clearHistory":

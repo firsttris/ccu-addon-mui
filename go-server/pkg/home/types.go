@@ -141,3 +141,14 @@ type HealthValue struct {
 	Value interface{} `json:"value"`
 	Time  int64       `json:"time,omitempty"`
 }
+
+// VirtualKey is a virtual key of the central (a channel of its HM-RCV-50
+// or HmIP-RCV-50)
+type VirtualKey struct {
+	ID            int64  `json:"id"`
+	Address       string `json:"address"`
+	InterfaceName string `json:"interfaceName"`
+	Name          string `json:"name"`
+	// How many programs use the key
+	Programs int `json:"programs"`
+}
