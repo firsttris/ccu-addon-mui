@@ -216,7 +216,7 @@ Hintergründe in der [Architektur](docs/architektur.md#warum-es-schnell-ist).
   </tr>
   <tr>
     <td width="50%"><img src="docs/screenshot-programm.png" alt="Programm-Editor mit Wenn-Bedingungen aus Zeit und Systemvariable"><br><sub><b>Programme</b>: Wenn, Sonst wenn, Sonst, wie in der WebUI</sub></td>
-    <td width="50%"><img src="docs/screenshot-diagramme.png" alt="Diagramm mit Temperatur, Luftfeuchte und Fensterzustand über eine Woche"><br><sub><b>Diagramme</b>: jeder Datenpunkt, ohne microSD-Karte</sub></td>
+    <td width="50%"><img src="docs/screenshot-diagramme.png" alt="Diagramm mit Temperatur und Luftfeuchte über eine Woche"><br><sub><b>Diagramme</b>: jeder Datenpunkt, ohne microSD-Karte</sub></td>
   </tr>
 </table>
 
