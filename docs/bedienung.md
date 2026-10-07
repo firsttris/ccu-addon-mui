@@ -45,8 +45,10 @@ und *Bearbeiten* legst du sie direkt an.
 
 ### Kacheln anordnen
 
-*Anordnen* schaltet die Ansicht in den Bearbeitungsmodus. Sie sieht dabei genauso aus wie sonst, nur
-verschiebbar:
+*Anordnen* (das Raster-Symbol oben in der Kopfzeile, auf dem Handy im Menü) schaltet die Ansicht in den
+Bearbeitungsmodus. Sie sieht dabei genauso aus wie sonst, nur verschiebbar. Jede Kachel hat oben rechts
+einen Griff: Nur daran ziehst du sie, überall sonst scrollt die Seite wie gewohnt, und schalten lässt sich
+beim Anordnen nichts.
 
 - **Räume und Gewerke** behalten ihre Bereiche (Licht, Heizung, Rollläden …). Kacheln ziehst du innerhalb
   ihres Bereichs und änderst an der rechten Kante die Breite. Ganze Bereiche verschiebst du mit den
