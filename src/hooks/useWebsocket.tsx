@@ -179,11 +179,12 @@ const writeToken = (token: string | null, key = TOKEN_STORAGE_KEY) => {
   }
 };
 
-// Connect to WebSocket server via same host (works in dev and production)
-const wsUrl =
-  window.location.protocol === 'https:'
-    ? `wss://${window.location.host}/ws/mui`
-    : `ws://${window.location.host}/ws/mui`;
+// The WebSocket server on the same host. Installed, the app lies under
+// /addons/mui/ and so does the WebSocket: on openccu-lite only there the
+// session gate passes the login on (X-Occulite-Session). The dev server
+// proxies /ws/mui.
+const wsPath = import.meta.env.BASE_URL === '/' ? '/ws/mui' : `${import.meta.env.BASE_URL}ws`;
+const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${wsPath}`;
 
 export const useWebsocket = () => {
   const [authState, setAuthState] = useState<AuthState>('pending');

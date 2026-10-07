@@ -1,0 +1,86 @@
+#!/bin/sh
+#
+# The add-on on openccu-lite. systemd runs this script inside the unit
+# addon-mui.service, as the user addon-mui: start puts the server in the
+# background and returns, stop ends it, and the unit's cgroup catches what
+# is left. Only the add-on's own directories are writable; the output goes
+# to the journal (journalctl -u addon-mui)
+# (ccu-addon-howto docs/11-openccu-lite.md, docs/12-porting-to-openccu-lite.md).
+
+ADDON_DIR="/usr/local/addons/mui"
+SERVER_DIR="$ADDON_DIR/go-server"
+GO_BIN="$SERVER_DIR/ccu-addon-mui-server"
+# Owned by the add-on's user, kept across restarts of the unit
+RUN_DIR="/run/addon-mui"
+PID_FILE="$RUN_DIR/mui.pid"
+# All of the add-on's own data, writable for its user
+DATA_DIR="/usr/local/etc/config/addons/mui"
+CONFIG_FILE="$DATA_DIR/mui.conf"
+
+start() {
+    if [ -f $PID_FILE ] && kill -0 "$(cat $PID_FILE)" 2>/dev/null; then
+        echo "MUI is already running (PID: $(cat $PID_FILE))"
+        return 0
+    fi
+    mkdir -p $RUN_DIR $DATA_DIR
+    cd $SERVER_DIR || exit 1
+    if [ -f $CONFIG_FILE ]; then
+        set -a
+        . $CONFIG_FILE
+        set +a
+    fi
+    # stdout and stderr stay open: they are the journal
+    DATA_DIR=$DATA_DIR APP_DIR=$ADDON_DIR $GO_BIN &
+    echo $! > $PID_FILE
+    echo "MUI started (PID: $!)"
+}
+
+# Succeeds when the server is gone already
+stop() {
+    [ -f $PID_FILE ] || return 0
+    PID=$(cat $PID_FILE)
+    kill $PID 2>/dev/null
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        kill -0 $PID 2>/dev/null || break
+        sleep 1
+    done
+    kill -9 $PID 2>/dev/null
+    rm -f $PID_FILE
+    return 0
+}
+
+case "$1" in
+    ""|start) start ;;
+    # Prepares nothing: the server starts in start, never in init
+    init) ;;
+    stop) stop ;;
+    restart) stop; start ;;
+    status)
+        if [ -f $PID_FILE ] && kill -0 "$(cat $PID_FILE)" 2>/dev/null; then
+            echo "MUI is running"
+        else
+            echo "MUI is not running"
+            exit 1
+        fi
+    ;;
+    info)
+        echo "Info: <b>MUI</b><br>"
+        echo "Info: <a href='https://github.com/firsttris/ccu-addon-mui'>https://github.com/firsttris/ccu-addon-mui</a>"
+        echo "Name: MUI"
+        echo "Version: $(cat $ADDON_DIR/VERSION 2>/dev/null)"
+        echo "Operations: uninstall restart"
+        echo "Config-Url: /addons/mui/"
+    ;;
+    uninstall)
+        # Runs as the add-on's user; the system removes the rc.d entry, the
+        # www link, the lighttpd copy and the menu entry afterwards
+        stop
+        rm -rf $ADDON_DIR/* $DATA_DIR/*
+    ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status|info|uninstall}" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

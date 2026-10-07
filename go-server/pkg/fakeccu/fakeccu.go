@@ -34,6 +34,10 @@ type CCU struct {
 	// When the fake started: the time stamp of its maintenance values
 	Started time.Time
 	mu      sync.Mutex
+	// Lite makes it an openccu-lite: no ReGa, and occulited's APIs on the
+	// WebUI port instead of the WebUI (occulited.go)
+	Lite bool
+	lite *liteStore
 	// ConfigDir is the fake /etc/config, for the security settings
 	// flag files (sshEnabled, authEnabled, httpsRedirectEnabled)
 	ConfigDir string
@@ -217,6 +221,10 @@ func (c *CCU) Close() {
 // --- ReGa -------------------------------------------------------------
 
 func (c *CCU) handleRega(w http.ResponseWriter, r *http.Request) {
+	if c.Lite {
+		http.Error(w, "openccu-lite has no ReGa", http.StatusNotFound)
+		return
+	}
 	// ReGa reads and writes ISO-8859-1 (see package latin1)
 	body, _ := io.ReadAll(r.Body)
 	// rega.ExecuteComplete: the script's last line writes the end marker
@@ -1543,6 +1551,10 @@ func (c *CCU) handleControl(w http.ResponseWriter, r *http.Request) {
 func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/fake/") {
 		c.handleControl(w, r)
+		return
+	}
+	if c.Lite {
+		c.handleOcculited(w, r)
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/pages/jpages/group/") && r.Method == http.MethodPost {

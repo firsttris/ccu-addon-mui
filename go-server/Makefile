@@ -50,12 +50,18 @@ coverage:
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
-	rm -f $(BINARY_NAME)-arm $(BINARY_NAME)-amd64
+	rm -f $(BINARY_NAME)-arm $(BINARY_NAME)-amd64 $(BINARY_NAME)-lite-arm64 $(BINARY_NAME)-lite-amd64
 
 ## Download dependencies
 deps:
 	$(GOMOD) download
 	$(GOMOD) tidy
+
+## The server for openccu-lite (-tags lite): aarch64 for the Raspberry Pi
+## images, amd64 for the OVA
+build-lite:
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) $(BUILD_FLAGS) -tags netgo,lite -o $(BINARY_NAME)-lite-arm64 -v
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(BUILD_FLAGS) -tags netgo,lite -o $(BINARY_NAME)-lite-amd64 -v
 
 ## Run locally
 run:
@@ -67,8 +73,8 @@ size: build build-ccu3
 	@ls -lh $(BINARY_NAME) $(BINARY_NAME)-arm | awk '{print $$9, $$5}'
 
 ## Install the binaries to the addon_installer directory
-install-addon: build-addon
+install-addon: build-addon build-lite
 	mkdir -p ../addon_installer/go-server
-	cp $(BINARY_NAME)-arm $(BINARY_NAME)-amd64 ../addon_installer/go-server/
+	cp $(BINARY_NAME)-arm $(BINARY_NAME)-amd64 $(BINARY_NAME)-lite-arm64 $(BINARY_NAME)-lite-amd64 ../addon_installer/go-server/
 
-.PHONY: all build build-ccu3 build-addon test coverage clean deps run size install-addon
+.PHONY: all build build-ccu3 build-addon build-lite test coverage clean deps run size install-addon
