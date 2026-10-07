@@ -226,11 +226,38 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `FIRMWARE_UPLOAD_DIR`, `FIRMWARE_STAGED_LINK` | `/usr/local/tmp`, `/usr/local/.firmwareUpdate` | Hochgeladene CCU-Updates und der Link, über den die WebUI das geprüfte Update bereitstellt |
 | `CCU_FIRMWARE_RELEASES` | `https://github.com/openccu/openccu/releases/download` | Releases mit SHA256-Dateien |
 | `ADDON_RELEASE_URL`, `ADDON_UPDATE_DIR` | GitHub-API der neuesten Release, `/usr/local/tmp` | Update des Add-ons ohne Neustart der CCU: woher die neue Version kommt und wo sie ausgepackt wird |
+| `OCCULITE_URL`, `OCCULITE_TOKEN_FILE` | `http://127.0.0.1`, `/run/occulite/addon-tokens/mui.api` | nur openccu-lite: occulited und das API-Token des Add-ons |
+| `LITE_FORCE` | – | nur openccu-lite: startet das Lite-Binary auch ohne openccu-lite, etwa gegen die Fake-CCU mit `-lite` |
 | `PUSH_SUBJECT` | GitHub-URL | Kontakt in Push-Anfragen |
 | `DEBUG` | `false` | ausführliches Log |
 
 Wie man alle Pfade für eine Testumgebung umbiegt, siehst du an den Stack-Tests in
 `playwright.stack.config.ts`.
+
+## openccu-lite
+
+Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go build -tags lite` für
+[openccu-lite](https://github.com/hobbyquaker/openccu-lite), das keine ReGa und keine WebUI hat.
+
+- **Was sich unterscheidet**, steht in Dateien mit Build-Tag: `main_ccu.go` und `main_lite.go` verbinden die
+  Plattform, `pkg/websocket/dispatch_ccu.go` verteilt, was nur eine CCU hat (Programme, Systemvariablen,
+  Alarme, Benutzer, die Systemeinstellungen der WebUI). Die Handler-Dateien dafür tragen `//go:build !lite`.
+  Das Hausmodell (Räume, Gewerke, Kanäle, Namen) liegt hinter `home.Source`: auf der CCU `pkg/rega`, auf
+  openccu-lite `pkg/occulite`.
+- **Anmeldung:** Auf openccu-lite meldet occulites Gate vor `/addons/` die Sitzung im Header
+  `X-Occulite-Session`, auch am WebSocket-Upgrade. Deshalb verbindet sich die App installiert mit
+  `/addons/mui/ws`.
+- **Die App** ist für beide gleich. Bei der Anmeldung schickt der Server `platform` und `capabilities` mit,
+  danach blendet sie aus, was es nicht gibt.
+- **Paket:** `make build-lite` baut die Server für aarch64 und x86_64, `npm run build` packt daraus
+  `mui-<version>-aarch64-lite.tar.gz` und `mui-<version>-x86_64-lite.tar.gz` mit `openccu-lite.json`. Das
+  Add-on läuft dort als eigener Benutzer und schreibt nur nach `/usr/local/etc/config/addons/mui`
+  (`DATA_DIR`); `addon_installer/rc.d/mui-lite` und `addon_installer/lite/` sind die Teile dafür.
+- **Testen:** `go test -tags lite ./...` startet den Lite-Server gegen die Fake-CCU im Lite-Modus
+  (`fakeccu.CCU.Lite`): keine ReGa, dafür occulites APIs aus der Fixture. Von Hand geht das mit
+  `go run ./cmd/fakeccu -lite`, das die Umgebung für den Server ausgibt.
+
+Der Plan für die weiteren Schritte steht in [plan-openccu-lite.md](plan-openccu-lite.md).
 
 ## Release
 

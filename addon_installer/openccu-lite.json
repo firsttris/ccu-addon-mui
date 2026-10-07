@@ -1,0 +1,23 @@
+{
+  "format": 1,
+  "id": "mui",
+  "name": "MUI",
+  "description": {
+    "de": "Homematic-Geräte verwalten und bedienen: anlernen, einstellen, direkt verknüpfen, mit Kacheln für Handy und Tablet.",
+    "en": "Manage and operate Homematic devices: pair, configure, link directly, with tiles for phone and tablet."
+  },
+  "homepage": "https://github.com/firsttris/ccu-addon-mui",
+  "licence": "MIT",
+  "release": { "github": "firsttris/ccu-addon-mui", "asset": "mui-{version}-{arch}-lite.tar.gz" },
+  "requires": { "architectures": ["aarch64", "x86_64"] },
+  "ui": { "icon": "dist/icon.svg", "session_header": true },
+  "runtime": {
+    "daemon": true,
+    "needs": ["rfd", "hmipserver"],
+    "api_scopes": ["meta:write", "rpc:configure", "system:read", "system:write"],
+    "note": {
+      "de": "Spricht mit rfd, HMIPServer und hs485d über die lokalen Ports und mit occulited über dessen API (Namen, Räume, Servicemeldungen, Heizgruppen, Gerätefirmware).",
+      "en": "Talks to rfd, HMIPServer and hs485d on the local ports and to occulited through its API (names, rooms, service messages, heating groups, device firmware)."
+    }
+  }
+}

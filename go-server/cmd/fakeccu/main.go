@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"ccu-addon-mui-server/pkg/fakeccu"
@@ -28,6 +29,8 @@ func main() {
 	wiredPort := flag.Int("wired-port", 12000, "BidCos-Wired XML-RPC port")
 	groupsFile := flag.String("groups-file", "", "heating groups of the fake HMServer (groups.gson)")
 	configDir := flag.String("config-dir", "", "fake /etc/config for the security settings")
+	lite := flag.Bool("lite", false, "an openccu-lite: no ReGa, occulited's APIs on the WebUI port")
+	tokenFile := flag.String("token-file", filepath.Join(os.TempDir(), "mui-fake-addon-token"), "with -lite: where to write the add-on's token")
 	flag.Parse()
 
 	fixture, err := fakeccu.LoadFixture(*fixturePath)
@@ -37,14 +40,25 @@ func main() {
 	ccu := fakeccu.New(fixture)
 	ccu.GroupsFile = *groupsFile
 	ccu.ConfigDir = *configDir
+	ccu.Lite = *lite
 	if err := ccu.Start(*host, *regaPort, *webUIPort, *bidcosPort, *hmipPort, *virtualPort, *wiredPort); err != nil {
 		log.Fatal(err)
 	}
 	defer ccu.Close()
 
-	fmt.Printf("Fake CCU running. Start the server with:\n\n")
-	fmt.Printf("  CCU_HOST=%s REGA_PORT=%d RPC_PORT=%d HMIP_PORT=%d VIRTUAL_DEVICES_PORT=%d WIRED_PORT=%d CCU_WEBUI_URL=http://%s:%d\n\n",
-		*host, ccu.RegaPort, ccu.InterfacePorts["BidCos-RF"], ccu.InterfacePorts["HmIP-RF"], ccu.InterfacePorts["VirtualDevices"], ccu.InterfacePorts["BidCos-Wired"], *host, ccu.WebUIPort)
+	if *lite {
+		if err := os.WriteFile(*tokenFile, []byte(fakeccu.LiteAddonToken+"\n"), 0o600); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Fake openccu-lite running. Build and start the server with -tags lite and:\n\n")
+		fmt.Printf("  LITE_FORCE=1 OCCULITE_URL=http://%s:%d OCCULITE_TOKEN_FILE=%s CCU_HOST=%s RPC_PORT=%d HMIP_PORT=%d VIRTUAL_DEVICES_PORT=%d WIRED_PORT=%d\n\n",
+			*host, ccu.WebUIPort, *tokenFile, *host, ccu.InterfacePorts["BidCos-RF"], ccu.InterfacePorts["HmIP-RF"], ccu.InterfacePorts["VirtualDevices"], ccu.InterfacePorts["BidCos-Wired"])
+		fmt.Printf("The session gate is the proxy's: send X-Occulite-Session %s (Admin) or %s (Gast).\n\n", fakeccu.LiteSession("Admin"), fakeccu.LiteSession("Gast"))
+	} else {
+		fmt.Printf("Fake CCU running. Start the server with:\n\n")
+		fmt.Printf("  CCU_HOST=%s REGA_PORT=%d RPC_PORT=%d HMIP_PORT=%d VIRTUAL_DEVICES_PORT=%d WIRED_PORT=%d CCU_WEBUI_URL=http://%s:%d\n\n",
+			*host, ccu.RegaPort, ccu.InterfacePorts["BidCos-RF"], ccu.InterfacePorts["HmIP-RF"], ccu.InterfacePorts["VirtualDevices"], ccu.InterfacePorts["BidCos-Wired"], *host, ccu.WebUIPort)
+	}
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
