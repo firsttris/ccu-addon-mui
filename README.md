@@ -31,22 +31,26 @@ ein Add-on für CCU3 und OpenCCU, das die alte WebUI im Alltag ersetzt.
 
 ## 💡 Warum?
 
-Die WebUI der CCU3 kann alles, sieht aber aus wie 2008: Tabellen, Popups, Seiten, die der Server bei
-jedem Klick neu baut, und Werte, die nur alle paar Sekunden nachgeladen werden. Am Handy ist sie kaum
-zu bedienen. Dieses Add-on ersetzt sie durch eine moderne App, die auf der Zentrale selbst läuft:
+Ich wollte meine CCU3 nicht ersetzen, sondern erneuern. Die Zentrale selbst ist gut: zuverlässiger Funk,
+langlebige Geräte, alles läuft lokal ohne Cloud. Gealtert ist nur die Oberfläche: Tabellen, Popups, Seiten,
+die der Server bei jedem Klick neu baut, und am Handy kaum zu bedienen. Statt auf ein neues System
+umzuziehen und alles neu anzulernen, bekommt die CCU3 mit diesem Add-on eine Oberfläche, wie man sie heute
+erwartet:
 
-- **Alles an einem Ort**: Räume, Gewerke und Favoriten bedienen, und genauso Geräte anlernen,
-  Einstellungen übertragen, Direktverknüpfungen anlegen, Programme schreiben, Backups ziehen, Firmware
-  einspielen. Für den Alltag musst du die alte WebUI nicht mehr öffnen.
-- **Live statt Abfrage**: Jede Änderung eines Geräts kommt über WebSocket in Millisekunden auf jedem
-  offenen Gerät an. Die WebUI fragt dagegen jeden offenen Tab alle 3 Sekunden ab.
-- **Für Hand und Wand gemacht**: Kacheln, die zeigen, was los ist (Lampe leuchtet, Rollladen fährt,
-  Fenster steht offen), mit Gesten statt Formularen, hell oder dunkel, als App installierbar.
+- **Mobile first**: für das Handy gebaut, genauso gut auf Tablet, Wand und Desktop. Kacheln mit Gesten
+  statt Formularen, hell oder dunkel, als App auf dem Startbildschirm installierbar.
+- **Gleiche Zentrale, neue Oberfläche**: Geräte, Programme und Verknüpfungen bleiben, wie sie sind. Nichts
+  wird umgezogen, nichts neu angelernt, und die alte WebUI läuft daneben weiter.
+- **Live statt Abfrage**: Jede Änderung eines Geräts kommt über WebSocket in Millisekunden auf jedem offenen
+  Gerät an. Die WebUI fragt dagegen jeden offenen Tab alle 3 Sekunden ab.
+- **Alles an einem Ort**: Räume, Gewerke und Favoriten bedienen, und genauso Geräte anlernen, Einstellungen
+  übertragen, Direktverknüpfungen anlegen, Programme schreiben, Backups ziehen, Firmware einspielen. Für
+  den Alltag musst du die alte WebUI nicht mehr öffnen.
 - **Genauso sicher wie die CCU**: Anmeldung mit den CCU-Benutzern und deren Rechten, kurzlebiges
   Admin-Token für Einstellungen, Protokoll jeder Änderung.
 - **Nach dem Original gebaut**: Jede Funktion folgt den Quellen der WebUI aus
-  [OpenCCU](https://github.com/OpenCCU/OpenCCU-Base). Datenpunkte, Skripte und Abläufe sind die der CCU.
-  Das Add-on spricht nur deren eigene Schnittstellen und verändert nichts an der Zentrale.
+  [OpenCCU](https://github.com/OpenCCU/OpenCCU-Base). Das Add-on spricht nur die eigenen Schnittstellen
+  der CCU; deine Geräte und Programme bleiben in der Zentrale, auch wenn du es wieder entfernst.
 
 ## ✨ Funktionen
 

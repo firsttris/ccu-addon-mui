@@ -21,20 +21,24 @@ an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
 
 ## 💡 Why?
 
-The CCU3 WebUI can do everything, but it looks like 2008: tables, popups, every page rendered by the
-server on each click, and values that are polled every few seconds. On a phone it is hardly usable.
-This add-on replaces it with a modern app that runs on the central unit itself:
+I didn't want to replace my CCU3, I wanted to renew it. The central unit itself is good: reliable radio,
+long-lived devices, everything runs locally without a cloud. Only its interface has aged: tables, popups,
+pages the server rebuilds on every click, and hardly usable on a phone. Instead of moving to a new system
+and pairing everything again, this add-on gives the CCU3 the interface you expect today:
 
-- **Everything in one place**: control rooms, trades and favourites, and just as well pair devices,
-  transfer settings, create direct links, write programs, make backups and install firmware.
+- **Mobile first**: built for the phone, just as good on tablet, wall and desktop. Tiles with gestures
+  instead of forms, light or dark, installable as an app on the home screen.
+- **Same central unit, new interface**: devices, programs and links stay as they are. Nothing is moved,
+  nothing is paired again, and the old WebUI keeps running alongside.
 - **Live instead of polling**: every device change reaches every open screen over WebSocket within
   milliseconds. The WebUI polls each open tab every 3 seconds.
-- **Made for hand and wall**: tiles that show what is going on, gestures instead of forms, light and dark,
-  installable as an app.
+- **Everything in one place**: control rooms, trades and favourites, and just as well pair devices,
+  transfer settings, create direct links, write programs, make backups and install firmware.
 - **As secure as the CCU**: log in with the CCU's users and their rights, a short-lived admin token for
   settings, an audit log of every change.
 - **Built after the original**: every feature follows the WebUI sources of
-  [OpenCCU](https://github.com/OpenCCU/OpenCCU-Base) and uses only the CCU's own interfaces.
+  [OpenCCU](https://github.com/OpenCCU/OpenCCU-Base). The add-on only uses the CCU's own interfaces; your
+  devices and programs stay in the central unit, even if you remove it again.
 
 ## ✨ Features
 
