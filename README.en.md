@@ -23,8 +23,8 @@ an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
 
 **Bring your CCU3 into 2026.**
 
-A new interface, built for your phone. New features the CCU3 never had. Everything in one app, from the
-light switch to the program.
+A new interface, built for your phone. New features like push, charts and rules. Everything in one app,
+from the light switch to the program.
 
 - **Everything in one place**: control rooms, trades and favourites, and just as well pair devices,
   transfer settings, create direct links, write programs, make backups and install firmware.

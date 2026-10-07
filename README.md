@@ -33,8 +33,8 @@ ein Add-on für CCU3 und OpenCCU, das die alte WebUI im Alltag ersetzt.
 
 **Hol deine CCU3 ins Jahr 2026.**
 
-Neue Oberfläche, gebaut fürs Handy. Neue Funktionen, die die CCU3 nie hatte. Alles in einer App, vom
-Lichtschalter bis zum Programm.
+Neue Oberfläche, gebaut fürs Handy. Neue Funktionen wie Push, Diagramme und Regeln. Alles in einer App,
+vom Lichtschalter bis zum Programm.
 
 - **Alles an einem Ort**: Räume, Gewerke und Favoriten bedienen, und genauso Geräte anlernen,
   Einstellungen übertragen, Direktverknüpfungen anlegen, Programme schreiben, Backups ziehen, Firmware
