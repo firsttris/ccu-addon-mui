@@ -205,7 +205,11 @@ func verify(t *testing.T, v *vm) {
 
 func logout(t *testing.T, v *vm) {
 	conn := v.adminConn(t)
-	resp, err := v.client.Post(v.base+"/api/auth/v1/logout", "application/json", nil)
+	// A state-changing call on the session cookie needs X-Occulite-Request
+	// (occulited docs/system-api.md, /api/auth/v1), as the shell sends it
+	request, _ := http.NewRequest(http.MethodPost, v.base+"/api/auth/v1/logout", nil)
+	request.Header.Set("X-Occulite-Request", "1")
+	resp, err := v.client.Do(request)
 	if err != nil {
 		t.Fatal(err)
 	}
