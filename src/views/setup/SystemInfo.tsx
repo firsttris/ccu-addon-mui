@@ -122,9 +122,10 @@ export const SystemInfo = () => {
           <Addons />
         </>
       )}
-      <DeviceFirmware />
+      {/* openccu-lite fetches and deploys device firmware on its Updates page */}
       {capabilities.system && (
         <>
+          <DeviceFirmware />
           <Logging />
           <Backup />
         </>

@@ -38,6 +38,8 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 		return platformHooks{}, fmt.Errorf("reading the add-on's data: %w", err)
 	}
 	wsServer.SetHome(homeModel)
+	// Heating groups through occulited, which names their devices itself
+	wsServer.SetGroupService(occulite.NewGroups(client))
 
 	// The gate in front of /addons/ adds the session to the WebSocket
 	// upgrade; occulited tells whose it is

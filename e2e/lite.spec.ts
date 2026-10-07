@@ -25,6 +25,8 @@ test('blendet auf openccu-lite Programme, Systemvariablen und Systemeinstellunge
   // The versions stay, the system settings are openccu-lite's own
   await expect(page.getByRole('region', { name: /^System$/ })).toBeVisible();
   await expect(page.getByRole('region', { name: /^Backup$/ })).toHaveCount(0);
+  // Device firmware is on openccu-lite's Updates page
+  await expect(page.getByRole('region', { name: /^(Geräte-Firmware|Device firmware)$/ })).toHaveCount(0);
 
   // Nothing asks for what is not there
   const sent = await page.evaluate(() =>

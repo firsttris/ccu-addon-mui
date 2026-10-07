@@ -695,3 +695,72 @@ func (h *Home) ChangeFavorite(change home.FavoriteChange) (string, string, error
 	})
 	return result, value, err
 }
+
+// --- Pairing ----------------------------------------------------------
+
+// devices lists the devices (not channels) of all interfaces
+func (h *Home) devices() []channelInfo {
+	var list []channelInfo
+	for _, iface := range h.rpc.InterfaceNames() {
+		descriptions, err := h.rpc.ListDevices(iface)
+		if err != nil {
+			continue
+		}
+		for _, d := range descriptions {
+			if d.Parent == "" {
+				list = append(list, channelInfo{iface: iface, desc: d})
+			}
+		}
+	}
+	return list
+}
+
+// inboxSkipped are no devices to accept: the central's virtual remotes and
+// the heating groups' devices (VirtualDevices), which occulited names
+func inboxSkipped(iface string, d ccurpc.DeviceDescription) bool {
+	return iface == "VirtualDevices" || strings.HasSuffix(d.Type, "RCV-50") || d.Address == "BidCoS-RF" || d.Address == "BidCoS-Wir"
+}
+
+// GetInbox: openccu-lite has no inbox; a newly paired device is usable at
+// once, but has no object in the metadata store until it gets a name. Those
+// devices are the new ones.
+func (h *Home) GetInbox() ([]home.InboxDevice, error) {
+	snapshot, err := h.snapshot()
+	if err != nil {
+		return nil, err
+	}
+	inbox := []home.InboxDevice{}
+	for _, d := range h.devices() {
+		if inboxSkipped(d.iface, d.desc) {
+			continue
+		}
+		if _, named := snapshot.Objects[Ref(d.iface, d.desc.Address)]; named {
+			continue
+		}
+		inbox = append(inbox, home.InboxDevice{
+			Address: d.desc.Address, Type: d.desc.Type, InterfaceName: d.iface,
+			Name: d.desc.Type + " " + d.desc.Address,
+		})
+	}
+	sort.Slice(inbox, func(i, j int) bool { return inbox[i].Address < inbox[j].Address })
+	return inbox, nil
+}
+
+// AcceptDevice gives a new device its object, named as the CCU names it
+// ("<type> <address>"), so it leaves the inbox; renaming follows in the
+// app as on a CCU
+func (h *Home) AcceptDevice(address string) (string, error) {
+	for _, d := range h.devices() {
+		if d.desc.Address != address {
+			continue
+		}
+		ctx, cancel := h.context()
+		defer cancel()
+		err := h.client.PatchObject(ctx, Ref(d.iface, address), map[string]interface{}{"name": d.desc.Type + " " + address})
+		if err != nil {
+			return "", err
+		}
+		return home.SetOK, nil
+	}
+	return home.SetNotFound, nil
+}
