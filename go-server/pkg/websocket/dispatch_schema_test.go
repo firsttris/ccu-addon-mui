@@ -46,8 +46,13 @@ func TestDispatcherMatchesSchema(t *testing.T) {
 	if start < 0 || end < start {
 		t.Fatal("handleMessage/dispatch not found in websocket.go")
 	}
+	// What only a CCU has is dispatched from dispatch_ccu.go
+	ccuOnly, err := os.ReadFile("dispatch_ccu.go")
+	if err != nil {
+		t.Fatal(err)
+	}
 	handled := map[string]bool{}
-	for _, line := range regexp.MustCompile(`(?m)^\s*case (".*"):`).FindAllStringSubmatch(text[start:end], -1) {
+	for _, line := range regexp.MustCompile(`(?m)^\s*case (".*"):`).FindAllStringSubmatch(text[start:end]+string(ccuOnly), -1) {
 		for _, quoted := range regexp.MustCompile(`"([^"]+)"`).FindAllStringSubmatch(line[1], -1) {
 			handled[quoted[1]] = true
 		}

@@ -117,6 +117,11 @@ type Config struct {
 	// DataDir holds the add-on's own data on openccu-lite (DATA_DIR); empty
 	// on a CCU, where it is spread as above
 	DataDir string
+	// openccu-lite: occulited behind the system's web server, and the
+	// add-on's own API token (minted at every start with the manifest's
+	// api_scopes)
+	OcculiteURL       string
+	OcculiteTokenFile string
 }
 
 func Load() *Config {
@@ -189,6 +194,8 @@ func Load() *Config {
 		AddonReleaseURL:      getEnv("ADDON_RELEASE_URL", "https://api.github.com/repos/firsttris/ccu-addon-mui/releases/latest"),
 		AddonUpdateDir:       getEnv("ADDON_UPDATE_DIR", "/usr/local/tmp"),
 		DataDir:              os.Getenv(dataDirEnv),
+		OcculiteURL:          getEnv("OCCULITE_URL", "http://127.0.0.1"),
+		OcculiteTokenFile:    getEnv("OCCULITE_TOKEN_FILE", "/run/occulite/addon-tokens/mui.api"),
 	}
 }
 

@@ -1,10 +1,7 @@
 package main
 
 import (
-	"ccu-addon-mui-server/pkg/addons"
 	"context"
-	"errors"
-	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -12,18 +9,12 @@ import (
 	"time"
 
 	"ccu-addon-mui-server/pkg/audit"
-	"ccu-addon-mui-server/pkg/auth"
-	"ccu-addon-mui-server/pkg/backup"
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/diagrams"
 	"ccu-addon-mui-server/pkg/logger"
-	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
-	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/rules"
-	"ccu-addon-mui-server/pkg/selfupdate"
-	"ccu-addon-mui-server/pkg/settings"
 	"ccu-addon-mui-server/pkg/tiles"
 	"ccu-addon-mui-server/pkg/types"
 	"ccu-addon-mui-server/pkg/websocket"
@@ -60,54 +51,18 @@ func run(ctx context.Context, cfg *config.Config) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	regaClient := rega.NewClient(cfg)
-	wsServer := websocket.NewServer(cfg, regaClient)
-
-	switch cfg.AuthMode {
-	case "ccu":
-		authenticator, err := auth.New(cfg.WebUIURL, cfg.AuthKeyFile)
-		if err != nil {
-			// Fail closed: without the key nobody could log in, and running
-			// without authentication would expose all devices.
-			return fmt.Errorf("failed to initialise authentication: %w", err)
-		}
-		if err := authenticator.EnableSessions(cfg.SessionsFile); err != nil {
-			return fmt.Errorf("failed to load the logged-in devices: %w", err)
-		}
-		authenticator.SetLevelFunc(func(username string) (string, error) {
-			level, err := regaClient.GetUserLevel(username)
-			if errors.Is(err, rega.ErrUnknownUser) {
-				// Deleted in the WebUI: no rights any more
-				return auth.LevelUnknown, nil
-			}
-			if err != nil {
-				logger.Info(fmt.Sprintf("⚠️ Could not read the user level of %q: %v", username, err))
-				return auth.LevelUnknown, err
-			}
-			return auth.LevelFromCCU(level), nil
-		})
-		wsServer.SetAuthenticator(authenticator)
-		logger.Info("🔒 Authentication: CCU users (" + cfg.WebUIURL + ")")
-	case "none":
-		logger.Info("⚠️ Authentication disabled (AUTH_MODE=none): everyone on the network can control all devices")
-	default:
-		return fmt.Errorf("invalid AUTH_MODE %q, expected \"ccu\" or \"none\"", cfg.AuthMode)
-	}
-
+	wsServer := websocket.NewServer(cfg, nil)
 	wsServer.SetAuditLog(audit.New(cfg.AuditLogFile))
-	wsServer.SetBackup(backup.New(cfg.WebUIURL, cfg.BackupDir, cfg.FirmwareUploadDir))
 
 	deviceRPC := ccurpc.New(cfg)
 	wsServer.SetDeviceRPC(deviceRPC)
 
-	// The add-ons; this one's rc.d script is "mui" (addon_installer/rc.d)
-	wsServer.SetAddons(addons.New(cfg.AddonsDir, "mui", cfg.WebUIURL))
-	wsServer.SetSelfUpdate(selfupdate.New(cfg.AddonReleaseURL, cfg.AddonUpdateDir))
-	wsServer.SetLogs(logs.New(cfg.SyslogConfig, cfg.LogDir))
-	websocket.SetClockFiles(cfg.TimeConfFile, cfg.NTPClientFile, cfg.TZFile)
-	websocket.SetGroupsFile(cfg.GroupsFile)
-	settings.StatusDir = cfg.StatusDir
-	wsServer.SetSettings(settings.New(cfg.ConfigDir), cfg.DiagramsDir)
+	// What differs between a CCU and openccu-lite (main_ccu.go,
+	// main_lite.go): the home model, the login, the system settings
+	platform, err := setupPlatform(ctx, cfg, wsServer, deviceRPC)
+	if err != nil {
+		return err
+	}
 
 	// Push notifications about new alarms and service messages
 	var ruleEngine *rules.Engine
@@ -145,26 +100,22 @@ func run(ctx context.Context, cfg *config.Config) error {
 		recorder := diagrams.NewRecorder(cfg.DiagramsDir)
 		wsServer.SetDiagrams(store, recorder)
 		go recorder.Run(ctx, 5*time.Minute, func(err error) { logger.Error("Failed to write diagram values:", err) })
-		go wsServer.RunSysvarRecording(ctx, time.Minute)
+		platform.diagramsRecording(ctx)
 	}
 
-	// Tile layouts and the tiles chosen for channels
+	// Tile layouts and the tiles chosen for channels, the add-on's own on
+	// every platform
 	if store, err := tiles.Open(cfg.TilesFile); err != nil {
 		logger.Error("Tile layouts disabled:", err)
 	} else {
 		wsServer.SetTiles(store)
 	}
 
-	// System variables send no events: read once for all apps that show them
-	sysvarInterval := cfg.SysvarInterval
-	if sysvarInterval <= 0 {
-		sysvarInterval = 5 * time.Second
-	}
-	go wsServer.RunSysvarWatch(ctx, sysvarInterval)
-	// Alarms and service messages, likewise
+	// Alarms and service messages send no events either
 	go wsServer.RunMessageWatch(ctx)
 
 	rpcServer := xmlrpc.NewServer(cfg, func(event *types.CCUEvent) {
+		platform.onEvent(event)
 		wsServer.RecordEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
 		wsServer.ServiceEvent(event.Event.Datapoint)
 		if ruleEngine != nil {
@@ -192,9 +143,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 		}
 	}()
 
-	if err := regaClient.TestConnection(); err != nil {
-		logger.Error("CCU connection test failed:", err)
-	}
+	platform.started()
 
 	<-ctx.Done()
 	logger.Info("🛑 Shutting down...")
@@ -218,4 +167,31 @@ func run(ctx context.Context, cfg *config.Config) error {
 
 	logger.Info("✅ Shutdown complete")
 	return nil
+}
+
+// platformHooks are what a platform (main_ccu.go, main_lite.go) adds to the
+// common run: recording its own diagram series, seeing every event, and a
+// step once the servers listen. Any may be nil.
+type platformHooks struct {
+	recordDiagrams func(ctx context.Context)
+	event          func(event *types.CCUEvent)
+	start          func()
+}
+
+func (p platformHooks) diagramsRecording(ctx context.Context) {
+	if p.recordDiagrams != nil {
+		p.recordDiagrams(ctx)
+	}
+}
+
+func (p platformHooks) onEvent(event *types.CCUEvent) {
+	if p.event != nil {
+		p.event(event)
+	}
+}
+
+func (p platformHooks) started() {
+	if p.start != nil {
+		p.start()
+	}
 }
