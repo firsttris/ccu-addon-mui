@@ -62,7 +62,10 @@ export const GridDashboard = ({
   // anything that can make tiles lower (width, arrangement), all are
   // measured again from low cells
   useEffect(() => setHeights({}), [width, draft]);
-  const layouts = useMemo(() => responsiveLayouts(tiles, draft, heights, equalRows), [tiles, draft, heights, equalRows]);
+  const layouts = useMemo(
+    () => responsiveLayouts(tiles, draft, heights, width, equalRows),
+    [tiles, draft, heights, width, equalRows],
+  );
   const [breakpoint, setBreakpoint] = useState<BreakpointName>('lg');
   // Only what the user moved or resized is kept, for the breakpoint shown
   const commit = (layout: Layout) => {

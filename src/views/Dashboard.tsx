@@ -480,7 +480,7 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, on
   const layout = draft ?? saved;
   const sections = orderSections(groups, layout?.order ?? []);
   const change = (next: Partial<SavedLayout>) =>
-    setDraft({ v: 2, order: sections.map((g) => g.key), sections: {}, ...layout, ...next });
+    setDraft({ v: 3, order: sections.map((g) => g.key), sections: {}, ...layout, ...next });
   const canArrange = layoutId !== undefined && userLevel !== 'guest' && channelsByType.length > 0;
   // The button to start sits in the header (on phones in the menu); while
   // arranging, the bar below has the hint, reset and done
