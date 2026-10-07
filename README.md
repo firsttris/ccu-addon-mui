@@ -31,7 +31,7 @@ ein Add-on für CCU3 und OpenCCU, das die alte WebUI im Alltag ersetzt.
 
 ## 💡 Warum?
 
-**Hol deine CCU3 ins Jahr 2026.**
+**Hol deine CCU3 in die Zukunft.**
 
 Neue Oberfläche, gebaut fürs Handy. Neue Funktionen wie Push-Benachrichtigungen und Diagramme. Und alles,
 was sie schon kann, bleibt. Alles in einer App, vom Lichtschalter bis zum Programm.
