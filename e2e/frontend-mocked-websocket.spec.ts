@@ -716,7 +716,7 @@ test('ordnet die Kacheln eines Raums per Drag & Drop an', async ({ page }) => {
   expect(stored).toHaveLength(1);
   expect(stored[0].id).toBe(1);
   const layout = JSON.parse(stored[0].layout!);
-  expect(layout.v).toBe(2);
+  expect(layout.v).toBe(3);
   expect(
     Object.values(layout.sections as Record<string, { lg?: { i: string; x: number }[] }>).some((section) =>
       section.lg?.some((t) => t.i === key && t.x > 0),

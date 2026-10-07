@@ -16,6 +16,9 @@ import SlidersIcon from '~icons/lucide/sliders-horizontal';
 import LogOutIcon from '~icons/lucide/log-out';
 import KeyIcon from '~icons/lucide/key-round';
 import LayoutGridIcon from '~icons/lucide/layout-grid';
+import CheckIcon from '~icons/lucide/check';
+import XIcon from '~icons/lucide/x';
+import RotateCcwIcon from '~icons/lucide/rotate-ccw';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { LanguageChoice, useUserLanguageSync } from './LanguageChoice';
 import { useTheme } from '../contexts/ThemeContext';
@@ -119,9 +122,9 @@ const NavMenu = ({
         </SheetHeader>
         <nav className="flex flex-col gap-5 px-2 pb-4">
           {/* On phones the header has no room for it */}
-          {arrange && (
+          {arrange && !arrange.editing && (
             <div className="sm:hidden">
-              <NavLink icon={<LayoutGridIcon />} onClick={() => go(arrange)}>
+              <NavLink icon={<LayoutGridIcon />} onClick={() => go(arrange.start)}>
                 {m.LAYOUT_ARRANGE()}
               </NavLink>
             </div>
@@ -329,21 +332,51 @@ export const Header: React.FC = () => {
           <span className="truncate text-xl leading-tight font-semibold tracking-tight sm:text-2xl">{title}</span>
           <Clock />
         </div>
-        {arrange && (
-          <Button
-            variant="outline"
-            size="icon-lg"
-            className="hidden sm:inline-flex"
-            onClick={arrange}
-            aria-label={m.LAYOUT_ARRANGE()}
-            title={m.LAYOUT_ARRANGE()}
-          >
-            <LayoutGridIcon className="size-5" />
-          </Button>
+        {arrange?.editing ? (
+          // While arranging, its buttons take the place of the others here:
+          // nothing on the page moves
+          <div className="flex shrink-0 items-center gap-2">
+            <Button variant="ghost" size="lg" onClick={arrange.cancel} aria-label={m.CANCEL()} title={m.CANCEL()}>
+              <XIcon className="sm:hidden" />
+              <span className="hidden sm:inline">{m.CANCEL()}</span>
+            </Button>
+            {arrange.reset && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={arrange.reset}
+                disabled={arrange.busy}
+                aria-label={m.LAYOUT_RESET()}
+                title={m.LAYOUT_RESET()}
+              >
+                <RotateCcwIcon />
+                <span className="hidden sm:inline">{m.LAYOUT_RESET()}</span>
+              </Button>
+            )}
+            <Button size="lg" onClick={arrange.done} disabled={arrange.busy}>
+              <CheckIcon />
+              {m.LAYOUT_DONE()}
+            </Button>
+          </div>
+        ) : (
+          <>
+            {arrange && (
+              <Button
+                variant="outline"
+                size="icon-lg"
+                className="hidden sm:inline-flex"
+                onClick={arrange.start}
+                aria-label={m.LAYOUT_ARRANGE()}
+                title={m.LAYOUT_ARRANGE()}
+              >
+                <LayoutGridIcon className="size-5" />
+              </Button>
+            )}
+            <AdminLockButton />
+            <AlarmButton onClick={() => setAlarmsOpen(true)} />
+          </>
         )}
-        <AdminLockButton />
-        <AlarmButton onClick={() => setAlarmsOpen(true)} />
-        {problemCount > 0 && (
+        {problemCount > 0 && !arrange?.editing && (
           <button
             onClick={() => setProblemsOpen(true)}
             aria-label={`${m.NOTICES()}: ${problemCount}`}

@@ -4,7 +4,7 @@ import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import { cn } from '../../lib/utils';
-import { BREAKPOINTS, BreakpointName, COLS, MARGIN, responsiveLayouts, ROW_HEIGHT, SectionLayout, TileSpec, toSaved } from './tileLayout';
+import { BREAKPOINTS, BreakpointName, COLS, flowCompactor, MARGIN, responsiveLayouts, ROW_HEIGHT, SectionLayout, TileSpec, toSaved } from './tileLayout';
 
 export interface GridTile extends TileSpec {
   element: ReactNode;
@@ -62,7 +62,10 @@ export const GridDashboard = ({
   // anything that can make tiles lower (width, arrangement), all are
   // measured again from low cells
   useEffect(() => setHeights({}), [width, draft]);
-  const layouts = useMemo(() => responsiveLayouts(tiles, draft, heights, equalRows), [tiles, draft, heights, equalRows]);
+  const layouts = useMemo(
+    () => responsiveLayouts(tiles, draft, heights, width, equalRows),
+    [tiles, draft, heights, width, equalRows],
+  );
   const [breakpoint, setBreakpoint] = useState<BreakpointName>('lg');
   // Only what the user moved or resized is kept, for the breakpoint shown
   const commit = (layout: Layout) => {
@@ -81,7 +84,10 @@ export const GridDashboard = ({
           layouts={layouts}
           rowHeight={ROW_HEIGHT}
           margin={[MARGIN, MARGIN]}
-          containerPadding={[MARGIN, MARGIN]}
+          // Sideways only, balanced by -mx-3: the tiles stay where they are
+          // when arranging starts
+          containerPadding={[MARGIN, 0]}
+          compactor={flowCompactor}
           // Only the grip starts a drag: elsewhere a touch scrolls the page,
           // on a tablet the tiles cover most of it
           dragConfig={{ enabled: editing, handle: '.tile-drag-handle' }}

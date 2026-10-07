@@ -1,4 +1,4 @@
-import type { Layout, LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
+import type { Compactor, Layout, LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
 
 // Layout of the dashboard's tiles when arranged by hand. Every section
 // (lights, heating, ...) is a grid of its own: tiles move within it, and the
@@ -7,12 +7,14 @@ import type { Layout, LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
 // on the room, trade or favorite list in the CCU.
 
 export const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const;
-export const COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 } as const;
+// Fine columns, so that tiles can be as wide as in the sections' own grids:
+// five side by side need a multiple of five (12 columns only fit 4 or 6)
+export const COLS = { lg: 60, md: 50, sm: 30, xs: 20, xxs: 10 } as const;
 export type BreakpointName = keyof typeof BREAKPOINTS;
 export const BREAKPOINT_NAMES = Object.keys(BREAKPOINTS) as BreakpointName[];
 
-// Width of a column at each breakpoint, roughly (for default widths)
-const COLUMN_PX: Record<BreakpointName, number> = { lg: 100, md: 100, sm: 128, xs: 120, xxs: 180 };
+// Version 2 had a fifth of the columns (12 at lg)
+const V2_SCALE = 5;
 
 export const ROW_HEIGHT = 8;
 export const MARGIN = 12;
@@ -22,6 +24,8 @@ export interface TileSpec {
   key: string;
   // The narrowest the tile looks right, in pixels (as the section grids)
   minPx: number;
+  // Columns of the section grid it spans (col-span-2)
+  span?: number;
 }
 
 export interface SavedTile {
@@ -35,7 +39,7 @@ export interface SavedTile {
 export type SectionLayout = Partial<Record<BreakpointName, SavedTile[]>>;
 
 export interface SavedLayout {
-  v: 2;
+  v: 3;
   // Section keys in the order shown; sections not listed follow
   order: string[];
   sections: Record<string, SectionLayout>;
@@ -44,15 +48,21 @@ export interface SavedLayout {
 // Grid rows for a tile's height in pixels
 export const rowsFor = (heightPx: number) => Math.max(1, Math.ceil((heightPx + MARGIN) / (ROW_HEIGHT + MARGIN)));
 
-export const defaultWidth = (minPx: number, bp: BreakpointName) => Math.min(COLS[bp], Math.max(1, Math.ceil(minPx / COLUMN_PX[bp])));
+// As wide as in the section's own grid (auto-fill, minmax(minPx, 1fr)): as
+// many tiles side by side as fit into the grid's width (the container's,
+// without its padding), sharing the columns
+export const defaultWidth = (minPx: number, bp: BreakpointName, widthPx: number, span = 1) => {
+  const perRow = Math.max(1, Math.floor((widthPx - 2 * MARGIN + MARGIN) / (minPx + MARGIN)));
+  return Math.min(COLS[bp], span * Math.max(1, Math.floor(COLS[bp] / Math.min(perRow, COLS[bp]))));
+};
 
 // Tiles flowed left to right in their order, as the sections show them
-export const defaultLayout = (tiles: TileSpec[], bp: BreakpointName): SavedTile[] => {
+export const defaultLayout = (tiles: TileSpec[], bp: BreakpointName, widthPx: number): SavedTile[] => {
   const out: SavedTile[] = [];
   let x = 0;
   let row = 0;
   for (const tile of tiles) {
-    const w = defaultWidth(tile.minPx, bp);
+    const w = defaultWidth(tile.minPx, bp, widthPx, tile.span);
     if (x + w > COLS[bp]) {
       x = 0;
       row += 1;
@@ -69,20 +79,37 @@ export const parseLayout = (json: string | undefined): SavedLayout | null => {
   try {
     const parsed = JSON.parse(json);
     // Version 1 put all tiles into one grid: dropped, the sections come back
-    return parsed && parsed.v === 2 && Array.isArray(parsed.order) && parsed.sections && typeof parsed.sections === 'object'
-      ? (parsed as SavedLayout)
-      : null;
+    if (!parsed || !Array.isArray(parsed.order) || !parsed.sections || typeof parsed.sections !== 'object') return null;
+    if (parsed.v === 3) return parsed as SavedLayout;
+    if (parsed.v !== 2) return null;
+    const scale = (layout: SectionLayout): SectionLayout =>
+      Object.fromEntries(
+        Object.entries(layout).map(([bp, tiles]) => [
+          bp,
+          (tiles ?? []).map((t) => ({ ...t, x: t.x * V2_SCALE, w: t.w * V2_SCALE })),
+        ]),
+      );
+    return {
+      v: 3,
+      order: parsed.order,
+      sections: Object.fromEntries(
+        Object.entries(parsed.sections as Record<string, SectionLayout>).map(([key, layout]) => [key, scale(layout)]),
+      ),
+    };
   } catch {
     return null;
   }
 };
 
 // The layouts to show: the saved positions of tiles that still exist, new
-// tiles appended below, and every height from the measured content
+// tiles appended below, and every height from the measured content. Only
+// the layout of the breakpoint that widthPx falls into is shown, so new
+// tiles get their width from it.
 export const responsiveLayouts = (
   tiles: TileSpec[],
   saved: SectionLayout | undefined,
   heights: Record<string, number>,
+  widthPx: number,
   // Tiles starting in the same row get the height of the tallest, as in
   // the sections' own grids
   equalRows = false,
@@ -93,8 +120,8 @@ export const responsiveLayouts = (
     const stored = (saved?.[bp] ?? []).filter((t) => keys.has(t.i));
     const placed = new Set(stored.map((t) => t.i));
     const missing = tiles.filter((t) => !placed.has(t.key));
-    const appended = defaultLayout(missing, bp).map((t) => ({ ...t, y: t.y + 100000 }));
-    const base = saved?.[bp] ? [...stored, ...appended] : defaultLayout(tiles, bp);
+    const appended = defaultLayout(missing, bp, widthPx).map((t) => ({ ...t, y: t.y + 100000 }));
+    const base = saved?.[bp] ? [...stored, ...appended] : defaultLayout(tiles, bp, widthPx);
     const rowHeight = new Map<number, number>();
     if (equalRows) {
       for (const t of base) rowHeight.set(t.y, Math.max(rowHeight.get(t.y) ?? 0, heights[t.i] ?? 0));
@@ -110,6 +137,47 @@ export const responsiveLayouts = (
     );
   }
   return result;
+};
+
+// Tiles flow left to right in their order and wrap at the edge, as in the
+// sections' own grids; each row is as tall as its tallest tile. A tile
+// dragged onto others takes its place among them (they move aside in the
+// row) instead of pushing them down: it goes before the first tile whose
+// middle is not left of its own, in the row its middle is over.
+// (react-grid-layout's wrapCompactor makes every row one grid row tall.)
+export const flowLayout = (layout: Layout, cols: number): Layout => {
+  const byPosition = (a: LayoutItem, b: LayoutItem) => a.y - b.y || a.x - b.x;
+  const order = layout.filter((t) => !t.moved).sort(byPosition);
+  for (const dragged of layout.filter((t) => t.moved)) {
+    const cx = dragged.x + dragged.w / 2;
+    const cy = dragged.y + dragged.h / 2;
+    const at = order.findIndex((t) => t.y > cy || (cy < t.y + t.h && t.x + t.w / 2 >= cx));
+    order.splice(at < 0 ? order.length : at, 0, dragged);
+  }
+  const placed = new Map<string, LayoutItem>();
+  let x = 0;
+  let y = 0;
+  let rowHeight = 0;
+  for (const t of order) {
+    const w = Math.min(t.w, cols);
+    if (x > 0 && x + w > cols) {
+      x = 0;
+      y += rowHeight;
+      rowHeight = 0;
+    }
+    placed.set(t.i, { ...t, x, y, w, moved: false });
+    x += w;
+    rowHeight = Math.max(rowHeight, t.h);
+  }
+  return layout.map((t) => placed.get(t.i)!);
+};
+
+// Overlapping while dragging: nothing is pushed away, flowLayout puts every
+// tile in its place
+export const flowCompactor: Compactor = {
+  type: 'wrap',
+  allowOverlap: true,
+  compact: flowLayout,
 };
 
 // What is stored: position and width (heights come from the content)
