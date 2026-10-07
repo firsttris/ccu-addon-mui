@@ -51,6 +51,23 @@ const settle = async (page: Page) => {
   }
 };
 
+// A sheet or dialog slides in: until its animations ended, a screenshot
+// may catch it on the way
+const opened = async (page: Page) => {
+  await page
+    .getByRole('dialog')
+    .evaluate((el) =>
+      Promise.all(
+        el
+          .getAnimations({ subtree: true })
+          // Not the endless ones (a pulsing dot)
+          .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+          .map((a) => a.finished),
+      ),
+    );
+  await page.evaluate(() => document.fonts.ready);
+};
+
 for (const dark of [false, true]) {
   for (const viewport of viewports) {
     test.describe(`${viewport.name} ${dark ? 'dark' : 'light'}`, () => {
@@ -104,9 +121,10 @@ for (const dark of [false, true]) {
 
       test('notices', async ({ page }) => {
         await page.goto('/room/1');
+        await settle(page);
         await page.getByRole('button', { name: /^Meldungen: / }).click();
         await expect(page.getByRole('dialog').getByText('Fensterkontakt Bad')).toBeVisible();
-        await page.evaluate(() => document.fonts.ready);
+        await opened(page);
         await expect(page).toHaveScreenshot(`notices-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
           animations: 'disabled',
           maxDiffPixels: 10,
@@ -115,9 +133,10 @@ for (const dark of [false, true]) {
 
       test('menu', async ({ page }) => {
         await page.goto('/room/1');
+        await settle(page);
         await page.getByRole('button', { name: 'Menü' }).click();
         await expect(page.getByRole('dialog').getByText('Heizungsraum')).toBeVisible();
-        await page.evaluate(() => document.fonts.ready);
+        await opened(page);
         await expect(page).toHaveScreenshot(`menu-${viewport.name}-${dark ? 'dark' : 'light'}.png`, {
           animations: 'disabled',
           maxDiffPixels: 10,
