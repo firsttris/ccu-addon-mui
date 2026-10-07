@@ -233,6 +233,8 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 		c.handleLiteEvents(w, r)
 	case strings.HasPrefix(r.URL.Path, "/api/meta/v1/enums/"):
 		c.handleLiteNodes(w, r)
+	case strings.HasPrefix(r.URL.Path, "/api/system/v1/groups"):
+		c.handleLiteGroups(w, r)
 	default:
 		apiError(w, http.StatusNotFound, "not_found", r.Method+" "+r.URL.Path)
 	}
@@ -393,3 +395,124 @@ func (c *CCU) handleLiteNodes(w http.ResponseWriter, r *http.Request) {
 // LiteAddonToken is the fake's add-on token (on openccu-lite
 // /run/occulite/addon-tokens/mui.api)
 const LiteAddonToken = "olt_fake_addon_token"
+
+type liteGroup struct {
+	ID                    int          `json:"id"`
+	Name                  string       `json:"name"`
+	Type                  string       `json:"type"`
+	TypeLabel             string       `json:"type_label"`
+	Device                string       `json:"device"`
+	DeviceName            string       `json:"device_name"`
+	Ref                   string       `json:"ref"`
+	ForbidSingleOperation bool         `json:"forbid_single_operation"`
+	Members               []liteMember `json:"members"`
+}
+
+type liteMember struct {
+	ID     string `json:"id"`
+	Serial string `json:"serial"`
+	Type   string `json:"type"`
+}
+
+// The heating groups of the fake's openccu-lite (system-api.md "Heating
+// groups"); the thermostats of the fixture may join them
+func (c *CCU) handleLiteGroups(w http.ResponseWriter, r *http.Request) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	rest := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/system/v1/groups"), "/")
+	member := func(address string) liteMember {
+		serial, _, _ := strings.Cut(address, ":")
+		return liteMember{ID: address, Serial: serial, Type: "HEATING_CLIMATECONTROL_TRANSCEIVER"}
+	}
+	assignable := func() []liteMember {
+		taken := map[string]bool{}
+		for _, g := range c.liteGroups {
+			for _, m := range g.Members {
+				taken[m.ID] = true
+			}
+		}
+		list := []liteMember{}
+		for _, ch := range c.fixture.Channels {
+			if ch.Interface == "HmIP-RF" && ch.Type == "HEATING_CLIMATECONTROL_TRANSCEIVER" && !taken[ch.Address] {
+				list = append(list, member(ch.Address))
+			}
+		}
+		return list
+	}
+	find := func(id string) *liteGroup {
+		for _, g := range c.liteGroups {
+			if strconv.Itoa(g.ID) == id {
+				return g
+			}
+		}
+		return nil
+	}
+	var body struct {
+		Name                  *string  `json:"name"`
+		Type                  string   `json:"type"`
+		Members               []string `json:"members"`
+		ForbidSingleOperation *bool    `json:"forbid_single_operation"`
+	}
+	if r.Method == http.MethodPost || r.Method == http.MethodPut {
+		_ = json.NewDecoder(r.Body).Decode(&body)
+	}
+	apply := func(g *liteGroup) {
+		if body.Name != nil {
+			g.Name = *body.Name
+			g.DeviceName = g.Name + " " + g.Device
+		}
+		if body.Members != nil {
+			g.Members = []liteMember{}
+			for _, address := range body.Members {
+				g.Members = append(g.Members, member(address))
+			}
+		}
+		if body.ForbidSingleOperation != nil {
+			g.ForbidSingleOperation = *body.ForbidSingleOperation
+		}
+	}
+	switch {
+	case rest == "" && r.Method == http.MethodGet:
+		writeJSON(w, http.StatusOK, map[string]interface{}{"groups": c.liteGroups, "devices_to_configure": []liteMember{}})
+	case rest == "types" && r.Method == http.MethodGet:
+		writeJSON(w, http.StatusOK, map[string]interface{}{"types": []map[string]interface{}{
+			{"id": "hmip.heating.group", "label": "HmIP-Heizungssteuerung", "assignable": assignable(), "leftover": []liteMember{}},
+		}})
+	case rest == "" && r.Method == http.MethodPost:
+		if body.Name == nil || strings.TrimSpace(*body.Name) == "" || body.Type != "hmip.heating.group" {
+			apiError(w, 422, "invalid", "name and type")
+			return
+		}
+		c.liteGroupID++
+		g := &liteGroup{ID: c.liteGroupID, Type: body.Type, TypeLabel: "HmIP-Heizungssteuerung", Device: fmt.Sprintf("INT%07d", c.liteGroupID)}
+		g.Ref = "VirtualDevices." + g.Device
+		apply(g)
+		c.liteGroups = append(c.liteGroups, g)
+		writeJSON(w, http.StatusOK, g)
+	case rest != "" && r.Method == http.MethodGet:
+		if g := find(rest); g != nil {
+			writeJSON(w, http.StatusOK, g)
+			return
+		}
+		apiError(w, http.StatusNotFound, "unknown-group", rest)
+	case rest != "" && r.Method == http.MethodPut:
+		g := find(rest)
+		if g == nil {
+			apiError(w, http.StatusNotFound, "unknown-group", rest)
+			return
+		}
+		apply(g)
+		writeJSON(w, http.StatusOK, g)
+	case rest != "" && r.Method == http.MethodDelete:
+		for i, g := range c.liteGroups {
+			if strconv.Itoa(g.ID) == rest {
+				c.liteGroups = append(c.liteGroups[:i], c.liteGroups[i+1:]...)
+				writeJSON(w, http.StatusOK, map[string]interface{}{"deleted": g.ID, "former_members": g.Members})
+				return
+			}
+		}
+		apiError(w, http.StatusNotFound, "unknown-group", rest)
+	default:
+		apiError(w, http.StatusMethodNotAllowed, "method", r.Method)
+	}
+}

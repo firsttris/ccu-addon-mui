@@ -247,6 +247,10 @@ Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go 
   sie gibt. Räume, Gewerke und Namen ändert der Server in occulites Metadaten-Speicher; Räume heißen dort
   Pfade (`room/eg/wohnzimmer`), Kanäle `HmIP-RF.<Adresse>`, und die App bekommt daraus feste Zahlen-IDs
   (`occulite.ID`).
+- **Geräteverwaltung:** Anlernen, Paramsets und Direktverknüpfungen laufen wie auf der CCU über XML-RPC.
+  Einen Posteingang hat openccu-lite nicht: Neu sind dort die Geräte ohne Eintrag im Metadaten-Speicher,
+  *Übernehmen* legt ihn mit dem Namen `<Typ> <Adresse>` an. Heizgruppen gehen über occulites
+  `/api/system/v1/groups` (`occulite.Groups`), Gerätefirmware lädt und verteilt occulite selbst.
 - **Anmeldung:** Auf openccu-lite meldet occulites Gate vor `/addons/` die Sitzung im Header
   `X-Occulite-Session`, auch am WebSocket-Upgrade. Deshalb verbindet sich die App installiert mit
   `/addons/mui/ws`.

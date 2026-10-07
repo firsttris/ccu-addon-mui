@@ -339,3 +339,59 @@ func TestLiteChanges(t *testing.T) {
 		t.Fatalf("deleteGroup: %v", m)
 	}
 }
+
+// A paired device without an object in the metadata store is new: it is in
+// the inbox until it is accepted (it gets its object and name)
+func TestLiteInbox(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+	m := liteCall(t, conn, map[string]interface{}{"type": "getInbox"})
+	devices, _ := m["devices"].([]interface{})
+	if len(devices) == 0 {
+		t.Fatalf("inbox empty: %v", m)
+	}
+	first := devices[0].(map[string]interface{})
+	address := first["address"].(string)
+	for _, d := range devices {
+		if d.(map[string]interface{})["address"] == "000855699C4F38" {
+			t.Fatalf("a named device in the inbox: %v", m)
+		}
+	}
+	if m := liteCall(t, conn, map[string]interface{}{"type": "acceptDevice", "address": address}); m["success"] != true {
+		t.Fatalf("acceptDevice: %v", m)
+	}
+	for _, d := range liteCall(t, conn, map[string]interface{}{"type": "getInbox"})["devices"].([]interface{}) {
+		if d.(map[string]interface{})["address"] == address {
+			t.Fatalf("%s still in the inbox", address)
+		}
+	}
+}
+
+// Heating groups go through occulited's API, which names the group's
+// device itself
+func TestLiteHeatingGroups(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+	m := liteCall(t, conn, map[string]interface{}{"type": "getHeatingGroupMembers", "groupType": "hmip.heating.group"})
+	members := m["members"].(map[string]interface{})["assignable"].([]interface{})
+	if len(members) != 1 || members[0].(map[string]interface{})["id"] != "000A9D89A7AF25:1" {
+		t.Fatalf("members: %v", m)
+	}
+	m = liteCall(t, conn, map[string]interface{}{"type": "saveHeatingGroup", "group": map[string]interface{}{
+		"id": 0, "name": "Erdgeschoss", "type": "hmip.heating.group", "members": []string{"000A9D89A7AF25:1"},
+	}})
+	if m["success"] != true || m["id"] != 1.0 {
+		t.Fatalf("saveHeatingGroup: %v", m)
+	}
+	m = liteCall(t, conn, map[string]interface{}{"type": "getHeatingGroups"})
+	group := findByName(t, m["groups"], "Erdgeschoss")
+	if group["deviceAddress"] != "INT0000001" || len(group["members"].([]interface{})) != 1 {
+		t.Fatalf("group: %v", group)
+	}
+	if m := liteCall(t, conn, map[string]interface{}{"type": "deleteHeatingGroup", "id": 1}); m["success"] != true {
+		t.Fatalf("deleteHeatingGroup: %v", m)
+	}
+	if groups := liteCall(t, conn, map[string]interface{}{"type": "getHeatingGroups"})["groups"].([]interface{}); len(groups) != 0 {
+		t.Fatalf("not deleted: %v", groups)
+	}
+}

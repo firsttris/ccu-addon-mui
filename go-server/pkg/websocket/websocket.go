@@ -298,6 +298,8 @@ type Server struct {
 	capabilities Capabilities
 	// The platform's login gate, nil to log in here (gate.go)
 	gate GateFunc
+	// Heating groups kept elsewhere than in the HMServer (heating_groups.go)
+	groups GroupService
 }
 
 // DeviceRPC is the part of ccurpc.Client the server uses.

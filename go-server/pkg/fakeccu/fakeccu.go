@@ -41,6 +41,8 @@ type CCU struct {
 	// The event stream's messages and who follows it (occulited.go)
 	liteEvents  []liteEvent
 	liteStreams map[chan liteEvent]bool
+	liteGroups  []*liteGroup
+	liteGroupID int
 	// ConfigDir is the fake /etc/config, for the security settings
 	// flag files (sshEnabled, authEnabled, httpsRedirectEnabled)
 	ConfigDir string
