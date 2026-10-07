@@ -94,6 +94,18 @@ anlegen, Anmeldung (`AUTH_MODE=ccu`, ohne Schlüssel startet der Server nicht), 
 Einstellungen, Push und Diagramme einhängen, den Event-Server starten und bei BidCos-RF und HmIP-RF anmelden.
 Beim Beenden meldet er sich wieder ab.
 
+## Zwei Plattformen
+
+Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go build -tags lite` für
+[openccu-lite](https://github.com/hobbyquaker/openccu-lite), das keine ReGa und keine WebUI hat. Was sich
+unterscheidet, liegt hinter Schnittstellen: das Hausmodell (Räume, Gewerke, Kanäle, Namen, Favoriten,
+Servicemeldungen) hinter `home.Source` mit der ReGa (`pkg/rega`) bzw. occulites APIs (`pkg/occulite`), die
+Heizgruppen hinter `GroupService`, die Anmeldung hinter dem Gate von openccu-lite. Was nur eine CCU hat,
+verteilt `dispatch_ccu.go`, und die Dateien dafür bauen nur ins CCU-Paket. Auf openccu-lite kommen die
+Events statt über einen Callback-Server über occulites Event-Stream, der Verpasstes nachholt, und die Werte
+beim Start aus dessen Zustandsspeicher. Die App ist für beide gleich; der Server sagt ihr bei der Anmeldung,
+was es gibt.
+
 ## Schnittstellen der CCU
 
 Das Add-on verwendet ausschließlich die Schnittstellen, die auch die WebUI benutzt. Welche Funktion welche

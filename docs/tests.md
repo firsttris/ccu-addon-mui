@@ -9,9 +9,9 @@ echten Server und eine nachgebaute CCU.
 | Ebene | Was echt ist | Was nachgebaut ist | Tests | in der CI |
 |---|---|---|---:|:---:|
 | **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 307 in 57 Dateien | ✅ |
-| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU) | 295 Testfunktionen in 70 Dateien | ✅ |
+| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU), openccu-lite (Fake-Lite) | 295 Testfunktionen in 70 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests, jede Nachricht des Mocks an die App in den E2E-Tests | – | gegen `protocol/schema.json` | ✅ |
-| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 35 + 2 + 1 | ✅ |
+| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 35 + 2 + 2 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 74 | ✅ |
 | **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 72 | ✅ |
 
@@ -77,6 +77,12 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
   **echten** Server mit temporären Dateien, wartet auf die Anmeldung für Events und spricht dann über einen
   WebSocket-Client mit ihm: anmelden, schalten, Events, Rechte, Admin-Token, Paramsets, Anlernen,
   Verknüpfungen, Programme, Backup …
+- **openccu-lite** (`go test -tags lite ./...`): Dieselbe Fake-CCU im Lite-Modus (`fakeccu.CCU.Lite`) hat
+  keine ReGa und keine WebUI, sondern beantwortet occulites APIs aus derselben Fixture: Metadaten (Namen,
+  Räume, Gewerke), Sitzungen, Zustandsspeicher, Event-Stream, Servicemeldungen und Heizgruppen. Die
+  Integrationstests in `go-server/lite_integration_test.go` starten den Lite-Server dagegen: Anmeldung über
+  das Gate, Räume und Kanäle, Schalten mit dem Event aus dem Stream, Umbenennen, Layouts, Favoriten,
+  Posteingang, Heizgruppen, Servicemeldungen, Gesundheit, Regeln und Push.
 - **Protokoll-Vertrag**: Die Hilfsfunktion, die Nachrichten des Servers liest, prüft **jede** gegen
   `protocol/schema.json`. Ein eigener Test stellt sicher, dass das Schema unbekannte Felder ablehnt.
 
@@ -98,7 +104,8 @@ Sirene, Zutritt, Eingänge, Sensoren für Regen, Licht, CO₂, Feinstaub, Boden,
 Erreichbarkeit, Meldungen, Alarme, Favoriten, Startseite, Kacheln anordnen, die generische Kachel und
 *Alle Geräte*. `auth.spec.ts` prüft Anmeldung, Token über einen Neustart hinweg und Abmelden. `lite.spec.ts`
 lässt den Mock als openccu-lite antworten (`installWebSocketMock(page, { lite: true })`) und prüft, dass
-die App Programme, Systemvariablen, Alarme und die Systemeinstellungen ausblendet.
+die App Programme, Systemvariablen, Alarme und die Systemeinstellungen ausblendet und stattdessen auf
+Automationen und die Seiten von openccu-lite verweist.
 
 `npm run test:e2e:coverage` misst dabei die Abdeckung des Frontend-Codes (nyc, Bericht unter
 `coverage/playwright`).
@@ -164,8 +171,8 @@ der Workflow dafür eine eigene Auswahl `tiles`.
 
 | Workflow | Auslöser | Schritte |
 |---|---|---|
-| `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Unit-Tests, Build mit Typprüfung (`vite build && tsc`), Go-Build für ARM und x86, die `tar.gz`-Archive als Artefakt `addon` |
-| `go-unit-tests.yml` | Push und Pull Request auf `main` | `go test ./...` mit Coverage-Bericht als Artefakt |
+| `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Unit-Tests, Build mit Typprüfung (`vite build && tsc`), Go-Build für ARM und x86 und für openccu-lite (aarch64, x86_64), die `tar.gz`-Archive mit `.sha256` als Artefakt `addon` |
+| `go-unit-tests.yml` | Push und Pull Request auf `main` | `go vet` und `go test ./...` mit Coverage-Bericht als Artefakt, dasselbe mit `-tags lite` für openccu-lite |
 | `playwright-e2e.yml` | Push und Pull Request auf `main` | Im Docker-Image `mcr.microsoft.com/playwright` (Version aus der `package-lock.json`, kein Browser-Download): E2E mit Mock inkl. Anmeldung (4 Worker, mit Frontend-Coverage), Screenshot-Vergleich und E2E gegen den Stack auf zwei Runnern (`--shard`), Berichte als Artefakte |
 | `release.yml` | Tag `vX.Y.Z` | Die drei Workflows oben, dann die Release mit den Archiven und erzeugten Notizen |
 | `bump.yml` | von Hand | Version erhöhen, Tag `vX.Y.Z` anlegen und `release.yml` darauf starten |
@@ -178,6 +185,7 @@ Ein Pull Request wird erst gemergt, wenn alle Prüfungen grün sind.
 npm test                  # Vitest
 npm run typecheck         # TypeScript
 npm run test:go           # Go
+cd go-server && go test -tags lite ./...   # Go für openccu-lite
 npm run test:e2e          # Playwright mit Mock (startet Vite selbst)
 npm run test:stack        # Playwright gegen Go-Server + Fake-CCU
 npm run test:visual       # Screenshot-Vergleich
