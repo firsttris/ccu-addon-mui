@@ -133,6 +133,8 @@ Entwicklerwerkzeug *devconfig*.
 - **Benachrichtigungsregeln** ohne Programm: „Fenster seit 15 Minuten offen und kalt“, „Wasser erkannt“,
   „Tür nachts geöffnet“; in der WebUI braucht das ein Programm mit Verzögerung und ein E-Mail-Add-on
 - **Als App installierbar**, für Handy, Tablet und Wand, hell und dunkel, mit WakeLock
+- **Add-on-Update ohne Neustart der CCU**: prüfen und installieren direkt in der App; über die WebUI startet
+  die CCU3 dafür neu
 - **Kacheln anordnen** per Drag & Drop, für alle Geräte gleich
 - **Eigene Diagramme** für jeden Datenpunkt, ohne microSD-Karte
 - **Geräte-Gesundheit**: Batteriespannung mit Abschaltgrenze, Empfang in beide Richtungen, letzte Meldung

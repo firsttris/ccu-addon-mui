@@ -225,7 +225,7 @@ flowchart TB
   die App das Abo erneut und lädt alle Daten neu.
 - **Events** schreibt die App direkt in die gecachten Kanallisten. Nur der geänderte Kanal bekommt ein
   neues Objekt, alle anderen Kacheln rendern nicht neu. Ändert sich ein Wartungswert (`UNREACH`, `LOW_BAT`,
-  `CONFIG_PENDING` …), lädt sie zusätzlich Servicemeldungen und Geräteprobleme neu.
+  `CONFIG_PENDING` …), lädt sie zusätzlich die Geräteprobleme neu; die Servicemeldungen schickt der Server.
 - **Schalten** ist optimistisch: Die Kachel zeigt den neuen Zustand sofort. Lehnt die CCU ab, nimmt die App
   ihn zurück, aber nur, wenn inzwischen kein Event einen neueren Wert gebracht hat.
 - **Systemvariablen** melden keine Events. Der Server liest sie alle 5 s, einmal für alle Apps, die sie

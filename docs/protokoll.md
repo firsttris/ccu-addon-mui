@@ -12,8 +12,9 @@ entstehen die Typen der App, und die Go-Tests prüfen jede Nachricht des Servers
   passen. Fremde Webseiten können sich also nicht verbinden. Ohne `Origin` (z. B. `websocat`) geht es.
 - **Größe**: höchstens 128 KiB je Nachricht. Die größte Nachricht ist ein `subscribe` mit allen Kanaladressen.
 - **Keepalive**: Ping alle 54 s, nach 60 s ohne Pong ist die Verbindung tot.
-- **Reihenfolge**: Der Server arbeitet die Nachrichten einer Verbindung nacheinander ab. Der Sendepuffer
-  fasst 1024 Nachrichten; ist er voll, verwirft der Server und schreibt es ins Log.
+- **Reihenfolge**: Der Server arbeitet die Nachrichten einer Verbindung nacheinander ab, nur lesende
+  Anfragen laufen parallel (bis zu 4 je Verbindung), damit eine langsame Liste das Schalten nicht aufhält.
+  Der Sendepuffer fasst 1024 Nachrichten; ist er voll, verwirft der Server und schreibt es ins Log.
 - **App-Seite**: Timeout je Anfrage 20 s (Backup länger), Neuverbinden alle 3 s ohne Begrenzung.
 
 ## Nachrichten

@@ -96,14 +96,17 @@ die App-Dateien aus dem Service Worker; über das Netz gehen nur noch die Daten.
 - **iOS / iPadOS (Safari)**: Teilen → *Zum Home-Bildschirm*.
 - **Desktop (Chrome, Edge)**: Installieren-Symbol rechts in der Adressleiste.
 
-Updates des Add-ons holt sich die installierte App beim nächsten Start selbst.
+Nach einem Update des Add-ons lädt die installierte App die neue Version im Hintergrund und zeigt unten
+*Neu laden*. Erst ein Tipp darauf übernimmt sie, damit nichts mitten im Bearbeiten neu lädt.
 
 ### Wandtablet
 
 Für ein Tablet an der Wand:
 
 - **Startseite** im Menü auf *Favoriten* stellen und dort eine Liste nur für das Tablet anlegen.
-- Den Bildschirm hält die App über **WakeLock** an, solange sie im Vordergrund ist (nur mit HTTPS).
+- **Bildschirm anlassen** im Menü unter *Darstellung*: hält den Bildschirm über WakeLock an, solange die App
+  im Vordergrund ist. Als installierte App ist der Schalter anfangs an, im Browser-Tab aus. Er erscheint
+  nur, wo der Browser WakeLock kennt (HTTPS oder localhost).
 - **Effekte** im Menü auf *Dezent* oder *Aus* stellen, wenn das Tablet schwach ist.
 - Ein eigener CCU-Benutzer mit Stufe *Benutzer* für das Tablet verhindert, dass dort jemand einrichtet.
 

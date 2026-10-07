@@ -18,7 +18,7 @@ ab, erscheint nach zwei Sekunden ein roter Balken, und die App verbindet sich vo
 |---|---|
 | Navigation | Räume, Gewerke |
 | Ansichten | Favoriten, Alle Geräte, Systemvariablen, Programme, Diagramme, Geräte-Gesundheit, Einrichten |
-| Darstellung | Dunkles Design, Effekte (Aus, Dezent, Kräftig), Sprache (je Benutzer), Startseite (zuletzt geöffnet oder Favoriten) |
+| Darstellung | Dunkles Design, Effekte (Aus, Dezent, Kräftig), Sprache (je Benutzer), Startseite (zuletzt geöffnet oder Favoriten), Bildschirm anlassen (je Gerät) |
 | Konto | Benachrichtigungen (Push für Alarme, Servicemeldungen und Regeln), Passwort ändern, Abmelden |
 
 **Startseite**: die zuletzt geöffnete Ansicht, auf Wunsch immer die Favoriten. Gibt es noch keine Räume,
@@ -70,7 +70,7 @@ veraltet, und gerade der Befehl holt es zurück. Die Kachel zeigt es dann grau m
 
 | Kachel | Bedienung |
 |---|---|
-| **Thermostat** | Solltemperatur am Drehregler ziehen oder mit − und +; Modi Auto, Manuell, Boost, Aus; Ist-Temperatur, Luftfeuchte, Ventilöffnung, Fenster-offen; Kalender öffnet das Wochenprogramm |
+| **Thermostat** | Solltemperatur am Drehregler ziehen oder mit − und +; Modi Auto, Manuell, Boost, Aus, Urlaub; bei BidCos-Thermostaten Komfort- und Eco-Temperatur; Ist-Temperatur, Luftfeuchte, Ventilöffnung, Fenster-offen; Kalender öffnet das Wochenprogramm |
 | **Fußbodenheizung** | Ventilöffnung als Balken, Soll- und Ist-Temperatur |
 | **Licht, Schalter** | Antippen schaltet; Lampen leuchten in der Kachel, Schalter (z. B. Pumpe) haben einen Kippschalter |
 | **Dimmer** | Helligkeit am Balken ziehen, antippen schaltet ein und aus |
@@ -103,7 +103,7 @@ veraltet, und gerade der Befehl holt es zurück. Die Kachel zeigt es dann grau m
 | **Wasserschutz** | Absperrventil öffnen und schließen, Durchfluss und Wasserdruck |
 | **Taster** | kurz antippen oder für einen langen Tastendruck halten |
 | **Eingänge** | je nach Betriebsart: Tastendrücke leuchten auf, Kontakt offen oder geschlossen, Level |
-| **Energiezähler** | Leistung und Zählerstände, Gas mit Durchfluss |
+| **Energiezähler** | Leistung, Zählerstände und Einspeisung, wo vorhanden Spannung, Stromstärke und Frequenz; Gas mit Durchfluss |
 | **Zählersensor** (HM-ES-TX-WM) | Leistung und Zählerstand für den angeschlossenen Sensor (Strom, Gas oder IEC) |
 | **Access Point / DRAP** | Busspannung und Strom der Wired-Busse |
 | **Alle anderen** | generische Kachel aus der Gerätebeschreibung: Schalter, Auswahlfelder, Zahlen, Aktionen |
@@ -180,7 +180,7 @@ Administratoren kommen per Klick auf das Gerät zur Geräteseite.
 **Wochenprogramm** (Kalender auf der Thermostat-Kachel oder auf der Geräteseite): pro Tag eine Zeitleiste
 mit den Temperaturen. Zeiten ziehen, Abschnitte teilen oder löschen, Temperatur mit − und +, einen Tag
 auf Werktage, Wochenende oder alle Tage kopieren. Thermostate mit mehreren Profilen haben Reiter für
-Profil 1, 2 … Gespeichert wird wie jede Geräteeinstellung: Die App überträgt es aufs Gerät und zeigt, wann
+Profil 1, 2 …, Administratoren wählen dort auch, welches Profil aktiv ist. Gespeichert wird wie jede Geräteeinstellung: Die App überträgt es aufs Gerät und zeigt, wann
 es angekommen ist.
 
 <img src="screenshot-wochenprogramm.png" alt="Wochenprogramm eines Thermostats mit Zeitleiste je Tag" width="900">

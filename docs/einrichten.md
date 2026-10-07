@@ -2,8 +2,7 @@
 
 Der Bereich *Einrichten* im Menü ersetzt die Seiten *Einstellungen* und *Systemsteuerung* der WebUI.
 Geräte anlernen und konfigurieren, Verknüpfungen, Räume, Benutzer, Backups, Firmware und die
-Zentrale selbst: Alles geht ohne die alte WebUI. Bei jeder Funktion steht im Code, nach welcher Datei der
-WebUI sie gebaut ist.
+Zentrale selbst: Alles geht ohne die alte WebUI.
 
 <img src="screenshot-geraeteliste.png" alt="Einrichten: Seitenmenü und Geräteliste mit Typ, Adresse, Schnittstelle, Firmware und Status" width="900">
 
@@ -197,7 +196,7 @@ welches Funkmodul die Zentrale mit welchem BidCos-Gerät spricht, mit *Roaming*.
 
 | Bereich | Inhalt |
 |---|---|
-| **Versionen** | Add-on, Firmware der Zentrale, Produkt, ReGaHss-Version; auf der CCU Hardware, Seriennummer, Speicher, Laufzeit, Last, Temperatur, Betriebssystem, freier Platz und Netzwerkstatus (wie die Hilfe-Seite der WebUI); Funkmodule mit Status und **Duty Cycle**. **CCU-Firmware**: nach neuer Version suchen (OpenCCU oder eQ-3); bei OpenCCU **„Herunterladen und installieren“**: die CCU lädt das Release selbst von GitHub, der Server prüft die SHA256-Prüfsumme; der freie Speicher steht nur zur Info dabei (die 2,8 GB der WebUI sind mehr als die ganze Partition einer CCU3, ob das Update passt, prüft das Recovery-System); alternativ wie in der WebUI die Datei vom neuesten GitHub-Release selbst laden und mit *Firmware einspielen* hochladen; die Datei landet direkt auf dem Speicher der CCU statt im knappen RAM; vor dem Installieren wie in der WebUI auf Wunsch ein Backup; Lizenz bestätigen, installieren |
+| **Versionen** | Add-on (mit *Auf Update prüfen* und *Update installieren*, ohne Neustart der CCU), Firmware der Zentrale, Produkt, ReGaHss-Version; auf der CCU Hardware, Seriennummer, Speicher, Laufzeit, Last, Temperatur, Betriebssystem, freier Platz und Netzwerkstatus (wie die Hilfe-Seite der WebUI); Funkmodule mit Status und **Duty Cycle**. **CCU-Firmware**: nach neuer Version suchen (OpenCCU oder eQ-3); bei OpenCCU **„Herunterladen und installieren“**: die CCU lädt das Release selbst von GitHub, der Server prüft die SHA256-Prüfsumme; der freie Speicher steht nur zur Info dabei (die 2,8 GB der WebUI sind mehr als die ganze Partition einer CCU3, ob das Update passt, prüft das Recovery-System); alternativ wie in der WebUI die Datei vom neuesten GitHub-Release selbst laden und mit *Firmware einspielen* hochladen; die Datei landet direkt auf dem Speicher der CCU statt im knappen RAM; vor dem Installieren wie in der WebUI auf Wunsch ein Backup; Lizenz bestätigen, installieren |
 | **Hilfe und Lizenzen** | Dokumentation und Lizenz des Add-ons, OpenCCU-Dokumentation, Hilfe von eQ-3 (Homematic, Homematic IP), Lizenzinformationen der CCU-Software |
 | **Standort und Uhrzeit** | Koordinaten für Astro-Zeiten, Zeitzone, Zeitserver, Uhr stellen; **Neustart**, **Herunterfahren** und **Neustart im abgesicherten Modus** (Zusatzsoftware startet einmalig nicht, auch dieses Add-on nicht; die alte WebUI bleibt erreichbar); auf der eQ-3-Firmware die **Version der Logikschicht** (Standard oder Kompatibilitätsmodus) |
 | **Allgemeine Einstellungen** | Strom- und Gaspreise (für Diagramme), Info-LED, Beta-Firmware für Geräte, Meldungen „nicht erreichbar“ ausblenden, Speicherplatz der Diagramme |

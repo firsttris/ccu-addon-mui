@@ -21,9 +21,10 @@ an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
 
 ## 💡 Why?
 
-The CCU3 WebUI can do everything, but it looks like 2008: tables, popups, every page rendered by the
-server on each click, and values that are polled every few seconds. On a phone it is hardly usable.
-This add-on replaces it with a modern app that runs on the central unit itself:
+**Bring your CCU3 into the future.**
+
+A new interface, built for your phone. New features like push notifications and charts. And everything it
+can already do stays. Everything in one app, from the light switch to the program.
 
 - **Everything in one place**: control rooms, trades and favourites, and just as well pair devices,
   transfer settings, create direct links, write programs, make backups and install firmware.
@@ -46,7 +47,7 @@ This add-on replaces it with a modern app that runs on the central unit itself:
 
 ### 📱 Mobile first, as an app
 - Built for phone, tablet and wall, installable as an app (PWA)
-- Light and dark, screen stays on (WakeLock)
+- Light and dark, keep the screen on with a switch (WakeLock)
 - Live over WebSocket instead of polling every 3 seconds
 
 </td>
