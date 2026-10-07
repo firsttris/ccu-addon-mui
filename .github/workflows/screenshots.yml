@@ -18,10 +18,28 @@ permissions:
   contents: write
 
 jobs:
+  # The image the "Screenshots" check compares in, in the version of
+  # @playwright/test from the lockfile (as in playwright-e2e.yml)
+  playwright-image:
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.version.outputs.image }}
+    steps:
+      - name: Checkout lockfile
+        uses: actions/checkout@v4.1.1
+        with:
+          sparse-checkout: package-lock.json
+          sparse-checkout-cone-mode: false
+
+      - name: Read version
+        id: version
+        run: echo "image=mcr.microsoft.com/playwright:v$(jq -r '.packages["node_modules/@playwright/test"].version' package-lock.json)-noble" >> "$GITHUB_OUTPUT"
+
   update:
+    needs: playwright-image
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: ${{ needs.playwright-image.outputs.image }}
       options: --ipc=host
 
     steps:

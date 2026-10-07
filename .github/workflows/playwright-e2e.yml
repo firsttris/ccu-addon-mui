@@ -21,11 +21,36 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  e2e-frontend-mocked:
-    name: Frontend E2E
+  # All jobs run in Microsoft's Playwright image: browser and system packages
+  # are in it, nothing is installed, and the screenshots render the same on
+  # every run. Its version must match @playwright/test, so it comes from the
+  # lockfile instead of being written here.
+  playwright-image:
+    name: Playwright image
     # Draft pull requests do not build; "Ready for review" starts the run
     if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.version.outputs.image }}
+
+    steps:
+      - name: Checkout lockfile
+        uses: actions/checkout@v4.1.1
+        with:
+          sparse-checkout: package-lock.json
+          sparse-checkout-cone-mode: false
+
+      - name: Read version
+        id: version
+        run: echo "image=mcr.microsoft.com/playwright:v$(jq -r '.packages["node_modules/@playwright/test"].version' package-lock.json)-noble" >> "$GITHUB_OUTPUT"
+
+  e2e-frontend-mocked:
+    name: Frontend E2E
+    needs: playwright-image
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.playwright-image.outputs.image }}
+      options: --ipc=host
 
     steps:
       - name: Checkout code
@@ -39,9 +64,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
 
       - name: Run frontend E2E tests with coverage
         run: rm -rf .nyc_output coverage/playwright && mkdir -p .nyc_output && PW_COVERAGE=1 npx playwright test --project=chromium --reporter=github,html
@@ -76,13 +98,12 @@ jobs:
 
   visual:
     name: Screenshots
-    if: ${{ !github.event.pull_request.draft }}
+    needs: playwright-image
     runs-on: ubuntu-latest
-    # The baselines come from this image: the same fonts and rendering on
-    # every run (e2e/visual.spec.ts). Keep its version at the one of
-    # @playwright/test in package.json; "Update screenshots" uses it too.
+    # The baselines come from this image (e2e/visual.spec.ts); "Update
+    # screenshots" takes them in the same one
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: ${{ needs.playwright-image.outputs.image }}
       options: --ipc=host
 
     steps:
@@ -106,9 +127,21 @@ jobs:
           if-no-files-found: ignore
 
   e2e-stack:
-    name: Stack E2E (fake CCU)
-    if: ${{ !github.event.pull_request.draft }}
+    name: Stack E2E (fake CCU) ${{ matrix.shard }}/2
+    needs: playwright-image
     runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.playwright-image.outputs.image }}
+      options: --ipc=host
+    # The tests share one fake CCU and run one after the other, so they are
+    # split across two runners, each with its own stack
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    env:
+      # Pure Go; the image has no C compiler
+      CGO_ENABLED: '0'
 
     steps:
       - name: Checkout code
@@ -129,16 +162,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
-
       - name: Run frontend + server against the fake CCU
-        run: npm run test:stack
+        run: npm run test:stack -- --shard=${{ matrix.shard }}/2
 
       - name: Upload Playwright test results
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-stack-test-results
+          name: playwright-stack-test-results-${{ matrix.shard }}
           path: test-results/
           if-no-files-found: ignore
