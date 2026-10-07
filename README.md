@@ -11,7 +11,7 @@ ein Add-on für CCU3 und OpenCCU, das die alte WebUI im Alltag ersetzt.
 [![Downloads](https://img.shields.io/github/downloads/firsttris/ccu-addon-mui/total?label=Downloads&color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-yellow)](LICENSE)
 <br>
-[![CCU3 | OpenCCU](https://img.shields.io/badge/Zentrale-CCU3%20%7C%20OpenCCU-1d4ed8)](docs/installation.md)
+[![CCU3 | OpenCCU | openccu-lite](https://img.shields.io/badge/Zentrale-CCU3%20%7C%20OpenCCU%20%7C%20openccu--lite-1d4ed8)](docs/installation.md)
 [![HmIP | BidCos-RF | HmIP Wired](https://img.shields.io/badge/Funk-HmIP%20%7C%20BidCos--RF%20%7C%20HmIP%20Wired-1d4ed8)](docs/geraete.md)
 [![Go](https://img.shields.io/badge/Go-statisches%20Binary-00add8?logo=go&logoColor=white)](docs/architektur.md)
 [![React](https://img.shields.io/badge/React-19-20232a?logo=react&logoColor=61dafb)](https://react.dev/)
@@ -237,6 +237,12 @@ Mehr Bilder in [Bedienung](docs/bedienung.md) und [Einrichten](docs/einrichten.m
    - OpenCCU auf **x86** (VM/OVA für Proxmox, VMware, VirtualBox, Synology; Docker, LXC; Mini-PC wie Intel NUC): `mui-<version>-x86_64-pc.tar.gz`
 2. In der WebUI unter *Einstellungen → Systemsteuerung → Zusatzsoftware* hochladen und installieren. OpenCCU startet das Add-on sofort, die CCU3 mit eQ-3-Firmware startet dafür neu.
 3. **http://&lt;IP-der-CCU&gt;/addons/mui** öffnen und mit einem Benutzer der CCU anmelden.
+
+Auf **[openccu-lite](https://github.com/hobbyquaker/openccu-lite)** gibt es ein eigenes Paket
+(`mui-<version>-aarch64-lite.tar.gz` für den Raspberry Pi, `mui-<version>-x86_64-lite.tar.gz` als VM). Dort
+erscheint MUI im Menü von openccu-lite, die Anmeldung ist die von openccu-lite. Programme und
+Systemvariablen gibt es dort nicht, Geräte anlernen, einstellen, verknüpfen und bedienen schon. Mehr in der
+[Installation](docs/installation.md#openccu-lite).
 
 Danach als App auf den Startbildschirm legen. Updates installiert die App selbst, ohne Neustart der CCU (*Einrichten → System → Auf Update prüfen*). HTTPS,
 Optionen wie `AUTH_MODE` und Deinstallation stehen in der [Installation](docs/installation.md).

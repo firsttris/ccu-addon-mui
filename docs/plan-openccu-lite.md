@@ -4,6 +4,32 @@ Stand: Oktober 2026, openccu-lite `v1.0.0-dev.42`. Dieser Plan beschreibt, wie d
 OpenCCU auch auf [openccu-lite](https://github.com/hobbyquaker/openccu-lite) läuft, aus einem Branch und
 einer Codebasis.
 
+## Stand der Umsetzung
+
+Die Schritte 1 bis 8 sind umgesetzt und mit Tests gegen die Fake-CCU im Lite-Modus abgesichert
+(`go test -tags lite ./...`, `e2e/lite.spec.ts`); der Branch baut beide Pakete. Offen ist nur, was ein
+echtes openccu-lite braucht:
+
+- [ ] Test auf einer echten openccu-lite-VM (OVA) nach der Checkliste unten (Abschnitt *Tests*).
+- [ ] Release mit den Lite-Paketen und ihren `.sha256` (der Build erzeugt beides).
+- [ ] Pull Request auf occulites [`catalog/catalog.json`](https://github.com/hobbyquaker/occulited/blob/master/catalog/catalog.json)
+  mit dem Eintrag
+  `{"git": "https://github.com/firsttris/ccu-addon-mui", "manifest": "addon_installer/openccu-lite.json"}`.
+  Das System liest das Manifest an der neuesten Release, also erst nach einer Release mit dieser Datei.
+- [ ] Die offenen Fragen an Sebastian (unten), vor allem Layouts pro Raum, gemeinsame Favoriten und die
+  Stufe für Namen und Räume.
+
+Abweichungen vom Plan:
+
+- **Favoriten** liegen vorerst in der eigenen Datei `mui-lite.json`, nicht im `favorite`-Enum von
+  occulited: Dort hat jedes Konto genau eine Liste, MUI kennt mehrere benannte Listen.
+- **Gerätefirmware** verwaltet occulites Update-Seite; MUI zeigt dort nur den Link. Das Update eines
+  einzelnen Geräts aus seiner Geräteseite geht weiter.
+- **Gerätebilder** gibt es auf openccu-lite nicht (keine WebUI-Dateien); die Kacheln zeigen dort ihr Symbol.
+- **Im Lite-Binary** steckt noch der ReGa-Client, weil `websocket.Server` ihn als Feld kennt. Erreichbar ist
+  er dort nicht: Der Verteiler schickt keine Anfrage an die CCU-Handler, deren Dateien gar nicht mitgebaut
+  werden. Ganz heraus käme er erst, wenn auch die übrigen gemeinsamen Handler hinter Schnittstellen liegen.
+
 ## Worum es geht
 
 openccu-lite ist ein Fork von OpenCCU ohne ReGaHSS. Der Funk-Stack (`rfd`, `hs485d`, `HMIPServer`) bleibt,

@@ -17,6 +17,17 @@ protokolliert.
   Client erfinden. Die Sperre gilt für Anmeldung, Admin-Token, Passwort ändern und die Passwortabfragen bei
   Backup und Restore.
 
+### Auf openccu-lite
+
+Dort meldet nicht das Add-on an, sondern openccu-lite: Jede Anfrage unter `/addons/` geht durch occulites
+Sitzungs-Gate, das ohne Anmeldung auf `/login` umleitet und die Sitzung im Header `X-Occulite-Session`
+weitergibt, auch am WebSocket-Upgrade. Der Server prüft sie bei occulited (`/api/auth/v1/state`, nur eine
+angemeldete Sitzung mit derselben `sid` zählt) und übernimmt Benutzer und Stufe: *configure* und
+*administer* sind Administratoren, *operate* Benutzer, *read* Gäste. Dem Header traut der Server nur im
+Paket für openccu-lite; auf der CCU könnte ihn jeder Client selbst setzen. Tokens, Sitzungsliste und die
+erneute Passworteingabe gibt es dort nicht. Das Add-on läuft als eigener Benutzer ohne Root und schreibt nur
+in seine eigenen Verzeichnisse.
+
 ## Tokens
 
 Nach der Anmeldung bekommt die App Tokens, die der Server mit HMAC-SHA256 signiert:

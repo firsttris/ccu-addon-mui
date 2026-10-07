@@ -53,10 +53,19 @@ jobs:
       - name: Build app
         run: npm run build
 
-      # The add-on archives for ARM and x86, to install from a pull request; the release attaches them
+      # A .sha256 beside every archive, with the bare file name, so
+      # `sha256sum -c` works and openccu-lite's catalogue verifies the download
+      # (ccu-addon-howto docs/07-updates-and-releases.md)
+      - name: Checksums
+        run: for f in mui-*.tar.gz; do sha256sum "$f" > "$f.sha256"; done
+
+      # The add-on archives for the CCU (ARM, x86) and openccu-lite (aarch64, x86_64) with their
+      # checksums, to install from a pull request; the release attaches them
       - name: Upload add-on archives
         uses: actions/upload-artifact@v4
         with:
           name: addon
-          path: mui-*.tar.gz
+          path: |
+            mui-*.tar.gz
+            mui-*.tar.gz.sha256
           if-no-files-found: error

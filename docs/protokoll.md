@@ -6,8 +6,9 @@ entstehen die Typen der App, und die Go-Tests prüfen jede Nachricht des Servers
 
 ## Verbindung
 
-- **Endpunkt**: `ws://<CCU>/ws/mui` bzw. `wss://` über HTTPS. lighttpd leitet an den Server auf
-  `127.0.0.1:8088` weiter.
+- **Endpunkt**: `ws://<CCU>/addons/mui/ws` bzw. `wss://` über HTTPS; `/ws/mui` geht weiterhin. lighttpd
+  leitet an den Server auf `127.0.0.1:8088` weiter. Auf openccu-lite gibt es nur den Pfad unter `/addons/`,
+  weil nur dort occulites Gate die Sitzung weitergibt.
 - **Origin**: Schickt der Browser einen `Origin`, muss sein Hostname zum `Host` (oder `X-Forwarded-Host`)
   passen. Fremde Webseiten können sich also nicht verbinden. Ohne `Origin` (z. B. `websocat`) geht es.
 - **Größe**: höchstens 128 KiB je Nachricht. Die größte Nachricht ist ein `subscribe` mit allen Kanaladressen.
@@ -70,6 +71,15 @@ Vor der Anmeldung sind nur `auth` und `login` erlaubt; alles andere beantwortet 
    `TOO_MANY_ATTEMPTS`, `CCU_UNREACHABLE`.
 4. Ist das Admin-Token abgelaufen, antworten Einrichtungsaktionen mit `ELEVATION_REQUIRED`; die App fragt
    das Passwort ab und schickt `{"type": "elevate", "password"}`.
+
+Eine erfolgreiche `auth_response` sagt außerdem, worauf das Add-on läuft: `platform` ist `ccu` (CCU3,
+OpenCCU) oder `lite` (openccu-lite), `capabilities` sagt, was es dort gibt (`programs`, `sysvars`, `alarms`,
+`history`, `system`, `users`, `selfUpdate`, `channelOptions`, `comTest`). Auf openccu-lite sind alle aus,
+und Nachrichten für diese Teile beantwortet der Server mit `unknown message type`.
+
+Auf openccu-lite meldet occulites Gate die Sitzung am WebSocket-Upgrade. `auth` und `login` antworten dort
+ohne Token mit dem Benutzer und der Stufe von openccu-lite (`authRequired: false`); ohne Sitzung kommt
+`LOGIN_REQUIRED`.
 
 Format und Prüfung der Tokens stehen in [Sicherheit](sicherheit.md).
 

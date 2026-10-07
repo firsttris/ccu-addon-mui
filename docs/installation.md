@@ -10,6 +10,7 @@ Rechner, Docker oder eine Cloud werden nicht gebraucht.
   LXC). `mui-<version>-arm-ccu3-raspi.tar.gz` ist für die CCU3 und jeden Raspberry Pi (auch mit
   64-bit-OpenCCU), `mui-<version>-x86_64-pc.tar.gz` für OpenCCU auf x86 (PC, OVA, Docker, LXC). Das falsche
   Archiv bricht mit „Error (2)“ ab.
+- **openccu-lite** hat ein eigenes Paket, siehe [openccu-lite](#openccu-lite).
 - **Räume oder Gewerke**: Das Dashboard zeigt Kanäle nach Raum und Gewerk. Ohne Zuordnung erscheint ein
   Gerät nur unter *Alle Geräte*. Zuordnen kannst du direkt im Add-on (siehe [Einrichten](einrichten.md)).
 - **Browser**: aktuelle Versionen von Chrome, Edge, Firefox oder Safari, auf Desktop, Tablet und Handy.
@@ -32,6 +33,32 @@ und *Deinstallieren*.
 
 Ab dann geht es auch ohne die alte WebUI: Weitere Add-ons installierst du unter *Einrichten → System →
 Zusatzsoftware* im Add-on selbst.
+
+## openccu-lite
+
+[openccu-lite](https://github.com/hobbyquaker/openccu-lite) ist ein Fork von OpenCCU ohne ReGaHSS und ohne
+die alte WebUI; die Systemverwaltung macht dort occulited. MUI ist dort die Oberfläche für die Geräte:
+anlernen, einstellen, direkt verknüpfen, Heizgruppen, Räume und Gewerke, und bedienen mit Kacheln.
+
+- **Paket**: `mui-<version>-aarch64-lite.tar.gz` für den Raspberry Pi 3/4/5, `mui-<version>-x86_64-lite.tar.gz`
+  für die VM (OVA). Installiert wird es unter *Zusatzsoftware* von openccu-lite, später auch aus dessen
+  Katalog. Die CCU-Pakete starten auf openccu-lite nicht und umgekehrt.
+- **Öffnen**: MUI erscheint im Menü von openccu-lite und läuft dort im Rahmen, mit dessen Hell/Dunkel und
+  Sprache. Direkt geht es unter **http://&lt;IP&gt;/addons/mui/**.
+- **Anmeldung**: die von openccu-lite. Die Stufen *configure* und *administer* sind in MUI Administratoren
+  (ohne erneute Passworteingabe), *operate* Benutzer, *read* Gäste.
+- **Was es dort nicht gibt**: Programme, Systemvariablen und Alarme, weil sie die ReGa brauchen. Automationen
+  laufen auf openccu-lite in einem eigenen System, etwa Node-RED (RedMatic), Home Assistant oder ioBroker;
+  einfache Abläufe gehen als Direktverknüpfung. Netzwerk, Firewall, Benutzer, Sicherung, Updates und
+  Gerätefirmware verwaltet openccu-lite selbst, MUI verlinkt dorthin.
+- **Updates** kommen über die Zusatzsoftware bzw. den Katalog von openccu-lite, nicht aus der App.
+- **Daten**: Kachel-Layouts, Favoriten, Regeln, Diagramme und Push-Abos liegen in
+  `/usr/local/etc/config/addons/mui/`, Namen, Räume und Gewerke im Metadaten-Speicher von openccu-lite.
+  Das Add-on läuft dort als eigener Benutzer und schreibt nur in seine Verzeichnisse; das Log steht im
+  Journal (`journalctl -u addon-mui`).
+
+openccu-lite ist noch in Entwicklung (Vorabversionen). Rückmeldungen von echten Installationen sind sehr
+willkommen.
 
 ## Aktualisieren
 
