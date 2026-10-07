@@ -2,7 +2,7 @@
 
 PR: https://github.com/firsttris/ccu-addon-mui/pull/191
 Branch: `claude/sweet-goldberg-72zf4r-openccu-lite`
-Stand: 2026-10-07. Zeilenangaben beziehen sich auf den PR-Branch (`go-server/`).
+Stand: 2026-10-07, PR-Head `e89bcbf`. Zeilenangaben beziehen sich auf den PR-Branch (`go-server/`).
 Ergänzt `REVIEW-PR191.md` (Korrektheit); hier geht es nur um die API-Nutzung.
 
 ## Ist-Zustand im PR
@@ -10,22 +10,27 @@ Ergänzt `REVIEW-PR191.md` (Korrektheit); hier geht es nur um die API-Nutzung.
 | Bereich | Heute im PR | Was die API bietet |
 | --- | --- | --- |
 | Werte | ✅ einmal `GET /api/rpc/v1/state?limit=5000` seeden (`pkg/occulite/rpc.go:31-55`), dann SSE `GET /api/rpc/v1/events` mit `Last-Event-ID`, Resync bei Verlust (`main_lite.go:100-135`). In-Memory-Map in `Home` (`home.go:95-124`). | genau so gedacht |
-| Metadaten (Namen, Räume, Gewerke) | ❌ `GET /api/meta/v1/snapshot` bei **jedem** Aufruf (`home.go:75-79`; Aufrufer `:162, :170, :210, :234, :266` u. a.) | Snapshot einmal + `GET /api/meta/v1/events/sse?since=<revision>` (`meta-api.md` Z. 106-169) |
+| Metadaten (Namen, Räume, Gewerke) | ⚠️ Der Change-Stream wird bereits gefolgt (`metastream.go`, `FollowMeta` ab `:97`), aber nur, um die eigenen Layouts bei `node.moved`/`node.deleted` nachzuziehen. `GET /api/meta/v1/snapshot` wird weiterhin bei **jedem** Lese-/Schreibaufruf geholt (`home.go:75-79`; Aufrufer `:162, :170, :210, :234, :266, :462`) | Snapshot einmal + Stream auf den lokalen Snapshot anwenden (`meta-api.md` Z. 106-169) |
 | Geräteliste | ❌ `ListDevices` auf jedem Interface bei jedem `channels()`-Aufruf (`home.go:313-336`), zusätzlich in `interfaceOf` bei Miss (`:343`) und `channelByID` (`:353`) | Device-Events kommen schon über den Stream (`main_lite.go:118`), `?devices=1` liefert `newDevices` mit kompletten Descriptions |
-| Werte-Seed pro Kanal | ⚠️ `readValues` ruft `GetParamset(VALUES)` seriell pro nicht-BidCos-Kanal ohne Werte (`home.go:452-471`) | State-Store liefert die „chosen set“-Werte bereits; Rest gebündelt via `system.multicall` |
-| Heizgruppen | ⚠️ `GET /groups` + `GET /groups/{id}` pro Gruppe (`groups.go:40-50`) | API-bedingt (Liste enthält keine Mitglieder); nur parallelisierbar |
+| Werte-Seed pro Kanal | ⚠️ `readValues` ruft `GetParamset(VALUES)` seriell pro nicht-BidCos-Kanal ohne Werte (`home.go:440-458`); BidCos wird bereits übersprungen ✅ | State-Store liefert die „chosen set“-Werte bereits; Rest gebündelt via `system.multicall` |
+| Heizgruppen | ⚠️ `GET /groups` + `GET /groups/{id}` pro Gruppe, seriell (`groups.go:55-80`) | API-bedingt (Liste enthält keine Mitglieder); nur parallelisierbar |
 | Auth-Token | ℹ️ Token-Datei pro Request von Platte (`client.go:57-66`) | bewusst so, gering |
 
 ## Änderungen
 
 ### 1. Meta-Snapshot cachen und per Change-Stream aktuell halten (größter Hebel)
 
-- `Home` bekommt `snapshot Snapshot` + `revision` unter `h.mu`.
-- Beim Start: `GET /api/meta/v1/snapshot` einmal laden, `revision` merken.
-- Goroutine: `GET /api/meta/v1/events/sse?since=<revision>` folgen (Reconnect mit
-  Backoff wie in `rpc.go:84-182`). Events `object.updated`, `node.*`, `import` auf den
-  lokalen Snapshot anwenden; bei `import` oder Lücke (Server kennt `since` nicht mehr)
-  Snapshot neu laden.
+- Der Stream läuft schon: `FollowMeta` (`metastream.go:97`) mit Reconnect/Backoff und
+  `since`. Es fehlt nur, dass `onMetaEvent` (`:125`) den **lokalen Snapshot** pflegt
+  statt bei `node.moved` selbst wieder `h.snapshot()` zu rufen (`:131`).
+- `Home` bekommt `snapshot Snapshot` + `revision` unter `h.mu`. Beim Start einmal
+  `GET /api/meta/v1/snapshot` laden, `revision` merken, `FollowMeta` mit dieser
+  Revision starten statt mit 0.
+- In `onMetaEvent`: `object.updated` → Objekt im Snapshot ersetzen; `node.*` → Enum-Baum
+  anpassen; `import` oder Lücke (Server kennt `since` nicht mehr, Stream antwortet mit
+  Fehler) → Snapshot komplett neu laden. Die bestehende Layout-Logik (`moveLayouts`)
+  liest dann aus dem lokalen Snapshot.
+- `h.snapshot()` gibt den lokalen Snapshot zurück (Kopie oder read-locked).
 - Alle Leser (`GetRooms`, `GetTrades`, `GetChannels`, `GetAllChannels`,
   `GetDeviceNames`) lesen den lokalen Snapshot.
 - Schreiber (`SetName`, `SetGroupMember`, `CreateGroup`, `changeNode`) schreiben über

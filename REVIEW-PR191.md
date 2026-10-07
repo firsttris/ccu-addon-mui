@@ -4,6 +4,9 @@ PR: https://github.com/firsttris/ccu-addon-mui/pull/191
 Branch: `claude/sweet-goldberg-72zf4r-openccu-lite`
 Review-Stand: 2026-10-07, zwei Durchgänge (Standard + high effort, alle Findings).
 
+**Update:** Der PR wurde nach dem Review überarbeitet (Head `e89bcbf`). Jeder Punkt trägt
+jetzt eine Stand-Zeile. Offen sind nur noch die Performance-Punkte E1 bis E3.
+
 Die Grundstruktur (eigenes `occulite`-Paket, Plattform-Gate, Capabilities im Frontend)
 ist sauber. Die folgenden Punkte sind nach Schwere sortiert. Jeder Punkt nennt
 Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
@@ -13,6 +16,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
 ## A. Blockierend (vor dem Merge fixen)
 
 ### A1. `saveDiagram` panict auf openccu-lite
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt (startSeries nutzt s.home, History hinter capabilities.History)
 - **Datei:** `go-server/pkg/websocket/diagrams.go:221-233`
 - **Problem:** `startSeries` ruft `s.regaClient.GetAllChannels()` und `GetHistory` auf
   dem `*rega.Client` auf. Im lite-Build ist der nil. Der Handler wird auf beiden
@@ -24,6 +28,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
   CCU-only) hinter einen nil-/Capability-Guard legen.
 
 ### A2. Raum/Gewerk-Zuordnung ignoriert vom Gerät geerbte Enums
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt (Commit „Räume nur am Kanal“: channelEnums liest nur die Kanal-Enums)
 - **Datei:** `go-server/pkg/occulite/home.go:255` (`SetGroupMember`) und `:409` (`channel()`)
 - **Problem:** `channel()` zeigt einen Kanal in den Enums seines Geräts, wenn das
   Kanal-Objekt keine eigenen hat. `SetGroupMember` liest aber nur `object.Enums`
@@ -36,6 +41,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
   Fallback in `channel()` entfernen.
 
 ### A3. Service-Meldungen lassen sich nicht quittieren
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt, bewusst anders: nicht-sticky Meldungen antworten NOT_SUPPORTED (occulited-Meldungen sind read-only), App bietet kein Quittieren an
 - **Datei:** `go-server/pkg/occulite/messages.go:417` (`AcknowledgeServiceMessage`)
 - **Problem:** Liefert für alles außer `STICKY_*` ein `SetNotFound`.
 - **Szenario:** Lite-Admin quittiert LOW_BAT / UNREACH / CONFIG_PENDING → App zeigt
@@ -45,6 +51,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
   Fehlercode liefern).
 
 ### A4. Sprachprofile werden in `/etc/config/userprofiles` geschrieben
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt (language.go nutzt DataDir auf lite)
 - **Datei:** `go-server/pkg/websocket/language.go:23`, `go-server/cmd/.../main_lite.go`
 - **Problem:** User-Sprachdateien liegen weiter unter `cfg.ConfigDir`. Auf lite ist das
   für das Add-on vermutlich nicht schreibbar; `main_lite.go` setzt das Verzeichnis nie
@@ -54,6 +61,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
 - **Fix:** Profilverzeichnis im lite-Build auf `cfg.DataDir` zeigen lassen.
 
 ### A5. Abgelaufene lite-Session führt in ein totes CCU-Login-Formular
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt (eigener Code SESSION_REQUIRED, authRequired false)
 - **Datei:** `go-server/pkg/websocket/gate.go:31`, `src/hooks/useWebsocket.tsx:365`
 - **Problem:** Findet das lite-Gate keine Session, antwortet der Server mit
   `LOGIN_REQUIRED` + `authRequired:true`. Die App rendert daraufhin ihr eigenes
@@ -69,6 +77,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
 ## B. Sicherheit / Auth
 
 ### B1. Session wird nur beim WebSocket-Upgrade geprüft
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt (gate.go prüft die Session periodisch, gateRecheck-Ticker)
 - **Datei:** `go-server/pkg/websocket/websocket.go:527`
 - **Problem:** Logout oder Widerruf der Session in openccu-lite wirkt nicht auf
   bereits offene Sockets; `client.authenticated` und `alwaysElevated` bleiben gesetzt.
@@ -78,6 +87,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
   gegen occulited validieren; bei Fehler Socket schließen.
 
 ### B2. `elevate` liefert mit Plattform-Gate für jeden Client Erfolg
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt (handleElevate prüft gateSession.Level == LevelAdmin)
 - **Datei:** `go-server/pkg/websocket/websocket.go:1122` (`handleElevate`)
 - **Problem:** Bei `s.auth == nil` (lite) bekommt auch ein „operate“-User
   `elevated:true`, entgegen der Regel in `gate.go` („only administrators are elevated“).
@@ -92,6 +102,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
 ## C. Frontend
 
 ### C1. `useSysvars` / `usePrograms` nicht per Capability gegated
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt (useSysvars/usePrograms mit enabled aus useCapabilities)
 - **Datei:** `src/queries/index.ts:252`; Verwender: Favorites, FavoriteEditor,
   DiagramEditor, DeviceSysvars
 - **Problem:** Auf lite werden `getSysvars`/`getPrograms` weiter gesendet; Server
@@ -104,6 +115,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
 ## D. Korrektheit / Randfälle
 
 ### D1. Deduplizierte Raum-/Gewerk-ID kann 32 Zeichen überschreiten
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt (Suffix wird innerhalb der 32 Zeichen angehängt)
 - **Datei:** `go-server/pkg/occulite/home.go:209`
 - **Problem:** `slug(name)` kürzt auf 32 Zeichen, danach wird `-2` angehängt → 34 Zeichen.
 - **Szenario:** Zweiter Raum mit langem Namen → occulited lehnt die Node-ID ab
@@ -115,6 +127,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
 ## E. Performance
 
 ### E1. Snapshot und `listDevices` werden pro Request neu geholt (kein Cache)
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ⬜ offen; Infrastruktur dafür ist jetzt da: FollowMeta/MetaEvents folgen dem Change-Stream bereits (metastream.go), aber nur für die Layouts. snapshot() holt weiterhin pro Aufruf, channels() listet weiterhin pro Aufruf. Siehe PR191-API-BESSER-NUTZEN.md Punkt 1+2
 - **Datei:** `go-server/pkg/occulite/home.go:75-79` (Snapshot), `:313-336` (`channels()`),
   `:343` (`interfaceOf`), `:353` (`channelByID`), `main_lite.go:118-121`
 - **Problem:** Jeder Aufruf von GetRooms/GetTrades/GetChannels/GetAllChannels/SetName/
@@ -131,6 +144,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
   Dann sind Raum-/Kanal-Anfragen reine In-Memory-Filter.
 
 ### E2. `GetChannels(objectID)` baut alle Kanäle des Homes und filtert erst danach
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ⬜ offen (GetChannels baut weiter alle Kanäle und filtert dann)
 - **Datei:** `go-server/pkg/occulite/home.go:473`
 - **Problem:** Pro Raum/Gewerk/Favoriten-Request: voller Snapshot-HTTP-Call + Pass über
   alle Kanäle aller Interfaces inkl. Value- und Store-Reads. Auf der CCU besucht das
@@ -138,6 +152,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
 - **Fix:** `h.channels()` vor dem `channel()`-Aufruf anhand der Refs der Gruppe filtern.
 
 ### E3. N+1 bei Heizgruppen
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ⬜ offen (Groups.List weiterhin seriell N+1; API-bedingt, nur parallelisieren)
 - **Datei:** `go-server/pkg/occulite/groups.go:244` (`Groups.List`)
 - **Problem:** Pro Gruppe ein extra `GET /api/system/v1/groups/<id>`, obwohl die
   Listenantwort die kopierten Felder schon enthält. `handleHeatingGroupChange` ruft
@@ -149,6 +164,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
 ## F. Kleinigkeiten / Aufräumen
 
 ### F1. Toter `default`-Zweig in `virtual_keys.go`
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt (kein regaClient-Fallback mehr in virtual_keys.go)
 - **Datei:** `go-server/pkg/websocket/virtual_keys.go:22-26`
 - **Problem:** `*rega.Client` implementiert `GetVirtualKeys() ([]home.VirtualKey, error)`
   bereits (`rega.VirtualKey` ist ein Alias), also gewinnt immer der erste Case; der
@@ -157,6 +173,7 @@ Datei:Zeile, das Problem, ein konkretes Fehlerszenario und einen Fix-Vorschlag.
   aufnehmen) und den `regaClient`-Zweig entfernen.
 
 ### F2. Falscher Dateiverweis im Kommentar
+- **Stand (PR-Head e89bcbf, 2026-10-07):** ✅ erledigt (Kommentar zeigt auf src/hooks/capabilities.ts)
 - **Datei:** `go-server/pkg/websocket/platform.go:11`
 - **Problem:** Kommentar verweist auf `src/hooks/useCapabilities.ts`; die Datei heißt
   `src/hooks/capabilities.ts`.
