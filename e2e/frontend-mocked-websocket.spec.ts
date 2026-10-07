@@ -692,8 +692,16 @@ test('ordnet die Kacheln eines Raums per Drag & Drop an', async ({ page }) => {
   const key = await first.getAttribute('data-tile-key');
   const box = (await first.boundingBox())!;
 
-  // Drag the first tile to the right by a few columns
+  // Only the grip starts a drag
   await page.mouse.move(box.x + 20, box.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 420, box.y + 30, { steps: 10 });
+  await page.mouse.up();
+  expect((await first.boundingBox())!.x).toBe(box.x);
+
+  // Drag the first tile to the right by a few columns
+  const grip = (await first.locator('.tile-drag-handle').boundingBox())!;
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + 300, box.y + 30, { steps: 10 });
   await page.mouse.move(box.x + 420, box.y + 30, { steps: 10 });

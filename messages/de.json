@@ -679,7 +679,7 @@
   "LAYOUT_ARRANGE": "Anordnen",
   "LAYOUT_DONE": "Fertig",
   "LAYOUT_RESET": "Automatisch anordnen",
-  "LAYOUT_HINT": "Kacheln innerhalb ihres Bereichs ziehen; an der rechten Kante die Breite ändern. Bereiche mit den Pfeilen verschieben. Gilt auf allen Geräten.",
+  "LAYOUT_HINT": "Kacheln am Griff innerhalb ihres Bereichs ziehen; an der rechten Kante die Breite ändern. Bereiche mit den Pfeilen verschieben. Gilt auf allen Geräten.",
   "LAYOUT_SAVED": "Anordnung gespeichert",
   "PUSH_TITLE": "Benachrichtigungen",
   "PUSH_ALARMS": "Alarme",
