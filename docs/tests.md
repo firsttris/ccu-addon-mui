@@ -13,6 +13,7 @@ echten Server und eine nachgebaute CCU.
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests, jede Nachricht des Mocks an die App in den E2E-Tests | – | gegen `protocol/schema.json` | ✅ |
 | **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 35 + 2 + 2 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 74 | ✅ |
+| **openccu-lite-VM** | openccu-lite aus seinem Release-Image (QEMU), occulited, lighttpd, Sitzungs-Gate, Installation des Pakets | nichts; aber ohne Funkmodul, also ohne Geräte | 3 Phasen | ✅ bei Lite-Änderungen, wöchentlich, vor Releases |
 | **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 72 | ✅ |
 
 Zusammen über 600 Tests, dazu 72 Screenshot-Vergleiche.
@@ -137,6 +138,33 @@ Die 74 Tests decken praktisch jede Funktion von *Einrichten* ab, zum Beispiel:
   Sicherheitsschlüssel, Sitzungs-Timeout, Sicherheitsstufe, Werkseinstellungen
 - Diagramme, Systemprotokoll, virtuelle Taster, Funktionstest, Energiepreise, Info-LED
 
+## Auf einer openccu-lite-VM
+
+`scripts/lite-vm-test.sh <openccu-lite-x86_64-ova-*.zip> <mui-*-x86_64-lite.tar.gz>` (braucht
+`qemu-system-x86_64`, mit KVM in wenigen Minuten, ohne deutlich langsamer)
+
+Die Tests gegen die Fake-Lite prüfen, was MUI aus occulites APIs macht. Ob das Paket auf einem echten
+openccu-lite überhaupt installiert und läuft, prüft erst dieser Test: Er bootet das x86_64-Image eines
+openccu-lite-Releases headless in QEMU, wie openccu-lites eigenes `scripts/lite-qemu-test.sh`, legt den
+ersten Administrator an und installiert das Paket über occulites Add-on-API, wie dessen Seite
+*Zusatzsoftware* es hochlädt. Dann läuft `go-server/litevm` (Build-Tag `litevm`) in drei Phasen gegen die
+VM, über lighttpd und occulites Sitzungs-Gate:
+
+- **prepare:** Anmeldung über das Gate (`platform: lite`, Administrator), alles, was die App beim Start
+  liest, ein Raum in occulites Metadaten und die Sprache in `DATA_DIR`.
+- **verify:** nach einem Neustart des Dienstes `addon-mui` und nach einer erneuten Installation (Update)
+  sind Raum und Sprache noch da.
+- **logout:** Ein Abmelden in openccu-lite schließt die offene Verbindung (Neuprüfung jede Minute), die
+  nächste bekommt `SESSION_REQUIRED` oder wird vom Gate abgewiesen.
+
+Dazwischen prüft das Skript, dass `/addons/mui/` ohne Sitzung zur Anmeldung umleitet und das Journal des
+Add-ons keine Schreibfehler (`EACCES`, `EROFS`, *permission denied*) und keinen Panic enthält. Die Dauer
+jedes Schritts steht in der Zusammenfassung des Workflows, Serial-Log, Journal und Antworten im Artefakt
+`lite-vm-logs`.
+
+Die VM hat kein Funkmodul: Geräte, Anlernen, Werte über Funk und Heizgruppen bleiben ein Test auf echter
+Hardware (Checkliste in [plan-openccu-lite.md](plan-openccu-lite.md), Abschnitt *Tests*).
+
 ## Screenshot-Vergleich
 
 `npm run test:visual` · Baselines erneuern: `npm run test:visual:update`
@@ -178,7 +206,8 @@ der Workflow dafür eine eigene Auswahl `tiles`.
 | `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Unit-Tests, Build mit Typprüfung (`vite build && tsc`), Go-Build für ARM und x86 und für openccu-lite (aarch64, x86_64), die `tar.gz`-Archive mit `.sha256` als Artefakt `addon` |
 | `go-unit-tests.yml` | Push und Pull Request auf `main` | `go vet` und `go test ./...` mit Coverage-Bericht als Artefakt, dasselbe mit `-tags lite` für openccu-lite |
 | `playwright-e2e.yml` | Push und Pull Request auf `main` | Im Docker-Image `mcr.microsoft.com/playwright` (Version aus der `package-lock.json`, kein Browser-Download): E2E mit Mock inkl. Anmeldung (4 Worker, mit Frontend-Coverage), Screenshot-Vergleich und E2E gegen den Stack auf zwei Runnern (`--shard`), Berichte als Artefakte |
-| `release.yml` | Tag `vX.Y.Z` | Die drei Workflows oben, dann die Release mit den Archiven und erzeugten Notizen |
+| `lite-vm.yml` | Pull Request, der den Lite-Teil ändert; montags gegen das neueste openccu-lite; von Hand (mit wählbarem openccu-lite-Release); vor jeder Release | Paket bauen, openccu-lite-Image laden (zwischengespeichert je Release), in QEMU mit KVM booten, installieren, `scripts/lite-vm-test.sh`; Dauer je Schritt in der Zusammenfassung, Logs als Artefakt |
+| `release.yml` | Tag `vX.Y.Z` | Die vier Workflows oben, dann die Release mit den Archiven und erzeugten Notizen |
 | `bump.yml` | von Hand | Version erhöhen, Tag `vX.Y.Z` anlegen und `release.yml` darauf starten |
 
 Ein Pull Request wird erst gemergt, wenn alle Prüfungen grün sind.
@@ -193,6 +222,7 @@ cd go-server && go test -tags lite ./...   # Go für openccu-lite
 npm run test:e2e          # Playwright mit Mock (startet Vite selbst)
 npm run test:stack        # Playwright gegen Go-Server + Fake-CCU
 npm run test:visual       # Screenshot-Vergleich
+scripts/lite-vm-test.sh <openccu-lite-x86_64-ova-*.zip> mui-*-x86_64-lite.tar.gz   # auf einer openccu-lite-VM
 ```
 
 Playwright braucht einmal `npm run test:e2e:install` für Chromium.

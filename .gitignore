@@ -53,3 +53,7 @@ Thumbs.db
 
 # MkDocs build (mkdocs build)
 site/
+
+# scripts/lite-vm-test.sh
+lite-vm-out/
+lite-image/
