@@ -741,6 +741,8 @@ func (s *Server) dispatch(client *Client, msgType, requestID string, message []b
 		s.handleLayout(client, msgType, message)
 	case "getPush", "subscribePush", "unsubscribePush", "testPush":
 		s.handlePush(client, msgType, message)
+	case "getVirtualKeys":
+		s.handleVirtualKeys(client, requestID)
 	case "getDeviceImages":
 		s.handleDeviceImages(client, requestID)
 	case "getRules", "saveRule", "deleteRule":

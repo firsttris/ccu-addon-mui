@@ -82,7 +82,7 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
   Räume, Gewerke), Sitzungen, Zustandsspeicher, Event-Stream, Servicemeldungen und Heizgruppen. Die
   Integrationstests in `go-server/lite_integration_test.go` starten den Lite-Server dagegen: Anmeldung über
   das Gate, Räume und Kanäle, Schalten mit dem Event aus dem Stream, Umbenennen, Layouts, Favoriten,
-  Posteingang, Heizgruppen, Servicemeldungen, Gesundheit, Regeln und Push.
+  Posteingang, Heizgruppen, virtuelle Taster, Servicemeldungen, Gesundheit, Regeln und Push.
 - **Protokoll-Vertrag**: Die Hilfsfunktion, die Nachrichten des Servers liest, prüft **jede** gegen
   `protocol/schema.json`. Ein eigener Test stellt sicher, dass das Schema unbekannte Felder ablehnt.
 

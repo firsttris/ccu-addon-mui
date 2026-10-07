@@ -1,19 +1,13 @@
 package rega
 
 import (
+	"ccu-addon-mui-server/pkg/home"
 	"strconv"
 	"strings"
 )
 
 // VirtualKey is a virtual key of the CCU (HM-RCV-50, HmIP-RCV-50).
-type VirtualKey struct {
-	ID            int64  `json:"id"`
-	Address       string `json:"address"`
-	InterfaceName string `json:"interfaceName"`
-	Name          string `json:"name"`
-	// How many programs use the key
-	Programs int `json:"programs"`
-}
+type VirtualKey = home.VirtualKey
 
 // GetVirtualKeys lists the CCU's virtual keys (get_virtual_keys.tcl).
 func (c *Client) GetVirtualKeys() ([]VirtualKey, error) {
