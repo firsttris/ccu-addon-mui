@@ -8,7 +8,7 @@ const (
 )
 
 // Capabilities says which parts of the app the platform has. The app
-// hides the others (src/hooks/useCapabilities.ts).
+// hides the others (src/hooks/capabilities.ts).
 type Capabilities struct {
 	// ReGa programs and scripts, system variables, alarm variables and
 	// the system protocol (ReGa history)

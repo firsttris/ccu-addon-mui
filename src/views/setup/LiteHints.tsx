@@ -5,6 +5,7 @@ import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { m } from '../../paraglide/messages';
 import { Panel } from './Panel';
+import { Button } from '../../components/ui/button';
 
 // openccu-lite shows the add-on in a frame of its own interface: its pages
 // open in the whole window
@@ -33,6 +34,23 @@ export const LiteSystemLinks = () => (
       <SystemLink href="/addons">{m.ADDONS()}</SystemLink>
     </ul>
   </Panel>
+);
+
+// The openccu-lite session expired: only its login page renews it, the
+// app's own login would never succeed. It opens in the whole window, as
+// the gate in front of /addons/ would send a reload there.
+export const SessionExpired = () => (
+  <div className="flex min-h-screen items-center justify-center p-4">
+    <div role="alert" className="tile-edge flex w-full max-w-sm flex-col gap-5 rounded-2xl border bg-card p-6 text-center shadow-sm">
+      <h1 className="text-2xl font-semibold tracking-tight">{m.LITE_SESSION_EXPIRED()}</h1>
+      <p className="text-sm text-muted-foreground">{m.LITE_SESSION_EXPIRED_HINT()}</p>
+      <Button asChild size="lg">
+        <a href="/login" target="_top">
+          {m.LITE_SIGN_IN()}
+        </a>
+      </Button>
+    </div>
+  </div>
 );
 
 // openccu-lite has no programs and system variables: where automations go

@@ -27,6 +27,26 @@ func TestSlug(t *testing.T) {
 	}
 }
 
+// A second room of the same long name stays a valid node id (≤ 32)
+func TestUniqueSlug(t *testing.T) {
+	name := "Ein sehr, sehr langer Raumname im Obergeschoss"
+	taken := map[string]bool{"ein-sehr-sehr-langer-raumname-im": true}
+	if got := uniqueSlug(name, taken); got != "ein-sehr-sehr-langer-raumname-2" {
+		t.Fatalf("got %q", got)
+	}
+	taken["ein-sehr-sehr-langer-raumname-2"] = true
+	if got := uniqueSlug(name, taken); got != "ein-sehr-sehr-langer-raumname-3" {
+		t.Fatalf("got %q", got)
+	}
+	if got := uniqueSlug("Bad", map[string]bool{"bad": true}); got != "bad-2" {
+		t.Fatalf("got %q", got)
+	}
+	// A cut that ends on "-" loses it
+	if got := uniqueSlug("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa b", map[string]bool{"aaaaaaaaaaaaaaaaaaaaaaaaaaaaa-b": true}); got != "aaaaaaaaaaaaaaaaaaaaaaaaaaaaa-2" {
+		t.Fatalf("got %q", got)
+	}
+}
+
 // The app sends values as text, the interface wants them typed
 func TestTypedValue(t *testing.T) {
 	cases := []struct {

@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -43,12 +44,15 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 
 	// The gate in front of /addons/ adds the session to the WebSocket
 	// upgrade; occulited tells whose it is
-	wsServer.SetGate(func(r *http.Request) (websocket.GateSession, bool) {
-		session, ok := client.CheckSession(r.Context(), r.Header.Get(occulite.SessionHeader))
-		if !ok {
-			return websocket.GateSession{}, false
+	wsServer.SetGate(func(r *http.Request) (websocket.GateSession, error) {
+		session, err := client.CheckSession(r.Context(), r.Header.Get(occulite.SessionHeader))
+		if errors.Is(err, occulite.ErrNoSession) {
+			return websocket.GateSession{}, websocket.ErrNoSession
 		}
-		return websocket.GateSession{User: session.User, Level: occulite.AddonLevel(session.Level)}, true
+		if err != nil {
+			return websocket.GateSession{}, err
+		}
+		return websocket.GateSession{User: session.User, Level: occulite.AddonLevel(session.Level)}, nil
 	})
 	logger.Info("🔒 Authentication: openccu-lite sessions (" + cfg.OcculiteURL + ")")
 

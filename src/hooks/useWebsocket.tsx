@@ -124,8 +124,10 @@ export interface RequestOptions {
 
 type EventListener = (event: HmEvent) => void;
 
-// 'pending' until the server answered the auth message sent on connect
-export type AuthState = 'pending' | 'authenticated' | 'loginRequired';
+// 'pending' until the server answered the auth message sent on connect;
+// 'sessionRequired' when the platform's session (openccu-lite) expired:
+// only its own login page can renew it
+export type AuthState = 'pending' | 'authenticated' | 'loginRequired' | 'sessionRequired';
 
 interface PendingRequest {
   resolve: (response: unknown) => void;
@@ -362,6 +364,11 @@ export const useWebsocket = () => {
     setAuthRequired(response.authRequired === true);
     if (!response.success) {
       readyRef.current = false;
+      if (response.code === 'SESSION_REQUIRED') {
+        setLoginError(null);
+        setAuthState('sessionRequired');
+        return;
+      }
       if (response.code === 'LOGIN_REQUIRED') {
         // No or an outdated token: not an error the user has to see
         writeToken(null);
@@ -554,6 +561,10 @@ const WebSocketContext = createContext<UseWebsocketReturnType | undefined>(undef
 // and must not re-render when the connection state changes.
 const WebSocketActionsContext = createContext<WebSocketActions | undefined>(undefined);
 
+// What the platform has, for the queries: changes only on login. A CCU's
+// without a provider.
+const CapabilitiesContext = createContext<Capabilities>(CCU_CAPABILITIES);
+
 export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { actions, state } = useWebsocket();
   const queryClient = useQueryClient();
@@ -577,7 +588,9 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   return (
     <WebSocketActionsContext.Provider value={actions}>
-      <WebSocketContext.Provider value={state}>{children}</WebSocketContext.Provider>
+      <CapabilitiesContext.Provider value={state.capabilities}>
+        <WebSocketContext.Provider value={state}>{children}</WebSocketContext.Provider>
+      </CapabilitiesContext.Provider>
     </WebSocketActionsContext.Provider>
   );
 };
@@ -589,6 +602,8 @@ export const useWebSocketContext = () => {
   }
   return context;
 };
+
+export const useCapabilities = () => useContext(CapabilitiesContext);
 
 export const useWebSocketActions = () => {
   const context = useContext(WebSocketActionsContext);

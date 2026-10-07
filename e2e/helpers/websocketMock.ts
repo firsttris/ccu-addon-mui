@@ -20,6 +20,8 @@ export type WebSocketMockOptions = {
   // Answer as openccu-lite: no ReGa, no WebUI, so no programs, system
   // variables, alarms or system settings
   lite?: boolean;
+  // openccu-lite whose session expired: the gate passed no session
+  sessionExpired?: boolean;
 };
 
 export const VALID_TOKEN = 'test-token';
@@ -36,7 +38,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
   await page.exposeFunction('__mockProtocol', (json: string) => {
     recorded.push(JSON.parse(json));
   });
-  await page.addInitScript(({ requireLogin, validToken, lite }) => {
+  await page.addInitScript(({ requireLogin, validToken, lite, sessionExpired }) => {
     const record = (message: unknown) =>
       (window as Window & { __mockProtocol?: (json: string) => void }).__mockProtocol?.(JSON.stringify(message));
 
@@ -895,6 +897,10 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       state.sentMessages.push(message);
 
       if (message.type === 'auth') {
+        if (sessionExpired) {
+          delayedBroadcast({ type: 'auth_response', success: false, authRequired: false, elevated: false, code: 'SESSION_REQUIRED', error: 'no session of the system' });
+          return;
+        }
         if (!requireLogin) {
           delayedBroadcast({ type: 'auth_response', success: true, authRequired: false, level: 'admin', elevated: true, ...platform });
           return;
@@ -1261,5 +1267,10 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         broadcast({ type: 'sysvars', sysvars });
       },
     };
-  }, { requireLogin: options.requireLogin === true, validToken: VALID_TOKEN, lite: options.lite === true });
+  }, {
+    requireLogin: options.requireLogin === true,
+    validToken: VALID_TOKEN,
+    lite: options.lite === true,
+    sessionExpired: options.sessionExpired === true,
+  });
 };

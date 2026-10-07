@@ -7,6 +7,8 @@ package home
 const (
 	SetOK       = "OK"
 	SetNotFound = "NOT_FOUND"
+	// The platform cannot make this change (openccu-lite)
+	SetNotSupported = "NOT_SUPPORTED"
 )
 
 // NamedObject is a room or a trade.

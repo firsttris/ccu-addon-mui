@@ -24,8 +24,11 @@ Sitzungs-Gate, das ohne Anmeldung auf `/login` umleitet und die Sitzung im Heade
 weitergibt, auch am WebSocket-Upgrade. Der Server prüft sie bei occulited (`/api/auth/v1/state`, nur eine
 angemeldete Sitzung mit derselben `sid` zählt) und übernimmt Benutzer und Stufe: *configure* und
 *administer* sind Administratoren, *operate* Benutzer, *read* Gäste. Dem Header traut der Server nur im
-Paket für openccu-lite; auf der CCU könnte ihn jeder Client selbst setzen. Tokens, Sitzungsliste und die
-erneute Passworteingabe gibt es dort nicht. Das Add-on läuft als eigener Benutzer ohne Root und schreibt nur
+Paket für openccu-lite; auf der CCU könnte ihn jeder Client selbst setzen. Offene Verbindungen prüfen die
+Sitzung jede Minute neu und schließen sich, sobald sie endet (Abmelden in openccu-lite) oder einem anderen
+Benutzer oder einer anderen Stufe gehört; ist occulited nur kurz nicht erreichbar, bleiben sie offen. Tokens,
+Sitzungsliste und die erneute Passworteingabe gibt es dort nicht: Administratoren sind immer bestätigt,
+`elevate` antwortet allen anderen `FORBIDDEN`. Das Add-on läuft als eigener Benutzer ohne Root und schreibt nur
 in seine eigenen Verzeichnisse.
 
 ## Tokens

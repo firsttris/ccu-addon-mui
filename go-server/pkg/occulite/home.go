@@ -6,6 +6,7 @@ import (
 	"hash/fnv"
 	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -189,6 +190,18 @@ func slug(name string) string {
 	return id
 }
 
+// uniqueSlug is the node id of a name that is not taken yet: "-2", "-3", …
+// appended, within the 32 characters of a node id
+func uniqueSlug(name string, taken map[string]bool) string {
+	base := slug(name)
+	id := base
+	for n := 2; taken[id]; n++ {
+		suffix := fmt.Sprintf("-%d", n)
+		id = strings.TrimRight(base[:min(len(base), 32-len(suffix))], "-") + suffix
+	}
+	return id
+}
+
 func (h *Home) CreateGroup(list, name string) (string, int64, error) {
 	enumID, ok := groupEnums[list]
 	if !ok {
@@ -204,10 +217,7 @@ func (h *Home) CreateGroup(list, name string) (string, int64, error) {
 			taken[node.ID] = true
 		}
 	}
-	id := slug(name)
-	for n := 2; taken[id]; n++ {
-		id = fmt.Sprintf("%s-%d", slug(name), n)
-	}
+	id := uniqueSlug(name, taken)
 	ctx, cancel := h.context()
 	defer cancel()
 	if err := h.client.CreateNode(ctx, enumID, "", id, name); err != nil {
@@ -261,13 +271,16 @@ func (h *Home) SetGroupMember(groupID, channelID int64, member bool) (string, er
 	if path == "" {
 		path = pathOf(snapshot, "function", groupID)
 	}
-	ref := h.refOf(channelID)
-	if path == "" || ref == "" {
+	ch, found := h.channelByID(channelID)
+	if path == "" || !found {
 		return home.SetNotFound, nil
 	}
+	ref := Ref(ch.iface, ch.desc.Address)
 	object := snapshot.Objects[ref]
+	// Starts from what the app shows, the device's rooms included, and
+	// makes them the channel's own
 	enums := []string{}
-	for _, e := range object.Enums {
+	for _, e := range channelEnums(snapshot, ch) {
 		if e != path {
 			enums = append(enums, e)
 		}
@@ -275,10 +288,10 @@ func (h *Home) SetGroupMember(groupID, channelID int64, member bool) (string, er
 	if member {
 		enums = append(enums, path)
 	}
-	patch := map[string]interface{}{"enums": enums}
+	patch := map[string]interface{}{"enums": enums, "meta": map[string]interface{}{metaNamespace: map[string]interface{}{"ownEnums": true}}}
 	if object.Name == "" {
 		// The store never invents objects: a new one needs its name
-		patch["name"] = h.defaultName(snapshot, ref)
+		patch["name"] = defaultName(snapshot, ref, ch.desc.ParentType)
 	}
 	ctx, cancel := h.context()
 	defer cancel()
@@ -335,20 +348,36 @@ func (h *Home) interfaceOf(address string) string {
 	return iface
 }
 
-// refOf finds the ref of a channel by the app's id
-func (h *Home) refOf(channelID int64) string {
+// channelByID finds a channel by the app's id
+func (h *Home) channelByID(channelID int64) (channelInfo, bool) {
 	for _, ch := range h.channels() {
-		ref := Ref(ch.iface, ch.desc.Address)
-		if ID(ref) == channelID {
-			return ref
+		if ID(Ref(ch.iface, ch.desc.Address)) == channelID {
+			return ch, true
 		}
 	}
-	return ""
+	return channelInfo{}, false
+}
+
+// metaNamespace is the add-on's namespace in an object's meta
+const metaNamespace = "mui"
+
+// channelEnums are the rooms and functions of a channel: its own, or its
+// device's as long as the add-on never set the channel's (meta
+// mui.ownEnums), so that taking it out of its last room sticks
+func channelEnums(snapshot Snapshot, ch channelInfo) []string {
+	object := snapshot.Objects[Ref(ch.iface, ch.desc.Address)]
+	if len(object.Enums) > 0 {
+		return object.Enums
+	}
+	if own, _ := object.Meta[metaNamespace].(map[string]interface{}); own != nil && own["ownEnums"] == true {
+		return nil
+	}
+	return snapshot.Objects[Ref(ch.iface, ch.desc.Parent)].Enums
 }
 
 // defaultName is a name for a device or channel without one, as the CCU
-// names them: "<type> <address>"
-func (h *Home) defaultName(snapshot Snapshot, ref string) string {
+// names them: "<type> <address>", with the type of the device
+func defaultName(snapshot Snapshot, ref, deviceType string) string {
 	iface, address, _ := SplitRef(ref)
 	device, index, isChannel := strings.Cut(address, ":")
 	if isChannel {
@@ -356,10 +385,8 @@ func (h *Home) defaultName(snapshot Snapshot, ref string) string {
 			return parent.Name + ":" + index
 		}
 	}
-	for _, ch := range h.channels() {
-		if ch.desc.Address == address || ch.desc.Parent == address {
-			return ch.desc.ParentType + " " + address
-		}
+	if deviceType != "" {
+		return deviceType + " " + address
 	}
 	return address
 }
@@ -372,11 +399,9 @@ func (h *Home) channel(snapshot Snapshot, ch channelInfo) (home.Channel, bool) {
 	}
 	h.readValues(ch)
 	ref := Ref(ch.iface, d.Address)
-	object, named := snapshot.Objects[ref]
-	device := snapshot.Objects[Ref(ch.iface, d.Parent)]
-	name := object.Name
-	if !named || name == "" {
-		name = h.defaultName(snapshot, ref)
+	name := snapshot.Objects[ref].Name
+	if name == "" {
+		name = defaultName(snapshot, ref, d.ParentType)
 	}
 	id := ID(ref)
 	c := home.Channel{
@@ -404,11 +429,7 @@ func (h *Home) channel(snapshot Snapshot, ch channelInfo) (home.Channel, bool) {
 			}
 		}
 	}
-	enums := object.Enums
-	if len(enums) == 0 {
-		enums = device.Enums
-	}
-	for _, path := range enums {
+	for _, path := range channelEnums(snapshot, ch) {
 		switch {
 		case strings.HasPrefix(path, "room/"):
 			c.Rooms = append(c.Rooms, ID(path))
@@ -454,14 +475,19 @@ func (h *Home) GetAllChannels() ([]home.Channel, error) {
 	if err != nil {
 		return nil, err
 	}
+	return h.channelsOf(snapshot, h.channels()), nil
+}
+
+// channelsOf builds the app's channels, sorted by name
+func (h *Home) channelsOf(snapshot Snapshot, channels []channelInfo) []home.Channel {
 	list := []home.Channel{}
-	for _, ch := range h.channels() {
+	for _, ch := range channels {
 		if c, ok := h.channel(snapshot, ch); ok {
 			list = append(list, c)
 		}
 	}
 	sort.Slice(list, func(i, j int) bool { return list[i].Name < list[j].Name })
-	return list, nil
+	return list
 }
 
 // GetChannels returns the channels of a room, a function or a favorite list
@@ -470,7 +496,7 @@ func (h *Home) GetChannels(objectID string) ([]home.Channel, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid id %q", objectID)
 	}
-	all, err := h.GetAllChannels()
+	snapshot, err := h.snapshot()
 	if err != nil {
 		return nil, err
 	}
@@ -483,25 +509,35 @@ func (h *Home) GetChannels(objectID string) ([]home.Channel, error) {
 			}
 		}
 	})
-	list := []home.Channel{}
-	if favorite != nil {
-		byID := map[int64]home.Channel{}
-		for _, c := range all {
-			byID[c.ID] = c
-		}
-		for _, item := range favorite.Items {
-			if c, ok := byID[item]; ok {
-				list = append(list, c)
+	// Only the members are built, as the CCU's script visits only them
+	var members []channelInfo
+	for _, ch := range h.channels() {
+		if favorite != nil {
+			if slices.Contains(favorite.Items, ID(Ref(ch.iface, ch.desc.Address))) {
+				members = append(members, ch)
 			}
+			continue
 		}
-		return list, nil
-	}
-	for _, c := range all {
-		for _, g := range append(append([]int64{}, c.Rooms...), c.Trades...) {
-			if g == id {
-				list = append(list, c)
+		for _, path := range channelEnums(snapshot, ch) {
+			if (strings.HasPrefix(path, "room/") || strings.HasPrefix(path, "function/")) && ID(path) == id {
+				members = append(members, ch)
 				break
 			}
+		}
+	}
+	channels := h.channelsOf(snapshot, members)
+	if favorite == nil {
+		return channels, nil
+	}
+	// A favorite list keeps its order
+	byID := map[int64]home.Channel{}
+	for _, c := range channels {
+		byID[c.ID] = c
+	}
+	list := []home.Channel{}
+	for _, item := range favorite.Items {
+		if c, ok := byID[item]; ok {
+			list = append(list, c)
 		}
 	}
 	return list, nil

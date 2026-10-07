@@ -94,8 +94,10 @@ func (h *Home) GetServiceMessages() ([]home.ServiceMessage, error) {
 }
 
 // AcknowledgeServiceMessage ends a sticky message (STICKY_UNREACH,
-// STICKY_SABOTAGE) by setting it false on the device, as the CCU does; the
-// others end when the device reports otherwise
+// STICKY_SABOTAGE) by setting it false on the device, as the CCU does. The
+// others end when the device reports otherwise: occulited's messages are
+// read-only (docs/system-api.md, GET /service-messages), so they answer
+// NOT_SUPPORTED, and the app offers no acknowledging for them.
 func (h *Home) AcknowledgeServiceMessage(id int64) (string, string, error) {
 	messages, err := h.serviceMessages()
 	if err != nil {
@@ -106,7 +108,7 @@ func (h *Home) AcknowledgeServiceMessage(id int64) (string, string, error) {
 			continue
 		}
 		if !strings.HasPrefix(m.Key, "STICKY_") {
-			return home.SetNotFound, m.Key, nil
+			return home.SetNotSupported, m.Key, nil
 		}
 		if _, err := h.rpc.CallRaw(m.Interface, "setValue", m.Channel, m.Key, false); err != nil {
 			return "", "", err

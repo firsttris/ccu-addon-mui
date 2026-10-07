@@ -8,8 +8,8 @@ type virtualKeysResponse struct {
 	Keys      []home.VirtualKey `json:"keys"`
 }
 
-// virtualKeys is a home model that lists the central's virtual keys itself
-// (openccu-lite, from the interface processes)
+// virtualKeys is a home model that lists the central's virtual keys: the
+// ReGa (rega.Client) and openccu-lite's (from the interface processes)
 type virtualKeys interface {
 	GetVirtualKeys() ([]home.VirtualKey, error)
 }
@@ -17,18 +17,12 @@ type virtualKeys interface {
 // handleVirtualKeys lists the central's virtual keys: from the ReGa on a
 // CCU, with how many programs use them; on openccu-lite from the devices
 func (s *Server) handleVirtualKeys(client *Client, requestID string) {
-	var keys []home.VirtualKey
-	var err error
-	switch source := s.home.(type) {
-	case virtualKeys:
-		keys, err = source.GetVirtualKeys()
-	default:
-		if s.regaClient == nil {
-			s.sendRequestError(client, requestID, "no virtual keys here", "NOT_SUPPORTED")
-			return
-		}
-		keys, err = s.regaClient.GetVirtualKeys()
+	source, ok := s.home.(virtualKeys)
+	if !ok {
+		s.sendRequestError(client, requestID, "no virtual keys here", "NOT_SUPPORTED")
+		return
 	}
+	keys, err := source.GetVirtualKeys()
 	if err != nil {
 		s.sendRequestError(client, requestID, "getVirtualKeys failed: "+err.Error(), "CCU_ERROR")
 		return

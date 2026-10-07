@@ -2,6 +2,7 @@ package occulite
 
 import (
 	"context"
+	"errors"
 	"net/http"
 )
 
@@ -30,17 +31,25 @@ const (
 // CheckSession asks occulited who the gate's session value belongs to. A
 // session counts only when it is authenticated and its sid is the value
 // itself; an API token at the gate (no sid) does not log a user in
-// (ccu-addon-howto docs/11-openccu-lite.md, "Sessions").
-func (c *Client) CheckSession(ctx context.Context, value string) (Session, bool) {
+// (ccu-addon-howto docs/11-openccu-lite.md, "Sessions"). ErrNoSession
+// when it is none; another error when occulited could not tell.
+func (c *Client) CheckSession(ctx context.Context, value string) (Session, error) {
 	if value == "" {
-		return Session{}, false
+		return Session{}, ErrNoSession
 	}
 	var session Session
 	if err := c.do(ctx, http.MethodGet, "/api/auth/v1/state", value, nil, &session); err != nil {
-		return Session{}, false
+		var apiErr *Error
+		if errors.As(err, &apiErr) && (apiErr.Status == http.StatusUnauthorized || apiErr.Status == http.StatusForbidden) {
+			return Session{}, ErrNoSession
+		}
+		return Session{}, err
 	}
 	if !session.Authenticated || session.SID == "" || session.SID != value || session.User == "" {
-		return Session{}, false
+		return Session{}, ErrNoSession
 	}
-	return session, true
+	return session, nil
 }
+
+// ErrNoSession: the value is no valid session
+var ErrNoSession = errors.New("no session")

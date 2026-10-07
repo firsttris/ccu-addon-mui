@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,6 +25,7 @@ import (
 type liteStack struct {
 	ccu    *fakeccu.CCU
 	wsPort int
+	data   string
 }
 
 func litePort(t *testing.T) int {
@@ -50,6 +53,13 @@ func startLiteStack(t *testing.T) *liteStack {
 	t.Cleanup(ccu.Close)
 
 	data := t.TempDir()
+	// The recorder writes what is left when the server stops, without run
+	// waiting for it: not in a directory the test must remove cleanly
+	diagramsDir, err := os.MkdirTemp("", "mui-diagrams")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(diagramsDir) })
 	tokenFile := filepath.Join(t.TempDir(), "mui.api")
 	_ = os.WriteFile(tokenFile, []byte(fakeccu.LiteAddonToken+"\n"), 0o600)
 	cfg := &config.Config{
@@ -68,7 +78,7 @@ func startLiteStack(t *testing.T) *liteStack {
 		PushFile:           filepath.Join(data, "mui-push.json"),
 		RulesFile:          filepath.Join(data, "mui-rules.json"),
 		DiagramsFile:       filepath.Join(data, "mui-diagrams.json"),
-		DiagramsDir:        filepath.Join(data, "mui-diagrams"),
+		DiagramsDir:        diagramsDir,
 		PushSubject:        "mailto:test@example.com",
 		OcculiteURL:        fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort),
 		OcculiteTokenFile:  tokenFile,
@@ -86,7 +96,7 @@ func startLiteStack(t *testing.T) *liteStack {
 		cancel()
 		<-done
 	})
-	stack := &liteStack{ccu: ccu, wsPort: cfg.WSPort}
+	stack := &liteStack{ccu: ccu, wsPort: cfg.WSPort, data: data}
 	// Up once a connection is accepted
 	for i := 0; i < 100; i++ {
 		if conn, err := stack.dial(""); err == nil {
@@ -474,5 +484,118 @@ func TestLiteVirtualKeys(t *testing.T) {
 		if c.(map[string]interface{})["address"] == "BidCoS-RF:1" {
 			t.Fatal("virtual key among the channels")
 		}
+	}
+}
+
+// patchObject changes an object in the fake's metadata store, as
+// openccu-lite's own pages would
+func (s *liteStack) patchObject(t *testing.T, ref string, patch map[string]interface{}) {
+	t.Helper()
+	body, _ := json.Marshal(patch)
+	req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("http://127.0.0.1:%d/api/meta/v1/objects/%s", s.ccu.WebUIPort, ref), bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+fakeccu.LiteAddonToken)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("PATCH %s: %d", ref, resp.StatusCode)
+	}
+}
+
+// A channel without rooms of its own shows its device's; taking it into or
+// out of a room starts from those, and taking it out of the last one sticks
+func TestLiteInheritedRooms(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+	roomOf := func(name string) int64 {
+		if m := liteCall(t, conn, map[string]interface{}{"type": "createGroup", "list": "rooms", "name": name}); m["success"] != true {
+			t.Fatalf("createGroup: %v", m)
+		}
+		return int64(findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getRooms"})["rooms"], name)["id"].(float64))
+	}
+	keller, flur := roomOf("Keller"), roomOf("Flur")
+	stack.patchObject(t, "BidCos-RF.LEQ0000001", map[string]interface{}{"name": "Licht Wohnzimmer", "enums": []string{"room/keller"}})
+	stack.patchObject(t, "BidCos-RF.LEQ0000001:1", map[string]interface{}{"enums": []string{}})
+
+	var channelID int64
+	in := func(room int64) bool {
+		for _, c := range liteCall(t, conn, map[string]interface{}{"type": "getChannels", "roomId": fmt.Sprint(room)})["channels"].([]interface{}) {
+			if c := c.(map[string]interface{}); c["address"] == "LEQ0000001:1" {
+				channelID = int64(c["id"].(float64))
+				return true
+			}
+		}
+		return false
+	}
+	member := func(room int64, on bool) {
+		if m := liteCall(t, conn, map[string]interface{}{"type": "setGroupMember", "groupId": room, "channelId": channelID, "member": on}); m["success"] != true {
+			t.Fatalf("setGroupMember: %v", m)
+		}
+	}
+	if !in(keller) {
+		t.Fatal("the device's room is not shown")
+	}
+	member(flur, true)
+	if !in(keller) || !in(flur) {
+		t.Fatalf("after adding: Keller %v, Flur %v", in(keller), in(flur))
+	}
+	member(keller, false)
+	member(flur, false)
+	if in(keller) || in(flur) {
+		t.Fatalf("after removing: Keller %v, Flur %v", in(keller), in(flur))
+	}
+}
+
+// What a CCU does differently works or says why on openccu-lite
+func TestLiteLimits(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+
+	// A diagram with a new series: the current value instead of the ReGa's
+	// system protocol
+	m := liteCall(t, conn, map[string]interface{}{"type": "saveDiagram", "diagram": map[string]interface{}{
+		"name": "Licht", "series": []map[string]interface{}{{"address": "LEQ0000001:1", "datapoint": "STATE"}},
+	}})
+	if m["success"] != true {
+		t.Fatalf("saveDiagram: %v", m)
+	}
+
+	// The language is the add-on's own data
+	if m := liteCall(t, conn, map[string]interface{}{"type": "setUserLanguage", "language": 1}); m["success"] != true {
+		t.Fatalf("setUserLanguage: %v", m)
+	}
+	if data, err := os.ReadFile(filepath.Join(stack.data, "userprofiles", "Admin.lang")); err != nil || strings.TrimSpace(string(data)) != "1" {
+		t.Fatalf("language file: %q %v", data, err)
+	}
+
+	// Only sticky service messages end by acknowledging
+	other := false
+	for _, item := range liteCall(t, conn, map[string]interface{}{"type": "getServiceMessages"})["messages"].([]interface{}) {
+		if message := item.(map[string]interface{}); !strings.HasPrefix(message["type"].(string), "STICKY_") {
+			if m := liteCall(t, conn, map[string]interface{}{"type": "acknowledgeServiceMessage", "id": message["id"]}); m["code"] != "NOT_SUPPORTED" {
+				t.Fatalf("acknowledge %v: %v", message["type"], m)
+			}
+			other = true
+			break
+		}
+	}
+	if !other {
+		t.Fatal("no service message but sticky ones")
+	}
+
+	// Elevating: administrators are, nobody else
+	if m := liteCall(t, conn, map[string]interface{}{"type": "elevate", "password": ""}); m["success"] != true {
+		t.Fatalf("admin elevate: %v", m)
+	}
+	user, err := stack.dial(fakeccu.LiteSession("Gast"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer user.Close()
+	liteCall(t, user, map[string]interface{}{"type": "auth"})
+	if m := liteCall(t, user, map[string]interface{}{"type": "elevate", "password": ""}); m["success"] == true {
+		t.Fatalf("guest elevated: %v", m)
 	}
 }
