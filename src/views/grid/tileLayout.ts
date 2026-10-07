@@ -24,6 +24,8 @@ export interface TileSpec {
   key: string;
   // The narrowest the tile looks right, in pixels (as the section grids)
   minPx: number;
+  // Columns of the section grid it spans (col-span-2)
+  span?: number;
 }
 
 export interface SavedTile {
@@ -49,9 +51,9 @@ export const rowsFor = (heightPx: number) => Math.max(1, Math.ceil((heightPx + M
 // As wide as in the section's own grid (auto-fill, minmax(minPx, 1fr)): as
 // many tiles side by side as fit into the grid's width (the container's,
 // without its padding), sharing the columns
-export const defaultWidth = (minPx: number, bp: BreakpointName, widthPx: number) => {
+export const defaultWidth = (minPx: number, bp: BreakpointName, widthPx: number, span = 1) => {
   const perRow = Math.max(1, Math.floor((widthPx - 2 * MARGIN + MARGIN) / (minPx + MARGIN)));
-  return Math.max(1, Math.floor(COLS[bp] / Math.min(perRow, COLS[bp])));
+  return Math.min(COLS[bp], span * Math.max(1, Math.floor(COLS[bp] / Math.min(perRow, COLS[bp]))));
 };
 
 // Tiles flowed left to right in their order, as the sections show them
@@ -60,7 +62,7 @@ export const defaultLayout = (tiles: TileSpec[], bp: BreakpointName, widthPx: nu
   let x = 0;
   let row = 0;
   for (const tile of tiles) {
-    const w = defaultWidth(tile.minPx, bp, widthPx);
+    const w = defaultWidth(tile.minPx, bp, widthPx, tile.span);
     if (x + w > COLS[bp]) {
       x = 0;
       row += 1;

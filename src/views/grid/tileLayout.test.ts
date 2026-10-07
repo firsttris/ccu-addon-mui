@@ -14,6 +14,9 @@ describe('tileLayout', () => {
     expect(defaultWidth(232, 'lg', 1376)).toBe(12);
     expect(defaultWidth(340, 'lg', 1376)).toBe(20);
     expect(defaultWidth(150, 'lg', 1376)).toBe(7);
+    // A color light spans two columns of the lights grid
+    expect(defaultWidth(150, 'lg', 1376, 2)).toBe(14);
+    expect(defaultWidth(150, 'xxs', 390, 2)).toBe(10);
     // A phone: one per row
     expect(defaultWidth(340, 'xxs', 390)).toBe(10);
     expect(rowsFor(160)).toBe(9);

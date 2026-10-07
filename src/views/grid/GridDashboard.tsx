@@ -84,7 +84,9 @@ export const GridDashboard = ({
           layouts={layouts}
           rowHeight={ROW_HEIGHT}
           margin={[MARGIN, MARGIN]}
-          containerPadding={[MARGIN, MARGIN]}
+          // Sideways only, balanced by -mx-3: the tiles stay where they are
+          // when arranging starts
+          containerPadding={[MARGIN, 0]}
           compactor={flowCompactor}
           // Only the grip starts a drag: elsewhere a touch scrolls the page,
           // on a tablet the tiles cover most of it

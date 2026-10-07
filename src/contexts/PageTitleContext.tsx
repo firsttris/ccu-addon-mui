@@ -1,12 +1,25 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
+// Arranging the tiles of the current page, from the header: "Arrange"
+// starts it, and while arranging the header shows its buttons in that place
+export interface PageArrange {
+  editing: boolean;
+  // Saving the arrangement
+  busy: boolean;
+  start: () => void;
+  done: () => void;
+  cancel: () => void;
+  // Back to the automatic arrangement, once one is saved
+  reset?: () => void;
+}
+
 // The title of the current page, shown in the header, and whether its
-// tiles can be arranged: the header then offers "Arrange"
+// tiles can be arranged
 const PageTitleContext = createContext<{
   title: string;
   setTitle: (title: string) => void;
-  arrange: (() => void) | null;
-  setArrange: (arrange: (() => void) | null) => void;
+  arrange: PageArrange | null;
+  setArrange: (arrange: PageArrange | null) => void;
 }>({
   title: '',
   setTitle: () => {},
@@ -16,8 +29,7 @@ const PageTitleContext = createContext<{
 
 export const PageTitleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [title, setTitle] = useState('');
-  const [arrange, setArrangeState] = useState<(() => void) | null>(null);
-  const setArrange = useRef((next: (() => void) | null) => setArrangeState(() => next)).current;
+  const [arrange, setArrange] = useState<PageArrange | null>(null);
   return (
     <PageTitleContext.Provider value={{ title, setTitle, arrange, setArrange }}>{children}</PageTitleContext.Provider>
   );
@@ -36,15 +48,27 @@ export const usePageTitle = (title: string) => {
 
 export const usePageArrangeValue = () => useContext(PageTitleContext).arrange;
 
-// Offers "Arrange" in the header while the calling page is shown and
-// enabled, starting arranging with start
-export const usePageArrange = (enabled: boolean, start: () => void) => {
+// Offers arranging in the header while the calling page is shown; null
+// when its tiles can't be arranged. The handlers may change on every
+// render: the header calls the latest.
+export const usePageArrange = (arrange: PageArrange | null) => {
   const { setArrange } = useContext(PageTitleContext);
-  const latest = useRef(start);
-  latest.current = start;
+  const latest = useRef(arrange);
+  latest.current = arrange;
+  const enabled = arrange !== null;
+  const editing = arrange?.editing ?? false;
+  const busy = arrange?.busy ?? false;
+  const canReset = arrange?.reset !== undefined;
   useEffect(() => {
     if (!enabled) return;
-    setArrange(() => latest.current());
+    setArrange({
+      editing,
+      busy,
+      start: () => latest.current?.start(),
+      done: () => latest.current?.done(),
+      cancel: () => latest.current?.cancel(),
+      reset: canReset ? () => latest.current?.reset?.() : undefined,
+    });
     return () => setArrange(null);
-  }, [enabled, setArrange]);
+  }, [enabled, editing, busy, canReset, setArrange]);
 };

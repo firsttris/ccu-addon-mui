@@ -16,7 +16,6 @@ import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { TileSkeleton, TileSkeletonGrid } from '../components/ui/skeleton';
 import { cn } from '../lib/utils';
-import LayoutGridIcon from '~icons/lucide/layout-grid';
 import { useLayout, useSetLayout } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
@@ -264,6 +263,7 @@ const gridTiles = (group: SectionGroup): GridTile[] => {
       : channels.map((channel) => ({
           key: `c:${channel.address}`,
           minPx: sectionMinPx[override?.section ?? 'generic'] ?? minPx,
+          span: override?.wide ? 2 : 1,
           channelIds: [channel.id],
           element: <ControlComponent channel={channel} />,
         }));
@@ -388,7 +388,8 @@ const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, 
           </h2>
           <span className="text-sm text-muted-foreground">{count}</span>
           {editing && onMove && (
-            <span className="ml-auto flex gap-1 self-center">
+            // Not taller than the title, so the section doesn't move
+            <span className="-my-2 ml-auto flex gap-1 self-center">
               <Button
                 variant="outline"
                 size="icon"
@@ -482,9 +483,6 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, on
   const change = (next: Partial<SavedLayout>) =>
     setDraft({ v: 3, order: sections.map((g) => g.key), sections: {}, ...layout, ...next });
   const canArrange = layoutId !== undefined && userLevel !== 'guest' && channelsByType.length > 0;
-  // The button to start sits in the header (on phones in the menu); while
-  // arranging, the bar below has the hint, reset and done
-  usePageArrange(canArrange && !editing, () => setEditing(true));
   const store = (layout: string, after: () => void) =>
     setLayout.mutate(
       { id: layoutId ?? 0, layout },
@@ -496,6 +494,24 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, on
         onError: (error) => showToast(`${m.SAVE_FAILED()}: ${error.message}`),
       },
     );
+  const finish = () => {
+    setEditing(false);
+    setDraft(null);
+  };
+  // The buttons sit in the header (to start on phones in the menu), so
+  // nothing on the page moves when arranging starts
+  usePageArrange(
+    canArrange
+      ? {
+          editing,
+          busy: setLayout.isPending,
+          start: () => setEditing(true),
+          done: () => (draft ? store(JSON.stringify(draft), finish) : finish()),
+          cancel: finish,
+          reset: saved ? () => store('', finish) : undefined,
+        }
+      : null,
+  );
   const effects = useEffects();
   const channels = useMemo(() => channelsByType.flatMap(([, list]) => list), [channelsByType]);
   const lightTradeIds = useLightTradeIds();
@@ -523,30 +539,6 @@ export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, on
       <AlarmBanner onShowAll={() => setAlarmsOpen(true)} />
       <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
       <Overview channels={channels} />
-      {canArrange && editing && (
-        <div className="-mt-2 flex flex-wrap items-center justify-end gap-2">
-          <span className="mr-auto text-sm text-muted-foreground">{m.LAYOUT_HINT()}</span>
-          {saved && (
-            <Button variant="ghost" size="sm" onClick={() => store('', () => setEditing(false))}>
-              {m.LAYOUT_RESET()}
-            </Button>
-          )}
-          <Button
-            size="sm"
-            disabled={setLayout.isPending}
-            onClick={() => {
-              if (!draft) return setEditing(false);
-              store(JSON.stringify(draft), () => {
-                setEditing(false);
-                setDraft(null);
-              });
-            }}
-          >
-            <LayoutGridIcon />
-            {m.LAYOUT_DONE()}
-          </Button>
-        </div>
-      )}
       {sections.map((group, index) => (
         <Section
           key={group.key}

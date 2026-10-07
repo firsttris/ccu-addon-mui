@@ -95,12 +95,22 @@ export type ControlOverride =
     // One tile for all channels of a device of this type (e.g. the four
     // channels of an energy meter)
     | { per: 'device'; component: ComponentType<{ channels: Channel[] }> }
-  ) & { section: SectionId };
+  ) & {
+    section: SectionId;
+    // Two columns of the section's grid (col-span-2 on the tile), e.g. a
+    // light with a color picker; arranged tiles start as wide
+    wide?: boolean;
+  };
 
-const channelControl = <T extends Channel>(section: SectionId, component: ComponentType<{ channel: T }>): ControlOverride => ({
+const channelControl = <T extends Channel>(
+  section: SectionId,
+  component: ComponentType<{ channel: T }>,
+  { wide = false } = {},
+): ControlOverride => ({
   per: 'channel',
   section,
   component: component as ComponentType<{ channel: Channel }>,
+  wide,
 });
 
 const deviceControl = <T extends Channel>(section: SectionId, component: ComponentType<{ channels: T[] }>): ControlOverride => ({
@@ -133,7 +143,7 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   VIRTUAL_DIMMER: channelControl('lights', DimmerControl),
   BACKLIGHTING_RECEIVER: channelControl('system', DimmerControl),
   OPTICAL_SIGNAL_RECEIVER: channelControl('buttons', DimmerControl),
-  UNIVERSAL_LIGHT_RECEIVER: channelControl('lights', ColorLightControl),
+  UNIVERSAL_LIGHT_RECEIVER: channelControl('lights', ColorLightControl, { wide: true }),
   // BidCos LED controllers (rgbw.fn, dual_white_controller.fn): the
   // brightness of HM-LC-DW-WM is a dimmer, color and programs of the
   // HM-LC-RGBW-WM and the white mix have their own tiles
@@ -141,7 +151,7 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   VIRTUAL_DUAL_WHITE_BRIGHTNESS: channelControl('lights', DimmerControl),
   DUAL_WHITE_COLOR: channelControl('lights', DualWhiteColorControl),
   VIRTUAL_DUAL_WHITE_COLOR: channelControl('lights', DualWhiteColorControl),
-  RGBW_COLOR: channelControl('lights', RgbwColorControl),
+  RGBW_COLOR: channelControl('lights', RgbwColorControl, { wide: true }),
   RGBW_AUTOMATIC: channelControl('lights', RgbwProgramControl),
   [ChannelType.KEYMATIC]: channelControl('doors', DoorControl),
   DOOR_LOCK_STATE_TRANSMITTER: channelControl('doors', DoorLockControl),

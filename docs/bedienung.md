@@ -46,19 +46,21 @@ und *Bearbeiten* legst du sie direkt an.
 ### Kacheln anordnen
 
 *Anordnen* (das Raster-Symbol oben in der Kopfzeile, auf dem Handy im Menü) schaltet die Ansicht in den
-Bearbeitungsmodus. Sie sieht dabei genauso aus wie sonst, nur verschiebbar. Jede Kachel hat oben rechts
-einen Griff: Nur daran ziehst du sie, überall sonst scrollt die Seite wie gewohnt, und schalten lässt sich
-beim Anordnen nichts.
+Bearbeitungsmodus. Sie sieht dabei genauso aus wie sonst, nur verschiebbar; die Kopfzeile zeigt statt
+ihrer Knöpfe *Abbrechen*, *Automatisch anordnen* und *Fertig*. Jede Kachel hat oben rechts einen Griff: Nur
+daran ziehst du sie, überall sonst scrollt die Seite wie gewohnt, und schalten lässt sich beim Anordnen
+nichts. Die Kacheln stehen dabei wie sonst lückenlos nebeneinander: Ziehst du eine auf den Platz einer
+anderen, rücken die übrigen in der Reihe zur Seite.
 
 - **Räume und Gewerke** behalten ihre Bereiche (Licht, Heizung, Rollläden …). Kacheln ziehst du innerhalb
   ihres Bereichs und änderst an der rechten Kante die Breite. Ganze Bereiche verschiebst du mit den
   Pfeilen neben der Überschrift, z. B. Heizung nach oben.
 - **Favoritenlisten** stellst du selbst zusammen. Dort gibt es keine Bereiche: Alle Kacheln liegen auf
-  einer Fläche, zuerst in der Reihenfolge der Liste, und lassen sich frei verschieben.
+  einer Fläche, zuerst in der Reihenfolge der Liste.
 
 *Fertig* speichert das Layout in der CCU am Raum, Gewerk oder an der Favoritenliste; es gilt damit auf
-allen Geräten und passt sich für Handy, Tablet und Desktop an. *Automatisch anordnen* stellt die
-ursprüngliche Anordnung wieder her. Layouts aus älteren Versionen, die alle Kacheln ohne Bereiche
+allen Geräten und passt sich für Handy, Tablet und Desktop an. *Abbrechen* verwirft die Änderungen,
+*Automatisch anordnen* stellt die ursprüngliche Anordnung wieder her. Layouts aus älteren Versionen, die alle Kacheln ohne Bereiche
 gemischt hatten, verwirft die App einmalig.
 
 <img src="screenshot-anordnen.png" alt="Favoritenliste im Modus Anordnen mit Thermostat, Lichtern und Rollladen" width="900">
