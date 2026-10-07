@@ -1,4 +1,5 @@
 import { Page } from '@playwright/test';
+import { protocolViolations } from './protocol';
 
 type Message = {
   type: string;
@@ -20,8 +21,22 @@ export type WebSocketMockOptions = {
 
 export const VALID_TOKEN = 'test-token';
 
+// What the mock sent the app, per page, across reloads
+const recordings = new WeakMap<Page, unknown[]>();
+
+// The messages of the page that don't match protocol/schema.json
+export const mockProtocolViolations = (page: Page) => protocolViolations(recordings.get(page) ?? []);
+
 export const installWebSocketMock = async (page: Page, options: WebSocketMockOptions = {}) => {
+  const recorded: unknown[] = [];
+  recordings.set(page, recorded);
+  await page.exposeFunction('__mockProtocol', (json: string) => {
+    recorded.push(JSON.parse(json));
+  });
   await page.addInitScript(({ requireLogin, validToken }) => {
+    const record = (message: unknown) =>
+      (window as Window & { __mockProtocol?: (json: string) => void }).__mockProtocol?.(JSON.stringify(message));
+
     type AnyPayload = Record<string, unknown>;
 
     const rooms = [
@@ -834,7 +849,18 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       failNextSet: null,
     };
 
+    // An event as the server sends it (go-server/pkg/types): with the
+    // interface, here taken from the channel ("BidCos-RF.LEQ0000001:1"), and a timestamp
+    const eventMessage = (event: { channel: string; datapoint: string; value: unknown }) => ({
+      event: {
+        interface: event.channel.includes('.') ? event.channel.split('.')[0] : 'HmIP-RF',
+        timestamp: new Date().toISOString(),
+        ...event,
+      },
+    });
+
     const broadcast = (payload: AnyPayload) => {
+      record(payload);
       for (const socket of state.sockets as MockWebSocket[]) {
         socket.dispatchMessage(payload);
       }
@@ -855,8 +881,8 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         state.authenticated = message.token === validToken;
         delayedBroadcast(
           state.authenticated
-            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken }
-            : { type: 'auth_response', success: false, authRequired: true, code: 'LOGIN_REQUIRED' },
+            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken, elevated: false }
+            : { type: 'auth_response', success: false, authRequired: true, code: 'LOGIN_REQUIRED', elevated: false },
         );
         return;
       }
@@ -865,8 +891,8 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         state.authenticated = message.username === 'Admin' && message.password === 'secret';
         delayedBroadcast(
           state.authenticated
-            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken }
-            : { type: 'auth_response', success: false, authRequired: true, code: 'INVALID_CREDENTIALS' },
+            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken, elevated: false }
+            : { type: 'auth_response', success: false, authRequired: true, code: 'INVALID_CREDENTIALS', elevated: false },
         );
         return;
       }
@@ -899,12 +925,12 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       }
 
       if (message.type === 'getSysvars') {
-        delayedBroadcast({ type: 'getSysvars_response', sysvars, requestId: message.requestId });
+        delayedBroadcast({ type: 'getSysvars_response', success: true, sysvars, requestId: message.requestId });
         return;
       }
 
       if (message.type === 'getPrograms') {
-        delayedBroadcast({ type: 'getPrograms_response', programs, requestId: message.requestId });
+        delayedBroadcast({ type: 'getPrograms_response', success: true, programs, requestId: message.requestId });
         return;
       }
 
@@ -1107,13 +1133,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
             : { type: 'setDatapoint_response', requestId: message.requestId, success: true },
         );
         if (typeof message.channel === 'string' && typeof message.datapoint === 'string') {
-          delayedBroadcast({
-            event: {
-              channel: message.channel,
-              datapoint: message.datapoint,
-              value: message.value,
-            },
-          });
+          delayedBroadcast(eventMessage({ channel: message.channel, datapoint: message.datapoint, value: message.value }));
         }
       }
     };
@@ -1191,7 +1211,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
     (window as Window & { __wsMock?: unknown }).__wsMock = {
       emitEvent: (event: { channel: string; datapoint: string; value: unknown }) => {
-        broadcast({ event });
+        broadcast(eventMessage(event));
       },
       sentMessages: () => state.sentMessages,
       subscriptions: () => state.subscriptions,

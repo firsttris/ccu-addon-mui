@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import v8toIstanbul from 'v8-to-istanbul';
 import libCoverage from 'istanbul-lib-coverage';
+import { mockProtocolViolations } from './websocketMock';
 
 const COVERAGE_ENABLED = process.env.PW_COVERAGE === '1';
 const NYC_DIR = path.join(process.cwd(), '.nyc_output');
@@ -41,6 +42,13 @@ export const test = base.extend({
     }
 
     await use(page);
+
+    // What the WebSocket mock and the app sent each other must match
+    // protocol/schema.json, like the real server's messages in the Go tests
+    const violations = mockProtocolViolations(page);
+    if (violations.length > 0) {
+      throw new Error(`The WebSocket mock left protocol/schema.json:\n${violations.join('\n')}`);
+    }
 
     if (COVERAGE_ENABLED) {
       const entries = await page.coverage.stopJSCoverage();
