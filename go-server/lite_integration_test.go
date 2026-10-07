@@ -504,9 +504,10 @@ func (s *liteStack) patchObject(t *testing.T, ref string, patch map[string]inter
 	}
 }
 
-// A channel without rooms of its own shows its device's; taking it into or
-// out of a room starts from those, and taking it out of the last one sticks
-func TestLiteInheritedRooms(t *testing.T) {
+// Rooms are the channel's: a room on the device object does not reach its
+// channels, as in occulited's own app; adding and removing changes the
+// channel object
+func TestLiteChannelRooms(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
 	roomOf := func(name string) int64 {
@@ -520,10 +521,14 @@ func TestLiteInheritedRooms(t *testing.T) {
 	stack.patchObject(t, "BidCos-RF.LEQ0000001:1", map[string]interface{}{"enums": []string{}})
 
 	var channelID int64
+	for _, c := range liteCall(t, conn, map[string]interface{}{"type": "getChannels", "all": true})["channels"].([]interface{}) {
+		if c := c.(map[string]interface{}); c["address"] == "LEQ0000001:1" {
+			channelID = int64(c["id"].(float64))
+		}
+	}
 	in := func(room int64) bool {
 		for _, c := range liteCall(t, conn, map[string]interface{}{"type": "getChannels", "roomId": fmt.Sprint(room)})["channels"].([]interface{}) {
-			if c := c.(map[string]interface{}); c["address"] == "LEQ0000001:1" {
-				channelID = int64(c["id"].(float64))
+			if c.(map[string]interface{})["address"] == "LEQ0000001:1" {
 				return true
 			}
 		}
@@ -534,17 +539,16 @@ func TestLiteInheritedRooms(t *testing.T) {
 			t.Fatalf("setGroupMember: %v", m)
 		}
 	}
-	if !in(keller) {
-		t.Fatal("the device's room is not shown")
+	if in(keller) {
+		t.Fatal("the device's room reaches its channel")
 	}
 	member(flur, true)
-	if !in(keller) || !in(flur) {
-		t.Fatalf("after adding: Keller %v, Flur %v", in(keller), in(flur))
+	if !in(flur) || in(keller) {
+		t.Fatalf("after adding: Flur %v, Keller %v", in(flur), in(keller))
 	}
-	member(keller, false)
 	member(flur, false)
-	if in(keller) || in(flur) {
-		t.Fatalf("after removing: Keller %v, Flur %v", in(keller), in(flur))
+	if in(flur) {
+		t.Fatal("still in Flur after removing")
 	}
 }
 

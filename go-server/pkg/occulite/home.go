@@ -277,8 +277,6 @@ func (h *Home) SetGroupMember(groupID, channelID int64, member bool) (string, er
 	}
 	ref := Ref(ch.iface, ch.desc.Address)
 	object := snapshot.Objects[ref]
-	// Starts from what the app shows, the device's rooms included, and
-	// makes them the channel's own
 	enums := []string{}
 	for _, e := range channelEnums(snapshot, ch) {
 		if e != path {
@@ -288,7 +286,7 @@ func (h *Home) SetGroupMember(groupID, channelID int64, member bool) (string, er
 	if member {
 		enums = append(enums, path)
 	}
-	patch := map[string]interface{}{"enums": enums, "meta": map[string]interface{}{metaNamespace: map[string]interface{}{"ownEnums": true}}}
+	patch := map[string]interface{}{"enums": enums}
 	if object.Name == "" {
 		// The store never invents objects: a new one needs its name
 		patch["name"] = defaultName(snapshot, ref, ch.desc.ParentType)
@@ -358,21 +356,11 @@ func (h *Home) channelByID(channelID int64) (channelInfo, bool) {
 	return channelInfo{}, false
 }
 
-// metaNamespace is the add-on's namespace in an object's meta
-const metaNamespace = "mui"
-
-// channelEnums are the rooms and functions of a channel: its own, or its
-// device's as long as the add-on never set the channel's (meta
-// mui.ownEnums), so that taking it out of its last room sticks
+// channelEnums are the rooms and functions of a channel: the channel
+// object's own. Rooms on a device object do not reach its channels, as in
+// occulited's own app (Sebastian in #191).
 func channelEnums(snapshot Snapshot, ch channelInfo) []string {
-	object := snapshot.Objects[Ref(ch.iface, ch.desc.Address)]
-	if len(object.Enums) > 0 {
-		return object.Enums
-	}
-	if own, _ := object.Meta[metaNamespace].(map[string]interface{}); own != nil && own["ownEnums"] == true {
-		return nil
-	}
-	return snapshot.Objects[Ref(ch.iface, ch.desc.Parent)].Enums
+	return snapshot.Objects[Ref(ch.iface, ch.desc.Address)].Enums
 }
 
 // defaultName is a name for a device or channel without one, as the CCU

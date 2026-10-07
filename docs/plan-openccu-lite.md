@@ -32,9 +32,8 @@ Wie sich MUI auf openccu-lite verhält, wo es anders ist als auf der CCU:
   openccu-lite beendet sie. Ist die Sitzung abgelaufen, schickt die App zu occulites `/login`.
   Administratoren müssen ihr Passwort nicht noch einmal eingeben, alle anderen dürfen keine Einstellungen
   ändern.
-- **Räume am Gerät:** occulited erlaubt Räume auch am Geräteobjekt. MUI zeigt sie an den Kanälen, solange
-  ein Kanal keine eigenen hat; ändert man die Räume eines Kanals in MUI, werden sie seine eigenen
-  (`meta.mui.ownEnums`).
+- **Räume** gehören zum Kanal. Räume am Geräteobjekt gelten nicht für dessen Kanäle, wie in occulites
+  eigener Bedien-App.
 - **Servicemeldungen:** occulites Meldungen sind ein Abbild der Wartungsdatenpunkte. Bestätigen lassen sich
   nur `STICKY_UNREACH` und `STICKY_SABOTAGE` (per `setValue`, wie auf der CCU); die anderen enden, wenn das
   Gerät es meldet, und die App bietet dafür kein Bestätigen an.
@@ -79,7 +78,7 @@ sich nachrüsten:
 | LAN-Gateways, Funkmodul-Einstellungen | `/api/system/v1/radio/…` | `system:write` | ohne die Firmware des Funkmoduls (`power`) |
 | Statusleuchte | `/api/system/v1/led` | `led` | |
 | Diagramme aus der Historie | `/api/rpc/v1/history` | `rpc:read` | letzte 500 Werte je Datenpunkt, nur für occulites Liste von Datenpunkten |
-| Kanaloptionen (sichtbar, bedienbar) | eigener Namensraum `meta.mui` | `meta:write` | gibt es auf openccu-lite nicht, MUI müsste sie selbst führen; `meta.mui` nutzt MUI bisher nur für `ownEnums` (Räume eines Kanals) |
+| Kanaloptionen (sichtbar, bedienbar) | eigener Namensraum `meta.mui` | `meta:write` | gibt es auf openccu-lite nicht, MUI müsste sie selbst führen |
 | Favoriten gemeinsam mit occulites Bedien-App | Enum `favorite` | `meta:write` | dort eine Liste je Konto, MUI kennt mehrere |
 
 ### Nur über die Sitzung eines Administrators
@@ -368,7 +367,5 @@ den bestehenden Tests absichern.
   können sich noch ändern. Deshalb erst die Schritte 1 bis 3, die auch ohne Lite etwas taugen.
 - **Doppelte Pflege** bei Funktionen der Klasse B: Jede Änderung an Räumen, Namen oder Servicemeldungen
   braucht beide Umsetzungen. Die Schnittstelle und Tests für beide Varianten halten das im Rahmen.
-- **Räume am Gerät:** Ob occulites eigene Seiten Räume am Gerät genauso an die Kanäle vererben wie MUI,
-  ist nicht geprüft.
 - **Neue Geräte ohne Namen** wirken auf Lite zunächst unfertig. Ein guter Vorschlag beim Anlernen (Typ und
   Raum) gleicht das aus.
