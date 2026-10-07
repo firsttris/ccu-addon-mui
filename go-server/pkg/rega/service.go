@@ -1,25 +1,12 @@
 package rega
 
 import (
+	"ccu-addon-mui-server/pkg/home"
 	"strconv"
 	"strings"
 )
 
-// ServiceMessage is an active service message of the CCU, as the WebUI
-// lists them under "Servicemeldungen".
-type ServiceMessage struct {
-	ID int64 `json:"id"`
-	// The datapoint that raised it: UNREACH, STICKY_UNREACH, LOW_BAT,
-	// CONFIG_PENDING, SABOTAGE, ERROR_CODE, ...
-	Type string `json:"type"`
-	// The datapoint's value, e.g. the error code
-	Value     string `json:"value,omitempty"`
-	Timestamp string `json:"timestamp,omitempty"`
-	Address   string `json:"address,omitempty"`
-	Name      string `json:"name"`
-	RoomID    int64  `json:"roomId,omitempty"`
-	RoomName  string `json:"roomName,omitempty"`
-}
+type ServiceMessage = home.ServiceMessage
 
 func parseServiceMessages(output string) []ServiceMessage {
 	isRecord := func(line string) bool { return strings.HasPrefix(line, "S\t") }

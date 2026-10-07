@@ -1,29 +1,14 @@
 package rega
 
 import (
+	"ccu-addon-mui-server/pkg/home"
 	"strconv"
 	"strings"
 )
 
-// DeviceHealth is what a device's maintenance channel tells about it
-// (get_device_health.tcl)
-type DeviceHealth struct {
-	Address   string `json:"address"`
-	Name      string `json:"name"`
-	Type      string `json:"type"`
-	Interface string `json:"interfaceName"`
-	RoomID    int64  `json:"roomId,omitempty"`
-	RoomName  string `json:"roomName,omitempty"`
-	// The values by datapoint (LOW_BAT for LOWBAT too)
-	Values map[string]HealthValue `json:"values"`
-}
+type DeviceHealth = home.DeviceHealth
 
-// HealthValue is a value with the time it was last set (Unix seconds, 0 if
-// never)
-type HealthValue struct {
-	Value interface{} `json:"value"`
-	Time  int64       `json:"time,omitempty"`
-}
+type HealthValue = home.HealthValue
 
 // GetDeviceHealth reads the maintenance values of all devices
 func (c *Client) GetDeviceHealth() ([]DeviceHealth, error) {

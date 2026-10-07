@@ -117,7 +117,7 @@ func (s *Server) readAlarms(maxAge time.Duration) ([]rega.AlarmMessage, error) {
 }
 
 func (s *Server) readServiceMessages(maxAge time.Duration) ([]rega.ServiceMessage, error) {
-	return s.messages.service.get(maxAge, s.regaClient.GetServiceMessages)
+	return s.messages.service.get(maxAge, s.home.GetServiceMessages)
 }
 
 // watchMessages marks a connection that loaded the alarms or the service
@@ -186,7 +186,7 @@ func (s *Server) pollAlarms() {
 // pollServiceMessages reads the service messages (or takes a read younger
 // than maxAge) and sends them if they changed.
 func (s *Server) pollServiceMessages(maxAge time.Duration) {
-	if s.regaClient == nil || !s.hasMessageWatchers(false) {
+	if s.home == nil || !s.hasMessageWatchers(false) {
 		s.messages.mu.Lock()
 		s.messages.lastService = nil
 		s.messages.mu.Unlock()

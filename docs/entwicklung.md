@@ -123,6 +123,10 @@ docs/                diese Dokumentation
 3. **Server**: Trag den Typ in `go-server/pkg/websocket/websocket.go` im Dispatcher `handleMessage` ein und
    schreib einen Handler dafür. Für Einstellungen gibt es `configure(...)`: Es prüft die Rechte, führt die
    Aktion aus, schreibt ins Audit-Log und antwortet. Für das Bedienen von Geräten nimmst du `canOperate`.
+   Räume, Gewerke, Kanäle, Namen, Favoriten und Servicemeldungen liest und ändert der Handler über `s.home`
+   (die Schnittstelle `home.Source` in `go-server/pkg/home`), nicht direkt über die ReGa: Auf der CCU steckt
+   die ReGa dahinter, auf openccu-lite dessen APIs. Nur was es ausschließlich auf der CCU gibt, etwa
+   Programme oder Systemvariablen, ruft `s.regaClient` direkt.
 4. **Fake-CCU**: Braucht die Aktion etwas Neues von der CCU, etwa ein Skript, eine XML-RPC-Methode oder eine
    CGI-Seite, bildest du es in `go-server/pkg/fakeccu` nach. Neue ReGa-Vorlagen erkennt die Fake-CCU von
    selbst an ihrem Text, du ergänzt nur die Antwort als neuen Fall in `runScript` (`fakeccu.go`).

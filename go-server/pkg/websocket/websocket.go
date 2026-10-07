@@ -28,6 +28,7 @@ import (
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
+	"ccu-addon-mui-server/pkg/home"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/rules"
 	"ccu-addon-mui-server/pkg/selfupdate"
@@ -249,6 +250,9 @@ type Server struct {
 	settings    *settings.Service
 	diagramsDir string
 	regaClient  *rega.Client
+	// The home model: rooms, trades, channels, names, favorites, service
+	// messages (the ReGa on a CCU)
+	home home.Source
 	clients     map[*Client]bool
 	clientsMu   sync.RWMutex
 	// The system variables last sent to the connections (sysvars.go)
@@ -320,12 +324,23 @@ type DeviceRPC interface {
 }
 
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
-	return &Server{
+	s := &Server{
 		cfg:             cfg,
 		regaClient:      regaClient,
 		clients:         make(map[*Client]bool),
 		subscriptionMgr: subscriptions.NewManager(),
 	}
+	// A nil client must stay a nil interface
+	if regaClient != nil {
+		s.home = regaClient
+	}
+	return s
+}
+
+// SetHome replaces where the home model comes from (openccu-lite's APIs
+// instead of the ReGa)
+func (s *Server) SetHome(source home.Source) {
+	s.home = source
 }
 
 // SetAuthenticator requires clients to log in with a CCU user before they
@@ -879,7 +894,7 @@ func (s *Server) handleGetRooms(client *Client, message []byte) {
 		return
 	}
 
-	rooms, err := s.regaClient.GetRooms()
+	rooms, err := s.home.GetRooms()
 	if err != nil {
 		s.sendRequestError(client, msg.RequestID, "getRooms failed: "+err.Error(), "")
 		return
@@ -894,7 +909,7 @@ func (s *Server) handleGetTrades(client *Client, message []byte) {
 		return
 	}
 
-	trades, err := s.regaClient.GetTrades()
+	trades, err := s.home.GetTrades()
 	if err != nil {
 		s.sendRequestError(client, msg.RequestID, "getTrades failed: "+err.Error(), "")
 		return
@@ -910,7 +925,7 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 	}
 
 	if msg.All {
-		channels, err := s.regaClient.GetAllChannels()
+		channels, err := s.home.GetAllChannels()
 		if err != nil {
 			s.sendRequestError(client, msg.RequestID, "getChannels failed: "+err.Error(), "")
 			return
@@ -934,7 +949,7 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 		return
 	}
 
-	channels, err := s.regaClient.GetChannels(objectID)
+	channels, err := s.home.GetChannels(objectID)
 	if err != nil {
 		s.sendRequestError(client, msg.RequestID, "getChannels failed: "+err.Error(), "")
 		return
@@ -1229,7 +1244,7 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		return
 	}
 
-	result, previous, err := s.regaClient.SetDatapoint(msg.InterfaceName, msg.Address, msg.Attribute, valueStr)
+	result, previous, err := s.home.SetDatapoint(msg.InterfaceName, msg.Address, msg.Attribute, valueStr)
 	if err != nil {
 		fail("CCU_ERROR", "setDatapoint failed: "+err.Error())
 		return
@@ -1252,7 +1267,7 @@ type deviceProblemsResponse struct {
 }
 
 func (s *Server) handleGetDeviceProblems(client *Client, requestID string) {
-	devices, err := s.regaClient.GetDeviceProblems()
+	devices, err := s.home.GetDeviceProblems()
 	if err != nil {
 		s.sendRequestError(client, requestID, "getDeviceProblems failed: "+err.Error(), "")
 		return
@@ -1356,13 +1371,13 @@ func (s *Server) handleListDevices(client *Client, requestID string) {
 	lists := make([][]ccurpc.DeviceDescription, len(interfaces))
 	var names map[string]string
 	var wg sync.WaitGroup
-	if s.regaClient != nil {
+	if s.home != nil {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			var err error
 			// Without the names the list still works
-			if names, err = s.regaClient.GetDeviceNames(); err != nil {
+			if names, err = s.home.GetDeviceNames(); err != nil {
 				logger.Debugf("getDeviceNames: %v", err)
 			}
 		}()
@@ -1680,7 +1695,7 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 		s.sendRequestError(client, msg.RequestID, "guests may not acknowledge messages", "FORBIDDEN")
 		return
 	}
-	acknowledge := s.regaClient.AcknowledgeServiceMessage
+	acknowledge := s.home.AcknowledgeServiceMessage
 	if alarm {
 		acknowledge = s.regaClient.AcknowledgeAlarmMessage
 	}
@@ -1786,20 +1801,20 @@ func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 	case "createGroup":
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: msg.List, Value: msg.Name},
 			func() (interface{}, string, error) {
-				result, id, err := s.regaClient.CreateGroup(msg.List, msg.Name)
+				result, id, err := s.home.CreateGroup(msg.List, msg.Name)
 				created = id
 				return nil, result, err
 			}, &created)
 	case "renameGroup":
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Name},
 			func() (interface{}, string, error) {
-				result, previous, err := s.regaClient.RenameGroup(msg.List, msg.ID, msg.Name)
+				result, previous, err := s.home.RenameGroup(msg.List, msg.ID, msg.Name)
 				return previous, result, err
 			})
 	case "deleteGroup":
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target},
 			func() (interface{}, string, error) {
-				result, previous, err := s.regaClient.DeleteGroup(msg.List, msg.ID)
+				result, previous, err := s.home.DeleteGroup(msg.List, msg.ID)
 				return previous, result, err
 			})
 	case "createSysvar":
@@ -1847,7 +1862,7 @@ func (s *Server) handleRename(client *Client, message []byte) {
 	}
 	s.configure(client, msg.RequestID, audit.Entry{Action: "rename", Target: msg.Address, Value: msg.Name},
 		func() (interface{}, string, error) {
-			result, previous, err := s.regaClient.SetName(msg.Address, msg.Name)
+			result, previous, err := s.home.SetName(msg.Address, msg.Name)
 			return previous, result, err
 		})
 }
@@ -1867,7 +1882,7 @@ func (s *Server) handleSetGroupMember(client *Client, message []byte) {
 	target := fmt.Sprintf("group %d channel %d", msg.GroupID, msg.ChannelID)
 	s.configure(client, msg.RequestID, audit.Entry{Action: "setGroupMember", Target: target, Value: msg.Member},
 		func() (interface{}, string, error) {
-			result, err := s.regaClient.SetGroupMember(msg.GroupID, msg.ChannelID, msg.Member)
+			result, err := s.home.SetGroupMember(msg.GroupID, msg.ChannelID, msg.Member)
 			return !msg.Member, result, err
 		})
 }
@@ -2075,7 +2090,7 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 				response.KeyMismatch, _ = s.rpc.KeyMismatchDevice(msg.InterfaceName, true)
 			}
 		} else {
-			devices, err := s.regaClient.GetInbox()
+			devices, err := s.home.GetInbox()
 			if err != nil {
 				s.sendRequestError(client, msg.RequestID, "getInbox failed: "+err.Error(), "CCU_ERROR")
 				return
@@ -2141,7 +2156,7 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 	case "acceptDevice":
 		entry.Target = msg.Address
 		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
-			result, err := s.regaClient.AcceptDevice(msg.Address)
+			result, err := s.home.AcceptDevice(msg.Address)
 			return nil, result, err
 		})
 	case "replaceDevice":
@@ -2274,8 +2289,8 @@ func (s *Server) storeChannelMode(iface, address string, value interface{}) {
 			logger.Error(fmt.Sprintf("setMetadata channelMode %s: %v", address, err))
 		}
 	}
-	if s.regaClient != nil {
-		if result, err := s.regaClient.SetChannelMode(iface, address, mode); err != nil || result != "OK" {
+	if s.home != nil {
+		if result, err := s.home.SetChannelMode(iface, address, mode); err != nil || result != "OK" {
 			logger.Error(fmt.Sprintf("SetChannelMode %s: %s %v", address, result, err))
 		}
 	}
@@ -2432,7 +2447,7 @@ func (s *Server) handleFavorites(client *Client, msgType string, message []byte)
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
 		return
 	}
-	favorites, err := s.regaClient.GetFavorites(client.user)
+	favorites, err := s.home.GetFavorites(client.user)
 	if err != nil {
 		s.sendRequestError(client, msg.RequestID, "getFavorites failed: "+err.Error(), "CCU_ERROR")
 		return
@@ -2460,7 +2475,7 @@ func (s *Server) handleFavorites(client *Client, msgType string, message []byte)
 		s.sendRequestError(client, msg.RequestID, msgType+": "+rega.SetNotFound, rega.SetNotFound)
 		return
 	}
-	result, previous, err := s.regaClient.ChangeFavorite(rega.FavoriteChange{
+	result, previous, err := s.home.ChangeFavorite(rega.FavoriteChange{
 		Action: action, ListID: msg.ID, ItemID: msg.ItemID, Name: msg.Name, Username: client.user,
 	})
 	if err != nil {
@@ -2608,18 +2623,18 @@ func (s *Server) applyTiles(channels []rega.Channel) {
 // viewIDs are the rooms, trades and favorite lists (of all users): what a
 // layout can be stored for
 func (s *Server) viewIDs() (map[int64]bool, error) {
-	if s.regaClient == nil {
-		return nil, fmt.Errorf("ReGa is not available")
+	if s.home == nil {
+		return nil, fmt.Errorf("the home model is not available")
 	}
-	rooms, err := s.regaClient.GetRooms()
+	rooms, err := s.home.GetRooms()
 	if err != nil {
 		return nil, err
 	}
-	trades, err := s.regaClient.GetTrades()
+	trades, err := s.home.GetTrades()
 	if err != nil {
 		return nil, err
 	}
-	favorites, err := s.regaClient.GetFavorites("")
+	favorites, err := s.home.GetFavorites("")
 	if err != nil {
 		return nil, err
 	}
