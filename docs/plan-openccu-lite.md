@@ -353,6 +353,12 @@ den bestehenden Tests absichern.
    (Abschnitt *Weitere Module auf openccu-lite*)
 8. Mit welchen IDs führt `/api/system/v1/groups` die Mitglieder einer Heizgruppe? Wir nehmen die
    Kanaladressen an, wie beim HMServer.
+9. Räume am Geräteobjekt: Gelten sie in occulites eigenen Seiten auch für die Kanäle des Geräts? MUI zeigt
+   sie an den Kanälen, solange ein Kanal keine eigenen hat, und merkt sich in `meta.mui.ownEnums`, wenn ein
+   Kanal eigene bekommen hat. Ein gemeinsamer Weg wäre besser als ein MUI-eigener.
+10. Würde occulited mehrzeilige Direktiven im lighttpd-Fragment annehmen? Seine Prüfung liest einen Wert nur
+    bis zum Zeilenende und lehnt das ganze Fragment sonst ab; im Journal steht der Grund, für Add-on-Autoren
+    ist das aber leicht zu übersehen.
 
 ## Risiken
 
