@@ -15,11 +15,12 @@ import PlayIcon from '~icons/lucide/play';
 import SlidersIcon from '~icons/lucide/sliders-horizontal';
 import LogOutIcon from '~icons/lucide/log-out';
 import KeyIcon from '~icons/lucide/key-round';
+import LayoutGridIcon from '~icons/lucide/layout-grid';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { LanguageChoice, useUserLanguageSync } from './LanguageChoice';
 import { useTheme } from '../contexts/ThemeContext';
 import { EffectsLevel, useEffects } from '../contexts/EffectsContext';
-import { usePageTitleValue } from '../contexts/PageTitleContext';
+import { usePageArrangeValue, usePageTitleValue } from '../contexts/PageTitleContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useRooms, useServiceMessages, useTrades } from '../queries';
 import { ServiceMessagesSheet } from './ServiceMessages';
@@ -101,6 +102,7 @@ const NavMenu = ({
   const { data: rooms = [] } = useRooms({ enabled: open });
   const { data: trades = [] } = useTrades({ enabled: open });
   const [changingPassword, setChangingPassword] = useState(false);
+  const arrange = usePageArrangeValue();
 
   const go = (navigateTo: () => void) => {
     navigateTo();
@@ -116,6 +118,14 @@ const NavMenu = ({
           <SheetDescription className="sr-only">{m.MENU()}</SheetDescription>
         </SheetHeader>
         <nav className="flex flex-col gap-5 px-2 pb-4">
+          {/* On phones the header has no room for it */}
+          {arrange && (
+            <div className="sm:hidden">
+              <NavLink icon={<LayoutGridIcon />} onClick={() => go(arrange)}>
+                {m.LAYOUT_ARRANGE()}
+              </NavLink>
+            </div>
+          )}
           <NavSection title={m.ROOMS()}>
             {rooms.map((room) => (
               <NavLink
@@ -287,6 +297,7 @@ const StartPageChoice = () => {
 export const Header: React.FC = () => {
   useUserLanguageSync();
   const title = usePageTitleValue();
+  const arrange = usePageArrangeValue();
   const effects = useEffects();
   const [menuOpen, setMenuOpen] = useState(false);
   const [keepScreenOn, setKeepScreenOn] = useWakeLockSetting();
@@ -318,6 +329,18 @@ export const Header: React.FC = () => {
           <span className="truncate text-xl leading-tight font-semibold tracking-tight sm:text-2xl">{title}</span>
           <Clock />
         </div>
+        {arrange && (
+          <Button
+            variant="outline"
+            size="icon-lg"
+            className="hidden sm:inline-flex"
+            onClick={arrange}
+            aria-label={m.LAYOUT_ARRANGE()}
+            title={m.LAYOUT_ARRANGE()}
+          >
+            <LayoutGridIcon className="size-5" />
+          </Button>
+        )}
         <AdminLockButton />
         <AlarmButton onClick={() => setAlarmsOpen(true)} />
         {problemCount > 0 && (

@@ -692,8 +692,16 @@ test('ordnet die Kacheln eines Raums per Drag & Drop an', async ({ page }) => {
   const key = await first.getAttribute('data-tile-key');
   const box = (await first.boundingBox())!;
 
-  // Drag the first tile to the right by a few columns
+  // Only the grip starts a drag
   await page.mouse.move(box.x + 20, box.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 420, box.y + 30, { steps: 10 });
+  await page.mouse.up();
+  expect((await first.boundingBox())!.x).toBe(box.x);
+
+  // Drag the first tile to the right by a few columns
+  const grip = (await first.locator('.tile-drag-handle').boundingBox())!;
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + 300, box.y + 30, { steps: 10 });
   await page.mouse.move(box.x + 420, box.y + 30, { steps: 10 });
@@ -894,6 +902,18 @@ test('verschiebt beim Anordnen ganze Bereiche, die Kacheln bleiben in ihrem Bere
   await page.reload();
   await expect(headings.nth(0)).toHaveText(second!);
   await expect(headings.nth(1)).toHaveText(first!);
+});
+
+test('bietet das Anordnen auf dem Handy im Menü an', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/room/1');
+  await expect(page.getByRole('main').getByRole('heading', { level: 2 }).first()).toBeVisible();
+  // The header has no room for it on phones
+  await expect(page.getByRole('button', { name: /^(Anordnen|Arrange)$/ })).toHaveCount(0);
+  await page.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^(Fertig|Done)$/ })).toBeVisible();
 });
 
 test('bedient die Farb- und Weißkanäle der BidCos-LED-Controller', async ({ page }) => {

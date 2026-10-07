@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import GripIcon from '~icons/lucide/grip';
 import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -81,19 +82,29 @@ export const GridDashboard = ({
           rowHeight={ROW_HEIGHT}
           margin={[MARGIN, MARGIN]}
           containerPadding={[MARGIN, MARGIN]}
-          dragConfig={{ enabled: editing }}
+          // Only the grip starts a drag: elsewhere a touch scrolls the page,
+          // on a tablet the tiles cover most of it
+          dragConfig={{ enabled: editing, handle: '.tile-drag-handle' }}
           resizeConfig={{ enabled: editing, handles: ['e'] }}
           onBreakpointChange={(bp: BreakpointName) => setBreakpoint(bp)}
           onDragStop={(layout: Layout) => commit(layout)}
           onResizeStop={(layout: Layout) => commit(layout)}
         >
           {tiles.map((tile) => (
-            <div key={tile.key} data-tile-key={tile.key} className={cn('relative', editing && 'cursor-move')}>
+            <div key={tile.key} data-tile-key={tile.key} className="relative">
               <Measured id={tile.key} onHeight={onHeight}>
                 {tile.element}
               </Measured>
-              {/* While editing, dragging must not operate the tile */}
+              {/* While editing, a tap must not operate the tile */}
               {editing && <div aria-hidden className="absolute inset-0 rounded-2xl bg-primary/5" />}
+              {editing && (
+                <div
+                  aria-hidden
+                  className="tile-drag-handle absolute right-2 top-2 flex size-9 cursor-move touch-none items-center justify-center rounded-xl border border-border bg-background/80 text-foreground shadow-sm backdrop-blur-sm"
+                >
+                  <GripIcon className="size-5" />
+                </div>
+              )}
             </div>
           ))}
         </ResponsiveGridLayout>
