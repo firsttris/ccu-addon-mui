@@ -1,3 +1,5 @@
+//go:build !lite
+
 package websocket
 
 import (
@@ -25,12 +27,6 @@ type sysvarsMessage struct {
 
 // watchSysvars marks a connection that loaded the system variables (with
 // getSysvars, so it may see them): it gets their changes from then on.
-func (c *Client) watchSysvars(on bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.sysvars = on
-}
-
 func (c *Client) watchesSysvars() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()

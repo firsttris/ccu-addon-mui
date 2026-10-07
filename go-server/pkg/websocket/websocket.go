@@ -126,6 +126,10 @@ type Client struct {
 
 	// device describes the browser, from the User-Agent
 	device string
+	// gateSession is who the platform's login gate let through, when it
+	// has one (gate.go)
+	gateSession GateSession
+	gateOK      bool
 	// source is the client's address, for the login lockout
 	source string
 
@@ -208,6 +212,14 @@ func (c *Client) close() {
 	})
 }
 
+// watchSysvars: the connection gets the system variables when they change
+// (sysvars.go)
+func (c *Client) watchSysvars(on bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.sysvars = on
+}
+
 func (c *Client) setSessionID(id string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -284,6 +296,8 @@ type Server struct {
 	// What the add-on runs on (platform.go)
 	platform     string
 	capabilities Capabilities
+	// The platform's login gate, nil to log in here (gate.go)
+	gate GateFunc
 }
 
 // DeviceRPC is the part of ccurpc.Client the server uses.
@@ -330,10 +344,7 @@ func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 		platform:        PlatformCCU,
 		capabilities:    CCUCapabilities,
 	}
-	// A nil client must stay a nil interface
-	if regaClient != nil {
-		s.home = regaClient
-	}
+	s.SetRega(regaClient)
 	return s
 }
 
@@ -392,13 +403,8 @@ func (s *Server) SetDeviceRPC(rpc DeviceRPC) {
 func (s *Server) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", s.handleWebSocket)
-	if s.backup != nil {
-		mux.Handle(BackupPath, s.backup)
-		mux.HandleFunc(RestorePath, s.serveRestoreUpload)
-	}
-	if s.logs != nil {
-		mux.Handle(LogsPath, s.logs)
-	}
+	// Backups, restores and logs on a CCU (routes_ccu.go)
+	s.platformRoutes(mux)
 	mux.Handle(DeviceImagePath, s.deviceImageHandler())
 	mux.Handle(AssetsPath, s.assetsHandler())
 
@@ -515,6 +521,9 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	client := newClient(conn)
 	client.device = deviceLabel(r.UserAgent())
 	client.source = clientAddress(r)
+	if s.gate != nil {
+		client.gateSession, client.gateOK = s.gate(r)
+	}
 
 	s.addClient(client)
 
@@ -624,7 +633,7 @@ func (s *Server) handleMessage(client *Client, message []byte) {
 		return
 	}
 
-	if s.auth != nil && !client.authenticated {
+	if (s.auth != nil || s.gate != nil) && !client.authenticated {
 		s.sendRequestError(client, requestID, "authentication required", "AUTH_REQUIRED")
 		return
 	}
@@ -702,24 +711,8 @@ func (s *Server) dispatch(client *Client, msgType, requestID string, message []b
 		s.handleRename(client, message)
 	case "setChannelTile":
 		s.handleSetChannelTile(client, message)
-	case "setChannelOption":
-		s.handleSetChannelOption(client, message)
 	case "getSystemInfo":
 		s.handleSystemInfo(client, requestID)
-	case "getLogging", "setLogging", "downloadLogs":
-		s.handleLogging(client, msgType, message)
-	case "prepareRestore", "checkRestore", "restoreBackup", "prepareCcuFirmware", "prepareDeviceFirmwareUpload", "checkCcuFirmware", "downloadCcuFirmware", "installCcuFirmware", "cancelCcuFirmware", "prepareAddonUpload", "installAddon":
-		s.handleRestore(client, msgType, message)
-	case "getLanGateways", "setLanGateways", "changeLanGatewayKey", "setBidcosInterface":
-		s.handleLanGateways(client, msgType, message)
-	case "getCertificate", "uploadCertificate", "deleteCertificate":
-		s.handleCertificate(client, msgType, message)
-	case "getFirewall", "setFirewall":
-		s.handleFirewall(client, msgType, message)
-	case "getNetwork", "setNetwork":
-		s.handleNetwork(client, msgType, message)
-	case "getSecurity", "setSecurity", "changeSecurityKey", "setSessionTimeout", "factoryReset", "setSecurityLevel", "setSnmp":
-		s.handleSecurity(client, msgType, message)
 	case "getGeneralSettings", "setGeneralSettings":
 		s.handleGeneralSettings(client, msgType, message)
 	case "getDiagrams", "getDiagramData", "saveDiagram", "deleteDiagram":
@@ -728,34 +721,8 @@ func (s *Server) dispatch(client *Client, msgType, requestID string, message []b
 		s.handleHeatingGroupChange(client, msgType, message)
 	case "getHeatingGroups":
 		s.handleHeatingGroups(client, requestID)
-	case "runScript":
-		s.handleRunScript(client, message)
-	case "checkFirmwareUpdate":
-		s.handleFirmwareUpdate(client, requestID)
 	case "getUserLanguage", "setUserLanguage":
 		s.handleUserLanguage(client, msgType, message)
-	case "changePassword":
-		s.handleChangePassword(client, message)
-	case "getUsers", "saveUser", "deleteUser":
-		s.handleUsers(client, msgType, message)
-	case "getAddons", "addonAction", "checkAddonUpdate":
-		s.handleAddons(client, msgType, message)
-	case "checkSelfUpdate":
-		s.handleCheckSelfUpdate(client, requestID)
-	case "installSelfUpdate":
-		// Download and install take a while: the client's other requests
-		// go on meanwhile
-		go s.handleInstallSelfUpdate(client.snapshot(), requestID)
-	case "startComTest", "pollComTest":
-		s.handleComTest(client, msgType, message)
-	case "getVirtualKeys":
-		s.handleVirtualKeys(client, requestID)
-	case "getDevicePrograms":
-		s.handleDevicePrograms(client, message)
-	case "getHistory", "clearHistory":
-		s.handleHistory(client, msgType, message)
-	case "getSystemSettings", "setLocation", "powerAction", "setTimeServers", "setTimeZone", "setClock", "setRegaVersion":
-		s.handleSystemSettings(client, msgType, message)
 	case "listSessions", "revokeSession", "logout":
 		s.handleSessions(client, msgType, message)
 	case "getLinks", "addLink", "removeLink", "getLinkParamsetDescription", "getLinkParamset", "putLinkParamset":
@@ -774,10 +741,6 @@ func (s *Server) dispatch(client *Client, msgType, requestID string, message []b
 		s.handleSetGroupMember(client, message)
 	case "setInstallMode", "getInstallMode", "getInbox", "acceptDevice", "deleteDevice", "listReplaceableDevices", "replaceDevice", "addDeviceBySerial", "setTempKey", "searchWiredDevices", "getInterfaces":
 		s.handlePairing(client, msgType, message)
-	case "createBackup":
-		// Packing /usr/local takes minutes: the client's other requests go
-		// on meanwhile
-		go s.handleCreateBackup(client.snapshot(), message)
 	case "installFirmware":
 		s.handleInstallFirmware(client, message)
 	case "checkDeviceFirmware", "downloadDeviceFirmware", "addDeviceFirmware":
@@ -786,17 +749,16 @@ func (s *Server) dispatch(client *Client, msgType, requestID string, message []b
 		go s.handleDeviceFirmware(client.snapshot(), msgType, message)
 	case "getDeviceFirmware", "getDeviceFirmwareChangelog", "deleteDeviceFirmware":
 		s.handleDeviceFirmware(client, msgType, message)
-	case "getServiceMessages", "acknowledgeServiceMessage", "getAlarmMessages", "acknowledgeAlarmMessage":
+	case "getServiceMessages", "acknowledgeServiceMessage":
 		s.handleServiceMessages(client, msgType, message)
-	case "createGroup", "renameGroup", "deleteGroup", "createSysvar", "renameSysvar", "deleteSysvar", "editSysvar":
+	case "createGroup", "renameGroup", "deleteGroup":
 		s.handleObjects(client, msgType, message)
-	case "getSysvars", "setSysvar", "getPrograms", "runProgram", "setProgramActive", "setLogicOption":
-		s.handleLogic(client, msgType, message)
-	case "getProgram", "saveProgram", "deleteProgram":
-		s.handleProgramEditor(client, msgType, message)
 	case "getFavorites", "createFavorite", "renameFavorite", "deleteFavorite", "addFavoriteItem", "removeFavoriteItem":
 		s.handleFavorites(client, msgType, message)
 	default:
+		if s.dispatchPlatform(client, msgType, requestID, message) {
+			return
+		}
 		s.sendRequestError(client, requestID, fmt.Sprintf("unknown message type: %s", msgType), "")
 	}
 }
@@ -998,6 +960,11 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	}
 	_ = json.Unmarshal(message, &msg)
 
+	if s.gate != nil {
+		s.gateLogin(client)
+		return
+	}
+
 	if s.auth == nil {
 		// Without authentication everyone can do everything
 		client.setSession("", auth.LevelAdmin)
@@ -1038,24 +1005,6 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 	})
 }
 
-// autoLoginUser is the user the CCU logs in automatically, "" for none or
-// an administrator
-func (s *Server) autoLoginUser() string {
-	if s.regaClient == nil {
-		return ""
-	}
-	users, err := s.regaClient.GetUsers()
-	if err != nil {
-		return ""
-	}
-	for _, u := range users {
-		if u.AutoLogin && u.Level != levelToCCU[auth.LevelAdmin] {
-			return u.Name
-		}
-	}
-	return ""
-}
-
 // handleLogin verifies CCU credentials and returns a token for the client
 // to store.
 func (s *Server) handleLogin(client *Client, message []byte) {
@@ -1065,6 +1014,12 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendErrorCode(client, "invalid login message", "INVALID_MESSAGE")
+		return
+	}
+
+	// The platform logs in (openccu-lite's login page)
+	if s.gate != nil {
+		s.gateLogin(client)
 		return
 	}
 

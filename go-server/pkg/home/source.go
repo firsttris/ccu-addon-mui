@@ -1,5 +1,7 @@
 package home
 
+import "errors"
+
 // Source is where the server reads and changes the home model: on a CCU
 // the ReGa (pkg/rega), on openccu-lite its metadata and system APIs. What
 // exists only on a CCU (system variables, programs, the WebUI's system
@@ -43,3 +45,6 @@ type Source interface {
 	// Channels only administrators may operate, by address
 	GetReadOnlyChannels() (map[string]bool, error)
 }
+
+// ErrNotSupported: the platform does not have it
+var ErrNotSupported = errors.New("not supported on this platform")
