@@ -33,6 +33,10 @@ func fakeCCU(t *testing.T, logouts *int) *httptest.Server {
 				_, _ = w.Write([]byte(`{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":503,"message":"service not available"}}`))
 				return
 			}
+			if req.Params["username"] == "Broken" {
+				_, _ = w.Write([]byte(`{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":500,"message":"internal error"}}`))
+				return
+			}
 			_, _ = w.Write([]byte(`{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":501,"message":"invalid credentials or too many sessions"}}`))
 		case "Session.logout":
 			*logouts++
@@ -338,6 +342,21 @@ func TestCCUNotReadyDoesNotCountAsFailure(t *testing.T) {
 	for i := 0; i < maxFailures+2; i++ {
 		if _, _, err := a.Login("Booting", "secret", "test", "192.0.2.1"); err != ErrCCUNotReady {
 			t.Fatalf("attempt %d: got %v, want ErrCCUNotReady", i, err)
+		}
+	}
+}
+
+// Only the CCU's 501 means wrong credentials: other errors are reported
+// with the CCU's answer and don't count towards the lockout
+func TestOtherCCUErrorIsNotInvalidCredentials(t *testing.T) {
+	logouts := 0
+	ccu := fakeCCU(t, &logouts)
+	defer ccu.Close()
+	a := newTestAuthenticator(t, ccu.URL)
+	for i := 0; i < maxFailures+2; i++ {
+		_, _, err := a.Login("Broken", "secret", "test", "192.0.2.1")
+		if err == nil || err == ErrInvalidCredentials || err == ErrTooManyAttempts || !strings.Contains(err.Error(), "error 500: internal error") {
+			t.Fatalf("attempt %d: got %v, want the CCU's error", i, err)
 		}
 	}
 }

@@ -433,9 +433,18 @@ func (a *Authenticator) verifyWithCCU(username, password string) (bool, error) {
 	if login.Error != nil && login.Error.Code == 503 {
 		return false, ErrCCUNotReady
 	}
-	sessionID, ok := login.Result.(string)
-	if login.Error != nil || !ok || sessionID == "" {
+	// 501 is the only answer for wrong credentials (and too many
+	// sessions). Any other error isn't the user's password: say what the
+	// CCU answered, for the log
+	if login.Error != nil && login.Error.Code != 501 {
+		return false, fmt.Errorf("CCU login failed: error %d: %s", login.Error.Code, login.Error.Message)
+	}
+	if login.Error != nil {
 		return false, nil
+	}
+	sessionID, ok := login.Result.(string)
+	if !ok || sessionID == "" {
+		return false, fmt.Errorf("CCU login failed: unexpected answer %v", login.Result)
 	}
 
 	var logout rpcResponse
