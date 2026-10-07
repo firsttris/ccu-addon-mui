@@ -22,6 +22,10 @@ func NewGroups(client *Client) *Groups {
 	return &Groups{client: client}
 }
 
+// liteMember is a member or candidate of a group. Its id is hmipserver's,
+// a device (KEQ9000003) or a channel (00010000000A10:1): the app gets it
+// as the member's address and sends it back unchanged (Sebastian in #191,
+// docs/system-api.md "Heating groups").
 type liteMember struct {
 	ID     string `json:"id"`
 	Serial string `json:"serial"`
