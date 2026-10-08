@@ -1,7 +1,7 @@
 # API: WebSocket-Protokoll
 
 App und Server sprechen über eine WebSocket-Verbindung mit JSON-Nachrichten. Dieses Dokument beschreibt
-die Regeln und listet alle 151 Nachrichtentypen. Maßgeblich ist das Schema `protocol/schema.json`; daraus
+die Regeln und listet alle 153 Nachrichtentypen. Maßgeblich ist das Schema `protocol/schema.json`; daraus
 entstehen die Typen der App, und die Go-Tests prüfen jede Nachricht des Servers dagegen.
 
 ## Verbindung

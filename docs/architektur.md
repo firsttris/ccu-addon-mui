@@ -63,7 +63,7 @@ anlegt, steht in der [Installation](installation.md#dateien-auf-der-ccu).
 ```
 go-server/
   main.go              Start: Konfiguration, Dienste verdrahten, Shutdown
-  pkg/websocket        WebSocket-Server, Dispatcher für 151 Nachrichtentypen, Rechte, Audit-Aufrufe,
+  pkg/websocket        WebSocket-Server, Dispatcher für 153 Nachrichtentypen, Rechte, Audit-Aufrufe,
                        HTTP-Endpunkte für Backup, Upload und Logs
   pkg/rega             ReGa: 58 HM-Script-Vorlagen (embed), Ausführen, Parsen, Validieren
   pkg/ccurpc           XML-RPC-Client zu BidCos-RF, HmIP-RF, VirtualDevices; Cache für Beschreibungen
