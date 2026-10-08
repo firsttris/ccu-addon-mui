@@ -8,16 +8,16 @@ interface FloorControlProps {
   channel: FloorClimateControlTransceiverChannel;
 }
 
-// The water gets warmer the further the valve is open: amber to red-orange
-const water = (open: number, alpha = 1, lightness = 55) =>
-  `hsl(${40 - 28 * open} 95% ${lightness}% / ${Math.max(0, Math.min(1, alpha))})`;
+// The water gets warmer the further the valve is open: from cold blue over
+// violet to hot red (in OKLCH, so the way there stays even and never green)
+const water = (open: number, alpha = 1) => `oklch(0.64 0.19 ${255 + 135 * open} / ${Math.max(0, Math.min(1, alpha))})`;
 
 // The heating loop in the screed, seen from above: four runs that leave and
 // return at the manifold on the left
 const LOOP = 'M6 14 H104 A8 8 0 0 1 104 30 H18 A8 8 0 0 0 18 46 H104 A8 8 0 0 1 104 62 H6';
 
 // The floor with its heating loop, and the valve opening as a picture: the
-// warm water fills the loop from the manifold as far as the valve is open
+// water fills the loop from the manifold as far as the valve is open
 // (a quarter of it per run). The further open, the warmer the water and the
 // faster it flows; the floor glows and heat rises.
 const FloorPicture = ({ value, label }: { value: number; label: string }) => {
@@ -66,19 +66,24 @@ const FloorPicture = ({ value, label }: { value: number; label: string }) => {
           className="transition-[stroke,stroke-dasharray] duration-700 ease-[cubic-bezier(.4,0,.2,1)]"
           style={{ strokeDasharray: `${value} 100` }}
         />
-        {flowing && (
-          <path
-            d={LOOP}
-            strokeWidth="1.5"
-            strokeDasharray="4 12"
-            stroke="white"
-            strokeOpacity="0.8"
-            mask={`url(#${mask})`}
-            className={effects.on ? 'fx-flow' : undefined}
-            // Faster flow the further the valve is open
-            style={{ animationDuration: `${(2.4 - 1.8 * open).toFixed(2)}s` }}
-          />
-        )}
+        {/* The water moving: bright pulses with a soft halo, faster the further open */}
+        {flowing &&
+          [
+            { width: 3.5, opacity: 0.25 },
+            { width: 1.4, opacity: 0.9 },
+          ].map(({ width, opacity }) => (
+            <path
+              key={width}
+              d={LOOP}
+              strokeWidth={width}
+              strokeDasharray="3 13"
+              stroke="white"
+              strokeOpacity={opacity}
+              mask={`url(#${mask})`}
+              className={effects.on ? 'fx-flow' : undefined}
+              style={{ animationDuration: `${(1.1 - 0.7 * open).toFixed(2)}s` }}
+            />
+          ))}
       </svg>
       {/* Heat shimmering up off the floor: more of it the further open */}
       {effects.on &&
