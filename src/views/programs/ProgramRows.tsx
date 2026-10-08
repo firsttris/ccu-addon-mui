@@ -3,6 +3,7 @@ import { useState } from 'react';
 import XIcon from '~icons/lucide/x';
 import { TimeModuleDialog, useTimeTexts } from './TimeModuleDialog';
 import { ProgramCondition, ProgramDestination, TimeModule } from '../../types/protocol';
+import { ParameterDescription } from '../../types/types';
 import { useSysvars } from '../../queries';
 import { Button } from '../../components/ui/button';
 import { NativeSelect } from '../../components/ui/select';
@@ -63,7 +64,7 @@ const NumberCondition = ({
   onChange,
 }: {
   condition: ProgramCondition;
-  parameter?: { unit?: string; type: string };
+  parameter?: Pick<ParameterDescription, 'unit' | 'type'>;
   onChange: (c: ProgramCondition) => void;
 }) => {
   const compare = numberCompares.some((c) => c.value === condition.compare) ? condition.compare : COMPARE.NUMBER_EQUAL;
@@ -87,7 +88,7 @@ const NumberCondition = ({
         <NumberInput
           label={compare === COMPARE.RANGE ? m.RANGE_FROM() : m.PRG_VALUE()}
           value={condition.value1}
-          parameter={parameter as never}
+          parameter={parameter}
           onChange={(value1) => onChange({ ...condition, compare, value1 })}
         />
       </Field>
@@ -96,7 +97,7 @@ const NumberCondition = ({
           <NumberInput
             label={m.RANGE_TO()}
             value={condition.value2}
-            parameter={parameter as never}
+            parameter={parameter}
             onChange={(value2) => onChange({ ...condition, value2, value2Type: condition.value1Type })}
           />
         </Field>
@@ -437,7 +438,7 @@ export const DestinationRow = ({
           <NumberInput
             label={m.PRG_VALUE()}
             value={destination.value}
-            parameter={parameter as never}
+            parameter={parameter}
             onChange={(value) => onChange({ ...destination, value })}
           />
         </Field>
