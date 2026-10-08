@@ -324,8 +324,8 @@ export const LinkParameters = ({ interfaceName, link }: { interfaceName: string;
             <ul className="flex list-disc flex-col gap-1 pl-5">
               {changes.map(([name, value]) => (
                 <li key={name}>
-                  <strong>{t(name as TranslationKey)}</strong>: {formatParameterValue(description.data[name], current[name], t)} →{' '}
-                  {formatParameterValue(description.data[name], value, t)}
+                  <strong>{t(name as TranslationKey)}</strong>: {formatParameterValue(description.data[name], current[name])} →{' '}
+                  {formatParameterValue(description.data[name], value)}
                 </li>
               ))}
             </ul>
