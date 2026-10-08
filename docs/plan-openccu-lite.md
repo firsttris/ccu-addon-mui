@@ -12,6 +12,12 @@ So sieht MUI in openccu-lite aus (Menü *Zusatzsoftware → MUI*, aufgenommen vo
 <img src="screenshot-lite-desktop-hell.png" alt="MUI in openccu-lite am Desktop, hell" width="720">
 <img src="screenshot-lite-handy-dunkel.png" alt="MUI in openccu-lite auf dem Handy, dunkel" width="200">
 
+Im Vollbild ab 1.0.0-dev.45 ([openccu-lite#11](https://github.com/hobbyquaker/openccu-lite/issues/11)), ohne
+openccu-lites Leiste; der Weg zurück steht oben in MUIs Menü:
+
+<img src="screenshot-lite-vollbild-desktop.png" alt="MUI im Vollbild in openccu-lite am Desktop" width="720">
+<img src="screenshot-lite-vollbild-handy-menue.png" alt="MUIs Menü im Vollbild auf dem Handy, oben der Weg zurück zu openccu-lite" width="200">
+
 Die Schritte 1 bis 8 sind umgesetzt, der Branch baut beide Pakete. Getestet ist es auf zwei Wegen:
 
 - **Gegen die Fake-Lite** (`go test -tags lite ./...`, `e2e/lite.spec.ts`): was MUI aus occulites APIs
