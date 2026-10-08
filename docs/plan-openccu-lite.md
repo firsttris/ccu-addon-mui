@@ -396,6 +396,26 @@ Zum Manifest: `"start": "early"`, `hs485d` in `needs` und nur die Rechte, die MU
 das Token noch weniger: `meta:read`, `rpc:operate`, `system:read`. Den Katalog-PR nimmt er, sobald die Release mit
 `openccu-lite.json` draußen ist.
 
+## Fehler und Eigenheiten von openccu-lite
+
+Was wir beim Testen an openccu-lite selbst finden, nicht an MUI. Neue Funde kommen hierher, mit der
+Stelle, an der sie auffielen, und ob sie gemeldet sind. Fehler in occulited gehen als Issue an
+[hobbyquaker/openccu-lite](https://github.com/hobbyquaker/openccu-lite/issues) (Sebastians Wunsch in
+#191); Fehler in hmipserver oder rfd stammen von eQ-3 und lassen sich dort nur melden.
+
+| Was | Wo | Gefunden | Stand |
+|---|---|---|---|
+| Ein mehrzeiliger Wert einer Direktive im lighttpd-Fragment eines Add-ons wird abgelehnt, die Installation meldet es nicht | occulited | VM-Test (1.0.0-dev.42) | Sebastian behebt es (#191, Antwort 8); unser Fragment ist einzeilig |
+| `setValue` von `INHIBIT` an Kanal 0 des virtuellen Geräts einer Heizgruppe: `Fault -321`, eine NullPointerException (`BidCosVirtualChannelParameter.getParameterMappings()`) | hmipserver (eQ-3) | VM-Test (1.0.0-dev.43, Gruppe `HomeMatic.heating` ohne Mitglieder) | nicht gemeldet; nachzuprüfen, ob es mit Mitgliedern auch so ist |
+| `getParamset VALUES` am Kanal einer Heizgruppe ohne Mitglieder bekommt keine Antwort, occulited meldet `503 down`; `getParamsetDescription` geht | hmipserver (eQ-3), oder occulited, falls es zu früh aufgibt | VM-Test (1.0.0-dev.43) | nicht gemeldet; zu klären, wer nicht antwortet (Journal von hmipserver) |
+
+Keine Fehler, aber gut zu wissen:
+
+- lite-rpc nimmt die Sitzung eines Browsers nur als `Authorization: Bearer`, nicht über das Cookie allein
+  (`403 forbidden`). So dokumentiert, MUI macht es so.
+- Ohne HmIP-Funkmodul bietet hmipserver nur den Heizgruppen-Typ `HomeMatic.heating` an
+  (`GET /api/system/v1/groups/types`); `hmip.heating.group` wird mit `422` abgelehnt.
+
 ## Risiken
 
 - **Lite ist noch in Entwicklung** (`dev.42`). Die Metadata API ist für Version 1 eingefroren, andere Teile
