@@ -562,6 +562,7 @@ func settings(t *testing.T, configure, operate *websocket.Conn, device string, c
 		refused(t, call(t, operate, message{"type": "putParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER", "values": message{name: p["default"]}}))
 		var readErr message
 		read := func() interface{} {
+			readErr = nil
 			m := call(t, configure, message{"type": "getParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER"})
 			if m["type"] == "error" {
 				readErr = m
@@ -581,8 +582,17 @@ func settings(t *testing.T, configure, operate *websocket.Conn, device string, c
 		}
 		value := another(p, current)
 		ok(t, call(t, configure, message{"type": "putParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER", "values": message{name: value}}))
-		if got := read(); !same(got, value) {
-			t.Fatalf("%s MASTER %s: wrote %v, read %v", address, name, value, got)
+		// Read back until it is there: hmipserver answered a read right after
+		// the write once without the value (openccu-lite 1.0.0-dev.45, see
+		// the plan's Fehler und Eigenheiten)
+		got := read()
+		for tries := 1; !same(got, value) && tries < 10; tries++ {
+			t.Logf("%s MASTER %s: wrote %v, read %v (error %v), again", address, name, value, got, readErr)
+			time.Sleep(time.Second)
+			got = read()
+		}
+		if !same(got, value) {
+			t.Fatalf("%s MASTER %s: wrote %v, read %v (error %v)", address, name, value, got, readErr)
 		}
 		ok(t, call(t, configure, message{"type": "putParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER", "values": message{name: current}}))
 		t.Logf("%s MASTER %s: %v → %v and back, as ci-configure", address, name, current, value)
