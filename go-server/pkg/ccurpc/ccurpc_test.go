@@ -329,3 +329,24 @@ func TestParamsetDescriptionAfterFirmwareUpdate(t *testing.T) {
 		t.Fatalf("expected a description per firmware, got %v", calls)
 	}
 }
+
+// hmipserver sends MIN, MAX and DEFAULT of its virtual devices untyped, read
+// as text (openccu-lite's heating groups): numbers for FLOAT and INTEGER
+func TestParamsetDescriptionNumbersFromText(t *testing.T) {
+	description := parseParamsetDescription(map[string]interface{}{
+		"SET_TEMPERATURE": map[string]interface{}{"TYPE": "FLOAT", "MIN": "4.5", "MAX": "30.5", "DEFAULT": "20.0",
+			"SPECIAL": []interface{}{map[string]interface{}{"ID": "OFF", "VALUE": "4.5"}}},
+		"BOOST_TIME": map[string]interface{}{"TYPE": "INTEGER", "MIN": "0", "MAX": "30", "DEFAULT": 5},
+		"NAME":       map[string]interface{}{"TYPE": "STRING", "DEFAULT": "12"},
+	})
+	temperature := description["SET_TEMPERATURE"]
+	if temperature.Min != 4.5 || temperature.Max != 30.5 || temperature.Default != 20.0 || temperature.Special[0].Value != 4.5 {
+		t.Fatalf("FLOAT: %+v", temperature)
+	}
+	if boost := description["BOOST_TIME"]; boost.Min != 0 || boost.Max != 30 || boost.Default != 5 {
+		t.Fatalf("INTEGER: %+v", boost)
+	}
+	if name := description["NAME"]; name.Default != "12" {
+		t.Fatalf("STRING stays text: %+v", name)
+	}
+}
