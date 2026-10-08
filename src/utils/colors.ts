@@ -51,3 +51,8 @@ export const getPercentageGradient = (percentage: number): string => {
     return `linear-gradient(135deg, #C62828, ${color})`;
   }
 };
+
+// Heating water by how far a valve is open (0-1): from cold blue over violet
+// to hot red, in OKLCH so the way there stays even and never green
+export const heatColor = (open: number, alpha = 1) =>
+  `oklch(0.64 0.19 ${255 + 135 * open} / ${Math.max(0, Math.min(1, alpha))})`;

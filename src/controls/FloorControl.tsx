@@ -3,15 +3,15 @@ import { FloorClimateControlTransceiverChannel } from '../types/types';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
+import { heatColor } from '../utils/colors';
 import { cn } from '../lib/utils';
 
 interface FloorControlProps {
   channel: FloorClimateControlTransceiverChannel;
 }
 
-// The water gets warmer the further the valve is open: from cold blue over
-// violet to hot red (in OKLCH, so the way there stays even and never green)
-const water = (open: number, alpha = 1) => `oklch(0.64 0.19 ${255 + 135 * open} / ${Math.max(0, Math.min(1, alpha))})`;
+// The water gets warmer the further the valve is open
+const water = heatColor;
 
 // The heating loop in the screed, seen from above: four runs that leave and
 // return at the manifold on the left

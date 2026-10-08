@@ -1,5 +1,5 @@
 import { Channel, DatapointValue, HeatingClimateControlTransceiverChannel } from '../types/types';
-import { useParamset, useSetDataPoint } from '../queries';
+import { useDevices, useParamset, useSetDataPoint } from '../queries';
 import RadiatorThermostatIcon from '~icons/mui/radiator-thermostat';
 import WallThermostatIcon from '~icons/mui/wall-thermostat';
 import { Tile } from '../components/Tile';
@@ -9,6 +9,8 @@ import { ThermostatDial } from './ThermostatControl/ThermostatDial';
 import { TemperatureDisplay } from './ThermostatControl/TemperatureDisplay';
 import { ControlButtons } from './ThermostatControl/ControlButtons';
 import { ThermostatIconButtons } from './ThermostatControl/ThermostatIconButtons';
+import { Radiator } from './ThermostatControl/Radiator';
+import { DeviceImage } from '../components/DeviceImage';
 import { useThermostatState } from './ThermostatControl/hooks/useThermostatState';
 import { temperatureRange } from './ThermostatControl/constants';
 import { WeekProfileSheet } from './ThermostatControl/profile/WeekProfileSheet';
@@ -107,9 +109,10 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
           ? { text: m.OFF(), className: 'bg-muted text-muted-foreground' }
           : { text: manualMode ? m.MANUAL() : m.AUTO(), className: 'bg-muted text-muted-foreground' };
 
-  const kind = isRadiatorThermostat
-    ? [m.RADIATOR_THERMOSTAT(), valve !== undefined ? m.VALVE({ percent: valve }) : undefined].filter(Boolean).join(' · ')
-    : m.WALL_THERMOSTAT();
+  const kind = isRadiatorThermostat ? m.RADIATOR_THERMOSTAT() : m.WALL_THERMOSTAT();
+  // The device's picture from the WebUI (DEVDB.tcl), its icon until then
+  const { data: devices } = useDevices();
+  const deviceType = devices?.find((d) => d.address === channel.address.split(':')[0])?.type;
 
   return (
     <Tile
@@ -121,9 +124,15 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
       <div className="flex flex-col items-center gap-1 px-3.5 pt-4 pb-3.5">
         <div className="flex w-full items-start justify-between gap-2">
           <div className="flex min-w-0 items-start gap-2">
-            <span className="mt-0.5 shrink-0 text-muted-foreground [&_svg]:size-[18px]">
-              {isRadiatorThermostat ? <RadiatorThermostatIcon /> : <WallThermostatIcon />}
-            </span>
+            <DeviceImage
+              type={deviceType}
+              size={40}
+              fallback={
+                <span className="text-muted-foreground [&_svg]:size-5">
+                  {isRadiatorThermostat ? <RadiatorThermostatIcon /> : <WallThermostatIcon />}
+                </span>
+              }
+            />
             <div className="flex min-w-0 flex-col">
               <span className="line-clamp-2 text-[15px] leading-snug font-medium break-words" title={channel.name}>
                 {channel.name}
@@ -166,6 +175,8 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
             onToggleBoost={handleToggleBoost}
           />
         </div>
+
+        {valve !== undefined && <Radiator valve={valve} />}
 
         <ControlButtons
           onDecrease={decreaseTemperature}
