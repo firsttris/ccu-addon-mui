@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -60,11 +61,21 @@ func New(dir, selfID, webUIURL string) *Service {
 var lineRegex = regexp.MustCompile(`^([^:]+): (.*)$`)
 var tagRegex = regexp.MustCompile(`<[^>]*>`)
 
-// run calls the script with one argument and returns its output
+// run calls the script with one argument and returns its output. A daemon
+// the script starts in the background without redirecting its output
+// (restart: "$DAEMON &") keeps the pipe open; Wait gives up on it a second
+// after the script exited instead of waiting for the daemon forever.
 func (s *Service) run(script, arg string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.Timeout)
 	defer cancel()
-	return exec.CommandContext(ctx, script, arg).Output()
+	cmd := exec.CommandContext(ctx, script, arg)
+	cmd.WaitDelay = time.Second
+	output, err := cmd.Output()
+	if errors.Is(err, exec.ErrWaitDelay) {
+		// The script itself succeeded
+		err = nil
+	}
+	return output, err
 }
 
 // info merges "info.<lang>" and "info" as get_info does: lines "Key: value",

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func writeScript(t *testing.T, dir, name, body string) string {
@@ -80,5 +81,22 @@ func TestCheckUpdate(t *testing.T) {
 	}
 	if _, err := s.CheckUpdate("file:///etc/passwd", "1"); err == nil {
 		t.Fatal("expected an error for a file URL")
+	}
+}
+
+func TestRunDoesNotWaitForADaemon(t *testing.T) {
+	dir := t.TempDir()
+	// restart starts a daemon that keeps stdout open, as many rc.d scripts do
+	writeScript(t, dir, "daemon", `case "$1" in
+info) echo "Name: Daemon"; echo "Operations: restart";;
+restart) sleep 30 &;;
+esac`)
+	s := New(dir, "mui", "http://ccu")
+	start := time.Now()
+	if _, err := s.Run("daemon", "restart"); err != nil {
+		t.Fatal(err)
+	}
+	if elapsed := time.Since(start); elapsed > 5*time.Second {
+		t.Fatalf("Run waited %v for the daemon", elapsed)
 	}
 }
