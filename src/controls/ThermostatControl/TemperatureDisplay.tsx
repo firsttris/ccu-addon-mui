@@ -40,16 +40,16 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
   const changes = useChangeCount(localTarget);
   return (
     <div className="pointer-events-none absolute inset-x-0 top-[17%] flex flex-col items-center">
-      <AppWindowIcon
-        role="img"
-        aria-label={windowOpen ? m.WINDOW_OPEN() : undefined}
-        aria-hidden={!windowOpen}
-        className={cn(
-          'size-5',
-          windowOpen ? 'text-blue-500 dark:text-blue-400' : 'text-muted-foreground opacity-30',
-          windowOpen && effects.on && 'fx-pulse',
-        )}
-      />
+      {/* Only while a window is open; the space stays, so nothing jumps */}
+      {windowOpen ? (
+        <AppWindowIcon
+          role="img"
+          aria-label={m.WINDOW_OPEN()}
+          className={cn('size-5 text-blue-500 dark:text-blue-400', effects.on && 'fx-pulse')}
+        />
+      ) : (
+        <span className="h-5" />
+      )}
       <div
         key={effects.on ? changes % 2 : 0}
         className={cn(

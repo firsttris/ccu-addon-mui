@@ -2,7 +2,6 @@ import { Channel, DatapointValue, HeatingClimateControlTransceiverChannel } from
 import { useDevices, useParamset, useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { useEffects, rgba } from '../contexts/EffectsContext';
-import { getTemperatureColor } from '../utils/colors';
 import { ThermostatDial } from './ThermostatControl/ThermostatDial';
 import { TemperatureDisplay } from './ThermostatControl/TemperatureDisplay';
 import { ControlButtons } from './ThermostatControl/ControlButtons';
@@ -20,6 +19,11 @@ type ThermostatProps = {
 };
 
 const BOOST_COLOR = '#FF7043';
+// The arc says what the thermostat does: orange while it heats, a cool blue
+// while it holds the temperature, grey when it is off
+const HEATING_COLOR = '#FB923C';
+const IDLE_COLOR = '#38BDF8';
+const OFF_COLOR = '#A1A1AA';
 const OFF_TEMPERATURE = 4.5;
 
 export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
@@ -65,9 +69,10 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const { localTarget, updateLocalTarget, commitTemperatureChange, decreaseTemperature, increaseTemperature } =
     useThermostatState({ targetTemperature, channel, datapoint: bidcos ? 'SET_TEMPERATURE' : 'SET_POINT_TEMPERATURE', range });
 
-  const color = boostMode ? BOOST_COLOR : getTemperatureColor(localTarget);
-  const currentColor = getTemperatureColor(currentTemperature);
-  const demand = boostMode || localTarget > currentTemperature;
+  // Heating: boost, the target above the room, or a radiator's valve open
+  const demand = boostMode || localTarget > currentTemperature || (valve ?? 0) > 0;
+  const color = boostMode ? BOOST_COLOR : localTarget < 5 ? OFF_COLOR : demand ? HEATING_COLOR : IDLE_COLOR;
+  const currentColor = OFF_COLOR;
 
   const set = (datapoint: string, value: number | boolean) =>
     setDataPoint(channel.interfaceName, channel.address, datapoint, value);
