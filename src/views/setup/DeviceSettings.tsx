@@ -33,7 +33,7 @@ import { readableValue } from "../../controls/generic/SettingsView";
 import CheckIcon from "~icons/lucide/check-circle-2";
 import SendIcon from "~icons/lucide/send";
 import { ConfirmDialog, DialogButton } from "../../components/ConfirmDialog";
-import { WebUILink } from "../../components/WebUILink";
+import { useHasWebUI, WebUILink } from "../../components/WebUILink";
 import ChevronLeftIcon from "~icons/lucide/chevron-left";
 import TrashIcon from "~icons/lucide/trash-2";
 import { Notice } from "./SetupShell";
@@ -94,6 +94,7 @@ export const DeviceSettings = () => {
   const { showToast } = useToast();
   const { request } = useWebSocketActions();
   const { userLevel, elevated, capabilities } = useWebSocketContext();
+  const hasWebUI = useHasWebUI();
   const isAdmin = userLevel === "admin";
   const canEdit = isAdmin && elevated;
   const [elevating, setElevating] = useState(false);
@@ -480,8 +481,12 @@ export const DeviceSettings = () => {
                     · {m.FIRMWARE()} {device.firmware}
                   </span>
                 )}
-                <span>·</span>
-                <WebUILink />
+                {hasWebUI && (
+                  <>
+                    <span>·</span>
+                    <WebUILink />
+                  </>
+                )}
               </div>
             </div>
           </div>

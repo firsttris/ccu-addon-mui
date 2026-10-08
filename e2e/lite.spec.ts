@@ -46,6 +46,12 @@ test('zeigt auf openccu-lite, wo Automationen und Systemeinstellungen liegen', a
   const system = page.getByRole('region', { name: 'openccu-lite' });
   await expect(system.getByRole('link', { name: /^(Netzwerk|Network)$/ })).toHaveAttribute('href', '/system/network');
   await expect(system.getByRole('link', { name: /^(Sicherung|Backup)$/ })).toHaveAttribute('target', '_top');
+  // No WebUI on openccu-lite: the help links to its documentation and licences
+  const help = page.getByRole('region', { name: /^(Hilfe und Lizenzen|Help and licences)$/ });
+  await expect(help.getByRole('link', { name: /openccu-lite/ }).first()).toBeVisible();
+  await expect(help.locator('a[href="/licenses"]')).toHaveCount(1);
+  await expect(help.locator('a[href$="licenseinfo.htm"]')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /alter WebUI|old WebUI/ })).toHaveCount(0);
   // The add-on is updated through openccu-lite's add-ons page
   await expect(page.getByRole('link', { name: /Zusatzsoftware von openccu-lite|openccu-lite's add-ons page/ })).toHaveAttribute('href', '/addons');
 

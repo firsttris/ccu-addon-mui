@@ -8,8 +8,9 @@
 //
 // Then screenshots into <out dir>/screenshots: the app inside openccu-lite's
 // shell (/nav/mui, the page its menu entry opens), light and dark, on a
-// desktop and a phone, and a few of the app's own pages. Errors of the
-// shell itself are logged, not counted: they are openccu-lite's.
+// desktop and a phone, and a few of the app's own pages in that frame, as a
+// user reaches them. Errors of the shell itself are logged, not counted:
+// they are openccu-lite's.
 //
 //   node scripts/lite-vm-browser.mjs <base> <user> <password> <room> <out dir>
 //
@@ -101,10 +102,20 @@ try {
     await context.close();
   }
 
-  // --- the app's own pages ------------------------------------------------------------------
-  const pages = await session({ viewport: { width: 1280, height: 800 }, colorScheme: 'light', locale: 'de-DE' });
-  const app = await pages.newPage();
-  watch(app, 'pages');
+  // --- the app's own pages, in openccu-lite's frame --------------------------------------------
+  // As a user sees them: the shell opens the app at its start page
+  // (/nav/mui), the frame is then sent to each page of the app
+  const pages = await session({ viewport: { width: 1440, height: 900 }, colorScheme: 'light', locale: 'de-DE' });
+  const shell = await pages.newPage();
+  watch(shell, 'pages');
+  await shell.goto(`${base}/nav/mui`, { waitUntil: 'domcontentloaded' });
+  await appShown(shell.frameLocator('iframe[src*="/addons/mui/"]'));
+  const frame = shell.frames().find((f) => ours(f.url()));
+  if (!frame) throw new Error('no frame of the app in /nav/mui');
+  const open = async (route) => {
+    await frame.goto(`${base}/addons/mui/${route}?theme=light&lang=de`, { waitUntil: 'domcontentloaded' });
+    await appShown(frame);
+  };
   for (const [route, file] of [
     ['', 'app-room.png'],
     ['rooms', 'app-rooms.png'],
@@ -113,10 +124,13 @@ try {
     ['devices', 'app-devices.png'],
     ['setup/system', 'app-system.png'],
   ]) {
-    await app.goto(`${base}/addons/mui/${route}?theme=light&lang=de`, { waitUntil: 'domcontentloaded' });
-    await appShown(app);
-    await shot(app, file);
+    await open(route);
+    await shot(shell, file);
   }
+  // openccu-lite has no WebUI: no link into it, and the help links to
+  // openccu-lite's documentation and licences
+  if ((await frame.getByText(/alter WebUI|old WebUI/).count()) > 0) problems.push('a link into the WebUI on openccu-lite (setup/system)');
+  if ((await frame.locator('a[href="/licenses"]').count()) !== 1) problems.push("no link to openccu-lite's licences in the help");
 
   // The device pictures: openccu-lite serves them since 1.0.0-dev.45
   // (hobbyquaker/openccu-lite#10). The device list shows one per device, the
@@ -125,16 +139,17 @@ try {
   if (devdb.status() === 404) {
     console.log('SKIPPED device pictures: this openccu-lite has no DEVDB.tcl (before 1.0.0-dev.45)');
   } else {
-    await app.goto(`${base}/addons/mui/setup?theme=light&lang=de`, { waitUntil: 'domcontentloaded' });
-    const picture = app.locator('[data-device-image]:not([data-device-image="none"]) img').first();
+    await open('setup');
+    const picture = frame.locator('[data-device-image]:not([data-device-image="none"]) img').first();
     await picture.waitFor({ timeout: 30_000 });
-    await app.waitForFunction((img) => img.complete && img.naturalWidth > 0, await picture.elementHandle(), { timeout: 30_000 });
+    await frame.waitForFunction((img) => img.complete && img.naturalWidth > 0, await picture.elementHandle(), { timeout: 30_000 });
     console.log(`device picture shown: ${await picture.getAttribute('src')}`);
     // The heating group of the room Wohnzimmer (phase showcase, after the
     // one of the phase levels)
-    await app.goto(`${base}/addons/mui/device/VirtualDevices/INT0000002?theme=light&lang=de`, { waitUntil: 'domcontentloaded' });
-    await appShown(app);
-    await shot(app, 'app-device.png');
+    await open('device/VirtualDevices/INT0000002');
+    await frame.locator('[data-device-image]:not([data-device-image="none"]) img').first().waitFor({ timeout: 30_000 });
+    if ((await frame.getByText(/alter WebUI|old WebUI/).count()) > 0) problems.push('a link into the WebUI on openccu-lite (device page)');
+    await shot(shell, 'app-device.png');
   }
   await pages.close();
 } catch (e) {

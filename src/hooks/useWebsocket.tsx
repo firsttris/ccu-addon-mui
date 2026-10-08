@@ -586,6 +586,10 @@ export const useWebSocketContext = () => {
 
 export const useCapabilities = () => useContext(CapabilitiesContext);
 
+// The platform the server runs on; a CCU without a provider, as the
+// capabilities
+export const usePlatform = (): Platform => useContext(WebSocketContext)?.platform ?? 'ccu';
+
 export const useWebSocketActions = () => {
   const context = useContext(WebSocketActionsContext);
   if (context === undefined) {

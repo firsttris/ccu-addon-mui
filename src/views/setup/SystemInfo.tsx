@@ -298,33 +298,41 @@ const SystemState = ({ state }: { state: State }) => {
 
 // Help and licences, as the WebUI's help page links them (help.cgi): the
 // OpenCCU documentation, eQ-3's service pages, the licences of the CCU's
-// software, and this add-on's documentation and licence
-const helpLinks = (): [string, string][] => [
+// software, and this add-on's documentation and licence. On openccu-lite its
+// documentation and its licence page (/licenses) instead of the CCU's.
+const helpLinks = (lite: boolean): [string, string][] => [
   [m.HELP_ADDON_DOCS(), 'https://github.com/firsttris/ccu-addon-mui#readme'],
   [m.HELP_ADDON_LICENSE(), 'https://github.com/firsttris/ccu-addon-mui/blob/main/LICENSE'],
-  [m.HELP_OPENCCU_DOCS(), 'https://github.com/openccu/openccu/wiki'],
+  lite
+    ? [m.HELP_OPENCCU_LITE_DOCS(), 'https://github.com/hobbyquaker/openccu-lite#readme']
+    : [m.HELP_OPENCCU_DOCS(), 'https://github.com/openccu/openccu/wiki'],
   [m.HELP_HOMEMATIC(), 'http://www.eq-3.de/service.html'],
   [m.HELP_HOMEMATIC_IP(), 'https://www.homematic-ip.com/service.html'],
-  [m.HELP_CCU_LICENSES(), `${WEBUI_URL.replace(/\/?$/, '/')}licenseinfo.htm`],
+  lite
+    ? [m.HELP_OPENCCU_LITE_LICENSES(), '/licenses']
+    : [m.HELP_CCU_LICENSES(), `${WEBUI_URL.replace(/\/?$/, '/')}licenseinfo.htm`],
 ];
 
-const Help = () => (
-  <Panel aria-label={m.HELP()}>
-    <h2>{m.HELP()}</h2>
-    <ul className="flex flex-col gap-1.5 text-sm">
-      {helpLinks().map(([label, href]) => (
-        <li key={href}>
-          <a
-            className="text-primary underline-offset-4 hover:underline"
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {label} ↗
-          </a>
-        </li>
-      ))}
-    </ul>
-    <p className="text-xs">{m.HELP_COPYRIGHT()}</p>
-  </Panel>
-);
+const Help = () => {
+  const { platform } = useWebSocketContext();
+  return (
+    <Panel aria-label={m.HELP()}>
+      <h2>{m.HELP()}</h2>
+      <ul className="flex flex-col gap-1.5 text-sm">
+        {helpLinks(platform === 'lite').map(([label, href]) => (
+          <li key={href}>
+            <a
+              className="text-primary underline-offset-4 hover:underline"
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {label} ↗
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs">{m.HELP_COPYRIGHT()}</p>
+    </Panel>
+  );
+};

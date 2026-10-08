@@ -1359,6 +1359,8 @@
   "HELP_ADDON_DOCS": "Add-on documentation",
   "HELP_ADDON_LICENSE": "Add-on licence (MIT)",
   "HELP_OPENCCU_DOCS": "OpenCCU documentation",
+  "HELP_OPENCCU_LITE_DOCS": "openccu-lite documentation",
+  "HELP_OPENCCU_LITE_LICENSES": "Licence information of openccu-lite",
   "HELP_HOMEMATIC": "Homematic help (eQ-3)",
   "HELP_HOMEMATIC_IP": "Homematic IP help",
   "HELP_CCU_LICENSES": "Licence information of the CCU software",
