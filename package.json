@@ -18,7 +18,7 @@
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "typecheck": "tsc --noEmit -p .",
+    "typecheck": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy preferredLanguage baseLocale --emit-ts-declarations --silent && tsc --noEmit -p .",
     "generate:protocol": "json2ts -i protocol/schema.json -o src/types/protocol.ts --unreachableDefinitions --bannerComment \"/* Generated from protocol/schema.json by npm run generate:protocol. Do not edit. */\"",
     "test:e2e": "playwright test",
     "test:stack": "playwright test -c playwright.stack.config.ts",
