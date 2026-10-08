@@ -272,7 +272,7 @@ dürfen.
 - `protocol/schema.json` (JSON Schema draft-07) enthält je Nachrichtentyp ein Paar aus Anfrage und Antwort
   sowie gemeinsame Definitionen (`ServerMessage`, `EventMessage`, `ErrorResponse`, …). Unbekannte Felder
   sind verboten.
-- `npm run generate:protocol` erzeugt daraus `src/types/protocol.ts`. Die CI prüft, dass die Datei aktuell ist.
+- `bun run generate:protocol` erzeugt daraus `src/types/protocol.ts`. Die CI prüft, dass die Datei aktuell ist.
 - `request()` in der App ist darüber typisiert: Typ der Anfrage rein, passender Typ der Antwort raus.
 - `go-server/integration_test.go` validiert jede Nachricht, die der echte Server in den Tests schickt, gegen
   `#/definitions/ServerMessage`.

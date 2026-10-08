@@ -3,9 +3,9 @@ import { installWebSocketMock } from './helpers/websocketMock';
 
 // The pictures of the documentation (docs/screenshot-*.png) that show the
 // dashboard, with the mock's demo home at a fixed time. Not a test:
-// `npm run docs:screenshots` takes them anew; the setup pages come from
+// `bun run docs:screenshots` takes them anew; the setup pages come from
 // e2e-stack/docs-screenshots.spec.ts against the fake CCU.
-test.skip(!process.env.DOCS, 'documentation screenshots are taken with npm run docs:screenshots');
+test.skip(!process.env.DOCS, 'documentation screenshots are taken with bun run docs:screenshots');
 
 test.use({ locale: 'de-DE', timezoneId: 'Europe/Berlin' });
 

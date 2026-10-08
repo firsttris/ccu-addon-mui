@@ -47,13 +47,13 @@ Favoriten, ein Gerät im Posteingang) und startet fünf Server:
 Konfigurationsdateien wie `rfd.conf`, `netconfig`, `firewall.conf` und `groups.gson` kopieren die Tests in
 ein frisches Verzeichnis, damit jeder Lauf sauber beginnt.
 
-Eine Fixture lässt sich aus der eigenen CCU erzeugen (`npm run export:ccu`). `fixtures/my-ccu.json` ist ein
+Eine Fixture lässt sich aus der eigenen CCU erzeugen (`bun run export:ccu`). `fixtures/my-ccu.json` ist ein
 anonymisierter Export einer echten Zentrale mit 482 Kanälen; er dient als Prüfstein für Gerätebeschreibungen
 aus der Praxis.
 
 ## Unit-Tests (Vitest)
 
-`npm test` · Konfiguration `vitest.config.mts` (jsdom, Testing Library)
+`bun run test` · Konfiguration `vitest.config.mts` (jsdom, Testing Library)
 
 Getestet werden vor allem reine Logik und kritische Komponenten:
 
@@ -69,7 +69,7 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
 
 ## Go-Tests
 
-`npm run test:go` · Coverage: `npm run test:go:coverage`
+`bun run test:go` · Coverage: `bun run test:go:coverage`
 
 - **Pakete**: ReGa (Skripte, Parser, Validierung, Programm-Code), XML-RPC-Client und -Server, Anmeldung und
   Tokens, Einstellungen, Diagramme, Push, Audit, Add-ons, Logs …
@@ -82,7 +82,7 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
 
 ## E2E mit gemocktem WebSocket
 
-`npm run test:e2e` · Konfiguration `playwright.config.ts`
+`bun run test:e2e` · Konfiguration `playwright.config.ts`
 
 Die App läuft im Vite-Dev-Server und in echtem Chromium; nur `window.WebSocket` ist durch einen Mock ersetzt
 (`e2e/helpers/websocketMock.ts`), der Anfragen im Browser beantwortet und über `window.__wsMock` steuerbar
@@ -98,12 +98,12 @@ Sirene, Zutritt, Eingänge, Sensoren für Regen, Licht, CO₂, Feinstaub, Boden,
 Erreichbarkeit, Meldungen, Alarme, Favoriten, Startseite, Kacheln anordnen, die generische Kachel und
 *Alle Geräte*. `auth.spec.ts` prüft Anmeldung, Token über einen Neustart hinweg und Abmelden.
 
-`npm run test:e2e:coverage` misst dabei die Abdeckung des Frontend-Codes (nyc, Bericht unter
+`bun run test:e2e:coverage` misst dabei die Abdeckung des Frontend-Codes (nyc, Bericht unter
 `coverage/playwright`).
 
 ## E2E gegen den Stack
 
-`npm run test:stack` (braucht Go) · Konfiguration `playwright.stack.config.ts`
+`bun run test:stack` (braucht Go) · Konfiguration `playwright.stack.config.ts`
 
 Playwright startet drei Prozesse: die Fake-CCU, den echten Go-Server (mit allen Dateipfaden in einem
 temporären Verzeichnis) und Vite. Jeder Test setzt die Fake-CCU zurück, meldet sich über die Anmeldemaske an
@@ -126,7 +126,7 @@ Die 74 Tests decken praktisch jede Funktion von *Einrichten* ab, zum Beispiel:
 
 ## Screenshot-Vergleich
 
-`npm run test:visual` · Baselines erneuern: `npm run test:visual:update`
+`bun run test:visual` · Baselines erneuern: `bun run test:visual:update`
 
 Zwölf Ansichten (Räume, Gewerke, Kacheln aller Art, Anmeldung, Meldungen, Menü) in drei Größen (Handy,
 Tablet hoch und quer), hell und dunkel, mit fester Uhrzeit und Sprache: 72 Bilder unter
@@ -139,7 +139,7 @@ sie. Lokal geht das mit Docker:
 ```bash
 docker run --rm --ipc=host -v "$PWD":/work -w /work -e VISUAL=1 \
   mcr.microsoft.com/playwright:v$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")-noble \
-  npx playwright test visual -u
+  bunx playwright test visual -u
 ```
 
 Damit jeder Lauf dasselbe Bild liefert, wartet der Test, bis die App keine Anfragen mehr stellt und die Seite
@@ -147,7 +147,7 @@ ihre Höhe behält, und nimmt die ganze Seite in einem passend hohen Fenster auf
 Geräte* lässt 500 abweichende Pixel zu: Das Leuchten der vielen aktiven Kacheln kommt bei jedem Lauf etwas
 anders heraus.
 
-Die Bilder der Dokumentation (`docs/screenshot-*.png`) nimmt `npm run docs:screenshots` neu auf: die
+Die Bilder der Dokumentation (`docs/screenshot-*.png`) nimmt `bun run docs:screenshots` neu auf: die
 Kacheln aus dem Mock (`e2e/docs-screenshots.spec.ts`), die Einrichten-Seiten aus der Fake-CCU
 (`e2e-stack/docs-screenshots.spec.ts`). Derselbe Workflow kann auch sie erneuern.
 
@@ -166,12 +166,12 @@ Ein Pull Request wird erst gemergt, wenn alle Prüfungen grün sind.
 ## Selbst laufen lassen
 
 ```bash
-npm test                  # Vitest
-npm run typecheck         # TypeScript
-npm run test:go           # Go
-npm run test:e2e          # Playwright mit Mock (startet Vite selbst)
-npm run test:stack        # Playwright gegen Go-Server + Fake-CCU
-npm run test:visual       # Screenshot-Vergleich
+bun run test                  # Vitest
+bun run typecheck         # TypeScript
+bun run test:go           # Go
+bun run test:e2e          # Playwright mit Mock (startet Vite selbst)
+bun run test:stack        # Playwright gegen Go-Server + Fake-CCU
+bun run test:visual       # Screenshot-Vergleich
 ```
 
-Playwright braucht einmal `npm run test:e2e:install` für Chromium.
+Playwright braucht einmal `bun run test:e2e:install` für Chromium.

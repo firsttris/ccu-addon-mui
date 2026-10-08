@@ -2,10 +2,10 @@ import { expect, Page, test } from '@playwright/test';
 import { login } from './helpers';
 
 // The pictures of the documentation (docs/screenshot-*.png) that need the
-// server: setup, programs, diagrams. Not a test: `npm run docs:screenshots`
+// server: setup, programs, diagrams. Not a test: `bun run docs:screenshots`
 // takes them anew against the fake CCU, the others come from
 // e2e/docs-screenshots.spec.ts.
-test.skip(!process.env.DOCS, 'documentation screenshots are taken with npm run docs:screenshots');
+test.skip(!process.env.DOCS, 'documentation screenshots are taken with bun run docs:screenshots');
 
 const dark = async (page: Page) => page.addInitScript(() => localStorage.setItem('theme-dark', 'true'));
 

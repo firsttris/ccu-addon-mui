@@ -1,7 +1,7 @@
 name: Release
 
 # A tag vX.Y.Z releases that version: the button in "Bump version" (bump.yml) or
-# `npm run release:patch|minor|major` on a checkout creates it. First the full CI (build, Go and
+# `bun run release:patch|minor|major` on a checkout creates it. First the full CI (build, Go and
 # Playwright tests), then the shared GitHub release from firsttris/workflows, which checks the tag
 # against package.json and attaches the add-on archives built by build.yml. Run by hand on main:
 # only the checks, nothing is released.

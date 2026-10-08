@@ -255,7 +255,7 @@ erst, wenn jemand eine Verknüpfung öffnet.
 ## Das Protokoll als Vertrag
 
 `protocol/schema.json` beschreibt jede Anfrage, jede Antwort und jedes Event als JSON-Schema. Daraus
-entstehen die TypeScript-Typen der App (`npm run generate:protocol`), sodass `request('putParamset', …)` die
+entstehen die TypeScript-Typen der App (`bun run generate:protocol`), sodass `request('putParamset', …)` die
 passenden Felder verlangt und die passende Antwort liefert. Auf der Go-Seite prüft der Integrationstest
 **jede** Nachricht, die der echte Server sendet, gegen das Schema. Ändert eine Seite das Protokoll, ohne das
 Schema anzupassen, schlägt die CI fehl. Details in [WebSocket-Protokoll](protokoll.md).

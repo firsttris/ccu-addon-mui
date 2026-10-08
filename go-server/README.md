@@ -35,7 +35,7 @@ make coverage       # Coverage-Bericht (coverage.out, coverage.html)
 ```
 
 `update_script` installiert das Binary, das zu `uname -m` passt. `build-ccu3` baut mit `GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=0`, `-ldflags="-s -w -extldflags=-static"`
-und `-tags netgo` (DNS ohne libc). Im Normalfall baut `npm run build` im Wurzelverzeichnis alles zusammen,
+und `-tags netgo` (DNS ohne libc). Im Normalfall baut `bun run build` im Wurzelverzeichnis alles zusammen,
 inklusive App und installierbaren `mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz`.
 
 ## Starten
@@ -43,11 +43,11 @@ inklusive App und installierbaren `mui-<version>-arm-ccu3-raspi.tar.gz` und `mui
 **Mit Fake-CCU**, ohne Hardware (im Wurzelverzeichnis):
 
 ```bash
-npm run dev:fake   # Fake-CCU + Server + App, Anmeldung Admin / secret
+bun run dev:fake   # Fake-CCU + Server + App, Anmeldung Admin / secret
 ```
 
-**Gegen die eigene CCU**: `.env` aus `.env.example` anlegen, dann im Wurzelverzeichnis `npm run dev` (Server
-und App) oder `npm run start:server` (nur der Server).
+**Gegen die eigene CCU**: `.env` aus `.env.example` anlegen, dann im Wurzelverzeichnis `bun run dev` (Server
+und App) oder `bun run start:server` (nur der Server).
 
 ```bash
 CCU_HOST=192.168.178.26   # Adresse der CCU

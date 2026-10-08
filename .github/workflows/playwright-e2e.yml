@@ -37,12 +37,12 @@ jobs:
       - name: Checkout lockfile
         uses: actions/checkout@v4.1.1
         with:
-          sparse-checkout: package-lock.json
+          sparse-checkout: bun.lock
           sparse-checkout-cone-mode: false
 
       - name: Read version
         id: version
-        run: echo "image=mcr.microsoft.com/playwright:v$(jq -r '.packages["node_modules/@playwright/test"].version' package-lock.json)-noble" >> "$GITHUB_OUTPUT"
+        run: echo "image=mcr.microsoft.com/playwright:v$(sed -n 's|.*\["@playwright/test@\([0-9.]*\)".*|\1|p' bun.lock | head -n 1)-noble" >> "$GITHUB_OUTPUT"
 
   e2e-frontend-mocked:
     name: Frontend E2E
@@ -60,17 +60,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'npm'
+
+      # The Playwright image brings Node but not Bun: npm installs the
+      # version pinned in package.json (packageManager)
+      - name: Set up Bun
+        run: npm install -g "$(node -p "require('./package.json').packageManager")"
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run frontend E2E tests with coverage
-        run: rm -rf .nyc_output coverage/playwright && mkdir -p .nyc_output && PW_COVERAGE=1 npx playwright test --project=chromium --reporter=github,html
+        run: rm -rf .nyc_output coverage/playwright && mkdir -p .nyc_output && PW_COVERAGE=1 bunx playwright test --project=chromium --reporter=github,html
 
       - name: Generate Playwright coverage report
         if: always()
-        run: npx nyc report --temp-dir .nyc_output --reporter=text-summary --reporter=html --reporter=lcov --report-dir coverage/playwright
+        run: bunx nyc report --temp-dir .nyc_output --reporter=text-summary --reporter=html --reporter=lcov --report-dir coverage/playwright
 
       - name: Upload Playwright report
         if: always()
@@ -110,11 +114,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4.1.1
 
+      # The Playwright image brings Node but not Bun: npm installs the
+      # version pinned in package.json (packageManager)
+      - name: Set up Bun
+        run: npm install -g "$(node -p "require('./package.json').packageManager")"
+
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Compare the screenshots
-        run: npx playwright test visual --reporter=github,line
+        run: bunx playwright test visual --reporter=github,line
         env:
           VISUAL: '1'
 
@@ -151,7 +160,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'npm'
+
+      # The Playwright image brings Node but not Bun: npm installs the
+      # version pinned in package.json (packageManager)
+      - name: Set up Bun
+        run: npm install -g "$(node -p "require('./package.json').packageManager")"
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -160,10 +173,10 @@ jobs:
           cache-dependency-path: go-server/go.sum
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run frontend + server against the fake CCU
-        run: npm run test:stack -- --shard=${{ matrix.shard }}/2
+        run: bun run test:stack -- --shard=${{ matrix.shard }}/2
 
       - name: Upload Playwright test results
         if: failure()

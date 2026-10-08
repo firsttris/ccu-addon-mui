@@ -145,7 +145,7 @@ Nach Bedeutung:
 Am meisten hilft ein Export der Gerätedaten deiner CCU:
 
 ```bash
-npm run export:ccu -- -o ../fixtures/meine-ccu.json -anonymize
+bun run export:ccu -- -o ../fixtures/meine-ccu.json -anonymize
 ```
 
 Der Export liest nur (Räume, Kanäle, Gerätebeschreibungen) und ersetzt Namen durch Platzhalter.

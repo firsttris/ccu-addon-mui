@@ -34,7 +34,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'npm'
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -42,16 +46,16 @@ jobs:
           go-version-file: go-server/go.mod
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Protocol types up to date
-        run: npm run generate:protocol && git diff --exit-code src/types/protocol.ts
+        run: bun run generate:protocol && git diff --exit-code src/types/protocol.ts
 
       - name: Unit tests
-        run: npm run test:unit
+        run: bun run test:unit
 
       - name: Build app
-        run: npm run build
+        run: bun run build
 
       # The add-on archives for ARM and x86, to install from a pull request; the release attaches them
       - name: Upload add-on archives

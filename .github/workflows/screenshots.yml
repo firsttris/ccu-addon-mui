@@ -2,7 +2,7 @@ name: Update screenshots
 
 # Renews screenshots on the chosen branch and commits them: the baselines of
 # e2e/visual.spec.ts, in the image the "Screenshots" check compares in, and
-# the pictures of the documentation (npm run docs:screenshots). Run it after
+# the pictures of the documentation (bun run docs:screenshots). Run it after
 # a change to the look on purpose, then push again (a commit of this
 # workflow doesn't start the checks).
 on:
@@ -28,12 +28,12 @@ jobs:
       - name: Checkout lockfile
         uses: actions/checkout@v4.1.1
         with:
-          sparse-checkout: package-lock.json
+          sparse-checkout: bun.lock
           sparse-checkout-cone-mode: false
 
       - name: Read version
         id: version
-        run: echo "image=mcr.microsoft.com/playwright:v$(jq -r '.packages["node_modules/@playwright/test"].version' package-lock.json)-noble" >> "$GITHUB_OUTPUT"
+        run: echo "image=mcr.microsoft.com/playwright:v$(sed -n 's|.*\["@playwright/test@\([0-9.]*\)".*|\1|p' bun.lock | head -n 1)-noble" >> "$GITHUB_OUTPUT"
 
   update:
     needs: playwright-image
@@ -46,8 +46,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4.1.1
 
+      # The Playwright image brings Node but not Bun: npm installs the
+      # version pinned in package.json (packageManager)
+      - name: Set up Bun
+        run: npm install -g "$(node -p "require('./package.json').packageManager")"
+
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Set up Go
         if: inputs.what != 'tests'
@@ -58,13 +63,13 @@ jobs:
 
       - name: Take the test screenshots
         if: inputs.what != 'docs'
-        run: npx playwright test visual --update-snapshots --reporter=line
+        run: bunx playwright test visual --update-snapshots --reporter=line
         env:
           VISUAL: '1'
 
       - name: Take the documentation pictures
         if: inputs.what != 'tests'
-        run: npm run docs:screenshots -- --reporter=line
+        run: bun run docs:screenshots -- --reporter=line
 
       - name: Commit what changed
         run: |

@@ -1,4 +1,4 @@
-/* Generated from protocol/schema.json by npm run generate:protocol. Do not edit. */
+/* Generated from protocol/schema.json by bun run generate:protocol. Do not edit. */
 
 /**
  * A datapoint or parameter value
@@ -178,7 +178,7 @@ export type ServerMessage =
   | GetDeviceImagesResponse;
 
 /**
- * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.
+ * The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (bun run generate:protocol) and checked against the real server in go-server/integration_test.go.
  */
 export interface Protocol {
   getRooms: GetRoomsCall;
