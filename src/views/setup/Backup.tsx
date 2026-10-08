@@ -108,6 +108,7 @@ export const Backup = () => {
           onCancel={() => {
             setAsking(false);
             setError(null);
+            setPassword('');
           }}
         >
           <form
