@@ -165,9 +165,11 @@ sind davon ausgenommen, damit Backups klein bleiben.
 ## Deinstallieren
 
 In der WebUI unter *Zusatzsoftware → Deinstallieren*. Das entfernt App, Server, Startskript, Log,
-`mui.conf`, `mui-auth.key`, die Weiterleitung `lighttpd/mui.conf` und den Link unter `addons/www`. Liegen
-bleiben `mui-sessions.json`, `mui-push.json`, `mui-audit.log`, `mui-diagrams.json`, `mui-rules.json` und
-`/usr/local/mui-diagrams`, damit eine Neuinstallation Diagramme, Regeln und Verlauf behält. Wer alles entfernen will, löscht sie per SSH.
+`mui.conf`, `mui-auth.key`, die Weiterleitung `lighttpd/mui.conf` und den Link unter `addons/www`, dazu die
+Daten des Add-ons: `mui-sessions.json`, `mui-push.json` (mit dem Push-Schlüssel), `mui-audit.log`,
+`mui-diagrams.json`, `mui-rules.json`, die aufgezeichneten Werte unter `/usr/local/mui-diagrams` und noch
+nicht abgeholte Backups. Diagramme und Regeln sind danach weg; ein CCU-Backup von vorher enthält sie noch.
+Für ein Update ist Deinstallieren nicht nötig, das Update behält alles.
 
 ## Häufige Probleme
 
