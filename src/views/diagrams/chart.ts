@@ -41,21 +41,6 @@ export const niceTicks = (min: number, max: number, count = 5): number[] => {
   return ticks.map((v) => Number(v.toPrecision(12)));
 };
 
-// The value range of series, with a little room
-export const valueRange = (series: ChartSeries[]): [number, number] | null => {
-  let lo = Infinity;
-  let hi = -Infinity;
-  for (const s of series) {
-    for (const p of s.points) {
-      lo = Math.min(lo, p[2]);
-      hi = Math.max(hi, p[3]);
-    }
-  }
-  if (lo > hi) return null;
-  const ticks = niceTicks(lo, hi);
-  return [ticks[0], ticks[ticks.length - 1]];
-};
-
 const timeSteps = [
   5 * 60 * 1000,
   15 * 60 * 1000,

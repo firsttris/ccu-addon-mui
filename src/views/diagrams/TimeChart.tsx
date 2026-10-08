@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { defaultLang } from '../../i18n/locale';
 import { useEffects } from '../../contexts/EffectsContext';
 import { m } from '../../paraglide/messages';
-import { nearest, niceTicks, timeTicks, DAY, type Bar, type ChartPoint, type RenderSeries } from './chart';
+import { isBinary, nearest, niceTicks, timeTicks, DAY, type Bar, type ChartPoint, type RenderSeries } from './chart';
 
 const TOP = 14;
 const BOTTOM = 26;
@@ -36,8 +36,7 @@ const typicalStep = (points: ChartPoint[]) => {
   return deltas[deltas.length >> 1];
 };
 
-export const isBinaryValues = (s: RenderSeries) =>
-  s.kind !== 'bar' && s.points.length > 0 && s.points.every((p) => (p[2] === 0 || p[2] === 1) && (p[3] === 0 || p[3] === 1));
+export const isBinaryValues = (s: RenderSeries) => s.kind !== 'bar' && isBinary(s.points);
 
 // The scale a series uses: the side chosen, else one per unit; switches
 // drawn as steps get one of their own from 0 to 1
