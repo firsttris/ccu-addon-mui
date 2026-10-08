@@ -1,17 +1,22 @@
 name: Playwright E2E
 
+# Changes to documentation alone don't build.
 on:
   push:
     branches:
       - main
     paths-ignore:
-      - 'README.md'
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
   pull_request:
     branches:
       - main
     types: [opened, synchronize, reopened, ready_for_review]
     paths-ignore:
-      - 'README.md'
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
   # The release workflow runs the same tests first
   workflow_call:
 
