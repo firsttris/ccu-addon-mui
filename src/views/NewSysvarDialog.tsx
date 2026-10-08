@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { NativeSelect } from '../components/ui/select';
 import { m } from '../paraglide/messages';
 import { errorText } from '../lib/errors';
+import { Field } from '../components/Field';
 
 const kinds: { kind: Sysvar['kind']; label: () => string }[] = [
   { kind: 'bool', label: m.KIND_BOOL },
@@ -15,13 +16,6 @@ const kinds: { kind: Sysvar['kind']; label: () => string }[] = [
   { kind: 'enum', label: m.KIND_ENUM },
   { kind: 'string', label: m.KIND_STRING },
 ];
-
-const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-    {label}
-    {children}
-  </label>
-);
 
 const toNumber = (text: string) => (text.trim() === '' ? undefined : Number(text.replace(',', '.')));
 
