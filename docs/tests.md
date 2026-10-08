@@ -148,23 +148,33 @@ Die Tests gegen die Fake-Lite prüfen, was MUI aus occulites APIs macht. Ob das 
 openccu-lite überhaupt installiert und läuft, prüft erst dieser Test: Er bootet das x86_64-Image eines
 openccu-lite-Releases headless in QEMU, wie openccu-lites eigenes `scripts/lite-qemu-test.sh`, legt den
 ersten Administrator an und installiert das Paket über occulites Add-on-API, wie dessen Seite
-*Zusatzsoftware* es hochlädt. Dann läuft `go-server/litevm` (Build-Tag `litevm`) in drei Phasen gegen die
+*Zusatzsoftware* es hochlädt. Dann läuft `go-server/litevm` (Build-Tag `litevm`) in fünf Phasen gegen die
 VM, über lighttpd und occulites Sitzungs-Gate:
 
 - **prepare:** Anmeldung über das Gate (`platform: lite`, Administrator), alles, was die App beim Start
-  liest, ein Raum in occulites Metadaten und die Sprache in `DATA_DIR`.
+  liest, ein Raum mit Umlauten in occulites Metadaten, sein Layout und die Sprache in `DATA_DIR`.
 - **verify:** nach einem Neustart des Dienstes `addon-mui` und nach einer erneuten Installation (Update)
-  sind Raum und Sprache noch da.
+  sind Raum, Layout und Sprache noch da.
+- **levels:** Konten mit den Stufen *configure* und *operate*, jedes über das Gate angemeldet.
+  *configure* benennt einen Raum um, und die Änderung kommt mit seiner eigenen Sitzung bei occulited an.
+  Heizgruppen und Gerät löschen bekommen `FORBIDDEN`, *operate* darf nichts einrichten. Der Administrator
+  legt eine Heizgruppe mit Umlauten über occulites Gruppen-API an. Ihr Gerät liegt in hmipserver
+  (`VirtualDevices` läuft auch ohne Funkmodul). MUIs Geräteliste für *configure* muss dieselbe sein,
+  die lite-rpc (`/api/rpc/v1/json/VirtualDevices`) dieser Sitzung direkt gibt.
+- **fresh:** nach Deinstallieren (`POST /api/system/v1/addons/mui/uninstall`) und neuer Installation sind
+  Layout und Sprache weg, der Raum in occulites Speicher ist noch da.
 - **logout:** Ein Abmelden in openccu-lite schließt die offene Verbindung (Neuprüfung jede Minute), die
   nächste bekommt `SESSION_REQUIRED` oder wird vom Gate abgewiesen.
 
-Dazwischen prüft das Skript, dass `/addons/mui/` ohne Sitzung zur Anmeldung umleitet und das Journal des
-Add-ons keine Schreibfehler (`EACCES`, `EROFS`, *permission denied*) und keinen Panic enthält. Die Dauer
-jedes Schritts steht in der Zusammenfassung des Workflows, Serial-Log, Journal und Antworten im Artefakt
-`lite-vm-logs`.
+Dazwischen prüft das Skript, dass `/addons/mui/` ohne Sitzung zur Anmeldung umleitet, dass openccu-lites
+Backup (`GET /api/system/v1/backup`) `mui-lite.json` und die Sprachprofile enthält, und dass das Journal
+des Add-ons keine Schreibfehler (`EACCES`, `EROFS`, *permission denied*) und keinen Panic enthält. Ein
+Wiederherstellen ersetzt `/usr/local` und startet das System neu; dass es die Dateien zurückbringt, ist
+Sache des Systems, dass sie im Backup sind, unsere. Die Dauer jedes Schritts steht in der Zusammenfassung
+des Workflows, Serial-Log, Journal, Antworten und die Dateiliste des Backups im Artefakt `lite-vm-logs`.
 
-Die VM hat kein Funkmodul: Geräte, Anlernen, Werte über Funk und Heizgruppen bleiben ein Test auf echter
-Hardware (Checkliste in [plan-openccu-lite.md](plan-openccu-lite.md), Abschnitt *Tests*).
+Die VM hat kein Funkmodul: Geräte, Anlernen und Werte über Funk bleiben ein Test auf echter Hardware
+(Checkliste in [plan-openccu-lite.md](plan-openccu-lite.md), Abschnitt *Tests*).
 
 ## Screenshot-Vergleich
 
