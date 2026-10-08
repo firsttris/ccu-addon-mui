@@ -1,7 +1,5 @@
 import { Channel, DatapointValue, HeatingClimateControlTransceiverChannel } from '../types/types';
 import { useParamset, useSetDataPoint } from '../queries';
-import RadiatorThermostatIcon from '~icons/mui/radiator-thermostat';
-import WallThermostatIcon from '~icons/mui/wall-thermostat';
 import { Tile } from '../components/Tile';
 import { useEffects, rgba } from '../contexts/EffectsContext';
 import { getTemperatureColor } from '../utils/colors';
@@ -120,16 +118,11 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
     >
       <div className="flex flex-col items-center gap-1 px-3.5 pt-4 pb-3.5">
         <div className="flex w-full items-start justify-between gap-2">
-          <div className="flex min-w-0 items-start gap-2">
-            <span className="mt-0.5 shrink-0 text-muted-foreground [&_svg]:size-[18px]">
-              {isRadiatorThermostat ? <RadiatorThermostatIcon /> : <WallThermostatIcon />}
+          <div className="flex min-w-0 flex-col">
+            <span className="line-clamp-2 text-[15px] leading-snug font-medium break-words" title={channel.name}>
+              {channel.name}
             </span>
-            <div className="flex min-w-0 flex-col">
-              <span className="line-clamp-2 text-[15px] leading-snug font-medium break-words" title={channel.name}>
-                {channel.name}
-              </span>
-              <span className="truncate text-xs text-muted-foreground">{kind}</span>
-            </div>
+            <span className="truncate text-xs text-muted-foreground">{kind}</span>
           </div>
           <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium transition-colors', badge.className)}>
             {badge.text}
