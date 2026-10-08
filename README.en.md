@@ -1,5 +1,7 @@
 <div align="center">
 
+<h1>MUI: a modern WebUI for the Homematic CCU3 and OpenCCU</h1>
+
 **The complete WebUI of your Homematic central unit, rebuilt.**<br>
 Control, configure, link and program, live and on every device:
 an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
@@ -18,6 +20,10 @@ an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
 
 > The full documentation is in German: [firsttris.github.io/ccu-addon-mui](https://firsttris.github.io/ccu-addon-mui/) (source: [docs/README.md](docs/README.md)). Homematic is used mostly in
 > German-speaking countries, so that is where the detail lives. The app itself speaks German and English.
+
+MUI stands for *Modern WebUI*. The project is unrelated to the React library Material UI.
+It runs wherever the CCU runs: on the CCU3 by eQ-3, on OpenCCU (formerly RaspberryMatic) on a Raspberry Pi,
+x86, Proxmox or Docker, and on piVCCU, with Homematic IP (HmIP), Homematic (BidCos-RF) and Homematic IP Wired devices.
 
 ## 💡 Why?
 
