@@ -2,7 +2,8 @@
 # Tests the add-on on a real openccu-lite: boots openccu-lite's x86_64 image
 # headless in QEMU, creates the first administrator, installs the add-on
 # package through occulited as its Addons page does, and runs
-# go-server/litevm against it, with a restart and an update in between.
+# go-server/litevm against it, with a restart, an update, a backup and an
+# uninstall with a new install in between.
 # Boots the way openccu-lite's own scripts/lite-qemu-test.sh does (BIOS grub,
 # raw disk, user network with lighttpd on a forwarded port).
 #
@@ -129,7 +130,7 @@ step "install"
 phase() {
   say "litevm: $1"
   if ! (cd "$ROOT/go-server" && MUI_VM_BASE="$BASE" MUI_VM_USER="$USER_NAME" MUI_VM_PASSWORD="$PASSWORD" \
-    MUI_VM_PHASE="$1" MUI_VM_CLEANUP="${2:-}" go test -count=1 -tags litevm -v ./litevm) 2>&1 | tee -a "$OUT/litevm.log"; then
+    MUI_VM_PHASE="$1" go test -count=1 -tags litevm -v ./litevm) 2>&1 | tee -a "$OUT/litevm.log"; then
     fail "litevm $1"
   fi
 }
@@ -148,8 +149,25 @@ say "restart: HTTP $code $(cat "$OUT/restart.json")"
 phase verify
 step "restart"
 install update
-phase verify 1
+phase verify
 step "update"
+
+# --- levels: configure and operate, a heating group, lite-rpc -------------------------
+phase levels
+step "levels, heating group, lite-rpc"
+
+# --- the backup carries the add-on's data ------------------------------------------
+# What openccu-lite's backup takes (createBackup.sh: usr_local.tar.gz inside
+# the .sbk). A restore replaces /usr/local and reboots; that it brings the
+# files back is the system's part, that they are in it is ours.
+code=$(curl -s -o "$WORK/backup.sbk" -w '%{http_code}' --max-time 300 -H "$AUTH" "$BASE/api/system/v1/backup")
+[ "$code" = 200 ] || fail "backup: HTTP $code"
+tar -xOf "$WORK/backup.sbk" usr_local.tar.gz | tar -tz > "$OUT/backup-files.txt" || fail "backup is not an .sbk with usr_local.tar.gz"
+for file in etc/config/addons/mui/mui-lite.json etc/config/addons/mui/userprofiles; do
+  grep -q "$file" "$OUT/backup-files.txt" || fail "the backup lacks $file: $(grep addons/mui "$OUT/backup-files.txt" | head -20)"
+done
+say "backup: $(grep -c addons/mui "$OUT/backup-files.txt") entries of the add-on, program files $(grep -q 'addons/mui/go-server' "$OUT/backup-files.txt" && echo in it || echo not in it)"
+step "backup"
 
 # --- the journal ---------------------------------------------------------------------
 curl -s -H "$AUTH" "$BASE/api/system/v1/log?unit=addon-mui&limit=2000" > "$OUT/addon-mui.log.json"
@@ -158,6 +176,16 @@ if grep -iEo '[^"]*(permission denied|read-only file system|EACCES|EROFS|panic:)
   fail "the add-on's journal has errors writing or a panic"
 fi
 step "journal"
+
+# --- uninstall and install again: the add-on's data goes with it --------------------
+code=$(curl -s -o "$OUT/uninstall.json" -w '%{http_code}' --max-time 120 -X POST -H "$AUTH" "$BASE/api/system/v1/addons/mui/uninstall")
+say "uninstall: HTTP $code $(head -c 600 "$OUT/uninstall.json")"
+[ "$code" -lt 300 ] || fail "uninstall refused"
+grep -q '"ok":true' "$OUT/uninstall.json" || fail "uninstall did not succeed"
+curl -s -H "$AUTH" "$BASE/api/system/v1/addons" | grep -q '"id":"mui"' && fail "mui is still in the addon list after the uninstall"
+install again
+phase fresh
+step "uninstall, install again"
 
 # --- logout last: the test logs in and out with a session of its own ----------------
 phase logout

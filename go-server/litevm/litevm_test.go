@@ -11,12 +11,21 @@
 //	MUI_VM_BASE=http://127.0.0.1:8090 MUI_VM_USER=… MUI_VM_PASSWORD=… \
 //	MUI_VM_PHASE=prepare go test -tags litevm -v ./litevm
 //
-// The phases run in this order, with the script restarting and installing
-// the add-on again in between:
+// The phases run in this order, with the script restarting, updating,
+// backing up, uninstalling and installing the add-on in between:
 //   - prepare: logs in through the gate, reads what the app reads on start,
-//     creates the room ciRoom and sets the language
-//   - verify: the room and the language are still there (after a restart or
-//     an update); with MUI_VM_CLEANUP=1 the room is deleted
+//     creates the room ciRoom (with umlauts), gives it a layout and sets the
+//     language
+//   - verify: the room, its layout and the language are still there (after a
+//     restart or an update)
+//   - levels: accounts at configure and operate, each through the gate: what
+//     MUI lets them do and that the changes reach occulited with their own
+//     session; a heating group (occulited's system API) and lite-rpc
+//     (VirtualDevices, hmipserver runs without a radio module) with the
+//     user's session
+//   - fresh: after an uninstall and a new install the add-on's own data is
+//     gone (layout, language), the room in occulited's store is not; the
+//     room is deleted
 //   - logout: a logout in openccu-lite ends the open connection, and the next
 //     one gets SESSION_REQUIRED
 package litevm
@@ -25,6 +34,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -36,7 +46,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const ciRoom = "CI-Raum"
+// Umlauts on the way through occulited's metadata API and back
+const ciRoom = "CI-Raum Küche Öfen Maß"
+
+const ciLayout = `{"version":3,"ci":true}`
 
 type message = map[string]interface{}
 
@@ -54,12 +67,17 @@ func env(t *testing.T, name string) string {
 	return value
 }
 
-// login opens a session of the system, as its login page does: the cookies
-// carry it to the session gate in front of /addons/
+// login opens a session of the system's first administrator
 func login(t *testing.T) *vm {
 	t.Helper()
+	return loginAs(t, env(t, "MUI_VM_USER"), env(t, "MUI_VM_PASSWORD"))
+}
+
+// loginAs opens a session of the system, as its login page does: the
+// cookies carry it to the session gate in front of /addons/
+func loginAs(t *testing.T, user, password string) *vm {
+	t.Helper()
 	base := strings.TrimRight(env(t, "MUI_VM_BASE"), "/")
-	user, password := env(t, "MUI_VM_USER"), env(t, "MUI_VM_PASSWORD")
 	jar, _ := cookiejar.New(nil)
 	v := &vm{base: base, client: &http.Client{Jar: jar, Timeout: 30 * time.Second}}
 	body, _ := json.Marshal(map[string]string{"username": user, "password": password})
@@ -72,6 +90,27 @@ func login(t *testing.T) *vm {
 		t.Fatalf("login: %d", resp.StatusCode)
 	}
 	return v
+}
+
+// api calls occulited directly with the session's cookie; a changing call
+// needs X-Occulite-Request (occulited docs/system-api.md, /api/auth/v1)
+func (v *vm) api(t *testing.T, method, path string, body interface{}) (int, []byte) {
+	t.Helper()
+	var reader io.Reader
+	if body != nil {
+		data, _ := json.Marshal(body)
+		reader = bytes.NewReader(data)
+	}
+	request, _ := http.NewRequest(method, v.base+path, reader)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("X-Occulite-Request", "1")
+	resp, err := v.client.Do(request)
+	if err != nil {
+		t.Fatalf("%s %s: %v", method, path, err)
+	}
+	defer resp.Body.Close()
+	data, _ := io.ReadAll(resp.Body)
+	return resp.StatusCode, data
 }
 
 // dial opens the app's WebSocket through lighttpd and the gate; the add-on
@@ -131,13 +170,28 @@ func ok(t *testing.T, answer message) message {
 
 func (v *vm) adminConn(t *testing.T) *websocket.Conn {
 	t.Helper()
+	return v.conn(t, "admin")
+}
+
+// conn opens the app's connection and checks the level MUI gives the
+// session: configure and administer are admin, operate is user
+func (v *vm) conn(t *testing.T, level string) *websocket.Conn {
+	t.Helper()
 	conn := v.dial(t)
 	t.Cleanup(func() { conn.Close() })
 	m := call(t, conn, message{"type": "auth"})
-	if m["success"] != true || m["platform"] != "lite" || m["level"] != "admin" || m["elevated"] != true {
+	if m["success"] != true || m["platform"] != "lite" || m["level"] != level || (level == "admin" && m["elevated"] != true) {
 		t.Fatalf("auth through the gate: %v", m)
 	}
 	return conn
+}
+
+// refused fails unless MUI answered FORBIDDEN
+func refused(t *testing.T, answer message) {
+	t.Helper()
+	if answer["type"] != "error" || answer["code"] != "FORBIDDEN" {
+		t.Fatalf("want FORBIDDEN, got %v", answer)
+	}
 }
 
 func roomID(t *testing.T, conn *websocket.Conn) (int64, bool) {
@@ -157,6 +211,10 @@ func TestLiteVM(t *testing.T) {
 		prepare(t, login(t))
 	case "verify":
 		verify(t, login(t))
+	case "levels":
+		levels(t, login(t))
+	case "fresh":
+		fresh(t, login(t))
 	case "logout":
 		logout(t, login(t))
 	default:
@@ -183,9 +241,11 @@ func prepare(t *testing.T, v *vm) {
 	if _, found := roomID(t, conn); !found {
 		ok(t, call(t, conn, message{"type": "createGroup", "list": "rooms", "name": ciRoom}))
 	}
-	if _, found := roomID(t, conn); !found {
-		t.Fatalf("%s not in the rooms after createGroup", ciRoom)
+	id, found := roomID(t, conn)
+	if !found {
+		t.Fatalf("%q not in the rooms after createGroup (umlauts lost?)", ciRoom)
 	}
+	ok(t, call(t, conn, message{"type": "setLayout", "id": id, "layout": ciLayout}))
 	ok(t, call(t, conn, message{"type": "setUserLanguage", "language": 2}))
 }
 
@@ -195,12 +255,137 @@ func verify(t *testing.T, v *vm) {
 	if !found {
 		t.Fatalf("%s is gone", ciRoom)
 	}
+	if m := ok(t, call(t, conn, message{"type": "getLayout", "id": id})); m["layout"] != ciLayout {
+		t.Fatalf("layout not kept: %v", m)
+	}
 	if m := ok(t, call(t, conn, message{"type": "getUserLanguage"})); m["language"] != 2.0 {
 		t.Fatalf("language not kept: %v", m)
 	}
-	if os.Getenv("MUI_VM_CLEANUP") == "1" {
-		ok(t, call(t, conn, message{"type": "deleteGroup", "list": "rooms", "id": id}))
+}
+
+const ciGroup = "CI-Heizgruppe Küche"
+
+// levels: what each level of openccu-lite may do through MUI. MUI maps
+// configure to its admin but keeps deleting devices and heating groups to
+// administer (rpc:admin, system:write); what it lets through goes to
+// occulited with the user's own session, so the system checks it too
+func levels(t *testing.T, admin *vm) {
+	accounts := map[string]*vm{}
+	for _, level := range []string{"configure", "operate"} {
+		name, password := "ci-"+level, fmt.Sprintf("ci-%d-%s", time.Now().UnixNano(), level)
+		code, body := admin.api(t, http.MethodPost, "/api/auth/v1/users", map[string]string{"username": name, "password": password, "level": level})
+		if code >= 300 {
+			t.Fatalf("creating %s: %d %s", name, code, body)
+		}
+		t.Cleanup(func() {
+			if code, body := admin.api(t, http.MethodDelete, "/api/auth/v1/users/"+name, nil); code >= 300 {
+				t.Errorf("deleting %s: %d %s", name, code, body)
+			}
+		})
+		accounts[level] = loginAs(t, name, password)
 	}
+	adminConn := admin.adminConn(t)
+	room, found := roomID(t, adminConn)
+	if !found {
+		t.Fatalf("%s is gone", ciRoom)
+	}
+
+	// configure: names and rooms with its own session (meta:write)
+	configure := accounts["configure"].conn(t, "admin")
+	renamed := ciRoom + " (configure)"
+	ok(t, call(t, configure, message{"type": "renameGroup", "list": "rooms", "id": room, "name": renamed}))
+	rooms, _ := ok(t, call(t, adminConn, message{"type": "getRooms"}))["rooms"].([]interface{})
+	seen := false
+	for _, r := range rooms {
+		seen = seen || r.(map[string]interface{})["name"] == renamed
+	}
+	if !seen {
+		t.Fatalf("the rename by ci-configure did not reach occulited: %v", rooms)
+	}
+	ok(t, call(t, configure, message{"type": "renameGroup", "list": "rooms", "id": room, "name": ciRoom}))
+	// ... but no heating groups and no deleting devices
+	refused(t, call(t, configure, message{"type": "saveHeatingGroup", "group": message{"name": ciGroup, "type": "hmip.heating.group", "members": []string{}}}))
+	refused(t, call(t, configure, message{"type": "deleteDevice", "interfaceName": "VirtualDevices", "address": "INT0000001"}))
+
+	// operate: no changes to names and rooms
+	operate := accounts["operate"].conn(t, "user")
+	refused(t, call(t, operate, message{"type": "renameGroup", "list": "rooms", "id": room, "name": renamed}))
+	refused(t, call(t, operate, message{"type": "createGroup", "list": "rooms", "name": "CI operate"}))
+
+	// administer: a heating group through occulited's system API, with the
+	// administrator's session; its virtual device lives in hmipserver
+	// (VirtualDevices), which runs without a radio module
+	group := 0
+	if m := call(t, adminConn, message{"type": "saveHeatingGroup", "group": message{"name": ciGroup, "type": "hmip.heating.group", "members": []string{}}}); m["success"] == true {
+		group = int(m["id"].(float64))
+	} else if m["code"] == "FORBIDDEN" || strings.Contains(fmt.Sprint(m["error"]), "403") || strings.Contains(fmt.Sprint(m["error"]), "401") {
+		t.Fatalf("heating group with the administrator's session refused: %v", m)
+	} else {
+		t.Logf("no heating group on this VM, the rest runs without one: %v", m)
+	}
+	if group != 0 {
+		defer func() { ok(t, call(t, adminConn, message{"type": "deleteHeatingGroup", "id": group})) }()
+		groups, _ := ok(t, call(t, adminConn, message{"type": "getHeatingGroups"}))["groups"].([]interface{})
+		seen := false
+		for _, g := range groups {
+			seen = seen || g.(map[string]interface{})["name"] == ciGroup
+		}
+		if !seen {
+			t.Fatalf("%q not in the heating groups (umlauts lost?): %v", ciGroup, groups)
+		}
+		refused(t, call(t, configure, message{"type": "deleteHeatingGroup", "id": group}))
+	}
+
+	// lite-rpc with the user's session: MUI's device list for configure is
+	// the one occulited's JSON-RPC gives that session directly. listDevices
+	// in MUI leaves out an interface that fails, so a refused session shows
+	// as devices missing
+	code, body := accounts["configure"].api(t, http.MethodPost, "/api/rpc/v1/json/VirtualDevices", message{"jsonrpc": "2.0", "method": "listDevices", "params": []interface{}{}, "id": 1})
+	var direct struct {
+		Result []map[string]interface{} `json:"result"`
+		Error  interface{}              `json:"error"`
+	}
+	if err := json.Unmarshal(body, &direct); code != http.StatusOK || err != nil || direct.Error != nil {
+		t.Fatalf("lite-rpc listDevices as ci-configure: %d %s", code, body)
+	}
+	want := 0
+	for _, d := range direct.Result {
+		if d["PARENT"] == "" || d["PARENT"] == nil {
+			want++
+		}
+	}
+	got := 0
+	devices, _ := ok(t, call(t, configure, message{"type": "listDevices"}))["devices"].([]interface{})
+	for _, d := range devices {
+		if d.(map[string]interface{})["interfaceName"] == "VirtualDevices" {
+			got++
+		}
+	}
+	t.Logf("VirtualDevices: %d devices through lite-rpc, %d in MUI", want, got)
+	if got != want {
+		t.Fatalf("MUI lists %d devices of VirtualDevices, lite-rpc %d", got, want)
+	}
+	if group != 0 && want == 0 {
+		t.Fatal("the heating group's device is not in VirtualDevices")
+	}
+}
+
+// fresh: after an uninstall the add-on's data directory is empty, so the
+// new install starts without the layout and the language; the room belongs
+// to occulited's store and stays
+func fresh(t *testing.T, v *vm) {
+	conn := v.adminConn(t)
+	id, found := roomID(t, conn)
+	if !found {
+		t.Fatalf("%s is gone from occulited's store", ciRoom)
+	}
+	if m := ok(t, call(t, conn, message{"type": "getLayout", "id": id})); m["layout"] != "" && m["layout"] != nil {
+		t.Fatalf("layout still there after the uninstall: %v", m)
+	}
+	if m := ok(t, call(t, conn, message{"type": "getUserLanguage"})); m["language"] == 2.0 {
+		t.Fatalf("language still there after the uninstall: %v", m)
+	}
+	ok(t, call(t, conn, message{"type": "deleteGroup", "list": "rooms", "id": id}))
 }
 
 func logout(t *testing.T, v *vm) {
