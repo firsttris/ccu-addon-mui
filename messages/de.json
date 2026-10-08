@@ -1500,6 +1500,7 @@
   "UPDATE_STEP_INSTALL": "Installieren",
   "UPDATE_STEP_RESTART": "Server startet neu",
   "UPDATE_STEP_APP": "App wird aktualisiert",
+  "UPDATE_STEP_OF": "Schritt {step} von {total}",
   "UPDATE_NOT_BACK": "Der Server ist nach dem Update nicht zurückgekommen. Bitte die CCU prüfen und die App danach neu laden.",
   "UPDATE_WRONG_VERSION": "Installiert wurde {version}, der Server meldet aber {running}. Bitte die Zusatzsoftware in der WebUI prüfen.",
   "UPDATE_OTHER_TABS": "Das Update ist installiert. Die App ist in diesem Browser noch in einem anderen Tab offen, der beim Übernehmen der neuen Version mit neu lädt. Dort erst alles speichern, dann hier „Jetzt neu laden“.",

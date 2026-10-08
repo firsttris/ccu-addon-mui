@@ -17,6 +17,7 @@ import { errorText } from '../../lib/errors';
 import { useEffects } from '../../contexts/EffectsContext';
 import { cn } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
+import { HeroTone, updateButton, UpdateHero, VersionJump } from './UpdateHero';
 
 // Download, check and the update script take seconds, on a slow line minutes
 const INSTALL_TIMEOUT_MS = 5 * 60 * 1000;
@@ -57,48 +58,53 @@ const installError = (error: unknown) =>
 const megabytes = (bytes: number) =>
   (bytes / 1024 / 1024).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-const StepRow = ({
-  step,
-  status,
-  children,
-}: {
-  step: Step;
-  status: 'pending' | 'active' | 'done' | 'failed';
-  children?: ReactNode;
-}) => {
+type StepStatus = 'pending' | 'active' | 'done' | 'failed';
+
+// One step in the list: a dot on a rail that fills as the steps get done
+const StepRow = ({ step, status, last }: { step: Step; status: StepStatus; last: boolean }) => {
   const effects = useEffects();
   const { icon, motion } = stepIcon[step];
   return (
-    <li className="flex items-start gap-3" aria-current={status === 'active' ? 'step' : undefined}>
+    <li className="relative flex items-center gap-3 pb-2.5 last:pb-0" aria-current={status === 'active' ? 'step' : undefined}>
+      {!last && (
+        <span aria-hidden className="absolute top-7 bottom-0 left-[13px] w-0.5 overflow-hidden rounded-full bg-border">
+          <span
+            className={cn(
+              'block size-full origin-top bg-gradient-to-b from-green-500 to-emerald-400 transition-transform duration-500 ease-out',
+              status === 'done' ? 'scale-y-100' : 'scale-y-0',
+            )}
+          />
+        </span>
+      )}
       <span
         className={cn(
-          'flex size-9 shrink-0 items-center justify-center rounded-full border transition-colors duration-300 [&_svg]:size-[18px]',
-          status === 'pending' && 'border-border text-muted-foreground/50',
-          status === 'active' && 'border-sky-500/40 bg-sky-500/10 text-sky-600 dark:text-sky-300',
-          status === 'done' && 'border-green-500/40 bg-green-500/15 text-green-600 dark:text-green-300',
-          status === 'failed' && 'border-red-500/40 bg-red-500/15 text-red-600 dark:text-red-400',
+          'relative flex size-7 shrink-0 items-center justify-center rounded-full border transition-colors duration-300 [&_svg]:size-3.5',
+          status === 'pending' && 'border-border bg-background text-muted-foreground/60',
+          status === 'active' && 'border-sky-500/50 bg-sky-500/10 text-sky-600 dark:text-sky-300',
+          status === 'done' && 'border-transparent bg-green-500 text-white shadow-sm shadow-green-500/30',
+          status === 'failed' && 'border-transparent bg-red-500 text-white',
         )}
       >
+        {status === 'active' && effects.on && <span aria-hidden className="fx-wave absolute inset-0 rounded-full border-2 border-sky-500/40" />}
         {status === 'done' ? (
-          <CheckIcon className={cn(effects.on && 'fx-bloom')} />
+          <CheckIcon className={cn('[stroke-width:3]', effects.on && 'fx-bloom')} />
         ) : status === 'failed' ? (
-          <XIcon />
+          <XIcon className="[stroke-width:3]" />
         ) : (
           <span className={cn('flex', status === 'active' && effects.on && motion)}>{icon}</span>
         )}
       </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5 pt-2">
-        <span
-          className={cn(
-            'text-sm leading-none',
-            status === 'pending' ? 'text-muted-foreground' : 'font-medium',
-            status === 'failed' && 'text-red-600 dark:text-red-400',
-          )}
-        >
-          {stepLabel[step]()}
-        </span>
-        {children}
-      </div>
+      <span
+        className={cn(
+          'text-sm transition-colors duration-300',
+          status === 'pending' && 'text-muted-foreground',
+          status === 'active' && 'font-semibold',
+          status === 'done' && 'text-foreground/80',
+          status === 'failed' && 'font-semibold text-red-600 dark:text-red-400',
+        )}
+      >
+        {stepLabel[step]()}
+      </span>
     </li>
   );
 };
@@ -108,13 +114,15 @@ const StepRow = ({
 // the new version and brings this tab to the new app (takeOverNewApp):
 // after the reload UpdateDone says it is done. Started from the update
 // notice and from the system page.
-export const UpdateWizard = ({ version, onClose }: { version: string; onClose: () => void }) => {
+export const UpdateWizard = ({ version, current, onClose }: { version: string; current?: string; onClose: () => void }) => {
+  const effects = useEffects();
   const { request } = useWebSocketActions();
   const { elevated, connectionStatus } = useWebSocketContext();
   const [state, setState] = useState<State>('confirm');
   const [step, setStep] = useState<Step>('download');
   const [bytes, setBytes] = useState<{ done: number; total: number }>({ done: 0, total: 0 });
   const [error, setError] = useState<string | null>(null);
+  const confirmButton = useRef<HTMLButtonElement>(null);
 
   // The connection as a ref: the wait for the restart reads it in a loop
   const status = useRef(connectionStatus);
@@ -183,84 +191,148 @@ export const UpdateWizard = ({ version, onClose }: { version: string; onClose: (
   }
 
   const busy = state === 'running';
-  const current = STEPS.indexOf(step);
-  const statusOf = (s: Step) => {
+  const index = STEPS.indexOf(step);
+  const statusOf = (s: Step): StepStatus => {
     const i = STEPS.indexOf(s);
-    if (state === 'error' && i === current) return 'failed';
+    if (state === 'error' && i === index) return 'failed';
     if (state === 'otherTabs' || state === 'appFailed') return s === 'app' ? 'active' : 'done';
-    return i < current ? 'done' : i === current ? 'active' : 'pending';
+    return i < index ? 'done' : i === index ? 'active' : 'pending';
   };
   const percent = bytes.total > 0 ? Math.min(100, Math.round((bytes.done / bytes.total) * 100)) : undefined;
+  const downloading = state === 'running' && step === 'download';
+
+  // The ring over the whole update: each step a sixth, the download by its bytes
+  const within = step === 'download' ? (percent ?? 0) / 100 : 0.5;
+  const progress = state === 'confirm' ? 0 : (index + within) / STEPS.length;
+  const tone: HeroTone = state === 'error' ? 'red' : state === 'otherTabs' || state === 'appFailed' ? 'amber' : 'sky';
+  const hero =
+    state === 'confirm'
+      ? { key: 'confirm', ...stepIcon.download, motion: 'animate-bounce' }
+      : state === 'error'
+        ? { key: 'error', icon: <XIcon />, motion: '' }
+        : { key: step, ...stepIcon[step] };
 
   return (
     <Dialog open onOpenChange={(open) => !open && !busy && onClose()}>
-      <DialogContent showCloseButton={!busy} onInteractOutside={(e) => busy && e.preventDefault()} onEscapeKeyDown={(e) => busy && e.preventDefault()}>
-        <DialogHeader>
+      <DialogContent
+        showCloseButton={!busy}
+        onInteractOutside={(e) => busy && e.preventDefault()}
+        onEscapeKeyDown={(e) => busy && e.preventDefault()}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          confirmButton.current?.focus();
+        }}
+        className="gap-5 overflow-hidden outline-none sm:max-w-md"
+      >
+        {effects.on && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-sky-500/10 via-violet-500/5 to-transparent"
+          />
+        )}
+        <DialogHeader className="relative items-center text-center sm:items-center sm:text-center">
           <DialogTitle>{m.UPDATE_TITLE({ version })}</DialogTitle>
           <DialogDescription>{state === 'confirm' ? m.UPDATE_CONFIRM() : m.UPDATE_RUNNING_HINT()}</DialogDescription>
         </DialogHeader>
 
-        {state !== 'confirm' && (
-          <ol className="flex flex-col gap-3" aria-label={m.UPDATE_STEPS()}>
-            {STEPS.map((s) => (
-              <StepRow key={s} step={s} status={statusOf(s)}>
-                {s === 'download' && statusOf('download') === 'active' && (
-                  <div className="flex items-center gap-2">
-                    <div
-                      role="progressbar"
-                      aria-label={m.UPDATE_STEP_DOWNLOAD()}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={percent}
-                      className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"
-                    >
-                      <div
-                        className={cn('h-full rounded-full bg-sky-500 transition-[width] duration-200', percent === undefined && 'w-1/3 animate-pulse')}
-                        style={percent !== undefined ? { width: `${percent}%` } : undefined}
-                      />
-                    </div>
-                    <span className="w-24 text-right text-xs text-muted-foreground tabular-nums">
-                      {percent !== undefined ? `${megabytes(bytes.done)} / ${megabytes(bytes.total)} MB` : ''}
-                    </span>
+        <UpdateHero
+          icon={hero.icon}
+          iconKey={hero.key}
+          motion={hero.motion}
+          progress={progress}
+          tone={tone}
+          running={busy}
+        />
+
+        {state === 'confirm' ? (
+          current && <VersionJump from={current} to={version} />
+        ) : (
+          <div className="-mt-1 flex flex-col items-center gap-2 text-center">
+            <span key={step} className={cn('text-base font-semibold', effects.on && 'fx-rise-a')}>
+              {state === 'error' ? m.SELF_UPDATE_FAILED() : stepLabel[step]()}
+            </span>
+            {downloading ? (
+              <div className="flex w-full max-w-64 flex-col gap-1.5">
+                <div
+                  role="progressbar"
+                  aria-label={m.UPDATE_STEP_DOWNLOAD()}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={percent}
+                  className="relative h-2 overflow-hidden rounded-full bg-muted"
+                >
+                  <div
+                    className={cn(
+                      'relative h-full overflow-hidden rounded-full bg-gradient-to-r from-sky-400 to-violet-500 transition-[width] duration-300 ease-out',
+                      percent === undefined && 'w-1/3 animate-pulse',
+                    )}
+                    style={percent !== undefined ? { width: `${percent}%` } : undefined}
+                  >
+                    {effects.on && <span className="fx-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent" />}
                   </div>
-                )}
-              </StepRow>
+                </div>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {percent !== undefined ? `${megabytes(bytes.done)} / ${megabytes(bytes.total)} MB · ${percent} %` : '\u00a0'}
+                </span>
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {m.UPDATE_STEP_OF({ step: index + 1, total: STEPS.length })}
+              </span>
+            )}
+          </div>
+        )}
+
+        {state !== 'confirm' && (
+          <ol className="rounded-xl border bg-muted/30 p-3.5" aria-label={m.UPDATE_STEPS()}>
+            {STEPS.map((s, i) => (
+              <StepRow key={s} step={s} status={statusOf(s)} last={i === STEPS.length - 1} />
             ))}
           </ol>
         )}
 
         {state === 'otherTabs' && (
-          <p role="status" className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+          <p role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
             {m.UPDATE_OTHER_TABS()}
           </p>
         )}
         {state === 'appFailed' && (
-          <p role="status" className="rounded-lg bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+          <p role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
             {m.UPDATE_APP_FAILED()}
           </p>
         )}
         {state === 'error' && error && (
-          <p role="alert" className="rounded-lg bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">
+          <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">
             {error}
           </p>
         )}
 
-        <DialogFooter>
-          {state === 'confirm' && (
-            <>
-              <Button variant="outline" onClick={onClose}>
-                {m.CANCEL()}
+        {state !== 'running' && (
+          <DialogFooter className="sm:justify-center">
+            {state === 'confirm' && (
+              <>
+                <Button variant="outline" onClick={onClose}>
+                  {m.CANCEL()}
+                </Button>
+                <Button ref={confirmButton} onClick={start} className={updateButton}>
+                  <DownloadIcon />
+                  {m.SELF_UPDATE_INSTALL()}
+                </Button>
+              </>
+            )}
+            {state === 'otherTabs' && (
+              <Button onClick={() => void takeOverNow()} className="press">
+                <RefreshIcon />
+                {m.UPDATE_RELOAD_NOW()}
               </Button>
-              <Button onClick={start}>{m.SELF_UPDATE_INSTALL()}</Button>
-            </>
-          )}
-          {state === 'otherTabs' && <Button onClick={() => void takeOverNow()}>{m.UPDATE_RELOAD_NOW()}</Button>}
-          {(state === 'appFailed' || state === 'error') && (
-            <Button variant="outline" onClick={onClose}>
-              {m.CLOSE()}
-            </Button>
-          )}
-        </DialogFooter>
+            )}
+            {(state === 'appFailed' || state === 'error') && (
+              <Button variant="outline" onClick={onClose}>
+                {m.CLOSE()}
+              </Button>
+            )}
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

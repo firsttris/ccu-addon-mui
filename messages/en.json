@@ -1500,6 +1500,7 @@
   "UPDATE_STEP_INSTALL": "Install",
   "UPDATE_STEP_RESTART": "Server restarts",
   "UPDATE_STEP_APP": "Updating the app",
+  "UPDATE_STEP_OF": "Step {step} of {total}",
   "UPDATE_NOT_BACK": "The server did not come back after the update. Please check the CCU and reload the app afterwards.",
   "UPDATE_WRONG_VERSION": "{version} was installed, but the server reports {running}. Please check the add-on in the WebUI.",
   "UPDATE_OTHER_TABS": "The update is installed. The app is still open in another tab of this browser, which reloads too when the new version is taken over. Save everything there first, then \"Reload now\" here.",

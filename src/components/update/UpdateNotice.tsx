@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
-import DownloadIcon from '~icons/lucide/circle-arrow-down';
+import { useEffect, useRef, useState } from 'react';
+import DownloadIcon from '~icons/lucide/arrow-down-to-line';
+import GiftIcon from '~icons/lucide/gift';
 import PartyIcon from '~icons/lucide/party-popper';
+import AlertIcon from '~icons/lucide/triangle-alert';
+import ExternalIcon from '~icons/lucide/external-link';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
@@ -10,6 +13,7 @@ import { useEffects } from '../../contexts/EffectsContext';
 import { cn } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
 import { UpdateWizard } from './UpdateWizard';
+import { updateButton, UpdateHero, VersionJump } from './UpdateHero';
 
 const SKIPPED_KEY = 'mui-update-skipped';
 const LATER_KEY = 'mui-update-later';
@@ -41,6 +45,7 @@ export const UpdateNotice = () => {
   const [latest, setLatest] = useState<{ current: string; latest: string } | null>(null);
   const [asked, setAsked] = useState(false);
   const [installing, setInstalling] = useState(false);
+  const now = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (asked || connectionStatus !== 'Open' || authState !== 'authenticated' || userLevel !== 'admin') return;
@@ -56,7 +61,7 @@ export const UpdateNotice = () => {
   }, [asked, connectionStatus, authState, userLevel, request]);
 
   if (!latest) return null;
-  if (installing) return <UpdateWizard version={latest.latest} onClose={() => setLatest(null)} />;
+  if (installing) return <UpdateWizard version={latest.latest} current={latest.current} onClose={() => setLatest(null)} />;
 
   const close = (key: string, storage: Storage) => {
     write(storage, key, latest.latest);
@@ -65,34 +70,53 @@ export const UpdateNotice = () => {
 
   return (
     <Dialog open onOpenChange={(open) => !open && close(LATER_KEY, sessionStorage)}>
-      <DialogContent>
-        <DialogHeader className="items-center text-center sm:items-center sm:text-center">
-          <span className="relative mb-1 flex size-14 items-center justify-center rounded-full bg-sky-500/15 text-sky-600 dark:text-sky-300 [&_svg]:size-7">
-            {effects.on && <span aria-hidden className="fx-wave absolute inset-0 rounded-full border-2 border-sky-500/40" />}
-            <DownloadIcon className={cn(effects.on && 'animate-bounce')} />
-          </span>
-          <DialogTitle>{m.UPDATE_AVAILABLE()}</DialogTitle>
+      <DialogContent
+        className="gap-5 overflow-hidden outline-none sm:max-w-sm"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          now.current?.focus();
+        }}
+      >
+        {effects.on && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-sky-500/15 via-violet-500/5 to-transparent"
+          />
+        )}
+        <UpdateHero icon={<GiftIcon />} iconKey="gift" motion="fx-swing-a [animation-iteration-count:infinite] [animation-duration:2.4s]" progress={0} running />
+        <DialogHeader className="relative items-center gap-3 text-center sm:items-center sm:text-center">
+          <DialogTitle className="text-xl">{m.UPDATE_AVAILABLE()}</DialogTitle>
+          <VersionJump from={latest.current} to={latest.latest} />
           <DialogDescription>{m.UPDATE_NEW_VERSION({ latest: latest.latest, current: latest.current })}</DialogDescription>
+          <a
+            href={`https://github.com/firsttris/ccu-addon-mui/releases/tag/v${latest.latest}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-sm font-medium text-sky-600 underline-offset-4 hover:underline dark:text-sky-300"
+          >
+            {m.UPDATE_WHATS_NEW()}
+            <ExternalIcon className="size-3.5" />
+          </a>
         </DialogHeader>
-        <a
-          href={`https://github.com/firsttris/ccu-addon-mui/releases/tag/v${latest.latest}`}
-          target="_blank"
-          rel="noreferrer"
-          className="self-center text-sm font-medium underline underline-offset-4"
-        >
-          {m.UPDATE_WHATS_NEW()}
-        </a>
-        <DialogFooter className="sm:justify-between">
-          <Button variant="ghost" onClick={() => close(SKIPPED_KEY, localStorage)}>
-            {m.UPDATE_SKIP()}
+        <div className="flex flex-col gap-2">
+          <Button
+            ref={now}
+            size="lg"
+            className={updateButton}
+            onClick={() => setInstalling(true)}
+          >
+            <DownloadIcon />
+            {m.UPDATE_NOW()}
           </Button>
-          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+          <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" onClick={() => close(LATER_KEY, sessionStorage)}>
               {m.UPDATE_LATER()}
             </Button>
-            <Button onClick={() => setInstalling(true)}>{m.UPDATE_NOW()}</Button>
+            <Button variant="ghost" className="text-muted-foreground" onClick={() => close(SKIPPED_KEY, localStorage)}>
+              {m.UPDATE_SKIP()}
+            </Button>
           </div>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -113,26 +137,36 @@ export const UpdateDone = () => {
   const ok = !running || running === version;
   return (
     <Dialog open onOpenChange={(open) => !open && setVersion(null)}>
-      <DialogContent>
-        <DialogHeader className="items-center text-center sm:items-center sm:text-center">
-          <span
+      <DialogContent className="gap-5 overflow-hidden outline-none sm:max-w-sm">
+        {effects.on && (
+          <div
+            aria-hidden
             className={cn(
-              'mb-1 flex size-14 items-center justify-center rounded-full [&_svg]:size-7',
-              ok ? 'bg-green-500/15 text-green-600 dark:text-green-300' : 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
+              'pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b to-transparent',
+              ok ? 'from-green-500/15' : 'from-amber-500/15',
             )}
-          >
-            <PartyIcon className={cn(ok && effects.on && 'fx-bloom')} />
-          </span>
-          <DialogTitle>{ok ? m.UPDATE_DONE_TITLE() : m.UPDATE_OLD_APP_TITLE()}</DialogTitle>
+          />
+        )}
+        <UpdateHero
+          icon={ok ? <PartyIcon /> : <AlertIcon />}
+          iconKey={ok ? 'done' : 'old'}
+          progress={1}
+          tone={ok ? 'green' : 'amber'}
+          celebrate={ok}
+        />
+        <DialogHeader className="relative items-center text-center sm:items-center sm:text-center">
+          <DialogTitle className="text-xl">{ok ? m.UPDATE_DONE_TITLE() : m.UPDATE_OLD_APP_TITLE()}</DialogTitle>
           <DialogDescription>{ok ? m.UPDATE_DONE({ version }) : m.UPDATE_OLD_APP({ version, running })}</DialogDescription>
         </DialogHeader>
-        <DialogFooter>
+        <DialogFooter className="sm:justify-center">
           {!ok && (
             <Button variant="outline" onClick={() => void takeOverNow()}>
               {m.UPDATE_RELOAD_NOW()}
             </Button>
           )}
-          <Button onClick={() => setVersion(null)}>{m.STATUS_OK()}</Button>
+          <Button className="press" onClick={() => setVersion(null)}>
+            {m.STATUS_OK()}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
