@@ -46,3 +46,6 @@ go-server/.env
 !.vscode/extensions.json
 .DS_Store
 Thumbs.db
+
+# MkDocs build (mkdocs build)
+site/

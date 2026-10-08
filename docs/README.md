@@ -2,7 +2,7 @@
 
 Hier steht alles über ccu-addon-mui im Detail: wie du es installierst und bedienst, was jede Seite macht,
 wie weit es die WebUI der CCU3 schon ersetzt und wie es innen aufgebaut ist. Den schnellen Überblick gibt
-die [README](../README.md).
+die [README auf GitHub](https://github.com/firsttris/ccu-addon-mui#readme).
 
 ## Für Anwender
 
