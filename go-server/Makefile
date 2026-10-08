@@ -1,14 +1,12 @@
 # Makefile for CCU3 MUI Go Server
 
 BINARY_NAME=ccu-addon-mui-server
-VERSION?=0.0.1
 
 # Go parameters
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
-GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
 # Build flags for static binary
