@@ -364,13 +364,14 @@ func (c *Client) GetParamsetDescription(iface, address, paramsetKey string) (Par
 		deviceType = device.Type
 	}
 	// and firmware: a newer firmware can bring parameters of its own while
-	// the description's VERSION stays. The firmware is the device's, known
-	// from listDevices (channels have none of their own).
+	// the description's VERSION stays. The firmware is the device's
+	// (channels have none of their own); after an update (Forget) the
+	// device is read again, else every later firmware would share one key.
 	firmware := device.Firmware
 	if parent, _, isChannel := strings.Cut(address, ":"); isChannel {
-		c.mu.Lock()
-		firmware = c.devices[iface+"|"+parent].Firmware
-		c.mu.Unlock()
+		if parentDevice, err := c.GetDeviceDescription(iface, parent); err == nil {
+			firmware = parentDevice.Firmware
+		}
 	}
 	cacheKey := strings.Join([]string{iface, deviceType, device.Type, channel, fmt.Sprint(device.Version), firmware, paramsetKey}, "|")
 
