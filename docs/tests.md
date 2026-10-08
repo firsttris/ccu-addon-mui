@@ -163,10 +163,9 @@ VM, über lighttpd und occulites Sitzungs-Gate:
   (`VirtualDevices` läuft auch ohne Funkmodul). MUIs Geräteliste für *configure* muss dieselbe sein,
   die lite-rpc (`/api/rpc/v1/json/VirtualDevices`) dieser Sitzung direkt gibt. An diesem Gerät setzt
   *operate* einen Wert (`setDatapoint` über lite-rpc, `rpc:operate`), und der Wert kommt als Event über
-  occulites Event-Stream an die Verbindung zurück, die den Kanal abonniert hat. Auf der VM läuft dieser
-  Schritt zurzeit nicht: hmipserver beantwortet Werte einer Heizgruppe ohne Mitglieder nicht (`503 down`),
-  und ohne Funkgeräte gibt es keine Mitglieder. Der Test meldet das als übersprungen und prüft es
-  wieder, sobald hmipserver antwortet. *configure* ändert eine
+  occulites Event-Stream an die Verbindung zurück, die den Kanal abonniert hat. Antwortet hmipserver
+  direkt nach dem Anlegen der Gruppe nicht (`503 down`, siehe Plan), meldet der Test den Schritt als
+  übersprungen; jeder andere Fehler und ein fehlendes Event bleiben rot. *configure* ändert eine
   Einstellung (MASTER, `rpc:configure`) und setzt sie zurück; *operate* bekommt dabei `FORBIDDEN`.
 - **fresh:** nach Deinstallieren (`POST /api/system/v1/addons/mui/uninstall`) und neuer Installation sind
   Layout und Sprache weg, der Raum in occulites Speicher ist noch da.

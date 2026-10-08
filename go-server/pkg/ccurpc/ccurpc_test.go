@@ -2,6 +2,7 @@ package ccurpc
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -348,5 +349,34 @@ func TestParamsetDescriptionNumbersFromText(t *testing.T) {
 	}
 	if name := description["NAME"]; name.Default != "12" {
 		t.Fatalf("STRING stays text: %+v", name)
+	}
+}
+
+// Values that come untyped, as text, get the type of their parameter
+// (hmipserver's virtual devices on openccu-lite); typed values ask for no
+// description
+func TestGetParamsetTypesUntypedValues(t *testing.T) {
+	calls := map[string]int{}
+	ccu := fakeInterface(t, map[string]string{
+		"getDeviceDescription":   channelDescription,
+		"getParamsetDescription": valuesDescription,
+		"getParamset": `<struct>
+			<member><name>STATE</name><value>1</value></member>
+			<member><name>ON_TIME</name><value>17.5</value></member>
+			<member><name>PROCESS</name><value><i4>0</i4></value></member>
+		</struct>`,
+	}, calls)
+	defer ccu.Close()
+	client := newTestClient(t, ccu.URL)
+
+	values, err := client.GetParamset("HmIP-RF", "0001D3C99C3C93:1", ParamsetValues)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if values["STATE"] != true || values["ON_TIME"] != 17.5 || fmt.Sprint(values["PROCESS"]) != "0" {
+		t.Fatalf("values: %#v", values)
+	}
+	if calls["getParamsetDescription"] != 1 {
+		t.Fatalf("calls: %v", calls)
 	}
 }
