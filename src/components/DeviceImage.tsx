@@ -34,7 +34,7 @@ interface DeviceImageProps {
   // The channel to mark (its index, or a form name like "1+2")
   channel?: string;
   className?: string;
-  // Shown while the picture is missing (default: a chip)
+  // Shown while the picture is missing (default: a chip; null: nothing)
   fallback?: ReactNode;
 }
 
@@ -106,7 +106,11 @@ export const DeviceImage = ({ type, size, channel, className, fallback }: Device
           )}
         </>
       ) : (
-        (fallback ?? <CpuIcon className="text-muted-foreground" style={{ width: size * 0.45, height: size * 0.45 }} />)
+        (fallback === undefined ? (
+          <CpuIcon className="text-muted-foreground" style={{ width: size * 0.45, height: size * 0.45 }} />
+        ) : (
+          fallback
+        ))
       )}
     </span>
   );

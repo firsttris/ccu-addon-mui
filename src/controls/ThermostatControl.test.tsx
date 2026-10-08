@@ -12,7 +12,7 @@ vi.mock('../queries', async (importOriginal) => ({
   useDevices: () => ({ data: undefined }),
 }));
 vi.mock('./ThermostatControl/profile/WeekProfileSheet', () => ({ WeekProfileSheet: () => null }));
-vi.mock('../components/DeviceImage', () => ({ DeviceImage: ({ fallback }: { fallback?: React.ReactNode }) => fallback }));
+vi.mock('../components/DeviceImage', () => ({ DeviceImage: () => null, useDeviceImage: () => undefined, useDeviceImages: () => ({ isPending: false }) }));
 
 const { ThermostatControl } = await import('./ThermostatControl');
 
