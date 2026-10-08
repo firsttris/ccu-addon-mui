@@ -60,12 +60,7 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		return
 	}
 	entry := audit.Entry{User: client.user, Action: msgType, Target: "CCU"}
-	finish := func(result string) {
-		entry.Result = result
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
-	}
+	finish := func(result string) { s.recordAudit(entry, result) }
 	if code, errorMsg := configureError(client); code != "" {
 		finish(code)
 		s.sendRequestError(client, msg.RequestID, errorMsg, code)

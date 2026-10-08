@@ -1121,9 +1121,7 @@ func (s *Server) handleEndElevation(client *Client, message []byte) {
 	}
 	// The WebUI session kept for heating groups, security and the like
 	s.endWebUISession(client.user)
-	if err := s.audit.Record(audit.Entry{User: client.user, Action: "endElevation", Result: rega.SetOK}); err != nil {
-		logger.Error("Failed to write the audit log:", err)
-	}
+	s.recordAudit(audit.Entry{User: client.user, Action: "endElevation"}, rega.SetOK)
 	logger.Info(fmt.Sprintf("🔒 User %q gave up the admin rights", client.user))
 	s.sendJSON(client, elevateResponse{Type: "endElevation_response", RequestID: msg.RequestID, Success: true})
 }
@@ -1196,12 +1194,7 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		Target: msg.InterfaceName + "." + msg.Address + "." + msg.Attribute,
 		Value:  msg.Value,
 	}
-	record := func(result string) {
-		entry.Result = result
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
-	}
+	record := func(result string) { s.recordAudit(entry, result) }
 	fail := func(code, errorMsg string) {
 		record(code)
 		s.sendJSON(client, setDatapointResponse{
@@ -1597,12 +1590,7 @@ type changeResponse struct {
 // sent with the response.
 func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous interface{}, result string, err error), createdID ...*int64) {
 	entry.User = client.user
-	finish := func(result string) {
-		entry.Result = result
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
-	}
+	finish := func(result string) { s.recordAudit(entry, result) }
 	if code, errorMsg := configureError(client); code != "" {
 		finish(code)
 		s.sendRequestError(client, requestID, errorMsg, code)
@@ -1681,12 +1669,7 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 		target = fmt.Sprintf("alarm %d", msg.ID)
 	}
 	entry := audit.Entry{User: client.user, Action: msgType, Target: target}
-	finish := func(result string) {
-		entry.Result = result
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
-	}
+	finish := func(result string) { s.recordAudit(entry, result) }
 	if !canOperate(client.level) {
 		finish("FORBIDDEN")
 		s.sendRequestError(client, msg.RequestID, "guests may not acknowledge messages", "FORBIDDEN")
@@ -1957,12 +1940,7 @@ func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
 
 	// setSysvar, runProgram: operating
 	entry := audit.Entry{User: client.user, Action: msgType, Target: fmt.Sprintf("%d", msg.ID), Value: msg.Value}
-	finish := func(result string) {
-		entry.Result = result
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
-	}
+	finish := func(result string) { s.recordAudit(entry, result) }
 	if !canOperate(client.level) {
 		finish("FORBIDDEN")
 		s.sendRequestError(client, msg.RequestID, "guests may not control devices", "FORBIDDEN")
@@ -2222,10 +2200,7 @@ func (s *Server) handlePutParamset(client *Client, message []byte) {
 		Value:  msg.Values,
 	}
 	fail := func(code, errorMsg string) {
-		entry.Result = code
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
+		s.recordAudit(entry, code)
 		s.sendRequestError(client, msg.RequestID, errorMsg, code)
 	}
 
@@ -2267,10 +2242,7 @@ func (s *Server) handlePutParamset(client *Client, message []byte) {
 		fail("CCU_ERROR", "putParamset failed: "+err.Error())
 		return
 	}
-	entry.Result = "OK"
-	if err := s.audit.Record(entry); err != nil {
-		logger.Error("Failed to write the audit log:", err)
-	}
+	s.recordAudit(entry, "OK")
 	if mode, ok := values["CHANNEL_OPERATION_MODE"]; ok {
 		s.storeChannelMode(msg.InterfaceName, msg.Address, mode)
 	}
@@ -2387,12 +2359,7 @@ func (s *Server) handleCreateBackup(client *Client, message []byte) {
 		return
 	}
 	entry := audit.Entry{User: client.user, Action: "createBackup", Target: "CCU"}
-	finish := func(result string) {
-		entry.Result = result
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
-	}
+	finish := func(result string) { s.recordAudit(entry, result) }
 	if code, errorMsg := configureError(client); code != "" {
 		finish(code)
 		s.sendRequestError(client, msg.RequestID, errorMsg, code)
@@ -2477,12 +2444,7 @@ func (s *Server) handleFavorites(client *Client, msgType string, message []byte)
 		value = strconv.FormatInt(msg.ItemID, 10)
 	}
 	entry := audit.Entry{User: client.user, Action: msgType, Target: target, Value: value}
-	finish := func(result string) {
-		entry.Result = result
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
-	}
+	finish := func(result string) { s.recordAudit(entry, result) }
 	if !canOperate(client.level) {
 		finish("FORBIDDEN")
 		s.sendRequestError(client, msg.RequestID, "guests may not change favorites", "FORBIDDEN")
@@ -2655,12 +2617,7 @@ func (s *Server) handleLayout(client *Client, msgType string, message []byte) {
 		return
 	}
 	entry := audit.Entry{User: client.user, Action: msgType, Target: fmt.Sprintf("view %d", msg.ID)}
-	finish := func(result string) {
-		entry.Result = result
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
-	}
+	finish := func(result string) { s.recordAudit(entry, result) }
 	if !canOperate(client.level) {
 		finish("FORBIDDEN")
 		s.sendRequestError(client, msg.RequestID, "guests may not arrange tiles", "FORBIDDEN")

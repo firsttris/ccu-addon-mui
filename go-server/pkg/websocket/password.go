@@ -6,7 +6,6 @@ import (
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/auth"
-	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/rega"
 )
 
@@ -26,10 +25,7 @@ func (s *Server) handleChangePassword(client *Client, message []byte) {
 	}
 	entry := audit.Entry{User: client.user, Action: "changePassword", Target: client.user}
 	finish := func(code, errorMsg string) {
-		entry.Result = code
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
+		s.recordAudit(entry, code)
 		if code != rega.SetOK {
 			s.sendRequestError(client, msg.RequestID, errorMsg, code)
 		}

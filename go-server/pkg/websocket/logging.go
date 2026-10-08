@@ -111,12 +111,10 @@ func (s *Server) handleLogging(client *Client, msgType string, message []byte) {
 	case "downloadLogs":
 		entry := audit.Entry{User: client.user, Action: "downloadLogs", Target: "log files"}
 		code, errorMsg := configureError(client)
-		entry.Result = rega.SetOK
 		if code != "" {
-			entry.Result = code
-		}
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
+			s.recordAudit(entry, code)
+		} else {
+			s.recordAudit(entry, rega.SetOK)
 		}
 		if code != "" {
 			s.sendRequestError(client, msg.RequestID, errorMsg, code)

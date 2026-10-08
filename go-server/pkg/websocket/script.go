@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"ccu-addon-mui-server/pkg/audit"
-	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/rega"
 )
 
@@ -38,12 +37,7 @@ func (s *Server) handleRunScript(client *Client, message []byte) {
 		logged = logged[:auditScriptLength] + "…"
 	}
 	entry := audit.Entry{User: client.user, Action: "runScript", Target: "script", Value: logged}
-	finish := func(result string) {
-		entry.Result = result
-		if err := s.audit.Record(entry); err != nil {
-			logger.Error("Failed to write the audit log:", err)
-		}
-	}
+	finish := func(result string) { s.recordAudit(entry, result) }
 	if code, errorMsg := configureError(client); code != "" {
 		finish(code)
 		s.sendRequestError(client, msg.RequestID, errorMsg, code)
