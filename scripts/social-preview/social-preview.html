@@ -1,0 +1,61 @@
+<!doctype html>
+<!-- Vorlage für das Social-Media-Bild des Repos (Settings → Social preview), 1280 × 640.
+     Rendern: node scripts/social-preview/render.mjs → docs/social-preview.png -->
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 640px; overflow: hidden; }
+  body {
+    position: relative;
+    font-family: Inter, "Inter Display", ui-sans-serif, system-ui, sans-serif;
+    color: #f1f5f9;
+    background:
+      radial-gradient(60% 55% at 8% 0%, rgba(59,130,246,.26), transparent 70%),
+      radial-gradient(45% 50% at 100% 100%, rgba(168,85,247,.2), transparent 70%),
+      linear-gradient(135deg, #14181d, #0b0d0e);
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(#1d232a 1px, transparent 1px),
+      linear-gradient(90deg, #1d232a 1px, transparent 1px);
+    background-size: 32px 32px; opacity: .55;
+  }
+  .head { position: absolute; left: 64px; top: 56px; display: flex; align-items: center; gap: 22px; }
+  .head img { width: 84px; height: 84px; border-radius: 19px; box-shadow: 0 8px 30px rgba(37,99,235,.45); }
+  h1 { font-size: 58px; font-weight: 700; letter-spacing: -1.8px; line-height: 1; }
+  .sub { position: absolute; left: 64px; top: 168px; font-size: 25px; color: #cbd5e1; letter-spacing: -.2px; }
+  .sub b { color: #f8fafc; font-weight: 600; }
+  .chips { position: absolute; left: 64px; top: 222px; display: flex; gap: 10px; }
+  .chip {
+    font-size: 15px; font-weight: 500; color: #e2e8f0; padding: 7px 14px; border-radius: 999px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .shot {
+    position: absolute; left: 36px; top: 286px; width: 1210px;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 110px);
+            mask-image: linear-gradient(180deg, transparent 0, #000 110px);
+  }
+  .shot img { width: 100%; display: block; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="head">
+    <img src="../../public/icon.svg" alt="">
+    <h1>ccu-addon-mui</h1>
+  </div>
+  <p class="sub">Die komplette WebUI für <b>Homematic CCU3</b> und <b>OpenCCU</b>, neu gebaut.</p>
+  <div class="chips">
+    <span class="chip"><i style="background:#60a5fa"></i>Live per WebSocket</span>
+    <span class="chip"><i style="background:#a3e635"></i>Als App installierbar</span>
+    <span class="chip"><i style="background:#eab308"></i>Push aufs Handy</span>
+    <span class="chip"><i style="background:#f472b6"></i>Bedienen, einrichten, programmieren</span>
+  </div>
+  <div class="shot"><img src="../../docs/screenshot-hero.png" alt=""></div>
+</body>
+</html>

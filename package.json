@@ -24,6 +24,7 @@
     "test:stack": "playwright test -c playwright.stack.config.ts",
     "test:visual": "VISUAL=1 playwright test visual",
     "test:visual:update": "VISUAL=1 playwright test visual -u",
+    "docs:social-preview": "node scripts/social-preview/render.mjs",
     "docs:screenshots": "DOCS=1 playwright test docs-screenshots && DOCS=1 playwright test -c playwright.stack.config.ts docs-screenshots",
     "test:e2e:coverage": "npm run test:e2e:coverage:collect && npm run test:e2e:coverage:report",
     "test:e2e:coverage:collect": "rm -rf .nyc_output coverage/playwright && mkdir -p .nyc_output && PW_COVERAGE=1 playwright test",
