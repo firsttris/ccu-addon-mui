@@ -153,18 +153,27 @@ VM, über lighttpd und occulites Sitzungs-Gate:
 
 - **prepare:** Anmeldung über das Gate (`platform: lite`, Administrator), alles, was die App beim Start
   liest, ein Raum mit Umlauten in occulites Metadaten, sein Layout und die Sprache in `DATA_DIR`.
-- **verify:** nach einem Neustart des Dienstes `addon-mui` und nach einer erneuten Installation (Update)
-  sind Raum, Layout und Sprache noch da.
+- **verify:** nach einem Neustart des Dienstes `addon-mui`, nach einer erneuten Installation (Update) und
+  nach einem Neustart des ganzen Systems sind Raum, Layout und Sprache noch da. Nach dem Neustart kommt das
+  Add-on von selbst wieder (`"start": "early"`, es wartet selbst auf die Funkdienste).
 - **levels:** Konten mit den Stufen *configure* und *operate*, jedes über das Gate angemeldet.
   *configure* benennt einen Raum um, und die Änderung kommt mit seiner eigenen Sitzung bei occulited an.
   Heizgruppen und Gerät löschen bekommen `FORBIDDEN`, *operate* darf nichts einrichten. Der Administrator
   legt eine Heizgruppe mit Umlauten über occulites Gruppen-API an. Ihr Gerät liegt in hmipserver
   (`VirtualDevices` läuft auch ohne Funkmodul). MUIs Geräteliste für *configure* muss dieselbe sein,
-  die lite-rpc (`/api/rpc/v1/json/VirtualDevices`) dieser Sitzung direkt gibt.
+  die lite-rpc (`/api/rpc/v1/json/VirtualDevices`) dieser Sitzung direkt gibt. An diesem Gerät setzt
+  *operate* einen Wert (`setDatapoint` über lite-rpc, `rpc:operate`), und der Wert kommt als Event über
+  occulites Event-Stream an die Verbindung zurück, die den Kanal abonniert hat. *configure* ändert eine
+  Einstellung (MASTER, `rpc:configure`) und setzt sie zurück; *operate* bekommt dabei `FORBIDDEN`.
 - **fresh:** nach Deinstallieren (`POST /api/system/v1/addons/mui/uninstall`) und neuer Installation sind
   Layout und Sprache weg, der Raum in occulites Speicher ist noch da.
 - **logout:** Ein Abmelden in openccu-lite schließt die offene Verbindung (Neuprüfung jede Minute), die
   nächste bekommt `SESSION_REQUIRED` oder wird vom Gate abgewiesen.
+
+Dazu öffnet `scripts/lite-vm-browser.mjs` die App in Chrome, wie openccu-lites Rahmen sie öffnet
+(`/addons/mui/?theme=dark&lang=en`, über lighttpd und das Gate): Der Raum aus dem Test steht da, Thema und
+Sprache kommen aus den Parametern, und es gibt keine Konsolenfehler, keine Ausnahmen und keine
+fehlgeschlagenen Anfragen unter `/addons/mui/`. Ein Screenshot (`app.png`) liegt im Artefakt.
 
 Dazwischen prüft das Skript, dass `/addons/mui/` ohne Sitzung zur Anmeldung umleitet, dass openccu-lites
 Backup (`GET /api/system/v1/backup`) `mui-lite.json` und die Sprachprofile enthält, und dass das Journal
@@ -173,7 +182,7 @@ Wiederherstellen ersetzt `/usr/local` und startet das System neu; dass es die Da
 Sache des Systems, dass sie im Backup sind, unsere. Die Dauer jedes Schritts steht in der Zusammenfassung
 des Workflows, Serial-Log, Journal, Antworten und die Dateiliste des Backups im Artefakt `lite-vm-logs`.
 
-Die VM hat kein Funkmodul: Geräte, Anlernen und Werte über Funk bleiben ein Test auf echter Hardware
+Die VM hat kein Funkmodul: Funkgeräte, Anlernen und Werte über Funk bleiben ein Test auf echter Hardware
 (Checkliste in [plan-openccu-lite.md](plan-openccu-lite.md), Abschnitt *Tests*).
 
 ## Screenshot-Vergleich

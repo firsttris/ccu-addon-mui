@@ -2,8 +2,9 @@
 # Tests the add-on on a real openccu-lite: boots openccu-lite's x86_64 image
 # headless in QEMU, creates the first administrator, installs the add-on
 # package through occulited as its Addons page does, and runs
-# go-server/litevm against it, with a restart, an update, a backup and an
-# uninstall with a new install in between.
+# go-server/litevm against it, with a restart, an update, a backup, a reboot
+# of the system and an uninstall with a new install in between; and the app
+# in a browser (scripts/lite-vm-browser.mjs).
 # Boots the way openccu-lite's own scripts/lite-qemu-test.sh does (BIOS grub,
 # raw disk, user network with lighttpd on a forwarded port).
 #
@@ -114,6 +115,15 @@ SID=$(sed -n 's/.*"sid":"\([^"]*\)".*/\1/p' "$WORK/setup.json")
 AUTH="Authorization: Bearer $SID"
 step "setup"
 
+# A new session of the administrator, after a reboot
+relogin() {
+  curl -s --max-time 10 -X POST -H 'Content-Type: application/json' \
+    -d "{\"username\":\"$USER_NAME\",\"password\":\"$PASSWORD\"}" "$BASE/api/auth/v1/login" > "$WORK/login.json"
+  SID=$(sed -n 's/.*"sid":"\([^"]*\)".*/\1/p' "$WORK/login.json")
+  [ -n "$SID" ] || fail "no session after the reboot: $(cat "$WORK/login.json")"
+  AUTH="Authorization: Bearer $SID"
+}
+
 # --- install, as the Addons page uploads it ------------------------------------
 install() {
   local code
@@ -154,7 +164,14 @@ step "update"
 
 # --- levels: configure and operate, a heating group, lite-rpc -------------------------
 phase levels
-step "levels, heating group, lite-rpc"
+step "levels, heating group, values, settings"
+
+# --- the app in a browser, through lighttpd and the gate ------------------------------
+# The room's name as go-server/litevm makes it (ciRoom)
+if ! (cd "$ROOT" && node scripts/lite-vm-browser.mjs "$BASE" "$USER_NAME" "$PASSWORD" "CI-Raum Küche Öfen Maß" "$OUT") 2>&1 | tee -a "$OUT/browser.log"; then
+  fail "the app in the browser"
+fi
+step "app in the browser"
 
 # --- the backup carries the add-on's data ------------------------------------------
 # What openccu-lite's backup takes (createBackup.sh: usr_local.tar.gz inside
@@ -168,6 +185,21 @@ for file in etc/config/addons/mui/mui-lite.json etc/config/addons/mui/userprofil
 done
 say "backup: $(grep -c addons/mui "$OUT/backup-files.txt") entries of the add-on, program files $(grep -q 'addons/mui/go-server' "$OUT/backup-files.txt" && echo in it || echo not in it)"
 step "backup"
+
+# --- a reboot of the system: the add-on comes up by itself --------------------------
+# It starts early (the manifest's "start": "early") and waits for the
+# interface processes itself; the data must be there afterwards
+code=$(curl -s -o "$OUT/reboot.json" -w '%{http_code}' --max-time 30 -X POST -H "$AUTH" -H 'Content-Type: application/json' \
+  -d '{"confirm":true}' "$BASE/api/system/v1/reboot")
+[ "$code" -lt 300 ] || fail "reboot refused: HTTP $code $(cat "$OUT/reboot.json")"
+for _ in $(seq 1 60); do
+  curl -s --max-time 3 "$BASE/api/system/v1/health" | grep -q '"ok":true' || break
+  sleep 2
+done
+wait_health
+relogin
+phase verify
+step "reboot"
 
 # --- the journal ---------------------------------------------------------------------
 curl -s -H "$AUTH" "$BASE/api/system/v1/log?unit=addon-mui&limit=2000" > "$OUT/addon-mui.log.json"

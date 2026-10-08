@@ -3,11 +3,12 @@ name: openccu-lite VM
 # The add-on on a real openccu-lite: its x86_64 release image booted in QEMU
 # (KVM on the runner), the add-on package built here installed through
 # occulited, then go-server/litevm against it: login through the session gate,
-# what the app reads, a room, its layout and the language kept over a restart
-# and an update, the levels configure and operate, a heating group and
-# lite-rpc with the user's session, the data in openccu-lite's backup, no
-# write errors in the journal, uninstall and install again, logout ends the
-# connection (scripts/lite-vm-test.sh). Without a radio module: devices and
+# what the app reads, a room, its layout and the language kept over a restart,
+# an update and a reboot, the levels configure and operate, a heating group,
+# a value set with the event coming back and a setting through lite-rpc with
+# the user's session, the app in Chrome, the data in openccu-lite's backup,
+# no write errors in the journal, uninstall and install again, logout ends
+# the connection (scripts/lite-vm-test.sh). Without a radio module: devices and
 # pairing stay a test on real hardware.
 #
 # Runs when a pull request changes the openccu-lite part, every Monday against

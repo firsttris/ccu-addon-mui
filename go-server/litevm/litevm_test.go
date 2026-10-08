@@ -17,7 +17,7 @@
 //     creates the room ciRoom (with umlauts), gives it a layout and sets the
 //     language
 //   - verify: the room, its layout and the language are still there (after a
-//     restart or an update)
+//     restart of the add-on, an update and a reboot of the system)
 //   - levels: accounts at configure and operate, each through the gate: what
 //     MUI lets them do and that the changes reach occulited with their own
 //     session; a heating group (occulited's system API) and lite-rpc
@@ -49,7 +49,8 @@ import (
 // Umlauts on the way through occulited's metadata API and back
 const ciRoom = "CI-Raum Küche Öfen Maß"
 
-const ciLayout = `{"version":3,"ci":true}`
+// A layout as the app saves it (src/views/grid/tileLayout.ts), without tiles
+const ciLayout = `{"v":3,"order":[],"sections":{}}`
 
 type message = map[string]interface{}
 
@@ -384,9 +385,141 @@ func levels(t *testing.T, admin *vm) {
 	if got != want {
 		t.Fatalf("MUI lists %d devices of VirtualDevices, lite-rpc %d", got, want)
 	}
-	if group != 0 && want == 0 {
+	if group == 0 {
+		return
+	}
+	if want == 0 {
 		t.Fatal("the heating group's device is not in VirtualDevices")
 	}
+	var device string
+	var channels []string
+	for _, d := range direct.Result {
+		if d["PARENT"] == "" || d["PARENT"] == nil {
+			device = fmt.Sprint(d["ADDRESS"])
+		}
+	}
+	for _, d := range direct.Result {
+		if d["PARENT"] == device {
+			channels = append(channels, fmt.Sprint(d["ADDRESS"]))
+		}
+	}
+	values(t, configure, operate, device, channels)
+	settings(t, configure, operate, device, channels)
+}
+
+// writable picks a parameter of the paramset to change: FLOAT, INTEGER or
+// BOOL, readable and writable (operations 1 and 2), not internal (flag 2);
+// a temperature first. Its description and whether there is one.
+func writable(description map[string]interface{}) (string, map[string]interface{}, bool) {
+	best := ""
+	for name, raw := range description {
+		p := raw.(map[string]interface{})
+		operations, _ := p["operations"].(float64)
+		flags, _ := p["flags"].(float64)
+		kind := p["type"]
+		if int(operations)&3 != 3 || int(flags)&2 != 0 || (kind != "FLOAT" && kind != "INTEGER" && kind != "BOOL") {
+			continue
+		}
+		if best == "" || (strings.Contains(name, "TEMPERATURE") && !strings.Contains(best, "TEMPERATURE")) || (strings.Contains(name, "TEMPERATURE") == strings.Contains(best, "TEMPERATURE") && name < best) {
+			best = name
+		}
+	}
+	if best == "" {
+		return "", nil, false
+	}
+	return best, description[best].(map[string]interface{}), true
+}
+
+// another is a valid value of the parameter that differs from current
+func another(p map[string]interface{}, current interface{}) interface{} {
+	switch p["type"] {
+	case "BOOL":
+		return current != true
+	case "INTEGER":
+		min, max := p["min"].(float64), p["max"].(float64)
+		if c, ok := current.(float64); ok && c+1 <= max {
+			return c + 1
+		}
+		return min
+	default:
+		min, max := p["min"].(float64), p["max"].(float64)
+		value := min + (max-min)/2
+		if c, ok := current.(float64); ok && c == value {
+			value = min
+		}
+		return float64(int(value*2)) / 2
+	}
+}
+
+// same compares values the way they come back as JSON
+func same(a, b interface{}) bool {
+	fa, oka := a.(float64)
+	fb, okb := b.(float64)
+	if oka && okb {
+		return fa-fb < 0.01 && fb-fa < 0.01
+	}
+	return a == b
+}
+
+// values: an operate account sets a value of the heating group's device
+// through MUI (lite-rpc setValue with its own session, rpc:operate), and the
+// value comes back as an event through occulited's event stream to a
+// subscribed connection
+func values(t *testing.T, configure, operate *websocket.Conn, device string, channels []string) {
+	for _, channel := range append([]string{}, channels...) {
+		description, _ := ok(t, call(t, configure, message{"type": "getParamsetDescription", "interfaceName": "VirtualDevices", "address": channel, "paramsetKey": "VALUES"}))["description"].(map[string]interface{})
+		name, p, found := writable(description)
+		if !found {
+			continue
+		}
+		current := ok(t, call(t, configure, message{"type": "getParamset", "interfaceName": "VirtualDevices", "address": channel, "paramsetKey": "VALUES"}))["values"].(map[string]interface{})[name]
+		value := another(p, current)
+		ok(t, call(t, operate, message{"type": "subscribe", "channels": []string{channel}}))
+		answer := call(t, operate, message{"type": "setDatapoint", "interfaceName": "VirtualDevices", "address": channel, "attribute": name, "value": value})
+		if answer["success"] != true {
+			t.Fatalf("setDatapoint %s %s = %v as ci-operate: %v", channel, name, value, answer)
+		}
+		_ = operate.SetReadDeadline(time.Now().Add(30 * time.Second))
+		for {
+			var m message
+			if err := operate.ReadJSON(&m); err != nil {
+				t.Fatalf("no event for %s %s = %v within 30 s: %v", channel, name, value, err)
+			}
+			event, _ := m["event"].(map[string]interface{})
+			if event != nil && event["channel"] == channel && event["datapoint"] == name && same(event["value"], value) {
+				t.Logf("%s %s = %v (was %v): set as ci-operate, the event came back", channel, name, value, current)
+				return
+			}
+		}
+	}
+	t.Fatalf("no writable value on the heating group's channels %v", channels)
+}
+
+// settings: configure changes a setting of the heating group's device
+// (putParamset MASTER through lite-rpc with its own session, rpc:configure)
+// and puts it back; operate may not
+func settings(t *testing.T, configure, operate *websocket.Conn, device string, channels []string) {
+	for _, address := range append([]string{device}, channels...) {
+		description, _ := ok(t, call(t, configure, message{"type": "getParamsetDescription", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER"}))["description"].(map[string]interface{})
+		name, p, found := writable(description)
+		if !found {
+			continue
+		}
+		read := func() interface{} {
+			return ok(t, call(t, configure, message{"type": "getParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER"}))["values"].(map[string]interface{})[name]
+		}
+		current := read()
+		value := another(p, current)
+		refused(t, call(t, operate, message{"type": "putParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER", "values": message{name: value}}))
+		ok(t, call(t, configure, message{"type": "putParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER", "values": message{name: value}}))
+		if got := read(); !same(got, value) {
+			t.Fatalf("%s MASTER %s: wrote %v, read %v", address, name, value, got)
+		}
+		ok(t, call(t, configure, message{"type": "putParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER", "values": message{name: current}}))
+		t.Logf("%s MASTER %s: %v → %v and back, as ci-configure", address, name, current, value)
+		return
+	}
+	t.Logf("no writable setting on the heating group's device %s", device)
 }
 
 // fresh: after an uninstall the add-on's data directory is empty, so the

@@ -12,9 +12,9 @@ Die Schritte 1 bis 8 sind umgesetzt, der Branch baut beide Pakete. Getestet ist 
   macht, Fall für Fall.
 - **Auf einem echten openccu-lite** (`lite-vm.yml`): das Release-Image in einer VM, das Paket über occulites
   Add-on-API installiert, dann Anmeldung über das Gate, Lesen, Raum, Layout und Sprache über Neustart und
-  Update, die Stufen *configure* und *operate* mit ihrer eigenen Sitzung, eine Heizgruppe und lite-rpc
-  (`VirtualDevices`), Umlaute, unsere Daten im Backup, Deinstallieren und neu Installieren, Journal und
-  Abmelden. Ohne Funkmodul, also ohne Funkgeräte ([tests.md](tests.md#auf-einer-openccu-lite-vm)).
+  Update und Neustart des Systems, die Stufen *configure* und *operate* mit ihrer eigenen Sitzung, eine
+  Heizgruppe, Wert setzen mit Event zurück und eine Einstellung über lite-rpc (`VirtualDevices`), die App
+  im Browser, Umlaute, unsere Daten im Backup, Deinstallieren und neu Installieren, Journal und Abmelden. Ohne Funkmodul, also ohne Funkgeräte ([tests.md](tests.md#auf-einer-openccu-lite-vm)).
 
 Offen:
 
