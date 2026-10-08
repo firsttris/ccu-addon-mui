@@ -365,7 +365,7 @@ export const WeekProgramSheet = ({ open, onOpenChange, interfaceName, address, n
       astroType: 0,
       astroOffset: 0,
       targets: targets.length > 0 ? 1 << targets[0].index : 1,
-      level: kind === 'switch' ? 1 : 1,
+      level: 1,
       level2: hasLevel2 ? 0 : undefined,
     });
   };
