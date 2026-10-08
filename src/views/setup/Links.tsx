@@ -366,8 +366,12 @@ export const AddLinkForm = ({
   const action = useLinkAction();
   const label = (address: string) => `${names.get(address) ?? address} (${address})`;
   const anyDevice = device === undefined;
-  const linkable = (anyDevice ? devices.flatMap((d) => d.channels ?? []) : (channels ?? [])).filter(
-    (c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length,
+  const linkable = useMemo(
+    () =>
+      (anyDevice ? devices.flatMap((d) => d.channels ?? []) : (channels ?? [])).filter(
+        (c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length,
+      ),
+    [anyDevice, devices, channels],
   );
   const [own, setOwn] = useState('');
   const deviceAddress = device ?? own.split(':')[0];
