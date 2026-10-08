@@ -7,7 +7,7 @@
     "en": "Manage and operate Homematic devices: pair, configure, link directly, with tiles for phone and tablet."
   },
   "homepage": "https://github.com/firsttris/ccu-addon-mui",
-  "licence": "MIT",
+  "licence": "AGPL-3.0-only",
   "release": {
     "github": "firsttris/ccu-addon-mui",
     "asset": "mui-{version}-{arch}-lite.tar.gz"
