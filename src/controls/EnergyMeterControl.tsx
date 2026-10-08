@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import { EnergyMeterChannel } from '../types/types';
 import { cn, formatNumber } from '../lib/utils';
 import ZapIcon from '~icons/lucide/zap';
@@ -184,7 +184,7 @@ const channelNumber = (address: string) => Number(address.split(':')[1] ?? 0);
 
 const isSet = (value: number | undefined): value is number => typeof value === 'number' && value > 0;
 
-export const EnergyMeterControl = React.memo(function EnergyMeterControl({ channels }: EnergyMeterControlProps) {
+export const EnergyMeterControl = ({ channels }: EnergyMeterControlProps) => {
   const sorted = [...channels].sort((a, b) => channelNumber(a.address) - channelNumber(b.address));
 
   const power = sorted.find((c) => c.datapoints.POWER !== undefined)?.datapoints.POWER;
@@ -276,4 +276,4 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({ chann
       </div>
     </Tile>
   );
-});
+};
