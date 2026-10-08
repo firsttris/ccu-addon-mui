@@ -16,7 +16,7 @@ an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
 
 </div>
 
-> The full documentation is in German: [docs/README.md](docs/README.md). Homematic is used mostly in
+> The full documentation is in German: [firsttris.github.io/ccu-addon-mui](https://firsttris.github.io/ccu-addon-mui/) (source: [docs/README.md](docs/README.md)). Homematic is used mostly in
 > German-speaking countries, so that is where the detail lives. The app itself speaks German and English.
 
 ## 💡 Why?

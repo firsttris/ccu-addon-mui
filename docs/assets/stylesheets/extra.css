@@ -1,0 +1,21 @@
+/* Farben der App (styles.css --primary): Blau 600 wie Badges und Icon */
+:root {
+  --md-primary-fg-color: #2563eb;
+  --md-primary-fg-color--light: #4f8ff7;
+  --md-primary-fg-color--dark: #1d4ed8;
+  --md-accent-fg-color: #1d4ed8;
+}
+[data-md-color-scheme="slate"] {
+  --md-accent-fg-color: #4f8ff7;
+}
+/* Screenshots: Rahmen und Schatten, nie breiter als der Text */
+.md-typeset img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .18);
+}
+/* Breite, scrollbare Tabellen (Gerätezahlen, Vergleich, Protokoll) */
+.md-typeset table:not([class]) {
+  font-size: .75rem;
+}

@@ -248,6 +248,8 @@ Optionen wie `AUTH_MODE` und Deinstallation stehen in der [Installation](docs/in
 
 ## 📚 Dokumentation
 
+Auch als Website mit Suche: **https://firsttris.github.io/ccu-addon-mui/**
+
 | | |
 |---|---|
 | [Installation](docs/installation.md) | Installieren, Update, Anmeldung, HTTPS, als App, Push, Optionen, Deinstallation |
