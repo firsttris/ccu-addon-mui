@@ -105,11 +105,11 @@ jobs:
         run: npm ci
 
       - name: Run frontend E2E tests with coverage
-        run: rm -rf .nyc_output coverage/playwright && mkdir -p .nyc_output && PW_COVERAGE=1 npx playwright test --project=chromium --reporter=github,html
+        run: npm run test:e2e:coverage:collect -- --project=chromium --reporter=github,html
 
       - name: Generate Playwright coverage report
         if: always()
-        run: npx nyc report --temp-dir .nyc_output --reporter=text-summary --reporter=html --reporter=lcov --report-dir coverage/playwright
+        run: npm run test:e2e:coverage:report
 
       - name: Upload Playwright report
         if: always()
