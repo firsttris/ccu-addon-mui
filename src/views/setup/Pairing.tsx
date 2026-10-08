@@ -41,11 +41,9 @@ export const cleanLabel = (text: string) =>
 const LocalPairing = ({
   interfaceName,
   disabled,
-  onStart,
 }: {
   interfaceName: string;
   disabled: boolean;
-  onStart: () => void;
 }) => {
   const action = usePairingAction();
   const { showToast } = useToast();
@@ -94,7 +92,6 @@ const LocalPairing = ({
                 key,
               },
               {
-                onSuccess: onStart,
                 onError: (error) =>
                   showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
               },
@@ -165,16 +162,15 @@ export const Pairing = () => {
   usePageTitle(m.SETUP());
   const { showToast } = useToast();
   const [interfaceName, setInterfaceName] = useState(INTERFACES[0]);
-  const [started, setStarted] = useState(false);
   const { data: connected = [] } = useInterfaces();
   const interfaces = INTERFACES.filter(
     (name) => name !== "BidCos-Wired" || connected.includes(name),
   );
   const wired = interfaceName === "BidCos-Wired";
   const { data: { seconds, keyMismatch } = { seconds: 0 }, dataUpdatedAt } =
-    useInstallMode(interfaceName, { poll: started, enabled: !wired });
+    useInstallMode(interfaceName, { enabled: !wired });
   const active = seconds > 0;
-  const { data: inbox = [] } = useInbox({ poll: started && active });
+  const { data: inbox = [] } = useInbox({ poll: active });
   const action = usePairingAction();
   const [replacing, setReplacing] = useState<InboxDevice | null>(null);
   const [serial, setSerial] = useState("");
@@ -196,7 +192,6 @@ export const Pairing = () => {
   }, [keyMismatch, dataUpdatedAt]);
 
   const startPairing = () => {
-    setStarted(true);
     run({
       type: "setInstallMode",
       interfaceName,
@@ -294,7 +289,6 @@ export const Pairing = () => {
         <LocalPairing
           interfaceName={interfaceName}
           disabled={action.isPending}
-          onStart={() => setStarted(true)}
         />
       )}
       {interfaceName === "BidCos-RF" && (
