@@ -43,7 +43,7 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { useChannelNames } from "./channelNames";
 import { ChannelMeta, NameField, useRename } from "./ChannelMeta";
-import { useChannels } from "../../queries";
+import { useChannelList } from "../../queries";
 import { isHiddenChannel } from "../../hooks/channels";
 import { humanize } from "../../controls/generic/parameters";
 import { cn } from "../../lib/utils";
@@ -297,7 +297,7 @@ export const DeviceSettings = () => {
     return label === type ? humanize(type) : label;
   };
   const rename = useRename();
-  const { data: allChannels } = useChannels({ all: true });
+  const { data: allChannels } = useChannelList();
   const regaOf = new Map(
     (allChannels ?? [])
       .filter((c) => c.address.startsWith(`${address}:`))
