@@ -57,7 +57,8 @@ const watch = (page, name) => {
     else console.log(`${name}: openccu-lite's console: ${m.text()}`);
   });
   page.on('pageerror', (e) => (ours(page.url()) ? problems.push(`${name}: exception: ${e.message}`) : console.log(`${name}: openccu-lite's exception: ${e.message}`)));
-  page.on('requestfailed', (r) => ours(r.url()) && problems.push(`${name}: failed: ${r.url()} ${r.failure()?.errorText}`));
+  // ERR_ABORTED: a request the next page's navigation cut off, no failure
+  page.on('requestfailed', (r) => ours(r.url()) && r.failure()?.errorText !== 'net::ERR_ABORTED' && problems.push(`${name}: failed: ${r.url()} ${r.failure()?.errorText}`));
   page.on('response', (r) => ours(r.url()) && r.status() >= 400 && problems.push(`${name}: HTTP ${r.status()}: ${r.url()}`));
 };
 
@@ -147,7 +148,8 @@ try {
     // The heating group of the room Wohnzimmer (phase showcase, after the
     // one of the phase levels)
     await open('device/VirtualDevices/INT0000002');
-    await frame.locator('[data-device-image]:not([data-device-image="none"]) img').first().waitFor({ timeout: 30_000 });
+    // The page has a hidden copy for small screens: the visible picture
+    await frame.locator('[data-device-image]:not([data-device-image="none"]) img >> visible=true').first().waitFor({ timeout: 30_000 });
     if ((await frame.getByText(/alter WebUI|old WebUI/).count()) > 0) problems.push('a link into the WebUI on openccu-lite (device page)');
     await shot(shell, 'app-device.png');
   }
