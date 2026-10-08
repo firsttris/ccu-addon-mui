@@ -490,7 +490,11 @@ export const DeviceSettings = () => {
               type="button"
               variant="outline"
               className="text-destructive hover:text-destructive"
-              onClick={() => setDeleting(true)}
+              onClick={() => {
+                // Each time without reset or force, also after a cancel
+                setDeleteOptions({ reset: false, force: false });
+                setDeleting(true);
+              }}
             >
               <TrashIcon />
               {m.DELETE_DEVICE()}
