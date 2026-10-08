@@ -96,10 +96,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 	wsServer.SetAuditLog(audit.New(cfg.AuditLogFile))
 	wsServer.SetBackup(backup.New(cfg.WebUIURL, cfg.BackupDir, cfg.FirmwareUploadDir))
 
-	deviceRPC, err := ccurpc.New(cfg)
-	if err != nil {
-		return fmt.Errorf("failed to create the XML-RPC client: %w", err)
-	}
+	deviceRPC := ccurpc.New(cfg)
 	wsServer.SetDeviceRPC(deviceRPC)
 
 	// The add-ons; this one's rc.d script is "mui" (addon_installer/rc.d)

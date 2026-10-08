@@ -88,7 +88,7 @@ func Interfaces(cfg *config.Config) []Interface {
 	return interfaces
 }
 
-func New(cfg *config.Config) (*Client, error) {
+func New(cfg *config.Config) *Client {
 	var transport http.RoundTripper = &http.Transport{
 		DialContext:           (&net.Dialer{Timeout: 5 * time.Second}).DialContext,
 		ResponseHeaderTimeout: 30 * time.Second,
@@ -115,7 +115,7 @@ func New(cfg *config.Config) (*Client, error) {
 	}
 	c := newClient(callers)
 	c.slow = slow
-	return c, nil
+	return c
 }
 
 // How long a BidCos device firmware update may take (transfer and flash)
