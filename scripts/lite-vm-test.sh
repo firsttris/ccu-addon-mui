@@ -166,8 +166,13 @@ step "update"
 phase levels
 step "levels, heating group, values, settings"
 
+# --- rooms with a heating group each, for the screenshots -------------------------------
+phase showcase
+step "rooms and heating groups for the screenshots"
+
 # --- the app in a browser, through lighttpd and the gate ------------------------------
-# The room's name as go-server/litevm makes it (ciRoom)
+# Checks the app and takes the screenshots (screenshots/ in the logs). The
+# room's name as go-server/litevm makes it (ciRoom)
 if ! (cd "$ROOT" && node scripts/lite-vm-browser.mjs "$BASE" "$USER_NAME" "$PASSWORD" "CI-Raum Küche Öfen Maß" "$OUT") 2>&1 | tee -a "$OUT/browser.log"; then
   fail "the app in the browser"
 fi

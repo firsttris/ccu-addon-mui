@@ -175,7 +175,11 @@ VM, über lighttpd und occulites Sitzungs-Gate:
 Dazu öffnet `scripts/lite-vm-browser.mjs` die App in Chrome, wie openccu-lites Rahmen sie öffnet
 (`/addons/mui/?theme=dark&lang=en`, über lighttpd und das Gate): Der Raum aus dem Test steht da, Thema und
 Sprache kommen aus den Parametern, und es gibt keine Konsolenfehler, keine Ausnahmen und keine
-fehlgeschlagenen Anfragen unter `/addons/mui/`. Ein Screenshot (`app.png`) liegt im Artefakt.
+fehlgeschlagenen Anfragen unter `/addons/mui/`. Dafür legt die Phase *showcase* vorher drei Räume mit je
+einer Heizgruppe an (ein virtueller Thermostat ist das einzige Gerät, das die VM ohne Funkmodul haben
+kann). Dann fotografiert das Skript die App in openccu-lites Oberfläche (`/nav/mui`, die Seite seines
+Menüeintrags) hell und dunkel auf Desktop und Handy sowie einige Seiten der App selbst: `screenshots/` im
+Artefakt `lite-vm-logs`.
 
 Dazwischen prüft das Skript, dass `/addons/mui/` ohne Sitzung zur Anmeldung umleitet, dass openccu-lites
 Backup (`GET /api/system/v1/backup`) `mui-lite.json` und die Sprachprofile enthält, und dass das Journal

@@ -23,9 +23,12 @@
 //     session; a heating group (occulited's system API) and lite-rpc
 //     (VirtualDevices, hmipserver runs without a radio module) with the
 //     user's session
+//   - showcase: rooms with a heating group each, for the screenshots of
+//     scripts/lite-vm-browser.mjs (the VM has no radio devices; a heating
+//     group's virtual thermostat is the one device it can have)
 //   - fresh: after an uninstall and a new install the add-on's own data is
 //     gone (layout, language), the room in occulited's store is not; the
-//     room is deleted
+//     room and the heating group are deleted
 //   - logout: a logout in openccu-lite ends the open connection, and the next
 //     one gets SESSION_REQUIRED
 package litevm
@@ -222,6 +225,8 @@ func TestLiteVM(t *testing.T) {
 		verify(t, login(t))
 	case "levels":
 		levels(t, login(t))
+	case "showcase":
+		showcase(t, login(t))
 	case "fresh":
 		fresh(t, login(t))
 	case "logout":
@@ -344,7 +349,8 @@ func levels(t *testing.T, admin *vm) {
 		t.Logf("heating group %d (%s)", group, groupType)
 	}
 	if group != 0 {
-		defer func() { ok(t, call(t, adminConn, message{"type": "deleteHeatingGroup", "id": group})) }()
+		// Stays until the phase fresh: the room shows its tile in the
+		// screenshots (scripts/lite-vm-browser.mjs)
 		groups, _ := ok(t, call(t, adminConn, message{"type": "getHeatingGroups"}))["groups"].([]interface{})
 		seen := false
 		for _, g := range groups {
@@ -405,6 +411,18 @@ func levels(t *testing.T, admin *vm) {
 	}
 	values(t, configure, operate, device, channels)
 	settings(t, configure, operate, device, channels)
+
+	// The group's thermostat channel into the room, for the screenshots
+	all, _ := ok(t, call(t, adminConn, message{"type": "getChannels", "all": true}))["channels"].([]interface{})
+	for _, raw := range all {
+		ch := raw.(map[string]interface{})
+		if ch["interfaceName"] == "VirtualDevices" && strings.HasPrefix(fmt.Sprint(ch["address"]), device+":") && !strings.HasSuffix(fmt.Sprint(ch["address"]), ":0") {
+			ok(t, call(t, adminConn, message{"type": "setGroupMember", "groupId": room, "channelId": ch["id"], "member": true}))
+			t.Logf("%s in %s", ch["address"], ciRoom)
+			return
+		}
+	}
+	t.Logf("no channel of %s in MUI's channel list (%d channels)", device, len(all))
 }
 
 // writable picks a parameter of the paramset to change: FLOAT, INTEGER or
@@ -573,6 +591,64 @@ func settings(t *testing.T, configure, operate *websocket.Conn, device string, c
 	t.Logf("no writable setting on the heating group's device %s", device)
 }
 
+// The rooms of the phase showcase, each with a heating group and its set
+// point
+var showcaseRooms = []struct {
+	Name string
+	Temp float64
+}{{"Wohnzimmer", 21.5}, {"Bad", 23}, {"Schlafzimmer", 18.5}}
+
+func showcaseGroup(room string) string { return "Heizung " + room }
+
+// showcase gives the screenshots something to show: rooms with a heating
+// group's thermostat each, named, at a set point. What hmipserver does not
+// answer (a group just made, see docs/plan-openccu-lite.md) is logged only.
+func showcase(t *testing.T, v *vm) {
+	conn := v.adminConn(t)
+	rooms := map[string]int64{}
+	list, _ := ok(t, call(t, conn, message{"type": "getRooms"}))["rooms"].([]interface{})
+	for _, r := range list {
+		room := r.(map[string]interface{})
+		rooms[fmt.Sprint(room["name"])] = int64(room["id"].(float64))
+	}
+	code, body := v.api(t, http.MethodGet, "/api/system/v1/groups/types", nil)
+	var types struct {
+		Types []struct {
+			ID string `json:"id"`
+		} `json:"types"`
+	}
+	if err := json.Unmarshal(body, &types); code != http.StatusOK || err != nil || len(types.Types) == 0 {
+		t.Skipf("no heating group type: %d %s", code, body)
+	}
+	for _, r := range showcaseRooms {
+		if _, found := rooms[r.Name]; !found {
+			m := ok(t, call(t, conn, message{"type": "createGroup", "list": "rooms", "name": r.Name}))
+			rooms[r.Name] = int64(m["id"].(float64))
+		}
+		m := ok(t, call(t, conn, message{"type": "saveHeatingGroup", "group": message{"name": showcaseGroup(r.Name), "type": types.Types[0].ID, "members": []string{}}}))
+		channel := fmt.Sprintf("INT%07d:1", int(m["id"].(float64)))
+		var id interface{}
+		all, _ := ok(t, call(t, conn, message{"type": "getChannels", "all": true}))["channels"].([]interface{})
+		for _, raw := range all {
+			if ch := raw.(map[string]interface{}); ch["interfaceName"] == "VirtualDevices" && ch["address"] == channel {
+				id = ch["id"]
+			}
+		}
+		if id == nil {
+			t.Logf("%s not in MUI's channels yet", channel)
+			continue
+		}
+		ok(t, call(t, conn, message{"type": "setGroupMember", "groupId": rooms[r.Name], "channelId": id, "member": true}))
+		if m := call(t, conn, message{"type": "rename", "address": channel, "name": "Thermostat " + r.Name}); m["type"] == "error" || m["success"] == false {
+			t.Logf("rename %s: %v", channel, m)
+		}
+		if m := call(t, conn, message{"type": "setDatapoint", "interfaceName": "VirtualDevices", "address": channel, "attribute": "SET_TEMPERATURE", "value": r.Temp}); m["success"] != true {
+			t.Logf("set point %s: %v", channel, m)
+		}
+		t.Logf("%s: %s at %.1f °C", r.Name, channel, r.Temp)
+	}
+}
+
 // fresh: after an uninstall the add-on's data directory is empty, so the
 // new install starts without the layout and the language; the room belongs
 // to occulited's store and stays
@@ -589,6 +665,27 @@ func fresh(t *testing.T, v *vm) {
 		t.Fatalf("language still there after the uninstall: %v", m)
 	}
 	ok(t, call(t, conn, message{"type": "deleteGroup", "list": "rooms", "id": id}))
+	// The heating groups and rooms of the phases levels and showcase, in
+	// occulited's store too
+	names := map[string]bool{ciGroup: true}
+	for _, r := range showcaseRooms {
+		names[showcaseGroup(r.Name)] = true
+	}
+	groups, _ := ok(t, call(t, conn, message{"type": "getHeatingGroups"}))["groups"].([]interface{})
+	for _, raw := range groups {
+		if g := raw.(map[string]interface{}); names[fmt.Sprint(g["name"])] {
+			ok(t, call(t, conn, message{"type": "deleteHeatingGroup", "id": g["id"]}))
+		}
+	}
+	rooms, _ := ok(t, call(t, conn, message{"type": "getRooms"}))["rooms"].([]interface{})
+	for _, raw := range rooms {
+		room := raw.(map[string]interface{})
+		for _, r := range showcaseRooms {
+			if room["name"] == r.Name {
+				ok(t, call(t, conn, message{"type": "deleteGroup", "list": "rooms", "id": room["id"]}))
+			}
+		}
+	}
 }
 
 func logout(t *testing.T, v *vm) {
