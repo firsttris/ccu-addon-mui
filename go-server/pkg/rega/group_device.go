@@ -38,10 +38,5 @@ func (c *Client) SetupGroupDevice(address, name string, rename bool, members, ot
 	if err != nil {
 		return "", err
 	}
-	switch result := strings.TrimSpace(output); result {
-	case SetOK, SetNotFound:
-		return result, nil
-	default:
-		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
-	}
+	return resultOnly(output)
 }

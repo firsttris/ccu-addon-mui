@@ -32,6 +32,15 @@ func resultWithValue(output string) (result, value string, err error) {
 	return result, value, nil
 }
 
+// resultOnly checks "OK" or "NOT_FOUND" from a script.
+func resultOnly(output string) (string, error) {
+	result := strings.TrimSpace(output)
+	if result != SetOK && result != SetNotFound {
+		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
+	}
+	return result, nil
+}
+
 // CreateGroup creates a room or trade and returns SetOK with its id.
 func (c *Client) CreateGroup(list, name string) (result string, id int64, err error) {
 	listID, enumType, err := groupList(list)
@@ -276,10 +285,5 @@ func (c *Client) EditSysvar(id int64, sv NewSysvar, description string, channel 
 	if err != nil {
 		return "", err
 	}
-	switch result := strings.TrimSpace(output); result {
-	case SetOK, SetNotFound:
-		return result, nil
-	default:
-		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
-	}
+	return resultOnly(output)
 }
