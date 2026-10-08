@@ -1,9 +1,11 @@
 import React, { ReactNode } from 'react';
 import { EnergyMeterChannel } from '../types/types';
+import { cn } from '../lib/utils';
 import ZapIcon from '~icons/lucide/zap';
 import FlameIcon from '~icons/lucide/flame';
 import { defaultLang } from '../i18n/locale';
 import { Tile } from '../components/Tile';
+import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 
 // All channels of one HmIP-ESI: channel 1 has the current power or gas flow,
@@ -37,6 +39,51 @@ const locale = defaultLang === 'de' ? 'de-DE' : 'en-US';
 
 const format = (value: number, maximumFractionDigits: number) =>
   new Intl.NumberFormat(locale, { maximumFractionDigits }).format(value);
+
+// A Ferraris meter: the register with the reading in kWh (the tenths in
+// red, as on the real thing) and the disc below, turning the faster the more
+// power flows. A real disc turns about once a minute at 1 kW; this one goes
+// on a log scale from 1 W to 5 kW so a fridge and a kettle look different.
+const FerrarisMeter = ({ power, kwh }: { power: number; kwh: number | undefined }) => {
+  const effects = useEffects();
+  const turning = power > 0;
+  const speed = Math.min(1, Math.max(0, Math.log10(Math.max(1, power)) / Math.log10(5000)));
+  const tenths = kwh === undefined ? undefined : Math.floor(kwh * 10);
+  const digits = tenths === undefined ? '-----' : String(Math.floor(tenths / 10)).padStart(5, '0');
+  return (
+    <div
+      aria-hidden
+      className="flex w-[124px] shrink-0 flex-col items-center gap-2 rounded-[10px] border-[3px] border-zinc-300 bg-zinc-100 px-2 pt-2 pb-2.5 dark:border-zinc-700 dark:bg-zinc-800"
+    >
+      {/* Register */}
+      <div className="flex items-center gap-1">
+      <div className="flex gap-px rounded-[4px] bg-zinc-900 p-[3px] font-mono text-[11px] leading-none font-semibold tabular-nums">
+        {digits.split('').map((d, i) => (
+          <span key={i} className="w-[11px] rounded-[2px] bg-zinc-800 py-[3px] text-center text-zinc-100">
+            {d}
+          </span>
+        ))}
+        <span className="w-[11px] rounded-[2px] bg-red-700 py-[3px] text-center text-white">
+          {tenths === undefined ? '-' : tenths % 10}
+        </span>
+      </div>
+      <span className="text-[9px] font-semibold text-muted-foreground">kWh</span>
+      </div>
+      {/* The edge of the disc through its window: notches and the red mark
+          pass by, shaded so the edge looks round */}
+      <div className="relative h-5 w-full overflow-hidden rounded-[5px] border border-zinc-400 bg-zinc-900 dark:border-zinc-600">
+        <div
+          className={cn(
+            'absolute inset-x-0 top-1/2 h-2.5 -translate-y-1/2 bg-[linear-gradient(90deg,#ef4444_0_14px,transparent_14px),repeating-linear-gradient(90deg,#9f9fa9_0_1px,#d4d4d8_1px_16px)] bg-[length:160px_100%,16px_100%]',
+            turning && effects.on && 'fx-disc',
+          )}
+          style={{ animationDuration: `${(6 - 5.4 * speed).toFixed(2)}s` }}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.8),rgba(0,0,0,0.15)_30%,transparent_50%,rgba(0,0,0,0.15)_70%,rgba(0,0,0,0.8))]" />
+      </div>
+    </div>
+  );
+};
 
 const channelNumber = (address: string) => Number(address.split(':')[1] ?? 0);
 
@@ -82,7 +129,13 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({ chann
             <Kind icon={<ZapIcon />} tint="bg-yellow-500/15 text-yellow-700 dark:text-yellow-300">
               {m.ELECTRICITY()}
             </Kind>
-            <MainValue>{format(power ?? 0, 0)} W</MainValue>
+            <div className="flex items-center justify-between gap-3">
+              <MainValue>{format(power ?? 0, 0)} W</MainValue>
+              <FerrarisMeter
+                power={power ?? 0}
+                kwh={readings[0] ? (readings[0].datapoints.ENERGY_COUNTER ?? 0) / 1000 : undefined}
+              />
+            </div>
             {readings.map((channel, index) => (
               <Row key={channel.address}>
                 <span>

@@ -293,6 +293,15 @@ html body[data-scroll-locked] {
 @utility fx-flow {
   animation: fx-flow 1.2s linear infinite;
 }
+/* The disc of a Ferraris meter turning (one turn: the 160px of its edge) */
+@keyframes fx-disc {
+  to {
+    background-position-x: 160px, 160px;
+  }
+}
+@utility fx-disc {
+  animation: fx-disc 2s linear infinite;
+}
 /* Warmth rising off a heated floor */
 @keyframes fx-heat {
   0% {
