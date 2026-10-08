@@ -1,6 +1,7 @@
 # Third-party licenses
 
-MUI is under the [MIT License](LICENSE). Some of its files and the libraries
+MUI is under the [GNU Affero General Public License 3.0](LICENSE) (see
+[NOTICE](NOTICE)). Some of its files and the libraries
 built into the add-on are under other licenses; this file lists them and holds
 their license texts. It is part of the add-on archive.
 

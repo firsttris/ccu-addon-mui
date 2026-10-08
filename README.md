@@ -11,7 +11,7 @@ ein Add-on für CCU3 und OpenCCU, das die alte WebUI im Alltag ersetzt.
 [![E2E](https://github.com/firsttris/ccu-addon-mui/actions/workflows/playwright-e2e.yml/badge.svg)](https://github.com/firsttris/ccu-addon-mui/actions/workflows/playwright-e2e.yml)
 [![Release](https://img.shields.io/github/v/release/firsttris/ccu-addon-mui?label=Release&color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/firsttris/ccu-addon-mui/total?label=Downloads&color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases)
-[![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-yellow)](LICENSE)
+[![Lizenz: AGPL-3.0](https://img.shields.io/badge/Lizenz-AGPL--3.0-blue)](LICENSE)
 <br>
 [![CCU3 | OpenCCU](https://img.shields.io/badge/Zentrale-CCU3%20%7C%20OpenCCU-1d4ed8)](docs/installation.md)
 [![HmIP | BidCos-RF | HmIP Wired](https://img.shields.io/badge/Funk-HmIP%20%7C%20BidCos--RF%20%7C%20HmIP%20Wired-1d4ed8)](docs/geraete.md)
@@ -304,7 +304,8 @@ Vor einem Pull Request bitte `npm test`, `npm run typecheck` und `npm run test:g
 ⭐ Gefällt dir MUI? Ein [Stern auf GitHub](https://github.com/firsttris/ccu-addon-mui) hilft anderen, es zu finden.<br>
 🐛 [Fehler melden](https://github.com/firsttris/ccu-addon-mui/issues/new) · 💡 [Idee vorschlagen](https://github.com/firsttris/ccu-addon-mui/issues/new)
 
-<sub>Lizenz: <a href="LICENSE">MIT</a>, aus der WebUI übernommene Profile und Texte: <a href="THIRD_PARTY_LICENSES.md">Apache-2.0</a> · © Tristan Teufel und Mitwirkende · <a href="README.en.md">English version</a><br>
+<sub>Lizenz: <a href="LICENSE">AGPL-3.0</a> (bis v1.0.10 MIT), aus der WebUI übernommene Profile und Texte: <a href="THIRD_PARTY_LICENSES.md">Apache-2.0</a> · © Tristan Teufel und Mitwirkende · <a href="README.en.md">English version</a><br>
+Wer eine veränderte Version weitergibt oder für andere betreibt, muss ihren Quellcode unter der AGPL anbieten; eine kommerzielle Lizenz ohne diese Pflichten gibt es über <a href="https://teufel-it.de">teufel-it.de</a>.<br>
 Homematic und Homematic IP sind Marken der eQ-3 AG. Dieses Projekt steht in keiner Verbindung zu eQ-3 oder OpenCCU.</sub>
 
 </div>

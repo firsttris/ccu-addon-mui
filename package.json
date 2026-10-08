@@ -1,7 +1,7 @@
 {
   "name": "ccu-addon-mui",
   "version": "1.0.10",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "start": "vite",
     "start:fe": "vite",

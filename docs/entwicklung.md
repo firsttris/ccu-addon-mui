@@ -186,7 +186,7 @@ Das Skript liest `www/config/easymodes/<Empfänger>/<Sender>.tcl` samt Übersetz
 `src/controls/links/linkProfiles.json`.
 
 Die importierten Daten (Verknüpfungsprofile, Parameternamen, Texte der Servicemeldungen) stehen wie ihre
-Quelle, die WebUI, unter der Apache-Lizenz 2.0, nicht unter MIT. [THIRD_PARTY_LICENSES.md](../THIRD_PARTY_LICENSES.md)
+Quelle, die WebUI, unter der Apache-Lizenz 2.0, nicht unter der AGPL. [THIRD_PARTY_LICENSES.md](../THIRD_PARTY_LICENSES.md)
 nennt sie und liegt dem Add-on bei; ein neues Import-Skript gehört dort mit in die Liste.
 
 ## Umgebungsvariablen

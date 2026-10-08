@@ -11,7 +11,7 @@ an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
 [![E2E](https://github.com/firsttris/ccu-addon-mui/actions/workflows/playwright-e2e.yml/badge.svg)](https://github.com/firsttris/ccu-addon-mui/actions/workflows/playwright-e2e.yml)
 [![Release](https://img.shields.io/github/v/release/firsttris/ccu-addon-mui?label=release&color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/firsttris/ccu-addon-mui/total?color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![CCU3 | OpenCCU](https://img.shields.io/badge/central-CCU3%20%7C%20OpenCCU-1d4ed8)](docs/installation.md)
 
 <img src="docs/screenshot-hero.png" alt="All devices on a tablet, living room and boiler room on two phones" width="900">
@@ -201,7 +201,8 @@ See [Entwicklung](docs/entwicklung.md) and [Architektur](docs/architektur.md).
 ⭐ Like MUI? A [star on GitHub](https://github.com/firsttris/ccu-addon-mui) helps others find it.<br>
 🐛 [Report a bug](https://github.com/firsttris/ccu-addon-mui/issues/new) · 💡 [Request a feature](https://github.com/firsttris/ccu-addon-mui/issues/new)
 
-<sub>License: <a href="LICENSE">MIT</a>, profiles and texts taken from the WebUI: <a href="THIRD_PARTY_LICENSES.md">Apache-2.0</a> · © Tristan Teufel and contributors · <a href="README.md">Deutsche Version</a><br>
+<sub>License: <a href="LICENSE">AGPL-3.0</a> (MIT up to v1.0.10), profiles and texts taken from the WebUI: <a href="THIRD_PARTY_LICENSES.md">Apache-2.0</a> · © Tristan Teufel and contributors · <a href="README.md">Deutsche Version</a><br>
+Changed versions you pass on or run for others must offer their source code under the AGPL; a commercial license without these obligations is available via <a href="https://teufel-it.de">teufel-it.de</a>.<br>
 Homematic and Homematic IP are trademarks of eQ-3 AG. This project is not affiliated with eQ-3 or OpenCCU.</sub>
 
 </div>
