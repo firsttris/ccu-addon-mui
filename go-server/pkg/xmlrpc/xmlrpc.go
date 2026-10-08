@@ -574,7 +574,8 @@ func (s *Server) dispatchEvent(params []interface{}) {
 	s.markSeen(interfaceID)
 
 	logger.Debugf("   ✅ Event: %s | %s | %s = %v", interfaceID, address, datapoint, value)
-	s.handleCCUEvent(interfaceID, address, datapoint, value)
+	// The event names the interface (HmIP-RF), not this server's callback id
+	s.handleCCUEvent(strings.TrimPrefix(interfaceID, "websocket-server-"), address, datapoint, value)
 }
 
 // dispatchDeviceChange handles updateDevice(interfaceID, address, hint) and
