@@ -293,15 +293,6 @@ html body[data-scroll-locked] {
 @utility fx-flow {
   animation: fx-flow 1.2s linear infinite;
 }
-/* The disc of a Ferraris meter turning (one turn: the 160px of its edge) */
-@keyframes fx-disc {
-  to {
-    background-position-x: 160px, 160px;
-  }
-}
-@utility fx-disc {
-  animation: fx-disc 2s linear infinite;
-}
 /* The last roll of a meter register turning: 0-9 and 0 again (10 of 11) */
 @keyframes fx-roll {
   to {

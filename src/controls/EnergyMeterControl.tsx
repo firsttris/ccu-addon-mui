@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
 import { EnergyMeterChannel } from '../types/types';
 import { cn } from '../lib/utils';
 import ZapIcon from '~icons/lucide/zap';
@@ -113,31 +113,58 @@ const RegisterRow = ({
 
 const meterCase = 'flex flex-col gap-2 rounded-[12px] border-[3px] border-zinc-300 bg-zinc-100 p-2.5 dark:border-zinc-700 dark:bg-zinc-800';
 
+// One turn of the disc: the red mark comes round every 320 px of its edge
+const DISC_TURN = 320;
+
 const FerrarisMeter = ({ power, registers }: { power: number; registers: Register[] }) => {
   const effects = useEffects();
   const speed = Math.min(1, Math.max(0, Math.log10(Math.max(1, Math.abs(power))) / Math.log10(5000)));
+  // The edge moves by transform, and a new power only changes the playback
+  // rate: the disc speeds up or slows down where it is instead of jumping
+  // (a new animation-duration would put the mark somewhere else each time
+  // the meter reports)
+  const edge = useRef<HTMLDivElement>(null);
+  const turning = useRef<Animation | null>(null);
+  useEffect(() => {
+    const el = edge.current;
+    if (!el?.animate) return;
+    const animation = el.animate([{ transform: `translateX(-${DISC_TURN}px)` }, { transform: 'translateX(0)' }], {
+      duration: 1000,
+      iterations: Infinity,
+    });
+    animation.pause();
+    turning.current = animation;
+    return () => animation.cancel();
+  }, []);
+  useEffect(() => {
+    const animation = turning.current;
+    if (!animation) return;
+    const still = power === 0 || !effects.on || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (still) {
+      animation.pause();
+      return;
+    }
+    // Seconds per turn: 6 s at 1 W to 0.6 s at 5 kW; backwards while fed in
+    animation.updatePlaybackRate(Math.sign(power) / (6 - 5.4 * speed));
+    animation.play();
+  }, [power, speed, effects.on]);
   return (
     <div className={meterCase}>
       {registers.map(({ key, ...register }) => (
         <RegisterRow key={key} {...register} decimals={1} unit="kWh" />
       ))}
       {/* The edge of the disc through its window: notches and the red mark
-          pass by, shaded so the edge looks round */}
+          pass by, shaded softly so the edge looks round and the mark is seen
+          coming in and going out */}
       <div
         aria-hidden
         className="relative h-5 overflow-hidden rounded-[5px] border border-zinc-400 bg-zinc-900 dark:border-zinc-600"
       >
         <div
-          className={cn(
-            'absolute inset-x-0 top-1/2 h-2.5 -translate-y-1/2 bg-[linear-gradient(90deg,#ef4444_0_18px,transparent_18px),repeating-linear-gradient(90deg,#9f9fa9_0_1px,#d4d4d8_1px_16px)] bg-[length:320px_100%,16px_100%]',
-            power !== 0 && effects.on && 'fx-disc',
-          )}
-          style={{
-            animationDuration: `${(6 - 5.4 * speed).toFixed(2)}s`,
-            animationDirection: power < 0 ? 'reverse' : undefined,
-          }}
+          ref={edge}
+          className="absolute top-1/2 left-0 -mt-[5px] h-2.5 w-[calc(100%+320px)] bg-[linear-gradient(90deg,#ef4444_0_18px,transparent_18px),repeating-linear-gradient(90deg,#9f9fa9_0_1px,#d4d4d8_1px_16px)] bg-[length:320px_100%,16px_100%] will-change-transform"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.8),rgba(0,0,0,0.15)_25%,transparent_50%,rgba(0,0,0,0.15)_75%,rgba(0,0,0,0.8))]" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.55),rgba(0,0,0,0.1)_20%,transparent_50%,rgba(0,0,0,0.1)_80%,rgba(0,0,0,0.55))]" />
       </div>
     </div>
   );
