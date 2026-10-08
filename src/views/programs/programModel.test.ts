@@ -7,6 +7,7 @@ import {
   SUN,
   timeModeOf,
   TimeTexts,
+  today,
   WORKDAY_BITS,
   clockOfSeconds,
   conditionKind,
@@ -96,5 +97,13 @@ describe('describeTimeModule', () => {
     expect(dateOf('2026-01-15 00:00:00')).toBe('2026-01-15');
     expect(dateOf('0')).toBe('');
     expect(timeModeOf(tm({ time: '0', sunOffset: SUN.NIGHTTIME }))).toBe('nighttime');
+  });
+});
+
+describe('today', () => {
+  it('is the date on the wall clock, not in UTC', () => {
+    // Shortly after midnight; in UTC (Germany) still the day before
+    expect(today(new Date(2026, 0, 15, 0, 30))).toBe('2026-01-15');
+    expect(today(new Date(2026, 8, 5, 23, 59))).toBe('2026-09-05');
   });
 });

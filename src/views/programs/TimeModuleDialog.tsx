@@ -19,6 +19,7 @@ import {
   timeModeOf,
   timeOfClock,
   TimeTexts,
+  today,
   WEEKDAYS,
   WEEKEND_BITS,
   WORKDAY_BITS,
@@ -117,7 +118,7 @@ export const TimeModuleDialog = ({
   onCancel: () => void;
 }) => {
   const x = useTimeTexts();
-  const [t, setT] = useState<TimeModule>({ ...time, begin: dateOf(time.begin) || new Date().toISOString().slice(0, 10) });
+  const [t, setT] = useState<TimeModule>({ ...time, begin: dateOf(time.begin) || today() });
   const set = (patch: Partial<TimeModule>) => setT((prev) => ({ ...prev, ...patch }));
   const mode = timeModeOf(t);
   const start = clockOf(t.time);
@@ -132,13 +133,13 @@ export const TimeModuleDialog = ({
     if (next === 'nighttime') set({ time: '0', duration: 0, sunOffset: SUN.NIGHTTIME });
   };
   const setType = (timerType: number) => {
-    const today = new Date();
+    const now = new Date();
     const defaults: Partial<TimeModule> = { timerType, weekdays: 0, period: 0, repetitionValue: 0 };
-    if (timerType === TIMER.ONCE) defaults.repeatTime = today.toISOString().slice(0, 10);
+    if (timerType === TIMER.ONCE) defaults.repeatTime = today(now);
     if (timerType === TIMER.PERIODIC) defaults.period = 3600;
     if (timerType === TIMER.WEEKLY) defaults.weekdays = WORKDAY_BITS;
-    if (timerType === TIMER.MONTHLY) Object.assign(defaults, { period: today.getDate(), repetitionValue: 1 });
-    if (timerType === TIMER.YEARLY) Object.assign(defaults, { period: today.getDate(), repetitionValue: today.getMonth() + 1 });
+    if (timerType === TIMER.MONTHLY) Object.assign(defaults, { period: now.getDate(), repetitionValue: 1 });
+    if (timerType === TIMER.YEARLY) Object.assign(defaults, { period: now.getDate(), repetitionValue: now.getMonth() + 1 });
     set(defaults);
   };
   const dailyMode = t.weekdays === WORKDAY_BITS ? 'workdays' : t.weekdays === WEEKEND_BITS ? 'weekend' : t.repetitionValue > 1 ? 'n' : 'every';
@@ -392,7 +393,7 @@ export const TimeModuleDialog = ({
               <Choice
                 name="end"
                 checked={endMode === 'on'}
-                onChange={() => set({ end: dateOf(t.begin) || new Date().toISOString().slice(0, 10), repetitionCount: 0 })}
+                onChange={() => set({ end: dateOf(t.begin) || today(), repetitionCount: 0 })}
                 label={m.PRG_TM_END_ON()}
               />
               {endMode === 'on' && (
