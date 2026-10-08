@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"ccu-addon-mui-server/pkg/atomicfile"
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/auth"
 	"ccu-addon-mui-server/pkg/ccurpc"
@@ -208,7 +209,7 @@ func writeTimeConfLocation(latitude, longitude float64) error {
 	for _, key := range []string{"COUNTRY", "CITY", "LATITUDE", "LONGITUDE", "TIMEZONE"} {
 		b.WriteString(key + "=" + values[key] + "\n")
 	}
-	return os.WriteFile(timeConfFile, []byte(b.String()), 0o644)
+	return atomicfile.Write(timeConfFile, []byte(b.String()), 0o644)
 }
 
 type systemSettingsResponse struct {

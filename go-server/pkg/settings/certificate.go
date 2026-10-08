@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"ccu-addon-mui-server/pkg/atomicfile"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/pem"
@@ -103,8 +104,9 @@ func (s *Service) SetCertificate(data string) error {
 	if err := ValidateCertificate(data); err != nil {
 		return err
 	}
-	// It holds the private key: readable only for root
-	return os.WriteFile(s.path(certificateFile), []byte(data), 0o600)
+	// It holds the private key: readable only for root. Written atomically:
+	// a half written file would keep lighttpd (WebUI and add-on) from starting
+	return atomicfile.Write(s.path(certificateFile), []byte(data), 0o600)
 }
 
 // DeleteCertificate removes the own certificate (User.deleteCertificate);
