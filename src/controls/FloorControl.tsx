@@ -3,6 +3,7 @@ import { FloorClimateControlTransceiverChannel } from '../types/types';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
+import { cn } from '../lib/utils';
 
 interface FloorControlProps {
   channel: FloorClimateControlTransceiverChannel;
@@ -108,31 +109,23 @@ const FloorPicture = ({ value, label }: { value: number; label: string }) => {
   );
 };
 
-// Valve opening of one floor heating circuit
+// Valve opening of one floor heating circuit: laid out like the window and
+// door tiles, the picture first, then name and state
 export const FloorControl = ({ channel }: FloorControlProps) => {
-  const effects = useEffects();
   const value = Math.round(Number(channel.datapoints.LEVEL) * 100);
-  const open = value / 100;
-  const glowing = effects.on && value > 0;
+  const status = value === 0 ? m.VALVE_CLOSED() : value === 100 ? m.VALVE_OPEN() : m.VALVE_PARTLY({ percent: value });
 
   return (
     <Tile status={channel.status}>
-      <div className="flex flex-col gap-3 p-4">
-        <span className="line-clamp-2 text-[15px] leading-snug font-medium" title={channel.name}>
-          {channel.name}
-        </span>
-        <div className="flex items-end justify-between gap-3">
-          <div className="flex min-w-0 flex-col">
-            <span
-              className="text-[40px] leading-none font-semibold tracking-[-0.04em] tabular-nums"
-              style={glowing ? { textShadow: `0 0 ${18 * effects.k}px ${water(open, 0.45)}` } : undefined}
-            >
-              {value}
-              <span className="ml-0.5 align-top text-lg font-medium tracking-normal text-muted-foreground">%</span>
-            </span>
-            <span className="mt-1.5 text-[13px] text-muted-foreground">{m.VALVE_OPENING()}</span>
-          </div>
-          <FloorPicture value={value} label={`${m.VALVE_OPENING()} ${channel.name}`} />
+      <div className="flex items-center gap-3.5 p-3.5">
+        <FloorPicture value={value} label={`${m.VALVE_OPENING()} ${channel.name}`} />
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="line-clamp-2 text-[15px] leading-snug font-medium" title={channel.name}>
+            {channel.name}
+          </span>
+          <span className={cn('text-[13px] font-medium tabular-nums', value === 0 ? 'text-muted-foreground' : 'text-foreground/80')}>
+            {status}
+          </span>
         </div>
       </div>
     </Tile>
