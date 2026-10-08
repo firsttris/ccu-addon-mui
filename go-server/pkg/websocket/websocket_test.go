@@ -406,6 +406,12 @@ func TestAuthRequiredBeforeAnyRequest(t *testing.T) {
 	if !other.authenticated {
 		t.Fatal("expected the client to be authenticated")
 	}
+
+	// After logging out, this connection can't do anything either
+	s.handleMessage(client, []byte(`{"type":"logout","requestId":"1"}`))
+	<-client.send
+	s.handleMessage(client, []byte(`{"type":"setDatapoint","requestId":"2","interface":"HmIP-RF","address":"A:1","datapoint":"STATE","value":true}`))
+	assertErrorMessageContains(t, <-client.send, "authentication required")
 }
 
 func TestAuthDisabledAcceptsEveryone(t *testing.T) {

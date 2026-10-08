@@ -1525,6 +1525,12 @@ func (s *Server) handleSessions(client *Client, msgType string, message []byte) 
 		s.endWebUISession(client.user)
 		client.watchSysvars(false)
 		client.unwatchMessages()
+		if s.auth != nil {
+			// This connection is logged out too, not only the others
+			client.setSession("", auth.LevelUnknown)
+			client.authenticated = false
+			client.setSessionID("")
+		}
 		s.sendJSON(client, sessionsResponse{Type: "logout_response", RequestID: msg.RequestID, Success: true})
 	case "listSessions":
 		if code, errorMsg := configureError(client); code != "" {

@@ -480,7 +480,7 @@ export const useWebsocket = () => {
     setElevated(false);
     readyRef.current = false;
     setAuthState('loginRequired');
-    // The server still treats this connection as logged in; reconnect
+    // A fresh connection, without the subscriptions of the old session
     getWebSocket()?.close();
   }, [getWebSocket, request]);
 
