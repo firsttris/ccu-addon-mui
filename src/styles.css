@@ -284,6 +284,33 @@ html body[data-scroll-locked] {
   animation: fx-breeze 2.4s ease-in-out infinite;
 }
 
+/* Water running through a floor heating loop (dash period of the pipe: 16) */
+@keyframes fx-flow {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+@utility fx-flow {
+  animation: fx-flow 1.2s linear infinite;
+}
+/* Warmth rising off a heated floor */
+@keyframes fx-heat {
+  0% {
+    transform: translateY(6px) scaleY(0.6);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-34px) scaleY(1.2);
+    opacity: 0;
+  }
+}
+@utility fx-heat {
+  animation: fx-heat 2.6s ease-in-out infinite;
+}
+
 @utility fx-breathe {
   animation: fx-breathe 3.6s ease-in-out infinite;
 }
