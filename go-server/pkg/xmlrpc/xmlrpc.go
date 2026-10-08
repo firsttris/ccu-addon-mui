@@ -446,17 +446,17 @@ func (s *Server) handleXMLRPC(w http.ResponseWriter, r *http.Request) {
 		response = s.handleEvent(&call)
 	case "updateDevice", "deleteDevices":
 		s.dispatchDeviceChange(call.MethodName, call.Params.Param)
-		response = s.serializeMethodResponse("")
+		response = s.serializeMethodResponse()
 	case "newDevices":
 		s.handleNewDevices(call.Params.Param)
-		response = s.serializeMethodResponse("")
+		response = s.serializeMethodResponse()
 	case "listDevices":
 		response = s.handleListDevices(&call)
 	case "init":
 		response = s.handleInit(&call)
 	default:
 		logger.Debugf("   Unknown method: %s", call.MethodName)
-		response = s.serializeMethodResponse("")
+		response = s.serializeMethodResponse()
 	}
 
 	w.Header().Set("Content-Type", "text/xml")
@@ -489,7 +489,7 @@ func (s *Server) handleInit(call *methodCall) string {
 		}
 	}
 
-	return s.serializeMethodResponse("")
+	return s.serializeMethodResponse()
 }
 
 func (s *Server) handleSystemMulticall(call *methodCall) string {
@@ -497,12 +497,12 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 
 	if len(call.Params.Param) == 0 {
 		logger.Debug("   Empty multicall, no events")
-		return s.serializeMethodResponse("")
+		return s.serializeMethodResponse()
 	}
 
 	if call.Params.Param[0].Value.Array == nil {
 		logger.Debug("   No array in multicall")
-		return s.serializeMethodResponse("")
+		return s.serializeMethodResponse()
 	}
 
 	calls := call.Params.Param[0].Value.Array.Data.Value
@@ -544,7 +544,7 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 		}
 	}
 
-	return s.serializeMethodResponse("")
+	return s.serializeMethodResponse()
 }
 
 // handleEvent handles a direct event call, which the CCU uses instead of
@@ -555,7 +555,7 @@ func (s *Server) handleEvent(call *methodCall) string {
 		params = append(params, s.extractValue(&call.Params.Param[i].Value))
 	}
 	s.dispatchEvent(params)
-	return s.serializeMethodResponse("")
+	return s.serializeMethodResponse()
 }
 
 // dispatchEvent takes the params of an event call:
@@ -679,15 +679,16 @@ func (s *Server) extractValue(v *value) interface{} {
 	return nil
 }
 
-func (s *Server) serializeMethodResponse(result string) string {
-	return fmt.Sprintf(`<?xml version="1.0"?>
+// serializeMethodResponse is the empty answer to a call
+func (s *Server) serializeMethodResponse() string {
+	return `<?xml version="1.0"?>
 <methodResponse>
 <params>
 <param>
-<value><string>%s</string></value>
+<value><string></string></value>
 </param>
 </params>
-</methodResponse>`, result)
+</methodResponse>`
 }
 
 func (s *Server) serializeArrayResponse(items []string) string {
