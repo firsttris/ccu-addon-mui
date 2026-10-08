@@ -22,9 +22,3 @@ https://teufel-it.de
 
 Some data files are taken from the CCU's WebUI and stay under the Apache
 License 2.0; THIRD_PARTY_LICENSES.md lists them and the libraries in the add-on.
-
-Earlier versions
-----------------
-
-Versions up to and including v1.0.10 were released under the MIT License and
-remain available under it.
