@@ -51,38 +51,75 @@ const format = (value: number, maximumFractionDigits: number) =>
 interface Register {
   key: string;
   label: string;
-  kwh: number;
+  value: number;
 }
 
-const RegisterRow = ({ label, kwh }: Omit<Register, 'key'>) => {
-  const tenths = Math.round(Math.max(0, kwh) * 10);
-  const digits = String(Math.floor(tenths / 10)).padStart(5, '0');
+// One register of a meter: five black rolls, the decimals red. With roll
+// set, the last roll turns (seconds per turn), as the test roll of a gas
+// meter does while gas flows.
+const RegisterRow = ({
+  label,
+  value,
+  decimals,
+  unit,
+  roll = 0,
+}: Omit<Register, 'key'> & { decimals: number; unit: string; roll?: number }) => {
+  const effects = useEffects();
+  const scaled = Math.round(Math.max(0, value) * 10 ** decimals);
+  const whole = String(Math.floor(scaled / 10 ** decimals)).padStart(5, '0');
+  const fraction = String(scaled % 10 ** decimals).padStart(decimals, '0');
+  const last = Number(fraction.at(-1));
+  const rolling = roll > 0 && effects.on;
   return (
     <div className="flex items-center justify-between gap-2">
       <span className="truncate text-[13px] text-muted-foreground">{label}</span>
-      <span className="sr-only">{format(kwh, 1)} kWh</span>
+      <span className="sr-only">
+        {format(value, decimals)} {unit}
+      </span>
       <div aria-hidden className="flex shrink-0 items-center gap-1.5">
         <div className="flex gap-px rounded-[4px] bg-zinc-900 p-[3px] font-mono text-[13px] leading-none font-semibold tabular-nums">
-          {digits.split('').map((d, i) => (
-            <span key={i} className="w-[13px] rounded-[2px] bg-zinc-800 py-[3px] text-center text-zinc-100">
-              {d}
-            </span>
-          ))}
-          <span className="w-[13px] rounded-[2px] bg-red-700 py-[3px] text-center text-white">{tenths % 10}</span>
+          {[...whole, ...fraction].map((d, i) => {
+            const red = i >= whole.length;
+            const cell = cn('h-[19px] w-[13px] rounded-[2px] py-[3px] text-center', red ? 'bg-red-700 text-white' : 'bg-zinc-800 text-zinc-100');
+            if (i < whole.length + decimals - 1 || !rolling) {
+              return (
+                <span key={i} className={cell}>
+                  {d}
+                </span>
+              );
+            }
+            // The turning roll: 0-9 and 0 again, started at the current digit
+            return (
+              <span key={i} className={cn(cell, 'overflow-hidden py-0')}>
+                <span
+                  className="fx-roll flex flex-col"
+                  style={{ animationDuration: `${roll}s`, animationDelay: `${(-roll * last) / 10}s` }}
+                >
+                  {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((n, k) => (
+                    <span key={k} className="flex h-[19px] shrink-0 items-center justify-center">
+                      {n}
+                    </span>
+                  ))}
+                </span>
+              </span>
+            );
+          })}
         </div>
-        <span className="w-6 text-[10px] font-semibold text-muted-foreground">kWh</span>
+        <span className="w-6 text-[10px] font-semibold text-muted-foreground">{unit}</span>
       </div>
     </div>
   );
 };
 
+const meterCase = 'flex flex-col gap-2 rounded-[12px] border-[3px] border-zinc-300 bg-zinc-100 p-2.5 dark:border-zinc-700 dark:bg-zinc-800';
+
 const FerrarisMeter = ({ power, registers }: { power: number; registers: Register[] }) => {
   const effects = useEffects();
   const speed = Math.min(1, Math.max(0, Math.log10(Math.max(1, Math.abs(power))) / Math.log10(5000)));
   return (
-    <div className="flex flex-col gap-2 rounded-[12px] border-[3px] border-zinc-300 bg-zinc-100 p-2.5 dark:border-zinc-700 dark:bg-zinc-800">
+    <div className={meterCase}>
       {registers.map(({ key, ...register }) => (
-        <RegisterRow key={key} {...register} />
+        <RegisterRow key={key} {...register} decimals={1} unit="kWh" />
       ))}
       {/* The edge of the disc through its window: notches and the red mark
           pass by, shaded so the edge looks round */}
@@ -102,6 +139,20 @@ const FerrarisMeter = ({ power, registers }: { power: number; registers: Registe
         />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.8),rgba(0,0,0,0.15)_25%,transparent_50%,rgba(0,0,0,0.15)_75%,rgba(0,0,0,0.8))]" />
       </div>
+    </div>
+  );
+};
+
+// A diaphragm gas meter: the register in m³ (hundredths red, as resolved by
+// GAS_VOLUME), its last roll turning while gas flows, the faster the more
+// (log scale from 0.01 to 6 m³/h, the range of a G4 meter: 8 s to 0.8 s per
+// turn).
+const GasMeter = ({ flow, volume }: { flow: number; volume: number }) => {
+  const rate = Math.abs(flow);
+  const speed = Math.min(1, Math.max(0, (Math.log10(Math.max(0.01, rate)) + 2) / (Math.log10(6) + 2)));
+  return (
+    <div className={meterCase}>
+      <RegisterRow label={m.METER_READING()} value={volume} decimals={2} unit="m³" roll={rate > 0 ? Number((8 - 7.2 * speed).toFixed(2)) : 0} />
     </div>
   );
 };
@@ -138,9 +189,9 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({ chann
   const registers: Register[] = readings.map((channel, index) => ({
     key: channel.address,
     label: index > 0 ? `${m.METER_READING()} (${m.CHANNEL()} ${channelNumber(channel.address)})` : m.METER_READING(),
-    kwh: (channel.datapoints.ENERGY_COUNTER ?? 0) / 1000,
+    value: (channel.datapoints.ENERGY_COUNTER ?? 0) / 1000,
   }));
-  if (feedIn !== undefined) registers.push({ key: 'feed-in', label: m.FEED_IN(), kwh: feedIn / 1000 });
+  if (feedIn !== undefined) registers.push({ key: 'feed-in', label: m.FEED_IN(), value: feedIn / 1000 });
 
   // Channel names default to "HmIP-ESI <address>"; show the first one
   const name = sorted[0]?.name ?? '';
@@ -190,11 +241,11 @@ export const EnergyMeterControl = React.memo(function EnergyMeterControl({ chann
             <Kind icon={<FlameIcon />} tint="bg-orange-500/15 text-orange-700 dark:text-orange-300">
               {m.GAS()}
             </Kind>
-            <MainValue>{format(gasCounters[0]?.datapoints.GAS_VOLUME ?? 0, 2)} m³</MainValue>
-            <Row>
-              <span>{m.GAS_FLOW()}</span>
-              <span>{format(gasFlow ?? 0, 2)} m³/h</span>
-            </Row>
+            <div className="flex items-baseline justify-between gap-3">
+              <MainValue>{format(gasFlow ?? 0, 2)} m³/h</MainValue>
+              <span className="text-[13px] text-muted-foreground">{m.GAS_FLOW()}</span>
+            </div>
+            <GasMeter flow={gasFlow ?? 0} volume={gasCounters[0]?.datapoints.GAS_VOLUME ?? 0} />
           </Section>
         )}
 
