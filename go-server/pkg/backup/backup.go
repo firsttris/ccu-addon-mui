@@ -192,9 +192,14 @@ func (s *Service) removeExpired() {
 type rpcResponse struct {
 	Result interface{} `json:"result"`
 	Error  *struct {
+		Code    int    `json:"code"`
 		Message string `json:"message"`
 	} `json:"error"`
 }
+
+// The JSON API's code for a session without the rights the method needs,
+// also an expired one (homematic.cgi checkPrivilegeLevel: "access denied")
+const accessDeniedCode = 400
 
 func (s *Service) login(username, password string) (string, error) {
 	var login rpcResponse
