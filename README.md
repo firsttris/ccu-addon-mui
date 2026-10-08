@@ -1,5 +1,7 @@
 <div align="center">
 
+<h1>MUI: Moderne WebUI für Homematic CCU3 und OpenCCU</h1>
+
 **Die komplette WebUI deiner Homematic-Zentrale, neu gebaut.**<br>
 Bedienen, einrichten, verknüpfen und programmieren, live und auf jedem Gerät:
 ein Add-on für CCU3 und OpenCCU, das die alte WebUI im Alltag ersetzt.
@@ -25,6 +27,8 @@ ein Add-on für CCU3 und OpenCCU, das die alte WebUI im Alltag ersetzt.
 [Dokumentation](docs/README.md) •
 [Entwicklung](#-entwicklung)
 
+<sub>English: a modern, mobile-first web interface for the Homematic CCU3 and OpenCCU, replacing the stock WebUI. See the [English README](README.en.md).</sub>
+
 <img src="docs/screenshot-hero.png" alt="Alle Geräte auf dem Tablet, dazu Wohnzimmer und Heizungsraum auf zwei Handys" width="900">
 
 </div>
@@ -48,6 +52,11 @@ was sie schon kann, bleibt. Alles in einer App, vom Lichtschalter bis zum Progra
 - **Nach dem Original gebaut**: Jede Funktion folgt den Quellen der WebUI aus
   [OpenCCU](https://github.com/OpenCCU/OpenCCU-Base). Datenpunkte, Skripte und Abläufe sind die der CCU.
   Das Add-on spricht nur deren eigene Schnittstellen und verändert nichts an der Zentrale.
+- **Läuft überall, wo die CCU läuft**: auf der CCU3 von eQ-3, auf OpenCCU (früher RaspberryMatic) auf
+  Raspberry Pi, x86, Proxmox oder Docker, und auf piVCCU. Mit Homematic IP (HmIP), Homematic (BidCos-RF)
+  und Homematic IP Wired.
+
+MUI steht für *Moderne WebUI*. Mit der React-Bibliothek Material UI hat das Projekt nichts zu tun.
 
 ## ✨ Funktionen
 

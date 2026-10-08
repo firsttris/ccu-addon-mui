@@ -41,7 +41,7 @@ export const Login = () => {
         }}
       >
         <div className="flex flex-col gap-1.5 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">CCU Addon MUI</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">MUI · Homematic</h1>
           <p className="text-sm text-muted-foreground">{m.LOGIN_HINT()}</p>
         </div>
         <div className="flex flex-col gap-2">

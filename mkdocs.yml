@@ -1,7 +1,7 @@
 # Dokumentation als Website: https://firsttris.github.io/ccu-addon-mui/
 # Quelle ist docs/, gebaut mit MkDocs Material (.github/workflows/docs.yml).
 # Lokal: pip install -r requirements-docs.txt && mkdocs serve
-site_name: ccu-addon-mui
+site_name: MUI · ccu-addon-mui
 site_description: >-
   MUI, die moderne WebUI für Homematic CCU3 und OpenCCU: bedienen, einrichten,
   verknüpfen, programmieren. Live per WebSocket, als App installierbar.
