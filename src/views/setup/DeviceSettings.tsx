@@ -157,10 +157,14 @@ export const DeviceSettings = () => {
   const [transferSince, setTransferSince] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
   const watching = transferSince !== null && now - transferSince < 120_000;
+  // Renders again when "sending" turns into "done" and when watching ends,
+  // not every second
   useEffect(() => {
     if (transferSince === null) return;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
+    const timers = [4000, 120_000].map((ms) =>
+      setTimeout(() => setNow(Date.now()), transferSince + ms - Date.now()),
+    );
+    return () => timers.forEach(clearTimeout);
   }, [transferSince]);
   const hasMaintenance = device?.children?.includes(`${address}:0`) === true;
   const { data: maintenance } = useParamset(
