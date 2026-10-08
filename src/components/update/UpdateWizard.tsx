@@ -165,12 +165,14 @@ export const UpdateWizard = ({ version, current, onClose }: { version: string; c
       setState('error');
       return;
     }
+    // Also the old version may still answer, if the server wasn't gone yet
     let running = '';
-    for (let attempt = 0; attempt < 5 && running !== version; attempt++) {
+    for (let attempt = 0; attempt < 10 && running !== version; attempt++) {
+      if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 2000));
       try {
         running = (await request({ type: 'checkSelfUpdate' }, { timeoutMs: 30000 })).current;
       } catch {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Not back yet: next attempt
       }
     }
     if (running !== version) {
