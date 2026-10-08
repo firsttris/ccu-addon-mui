@@ -394,6 +394,7 @@ const Snmp = ({
             { queue: false, timeoutMs: 60000 },
           );
           showToast(m.SAVED(), "info");
+          setUser("");
           setSecret("");
           setRepeat("");
           await Promise.all(
