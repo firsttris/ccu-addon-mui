@@ -4,6 +4,7 @@ import { PageTitleProvider } from '../contexts/PageTitleContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { Login } from '../views/Login';
 import { UpdatePrompt } from '../components/UpdatePrompt';
+import { UpdateDone, UpdateNotice } from '../components/update/UpdateNotice';
 
 const RootComponent = () => {
   const { authState } = useWebSocketContext();
@@ -21,6 +22,8 @@ const RootComponent = () => {
         </PageTitleProvider>
       )}
       <UpdatePrompt />
+      <UpdateNotice />
+      <UpdateDone />
     </>
   );
 };

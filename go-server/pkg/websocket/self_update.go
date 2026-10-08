@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -21,6 +22,15 @@ type selfUpdateResponse struct {
 	Installable bool `json:"installable"`
 }
 
+// selfUpdateProgress tells the client installing an update how far it is
+// (phase download, verify, unpack or install; bytes for the download)
+type selfUpdateProgress struct {
+	Type  string `json:"type"`
+	Phase string `json:"phase"`
+	Done  int64  `json:"done,omitempty"`
+	Total int64  `json:"total,omitempty"`
+}
+
 type installSelfUpdateResponse struct {
 	Type      string `json:"type"`
 	RequestID string `json:"requestId,omitempty"`
@@ -29,8 +39,16 @@ type installSelfUpdateResponse struct {
 }
 
 // handleCheckSelfUpdate: the newest release of this add-on, for
-// administrators, next to the installed version (the VERSION file).
-func (s *Server) handleCheckSelfUpdate(client *Client, requestID string) {
+// administrators, next to the installed version (the VERSION file). The
+// app asks on every start: GitHub is asked at most every 6 hours, unless
+// force (the check started by hand).
+func (s *Server) handleCheckSelfUpdate(client *Client, message []byte) {
+	var msg struct {
+		RequestID string `json:"requestId"`
+		Force     bool   `json:"force"`
+	}
+	_ = json.Unmarshal(message, &msg)
+	requestID := msg.RequestID
 	if client.level != auth.LevelAdmin {
 		s.sendRequestError(client, requestID, "only administrators may check for updates", "FORBIDDEN")
 		return
@@ -39,7 +57,7 @@ func (s *Server) handleCheckSelfUpdate(client *Client, requestID string) {
 		s.sendRequestError(client, requestID, "the update is not available", "NOT_SUPPORTED")
 		return
 	}
-	release, err := s.selfUpdate.Latest()
+	release, err := s.selfUpdate.CachedLatest(msg.Force)
 	if err != nil && !(errors.Is(err, selfupdate.ErrNoAsset) && release.Version != "") {
 		s.sendRequestError(client, requestID, "update check failed: "+err.Error(), "CCU_ERROR")
 		return
@@ -71,7 +89,8 @@ func (s *Server) handleInstallSelfUpdate(client *Client, requestID string) {
 		fail("NOT_SUPPORTED", errors.New("the add-on can only update itself on the CCU"))
 		return
 	}
-	release, err := s.selfUpdate.Latest()
+	// What is installed must be the newest: ask GitHub again
+	release, err := s.selfUpdate.CachedLatest(true)
 	if err != nil {
 		code := "DOWNLOAD_FAILED"
 		if errors.Is(err, selfupdate.ErrNoAsset) {
@@ -82,7 +101,10 @@ func (s *Server) handleInstallSelfUpdate(client *Client, requestID string) {
 	}
 	entry.Value = release.Version
 	logger.Info(fmt.Sprintf("⬆️ Add-on update to %s started by %q", release.Version, client.user))
-	if err := s.selfUpdate.Install(context.Background(), release); err != nil {
+	progress := func(p selfupdate.Progress) {
+		s.sendJSON(client, selfUpdateProgress{Type: "selfUpdateProgress", Phase: p.Phase, Done: p.Done, Total: p.Total})
+	}
+	if err := s.selfUpdate.Install(context.Background(), release, progress); err != nil {
 		code := "DOWNLOAD_FAILED"
 		switch {
 		case errors.Is(err, selfupdate.ErrChecksum):

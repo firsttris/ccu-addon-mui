@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useWebSocketContext } from '../hooks/useWebsocket';
-import { lookForNewApp } from '../lib/appUpdate';
+import { answerTabQuestions, lookForNewApp } from '../lib/appUpdate';
 import { Button } from './ui/button';
 import { m } from '../paraglide/messages';
 
@@ -21,6 +21,10 @@ export const UpdatePrompt = () => {
       if (registration) setInterval(() => registration.update().catch(() => undefined), UPDATE_CHECK_MS);
     },
   });
+
+  // The update wizard asks whether the app is open in other tabs before it
+  // takes over the new version, which would reload them too
+  useEffect(() => answerTabQuestions(), []);
 
   // The server restarts after an update of the add-on (installSelfUpdate,
   // the WebUI's Zusatzsoftware): look for the new app as soon as it is back,

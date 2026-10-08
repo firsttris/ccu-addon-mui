@@ -7,7 +7,7 @@ vi.mock('virtual:pwa-register/react', () => ({
   useRegisterSW: () => ({ needRefresh: [false], updateServiceWorker: vi.fn() }),
 }));
 vi.mock('../hooks/useWebsocket', () => ({ useWebSocketContext: () => ({ connectionStatus }) }));
-vi.mock('../lib/appUpdate', () => ({ lookForNewApp: () => lookForNewApp() }));
+vi.mock('../lib/appUpdate', () => ({ lookForNewApp: () => lookForNewApp(), answerTabQuestions: () => () => undefined }));
 
 const { UpdatePrompt } = await import('./UpdatePrompt');
 

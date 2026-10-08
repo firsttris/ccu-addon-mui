@@ -720,7 +720,7 @@ func (s *Server) dispatch(client *Client, msgType, requestID string, message []b
 	case "getAddons", "addonAction", "checkAddonUpdate":
 		s.handleAddons(client, msgType, message)
 	case "checkSelfUpdate":
-		s.handleCheckSelfUpdate(client, requestID)
+		s.handleCheckSelfUpdate(client, message)
 	case "installSelfUpdate":
 		// Download and install take a while: the client's other requests
 		// go on meanwhile

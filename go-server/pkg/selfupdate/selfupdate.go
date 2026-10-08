@@ -63,6 +63,32 @@ const (
 	scriptTimeout    = 2 * time.Minute
 )
 
+// The steps of an install, as Progress reports them
+const (
+	PhaseDownload = "download"
+	PhaseVerify   = "verify"
+	PhaseUnpack   = "unpack"
+	PhaseInstall  = "install"
+)
+
+// Progress of an install: the step, and for the download the bytes so far
+// and in all (Total 0 if the server doesn't say)
+type Progress struct {
+	Phase string
+	Done  int64
+	Total int64
+}
+
+// How long an answer of GitHub is kept: the app asks on every start, GitHub
+// allows 60 requests an hour without a token. A failed check is asked again
+// sooner.
+const (
+	latestCacheTTL       = 6 * time.Hour
+	latestFailedCacheTTL = 10 * time.Minute
+	// Download progress at most this often, enough for a smooth bar
+	progressInterval = 150 * time.Millisecond
+)
+
 // Release is the newest release and its archive for this platform.
 type Release struct {
 	Version string
@@ -82,6 +108,31 @@ type Updater struct {
 	Client *http.Client
 
 	running sync.Mutex
+
+	cache struct {
+		sync.Mutex
+		release Release
+		err     error
+		at      time.Time
+	}
+}
+
+// CachedLatest is Latest, answered from the last check while it is recent
+// (6 hours, 10 minutes after a failure); force asks GitHub anyway, for the
+// check a user starts by hand.
+func (u *Updater) CachedLatest(force bool) (Release, error) {
+	u.cache.Lock()
+	defer u.cache.Unlock()
+	ttl := latestCacheTTL
+	if u.cache.err != nil && !errors.Is(u.cache.err, ErrNoAsset) {
+		ttl = latestFailedCacheTTL
+	}
+	if !force && !u.cache.at.IsZero() && time.Since(u.cache.at) < ttl {
+		return u.cache.release, u.cache.err
+	}
+	release, err := u.Latest()
+	u.cache.release, u.cache.err, u.cache.at = release, err, time.Now()
+	return release, err
 }
 
 func New(releaseURL, workDir string) *Updater {
@@ -140,8 +191,11 @@ func (u *Updater) Latest() (Release, error) {
 // Install downloads the release's archive, checks it, unpacks it and runs
 // its update_script. The script restarts the server a few seconds after it
 // returned (update_script: sleep 3, rc.d/mui restart), which leaves time to
-// answer.
-func (u *Updater) Install(ctx context.Context, release Release) error {
+// answer. report (may be nil) hears each step, and the download's bytes.
+func (u *Updater) Install(ctx context.Context, release Release, report func(Progress)) error {
+	if report == nil {
+		report = func(Progress) {}
+	}
 	if !u.running.TryLock() {
 		return ErrRunning
 	}
@@ -152,7 +206,7 @@ func (u *Updater) Install(ctx context.Context, release Release) error {
 	if err := os.MkdirAll(u.WorkDir, 0o755); err != nil {
 		return err
 	}
-	archive, err := u.download(ctx, release)
+	archive, err := u.download(ctx, release, report)
 	if err != nil {
 		return err
 	}
@@ -162,14 +216,33 @@ func (u *Updater) Install(ctx context.Context, release Release) error {
 		return err
 	}
 	defer os.RemoveAll(dir)
+	report(Progress{Phase: PhaseUnpack})
 	if err := unpack(archive, dir); err != nil {
 		return err
 	}
+	report(Progress{Phase: PhaseInstall})
 	return runScript(ctx, dir)
 }
 
+// counter tells report how much of the download has arrived, at most every
+// progressInterval
+type counter struct {
+	done, total int64
+	last        time.Time
+	report      func(Progress)
+}
+
+func (c *counter) Write(p []byte) (int, error) {
+	c.done += int64(len(p))
+	if now := time.Now(); now.Sub(c.last) >= progressInterval {
+		c.last = now
+		c.report(Progress{Phase: PhaseDownload, Done: c.done, Total: c.total})
+	}
+	return len(p), nil
+}
+
 // download stores the archive in WorkDir and checks its checksum
-func (u *Updater) download(ctx context.Context, release Release) (string, error) {
+func (u *Updater) download(ctx context.Context, release Release, report func(Progress)) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, release.URL, nil)
 	if err != nil {
 		return "", err
@@ -187,7 +260,14 @@ func (u *Updater) download(ctx context.Context, release Release) (string, error)
 		return "", err
 	}
 	hash := sha256.New()
-	n, err := io.Copy(io.MultiWriter(file, hash), io.LimitReader(resp.Body, maxArchiveBytes+1))
+	total := max(resp.ContentLength, 0)
+	report(Progress{Phase: PhaseDownload, Total: total})
+	count := &counter{total: total, last: time.Now(), report: report}
+	n, err := io.Copy(io.MultiWriter(file, hash, count), io.LimitReader(resp.Body, maxArchiveBytes+1))
+	if err == nil {
+		report(Progress{Phase: PhaseDownload, Done: n, Total: max(total, n)})
+		report(Progress{Phase: PhaseVerify})
+	}
 	if closeErr := file.Close(); err == nil {
 		err = closeErr
 	}

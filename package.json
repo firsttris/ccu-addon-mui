@@ -22,6 +22,7 @@
     "generate:protocol": "json2ts -i protocol/schema.json -o src/types/protocol.ts --unreachableDefinitions --bannerComment \"/* Generated from protocol/schema.json by npm run generate:protocol. Do not edit. */\"",
     "test:e2e": "playwright test",
     "test:stack": "playwright test -c playwright.stack.config.ts",
+    "test:update": "node e2e-update/build.mjs && playwright test -c playwright.update.config.ts",
     "test:visual": "VISUAL=1 playwright test visual",
     "test:visual:update": "VISUAL=1 playwright test visual -u",
     "docs:social-preview": "node scripts/social-preview/render.mjs",

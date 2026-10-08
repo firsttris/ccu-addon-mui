@@ -121,7 +121,7 @@ func TestInstallRunsTheUpdateScript(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := u.Install(context.Background(), release); err != nil {
+	if err := u.Install(context.Background(), release, nil); err != nil {
 		t.Fatal(err)
 	}
 	if got, _ := os.ReadFile(marker); string(got) != "new app" {
@@ -138,7 +138,7 @@ func TestInstallRejectsAWrongChecksum(t *testing.T) {
 	data := archive(t, entry{name: "update_script", mode: 0o755, body: "#!/bin/sh\ntouch " + marker + "\n"})
 	u := updater(releaseServer(t, data, "sha256:"+sum([]byte("other"))), t.TempDir())
 	release, _ := u.Latest()
-	if err := u.Install(context.Background(), release); !errors.Is(err, ErrChecksum) {
+	if err := u.Install(context.Background(), release, nil); !errors.Is(err, ErrChecksum) {
 		t.Fatalf("expected ErrChecksum, got %v", err)
 	}
 	if _, err := os.Stat(marker); err == nil {
@@ -150,7 +150,7 @@ func TestInstallReportsAFailingScript(t *testing.T) {
 	data := archive(t, entry{name: "update_script", mode: 0o755, body: "#!/bin/sh\necho no room >&2\nexit 2\n"})
 	u := updater(releaseServer(t, data, "sha256:"+sum(data)), t.TempDir())
 	release, _ := u.Latest()
-	err := u.Install(context.Background(), release)
+	err := u.Install(context.Background(), release, nil)
 	if !errors.Is(err, ErrScript) || !strings.Contains(err.Error(), "no room") {
 		t.Fatalf("expected ErrScript with the script's output, got %v", err)
 	}
@@ -195,7 +195,32 @@ func TestOneInstallAtATime(t *testing.T) {
 	u := New("http://unused", t.TempDir())
 	u.running.Lock()
 	defer u.running.Unlock()
-	if err := u.Install(context.Background(), Release{URL: "x", SHA256: "y"}); !errors.Is(err, ErrRunning) {
+	if err := u.Install(context.Background(), Release{URL: "x", SHA256: "y"}, nil); !errors.Is(err, ErrRunning) {
 		t.Fatalf("expected ErrRunning, got %v", err)
+	}
+}
+
+// The app checks on every start: GitHub is asked once, until force
+func TestCachedLatestAsksGitHubOnce(t *testing.T) {
+	data := []byte("archive")
+	asked := 0
+	inner := releaseServer(t, data, "sha256:"+sum(data))
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		asked++
+		http.Redirect(w, r, inner.URL+r.URL.Path, http.StatusTemporaryRedirect)
+	}))
+	t.Cleanup(server.Close)
+	u := updater(inner, t.TempDir())
+	u.ReleaseURL = server.URL + "/latest"
+	for range 3 {
+		if release, err := u.CachedLatest(false); err != nil || release.Version != "1.2.3" {
+			t.Fatalf("unexpected answer %+v, %v", release, err)
+		}
+	}
+	if asked != 1 {
+		t.Fatalf("GitHub asked %d times, want 1", asked)
+	}
+	if _, err := u.CachedLatest(true); err != nil || asked != 2 {
+		t.Fatalf("force did not ask again (%d, %v)", asked, err)
 	}
 }
