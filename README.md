@@ -304,7 +304,7 @@ Vor einem Pull Request bitte `npm test`, `npm run typecheck` und `npm run test:g
 ⭐ Gefällt dir MUI? Ein [Stern auf GitHub](https://github.com/firsttris/ccu-addon-mui) hilft anderen, es zu finden.<br>
 🐛 [Fehler melden](https://github.com/firsttris/ccu-addon-mui/issues/new) · 💡 [Idee vorschlagen](https://github.com/firsttris/ccu-addon-mui/issues/new)
 
-<sub>Lizenz: <a href="LICENSE">MIT</a> · © Tristan Teufel und Mitwirkende · <a href="README.en.md">English version</a><br>
+<sub>Lizenz: <a href="LICENSE">MIT</a>, aus der WebUI übernommene Profile und Texte: <a href="THIRD_PARTY_LICENSES.md">Apache-2.0</a> · © Tristan Teufel und Mitwirkende · <a href="README.en.md">English version</a><br>
 Homematic und Homematic IP sind Marken der eQ-3 AG. Dieses Projekt steht in keiner Verbindung zu eQ-3 oder OpenCCU.</sub>
 
 </div>
