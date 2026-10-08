@@ -25,6 +25,7 @@ on:
       - 'go-server/litevm/**'
       - 'addon_installer/**'
       - 'scripts/lite-vm-test.sh'
+      - 'scripts/lite-vm-browser.mjs'
       - '.github/workflows/lite-vm.yml'
   schedule:
     - cron: '17 4 * * 1'

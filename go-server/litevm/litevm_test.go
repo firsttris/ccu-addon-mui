@@ -466,33 +466,43 @@ func same(a, b interface{}) bool {
 // value comes back as an event through occulited's event stream to a
 // subscribed connection
 func values(t *testing.T, configure, operate *websocket.Conn, device string, channels []string) {
-	for _, channel := range append([]string{}, channels...) {
-		description, _ := ok(t, call(t, configure, message{"type": "getParamsetDescription", "interfaceName": "VirtualDevices", "address": channel, "paramsetKey": "VALUES"}))["description"].(map[string]interface{})
-		name, p, found := writable(description)
-		if !found {
+	// What a user sets: a temperature on a channel of its own, not channel
+	// 0 (hmipserver's virtual group device fails INHIBIT there with a Java
+	// NullPointerException, Fault -321)
+	var channel, name string
+	var p map[string]interface{}
+	for _, address := range channels {
+		if strings.HasSuffix(address, ":0") {
 			continue
 		}
-		current := ok(t, call(t, configure, message{"type": "getParamset", "interfaceName": "VirtualDevices", "address": channel, "paramsetKey": "VALUES"}))["values"].(map[string]interface{})[name]
-		value := another(p, current)
-		ok(t, call(t, operate, message{"type": "subscribe", "channels": []string{channel}}))
-		answer := call(t, operate, message{"type": "setDatapoint", "interfaceName": "VirtualDevices", "address": channel, "attribute": name, "value": value})
-		if answer["success"] != true {
-			t.Fatalf("setDatapoint %s %s = %v as ci-operate: %v", channel, name, value, answer)
-		}
-		_ = operate.SetReadDeadline(time.Now().Add(30 * time.Second))
-		for {
-			var m message
-			if err := operate.ReadJSON(&m); err != nil {
-				t.Fatalf("no event for %s %s = %v within 30 s: %v", channel, name, value, err)
-			}
-			event, _ := m["event"].(map[string]interface{})
-			if event != nil && event["channel"] == channel && event["datapoint"] == name && same(event["value"], value) {
-				t.Logf("%s %s = %v (was %v): set as ci-operate, the event came back", channel, name, value, current)
-				return
-			}
+		description, _ := ok(t, call(t, configure, message{"type": "getParamsetDescription", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "VALUES"}))["description"].(map[string]interface{})
+		n, d, found := writable(description)
+		if found && (channel == "" || (strings.Contains(n, "TEMPERATURE") && !strings.Contains(name, "TEMPERATURE"))) {
+			channel, name, p = address, n, d
 		}
 	}
-	t.Fatalf("no writable value on the heating group's channels %v", channels)
+	if channel == "" {
+		t.Fatalf("no writable value on the heating group's channels %v", channels)
+	}
+	current := ok(t, call(t, configure, message{"type": "getParamset", "interfaceName": "VirtualDevices", "address": channel, "paramsetKey": "VALUES"}))["values"].(map[string]interface{})[name]
+	value := another(p, current)
+	ok(t, call(t, operate, message{"type": "subscribe", "channels": []string{channel}}))
+	answer := call(t, operate, message{"type": "setDatapoint", "interfaceName": "VirtualDevices", "address": channel, "attribute": name, "value": value})
+	if answer["success"] != true {
+		t.Fatalf("setDatapoint %s %s = %v as ci-operate: %v", channel, name, value, answer)
+	}
+	_ = operate.SetReadDeadline(time.Now().Add(30 * time.Second))
+	for {
+		var m message
+		if err := operate.ReadJSON(&m); err != nil {
+			t.Fatalf("no event for %s %s = %v within 30 s: %v", channel, name, value, err)
+		}
+		event, _ := m["event"].(map[string]interface{})
+		if event != nil && event["channel"] == channel && event["datapoint"] == name && same(event["value"], value) {
+			t.Logf("%s %s = %v (was %v): set as ci-operate, the event came back", channel, name, value, current)
+			return
+		}
+	}
 }
 
 // settings: configure changes a setting of the heating group's device
