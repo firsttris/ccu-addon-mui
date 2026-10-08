@@ -21,8 +21,8 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  # All jobs run in Microsoft's Playwright image: browser and system packages
-  # are in it, nothing is installed, and the screenshots render the same on
+  # All jobs run in Microsoft's Playwright image: browser, Node and system
+  # packages are in it, nothing but Bun is installed, and the screenshots render the same on
   # every run. Its version must match @playwright/test, so it comes from the
   # lockfile instead of being written here.
   playwright-image:
@@ -55,11 +55,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.1
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
 
       # The Playwright image brings Node but not Bun: npm installs the
       # version pinned in package.json (packageManager)
@@ -155,11 +150,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4.1.1
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
 
       # The Playwright image brings Node but not Bun: npm installs the
       # version pinned in package.json (packageManager)
