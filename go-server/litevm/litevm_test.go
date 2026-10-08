@@ -56,6 +56,9 @@ type message = map[string]interface{}
 type vm struct {
 	base   string
 	client *http.Client
+	// sid is the session's id from the login, for the APIs that take a
+	// browser's session only in the Authorization header (lite-rpc)
+	sid string
 }
 
 func env(t *testing.T, name string) string {
@@ -85,15 +88,20 @@ func loginAs(t *testing.T, user, password string) *vm {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("login: %d", resp.StatusCode)
+	defer resp.Body.Close()
+	var session struct {
+		SID string `json:"sid"`
 	}
+	if err := json.NewDecoder(resp.Body).Decode(&session); resp.StatusCode != http.StatusOK || err != nil {
+		t.Fatalf("login: %d %v", resp.StatusCode, err)
+	}
+	v.sid = session.SID
 	return v
 }
 
-// api calls occulited directly with the session's cookie; a changing call
-// needs X-Occulite-Request (occulited docs/system-api.md, /api/auth/v1)
+// api calls occulited directly with the session as a bearer: lite-rpc takes
+// a browser's session only that way, not with the cookie alone (occulited
+// answers 403 forbidden)
 func (v *vm) api(t *testing.T, method, path string, body interface{}) (int, []byte) {
 	t.Helper()
 	var reader io.Reader
@@ -103,7 +111,7 @@ func (v *vm) api(t *testing.T, method, path string, body interface{}) (int, []by
 	}
 	request, _ := http.NewRequest(method, v.base+path, reader)
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("X-Occulite-Request", "1")
+	request.Header.Set("Authorization", "Bearer "+v.sid)
 	resp, err := v.client.Do(request)
 	if err != nil {
 		t.Fatalf("%s %s: %v", method, path, err)
@@ -314,14 +322,25 @@ func levels(t *testing.T, admin *vm) {
 
 	// administer: a heating group through occulited's system API, with the
 	// administrator's session; its virtual device lives in hmipserver
-	// (VirtualDevices), which runs without a radio module
+	// (VirtualDevices), which runs without a radio module. The types are
+	// what hmipserver offers: without an HmIP module only HomeMatic.heating
+	code, body := admin.api(t, http.MethodGet, "/api/system/v1/groups/types", nil)
+	var types struct {
+		Types []struct {
+			ID string `json:"id"`
+		} `json:"types"`
+	}
+	if err := json.Unmarshal(body, &types); code != http.StatusOK || err != nil {
+		t.Fatalf("group types: %d %s", code, body)
+	}
 	group := 0
-	if m := call(t, adminConn, message{"type": "saveHeatingGroup", "group": message{"name": ciGroup, "type": "hmip.heating.group", "members": []string{}}}); m["success"] == true {
-		group = int(m["id"].(float64))
-	} else if m["code"] == "FORBIDDEN" || strings.Contains(fmt.Sprint(m["error"]), "403") || strings.Contains(fmt.Sprint(m["error"]), "401") {
-		t.Fatalf("heating group with the administrator's session refused: %v", m)
+	if len(types.Types) == 0 {
+		t.Log("hmipserver offers no heating group type on this VM")
 	} else {
-		t.Logf("no heating group on this VM, the rest runs without one: %v", m)
+		groupType := types.Types[0].ID
+		m := ok(t, call(t, adminConn, message{"type": "saveHeatingGroup", "group": message{"name": ciGroup, "type": groupType, "members": []string{}}}))
+		group = int(m["id"].(float64))
+		t.Logf("heating group %d (%s)", group, groupType)
 	}
 	if group != 0 {
 		defer func() { ok(t, call(t, adminConn, message{"type": "deleteHeatingGroup", "id": group})) }()
@@ -340,7 +359,7 @@ func levels(t *testing.T, admin *vm) {
 	// the one occulited's JSON-RPC gives that session directly. listDevices
 	// in MUI leaves out an interface that fails, so a refused session shows
 	// as devices missing
-	code, body := accounts["configure"].api(t, http.MethodPost, "/api/rpc/v1/json/VirtualDevices", message{"jsonrpc": "2.0", "method": "listDevices", "params": []interface{}{}, "id": 1})
+	code, body = accounts["configure"].api(t, http.MethodPost, "/api/rpc/v1/json/VirtualDevices", message{"jsonrpc": "2.0", "method": "listDevices", "params": []interface{}{}, "id": 1})
 	var direct struct {
 		Result []map[string]interface{} `json:"result"`
 		Error  interface{}              `json:"error"`
@@ -393,7 +412,7 @@ func logout(t *testing.T, v *vm) {
 	// A state-changing call on the session cookie needs X-Occulite-Request
 	// (occulited docs/system-api.md, /api/auth/v1), as the shell sends it
 	request, _ := http.NewRequest(http.MethodPost, v.base+"/api/auth/v1/logout", nil)
-	request.Header.Set("X-Occulite-Request", "1")
+	request.Header.Set("Authorization", "Bearer "+v.sid)
 	resp, err := v.client.Do(request)
 	if err != nil {
 		t.Fatal(err)
