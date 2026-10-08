@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { useUpload } from '../../hooks/useUpload';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Input } from '../../components/ui/input';
 import { m } from '../../paraglide/messages';
@@ -16,6 +17,7 @@ const errorMessage = (error: unknown) => errorText(error, m.ADDON_INSTALL_FAILED
 // some add-ons need the CCU to restart.
 export const AddonInstall = ({ onClose }: { onClose: () => void }) => {
   const { request } = useWebSocketActions();
+  const upload = useUpload();
   const { authRequired } = useWebSocketContext();
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
@@ -30,8 +32,7 @@ export const AddonInstall = ({ onClose }: { onClose: () => void }) => {
     setError(null);
     try {
       const prepared = await request({ type: 'prepareAddonUpload' }, { queue: false });
-      const upload = await fetch(prepared.url, { method: 'POST', body: file });
-      if (!upload.ok) throw new Error(await upload.text());
+      await upload(prepared.url, file);
       const installed = await request({ type: 'installAddon', id: prepared.id, password }, { queue: false, timeoutMs: INSTALL_TIMEOUT_MS });
       setResult(installed.reboot ? 'reboot' : 'installed');
       await queryClient.invalidateQueries({ queryKey: ['addons'] });

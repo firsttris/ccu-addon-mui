@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { BACKUP_TIMEOUT_MS, download as downloadBackup } from './Backup';
 import UploadIcon from '~icons/lucide/upload';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { useUpload } from '../../hooks/useUpload';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -33,6 +34,7 @@ const errorMessage = (error: unknown) =>
 // CCU.downloadFirmware), and the server checks its SHA256 checksum.
 export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; download?: string }) => {
   const { request } = useWebSocketActions();
+  const upload = useUpload();
   const { authRequired } = useWebSocketContext();
   const [step, setStep] = useState<Step>('choose');
   const [file, setFile] = useState<File | null>(null);
@@ -77,8 +79,7 @@ export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; 
     setError(null);
     try {
       const prepared = await request({ type: 'prepareCcuFirmware' }, { queue: false });
-      const upload = await fetch(prepared.url, { method: 'POST', body: file });
-      if (!upload.ok) throw new Error(await upload.text());
+      await upload(prepared.url, file);
       const checked = await request(
         { type: 'checkCcuFirmware', id: prepared.id, password, language: getLocale() === 'en' ? 'en' : 'de' },
         { queue: false, timeoutMs: FIRMWARE_TIMEOUT_MS },

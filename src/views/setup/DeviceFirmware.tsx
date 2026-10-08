@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import DownloadIcon from '~icons/lucide/circle-arrow-down';
 import UploadIcon from '~icons/lucide/upload';
 import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { useUpload } from '../../hooks/useUpload';
 import {
   DEVICE_FIRMWARE_TIMEOUT_MS,
   useDeviceFirmwareCatalog,
@@ -193,6 +194,7 @@ export const DeviceFirmware = () => {
 
 const UploadDialog = ({ onClose }: { onClose: () => void }) => {
   const { request } = useWebSocketActions();
+  const upload = useUpload();
   const changed = useDeviceFirmwareChanged();
   const retry = usePasswordRetry();
   const { showToast } = useToast();
@@ -211,8 +213,7 @@ const UploadDialog = ({ onClose }: { onClose: () => void }) => {
         let id = uploadId;
         if (!id) {
           const prepared = await request({ type: 'prepareDeviceFirmwareUpload' }, { queue: false });
-          const upload = await fetch(prepared.url, { method: 'POST', body: file });
-          if (!upload.ok) throw new Error(await upload.text());
+          await upload(prepared.url, file);
           id = prepared.id;
           setUploadId(id);
         }
