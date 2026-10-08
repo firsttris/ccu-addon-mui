@@ -484,7 +484,11 @@ func values(t *testing.T, configure, operate *websocket.Conn, device string, cha
 	if channel == "" {
 		t.Fatalf("no writable value on the heating group's channels %v", channels)
 	}
-	current := ok(t, call(t, configure, message{"type": "getParamset", "interfaceName": "VirtualDevices", "address": channel, "paramsetKey": "VALUES"}))["values"].(map[string]interface{})[name]
+	// Without reading the value first: getParamset VALUES of the group's
+	// channel gets no answer from hmipserver while the group has no members
+	// (occulited: 503 down). A value in the middle of the range differs
+	// from what a new group starts with
+	var current interface{}
 	value := another(p, current)
 	ok(t, call(t, operate, message{"type": "subscribe", "channels": []string{channel}}))
 	answer := call(t, operate, message{"type": "setDatapoint", "interfaceName": "VirtualDevices", "address": channel, "attribute": name, "value": value})
@@ -515,12 +519,27 @@ func settings(t *testing.T, configure, operate *websocket.Conn, device string, c
 		if !found {
 			continue
 		}
+		refused(t, call(t, operate, message{"type": "putParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER", "values": message{name: p["default"]}}))
+		var readErr message
 		read := func() interface{} {
-			return ok(t, call(t, configure, message{"type": "getParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER"}))["values"].(map[string]interface{})[name]
+			m := call(t, configure, message{"type": "getParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER"})
+			if m["type"] == "error" {
+				readErr = m
+				return nil
+			}
+			return m["values"].(map[string]interface{})[name]
 		}
 		current := read()
+		if readErr != nil {
+			// hmipserver's group without members, as for VALUES above;
+			// FORBIDDEN or a session error would be MUI's or occulited's
+			if readErr["code"] == "FORBIDDEN" || !strings.Contains(fmt.Sprint(readErr["error"]), "503") {
+				t.Fatalf("getParamset MASTER %s as ci-configure: %v", address, readErr)
+			}
+			t.Logf("%s MASTER not readable on this group without members: %v", address, readErr["error"])
+			continue
+		}
 		value := another(p, current)
-		refused(t, call(t, operate, message{"type": "putParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER", "values": message{name: value}}))
 		ok(t, call(t, configure, message{"type": "putParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER", "values": message{name: value}}))
 		if got := read(); !same(got, value) {
 			t.Fatalf("%s MASTER %s: wrote %v, read %v", address, name, value, got)
