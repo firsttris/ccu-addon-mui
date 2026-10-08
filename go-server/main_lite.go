@@ -58,6 +58,9 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 	groups := occulite.NewGroups(client)
 	wsServer.SetGroupService(groups)
 	wsServer.SetGroupSessions(func(session string) websocket.GroupService { return groups.ForSession(session) })
+	// The device pictures (DEVDB.tcl, read from /www as on a CCU) are served
+	// by openccu-lite itself, since 1.0.0-dev.45 (hobbyquaker/openccu-lite#10)
+	wsServer.SetDeviceImageBase("/config/img/devices/")
 
 	// The gate in front of /addons/ adds the session to the WebSocket
 	// upgrade; occulited tells whose it is

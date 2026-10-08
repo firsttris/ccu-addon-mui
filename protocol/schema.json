@@ -12947,6 +12947,10 @@
             "$ref": "#/definitions/DeviceImage"
           },
           "description": "by device type in lower case"
+        },
+        "base": {
+          "type": "string",
+          "description": "where the pictures are served, their path appended: /ws/mui/img/ by this server on a CCU, /config/img/devices/ by lighttpd on openccu-lite; absent from older servers"
         }
       },
       "required": [

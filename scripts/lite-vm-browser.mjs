@@ -117,6 +117,25 @@ try {
     await appShown(app);
     await shot(app, file);
   }
+
+  // The device pictures: openccu-lite serves them since 1.0.0-dev.45
+  // (hobbyquaker/openccu-lite#10). The device list shows one per device, the
+  // device page a big one; a picture that loaded has a size
+  const devdb = await pages.request.get(`${base}/config/devdescr/DEVDB.tcl`);
+  if (devdb.status() === 404) {
+    console.log('SKIPPED device pictures: this openccu-lite has no DEVDB.tcl (before 1.0.0-dev.45)');
+  } else {
+    await app.goto(`${base}/addons/mui/setup?theme=light&lang=de`, { waitUntil: 'domcontentloaded' });
+    const picture = app.locator('[data-device-image]:not([data-device-image="none"]) img').first();
+    await picture.waitFor({ timeout: 30_000 });
+    await app.waitForFunction((img) => img.complete && img.naturalWidth > 0, await picture.elementHandle(), { timeout: 30_000 });
+    console.log(`device picture shown: ${await picture.getAttribute('src')}`);
+    // The heating group of the room Wohnzimmer (phase showcase, after the
+    // one of the phase levels)
+    await app.goto(`${base}/addons/mui/device/VirtualDevices/INT0000002?theme=light&lang=de`, { waitUntil: 'domcontentloaded' });
+    await appShown(app);
+    await shot(app, 'app-device.png');
+  }
   await pages.close();
 } catch (e) {
   problems.push(String(e?.message ?? e));

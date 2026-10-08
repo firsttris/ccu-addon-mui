@@ -5598,6 +5598,10 @@ export interface GetDeviceImagesResponse {
   images: {
     [k: string]: DeviceImage;
   };
+  /**
+   * where the pictures are served, their path appended: /ws/mui/img/ by this server on a CCU, /config/img/devices/ by lighttpd on openccu-lite; absent from older servers
+   */
+  base?: string;
 }
 /**
  * a device type's picture from the WebUI's DEVDB.tcl

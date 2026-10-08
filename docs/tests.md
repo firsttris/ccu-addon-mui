@@ -179,7 +179,10 @@ fehlgeschlagenen Anfragen unter `/addons/mui/`. Dafür legt die Phase *showcase*
 einer Heizgruppe an (ein virtueller Thermostat ist das einzige Gerät, das die VM ohne Funkmodul haben
 kann). Dann fotografiert das Skript die App in openccu-lites Oberfläche (`/nav/mui`, die Seite seines
 Menüeintrags) hell und dunkel auf Desktop und Handy sowie einige Seiten der App selbst: `screenshots/` im
-Artefakt `lite-vm-logs`.
+Artefakt `lite-vm-logs`. Hat das System die Gerätebilder (seit 1.0.0-dev.45), prüfen Test und Skript sie
+auch: `getDeviceImages` kennt die Typen und sagt, wo openccu-lite sie ausliefert, das Bild des
+Heizgruppen-Geräts kommt dort an, und in der Geräteliste ist ein Bild wirklich geladen
+(`app-device.png` zeigt die Geräteseite).
 
 Dazwischen prüft das Skript, dass `/addons/mui/` ohne Sitzung zur Anmeldung umleitet, dass openccu-lites
 Backup (`GET /api/system/v1/backup`) `mui-lite.json` und die Sprachprofile enthält, und dass das Journal

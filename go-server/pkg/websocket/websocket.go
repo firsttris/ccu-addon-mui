@@ -308,6 +308,9 @@ type Server struct {
 	// and as a user's session changes them
 	groups        GroupService
 	groupSessions func(session string) GroupService
+	// deviceImageBase: where the app loads the device pictures from, when
+	// not from DeviceImagePath (SetDeviceImageBase)
+	deviceImageBase string
 }
 
 // DeviceRPC is the part of ccurpc.Client the server uses.

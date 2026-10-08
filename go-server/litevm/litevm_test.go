@@ -600,11 +600,48 @@ var showcaseRooms = []struct {
 
 func showcaseGroup(room string) string { return "Heizung " + room }
 
+// deviceImages: openccu-lite brings the WebUI's device pictures since
+// 1.0.0-dev.45 (hobbyquaker/openccu-lite#10), at the CCU's paths. The server
+// reads DEVDB.tcl from /www, the app loads the pictures from where the
+// server says, and they are there. An older image without the files is
+// logged, not failed.
+func deviceImages(t *testing.T, v *vm, conn *websocket.Conn) {
+	resp, err := v.client.Get(v.base + "/config/devdescr/DEVDB.tcl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode == http.StatusNotFound {
+		t.Log("SKIPPED device pictures: this openccu-lite has no DEVDB.tcl (before 1.0.0-dev.45)")
+		return
+	}
+	m := ok(t, call(t, conn, message{"type": "getDeviceImages"}))
+	images, _ := m["images"].(map[string]interface{})
+	if m["base"] != "/config/img/devices/" || len(images) < 100 {
+		t.Fatalf("getDeviceImages: base %v, %d types", m["base"], len(images))
+	}
+	group, found := images["hm-cc-vg-1"].(map[string]interface{})
+	if !found {
+		t.Fatalf("no picture for the heating group's device HM-CC-VG-1 among %d types", len(images))
+	}
+	url := v.base + fmt.Sprint(m["base"]) + fmt.Sprint(group["path"])
+	resp, err = v.client.Get(url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK || !strings.HasPrefix(resp.Header.Get("Content-Type"), "image/") {
+		t.Fatalf("%s: %d %s", url, resp.StatusCode, resp.Header.Get("Content-Type"))
+	}
+	t.Logf("device pictures: %d types, HM-CC-VG-1 at %s", len(images), url)
+}
+
 // showcase gives the screenshots something to show: rooms with a heating
 // group's thermostat each, named, at a set point. What hmipserver does not
 // answer (a group just made, see docs/plan-openccu-lite.md) is logged only.
 func showcase(t *testing.T, v *vm) {
 	conn := v.adminConn(t)
+	deviceImages(t, v, conn)
 	rooms := map[string]int64{}
 	list, _ := ok(t, call(t, conn, message{"type": "getRooms"}))["rooms"].([]interface{})
 	for _, r := range list {

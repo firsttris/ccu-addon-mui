@@ -189,7 +189,7 @@ eines Wartungswerts (`UNREACH`, `LOW_BAT`, `CONFIG_PENDING` …) neu, sonst alle
 | | `saveDiagram`, `deleteDiagram` | Diagramm speichern oder löschen | Admin+T (A) |
 | Push | `getPush` | VAPID-Public-Key und Abo-Status des Endpoints | alle |
 | | `subscribePush`, `unsubscribePush` | Push-Abo anlegen oder entfernen, mit `alarms`, `service` und `rules` (Benachrichtigungsregeln) | alle |
-| Geräte | `getDeviceImages` | Gerätebilder der WebUI je Gerätetyp mit den Markierungen der Kanäle (`DEVDB.tcl`); die Bilder selbst unter `/ws/mui/img/`, ohne Anmeldung wie in der WebUI | alle |
+| Geräte | `getDeviceImages` | Gerätebilder der WebUI je Gerätetyp mit den Markierungen der Kanäle (`DEVDB.tcl`); die Bilder selbst unter `base` (auf der CCU `/ws/mui/img/` von diesem Server, auf openccu-lite `/config/img/devices/` von openccu-lite), ohne Anmeldung wie in der WebUI | alle |
 | Regeln | `getRules` | Benachrichtigungsregeln (`pkg/rules`, Datei `mui-rules.json`) | alle |
 | | `saveRule`, `deleteRule` | Regel speichern oder löschen; `summary` sind die Bedingungen in Worten, die die App schreibt | Admin+T (A) |
 | | `testPush` | Testbenachrichtigung senden | alle |

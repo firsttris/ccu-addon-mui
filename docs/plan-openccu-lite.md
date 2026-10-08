@@ -62,7 +62,11 @@ Abweichungen vom Plan:
   occulited: Dort hat jedes Konto genau eine Liste, MUI kennt mehrere benannte Listen.
 - **Gerätefirmware** verwaltet occulites Update-Seite; MUI zeigt dort nur den Link. Das Update eines
   einzelnen Geräts aus seiner Geräteseite geht weiter.
-- **Gerätebilder** gibt es auf openccu-lite nicht (keine WebUI-Dateien); die Kacheln zeigen dort ihr Symbol.
+- **Gerätebilder** bringt openccu-lite seit 1.0.0-dev.45 selbst mit, an den Pfaden der CCU
+  (`/www/config/img/devices/`, `/www/config/devdescr/DEVDB.tcl`, im Browser unter `/config/img/devices/`),
+  auf unsere Bitte in [openccu-lite#10](https://github.com/hobbyquaker/openccu-lite/issues/10). Der Server
+  liest `DEVDB.tcl` wie auf der CCU, die App lädt die Bilder von dort, wo openccu-lite sie ausliefert
+  (`getDeviceImages` sagt es mit `base`). Auf älteren Images bleibt der Platzhalter.
 - **Im Lite-Binary** steckt noch der ReGa-Client, weil `websocket.Server` ihn als Feld kennt. Erreichbar ist
   er dort nicht: Der Verteiler schickt keine Anfrage an die CCU-Handler, deren Dateien gar nicht mitgebaut
   werden. Ganz heraus käme er erst, wenn auch die übrigen gemeinsamen Handler hinter Schnittstellen liegen.
@@ -120,8 +124,6 @@ Ohne ReGa fehlen die Grundlagen; keine API, auch keine gesperrte:
 - **Servicemeldungen bestätigen**, außer den Sticky-Meldungen: occulites Meldungen sind ein Abbild der
   Wartungsdatenpunkte, sie enden, wenn das Gerät es meldet. `STICKY_UNREACH` und `STICKY_SABOTAGE` setzt
   MUI wie die CCU per `setValue` zurück.
-- **Gerätebilder**: Sie liegen bei der CCU in den Dateien der WebUI. Mitliefern ginge nur mit Klärung der
-  Rechte an den Bildern von eQ-3.
 
 ## Worum es geht
 
