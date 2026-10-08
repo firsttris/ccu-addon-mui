@@ -20,7 +20,8 @@
   },
   "ui": {
     "icon": "dist/icon.svg",
-    "session_header": true
+    "session_header": true,
+    "fullscreen": true
   },
   "runtime": {
     "daemon": true,

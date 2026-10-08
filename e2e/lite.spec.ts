@@ -11,6 +11,9 @@ test('blendet auf openccu-lite Programme, Systemvariablen und Systemeinstellunge
   await page.goto('/room/1');
   await page.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
   const menu = page.getByRole('dialog');
+  // The way back to openccu-lite, for the app shown as the whole window
+  await expect(menu.getByRole('link', { name: /^(Zurück zu openccu-lite|Back to openccu-lite)$/ })).toHaveAttribute('href', '/');
+  await expect(menu.getByRole('link', { name: /^(Zurück zu openccu-lite|Back to openccu-lite)$/ })).toHaveAttribute('target', '_top');
   await expect(menu.getByRole('button', { name: /^(Diagramme|Diagrams)$/ })).toBeVisible();
   await expect(menu.getByRole('button', { name: /^(Programme|Programs)$/ })).toHaveCount(0);
   await expect(menu.getByRole('button', { name: /^(Systemvariablen|System variables)$/ })).toHaveCount(0);

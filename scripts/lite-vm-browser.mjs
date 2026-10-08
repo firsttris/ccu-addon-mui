@@ -103,6 +103,48 @@ try {
     await context.close();
   }
 
+  // --- the whole window: the manifest's ui.fullscreen, switched on by the user -----------------
+  // openccu-lite 1.0.0-dev.45 and later (openccu-lite#11): the user's choice
+  // is the addon's entry in /me/preferences, which a PUT replaces as a whole
+  {
+    const context = await session({ viewport: { width: 1440, height: 900 }, colorScheme: 'light', locale: 'de-DE' });
+    const addons = await (await context.request.get(`${base}/api/system/v1/addons`)).json();
+    const mui = (addons.addons ?? addons).find?.((a) => a.id === 'mui');
+    if (!mui?.fullscreen) {
+      console.log(`SKIPPED fullscreen: openccu-lite does not offer it for mui (${JSON.stringify(mui?.fullscreen)})`);
+    } else {
+      const prefs = await (await context.request.get(`${base}/api/auth/v1/me/preferences`)).json();
+      const entries = (prefs.addons ?? []).filter((a) => a.id !== 'mui');
+      const put = await context.request.put(`${base}/api/auth/v1/me/preferences`, {
+        headers: { 'X-Occulite-Request': '1' },
+        data: { ...prefs, addons: [...entries, { id: 'mui', fullscreen: true }] },
+      });
+      if (!put.ok()) throw new Error(`preferences: HTTP ${put.status()} ${await put.text()}`);
+      for (const [name, options] of [
+        ['fullscreen-desktop', {}],
+        ['fullscreen-phone', { ...devices['iPhone 13'], defaultBrowserType: undefined }],
+      ]) {
+        const view = await session({ ...options, colorScheme: 'light', locale: 'de-DE', ...(name.endsWith('desktop') ? { viewport: { width: 1440, height: 900 } } : {}) });
+        const page = await view.newPage();
+        watch(page, name);
+        await page.goto(`${base}/nav/mui`, { waitUntil: 'domcontentloaded' });
+        const app = page.frameLocator('iframe[src*="/addons/mui/"]');
+        await appShown(app);
+        await shot(page, `${name}.png`);
+        // The way back is the app's own: its menu
+        await app.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
+        const back = app.getByRole('link', { name: /^(Zurück zu openccu-lite|Back to openccu-lite)$/ });
+        await back.waitFor({ timeout: 10_000 });
+        if ((await back.getAttribute('href')) !== '/' || (await back.getAttribute('target')) !== '_top') problems.push(`${name}: the way back is not a link to / in the whole window`);
+        await shot(page, `${name}-menu.png`);
+        await view.close();
+      }
+      // Back as it was, for the screenshots in the frame below
+      await context.request.put(`${base}/api/auth/v1/me/preferences`, { headers: { 'X-Occulite-Request': '1' }, data: prefs });
+    }
+    await context.close();
+  }
+
   // --- the app's own pages, in openccu-lite's frame --------------------------------------------
   // As a user sees them: the shell opens the app at its start page
   // (/nav/mui), the frame is then sent to each page of the app

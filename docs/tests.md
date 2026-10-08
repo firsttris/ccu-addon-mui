@@ -180,7 +180,9 @@ einer Heizgruppe an (ein virtueller Thermostat ist das einzige Gerät, das die V
 kann). Dann fotografiert das Skript die App in openccu-lites Oberfläche (`/nav/mui`, die Seite seines
 Menüeintrags) hell und dunkel auf Desktop und Handy und darin einige Seiten der App, so wie ein Nutzer sie
 erreicht: `screenshots/` im Artefakt `lite-vm-logs`. Dabei prüft es auch, dass es auf openccu-lite keinen
-Link in die WebUI gibt und die Hilfe auf openccu-lites Doku und Lizenzen zeigt. Hat das System die Gerätebilder (seit 1.0.0-dev.45), prüfen Test und Skript sie
+Link in die WebUI gibt und die Hilfe auf openccu-lites Doku und Lizenzen zeigt. Bietet openccu-lite das ganze Fenster
+für MUI an (seit 1.0.0-dev.45), schaltet es das für den Testnutzer ein, fotografiert MUI ohne openccu-lites
+Leiste auf Desktop und Handy und prüft, dass MUIs Menü den Weg zurück (`/`) anbietet. Hat das System die Gerätebilder (seit 1.0.0-dev.45), prüfen Test und Skript sie
 auch: `getDeviceImages` kennt die Typen und sagt, wo openccu-lite sie ausliefert, das Bild des
 Heizgruppen-Geräts kommt dort an, und in der Geräteliste ist ein Bild wirklich geladen
 (`app-device.png` zeigt die Geräteseite).

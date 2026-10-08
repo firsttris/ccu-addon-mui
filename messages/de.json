@@ -1525,6 +1525,7 @@
   "LITE_SYSTEM_TITLE": "openccu-lite",
   "LITE_SYSTEM_HINT": "Netzwerk, Firewall, Benutzer, Sicherung, Updates und Zusatzsoftware verwaltet openccu-lite selbst.",
   "LITE_NETWORK": "Netzwerk",
+  "LITE_BACK": "Zurück zu openccu-lite",
   "LITE_BACKUP": "Sicherung",
   "LITE_UPDATES": "Updates und Geräte-Firmware",
   "LITE_LOG": "Protokoll",

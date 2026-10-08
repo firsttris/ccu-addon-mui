@@ -295,7 +295,7 @@ Katalog. Direktverknüpfungen bleiben, die laufen zwischen den Geräten und deck
     "licence": "MIT",
     "release": { "github": "firsttris/ccu-addon-mui", "asset": "mui-{version}-{arch}-lite.tar.gz" },
     "requires": { "architectures": ["aarch64", "x86_64"] },
-    "ui": { "session_header": true },
+    "ui": { "session_header": true, "fullscreen": true },
     "runtime": {
       "daemon": true,
       "needs": ["rfd", "hmipserver", "hs485d"],
@@ -317,6 +317,11 @@ Katalog. Direktverknüpfungen bleiben, die laufen zwischen den Geräten und deck
   WebSockets gehen durch.
 - **Einbettung:** occulites Oberfläche zeigt uns im iframe und hängt `?theme=…&lang=…` an. Wir übernehmen
   Hell/Dunkel und Sprache daraus und hören auf `postMessage` `openccu-lite:theme`.
+  Ab 1.0.0-dev.45 kann der Nutzer MUI auch als ganzes Fenster zeigen, ohne openccu-lites obere Leiste
+  (Einstellungen → Zusatzsoftware), auf unsere Bitte in
+  [openccu-lite#11](https://github.com/hobbyquaker/openccu-lite/issues/11). Dafür erklärt das Manifest
+  `"ui": {"fullscreen": true}` und verspricht einen Weg zurück: Auf openccu-lite hat MUIs Menü oben den
+  Abschnitt *openccu-lite* mit „Zurück zu openccu-lite“ (`/`) und „Zusatzsoftware“.
 - **Interfaces:** Die Funkdienste erreicht der Server über occulites `lite-rpc`
   (`/api/rpc/v1/xmlrpc/<Interface>`), nicht über ihre lokalen Ports; welche es gibt, steht in
   `/etc/config/InterfacesList.xml`. Ein `init` als Callback-Server braucht es nicht: Werte und Events kommen
