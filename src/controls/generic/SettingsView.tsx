@@ -179,13 +179,11 @@ const Stepper = ({
 // 0..100 % with a slider and the exact value next to it
 const PercentSlider = ({
   label,
-  name,
   parameter,
   value,
   onChange,
 }: {
   label: string;
-  name: string;
   parameter: ParameterDescription;
   value: number | undefined;
   onChange: (value: number) => void;
@@ -199,7 +197,6 @@ const PercentSlider = ({
     typeof parameter.max === "number" ? Math.round(parameter.max * scale) : 100;
   const min =
     typeof parameter.min === "number" ? Math.round(parameter.min * scale) : 0;
-  void name;
   return (
     <div className="flex items-center gap-3">
       <input
@@ -335,7 +332,6 @@ const SingleControl = ({
       return (
         <PercentSlider
           label={label}
-          name={name}
           parameter={parameter}
           value={num}
           onChange={(next) => onSet(name, next)}
