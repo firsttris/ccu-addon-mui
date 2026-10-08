@@ -88,6 +88,7 @@ func (s *Server) handleUsers(client *Client, msgType string, message []byte) {
 				result, name, err := s.regaClient.DeleteUser(msg.ID)
 				if err == nil && result == rega.SetOK {
 					s.logOutUser(name)
+					s.autoLoginUsers.forget()
 				}
 				return nil, result, err
 			})
@@ -118,6 +119,10 @@ func (s *Server) handleUsers(client *Client, msgType string, message []byte) {
 				Mail: msg.Mail, Phone: msg.Phone, Password: msg.Password, AutoLogin: msg.AutoLogin,
 			})
 			createdID = id
+			if err == nil && result == rega.SetOK {
+				// The automatic login may have changed
+				s.autoLoginUsers.forget()
+			}
 			if err == nil && result == rega.SetOK && current != nil && !own &&
 				(msg.Password != nil || level != current.Level || name != current.Name) {
 				s.logOutUser(current.Name)

@@ -249,8 +249,11 @@ type Server struct {
 	clients     map[*Client]bool
 	clientsMu   sync.RWMutex
 	// The system variables last sent to the connections (sysvars.go)
-	lastSysvars     []byte
-	messages        messageWatch
+	lastSysvars []byte
+	messages    messageWatch
+	// The CCU's users, for the automatic login: read at most once a minute,
+	// as every connection without a token asks
+	autoLoginUsers  cachedList[rega.User]
 	sysvarsMu       sync.Mutex
 	subscriptionMgr *subscriptions.Manager
 	httpServer      *http.Server
@@ -1020,7 +1023,7 @@ func (s *Server) autoLoginUser() string {
 	if s.regaClient == nil {
 		return ""
 	}
-	users, err := s.regaClient.GetUsers()
+	users, err := s.autoLoginUsers.get(time.Minute, s.regaClient.GetUsers)
 	if err != nil {
 		return ""
 	}

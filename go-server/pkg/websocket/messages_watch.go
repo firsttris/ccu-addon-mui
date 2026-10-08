@@ -75,6 +75,13 @@ func (c *cachedList[T]) get(maxAge time.Duration, read func() ([]T, error)) ([]T
 	return value, nil
 }
 
+// forget drops the kept list: the next get reads it again
+func (c *cachedList[T]) forget() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.at = time.Time{}
+}
+
 type messageWatch struct {
 	alarms  cachedList[rega.AlarmMessage]
 	service cachedList[rega.ServiceMessage]
