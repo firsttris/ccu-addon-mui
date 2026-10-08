@@ -109,52 +109,64 @@ func (s *Service) List(lang string) []Addon {
 	addons := []Addon{}
 	scripts, _ := filepath.Glob(filepath.Join(s.Dir, "*"))
 	for _, script := range scripts {
-		stat, err := os.Stat(script)
-		if err != nil || stat.IsDir() || stat.Mode()&0o111 == 0 {
-			continue
+		if addon, ok := s.addon(script, lang); ok {
+			addons = append(addons, addon)
 		}
-		values := s.info(script, lang)
-		if len(values["Name"]) == 0 {
-			continue
-		}
-		addon := Addon{ID: filepath.Base(script), Name: values["Name"][0], Operations: []string{}}
-		addon.Self = addon.ID == s.SelfID
-		if v := values["Version"]; len(v) > 0 {
-			addon.Version = v[0]
-		}
-		if v := values["Update"]; len(v) > 0 {
-			addon.UpdateURL = v[0]
-		}
-		if v := values["Config-Url"]; len(v) > 0 {
-			addon.ConfigURL = v[0]
-		}
-		for _, line := range values["Info"] {
-			// Many scripts repeat their name as the first info line
-			if text := strings.TrimSpace(tagRegex.ReplaceAllString(line, "")); text != "" && text != addon.Name {
-				addon.Info = append(addon.Info, text)
-			}
-		}
-		for _, field := range values["Operations"] {
-			for _, op := range strings.Fields(field) {
-				if slices.Contains(knownOperations, op) && !slices.Contains(addon.Operations, op) {
-					addon.Operations = append(addon.Operations, op)
-				}
-			}
-		}
-		addons = append(addons, addon)
 	}
 	sort.Slice(addons, func(i, j int) bool { return strings.ToLower(addons[i].Name) < strings.ToLower(addons[j].Name) })
 	return addons
 }
 
-// Offers says whether the add-on offers the operation.
-func (s *Service) Offers(id, operation string) bool {
-	for _, a := range s.List("de") {
-		if a.ID == id {
-			return slices.Contains(a.Operations, operation)
+// addon describes one script; false if it is no add-on (not executable,
+// no name)
+func (s *Service) addon(script, lang string) (Addon, bool) {
+	stat, err := os.Stat(script)
+	if err != nil || stat.IsDir() || stat.Mode()&0o111 == 0 {
+		return Addon{}, false
+	}
+	values := s.info(script, lang)
+	if len(values["Name"]) == 0 {
+		return Addon{}, false
+	}
+	addon := Addon{ID: filepath.Base(script), Name: values["Name"][0], Operations: []string{}}
+	addon.Self = addon.ID == s.SelfID
+	if v := values["Version"]; len(v) > 0 {
+		addon.Version = v[0]
+	}
+	if v := values["Update"]; len(v) > 0 {
+		addon.UpdateURL = v[0]
+	}
+	if v := values["Config-Url"]; len(v) > 0 {
+		addon.ConfigURL = v[0]
+	}
+	for _, line := range values["Info"] {
+		// Many scripts repeat their name as the first info line
+		if text := strings.TrimSpace(tagRegex.ReplaceAllString(line, "")); text != "" && text != addon.Name {
+			addon.Info = append(addon.Info, text)
 		}
 	}
-	return false
+	for _, field := range values["Operations"] {
+		for _, op := range strings.Fields(field) {
+			if slices.Contains(knownOperations, op) && !slices.Contains(addon.Operations, op) {
+				addon.Operations = append(addon.Operations, op)
+			}
+		}
+	}
+	return addon, true
+}
+
+// find describes the add-on with the id, running only its own script
+func (s *Service) find(id string) (Addon, bool) {
+	if id == "" || id != filepath.Base(id) || strings.HasPrefix(id, ".") {
+		return Addon{}, false
+	}
+	return s.addon(filepath.Join(s.Dir, id), "de")
+}
+
+// Offers says whether the add-on offers the operation.
+func (s *Service) Offers(id, operation string) bool {
+	addon, ok := s.find(id)
+	return ok && slices.Contains(addon.Operations, operation)
 }
 
 // ErrNotFound: no such add-on, or it doesn't offer the operation
@@ -166,14 +178,8 @@ func (s *Service) Run(id, operation string) (name string, err error) {
 	if id == "" || id != filepath.Base(id) || strings.HasPrefix(id, ".") {
 		return "", fmt.Errorf("invalid add-on")
 	}
-	var addon *Addon
-	for _, a := range s.List("de") {
-		if a.ID == id {
-			addon = &a
-			break
-		}
-	}
-	if addon == nil || !slices.Contains(addon.Operations, operation) {
+	addon, ok := s.find(id)
+	if !ok || !slices.Contains(addon.Operations, operation) {
 		return "", ErrNotFound
 	}
 	if addon.Self && operation == "uninstall" {
