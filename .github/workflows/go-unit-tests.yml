@@ -1,13 +1,22 @@
 name: Go Unit Tests
 
+# Changes to documentation alone don't build.
 on:
   push:
     branches:
       - main
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
   pull_request:
     branches:
       - main
     types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
   # The release workflow runs the same tests first
   workflow_call:
 
