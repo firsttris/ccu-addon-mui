@@ -90,7 +90,10 @@ const useSeriesData = (diagram: Diagram, from: number, to: number, enabled: bool
   const { request } = useWebSocketActions();
   const start = intervalStart(from, barInterval(to - from)) - (to - from) / 4;
   return useQuery({
-    queryKey: ['diagramData', diagram.id, diagram.series.map(keyOf).join(','), from, to],
+    // Live: one entry for the span that moves on with the minute
+    // (refetchInterval), not a new one every minute, which would also show
+    // the old values as placeholder and draw the chart in again
+    queryKey: ['diagramData', diagram.id, diagram.series.map(keyOf).join(','), ...(live ? ['live', to - from] : [from, to])],
     queryFn: async () =>
       (
         await request({
