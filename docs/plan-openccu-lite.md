@@ -6,6 +6,12 @@ einer Codebasis.
 
 ## Stand der Umsetzung
 
+So sieht MUI in openccu-lite aus (Menü *Zusatzsoftware → MUI*, aufgenommen vom VM-Test auf
+1.0.0-dev.43; der Thermostat ist das virtuelle Gerät einer Heizgruppe, die VM hat kein Funkmodul):
+
+<img src="screenshot-lite-desktop-hell.png" alt="MUI in openccu-lite am Desktop, hell" width="720">
+<img src="screenshot-lite-handy-dunkel.png" alt="MUI in openccu-lite auf dem Handy, dunkel" width="200">
+
 Die Schritte 1 bis 8 sind umgesetzt, der Branch baut beide Pakete. Getestet ist es auf zwei Wegen:
 
 - **Gegen die Fake-Lite** (`go test -tags lite ./...`, `e2e/lite.spec.ts`): was MUI aus occulites APIs
