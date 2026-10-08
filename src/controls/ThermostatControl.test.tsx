@@ -9,8 +9,10 @@ vi.mock('../queries', async (importOriginal) => ({
   useParamset: () => ({ data: undefined }),
   useSetDataPoint: () => setDataPoint,
   useWeekProfile: () => ({ data: undefined }),
+  useDevices: () => ({ data: undefined }),
 }));
 vi.mock('./ThermostatControl/profile/WeekProfileSheet', () => ({ WeekProfileSheet: () => null }));
+vi.mock('../components/DeviceImage', () => ({ DeviceImage: () => null, useDeviceImage: () => undefined, useDeviceImages: () => ({ isPending: false }) }));
 
 const { ThermostatControl } = await import('./ThermostatControl');
 

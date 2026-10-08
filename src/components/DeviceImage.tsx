@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import CpuIcon from '~icons/lucide/cpu';
 import { useWebSocketActions } from '../hooks/useWebsocket';
@@ -34,9 +34,11 @@ interface DeviceImageProps {
   // The channel to mark (its index, or a form name like "1+2")
   channel?: string;
   className?: string;
+  // Shown while the picture is missing (default: a chip; null: nothing)
+  fallback?: ReactNode;
 }
 
-export const DeviceImage = ({ type, size, channel, className }: DeviceImageProps) => {
+export const DeviceImage = ({ type, size, channel, className, fallback }: DeviceImageProps) => {
   const image = useDeviceImage(type);
   const [failed, setFailed] = useState<string | null>(null);
   const shapes = channel ? image?.channels?.[channel] : undefined;
@@ -104,7 +106,11 @@ export const DeviceImage = ({ type, size, channel, className }: DeviceImageProps
           )}
         </>
       ) : (
-        <CpuIcon className="text-muted-foreground" style={{ width: size * 0.45, height: size * 0.45 }} />
+        (fallback === undefined ? (
+          <CpuIcon className="text-muted-foreground" style={{ width: size * 0.45, height: size * 0.45 }} />
+        ) : (
+          fallback
+        ))
       )}
     </span>
   );

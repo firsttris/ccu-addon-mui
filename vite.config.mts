@@ -6,14 +6,6 @@ import fs from 'fs';
 import Icons from 'unplugin-icons/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import tailwindcss from '@tailwindcss/vite';
-import { FileSystemIconLoader } from 'unplugin-icons/loaders';
-
-// Default sizes of icons that had a fixed size as hand-written components;
-// all others have none and are sized by CSS or props.
-const iconSizes: Record<string, string> = {
-  'mui:wall-thermostat': '24',
-  'mui:radiator-thermostat': '24',
-};
 
 // WebSocket target of the go-server, selected via `vite --mode <name>`
 const proxyTargets: Record<string, string> = {
@@ -64,21 +56,11 @@ export default defineConfig(({ command, mode, isPreview }) => ({
       emitTsDeclarations: true,
     }),
     // Icons are compiled into the bundle (no requests at runtime, works
-    // offline on the CCU). "mui" holds our own SVGs from src/assets/icons.
+    // offline on the CCU).
     Icons({
       compiler: 'jsx',
       jsx: 'react',
       scale: 0,
-      customCollections: {
-        mui: FileSystemIconLoader('./src/assets/icons'),
-      },
-      iconCustomizer(collection, icon, props) {
-        const size = iconSizes[`${collection}:${icon}`];
-        if (size) {
-          props.width = size;
-          props.height = size;
-        }
-      },
     }),
     VitePWA({
       // A new version waits until the user reloads (components/UpdatePrompt):
