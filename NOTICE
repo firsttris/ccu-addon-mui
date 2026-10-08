@@ -1,0 +1,24 @@
+MUI
+Copyright (C) 2022 Tristan Teufel and contributors
+
+MUI is free software: you can redistribute it and/or modify it under the
+terms of the GNU Affero General Public License, version 3, as published by the Free Software
+Foundation (see LICENSE). It comes without any warranty.
+
+Additional terms under section 7(b) of the license
+--------------------------------------------------
+
+Modified versions of MUI, and works based on it, must preserve the author
+attribution "MUI by Tristan Teufel" together with a link to
+https://github.com/firsttris/ccu-addon-mui in the Appropriate Legal Notices they
+display, at least wherever the original shows its author and source code link.
+
+Commercial license
+------------------
+
+To use MUI without the obligations of the AGPL, for example in a
+closed-source product or service, ask for a commercial license:
+https://teufel-it.de
+
+Some data files are taken from the CCU's WebUI and stay under the Apache
+License 2.0; THIRD_PARTY_LICENSES.md lists them and the libraries in the add-on.

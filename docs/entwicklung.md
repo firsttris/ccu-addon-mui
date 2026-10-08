@@ -185,6 +185,10 @@ node scripts/import-link-profiles.mjs /pfad/zu/OpenCCU-Base
 Das Skript liest `www/config/easymodes/<Empfänger>/<Sender>.tcl` samt Übersetzungen und schreibt daraus
 `src/controls/links/linkProfiles.json`.
 
+Die importierten Daten (Verknüpfungsprofile, Parameternamen, Texte der Servicemeldungen) stehen wie ihre
+Quelle, die WebUI, unter der Apache-Lizenz 2.0, nicht unter der AGPL. [THIRD_PARTY_LICENSES.md](../THIRD_PARTY_LICENSES.md)
+nennt sie und liegt dem Add-on bei; ein neues Import-Skript gehört dort mit in die Liste.
+
 ## Umgebungsvariablen
 
 Der Server liest seine Einstellungen aus Umgebungsvariablen (`go-server/pkg/config/config.go`). Auf der CCU

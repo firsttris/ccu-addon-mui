@@ -10,7 +10,7 @@ repo_url: https://github.com/firsttris/ccu-addon-mui
 repo_name: firsttris/ccu-addon-mui
 edit_uri: edit/main/docs/
 copyright: >-
-  Lizenz MIT · Homematic und Homematic IP sind Marken der eQ-3 AG.
+  Lizenz AGPL-3.0 · Homematic und Homematic IP sind Marken der eQ-3 AG.
   Dieses Projekt steht in keiner Verbindung zu eQ-3 oder OpenCCU.
 
 docs_dir: docs
