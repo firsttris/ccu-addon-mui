@@ -197,6 +197,20 @@ export const TimeChart = ({ label, series, from, to, height = 300, animationKey 
     return { line, band, area, dots };
   };
 
+  // The paths and the typical spacing of the points change with the data
+  // and the size, not while the pointer moves over the chart
+  const lineSeries = useMemo(() => {
+    const result = new Map<string, { paths: ReturnType<typeof linePaths>; before: ReturnType<typeof linePaths> | null }>();
+    for (const s of drawn) {
+      const scale = scales.get(scaleKey(s));
+      if (s.kind === 'bar' || !scale) continue;
+      result.set(s.key, { paths: linePaths(s, s.points, scale), before: s.compare ? linePaths(s, s.compare.points, scale) : null });
+    }
+    return result;
+    // linePaths reads only these, through x, y and baseline
+  }, [drawn, scales, width, height, from, to]);
+  const steps = useMemo(() => new Map(series.map((s) => [s.key, typicalStep(s.points)])), [series]);
+
   const span = to - from;
   const xTicks = timeTicks(from, to, Math.max(3, Math.floor(plotWidth / 90)));
   const formatTick = (t: number) => {
@@ -222,9 +236,9 @@ export const TimeChart = ({ label, series, from, to, height = 300, animationKey 
           }
           const p = nearest(s.points, hoverTime);
           const before = s.compare ? nearest(s.compare.points, hoverTime)?.[1] : undefined;
-          if (!p || Math.abs(p[0] - hoverTime) > Math.max(span / 40, typicalStep(s.points) * 1.5)) {
+          if (!p || Math.abs(p[0] - hoverTime) > Math.max(span / 40, (steps.get(s.key) ?? Infinity) * 1.5)) {
             // A state or step lasts until the next value
-            const last = [...s.points].reverse().find((q) => q[0] <= hoverTime);
+            const last = s.points.findLast((q) => q[0] <= hoverTime);
             return (s.kind === 'state' || s.kind === 'step') && last ? [{ s, v: last[1], before, at: hoverTime, range: null }] : [];
           }
           return [{ s, v: p[1], before, at: p[0], range: p[3] > p[2] && s.aggregate === 'avg' ? ([p[2], p[3]] as [number, number]) : null }];
@@ -351,10 +365,9 @@ export const TimeChart = ({ label, series, from, to, height = 300, animationKey 
           {drawn
             .filter((s) => s.kind !== 'bar')
             .map((s, i) => {
-              const scale = scales.get(scaleKey(s));
-              if (!scale) return null;
-              const paths = linePaths(s, s.points, scale);
-              const before = s.compare ? linePaths(s, s.compare.points, scale) : null;
+              const drawing = lineSeries.get(s.key);
+              if (!drawing) return null;
+              const { paths, before } = drawing;
               return (
                 <g key={s.key} data-series={s.key} data-kind={s.kind}>
                   {before && <path d={before.line} className="chart-fill" style={delay(i)} fill="none" stroke={s.color} strokeOpacity={0.45} strokeWidth={1.25} strokeDasharray="4 3" />}
