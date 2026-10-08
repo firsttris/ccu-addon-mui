@@ -396,9 +396,10 @@ export const useWebsocket = () => {
     sendSubscription();
 
     // Data may have changed while disconnected. Not on the first login:
-    // the queries' first requests were just sent.
+    // the queries' first requests were just sent. Requests just sent from
+    // the queue are kept, not cancelled and sent again.
     if (wasAuthenticatedRef.current) {
-      queryClient.invalidateQueries();
+      queryClient.invalidateQueries(undefined, { cancelRefetch: false });
     }
     wasAuthenticatedRef.current = true;
   };
