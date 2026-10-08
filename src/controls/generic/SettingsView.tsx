@@ -15,7 +15,7 @@ import { Input } from "../../components/ui/input";
 import { NativeSelect } from "../../components/ui/select";
 import { TimePicker } from "../../components/ui/time-picker";
 import { Button } from "../../components/ui/button";
-import { cn } from "../../lib/utils";
+import { cn, formatNumber } from "../../lib/utils";
 import { shownParameters } from "./ParamsetView";
 import { parameterLabel } from "./parameters";
 import {
@@ -36,10 +36,7 @@ import {
 
 type OnSet = (name: string, value: string | number | boolean) => void;
 
-const number = (value: number, digits = 2) =>
-  new Intl.NumberFormat(getLocale(), { maximumFractionDigits: digits }).format(
-    value,
-  );
+const number = (value: number, digits = 2) => formatNumber(value, digits);
 
 // A number for the input field: decimal comma in German, no grouping
 const editable = (value: number) => {

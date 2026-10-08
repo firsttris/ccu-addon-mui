@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NativeSelect } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
-import { getLocale } from '../../paraglide/runtime';
+import { formatNumber } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
 import { PERMANENT, TIME_PRESETS } from './linkProfiles';
 
@@ -18,7 +18,7 @@ export const formatSeconds = (seconds: number) => {
   if (seconds === PERMANENT) return m.TIME_PERMANENT();
   if (seconds === 0) return m.TIME_NOT_ACTIVE();
   const unit = [...UNITS].reverse().find((u) => seconds >= u.seconds && seconds % u.seconds === 0) ?? UNITS[0];
-  return `${new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 1 }).format(seconds / unit.seconds)} ${unit.label}`;
+  return `${formatNumber(seconds / unit.seconds, 1)} ${unit.label}`;
 };
 
 const key = (seconds: number) => (seconds === PERMANENT ? 'permanent' : String(seconds));

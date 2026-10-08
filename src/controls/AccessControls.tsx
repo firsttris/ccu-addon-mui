@@ -9,7 +9,7 @@ import { Switch } from '../components/ui/switch';
 import { useEffects } from '../contexts/EffectsContext';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
-import { cn } from '../lib/utils';
+import { cn, formatNumber } from '../lib/utils';
 import { keyLabels } from './ButtonsControl';
 import { useValueList } from './useValueList';
 
@@ -167,8 +167,7 @@ export const AccessControl = ({ channels }: { channels: Channel[] }) => {
 // --- Wired access point (HmIPW-DRAP): voltage and current per bus line
 
 const number = (value: DatapointValue | undefined) => (typeof value === 'number' ? value : undefined);
-const format = (value: number, digits: number) =>
-  new Intl.NumberFormat(getLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+const format = (value: number, digits: number) => formatNumber(value, digits, digits);
 
 // The wired bus runs on 24 V; below about 20 V devices drop out
 const VOLTAGE_MIN = 20;

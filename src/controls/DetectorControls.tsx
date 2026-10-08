@@ -11,9 +11,8 @@ import { Tile } from '../components/Tile';
 import { HoldButton } from '../components/Gestures';
 import { Switch } from '../components/ui/switch';
 import { useEffects } from '../contexts/EffectsContext';
-import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
-import { cn } from '../lib/utils';
+import { cn, formatNumber } from '../lib/utils';
 import { useValueList } from './useValueList';
 
 export type Tone = 'calm' | 'active' | 'alarm';
@@ -265,7 +264,7 @@ export const MotionDetectorControl = ({ channel }: { channel: Channel }) => {
           {illumination !== undefined ? (
             <span className="flex items-center gap-1.5 text-muted-foreground">
               <SunDimIcon className="size-4" aria-hidden />
-              {new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 0 }).format(illumination)} {typeof lux === 'number' ? 'lx' : ''}
+              {formatNumber(illumination, 0)} {typeof lux === 'number' ? 'lx' : ''}
             </span>
           ) : (
             <span />

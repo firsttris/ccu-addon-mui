@@ -1,9 +1,8 @@
 import React, { ReactNode, useEffect, useRef } from 'react';
 import { EnergyMeterChannel } from '../types/types';
-import { cn } from '../lib/utils';
+import { cn, formatNumber } from '../lib/utils';
 import ZapIcon from '~icons/lucide/zap';
 import FlameIcon from '~icons/lucide/flame';
-import { defaultLang } from '../i18n/locale';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
@@ -35,10 +34,7 @@ const Row = ({ children }: { children: ReactNode }) => (
   <div className="flex justify-between gap-2 text-[13px] text-muted-foreground tabular-nums">{children}</div>
 );
 
-const locale = defaultLang === 'de' ? 'de-DE' : 'en-US';
-
-const format = (value: number, maximumFractionDigits: number) =>
-  new Intl.NumberFormat(locale, { maximumFractionDigits }).format(value);
+const format = (value: number, maximumFractionDigits: number) => formatNumber(value, maximumFractionDigits);
 
 // A Ferraris meter as on a two-rate meter: one disc and a register for each
 // reading (the channels 2-4 of an HmIP-ESI read different registers of the

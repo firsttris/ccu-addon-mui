@@ -12,10 +12,9 @@ import { AlarmBanner, AlarmsSheet } from '../components/Alarms';
 import { windowState } from '../controls/WindowControl';
 import { useEffects } from '../contexts/EffectsContext';
 import { channelTypeName } from '../i18n/channelTypeNames';
-import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { TileSkeleton, TileSkeletonGrid } from '../components/ui/skeleton';
-import { cn } from '../lib/utils';
+import { cn, formatNumber } from '../lib/utils';
 import { useLayout, useSetLayout } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
@@ -170,7 +169,7 @@ const Overview = ({ channels }: { channels: Channel[] }) => {
         icon={<ThermometerIcon />}
         tint="bg-sky-500/12 text-sky-600 dark:text-sky-300"
         label={m.INDOOR_AVERAGE()}
-        value={`${new Intl.NumberFormat(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(average)} °C`}
+        value={`${formatNumber(average, 1, 1)} °C`}
       />,
     );
   }
