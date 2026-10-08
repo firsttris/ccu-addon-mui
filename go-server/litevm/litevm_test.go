@@ -408,19 +408,33 @@ func levels(t *testing.T, admin *vm) {
 }
 
 // writable picks a parameter of the paramset to change: FLOAT, INTEGER or
-// BOOL, readable and writable (operations 1 and 2), not internal (flag 2);
-// a temperature first. Its description and whether there is one.
-func writable(description map[string]interface{}) (string, map[string]interface{}, bool) {
+// BOOL, readable and writable (operations 1 and 2) and, for values, sending
+// events (operations 4), not internal (flag 2); the set point first, then
+// another temperature. Its description and whether there is one.
+func writable(description map[string]interface{}, events bool) (string, map[string]interface{}, bool) {
+	rank := func(name string) int {
+		switch {
+		case name == "SET_TEMPERATURE" || name == "SET_POINT_TEMPERATURE":
+			return 0
+		case strings.Contains(name, "TEMPERATURE"):
+			return 1
+		}
+		return 2
+	}
+	want := 3
+	if events {
+		want = 7
+	}
 	best := ""
 	for name, raw := range description {
 		p := raw.(map[string]interface{})
 		operations, _ := p["operations"].(float64)
 		flags, _ := p["flags"].(float64)
 		kind := p["type"]
-		if int(operations)&3 != 3 || int(flags)&2 != 0 || (kind != "FLOAT" && kind != "INTEGER" && kind != "BOOL") {
+		if int(operations)&want != want || int(flags)&2 != 0 || (kind != "FLOAT" && kind != "INTEGER" && kind != "BOOL") {
 			continue
 		}
-		if best == "" || (strings.Contains(name, "TEMPERATURE") && !strings.Contains(best, "TEMPERATURE")) || (strings.Contains(name, "TEMPERATURE") == strings.Contains(best, "TEMPERATURE") && name < best) {
+		if best == "" || rank(name) < rank(best) || (rank(name) == rank(best) && name < best) {
 			best = name
 		}
 	}
@@ -476,8 +490,8 @@ func values(t *testing.T, configure, operate *websocket.Conn, device string, cha
 			continue
 		}
 		description, _ := ok(t, call(t, configure, message{"type": "getParamsetDescription", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "VALUES"}))["description"].(map[string]interface{})
-		n, d, found := writable(description)
-		if found && (channel == "" || (strings.Contains(n, "TEMPERATURE") && !strings.Contains(name, "TEMPERATURE"))) {
+		n, d, found := writable(description, true)
+		if found && (channel == "" || (n == "SET_TEMPERATURE" || n == "SET_POINT_TEMPERATURE") && name != n) {
 			channel, name, p = address, n, d
 		}
 	}
@@ -515,7 +529,7 @@ func values(t *testing.T, configure, operate *websocket.Conn, device string, cha
 func settings(t *testing.T, configure, operate *websocket.Conn, device string, channels []string) {
 	for _, address := range append([]string{device}, channels...) {
 		description, _ := ok(t, call(t, configure, message{"type": "getParamsetDescription", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER"}))["description"].(map[string]interface{})
-		name, p, found := writable(description)
+		name, p, found := writable(description, false)
 		if !found {
 			continue
 		}
