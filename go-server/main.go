@@ -3,6 +3,7 @@ package main
 import (
 	"ccu-addon-mui-server/pkg/addons"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -74,6 +75,10 @@ func run(ctx context.Context, cfg *config.Config) error {
 		}
 		authenticator.SetLevelFunc(func(username string) (string, error) {
 			level, err := regaClient.GetUserLevel(username)
+			if errors.Is(err, rega.ErrUnknownUser) {
+				// Deleted in the WebUI: no rights any more
+				return auth.LevelUnknown, nil
+			}
 			if err != nil {
 				logger.Info(fmt.Sprintf("⚠️ Could not read the user level of %q: %v", username, err))
 				return auth.LevelUnknown, err

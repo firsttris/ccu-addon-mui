@@ -3,6 +3,7 @@ package rega
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -199,6 +200,9 @@ func (c *Client) GetAllChannels() ([]Channel, error) {
 	return parseChannels(output), nil
 }
 
+// ErrUnknownUser: ReGa has no user of that name (deleted in the WebUI)
+var ErrUnknownUser = errors.New("unknown user")
+
 // GetUserLevel returns the level of a CCU user as stored in ReGa
 // (1 = guest, 2 = user, 8 = admin).
 func (c *Client) GetUserLevel(username string) (int, error) {
@@ -212,7 +216,7 @@ func (c *Client) GetUserLevel(username string) (int, error) {
 	}
 	level, err := strconv.Atoi(strings.TrimSpace(output))
 	if err != nil {
-		return 0, fmt.Errorf("no user level for %q", username)
+		return 0, fmt.Errorf("%w: %q", ErrUnknownUser, username)
 	}
 	return level, nil
 }

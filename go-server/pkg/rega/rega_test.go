@@ -129,8 +129,8 @@ func TestGetUserLevel(t *testing.T) {
 
 	// No such user: ReGa writes nothing
 	output = ""
-	if _, err := client.GetUserLevel("Nobody"); err == nil {
-		t.Fatal("expected an error for an unknown user")
+	if _, err := client.GetUserLevel("Nobody"); !errors.Is(err, ErrUnknownUser) {
+		t.Fatalf("expected ErrUnknownUser, got %v", err)
 	}
 }
 
