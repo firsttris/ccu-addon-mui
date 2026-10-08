@@ -302,6 +302,15 @@ html body[data-scroll-locked] {
 @utility fx-disc {
   animation: fx-disc 2s linear infinite;
 }
+/* The last roll of a meter register turning: 0-9 and 0 again (10 of 11) */
+@keyframes fx-roll {
+  to {
+    transform: translateY(-90.9091%);
+  }
+}
+@utility fx-roll {
+  animation: fx-roll 2s linear infinite;
+}
 /* Warmth rising off a heated floor */
 @keyframes fx-heat {
   0% {
