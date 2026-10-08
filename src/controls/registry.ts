@@ -46,7 +46,6 @@ const DistanceControl = tile(() => import('./MeterSensorControls'), 'DistanceCon
 const FillingLevelControl = tile(() => import('./MeterSensorControls'), 'FillingLevelControl');
 const MeterSensorControl = tile(() => import('./MeterSensorControls'), 'MeterSensorControl');
 const PassageDetectorControl = tile(() => import('./MeterSensorControls'), 'PassageDetectorControl');
-const AlarmOutputControl = tile(() => import('./SwitchControl'), 'SwitchControl');
 const AutoRelockControl = tile(() => import('./SideChannelControls'), 'AutoRelockControl');
 const DoorStateControl = tile(() => import('./SideChannelControls'), 'DoorStateControl');
 const FloorOutputControl = tile(() => import('./SideChannelControls'), 'FloorOutputControl');
@@ -220,7 +219,7 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   VALVE_ACTUATOR_RECEIVER: channelControl('water', ValveControl),
   // The alarm output of the HmIP-WSS (channel 3: STATE; the WebUI has no
   // control for it, datapointconfigurator.fn)
-  ALARM_ACTUATOR_RECEIVER: channelControl('water', AlarmOutputControl),
+  ALARM_ACTUATOR_RECEIVER: channelControl('water', SwitchControl),
   // Servo controllers HmIP-WSC (servo.fn)
   SERVO_VIRTUAL_RECEIVER: channelControl('drives', ServoControl),
   SERVO_TRANSMITTER: channelControl('drives', ServoControl),
