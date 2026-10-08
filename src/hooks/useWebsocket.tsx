@@ -10,7 +10,7 @@ import React, {
 } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useQueryClient } from '@tanstack/react-query';
-import { Channel, DeviceProblem, HmEvent, Room, Trade, UserLevel } from './../types/types';
+import { Channel, HmEvent, UserLevel } from './../types/types';
 import { useUniqueDeviceID } from './useUniqueDeviceID';
 import { useToast } from '../contexts/ToastContext';
 import { applyEvent } from './channels';
@@ -31,55 +31,28 @@ export type ResponseOf<T extends RequestType> = Protocol[T]['response'];
 // A request as passed to request(): requestId and deviceId are added there
 export type RequestMessage = { [T in RequestType]: Omit<Protocol[T]['request'], 'requestId' | 'deviceId'> }[RequestType];
 
-// Any message from the server, loosely typed for dispatching
+// Any message from the server, loosely typed for dispatching: the fields
+// read here. Answers to requests are typed by ResponseOf.
 interface Response {
-  type?:
-    | 'selfUpdateProgress'
-    | 'subscribe_response'
-    | 'error'
-    | 'auth_response'
-    | 'setDatapoint_response'
-    | 'deviceProblems'
-    | 'paramsetDescription'
-    | 'paramset'
-    | 'sysvars'
-    | 'alarmMessages'
-    | 'serviceMessages';
+  type?: 'selfUpdateProgress' | 'error' | 'auth_response' | 'sysvars' | 'alarmMessages' | 'serviceMessages';
+  requestId?: string;
   error?: string;
   code?: string;
-  rooms?: Room[];
-  trades?: Trade[];
-  channels?: Channel[];
-  roomId?: string;
-  tradeId?: string;
-  all?: boolean;
   event?: HmEvent;
-  deviceId?: string;
   success?: boolean;
   // auth_response
   authRequired?: boolean;
   token?: string;
-  user?: string;
   level?: UserLevel;
   // auth_response, elevate_response: for changing settings
   adminToken?: string;
   elevated?: boolean;
   // When the admin rights end (RFC 3339)
   elevatedUntil?: string;
-  requestId?: string;
-  // deviceProblems
-  devices?: DeviceProblem[];
-  // getInstallMode
-  seconds?: number;
+  // Lists the server sends to all apps when they change
   sysvars?: unknown[];
   alarms?: unknown[];
   messages?: unknown[];
-  sessions?: unknown[];
-  links?: unknown[];
-  programs?: unknown[];
-  // paramsetDescription, paramset
-  description?: unknown;
-  values?: Record<string, unknown>;
 }
 
 // A failed request; code is the server's error code, or NOT_CONNECTED and
