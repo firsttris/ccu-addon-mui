@@ -24,7 +24,7 @@ func TestAdminCallTellsAnExpiredSessionFromAFailedMethod(t *testing.T) {
 		}
 	}))
 	defer ccu.Close()
-	s := New(ccu.URL, t.TempDir())
+	s := New(ccu.URL, t.TempDir(), "")
 	if _, err := s.groupSession("Admin", "secret"); err != nil {
 		t.Fatal(err)
 	}

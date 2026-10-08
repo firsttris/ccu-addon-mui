@@ -94,7 +94,7 @@ func run(ctx context.Context, cfg *config.Config) error {
 	}
 
 	wsServer.SetAuditLog(audit.New(cfg.AuditLogFile))
-	wsServer.SetBackup(backup.New(cfg.WebUIURL, cfg.BackupDir))
+	wsServer.SetBackup(backup.New(cfg.WebUIURL, cfg.BackupDir, cfg.FirmwareUploadDir))
 
 	deviceRPC, err := ccurpc.New(cfg)
 	if err != nil {

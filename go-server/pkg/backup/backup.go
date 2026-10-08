@@ -59,15 +59,16 @@ type Service struct {
 	uploads   map[string]*upload
 }
 
-// New creates backups via the WebUI at webUIURL and keeps them in dir.
-// Backups and uploads a previous run left in dir are removed: dir is on the
-// CCU's user partition, which a reboot doesn't clear.
-func New(webUIURL, dir string) *Service {
-	for _, pattern := range []string{"mui-backup-*.sbk", "mui-restore-*.sbk"} {
-		leftovers, _ := filepath.Glob(filepath.Join(dir, pattern))
-		for _, path := range leftovers {
-			os.Remove(path)
-		}
+// New creates backups via the WebUI at webUIURL and keeps them in dir;
+// uploaded CCU firmware goes to firmwareDir (PrepareFirmwareUpload).
+// Backups and uploads a previous run left there are removed: both are on
+// the CCU's user partition, which a reboot doesn't clear.
+func New(webUIURL, dir, firmwareDir string) *Service {
+	removeLeftovers(dir, "mui-backup-*.sbk", "mui-restore-*.sbk", "mui-devfw-*.tgz")
+	if firmwareDir != "" {
+		// Only files: a checked firmware is unpacked to <file>-dir, which
+		// the WebUI links for the update on the next reboot
+		removeLeftovers(firmwareDir, "mui-firmware-*")
 	}
 	return &Service{
 		webUIURL:   strings.TrimSuffix(webUIURL, "/"),
@@ -234,6 +235,18 @@ func (s *Service) callWith(client *http.Client, method string, params interface{
 		return fmt.Errorf("CCU returned status %d", resp.StatusCode)
 	}
 	return json.NewDecoder(resp.Body).Decode(result)
+}
+
+// removeLeftovers removes the files (not directories) matching the patterns
+func removeLeftovers(dir string, patterns ...string) {
+	for _, pattern := range patterns {
+		leftovers, _ := filepath.Glob(filepath.Join(dir, pattern))
+		for _, path := range leftovers {
+			if info, err := os.Lstat(path); err == nil && info.Mode().IsRegular() {
+				os.Remove(path)
+			}
+		}
+	}
 }
 
 // fileName takes the WebUI's name (<hostname>-<version>-<date>.sbk) when it

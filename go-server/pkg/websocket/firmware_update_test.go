@@ -114,7 +114,7 @@ func TestDownloadCcuFirmware(t *testing.T) {
 	cfg := &config.Config{UserFSDir: dir, FirmwareDownloadFile: ccu.FirmwareDownloadFile, FirmwareStagedLink: ccu.FirmwareStagedLink,
 		FirmwareUploadDir: filepath.Join(dir, "tmp"), CcuFirmwareReleases: upstream.URL + "/releases"}
 	s := NewServer(cfg, nil)
-	s.SetBackup(backup.New(fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort), filepath.Join(dir, "backups")))
+	s.SetBackup(backup.New(fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort), filepath.Join(dir, "backups"), cfg.FirmwareUploadDir))
 	client := &Client{send: make(chan []byte, 4), level: auth.LevelAdmin, user: "Admin", elevatedUntil: time.Now().Add(time.Hour)}
 	call := func(m map[string]interface{}) map[string]interface{} {
 		t.Helper()
