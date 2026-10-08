@@ -1,9 +1,7 @@
 import { PlaceDiagrams } from './diagrams/Diagrams';
+import { LightsStat, TemperatureStat, WindowsStat } from './OverviewStats';
 import { ComponentType, Fragment as ReactFragment, memo, ReactNode, Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import ThermometerIcon from '~icons/lucide/thermometer';
-import LightbulbIcon from '~icons/lucide/lightbulb';
-import AppWindowIcon from '~icons/lucide/app-window';
 import { Channel } from '../types/types';
 import { sameItems } from '../hooks/channels';
 import { controlOverrides, SectionId } from '../controls/registry';
@@ -14,7 +12,7 @@ import { useEffects } from '../contexts/EffectsContext';
 import { channelTypeName } from '../i18n/channelTypeNames';
 import { m } from '../paraglide/messages';
 import { TileSkeleton, TileSkeletonGrid } from '../components/ui/skeleton';
-import { cn, formatNumber } from '../lib/utils';
+import { cn } from '../lib/utils';
 import { useLayout, useSetLayout } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
@@ -136,18 +134,6 @@ const isLightOn = (channel: Channel, lightTradeIds: Set<number>) => {
   return dp.STATE === true || (typeof dp.LEVEL === 'number' && dp.LEVEL > 0) || Number(dp.LEVEL) > 0;
 };
 
-const Stat = ({ icon, tint, label, value }: { icon: ReactNode; tint: string; label: string; value: string }) => (
-  <div className="tile-edge flex min-w-0 items-center gap-3 rounded-2xl border bg-card p-4">
-    <div className={cn('flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5', tint)}>
-      {icon}
-    </div>
-    <div className="flex min-w-0 flex-col gap-0.5">
-      <div className="text-[13px] text-muted-foreground">{label}</div>
-      <div className="truncate text-xl font-semibold">{value}</div>
-    </div>
-  </div>
-);
-
 const Overview = ({ channels }: { channels: Channel[] }) => {
   const reachable = channels.filter((c) => !c.status?.UNREACH);
   const temperatures = reachable
@@ -163,43 +149,13 @@ const Overview = ({ channels }: { channels: Channel[] }) => {
   const stats: ReactNode[] = [];
   if (temperatures.length > 0) {
     const average = temperatures.reduce((a, b) => a + b, 0) / temperatures.length;
-    stats.push(
-      <Stat
-        key="temp"
-        icon={<ThermometerIcon />}
-        tint="bg-sky-500/12 text-sky-600 dark:text-sky-300"
-        label={m.INDOOR_AVERAGE()}
-        value={`${formatNumber(average, 1, 1)} °C`}
-      />,
-    );
+    stats.push(<TemperatureStat key="temp" index={stats.length} average={average} />);
   }
   if (switches.length > 0) {
-    stats.push(
-      <Stat
-        key="lights"
-        icon={<LightbulbIcon />}
-        tint="bg-amber-500/12 text-amber-600 dark:text-amber-300"
-        label={m.LIGHTS_ON()}
-        value={m.COUNT_OF({ count: switchedOn, total: switches.length })}
-      />,
-    );
+    stats.push(<LightsStat key="lights" index={stats.length} on={switchedOn} total={switches.length} />);
   }
   if (windowChannels.length > 0) {
-    stats.push(
-      <Stat
-        key="windows"
-        icon={<AppWindowIcon />}
-        tint="bg-blue-500/12 text-blue-600 dark:text-blue-300"
-        label={m.WINDOWS_OPEN()}
-        value={
-          openWindows.length === 0
-            ? m.NONE()
-            : openWindows.length <= 2
-              ? openWindows.map((c) => c.name).join(', ')
-              : String(openWindows.length)
-        }
-      />,
-    );
+    stats.push(<WindowsStat key="windows" index={stats.length} open={openWindows.map((c) => c.name)} />);
   }
   if (stats.length === 0) {
     return null;
