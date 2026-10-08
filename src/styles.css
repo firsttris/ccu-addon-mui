@@ -311,6 +311,52 @@ html body[data-scroll-locked] {
 @utility fx-roll {
   animation: fx-roll 2s linear infinite;
 }
+/* The LED of a smoke detector: a short green flash now and then, a fast
+   red blink on alarm */
+@keyframes fx-led {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+  }
+  91%,
+  95% {
+    opacity: 1;
+  }
+}
+@utility fx-led {
+  animation: fx-led 4s linear infinite;
+}
+@keyframes fx-led-alarm {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.15;
+  }
+}
+@utility fx-led-alarm {
+  animation: fx-led-alarm 0.5s steps(1) infinite;
+}
+/* Smoke rising and spreading */
+@keyframes fx-smoke {
+  0% {
+    transform: translate(-50%, 20px) scale(0.5);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -34px) scale(1.5);
+    opacity: 0;
+  }
+}
+@utility fx-smoke {
+  animation: fx-smoke 2.7s ease-out infinite;
+}
 /* Warmth rising off a heated floor */
 @keyframes fx-heat {
   0% {
