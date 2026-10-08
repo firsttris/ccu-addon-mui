@@ -198,7 +198,7 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
   const { showToast } = useToast();
   const { userLevel, elevated } = useWebSocketContext();
   const canEdit = userLevel === 'admin' && elevated;
-  const { data: description, isPending: loadingDescription } = useParamsetDescription(interfaceName, address, 'MASTER');
+  const { data: description, isPending: loadingDescription } = useParamsetDescription(interfaceName, address, 'MASTER', { enabled: open });
   const { data: values } = useParamset(interfaceName, address, 'MASTER', { enabled: open });
   const putParamset = usePutParamset();
   const setDataPoint = useSetDataPoint();

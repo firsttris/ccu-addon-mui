@@ -307,7 +307,7 @@ export const WeekProgramSheet = ({ open, onOpenChange, interfaceName, address, n
   const { userLevel, elevated } = useWebSocketContext();
   const { showToast } = useToast();
   const canEdit = userLevel === 'admin' && elevated;
-  const { data: description, isPending } = useParamsetDescription(interfaceName, address, 'MASTER');
+  const { data: description, isPending } = useParamsetDescription(interfaceName, address, 'MASTER', { enabled: open });
   const { data: values } = useParamset(interfaceName, address, 'MASTER', { enabled: open });
   const putParamset = usePutParamset();
 

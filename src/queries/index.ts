@@ -65,10 +65,12 @@ export const useParamsetDescription = (
   interfaceName: string,
   address: string,
   paramsetKey: 'VALUES' | 'MASTER' = 'VALUES',
+  { enabled = true }: { enabled?: boolean } = {},
 ) => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['paramsetDescription', interfaceName, address, paramsetKey],
+    enabled,
     queryFn: async () =>
       ((await request({ type: 'getParamsetDescription', interfaceName, address, paramsetKey }))
         .description ?? {}),
