@@ -9,6 +9,7 @@ import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
 import { m } from '../../paraglide/messages';
 import { OnlyOnCCU, Panel } from './Panel';
+import { errorText } from '../../lib/errors';
 
 // The levels the WebUI offers (cp_maintenance.cgi: LOGLEVELS,
 // HMIP_LOGLEVELS, REGA_LOGLEVELS), most verbose first
@@ -89,7 +90,7 @@ export const Logging = () => {
       await queryClient.invalidateQueries({ queryKey: ['logging'] });
       showToast(m.SAVED(), 'info');
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }
@@ -100,7 +101,7 @@ export const Logging = () => {
       const response = await request({ type: 'downloadLogs' }, { queue: false });
       download(response.url, response.fileName);
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     }
   };
 

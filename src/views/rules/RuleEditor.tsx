@@ -23,6 +23,7 @@ import { enumLabel } from '../../controls/generic/settingKinds';
 import { m } from '../../paraglide/messages';
 import type { NotificationRule, RuleCondition } from '../../types/protocol';
 import { MAX_CONDITIONS, emptyCondition, isValid, opLabel, summaryOf, type Op } from './ruleModel';
+import { errorText } from '../../lib/errors';
 
 const selectClass = 'h-9 min-w-0 max-w-full md:text-[13px]';
 
@@ -177,7 +178,7 @@ export const RuleEditor = ({ rule: initial, onClose }: { rule: NotificationRule;
       queryClient.invalidateQueries({ queryKey: ['rules'] });
       onClose();
     },
-    onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+    onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
   });
 
   const setCondition = (index: number, c: RuleCondition) =>

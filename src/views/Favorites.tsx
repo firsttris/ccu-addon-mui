@@ -18,6 +18,7 @@ import { Input } from '../components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { m } from '../paraglide/messages';
 import { rememberView } from '../lib/startPage';
+import { errorText } from '../lib/errors';
 
 // Favorite lists: the CCU user's own lists of channels, system variables
 // and programs from any room, as the WebUI's "Favoriten"
@@ -55,7 +56,7 @@ const NewListDialog = ({ onClose }: { onClose: () => void }) => {
             navigate({ to: '/favorite/$favoriteId', params: { favoriteId: String(id) }, search: { edit: true } });
           }
         },
-        onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+        onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
       },
     );
   };

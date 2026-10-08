@@ -18,6 +18,7 @@ import { Input as UiInput } from '../components/ui/input';
 import { NativeSelect } from '../components/ui/select';
 import { usePageTitle } from '../contexts/PageTitleContext';
 import { cn } from '../lib/utils';
+import { errorText } from '../lib/errors';
 
 type Children = { children: ReactNode };
 
@@ -177,7 +178,7 @@ export const Sysvars = () => {
         showToast(success, 'info');
         onSuccess?.();
       },
-      onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     });
 
   return (
@@ -231,7 +232,7 @@ export const Sysvars = () => {
                     onChange={(value) =>
                       action.mutate(
                         { type: 'setLogicOption', id: sysvar.id, option: 'visible', value },
-                        { onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`) },
+                        { onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)) },
                       )
                     }
                   />

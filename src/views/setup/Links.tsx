@@ -31,6 +31,7 @@ import { m } from '../../paraglide/messages';
 import { linkKey, LinkList } from './LinkList';
 import { NativeSelect } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
+import { errorText } from '../../lib/errors';
 
 const Row = ({ children }: { children: ReactNode }) => <div className="flex flex-wrap items-center gap-2">{children}</div>;
 
@@ -423,7 +424,7 @@ export const AddLinkForm = ({
           setPartner('');
           setLinkName('');
         },
-        onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+        onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
       },
     );
   };

@@ -41,6 +41,7 @@ import {
   type RenderSeries,
 } from './chart';
 import type { Diagram, DiagramSeries, EnergyPrice, GetDiagramDataResponse } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 const periodLabels: Record<Period, () => string> = {
   day: m.DIAG_PERIOD_DAY,
@@ -207,7 +208,7 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
       showToast(m.DIAG_DELETED(), 'info');
       queryClient.invalidateQueries({ queryKey: ['diagrams'] });
     },
-    onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+    onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     onSettled: () => setDeleting(false),
   });
 

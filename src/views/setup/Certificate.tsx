@@ -11,6 +11,7 @@ import { getLocale } from '../../paraglide/runtime';
 import { Panel } from './Panel';
 import { usePasswordRetry } from './usePasswordRetry';
 import { m } from '../../paraglide/messages';
+import { errorText } from '../../lib/errors';
 
 // Websocket messages are limited to 128 KiB; certificate chains are far
 // smaller
@@ -96,7 +97,7 @@ export const Certificate = () => {
         }
       },
       (error) => {
-        showToast(`${m.CHANGE_FAILED()}: ${error.message}`);
+        showToast(errorText(error, m.CHANGE_FAILED));
         setDeleting(false);
       },
     );

@@ -4,6 +4,7 @@ import { useToast } from '../contexts/ToastContext';
 import { appliedLanguage, applyLanguage, LanguageChoice as Choice } from '../i18n/language';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
+import { errorText } from '../lib/errors';
 
 // Whether the language is kept for the CCU user (logged in, not a guest,
 // as User.setLanguage) or only on this device
@@ -48,7 +49,7 @@ export const LanguageChoice = () => {
       } catch (error) {
         setBusy(false);
         if (!(error instanceof RequestError && error.code === 'NOT_SUPPORTED')) {
-          showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+          showToast(errorText(error, m.CHANGE_FAILED));
           return;
         }
       }

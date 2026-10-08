@@ -12,6 +12,7 @@ import { Panel } from './Panel';
 import { formatNumber } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
 import type { EnergyPrice, InfoLed } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 4 });
 
@@ -109,7 +110,7 @@ export const GeneralSettings = () => {
       ]);
       showToast(m.SAVED(), 'info');
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }

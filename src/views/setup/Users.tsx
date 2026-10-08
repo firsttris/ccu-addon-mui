@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import UserPlusIcon from '~icons/lucide/user-plus';
-import { RequestError, useWebSocketActions } from '../../hooks/useWebsocket';
+import { useWebSocketActions } from '../../hooks/useWebsocket';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
@@ -14,6 +14,7 @@ import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Panel } from './Panel';
 import { m } from '../../paraglide/messages';
 import type { CcuUser } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 type Level = 'admin' | 'user' | 'guest';
 
@@ -36,10 +37,7 @@ const useUsers = () => {
   });
 };
 
-const errorText = (error: unknown) => {
-  if (error instanceof RequestError && error.code === 'EXISTS') return m.USERS_EXISTS();
-  return `${m.CHANGE_FAILED()}: ${(error as Error).message}`;
-};
+const failed = (error: unknown) => errorText(error, m.CHANGE_FAILED, { EXISTS: m.USERS_EXISTS });
 
 // The CCU users with their rights, as the WebUI's user administration
 // (userAdministration.htm, userAccountConfigAdmin.htm)
@@ -58,7 +56,7 @@ export const Users = () => {
       await queryClient.invalidateQueries({ queryKey: ['users'] });
       showToast(m.USERS_DELETED(), 'info');
     } catch (error) {
-      showToast(errorText(error));
+      showToast(failed(error));
     }
     setDeleting(null);
   };
@@ -206,7 +204,7 @@ const UserDialog = ({ user, onDone }: { user: CcuUser | null; onDone: () => void
       showToast(m.SAVED(), 'info');
       onDone();
     } catch (e) {
-      setError(errorText(e));
+      setError(failed(e));
     } finally {
       setBusy(false);
     }

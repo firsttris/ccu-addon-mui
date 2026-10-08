@@ -7,6 +7,7 @@ import { m } from '../../paraglide/messages';
 import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
 import type { Channel } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 // Channel types shown as a lamp or a plain switch (SwitchControl)
 const SWITCH_TYPES = new Set(['SWITCH_VIRTUAL_RECEIVER', 'SWITCH']);
@@ -64,7 +65,7 @@ export const useRename = () => {
       { type: 'rename', address, name },
       {
         onSuccess: () => showToast(m.RENAMED(), 'info'),
-        onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+        onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
       },
     );
 };
@@ -80,7 +81,7 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
   const run = (variables: Parameters<typeof change.mutate>[0], success?: string) =>
     change.mutate(variables, {
       onSuccess: () => success && showToast(success, 'info'),
-      onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     });
 
   const options = [

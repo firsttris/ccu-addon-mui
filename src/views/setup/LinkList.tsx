@@ -12,6 +12,7 @@ import { getLocale } from '../../paraglide/runtime';
 import { useChannelNames } from './channelNames';
 import { LinkParameters, useLinkChannelInfo, useLinkProfiles } from './Links';
 import { m } from '../../paraglide/messages';
+import { errorText } from '../../lib/errors';
 
 const deviceAddressOf = (address: string) => address.split(':')[0];
 
@@ -269,7 +270,7 @@ export const LinkList = ({ links, isLoading, device, added }: LinkListProps) => 
               },
               {
                 onSuccess: () => showToast(m.LINK_REMOVED(), 'info'),
-                onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+                onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
                 onSettled: () => setRemoving(null),
               },
             )

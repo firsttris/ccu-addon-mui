@@ -17,6 +17,7 @@ import { ChannelPicker } from '../../components/ChannelPicker';
 import { DeviceImage } from '../../components/DeviceImage';
 import type { Channel } from '../../types/types';
 import type { HeatingGroup, HeatingGroupChange } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 type GroupType = HeatingGroupChange['type'];
 
@@ -106,7 +107,7 @@ export const HeatingGroupEditor = ({ group, onClose }: { group?: HeatingGroup; o
           setBusy(false);
         }
       },
-      (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
 
   return (

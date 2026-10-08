@@ -12,6 +12,7 @@ import { usePageTitle } from '../contexts/PageTitleContext';
 import { Controls, Item, List, Name } from './Logic';
 import { m } from '../paraglide/messages';
 import type { VirtualKey } from '../types/protocol';
+import { errorText } from '../lib/errors';
 
 // A key still named as the CCU created it ("HM-RCV-50 BidCoS-RF:7",
 // "HmIP-RCV-50 HmIP-RCV-1:7")
@@ -69,7 +70,7 @@ export const VirtualKeys = () => {
                           showToast(m.RENAMED(), 'info');
                           refetch();
                         },
-                        onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+                        onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
                       },
                     )
                   }

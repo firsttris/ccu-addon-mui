@@ -14,6 +14,7 @@ import { Panel } from './Panel';
 import { AddonInstall } from './AddonInstall';
 import UploadIcon from '~icons/lucide/upload';
 import type { Addon } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 type Operation = 'restart' | 'uninstall';
 
@@ -61,7 +62,7 @@ export const Addons = () => {
         await queryClient.invalidateQueries({ queryKey: ['addons'] });
       }
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     }
   };
 

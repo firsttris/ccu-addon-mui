@@ -11,6 +11,7 @@ import { WebUILink } from './WebUILink';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
+import { errorText } from '../lib/errors';
 
 // Alarm messages: triggered alarm system variables (water, smoke, burglary
 // through programs) that wait to be acknowledged, as the WebUI's
@@ -36,7 +37,7 @@ const useAcknowledge = () => {
     run: (alarm: AlarmMessage) =>
       acknowledge.mutate(alarm.id, {
         onSuccess: () => showToast(m.ACKNOWLEDGED(), 'info'),
-        onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+        onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
       }),
   };
 };

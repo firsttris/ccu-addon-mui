@@ -13,6 +13,7 @@ import { datapointLabel } from '../History';
 import { m } from '../../paraglide/messages';
 import { palette, type Period } from './chart';
 import type { Diagram, DiagramSeries } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 export const MAX_SERIES = 12;
 export const SYSVAR = 'sysvar';
@@ -138,7 +139,7 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
       queryClient.invalidateQueries({ queryKey: ['diagramData'] });
       onClose();
     },
-    onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+    onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
   });
 
   const valid = name.trim() !== '' && series.length > 0;

@@ -18,6 +18,7 @@ import { m } from '../../paraglide/messages';
 import type { NotificationRule } from '../../types/protocol';
 import { RuleEditor } from './RuleEditor';
 import { durationText, emptyRule, fromPreset, presets } from './ruleModel';
+import { errorText } from '../../lib/errors';
 
 export const useRules = () => {
   const { request } = useWebSocketActions();
@@ -47,7 +48,7 @@ export const Rules = () => {
         ? request({ type: 'saveRule', rule: action.save })
         : request({ type: 'deleteRule', id: action.delete }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['rules'] }),
-    onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+    onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
   });
 
   return (

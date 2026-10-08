@@ -15,6 +15,7 @@ import { Input } from '../components/ui/input';
 import { EditableName } from '../components/EditableName';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { m } from '../paraglide/messages';
+import { errorText } from '../lib/errors';
 
 // Edits a favorite list as the WebUI's newFav.htm does: its name, its
 // entries (channels, system variables, programs) and deleting it.
@@ -84,7 +85,7 @@ export const FavoriteEditor = ({ favorite, onClose }: { favorite: Favorite; onCl
   const run = (variables: Parameters<typeof change.mutate>[0], onSuccess?: () => void) =>
     change.mutate(variables, {
       onSuccess,
-      onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     });
 
   return (

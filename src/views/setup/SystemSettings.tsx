@@ -16,6 +16,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { Panel } from './Panel';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
+import { errorText } from '../../lib/errors';
 
 const useSystemSettings = () => {
   const { request } = useWebSocketActions();
@@ -109,7 +110,7 @@ export const Clock = () => {
       await queryClient.invalidateQueries({ queryKey: ['systemSettings'] });
       showToast(success, 'info');
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }
@@ -257,7 +258,7 @@ const Location = () => {
       await queryClient.invalidateQueries({ queryKey: ['systemSettings'] });
       showToast(m.SAVED(), 'info');
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }
@@ -366,7 +367,7 @@ export const Power = () => {
       showToast(labels[action].done(), 'info');
       setAsking(null);
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }
@@ -438,7 +439,7 @@ export const RegaVersion = () => {
       await queryClient.invalidateQueries({ queryKey: ['systemSettings'] });
       setAskRestart(true);
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }
@@ -451,7 +452,7 @@ export const RegaVersion = () => {
       showToast(m.SYS_REBOOTING(), 'info');
       setAskRestart(false);
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }

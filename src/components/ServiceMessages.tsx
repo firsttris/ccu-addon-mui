@@ -17,6 +17,7 @@ import { cn } from '../lib/utils';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './ui/sheet';
 import { WebUILink } from './WebUILink';
+import { errorText } from '../lib/errors';
 
 type Severity = 'error' | 'warning' | 'info';
 
@@ -110,7 +111,7 @@ export const ServiceMessagesSheet = ({ open, onOpenChange }: { open: boolean; on
       }
       showToast(m.ACKNOWLEDGED(), 'info');
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${error instanceof Error ? error.message : error}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     }
   };
 
@@ -180,7 +181,7 @@ export const ServiceMessagesSheet = ({ open, onOpenChange }: { open: boolean; on
                                 aria-label={`${m.ACKNOWLEDGE()}: ${first.name} ${label}`}
                                 onClick={() =>
                                   acknowledge.mutate(message.id, {
-                                    onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+                                    onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
                                   })
                                 }
                               >

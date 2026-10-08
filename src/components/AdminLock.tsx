@@ -4,6 +4,7 @@ import LockIcon from '~icons/lucide/lock';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
 import { m } from '../paraglide/messages';
+import { errorText } from '../lib/errors';
 
 // "7 h left", "12 min left" until the admin rights end
 const timeLeft = (until: number, now: number) => {
@@ -33,7 +34,7 @@ export const useAdminLock = () => {
       await endElevation();
       showToast(m.ADMIN_ENDED(), 'info');
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${error instanceof Error ? error.message : error}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }

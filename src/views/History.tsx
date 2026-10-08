@@ -14,6 +14,7 @@ import { defaultLang } from '../i18n/locale';
 import { humanize } from '../controls/generic/parameters';
 import { m } from '../paraglide/messages';
 import type { HistoryEntry } from '../types/protocol';
+import { errorText } from '../lib/errors';
 
 const PAGE = 100;
 
@@ -84,7 +85,7 @@ export const History = () => {
       await queryClient.resetQueries({ queryKey: ['history'] });
       showToast(m.HIST_CLEARED(), 'info');
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     }
     setClearing(false);
   };

@@ -66,6 +66,7 @@ import { PanelSkeleton } from "../../components/ui/skeleton";
 import { m } from "../../paraglide/messages";
 
 import { DEVICE_TABS, type DeviceTab } from "./deviceTabs";
+import { errorText } from "../../lib/errors";
 export { DEVICE_TABS, type DeviceTab };
 
 const Section = (props: HTMLAttributes<HTMLElement>) => <Panel {...props} />;
@@ -746,7 +747,7 @@ export const DeviceSettings = () => {
                   navigate({ to: "/setup" });
                 },
                 onError: (error) =>
-                  showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+                  showToast(errorText(error, m.CHANGE_FAILED)),
                 onSettled: () => setDeleting(false),
               },
             )

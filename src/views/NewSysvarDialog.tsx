@@ -6,6 +6,7 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Input } from '../components/ui/input';
 import { NativeSelect } from '../components/ui/select';
 import { m } from '../paraglide/messages';
+import { errorText } from '../lib/errors';
 
 const kinds: { kind: Sysvar['kind']; label: () => string }[] = [
   { kind: 'bool', label: m.KIND_BOOL },
@@ -70,7 +71,7 @@ export const NewSysvarDialog = ({ sysvar, onClose }: { sysvar?: Sysvar; onClose:
           showToast(sysvar ? m.SAVED() : m.CREATED(), 'info');
           onClose();
         },
-        onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+        onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
       },
     );
 

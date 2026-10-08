@@ -14,6 +14,7 @@ import { useToast } from "../../contexts/ToastContext";
 import { OnlyOnCCU, Panel } from "./Panel";
 import { usePasswordRetry } from "./usePasswordRetry";
 import { m } from "../../paraglide/messages";
+import { errorText } from "../../lib/errors";
 
 const ToggleRow = ({
   id,
@@ -87,7 +88,7 @@ const SecurityKey = ({ disabled }: { disabled: boolean }) => {
             ? m.SEC_KEY_SAME()
             : code === "KEY_NOT_ALL_DEVICES"
               ? m.SEC_KEY_NOT_ALL()
-              : `${m.CHANGE_FAILED()}: ${error.message}`,
+              : errorText(error, m.CHANGE_FAILED),
         );
         setConfirming(false);
       },
@@ -182,7 +183,7 @@ const SessionTimeout = ({
       showToast(m.SEC_TIMEOUT_SAVED(), "info");
       await queryClient.invalidateQueries({ queryKey: ["security"] });
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }
@@ -288,7 +289,7 @@ const SecurityLevel = ({
           setBusy(false);
         }
       },
-      (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
   return (
     <div className="flex flex-col gap-2">
@@ -406,7 +407,7 @@ const Snmp = ({
           setBusy(false);
         }
       },
-      (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
   return (
     <div className="flex flex-col gap-3">
@@ -529,7 +530,7 @@ const FactoryReset = ({ disabled }: { disabled: boolean }) => {
         const code = error instanceof RequestError ? error.code : undefined;
         if (code === "KEY_REQUIRED") setNeedsKey(true);
         else if (code === "KEY_WRONG") setKeyWrong(true);
-        else showToast(`${m.CHANGE_FAILED()}: ${error.message}`);
+        else showToast(errorText(error, m.CHANGE_FAILED));
       },
     );
   if (started) {
@@ -693,7 +694,7 @@ export const Security = () => {
           setBusy(false);
         }
       },
-      (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
 
   return (
