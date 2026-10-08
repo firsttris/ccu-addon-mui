@@ -197,6 +197,11 @@ See [Entwicklung](docs/entwicklung.md) and [Architektur](docs/architektur.md).
 ---
 
 <div align="center">
-<sub>License: <a href="LICENSE">MIT</a> · <a href="README.md">Deutsche Version</a><br>
+
+⭐ Like MUI? A [star on GitHub](https://github.com/firsttris/ccu-addon-mui) helps others find it.<br>
+🐛 [Report a bug](https://github.com/firsttris/ccu-addon-mui/issues/new) · 💡 [Request a feature](https://github.com/firsttris/ccu-addon-mui/issues/new)
+
+<sub>License: <a href="LICENSE">MIT</a> · © Tristan Teufel and contributors · <a href="README.md">Deutsche Version</a><br>
 Homematic and Homematic IP are trademarks of eQ-3 AG. This project is not affiliated with eQ-3 or OpenCCU.</sub>
+
 </div>
