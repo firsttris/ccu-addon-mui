@@ -23,6 +23,7 @@ vite.config.*.timestamp*
 .nyc_output/
 playwright-report/
 test-results/
+e2e-update/.fixture/
 blob-report/
 go-server/coverage.out
 go-server/coverage.html

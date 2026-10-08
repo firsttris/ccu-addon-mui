@@ -15,7 +15,9 @@ const proxyTargets: Record<string, string> = {
   stack: 'ws://127.0.0.1:28088',
 };
 
-const appVersion = JSON.parse(fs.readFileSync('./package.json', 'utf8')).version;
+// MUI_APP_VERSION: the update test (e2e-update) builds an installed and a
+// new version of the app
+const appVersion = process.env.MUI_APP_VERSION ?? JSON.parse(fs.readFileSync('./package.json', 'utf8')).version;
 
 export default defineConfig(({ command, mode, isPreview }) => ({
   define: {

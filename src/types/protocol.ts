@@ -25,6 +25,7 @@ export type ServerMessage =
   | SysvarsMessage
   | AlarmMessagesMessage
   | ServiceMessagesMessage
+  | SelfUpdateProgressMessage
   | GetRoomsResponse
   | GetTradesResponse
   | GetChannelsResponse
@@ -3025,7 +3026,7 @@ export interface CheckSelfUpdateCall {
   response: CheckSelfUpdateResponse;
 }
 /**
- * the newest release of this add-on on GitHub (administrators)
+ * the newest release of this add-on on GitHub (administrators); the server asks GitHub at most every 6 hours unless force
  *
  * This interface was referenced by `Protocol`'s JSON-Schema
  * via the `definition` "CheckSelfUpdateRequest".
@@ -3033,6 +3034,10 @@ export interface CheckSelfUpdateCall {
 export interface CheckSelfUpdateRequest {
   type: "checkSelfUpdate";
   requestId?: string;
+  /**
+   * ask GitHub now instead of answering from the last check (the check started by hand)
+   */
+  force?: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -5738,4 +5743,25 @@ export interface AlarmMessagesMessage {
 export interface ServiceMessagesMessage {
   type: "serviceMessages";
   messages: ServiceMessage[];
+}
+/**
+ * Sent to the connection that runs installSelfUpdate while it installs: each step, and the download's bytes (at most every 150 ms)
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SelfUpdateProgressMessage".
+ */
+export interface SelfUpdateProgressMessage {
+  type: "selfUpdateProgress";
+  /**
+   * the step of the install running now
+   */
+  phase: "download" | "verify" | "unpack" | "install";
+  /**
+   * download: the bytes so far
+   */
+  done?: number;
+  /**
+   * download: the size of the archive, if the server knows it
+   */
+  total?: number;
 }

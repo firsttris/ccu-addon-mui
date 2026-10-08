@@ -17,6 +17,8 @@ import { applyEvent } from './channels';
 import { RecentUpdates } from './recentUpdates';
 import type { Protocol } from '../types/protocol';
 import { m } from '../paraglide/messages';
+import { emitSelfUpdateProgress } from '../lib/selfUpdateProgress';
+import type { SelfUpdateProgressMessage } from '../types/protocol';
 
 // The transport: WebSocket connection, login, and requests answered by
 // promises. All server data is loaded and cached with TanStack Query on top
@@ -32,6 +34,7 @@ export type RequestMessage = { [T in RequestType]: Omit<Protocol[T]['request'], 
 // Any message from the server, loosely typed for dispatching
 interface Response {
   type?:
+    | 'selfUpdateProgress'
     | 'subscribe_response'
     | 'error'
     | 'auth_response'
@@ -264,6 +267,10 @@ export const useWebsocket = () => {
         case 'alarmMessages':
           recentRef.current.setList('alarmMessages', response.alarms ?? []);
           queryClient.setQueryData(['alarmMessages'], response.alarms);
+          return;
+        // How far the update of the add-on this app started is
+        case 'selfUpdateProgress':
+          emitSelfUpdateProgress(response as unknown as SelfUpdateProgressMessage);
           return;
         case 'serviceMessages':
           recentRef.current.setList('serviceMessages', response.messages ?? []);

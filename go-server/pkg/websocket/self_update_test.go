@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -62,18 +63,28 @@ func TestSelfUpdate(t *testing.T) {
 	updater := selfupdate.New(release.URL+"/latest", t.TempDir())
 	updater.Arch = "arm"
 	s.SetSelfUpdate(updater)
+	// The phases the last install reported, in order
+	var phases []string
 	call := func(client *Client, msgType string) map[string]interface{} {
 		if msgType == "checkSelfUpdate" {
-			s.handleCheckSelfUpdate(client, "r")
+			s.handleCheckSelfUpdate(client, []byte(`{"type":"checkSelfUpdate","requestId":"r","force":true}`))
 		} else {
 			s.handleInstallSelfUpdate(client, "r")
 		}
-		var m map[string]interface{}
-		_ = json.Unmarshal(<-client.send, &m)
-		return m
+		phases = nil
+		for {
+			var m map[string]interface{}
+			_ = json.Unmarshal(<-client.send, &m)
+			if m["type"] != "selfUpdateProgress" {
+				return m
+			}
+			if phase := m["phase"].(string); len(phases) == 0 || phases[len(phases)-1] != phase {
+				phases = append(phases, phase)
+			}
+		}
 	}
 	admin := func(elevated bool) *Client {
-		client := &Client{send: make(chan []byte, 1), level: auth.LevelAdmin, user: "Admin"}
+		client := &Client{send: make(chan []byte, 64), level: auth.LevelAdmin, user: "Admin"}
 		if elevated {
 			client.elevatedUntil = time.Now().Add(time.Hour)
 		}
@@ -83,7 +94,7 @@ func TestSelfUpdate(t *testing.T) {
 	if m := call(admin(false), "checkSelfUpdate"); m["latest"] != "9.9.9" || m["installable"] != true {
 		t.Fatalf("unexpected check answer: %v", m)
 	}
-	if m := call(&Client{send: make(chan []byte, 1), level: auth.LevelUser}, "checkSelfUpdate"); m["code"] != "FORBIDDEN" {
+	if m := call(&Client{send: make(chan []byte, 64), level: auth.LevelUser}, "checkSelfUpdate"); m["code"] != "FORBIDDEN" {
 		t.Fatalf("users may not check: %v", m)
 	}
 	// Installing runs code as root: only with the password entered again
@@ -98,6 +109,10 @@ func TestSelfUpdate(t *testing.T) {
 	}
 	if _, err := os.Stat(marker); err != nil {
 		t.Fatal("update_script did not run")
+	}
+	// The app shows each step as it comes
+	if got := strings.Join(phases, ","); got != "download,verify,unpack,install" {
+		t.Fatalf("unexpected progress: %s", got)
 	}
 
 	// Off the CCU there is nothing to update

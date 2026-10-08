@@ -49,6 +49,40 @@ jobs:
         id: version
         run: echo "image=mcr.microsoft.com/playwright:v$(jq -r '.packages["node_modules/@playwright/test"].version' package-lock.json)-noble" >> "$GITHUB_OUTPUT"
 
+  # The add-on updating itself up to the new app in this browser (service
+  # worker on): two builds, served as on the CCU (playwright.update.config.ts)
+  e2e-update:
+    name: Update E2E
+    needs: playwright-image
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ needs.playwright-image.outputs.image }}
+      options: --ipc=host
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.1.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the installed and the new app, run the update
+        run: npm run test:update
+
+      - name: Upload Playwright test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: update-test-results
+          path: test-results/
+          if-no-files-found: ignore
+
   e2e-frontend-mocked:
     name: Frontend E2E
     needs: playwright-image
