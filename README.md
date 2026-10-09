@@ -13,18 +13,18 @@ ein Add-on für CCU3 und OpenCCU, das die alte WebUI im Alltag ersetzt.
 [![Downloads](https://img.shields.io/github/downloads/firsttris/ccu-addon-mui/total?label=Downloads&color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases)
 [![Lizenz: AGPL-3.0](https://img.shields.io/badge/Lizenz-AGPL--3.0-blue)](LICENSE)
 <br>
-[![CCU3 | OpenCCU](https://img.shields.io/badge/Zentrale-CCU3%20%7C%20OpenCCU-1d4ed8)](docs/installation.md)
-[![HmIP | BidCos-RF | HmIP Wired](https://img.shields.io/badge/Funk-HmIP%20%7C%20BidCos--RF%20%7C%20HmIP%20Wired-1d4ed8)](docs/geraete.md)
-[![Go](https://img.shields.io/badge/Go-statisches%20Binary-00add8?logo=go&logoColor=white)](docs/architektur.md)
+[![CCU3 | OpenCCU](https://img.shields.io/badge/Zentrale-CCU3%20%7C%20OpenCCU-1d4ed8)](https://firsttris.github.io/ccu-addon-mui/installation.html)
+[![HmIP | BidCos-RF | HmIP Wired](https://img.shields.io/badge/Funk-HmIP%20%7C%20BidCos--RF%20%7C%20HmIP%20Wired-1d4ed8)](https://firsttris.github.io/ccu-addon-mui/geraete.html)
+[![Go](https://img.shields.io/badge/Go-statisches%20Binary-00add8?logo=go&logoColor=white)](https://firsttris.github.io/ccu-addon-mui/architektur.html)
 [![React](https://img.shields.io/badge/React-19-20232a?logo=react&logoColor=61dafb)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![PWA](https://img.shields.io/badge/PWA-installierbar-5a0fc8?logo=pwa&logoColor=white)](docs/installation.md#als-app-installieren)
+[![PWA](https://img.shields.io/badge/PWA-installierbar-5a0fc8?logo=pwa&logoColor=white)](https://firsttris.github.io/ccu-addon-mui/installation.html#als-app-installieren)
 
 [Warum?](#-warum) •
 [Funktionen](#-funktionen) •
 [Stand](#-stand-gegenüber-der-ccu3-webui) •
 [Installation](#-installation) •
-[Dokumentation](docs/README.md) •
+[Dokumentation](https://firsttris.github.io/ccu-addon-mui/) •
 [Entwicklung](#-entwicklung)
 
 <sub>English: a modern, mobile-first web interface for the Homematic CCU3 and OpenCCU, replacing the stock WebUI. See the [English README](README.en.md).</sub>
@@ -182,16 +182,16 @@ MUI steht für *Moderne WebUI*. Mit der React-Bibliothek Material UI hat das Pro
 
 | | Stand | |
 |---|---|---|
-| **Funktionen der WebUI** | **97 %** (64 von 66) | Was fehlt: [Vergleich mit der CCU3-WebUI](docs/vergleich-ccu3.md) |
+| **Funktionen der WebUI** | **97 %** (64 von 66) | Was fehlt: [Vergleich mit der CCU3-WebUI](https://firsttris.github.io/ccu-addon-mui/vergleich-ccu3.html) |
 | **Gerätetypen bedienbar** | **alle 472** an HmIP, HmIP Wired, BidCos-RF und BidCos-Wired | jedes Gerät, das die CCU kennt |
 | … mit eigener Kachel für jede Funktion | **427** (90 %) | |
-| … mit eigener Kachel für die Hauptfunktion | **453** (96 %) | Rest: [generische Kachel](docs/geraete.md#generische-kachel) |
+| … mit eigener Kachel für die Hauptfunktion | **453** (96 %) | Rest: [generische Kachel](https://firsttris.github.io/ccu-addon-mui/geraete.html#generische-kachel) |
 | **Direktverknüpfungs-Vorlagen** | 722 Profile für die 7 häufigsten Empfänger | alle anderen im Expertenmodus |
-| **Automatisierte Tests** | über 600 | Unit, Go, End-to-End gegen eine Fake-CCU: [Tests](docs/tests.md) |
+| **Automatisierte Tests** | über 600 | Unit, Go, End-to-End gegen eine Fake-CCU: [Tests](https://firsttris.github.io/ccu-addon-mui/tests.html) |
 
 Das klassische **BidCos-Wired** (HMW-Geräte am RS485-Bus) ist angebunden, sobald ein Wired-Gateway
 eingerichtet ist, aber noch nicht an echter Wired-Hardware getestet. Gezählt wird gegen den Gerätekatalog der WebUI
-(`DEVDB.tcl`, 535 Typen). Wie, steht in [Geräteunterstützung](docs/geraete.md).
+(`DEVDB.tcl`, 535 Typen). Wie, steht in [Geräteunterstützung](https://firsttris.github.io/ccu-addon-mui/geraete.html).
 
 ## ⚡ Schnell und schlank
 
@@ -215,7 +215,7 @@ Viele Add-ons bringen eine Node.js-Laufzeit mit. Auf derselben Maschine (x86) ge
 
 Gemessen an den Quellen der WebUI (`rega/pages/index.htm`, `webui.js`) und am Build dieses Add-ons; der
 Speicher des Servers gegen die Fake-CCU mit `fixtures/demo-ccu.json`.
-Hintergründe in der [Architektur](docs/architektur.md#warum-es-schnell-ist).
+Hintergründe in der [Architektur](https://firsttris.github.io/ccu-addon-mui/architektur.html#warum-es-schnell-ist).
 
 ## 📸 Screenshots
 
@@ -237,7 +237,7 @@ Hintergründe in der [Architektur](docs/architektur.md#warum-es-schnell-ist).
   <img src="docs/screenshot-handy-sicherheit.png" alt="Melder, Sirene und Zutritt auf dem Handy" width="24%">
 </p>
 
-Mehr Bilder in [Bedienung](docs/bedienung.md) und [Einrichten](docs/einrichten.md).
+Mehr Bilder in [Bedienung](https://firsttris.github.io/ccu-addon-mui/bedienung.html) und [Einrichten](https://firsttris.github.io/ccu-addon-mui/einrichten.html).
 
 ## 🚀 Installation
 
@@ -248,7 +248,7 @@ Mehr Bilder in [Bedienung](docs/bedienung.md) und [Einrichten](docs/einrichten.m
 3. **http://&lt;IP-der-CCU&gt;/addons/mui** öffnen und mit einem Benutzer der CCU anmelden.
 
 Danach als App auf den Startbildschirm legen. Updates installiert die App selbst, ohne Neustart der CCU (*Einrichten → System → Auf Update prüfen*). HTTPS,
-Optionen wie `AUTH_MODE` und Deinstallation stehen in der [Installation](docs/installation.md).
+Optionen wie `AUTH_MODE` und Deinstallation stehen in der [Installation](https://firsttris.github.io/ccu-addon-mui/installation.html).
 
 > [!NOTE]
 > Die Einrichten-Funktionen sind neu. Alle Abläufe sind End-to-End gegen eine Fake-CCU getestet, die
@@ -261,16 +261,16 @@ Auch als Website mit Suche: **https://firsttris.github.io/ccu-addon-mui/**
 
 | | |
 |---|---|
-| [Installation](docs/installation.md) | Installieren, Update, Anmeldung, HTTPS, als App, Push, Optionen, Deinstallation |
-| [Bedienung](docs/bedienung.md) | Dashboard, Kacheln, Meldungen, Favoriten, Diagramme, Programme, Systemvariablen |
-| [Einrichten](docs/einrichten.md) | Anlernen, Geräteeinstellungen, Verknüpfungen, Benutzer, Backup, Firmware, Systemsteuerung |
-| [Geräteunterstützung](docs/geraete.md) | Welche Geräte welche Kachel bekommen, Zahlen, was noch fehlt |
-| [Vergleich mit der CCU3-WebUI](docs/vergleich-ccu3.md) | Funktion für Funktion: vorhanden, fehlt, besser |
-| [Architektur](docs/architektur.md) | Aufbau, Datenfluss, Schnittstellen der CCU, Entscheidungen |
-| [API: WebSocket-Protokoll](docs/protokoll.md) | die API des Add-ons: Nachrichten, Anmeldung, Events, Fehlercodes, alle 153 Nachrichtentypen |
-| [Sicherheit](docs/sicherheit.md) | Anmeldung, Tokens, Rechte, Audit-Log |
-| [Tests](docs/tests.md) | Unit, Go, Fake-CCU, End-to-End, Screenshots, CI |
-| [Entwicklung](docs/entwicklung.md) | Lokale Umgebung, Befehle, Protokoll erweitern, Übersetzungen, Release |
+| [Installation](https://firsttris.github.io/ccu-addon-mui/installation.html) | Installieren, Update, Anmeldung, HTTPS, als App, Push, Optionen, Deinstallation |
+| [Bedienung](https://firsttris.github.io/ccu-addon-mui/bedienung.html) | Dashboard, Kacheln, Meldungen, Favoriten, Diagramme, Programme, Systemvariablen |
+| [Einrichten](https://firsttris.github.io/ccu-addon-mui/einrichten.html) | Anlernen, Geräteeinstellungen, Verknüpfungen, Benutzer, Backup, Firmware, Systemsteuerung |
+| [Geräteunterstützung](https://firsttris.github.io/ccu-addon-mui/geraete.html) | Welche Geräte welche Kachel bekommen, Zahlen, was noch fehlt |
+| [Vergleich mit der CCU3-WebUI](https://firsttris.github.io/ccu-addon-mui/vergleich-ccu3.html) | Funktion für Funktion: vorhanden, fehlt, besser |
+| [Architektur](https://firsttris.github.io/ccu-addon-mui/architektur.html) | Aufbau, Datenfluss, Schnittstellen der CCU, Entscheidungen |
+| [API: WebSocket-Protokoll](https://firsttris.github.io/ccu-addon-mui/protokoll.html) | die API des Add-ons: Nachrichten, Anmeldung, Events, Fehlercodes, alle 153 Nachrichtentypen |
+| [Sicherheit](https://firsttris.github.io/ccu-addon-mui/sicherheit.html) | Anmeldung, Tokens, Rechte, Audit-Log |
+| [Tests](https://firsttris.github.io/ccu-addon-mui/tests.html) | Unit, Go, Fake-CCU, End-to-End, Screenshots, CI |
+| [Entwicklung](https://firsttris.github.io/ccu-addon-mui/entwicklung.html) | Lokale Umgebung, Befehle, Protokoll erweitern, Übersetzungen, Release |
 
 ## 🔧 Entwicklung
 
@@ -288,13 +288,13 @@ Ohne echte Zentrale läuft alles gegen eine Fake-CCU mit Demo-Daten. Gegen die e
 **Stack**: Go-Server (WebSocket, XML-RPC, ReGa, JSON-RPC der WebUI) · React 19 mit TanStack Router und
 Query, Tailwind und shadcn/ui · Paraglide für Deutsch und Englisch · ein JSON-Schema als Vertrag zwischen
 beiden, aus dem die TypeScript-Typen entstehen · Vitest, Go-Tests und Playwright.
-Mehr in [Entwicklung](docs/entwicklung.md) und [Architektur](docs/architektur.md).
+Mehr in [Entwicklung](https://firsttris.github.io/ccu-addon-mui/entwicklung.html) und [Architektur](https://firsttris.github.io/ccu-addon-mui/architektur.html).
 
 ## 🤝 Mitwirken
 
 Fehler, Ideen und vor allem Rückmeldungen von echten Zentralen gern als
 [Issue](https://github.com/firsttris/ccu-addon-mui/issues). Fehlt einem Gerät eine eigene Kachel, hilft ein
-Export der Gerätedaten (`npm run export:ccu -- -anonymize`, siehe [Entwicklung](docs/entwicklung.md)).
+Export der Gerätedaten (`npm run export:ccu -- -anonymize`, siehe [Entwicklung](https://firsttris.github.io/ccu-addon-mui/entwicklung.html)).
 Vor einem Pull Request bitte `npm test`, `npm run typecheck` und `npm run test:go` laufen lassen.
 
 ---
