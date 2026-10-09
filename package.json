@@ -4,6 +4,7 @@
   "license": "AGPL-3.0-only",
   "scripts": {
     "start": "vite",
+    "prestart:fe": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy preferredLanguage baseLocale --emit-ts-declarations --silent",
     "start:fe": "vite",
     "start:fe:ccu3": "vite --mode ccu3",
     "start:server": "cd go-server && if [ -f .env ]; then set -a; . ./.env; set +a; fi && go build -o ccu-addon-mui-server-local . && exec ./ccu-addon-mui-server-local",
