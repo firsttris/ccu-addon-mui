@@ -39,15 +39,9 @@ jobs:
       image: ${{ steps.version.outputs.image }}
 
     steps:
-      - name: Checkout lockfile
-        uses: actions/checkout@v4.1.1
-        with:
-          sparse-checkout: package-lock.json
-          sparse-checkout-cone-mode: false
-
-      - name: Read version
+      - name: Image of the @playwright/test version in package-lock.json
         id: version
-        run: echo "image=mcr.microsoft.com/playwright:v$(jq -r '.packages["node_modules/@playwright/test"].version' package-lock.json)-noble" >> "$GITHUB_OUTPUT"
+        uses: firsttris/workflows/actions/playwright-image@v1
 
   # The add-on updating itself up to the new app in this browser (service
   # worker on): two builds, served as on the CCU (playwright.update.config.ts)

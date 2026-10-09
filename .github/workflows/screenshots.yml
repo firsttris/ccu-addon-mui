@@ -27,15 +27,9 @@ jobs:
     outputs:
       image: ${{ steps.version.outputs.image }}
     steps:
-      - name: Checkout lockfile
-        uses: actions/checkout@v4.1.1
-        with:
-          sparse-checkout: package-lock.json
-          sparse-checkout-cone-mode: false
-
-      - name: Read version
+      - name: Image of the @playwright/test version in package-lock.json
         id: version
-        run: echo "image=mcr.microsoft.com/playwright:v$(jq -r '.packages["node_modules/@playwright/test"].version' package-lock.json)-noble" >> "$GITHUB_OUTPUT"
+        uses: firsttris/workflows/actions/playwright-image@v1
 
   update:
     needs: playwright-image
@@ -78,14 +72,10 @@ jobs:
         run: npm run docs:tiles
 
       - name: Commit what changed
-        run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add e2e/visual.spec.ts-snapshots docs/screenshot-*.png docs/kacheln
-          if git diff --cached --quiet; then
-            echo "The screenshots are up to date."
-          else
-            git commit -m "Screenshots erneuert (${{ inputs.what }})"
-            git push
-          fi
+        uses: firsttris/workflows/actions/commit-changes@v1
+        with:
+          paths: |
+            e2e/visual.spec.ts-snapshots
+            docs/screenshot-*.png
+            docs/kacheln
+          message: Screenshots erneuert (${{ inputs.what }})
