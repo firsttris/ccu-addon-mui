@@ -8,10 +8,10 @@ echten Server und eine nachgebaute CCU.
 
 | Ebene | Was echt ist | Was nachgebaut ist | Tests | in der CI |
 |---|---|---|---:|:---:|
-| **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 307 in 57 Dateien | ✅ |
-| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU), openccu-lite (Fake-Lite) | 295 Testfunktionen in 70 Dateien | ✅ |
+| **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 309 in 58 Dateien | ✅ |
+| **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU), openccu-lite (Fake-Lite) | 328 Testfunktionen in 80 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests, jede Nachricht des Mocks an die App in den E2E-Tests | – | gegen `protocol/schema.json` | ✅ |
-| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 35 + 2 + 2 | ✅ |
+| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 35 + 2 + 2 + 1 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 74 | ✅ |
 | **openccu-lite-VM** | openccu-lite aus seinem Release-Image (QEMU), occulited, lighttpd, Sitzungs-Gate, Installation des Pakets | nichts; aber ohne Funkmodul, also ohne Geräte | 3 Phasen | ✅ bei Lite-Änderungen, wöchentlich, vor Releases |
 | **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 72 | ✅ |

@@ -42,6 +42,8 @@ test('blendet auf openccu-lite Programme, Systemvariablen und Systemeinstellunge
   expect(sent).not.toContain('getAlarmMessages');
   expect(sent).not.toContain('getSysvars');
   expect(sent).not.toContain('getPrograms');
+  // openccu-lite updates add-ons on its own page: no update notice
+  expect(sent).not.toContain('checkSelfUpdate');
 });
 
 test('zeigt auf openccu-lite, wo Automationen und Systemeinstellungen liegen', async ({ page }) => {
