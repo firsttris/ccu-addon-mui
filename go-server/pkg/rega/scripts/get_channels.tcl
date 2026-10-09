@@ -72,10 +72,6 @@ if (parentObject) {
                 }
                 WriteLine("M\t" # memberIds # "\t" # tradeIds);
 
-                ! The tile chosen in the add-on, see set_channel_tile.tcl
-                if (channelObject.MetaData("muiTile") == "light") { WriteLine("T\tlight"); }
-                if (channelObject.MetaData("muiTile") == "switch") { WriteLine("T\tswitch"); }
-
                 ! What an input channel is wired to (0 off, 1 key, 2 switch,
                 ! 3 contact, 4 level, 5 condition), stored by the WebUI as metadata "channelMode"
                 ! (functions.fn); without it the channel is a key

@@ -165,17 +165,6 @@ func TestParseChannelsReadsRoomsAndTrades(t *testing.T) {
 	}
 }
 
-func TestParseChannelsTile(t *testing.T) {
-	output := "C\t1\tA:1\tSWITCH_VIRTUAL_RECEIVER\tHmIP-RF\tPumpe\n" +
-		"T\tswitch\n" +
-		"C\t2\tA:2\tSWITCH_VIRTUAL_RECEIVER\tHmIP-RF\tSpots\n" +
-		"T\tbogus\n"
-	channels := parseChannels(output)
-	if len(channels) != 2 || channels[0].Tile != TileSwitch || channels[1].Tile != "" {
-		t.Fatalf("unexpected tiles: %+v", channels)
-	}
-}
-
 func TestParseChannelsMode(t *testing.T) {
 	output := "C\t1\tA:1\tMULTI_MODE_INPUT_TRANSMITTER\tHmIP-RF\tTor\n" +
 		"O\t3\n" +

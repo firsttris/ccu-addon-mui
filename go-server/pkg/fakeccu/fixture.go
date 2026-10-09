@@ -113,8 +113,6 @@ type Channel struct {
 	Name      string `json:"name"`
 	// Datapoints by name; values are bool, number, string or null
 	Datapoints map[string]interface{} `json:"datapoints"`
-	// Tile is the tile chosen in the add-on (ReGa metadata "muiTile")
-	Tile string `json:"tile,omitempty"`
 	// The WebUI's channel options; visible and usable by default
 	Hidden   bool `json:"hidden,omitempty"`
 	ReadOnly bool `json:"readOnly,omitempty"`

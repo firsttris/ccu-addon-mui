@@ -89,8 +89,6 @@ type CCU struct {
 	Whitelist []map[string]interface{}
 	// Time modules created by save_program, for their ids
 	timeModules int
-	// Tile layouts by room, trade or favorite list id (ReGa metadata)
-	layouts map[string]string
 	// The location set with set_location (system.Latitude/Longitude)
 	latitude, longitude string
 	// The system protocol is cleared (clear_history)
@@ -444,13 +442,6 @@ func (c *CCU) runScript(body string) (string, error) {
 			return c.getFavorites(values["USERNAME"]), nil
 		case "favorite_change":
 			return c.changeFavorite(values), nil
-		case "set_channel_tile":
-			id, _ := strconv.ParseInt(values["ID"], 10, 64)
-			if ch := c.channelByID(id); ch != nil {
-				ch.Tile = values["TILE"]
-				return "OK\t" + ch.Name, nil
-			}
-			return "NOT_FOUND", nil
 		case "set_channel_mode":
 			ch := c.channelByAddress(values["INTERFACE"], values["ADDRESS"])
 			mode, err := strconv.Atoi(values["MODE"])
@@ -570,26 +561,6 @@ func (c *CCU) runScript(body string) (string, error) {
 				}
 			}
 			return "NOT_FOUND", nil
-		case "get_layout", "set_layout":
-			id := values["ID"]
-			known := false
-			for _, g := range append(append([]Group{}, c.fixture.Rooms...), c.fixture.Trades...) {
-				known = known || strconv.FormatInt(g.ID, 10) == id
-			}
-			for _, f := range c.fixture.Favorites {
-				known = known || strconv.FormatInt(f.ID, 10) == id
-			}
-			if !known {
-				return "NOT_FOUND", nil
-			}
-			if c.layouts == nil {
-				c.layouts = map[string]string{}
-			}
-			if s.name == "set_layout" {
-				c.layouts[id] = values["LAYOUT"]
-				return "OK\tview", nil
-			}
-			return "OK\t" + c.layouts[id], nil
 		case "get_users":
 			var b strings.Builder
 			for _, u := range c.users() {
@@ -1003,9 +974,6 @@ func (c *CCU) getChannels(objectID string) string {
 		fmt.Fprintf(&b, "C\t%d\t%s\t%s\t%s\t%s\n", ch.ID, ch.Address, ch.Type, ch.Interface, ch.Name)
 		fmt.Fprintf(&b, "M\t%s\t%s\n", memberOf(c.fixture.Rooms, ch.ID), memberOf(c.fixture.Trades, ch.ID))
 		fmt.Fprintf(&b, "F\t%t\t%t\t%t\t%t\n", !ch.Hidden, !ch.ReadOnly, ch.Logged, ch.AES)
-		if ch.Tile != "" {
-			fmt.Fprintf(&b, "T\t%s\n", ch.Tile)
-		}
 		if ch.Mode != nil {
 			fmt.Fprintf(&b, "O\t%d\n", *ch.Mode)
 		}

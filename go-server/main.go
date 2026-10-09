@@ -23,6 +23,7 @@ import (
 	"ccu-addon-mui-server/pkg/rules"
 	"ccu-addon-mui-server/pkg/selfupdate"
 	"ccu-addon-mui-server/pkg/settings"
+	"ccu-addon-mui-server/pkg/tiles"
 	"ccu-addon-mui-server/pkg/types"
 	"ccu-addon-mui-server/pkg/websocket"
 	"ccu-addon-mui-server/pkg/xmlrpc"
@@ -143,6 +144,13 @@ func run(ctx context.Context, cfg *config.Config) error {
 		wsServer.SetDiagrams(store, recorder)
 		go recorder.Run(ctx, 5*time.Minute, func(err error) { logger.Error("Failed to write diagram values:", err) })
 		go wsServer.RunSysvarRecording(ctx, time.Minute)
+	}
+
+	// Tile layouts and the tiles chosen for channels
+	if store, err := tiles.Open(cfg.TilesFile); err != nil {
+		logger.Error("Tile layouts disabled:", err)
+	} else {
+		wsServer.SetTiles(store)
 	}
 
 	// System variables send no events: read once for all apps that show them

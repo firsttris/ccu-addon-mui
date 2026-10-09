@@ -38,6 +38,7 @@ go-server/mui-audit.log*
 go-server/mui-diagrams.json
 go-server/mui-diagrams/
 go-server/mui-rules.json
+go-server/mui-tiles.json
 go-server/.env
 
 # Editors and systems
