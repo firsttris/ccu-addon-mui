@@ -429,6 +429,30 @@ html body[data-scroll-locked] {
 @utility fx-nudge {
   animation: fx-nudge 2.4s ease-in-out infinite;
 }
+/* The figures above the tiles come in one after the other (OverviewStats) */
+@keyframes fx-stat-in {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+@utility fx-stat-in {
+  animation: fx-stat-in 0.45s cubic-bezier(0.3, 0.7, 0.2, 1) both;
+}
+/* A name too long for its place runs to its end and back (--shift) */
+@keyframes fx-marquee {
+  0%,
+  15% {
+    transform: translateX(0);
+  }
+  85%,
+  100% {
+    transform: translateX(var(--shift));
+  }
+}
+@utility fx-marquee {
+  animation: fx-marquee 6s ease-in-out infinite alternate;
+}
 /* Pressing a control gives way a little */
 @utility press {
   transition:
