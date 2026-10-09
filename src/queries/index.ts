@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { RequestError, useCapabilities, useWebSocketActions, useWebSocketContext } from '../hooks/useWebsocket';
+import { RequestError, useCapabilities, useWebSocketActions } from '../hooks/useWebsocket';
 import { AlarmMessage, ServiceMessage, ProgramDefinition } from '../types/protocol';
 import { applyEvent, groupChannelsByType, shareGroups, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
@@ -686,9 +686,9 @@ export const useServiceMessages = () => {
 export const useAlarmMessages = () => {
   const { request, recent } = useWebSocketActions();
   // openccu-lite has no alarm variables
-  const { capabilities } = useWebSocketContext();
+  const { alarms: enabled } = useCapabilities();
   return useQuery({
-    enabled: capabilities.alarms,
+    enabled,
     queryKey: ['alarmMessages'],
     queryFn: async () => {
       const startedAt = recent.time();

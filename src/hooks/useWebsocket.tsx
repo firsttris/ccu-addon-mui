@@ -157,12 +157,20 @@ const writeToken = (token: string | null, key = TOKEN_STORAGE_KEY) => {
   }
 };
 
-// The WebSocket server on the same host. Installed, the app lies under
-// /addons/mui/ and so does the WebSocket: on openccu-lite only there the
-// session gate passes the login on (X-Occulite-Session). The dev server
+// The WebSocket server on the same host, the paths to try in order.
+// Installed, the app lies under /addons/mui/ and so does the WebSocket: on
+// openccu-lite only there the session gate passes the login on
+// (X-Occulite-Session). A CCU whose lighttpd has not loaded the new mui.conf
+// yet (update_script's reload missing or failed) knows only /ws/mui, so the
+// app falls back to it while no connection has opened. The dev server
 // proxies /ws/mui.
-const wsPath = import.meta.env.BASE_URL === '/' ? '/ws/mui' : `${import.meta.env.BASE_URL}ws`;
-const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${wsPath}`;
+export const socketPaths = (base: string) => (base === '/' ? ['/ws/mui'] : [`${base}ws`, '/ws/mui']);
+const paths = socketPaths(import.meta.env.BASE_URL);
+const socketUrl = (path: string) =>
+  `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${path}`;
+
+// openccu-lite could not check the session (occulited restarting): ask again
+const AUTH_RETRY_MS = 3000;
 
 export const useWebsocket = () => {
   const [authState, setAuthState] = useState<AuthState>('pending');
@@ -176,6 +184,16 @@ export const useWebsocket = () => {
   // A CCU until the server says otherwise
   const [platform, setPlatform] = useState<Platform>('ccu');
   const [capabilities, setCapabilities] = useState<Capabilities>(CCU_CAPABILITIES);
+  // The path in use (socketPaths) and whether any connection opened yet:
+  // after that the path stays. A ref, read for every (re)connect: switching
+  // waits for the next attempt (reconnectInterval) instead of reconnecting
+  // at once, as a new url would
+  const pathRef = useRef(0);
+  const openedRef = useRef(false);
+  const url = useCallback(() => socketUrl(paths[pathRef.current]), []);
+  // Counts the auth messages to send again (SYSTEM_UNAVAILABLE)
+  const [authAttempt, setAuthAttempt] = useState(0);
+  const authRetryRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const deviceId = useUniqueDeviceID();
   const { showToast } = useToast();
@@ -273,7 +291,13 @@ export const useWebsocket = () => {
     }
   };
 
-  const { sendMessage, readyState, getWebSocket } = useWebSocket(wsUrl, {
+  const { sendMessage, readyState, getWebSocket } = useWebSocket(url, {
+    onOpen: () => {
+      openedRef.current = true;
+    },
+    onClose: () => {
+      if (!openedRef.current) pathRef.current = (pathRef.current + 1) % paths.length;
+    },
     shouldReconnect: () => true,
     reconnectInterval: 3000,
     reconnectAttempts: Infinity,
@@ -349,6 +373,14 @@ export const useWebsocket = () => {
         setAuthState('sessionRequired');
         return;
       }
+      if (response.code === 'SYSTEM_UNAVAILABLE') {
+        // The session may well be valid: no login page, ask again shortly
+        setLoginError(null);
+        setAuthState('pending');
+        clearTimeout(authRetryRef.current);
+        authRetryRef.current = setTimeout(() => setAuthAttempt((attempt) => attempt + 1), AUTH_RETRY_MS);
+        return;
+      }
       if (response.code === 'LOGIN_REQUIRED') {
         // No or an outdated token: not an error the user has to see
         writeToken(null);
@@ -410,6 +442,7 @@ export const useWebsocket = () => {
       );
     } else {
       readyRef.current = false;
+      clearTimeout(authRetryRef.current);
       // Requests already sent get no answer on a lost connection: fail them
       // now instead of after their timeout (queries retry once reconnected).
       // Those still queued are sent after the next login.
@@ -420,7 +453,9 @@ export const useWebsocket = () => {
         pending.reject(new RequestError('connection lost', 'NOT_CONNECTED'));
       }
     }
-  }, [readyState, sendMessage]);
+  }, [readyState, sendMessage, authAttempt]);
+
+  useEffect(() => () => clearTimeout(authRetryRef.current), []);
 
   const login = useCallback(
     (username: string, password: string) => {

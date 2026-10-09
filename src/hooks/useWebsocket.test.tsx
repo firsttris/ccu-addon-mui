@@ -11,6 +11,9 @@ const socket = vi.hoisted(() => {
     readyState: 0,
     sent: [] as Record<string, unknown>[],
     onMessage: undefined as ((event: MessageEvent) => void) | undefined,
+    url: (() => '') as () => string,
+    onOpen: undefined as (() => void) | undefined,
+    onClose: undefined as (() => void) | undefined,
     // Stable, as the library's: the hook's connect effect depends on it
     sendMessage: (json: string) => state.sent.push(JSON.parse(json)),
   };
@@ -20,8 +23,15 @@ vi.mock('react-use-websocket', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-use-websocket')>();
   return {
     ...actual,
-    default: (_url: string, options: { onMessage: (event: MessageEvent) => void }) => {
+    default: (
+      url: string | (() => string),
+      options: { onMessage: (event: MessageEvent) => void; onOpen?: () => void; onClose?: () => void },
+    ) => {
       socket.onMessage = options.onMessage;
+      // The library asks a function for every (re)connect
+      socket.url = typeof url === 'function' ? url : () => url;
+      socket.onOpen = options.onOpen;
+      socket.onClose = options.onClose;
       return {
         sendMessage: socket.sendMessage,
         readyState: socket.readyState,
@@ -31,7 +41,9 @@ vi.mock('react-use-websocket', async (importOriginal) => {
   };
 });
 
-const { useWebsocket, RequestError } = await import('./useWebsocket');
+// Installed under /addons/mui/, as on a CCU or openccu-lite
+vi.stubEnv('BASE_URL', '/addons/mui/');
+const { useWebsocket, RequestError, socketPaths } = await import('./useWebsocket');
 const { ReadyState } = await import('react-use-websocket');
 
 const fromServer = (message: Record<string, unknown>) =>
@@ -169,5 +181,42 @@ describe('useWebsocket', () => {
     fromServer({ type: 'auth_response', success: false, code: 'SESSION_REQUIRED' });
     expect(hook.result.current.state.authState).toBe('sessionRequired');
     expect(hook.result.current.state.authRequired).toBe(false);
+  });
+
+  it('asks again when openccu-lite could not check the session, without the login page', () => {
+    vi.useFakeTimers();
+    try {
+      const { hook, open } = setup();
+      open();
+      expect(sentOf('auth')).toHaveLength(1);
+      fromServer({ type: 'auth_response', success: false, code: 'SYSTEM_UNAVAILABLE' });
+      expect(hook.result.current.state.authState).toBe('pending');
+      act(() => {
+        vi.advanceTimersByTime(3000);
+      });
+      expect(sentOf('auth')).toHaveLength(2);
+      fromServer({ type: 'auth_response', success: true, level: 'admin' });
+      expect(hook.result.current.state.authState).toBe('authenticated');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('connects under /addons/mui/ and falls back to /ws/mui while nothing opened', () => {
+    expect(socketPaths('/')).toEqual(['/ws/mui']);
+    expect(socketPaths('/addons/mui/')).toEqual(['/addons/mui/ws', '/ws/mui']);
+
+    setup();
+    expect(socket.url()).toMatch(/\/addons\/mui\/ws$/);
+    // A CCU whose lighttpd does not know the new path yet: the next attempt
+    // takes the old one
+    socket.onClose?.();
+    expect(socket.url()).toMatch(/\/ws\/mui$/);
+    socket.onClose?.();
+    expect(socket.url()).toMatch(/\/addons\/mui\/ws$/);
+    // Once a connection opened, the path stays
+    socket.onOpen?.();
+    socket.onClose?.();
+    expect(socket.url()).toMatch(/\/addons\/mui\/ws$/);
   });
 });

@@ -131,6 +131,11 @@ type Client struct {
 	// has one (gate.go)
 	gateSession GateSession
 	gateOK      bool
+	// gateRequest is the WebSocket upgrade, to ask the gate again: when
+	// the platform could not tell at connect (gateErr) and while the
+	// connection is open (watchGate)
+	gateRequest *http.Request
+	gateErr     error
 	// source is the client's address, for the login lockout
 	source string
 
@@ -535,19 +540,19 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	client.device = deviceLabel(r.UserAgent())
 	client.source = clientAddress(r)
 	if s.gate != nil {
-		session, err := s.gate(r)
-		if err != nil && !errors.Is(err, ErrNoSession) {
-			logger.Error("Checking the session of the system:", err)
-		}
-		client.gateSession, client.gateOK = session, err == nil
+		client.gateRequest = r.Clone(context.Background())
+		s.checkGate(client)
 	}
+
+	// Read before readPump runs: a login may ask the gate again (gateLogin)
+	watch := client.gateOK
 
 	s.addClient(client)
 
 	go s.writePump(client)
 	go s.readPump(client)
-	if client.gateOK {
-		go s.watchGate(client, r)
+	if watch {
+		go s.watchGate(client, gateRecheck)
 	}
 }
 

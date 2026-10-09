@@ -80,7 +80,11 @@ und Nachrichten für diese Teile beantwortet der Server mit `unknown message typ
 Auf openccu-lite meldet occulites Gate die Sitzung am WebSocket-Upgrade. `auth` und `login` antworten dort
 ohne Token mit dem Benutzer und der Stufe von openccu-lite (`authRequired: false`); ohne Sitzung kommt
 `SESSION_REQUIRED`, und die App schickt zur Anmeldung von openccu-lite (`/login`), weil ihr eigenes
-Login-Formular dort nie gelingen kann. `acknowledgeServiceMessage` antwortet dort für alles außer
+Login-Formular dort nie gelingen kann. Konnte occulited die Sitzung nicht prüfen (Neustart, Zeitüberschreitung),
+fragt der Server beim Login erneut und antwortet sonst `SYSTEM_UNAVAILABLE`; die App bleibt dann beim Anmelden
+und schickt `auth` nach drei Sekunden noch einmal. Die App verbindet sich installiert mit `/addons/mui/ws` und
+nimmt beim nächsten Versuch `/ws/mui`, solange noch keine Verbindung zustande kam (eine CCU, deren lighttpd
+die neue `mui.conf` noch nicht geladen hat). `acknowledgeServiceMessage` antwortet dort für alles außer
 `STICKY_*` mit `NOT_SUPPORTED`: occulites Servicemeldungen enden, wenn das Gerät es meldet.
 
 Format und Prüfung der Tokens stehen in [Sicherheit](sicherheit.md).
