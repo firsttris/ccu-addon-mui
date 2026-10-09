@@ -11,6 +11,34 @@ Die Frontend-Tests (vitest, Playwright) konnte ich hier nicht ausführen (keine 
 
 ---
 
+## 0. Gegenprüfung und Umsetzung
+
+Jeder Punkt unten wurde ein zweites Mal gegen den Code von PR #191 (`7032098`) und gegen occulited's Quellen
+geprüft (`internal/devstate/keys.go`, `internal/meta/store.go`, `docs/*.md`). Drei Aussagen der ersten
+Fassung waren falsch oder übertrieben; sie sind unten korrigiert und hier markiert. Die bestätigten Punkte
+behebt der Pull Request, der dieses Dokument enthält, jeweils mit einem Test, der ohne den Fix scheitert.
+
+| Punkt | Ergebnis der Gegenprüfung | Umgesetzt |
+|---|---|---|
+| 4.1 WebSocket-Pfad ohne Rückfall | **Bestätigt.** `update_script` sagt selbst: ohne `S50lighttpd reload` gilt der neue Pfad erst nach einem Neustart; bis dahin verbindet sich die App nicht. | App fällt auf `/ws/mui` zurück, solange keine Verbindung offen war (`useWebsocket.tsx`, Test in `useWebsocket.test.tsx`) |
+| 4.2 Gate-Fehler = „Sitzung abgelaufen" | **Bestätigt.** Ein Fehler von occulited beim Verbindungsaufbau führt zu `SESSION_REQUIRED` und zur Anmeldeseite. | Server fragt beim Login erneut, antwortet sonst `SYSTEM_UNAVAILABLE`; die App fragt nach 3 s wieder (`gate.go`, Tests in `gate_test.go` und `useWebsocket.test.tsx`) |
+| 4.3 Default-Werte | **Teilweise falsch.** occulites Zustandsspeicher führt `STATE`, `LEVEL` und alle Werte, die Kacheln zeigen (`devstate/keys.go`): die eingeschaltete Lampe erscheint nicht als aus. Richtig bleibt: Datenpunkte außerhalb dieser Liste (z. B. `SECTION`, `PROCESS`) eines HmIP-Kanals wurden nie nachgelesen, sobald der Speicher einen Wert des Kanals kannte. | HmIP- und virtuelle Kanäle werden einmal nachgelesen, ohne Werte des Speichers zu überschreiben (`home.go readValues`, Test `TestReadValuesFillsWhatTheStateStoreLacks`) |
+| 4.4 `since` bei Typwechsel | **Ohne Auswirkung.** `since` wird nur für Kanal 0 genutzt (Gerätegesundheit), und Kanal 0 wird nie per `getParamset` gelesen: Seine Werte kommen immer als JSON. | Nichts |
+| 4.5 Layouts der Unterräume | **Bestätigt.** occulited schickt beim Löschen eines Teilbaums ein einziges `node.deleted` (`internal/meta/store.go`, `DeleteNode`). | Die Unterräume werden aus dem zuletzt gelesenen Snapshot ermittelt (`metastream.go`, Tests `TestDeletedNodeTakesTheLayoutsBelow`, `TestLiteLayoutsFollowRoomsMovedInOpenccuLite`) |
+| 4.6 `lastID` bei `resync` | **Bestätigt, harmlos.** | Eine Zeile (`main_lite.go`) |
+| 4.7 Streams ohne Header-Timeout | **Header-Timeout bestätigt. Die Aussage zu `time.After` war falsch:** seit Go 1.23 werden nicht mehr referenzierte Timer sofort freigegeben (das Modul nutzt Go 1.27). | `ResponseHeaderTimeout` für beide Streams (`client.go`, Test `TestStreamWaitsForItsHeadersOnlySoLong`) |
+| 4.8 `useAlarmMessages` | **Bestätigt.** | `useCapabilities()` |
+| 4.9 Toter Code | **Bestätigt.** | Entfernt |
+| 4.10 Lizenztext „MIT" | **Bestätigt, aber schon auf `main`.** | Nicht hier: gehört in einen eigenen PR gegen `main` |
+| 5.1 Polling-Angaben | **Teilweise übertrieben.** Posteingang (3 s) und Anlernstatus (1 s) pollen nur, solange der Anlernmodus läuft; die Servicemeldungen liest der Server alle 5 Minuten und bei Wartungs-Events, nicht „alle paar Sekunden". | — |
+| 5.2.1 Snapshot cachen | **Bestätigt.** | Gehalten, solange der Metadaten-Stream verbunden ist; jedes Event und jede eigene Änderung verwirft ihn (`cache.go`, Tests `TestSnapshotKeptWhileTheStreamIsConnected`, `TestLiteKeepsSnapshotAndDeviceLists`) |
+| 5.2.2 `listDevices` cachen | **Bestätigt.** | Gehalten, solange lite-rpc's Event-Stream läuft; Geräte- und `interface`-Events verwerfen die Liste der Schnittstelle, `resync` alle (`cache.go`, `main_lite.go`, dieselben Tests) |
+| 5.2.3–5.2.8 | Zutreffend, aber im Verhältnis klein: `roomOf` kostet bei 100 Geräten und 500 Objekten ~50 000 Präfixvergleiche pro Minute, die Token-Datei liegt im RAM (`/run`), `WithToken` teilt den Transport. | Nichts; nach den beiden Caches nicht mehr der Engpass |
+| 7. Fehlende Tests | **Bestätigt.** | Fake-occulited hat jetzt den Metadaten-Stream, verschachtelte Räume mit Verschieben und Löschen, `resync` und Geräte-Events; neue Integrationstests für Verschieben, Caches und `resync`, Unit-Tests für Gate-Wiederholung und Stufenwechsel |
+
+Nebenbei aufgefallen und mit behoben: Der Server wartete beim Beenden nicht auf das Folgen des
+Metadaten-Streams, das zum Schluss noch die Revision schreibt (`main.go platformHooks.stop`).
+
 ## 1. Gesamturteil
 
 **Die Integration ist architektonisch sauber gelöst und im Kern korrekt.** Die beiden Plattformen sind
@@ -235,7 +263,7 @@ Retry-Code (z. B. `CCU_NOT_READY`, den die App schon kennt) und die Verbindung s
 mit Backoff neu verbindet, statt den Nutzer zum Login zu schicken. `watchGate` macht das bereits richtig
 („A platform that cannot tell keeps the connection").
 
-### 4.3 Unbekannte Werte werden als Default gezeigt (mittel, Anzeige)
+### 4.3 Unbekannte Werte werden als Default gezeigt (klein, Anzeige; korrigiert, siehe 0.)
 
 `home.go:430-436`: Hat das Hausmodell für einen Datenpunkt keinen Wert (nicht im Zustandsspeicher, kein
 Event, BidCos ohne `getParamset`), bekommt die App `parameter.Default`, also `STATE: false`, `LEVEL: 0`.
@@ -252,7 +280,7 @@ Kennt der Zustandsspeicher nur `STATE` eines HmIP-Kanals, werden dessen übrige 
 `getParamset` nachgelesen (obwohl das bei HmIP kostenlos aus dem Cache kommt). Besser: `h.read[addr]`
 allein entscheiden lassen.
 
-### 4.4 `since` springt bei Typwechsel (klein)
+### 4.4 `since` springt bei Typwechsel (ohne Auswirkung, siehe 0.)
 
 `home.go:142`: `reflect.DeepEqual(previous, value)`. Werte aus `/state` und dem Stream sind JSON
 (`float64`), Werte aus `getParamset` (XML-RPC) sind `int`. `1` (int) ≠ `1.0` (float64), also setzt das
@@ -282,7 +310,7 @@ Harmlos, weil `seed()` den Wert danach ohnehin ersetzt, aber `if m.ID != ""` wä
 zurückkommt. Nimmt lighttpd die Verbindung an, aber occulited antwortet nie mit Headern, hängt der
 Stream für immer (bis Shutdown), und das Hausmodell bekommt keine Events mehr, ohne Log-Zeile. Lokal
 unwahrscheinlich, aber ein eigener `http.Transport{ResponseHeaderTimeout: 30 * time.Second}` kostet
-nichts. Nebenbei: `time.After` in der Wächter-Schleife (`rpc.go:143`, `metastream.go:62`) legt bei jedem
+nichts. Nebenbei (falsch, siehe 0.): `time.After` in der Wächter-Schleife (`rpc.go:143`, `metastream.go:62`) legt bei jedem
 Event einen neuen Timer an, der erst nach 45/75 s freigegeben wird; `time.NewTimer` + `Reset` ist das
 übliche Muster.
 
