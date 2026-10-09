@@ -41,6 +41,7 @@ import {
   type RenderSeries,
 } from './chart';
 import type { Diagram, DiagramSeries, EnergyPrice, GetDiagramDataResponse } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 const periodLabels: Record<Period, () => string> = {
   day: m.DIAG_PERIOD_DAY,
@@ -90,7 +91,10 @@ const useSeriesData = (diagram: Diagram, from: number, to: number, enabled: bool
   const { request } = useWebSocketActions();
   const start = intervalStart(from, barInterval(to - from)) - (to - from) / 4;
   return useQuery({
-    queryKey: ['diagramData', diagram.id, diagram.series.map(keyOf).join(','), from, to],
+    // Live: one entry for the span that moves on with the minute
+    // (refetchInterval), not a new one every minute, which would also show
+    // the old values as placeholder and draw the chart in again
+    queryKey: ['diagramData', diagram.id, diagram.series.map(keyOf).join(','), ...(live ? ['live', to - from] : [from, to])],
     queryFn: async () =>
       (
         await request({
@@ -204,7 +208,7 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
       showToast(m.DIAG_DELETED(), 'info');
       queryClient.invalidateQueries({ queryKey: ['diagrams'] });
     },
-    onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+    onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     onSettled: () => setDeleting(false),
   });
 

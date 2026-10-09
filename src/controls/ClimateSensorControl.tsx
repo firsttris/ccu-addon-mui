@@ -7,13 +7,11 @@ import { ReactNode } from 'react';
 import { Channel, DatapointValue } from '../types/types';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
-import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
-import { cn } from '../lib/utils';
+import { cn, formatNumber } from '../lib/utils';
 
 export const number = (value: DatapointValue | undefined) => (typeof value === 'number' && Number.isFinite(value) ? value : undefined);
-export const format = (value: number, digits = 1) =>
-  new Intl.NumberFormat(getLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+export const format = (value: number, digits = 1) => formatNumber(value, digits, digits);
 
 // Dew point by the Magnus formula (°C), good to ±0.4 °C between -45 and 60 °C
 export const dewPoint = (temperature: number, humidity: number) => {

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"ccu-addon-mui-server/pkg/atomicfile"
 	"ccu-addon-mui-server/pkg/logger"
 )
 
@@ -121,7 +122,7 @@ func writeTimeServers(servers string) error {
 	if !timeServersRegex.MatchString(servers) {
 		return fmt.Errorf("invalid time servers")
 	}
-	return os.WriteFile(ntpClientFile, []byte("NTPSERVERS='"+servers+"'\n"), 0o644)
+	return atomicfile.Write(ntpClientFile, []byte("NTPSERVERS='"+servers+"'\n"), 0o644)
 }
 
 // writeTimeZone writes time.conf's TIMEZONE and TZ, as set_location_config
@@ -139,10 +140,10 @@ func writeTimeZone(zone string) error {
 	for _, key := range []string{"COUNTRY", "CITY", "LATITUDE", "LONGITUDE", "TIMEZONE"} {
 		b.WriteString(key + "=" + values[key] + "\n")
 	}
-	if err := os.WriteFile(timeConfFile, []byte(b.String()), 0o644); err != nil {
+	if err := atomicfile.Write(timeConfFile, []byte(b.String()), 0o644); err != nil {
 		return err
 	}
-	return os.WriteFile(tzFile, []byte(value+"\n"), 0o644)
+	return atomicfile.Write(tzFile, []byte(value+"\n"), 0o644)
 }
 
 // clockAvailable: the add-on runs on the CCU itself, where date, hwclock and

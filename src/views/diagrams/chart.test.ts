@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DAY, HOUR, aggregatePoints, downsample, scaleUnit, barInterval, intervalStart, isBinary, nearest, niceTicks, seriesStats, timeTicks, toBars, toCSV, valueRange, type ChartPoint } from './chart';
+import { DAY, HOUR, aggregatePoints, downsample, scaleUnit, barInterval, intervalStart, isBinary, nearest, niceTicks, seriesStats, timeTicks, toBars, toCSV, type ChartPoint } from './chart';
 
 describe('niceTicks', () => {
   it('chooses round steps covering the range', () => {
@@ -11,17 +11,6 @@ describe('niceTicks', () => {
     const ticks = niceTicks(21, 21);
     expect(ticks[0]).toBeLessThan(21);
     expect(ticks[ticks.length - 1]).toBeGreaterThan(21);
-  });
-});
-
-describe('valueRange', () => {
-  it('spans minima and maxima of all series', () => {
-    const points: ChartPoint[] = [
-      [0, 20, 19.2, 21],
-      [1, 22, 21, 23.4],
-    ];
-    expect(valueRange([{ key: 'a', label: 'a', color: '', unit: '', points }])).toEqual([19, 24]);
-    expect(valueRange([])).toBeNull();
   });
 });
 

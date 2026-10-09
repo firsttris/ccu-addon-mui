@@ -23,11 +23,18 @@ export const useThermostatState = ({
   const commitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingCommitRef = useRef<(() => void) | null>(null);
 
+  // A value from the CCU waits until 3 seconds after the last user input,
+  // so the dial doesn't jump while it is turned; it is not dropped: a
+  // rollback after a refused change must show again.
   useEffect(() => {
-    // Ignore backend updates for 3 seconds after user interaction to prevent jumping
-    if (Date.now() - lastUserInteractionRef.current > 3000) {
-      setLocalTarget(targetTemperature);
-    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const apply = () => {
+      const wait = lastUserInteractionRef.current + 3000 - Date.now();
+      if (wait > 0) timer = setTimeout(apply, wait);
+      else setLocalTarget(targetTemperature);
+    };
+    apply();
+    return () => clearTimeout(timer);
   }, [targetTemperature]);
 
   const updateLocalTarget = (temp: number) => {

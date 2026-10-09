@@ -71,6 +71,11 @@ export const sysvarValueType = (sysvar?: Sysvar) => {
 
 // --- New parts, with the WebUI's defaults
 
+// Today on the wall clock as "YYYY-MM-DD" (toISOString would be UTC: until
+// 2 am in Germany that is yesterday)
+export const today = (date = new Date()) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
 export const newTimeModule = (): TimeModule => ({
   id: 0,
   changed: true,
@@ -81,7 +86,7 @@ export const newTimeModule = (): TimeModule => ({
   period: 0,
   weekdays: 0,
   repetitionValue: 1,
-  begin: new Date().toISOString().slice(0, 10),
+  begin: today(),
   end: '0',
   repetitionCount: 0,
   repeatTime: '',

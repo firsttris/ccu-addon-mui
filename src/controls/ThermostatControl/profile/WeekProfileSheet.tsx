@@ -15,7 +15,7 @@ import { ElevateDialog } from '../../../components/ElevateDialog';
 import { getTemperatureColor } from '../../../utils/colors';
 import { getLocale } from '../../../paraglide/runtime';
 import { m } from '../../../paraglide/messages';
-import { cn } from '../../../lib/utils';
+import { cn, formatNumber } from '../../../lib/utils';
 import {
   changedValues,
   DAY_END,
@@ -42,8 +42,7 @@ interface WeekProfileSheetProps {
   activeProfile?: number;
 }
 
-const formatTemperature = (value: number) =>
-  new Intl.NumberFormat(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
+const formatTemperature = (value: number) => formatNumber(value, 1, 1);
 
 // Monday = 0 … Sunday = 6, like DAYS
 const todayIndex = () => (new Date().getDay() + 6) % 7;
@@ -198,7 +197,7 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
   const { showToast } = useToast();
   const { userLevel, elevated } = useWebSocketContext();
   const canEdit = userLevel === 'admin' && elevated;
-  const { data: description, isPending: loadingDescription } = useParamsetDescription(interfaceName, address, 'MASTER');
+  const { data: description, isPending: loadingDescription } = useParamsetDescription(interfaceName, address, 'MASTER', { enabled: open });
   const { data: values } = useParamset(interfaceName, address, 'MASTER', { enabled: open });
   const putParamset = usePutParamset();
   const setDataPoint = useSetDataPoint();

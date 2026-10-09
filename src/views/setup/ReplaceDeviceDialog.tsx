@@ -7,6 +7,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { useChannelNames } from './channelNames';
 import { m } from '../../paraglide/messages';
 import type { InboxDevice } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 // Lets a new device from the inbox take the place of an existing one of the
 // same kind, with its settings, links and programs, as the WebUI's
@@ -38,7 +39,7 @@ export const ReplaceDeviceDialog = ({ device, onDone }: { device: InboxDevice; o
       showToast(m.REPLACE_DONE({ name: names.get(old) ?? old }), 'info');
       onDone();
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }

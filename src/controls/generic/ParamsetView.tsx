@@ -44,7 +44,6 @@ export const shownParameters = (description: ParamsetDescription) =>
 export const formatParameterValue = (
   parameter: ParameterDescription,
   value: DatapointValue | undefined,
-  t: (key: TranslationKey) => string,
 ): string => {
   if (value === null || value === undefined || value === '') {
     return '–';
@@ -119,7 +118,6 @@ const NumberParameter = ({ name, label, parameter, value, onSet }: ParameterProp
 
 export const ParameterValue = (props: ParameterProps) => {
   const { name, label, parameter, value, onSet, readOnly } = props;
-  const t = useTranslations();
   const writable = !readOnly && (parameter.operations & Operation.WRITE) !== 0;
 
   // A value with its own meaning, e.g. "not used"

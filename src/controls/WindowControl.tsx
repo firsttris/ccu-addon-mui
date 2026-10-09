@@ -90,8 +90,9 @@ export const WindowControl = ({ channel }: { channel: Channel }) => {
   const state = windowState(channel);
   const effects = useEffects();
   const dp = channel.datapoints as Record<string, DatapointValue>;
-  // Sabotage: the cover was opened (HmIP SABOTAGE, BidCos ERROR 1)
-  const sabotage = dp.SABOTAGE === true || (channel.type === 'SHUTTER_CONTACT' && dp.ERROR === 1);
+  // Sabotage: the cover was opened (BidCos ERROR 1). HmIP devices report
+  // it on channel 0 (SABOTAGE), which comes as a service message.
+  const sabotage = channel.type === 'SHUTTER_CONTACT' && dp.ERROR === 1;
   const open = state === 'open' || state === 'tilted';
   return (
     <Tile

@@ -15,6 +15,7 @@ import { OnlyOnCCU, Panel } from './Panel';
 import { usePasswordRetry } from './usePasswordRetry';
 import { m } from '../../paraglide/messages';
 import type { LanGateway, LanGatewayState, RadioModule } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 type GatewayType = LanGateway['type'];
 
@@ -103,7 +104,7 @@ const ChangeKeyDialog = ({ gateway, onClose }: { gateway: LanGateway; onClose: (
           setBusy(false);
         }
       },
-      (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
   return (
     <ConfirmDialog title={`${m.LGW_CHANGE_KEY()}: ${gateway.name || gateway.serial}`} confirmLabel={m.LGW_CHANGE_KEY()} busy={busy || !valid || password.blocked} onConfirm={change} onCancel={onClose}>
@@ -151,7 +152,7 @@ const Assignment = ({ modules, gateways, disabled }: { modules: RadioModule[]; g
       await request({ type: 'setBidcosInterface', address, module, roaming }, { queue: false });
       await queryClient.invalidateQueries({ queryKey: ['devices'] });
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     }
   };
   if (modules.length === 0 || bidcos.length === 0) return null;
@@ -263,7 +264,7 @@ export const LanGateways = () => {
           setBusy(false);
         }
       },
-      (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
 
   return (

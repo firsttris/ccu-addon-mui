@@ -22,17 +22,20 @@ export type SwitchVirtualReceiverDatapoint = {
   STATE: boolean;
 };
 
+// The types as the paramset descriptions give them (ENUM, FLOAT, INTEGER:
+// number; BOOL, ACTION: boolean), as the server passes the values on
 export type BlindVirtualReceiverDatapoint = {
-  ACTIVITY_STATE: string;
+  ACTIVITY_STATE: number;
   COMBINED_PARAMETER: string;
-  LEVEL: string;
-  LEVEL_2: string;
-  LEVEL_2_STATUS: string;
-  LEVEL_STATUS: string;
-  PROCESS: string;
-  SECTION: string;
-  SECTION_STATUS: string;
-  STOP: string;
+  LEVEL: number;
+  // null on roller shutters (no slats)
+  LEVEL_2: number | null;
+  LEVEL_2_STATUS: number;
+  LEVEL_STATUS: number;
+  PROCESS: number;
+  SECTION: number;
+  SECTION_STATUS: number;
+  STOP: boolean;
 };
 
 export type HeatingClimateControlTransceiverDatapoint = {
@@ -59,14 +62,14 @@ export type HeatingClimateControlTransceiverDatapoint = {
 };
 
 export type FloorClimateControlTransceiverDatapoint = {
-  DEW_POINT_ALARM: string;
-  EMERGENCY_OPERATION: string;
-  EXTERNAL_CLOCK: string;
-  FROST_PROTECTION: string;
-  HUMIDITY_LIMITER: string;
-  LEVEL: string;
-  LEVEL_STATUS: string;
-  VALVE_STATE: string;
+  DEW_POINT_ALARM: boolean;
+  EMERGENCY_OPERATION: boolean;
+  EXTERNAL_CLOCK: boolean;
+  FROST_PROTECTION: boolean;
+  HUMIDITY_LIMITER: boolean;
+  LEVEL: number;
+  LEVEL_STATUS: number;
+  VALVE_STATE: number;
 };
 
 // HmIP-ESI: channel 1 has the current power/flow, channels 2-4 the meter
@@ -86,10 +89,10 @@ export type EnergyMeterDatapoint = {
 };
 
 export type KeymaticDatapoint = {
-  ERROR: string;
-  INHIBIT: string;
+  ERROR: number;
+  INHIBIT: boolean;
   OPEN: boolean;
-  RELOCK_DELAY: string;
+  RELOCK_DELAY: number;
   STATE: boolean;
   STATE_UNCERTAIN: boolean;
 };

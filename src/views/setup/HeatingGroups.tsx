@@ -18,6 +18,7 @@ import { ListSkeletonItems } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 import { Panel } from './Panel';
 import { useChannelNames } from './channelNames';
+import { errorText } from '../../lib/errors';
 
 // Deleting a group, through the HMServer like the WebUI's GroupListPage.ftl
 const DeleteGroup = ({ group, onClose }: { group: HeatingGroup; onClose: () => void }) => {
@@ -39,7 +40,7 @@ const DeleteGroup = ({ group, onClose }: { group: HeatingGroup; onClose: () => v
           setBusy(false);
         }
       },
-      (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
   return (
     <ConfirmDialog title={m.HG_DELETE()} confirmLabel={m.DELETE()} destructive busy={busy || password.blocked} onConfirm={remove} onCancel={onClose}>

@@ -65,10 +65,12 @@ export const useParamsetDescription = (
   interfaceName: string,
   address: string,
   paramsetKey: 'VALUES' | 'MASTER' = 'VALUES',
+  { enabled = true }: { enabled?: boolean } = {},
 ) => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['paramsetDescription', interfaceName, address, paramsetKey],
+    enabled,
     queryFn: async () =>
       ((await request({ type: 'getParamsetDescription', interfaceName, address, paramsetKey }))
         .description ?? {}),
@@ -134,7 +136,8 @@ export const usePutParamset = () => {
 };
 
 // Seconds pairing is still on for an interface (0: off), polled while on
-export const useInstallMode = (interfaceName: string, { poll, enabled = true }: { poll: boolean; enabled?: boolean }) => {
+// Polled every second while the install mode runs, not after it ended
+export const useInstallMode = (interfaceName: string, { enabled = true }: { enabled?: boolean } = {}) => {
   const { request } = useWebSocketActions();
   return useQuery({
     enabled,
@@ -144,7 +147,7 @@ export const useInstallMode = (interfaceName: string, { poll, enabled = true }: 
       // BidCos-RF: a device that failed for another security key
       return { seconds: response.seconds ?? 0, keyMismatch: response.keyMismatch };
     },
-    refetchInterval: poll ? 1000 : false,
+    refetchInterval: (query) => ((query.state.data?.seconds ?? 0) > 0 ? 1000 : false),
     retry: false,
   });
 };

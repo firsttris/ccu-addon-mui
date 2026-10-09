@@ -23,8 +23,10 @@ if {$cmd == "download"} {
 } else {
     puts -nonewline "Content-Type: text/plain; charset=utf-8\r\n\r\n"
     
+    # At most 10 s, once: without Internet (DNS answers, 443 dropped) wget
+    # would wait 15 minutes per call of the add-on page
     catch {
-        regexp {"tag_name"\s*:\s*"v?([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z]+\.[0-9]+)?)"} [exec /usr/bin/wget -qO- --no-check-certificate $checkURL] match newversion
+        regexp {"tag_name"\s*:\s*"v?([0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z]+\.[0-9]+)?)"} [exec /usr/bin/wget -qO- -T 10 -t 1 --no-check-certificate $checkURL] match newversion
     }
     
     if {[info exists newversion]} {

@@ -92,7 +92,11 @@ export type TakeOver = 'reloading' | 'otherTabs' | 'failed';
 // while another tab of the app is open; and never blindly into the old app
 // when the new one can't be loaded.
 export const takeOverNewApp = async (version: string): Promise<TakeOver> => {
-  sessionStorage.setItem(UPDATED_TO_KEY, version);
+  try {
+    sessionStorage.setItem(UPDATED_TO_KEY, version);
+  } catch {
+    // Only the confirmation after the reload (UpdateDone) is missing then
+  }
   const registration = await swRegistration().catch(() => undefined);
   if (!registration) {
     // No service worker (development, plain http): the page comes fresh

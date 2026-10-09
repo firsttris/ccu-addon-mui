@@ -48,7 +48,7 @@ func TestDeleteDeviceFirmwareFailed(t *testing.T) {
 		_, _ = io.WriteString(w, `{"isSuccessful":true,"errorCode":"","content":"${delDevFirmwareFailed}"}`)
 	}))
 	defer server.Close()
-	s := New(server.URL, t.TempDir())
+	s := New(server.URL, t.TempDir(), "")
 	s.groupSessionsOnce.Do(func() { s.groupSessions = &groupSessions{sessions: map[string]string{"Admin": "abc"}} })
 	if err := s.DeleteDeviceFirmware("Admin", "", "0x56", "HM-LC-Sw1-FM"); !errors.Is(err, ErrDeviceFirmwareFailed) {
 		t.Fatalf("expected ErrDeviceFirmwareFailed, got %v", err)

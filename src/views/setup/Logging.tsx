@@ -9,6 +9,8 @@ import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
 import { m } from '../../paraglide/messages';
 import { OnlyOnCCU, Panel } from './Panel';
+import { errorText } from '../../lib/errors';
+import { download } from './Backup';
 
 // The levels the WebUI offers (cp_maintenance.cgi: LOGLEVELS,
 // HMIP_LOGLEVELS, REGA_LOGLEVELS), most verbose first
@@ -35,14 +37,6 @@ const regaLevels = () => [
 // A syslog server as set_log_config writes it: host name, IPv4 or IPv6
 export const validLogHost = (host: string) => /^[A-Za-z0-9.:[\]_-]{0,253}$/.test(host);
 
-const download = (url: string, fileName: string) => {
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-};
 
 // The logging settings of the WebUI's Zentralen-Wartung: how much the
 // HomeMatic IP server, rfd (BidCos-RF) and the logic layer log, where to
@@ -89,7 +83,7 @@ export const Logging = () => {
       await queryClient.invalidateQueries({ queryKey: ['logging'] });
       showToast(m.SAVED(), 'info');
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }
@@ -100,7 +94,7 @@ export const Logging = () => {
       const response = await request({ type: 'downloadLogs' }, { queue: false });
       download(response.url, response.fileName);
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     }
   };
 

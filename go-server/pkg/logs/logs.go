@@ -5,6 +5,7 @@ package logs
 
 import (
 	"bufio"
+	"ccu-addon-mui-server/pkg/atomicfile"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -126,7 +127,7 @@ func (s *Service) Write(settings Settings) error {
 	}
 	fmt.Fprintf(&b, "LOGLEVEL_RFD=%d\nLOGLEVEL_HS485D=%d\nLOGLEVEL_REGA=%d\nLOGLEVEL_HMIP=%s\n",
 		settings.RFD, settings.HS485D, settings.Rega, settings.HmIP)
-	return os.WriteFile(s.ConfigFile, []byte(b.String()), 0o644)
+	return atomicfile.Write(s.ConfigFile, []byte(b.String()), 0o644)
 }
 
 // Prepare returns the id of a download of the log files, valid once

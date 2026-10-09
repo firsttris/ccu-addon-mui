@@ -105,12 +105,13 @@ func TestGetParamsetDescriptionParsesAndCachesPerDeviceType(t *testing.T) {
 		t.Fatalf("unexpected PROCESS value list: %v", got)
 	}
 
-	// Cached: neither the device nor the paramset description is loaded again
+	// Cached: neither the channel, its device (for the firmware) nor the
+	// paramset description is loaded again
 	if _, err := client.GetParamsetDescription("HmIP-RF", "0001D3C99C3C93:1", ParamsetValues); err != nil {
 		t.Fatal(err)
 	}
-	if calls["getDeviceDescription"] != 1 || calls["getParamsetDescription"] != 1 {
-		t.Fatalf("expected one call each, got %v", calls)
+	if calls["getDeviceDescription"] != 2 || calls["getParamsetDescription"] != 1 {
+		t.Fatalf("expected the channel, its device and the description once, got %v", calls)
 	}
 }
 
@@ -133,6 +134,8 @@ func TestSameDeviceTypeSharesParamsetDescriptions(t *testing.T) {
 	calls := map[string]int{}
 	ccu := fakeInterface(t, map[string]string{
 		"listDevices": `<array><data>
+			<value><struct><member><name>ADDRESS</name><value>A</value></member><member><name>TYPE</name><value>HmIP-BSM</value></member><member><name>VERSION</name><value><i4>12</i4></value></member></struct></value>
+			<value><struct><member><name>ADDRESS</name><value>B</value></member><member><name>TYPE</name><value>HmIP-BSM</value></member><member><name>VERSION</name><value><i4>12</i4></value></member></struct></value>
 			<value><struct><member><name>ADDRESS</name><value>A:1</value></member><member><name>TYPE</name><value>SWITCH_VIRTUAL_RECEIVER</value></member><member><name>PARENT_TYPE</name><value>HmIP-BSM</value></member><member><name>VERSION</name><value><i4>12</i4></value></member></struct></value>
 			<value><struct><member><name>ADDRESS</name><value>B:1</value></member><member><name>TYPE</name><value>SWITCH_VIRTUAL_RECEIVER</value></member><member><name>PARENT_TYPE</name><value>HmIP-BSM</value></member><member><name>VERSION</name><value><i4>12</i4></value></member></struct></value>
 		</data></array>`,
@@ -142,7 +145,7 @@ func TestSameDeviceTypeSharesParamsetDescriptions(t *testing.T) {
 	client := newTestClient(t, ccu.URL)
 
 	devices, err := client.ListDevices("HmIP-RF")
-	if err != nil || len(devices) != 2 {
+	if err != nil || len(devices) != 4 {
 		t.Fatalf("ListDevices = %v, %v", devices, err)
 	}
 	for _, address := range []string{"A:1", "B:1"} {
@@ -291,5 +294,38 @@ func TestCallFault(t *testing.T) {
 	_, err := c.GetParamset("HmIP-RF", "A:1", ParamsetValues)
 	if faultCode(err) != -7 {
 		t.Fatalf("fault code of %v", err)
+	}
+}
+
+// After a firmware update (Forget) the device is read again, so the new
+// firmware gets descriptions of its own
+func TestParamsetDescriptionAfterFirmwareUpdate(t *testing.T) {
+	calls := map[string]int{}
+	firmware := "1.0.0"
+	ccu := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		value := `<struct><member><name>ADDRESS</name><value>A</value></member><member><name>TYPE</name><value>HmIP-BSM</value></member><member><name>FIRMWARE</name><value>` + firmware + `</value></member><member><name>VERSION</name><value><i4>12</i4></value></member></struct>`
+		switch {
+		case strings.Contains(string(body), "getParamsetDescription"):
+			calls["getParamsetDescription"]++
+			value = valuesDescription
+		case strings.Contains(string(body), "A:1"):
+			value = `<struct><member><name>ADDRESS</name><value>A:1</value></member><member><name>TYPE</name><value>SWITCH_VIRTUAL_RECEIVER</value></member><member><name>PARENT_TYPE</name><value>HmIP-BSM</value></member><member><name>VERSION</name><value><i4>12</i4></value></member></struct>`
+		}
+		w.Header().Set("Content-Type", "text/xml")
+		_, _ = io.WriteString(w, xmlResponse(value))
+	}))
+	defer ccu.Close()
+	client := newTestClient(t, ccu.URL)
+
+	for _, version := range []string{"1.0.0", "1.2.0", "1.4.0"} {
+		firmware = version
+		client.Forget("HmIP-RF", "A")
+		if _, err := client.GetParamsetDescription("HmIP-RF", "A:1", ParamsetValues); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if calls["getParamsetDescription"] != 3 {
+		t.Fatalf("expected a description per firmware, got %v", calls)
 	}
 }

@@ -9,6 +9,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { OnlyOnCCU, Panel } from './Panel';
 import { m } from '../../paraglide/messages';
 import type { NetConfig } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
 const HOSTNAME = /^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/;
@@ -94,7 +95,7 @@ export const Network = () => {
       setSaved(true);
       await queryClient.invalidateQueries({ queryKey: ['network'] });
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }

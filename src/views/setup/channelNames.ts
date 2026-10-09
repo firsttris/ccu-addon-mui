@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
-import { useChannels, useDevices } from '../../queries';
+import { useChannelList, useDevices } from '../../queries';
 
 // Names from ReGa by address. A device's name is that of its first channel
 // with a name of its own (the CCU names channels "<type> <address>:<n>"
 // until the user renames them).
 export const useChannelNames = () => {
-  const { data: channels } = useChannels({ all: true });
+  // Only the names: no events for all channels of the CCU
+  const { data: channels } = useChannelList();
   const { data: devices } = useDevices();
   return useMemo(() => {
     const names = new Map<string, string>();

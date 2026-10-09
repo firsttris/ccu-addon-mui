@@ -307,7 +307,7 @@ export const WeekProgramSheet = ({ open, onOpenChange, interfaceName, address, n
   const { userLevel, elevated } = useWebSocketContext();
   const { showToast } = useToast();
   const canEdit = userLevel === 'admin' && elevated;
-  const { data: description, isPending } = useParamsetDescription(interfaceName, address, 'MASTER');
+  const { data: description, isPending } = useParamsetDescription(interfaceName, address, 'MASTER', { enabled: open });
   const { data: values } = useParamset(interfaceName, address, 'MASTER', { enabled: open });
   const putParamset = usePutParamset();
 
@@ -365,7 +365,7 @@ export const WeekProgramSheet = ({ open, onOpenChange, interfaceName, address, n
       astroType: 0,
       astroOffset: 0,
       targets: targets.length > 0 ? 1 << targets[0].index : 1,
-      level: kind === 'switch' ? 1 : 1,
+      level: 1,
       level2: hasLevel2 ? 0 : undefined,
     });
   };

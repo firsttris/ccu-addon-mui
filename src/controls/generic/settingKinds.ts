@@ -1,4 +1,5 @@
 import { getLocale } from "../../paraglide/runtime";
+import { formatNumber } from "../../lib/utils";
 import { ParameterDescription } from "../../types/types";
 import { humanize, parameterLabel } from "./parameters";
 
@@ -127,10 +128,7 @@ export const unitLabel = (unit: string): string => {
   return match[1] ? `${match[1]} ${word}` : word;
 };
 
-const number = (value: number, digits = 2) =>
-  new Intl.NumberFormat(getLocale(), { maximumFractionDigits: digits }).format(
-    value,
-  );
+const number = (value: number, digits = 2) => formatNumber(value, digits);
 
 // A duration in seconds, readable: "2 min 30 s", "1,5 s", "1 h", "0 s"
 export const formatDuration = (seconds: number) => {

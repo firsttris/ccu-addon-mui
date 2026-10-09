@@ -3,6 +3,7 @@ package main
 import (
 	"ccu-addon-mui-server/pkg/addons"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -74,6 +75,10 @@ func run(ctx context.Context, cfg *config.Config) error {
 		}
 		authenticator.SetLevelFunc(func(username string) (string, error) {
 			level, err := regaClient.GetUserLevel(username)
+			if errors.Is(err, rega.ErrUnknownUser) {
+				// Deleted in the WebUI: no rights any more
+				return auth.LevelUnknown, nil
+			}
 			if err != nil {
 				logger.Info(fmt.Sprintf("⚠️ Could not read the user level of %q: %v", username, err))
 				return auth.LevelUnknown, err
@@ -89,12 +94,9 @@ func run(ctx context.Context, cfg *config.Config) error {
 	}
 
 	wsServer.SetAuditLog(audit.New(cfg.AuditLogFile))
-	wsServer.SetBackup(backup.New(cfg.WebUIURL, cfg.BackupDir))
+	wsServer.SetBackup(backup.New(cfg.WebUIURL, cfg.BackupDir, cfg.FirmwareUploadDir))
 
-	deviceRPC, err := ccurpc.New(cfg)
-	if err != nil {
-		return fmt.Errorf("failed to create the XML-RPC client: %w", err)
-	}
+	deviceRPC := ccurpc.New(cfg)
 	wsServer.SetDeviceRPC(deviceRPC)
 
 	// The add-ons; this one's rc.d script is "mui" (addon_installer/rc.d)

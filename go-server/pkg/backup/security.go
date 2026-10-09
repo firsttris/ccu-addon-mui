@@ -24,8 +24,9 @@ var (
 var keyRegex = regexp.MustCompile(`^[0-9a-zA-Z_]{5,}$`)
 
 // AdminCall runs a JSON-RPC method of the WebUI with the user's session
-// (a new one with the password, else the kept one). A kept session that
-// fails is forgotten and the password asked for (ErrSessionRequired).
+// (a new one with the password, else the kept one). A kept session the CCU
+// no longer accepts is forgotten and the password asked for
+// (ErrSessionRequired); other errors of the method are passed on.
 func (s *Service) AdminCall(username, password, method string, params map[string]interface{}) (interface{}, error) {
 	sessionID, err := s.groupSession(username, password)
 	if err != nil {
@@ -40,7 +41,7 @@ func (s *Service) AdminCall(username, password, method string, params map[string
 		return nil, err
 	}
 	if response.Error != nil {
-		if password == "" {
+		if password == "" && response.Error.Code == accessDeniedCode {
 			s.forgetGroupSession(username)
 			return nil, ErrSessionRequired
 		}

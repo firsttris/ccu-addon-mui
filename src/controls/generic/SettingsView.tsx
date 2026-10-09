@@ -15,7 +15,7 @@ import { Input } from "../../components/ui/input";
 import { NativeSelect } from "../../components/ui/select";
 import { TimePicker } from "../../components/ui/time-picker";
 import { Button } from "../../components/ui/button";
-import { cn } from "../../lib/utils";
+import { cn, formatNumber } from "../../lib/utils";
 import { shownParameters } from "./ParamsetView";
 import { parameterLabel } from "./parameters";
 import {
@@ -36,10 +36,7 @@ import {
 
 type OnSet = (name: string, value: string | number | boolean) => void;
 
-const number = (value: number, digits = 2) =>
-  new Intl.NumberFormat(getLocale(), { maximumFractionDigits: digits }).format(
-    value,
-  );
+const number = (value: number, digits = 2) => formatNumber(value, digits);
 
 // A number for the input field: decimal comma in German, no grouping
 const editable = (value: number) => {
@@ -182,13 +179,11 @@ const Stepper = ({
 // 0..100 % with a slider and the exact value next to it
 const PercentSlider = ({
   label,
-  name,
   parameter,
   value,
   onChange,
 }: {
   label: string;
-  name: string;
   parameter: ParameterDescription;
   value: number | undefined;
   onChange: (value: number) => void;
@@ -202,7 +197,6 @@ const PercentSlider = ({
     typeof parameter.max === "number" ? Math.round(parameter.max * scale) : 100;
   const min =
     typeof parameter.min === "number" ? Math.round(parameter.min * scale) : 0;
-  void name;
   return (
     <div className="flex items-center gap-3">
       <input
@@ -338,7 +332,6 @@ const SingleControl = ({
       return (
         <PercentSlider
           label={label}
-          name={name}
           parameter={parameter}
           value={num}
           onChange={(next) => onSet(name, next)}

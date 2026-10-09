@@ -9,8 +9,10 @@ import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
 import { defaultLang } from '../../i18n/locale';
 import { Panel } from './Panel';
+import { formatNumber } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
 import type { EnergyPrice, InfoLed } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 4 });
 
@@ -23,7 +25,7 @@ export const formatBytes = (bytes: number) => {
     value /= 1024;
     unit++;
   }
-  return `${new Intl.NumberFormat(defaultLang, { maximumFractionDigits: unit === 0 ? 0 : 1 }).format(value)} ${units[unit]}`;
+  return `${formatNumber(value, unit === 0 ? 0 : 1)} ${units[unit]}`;
 };
 
 // A number as typed: a comma counts as decimal point
@@ -108,7 +110,7 @@ export const GeneralSettings = () => {
       ]);
       showToast(m.SAVED(), 'info');
     } catch (error) {
-      showToast(`${m.CHANGE_FAILED()}: ${(error as Error).message}`);
+      showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
       setBusy(false);
     }

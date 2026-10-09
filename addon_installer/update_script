@@ -40,8 +40,10 @@ umask 022
 mkdir -p $ADDON_DIR/go-server $RC_DIR $WWW_DIR $LIGHTTPD_DIR
 
 # The app: Vite names its files by content hash, so the old ones are
-# removed instead of piling up with every update
+# removed instead of piling up with every update (also the service
+# worker's workbox-<hash>.js next to sw.js)
 rm -rf $ADDON_DIR/assets
+rm -f $ADDON_DIR/workbox-*.js
 cp -R dist/. $ADDON_DIR/
 cp update-check.cgi $ADDON_DIR/update-check.cgi
 [ -f VERSION ] && cp VERSION $ADDON_DIR/

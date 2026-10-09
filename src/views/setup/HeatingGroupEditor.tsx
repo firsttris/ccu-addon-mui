@@ -17,6 +17,8 @@ import { ChannelPicker } from '../../components/ChannelPicker';
 import { DeviceImage } from '../../components/DeviceImage';
 import type { Channel } from '../../types/types';
 import type { HeatingGroup, HeatingGroupChange } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
+import { Field } from '../../components/Field';
 
 type GroupType = HeatingGroupChange['type'];
 
@@ -24,13 +26,6 @@ export const groupTypes: { type: GroupType; label: () => string }[] = [
   { type: 'hmip.heating.group', label: () => 'HomeMatic IP' },
   { type: 'HomeMatic.heating', label: () => 'HomeMatic' },
 ];
-
-const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-    {label}
-    {children}
-  </label>
-);
 
 // Creating or changing a heating group, as the WebUI's GroupEditPage.ftl:
 // name, type, whether its members may still be operated alone, and the
@@ -106,7 +101,7 @@ export const HeatingGroupEditor = ({ group, onClose }: { group?: HeatingGroup; o
           setBusy(false);
         }
       },
-      (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
 
   return (

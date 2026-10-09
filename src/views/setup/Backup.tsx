@@ -20,7 +20,8 @@ const sizeFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 1
 const formatSize = (bytes: number) =>
   bytes >= 1024 * 1024 ? `${sizeFormat.format(bytes / 1024 / 1024)} MB` : `${sizeFormat.format(bytes / 1024)} kB`;
 
-// The server hands out a backup once, under a random address
+// Saves what the server hands out once under a random address (a backup,
+// the log files)
 export const download = (url: string, fileName: string) => {
   const link = document.createElement('a');
   link.href = url;
@@ -108,6 +109,7 @@ export const Backup = () => {
           onCancel={() => {
             setAsking(false);
             setError(null);
+            setPassword('');
           }}
         >
           <form

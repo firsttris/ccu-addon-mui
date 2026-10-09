@@ -31,6 +31,7 @@ import { m } from '../../paraglide/messages';
 import { linkKey, LinkList } from './LinkList';
 import { NativeSelect } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
+import { errorText } from '../../lib/errors';
 
 const Row = ({ children }: { children: ReactNode }) => <div className="flex flex-wrap items-center gap-2">{children}</div>;
 
@@ -323,8 +324,8 @@ export const LinkParameters = ({ interfaceName, link }: { interfaceName: string;
             <ul className="flex list-disc flex-col gap-1 pl-5">
               {changes.map(([name, value]) => (
                 <li key={name}>
-                  <strong>{t(name as TranslationKey)}</strong>: {formatParameterValue(description.data[name], current[name], t)} →{' '}
-                  {formatParameterValue(description.data[name], value, t)}
+                  <strong>{t(name as TranslationKey)}</strong>: {formatParameterValue(description.data[name], current[name])} →{' '}
+                  {formatParameterValue(description.data[name], value)}
                 </li>
               ))}
             </ul>
@@ -365,8 +366,12 @@ export const AddLinkForm = ({
   const action = useLinkAction();
   const label = (address: string) => `${names.get(address) ?? address} (${address})`;
   const anyDevice = device === undefined;
-  const linkable = (anyDevice ? devices.flatMap((d) => d.channels ?? []) : (channels ?? [])).filter(
-    (c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length,
+  const linkable = useMemo(
+    () =>
+      (anyDevice ? devices.flatMap((d) => d.channels ?? []) : (channels ?? [])).filter(
+        (c) => c.linkSourceRoles?.length || c.linkTargetRoles?.length,
+      ),
+    [anyDevice, devices, channels],
   );
   const [own, setOwn] = useState('');
   const deviceAddress = device ?? own.split(':')[0];
@@ -423,7 +428,7 @@ export const AddLinkForm = ({
           setPartner('');
           setLinkName('');
         },
-        onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+        onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
       },
     );
   };

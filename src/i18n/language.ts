@@ -29,13 +29,15 @@ if (appliedLanguage !== 0) {
 // translation offer (index.html starts with "de")
 document.documentElement.lang = getLocale();
 
-// Keeps a choice on this device and reloads if it differs from the one in use
+// Keeps a choice on this device and reloads if it differs from the one in
+// use. Not without storage: the reloaded app wouldn't know the choice, and
+// the sync after the login would reload again and again.
 export const applyLanguage = (choice: LanguageChoice) => {
   try {
     if (choice === 0) localStorage.removeItem(KEY);
     else localStorage.setItem(KEY, String(choice));
   } catch {
-    // Without storage the choice holds until the app reloads
+    return;
   }
   if (choice !== appliedLanguage) window.location.reload();
 };

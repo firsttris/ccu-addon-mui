@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import UploadIcon from '~icons/lucide/upload';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { useUpload } from '../../hooks/useUpload';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
@@ -24,6 +25,7 @@ export const restoreErrorMessage = (error: unknown) =>
 // of the CCU, so it is confirmed and the password is asked once more.
 export const RestoreBackup = ({ onCancel }: { onCancel: () => void }) => {
   const { request } = useWebSocketActions();
+  const upload = useUpload();
   const { authRequired } = useWebSocketContext();
   const [step, setStep] = useState<Step>('choose');
   const [file, setFile] = useState<File | null>(null);
@@ -40,8 +42,7 @@ export const RestoreBackup = ({ onCancel }: { onCancel: () => void }) => {
     setError(null);
     try {
       const prepared = await request({ type: 'prepareRestore' }, { queue: false });
-      const upload = await fetch(prepared.url, { method: 'POST', body: file });
-      if (!upload.ok) throw new Error(await upload.text());
+      await upload(prepared.url, file);
       const checked = await request({ type: 'checkRestore', id: prepared.id, password }, { queue: false, timeoutMs: RESTORE_TIMEOUT_MS });
       setId(prepared.id);
       setNeedsKey(checked.needsKey);

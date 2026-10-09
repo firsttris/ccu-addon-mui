@@ -245,27 +245,30 @@ func TestLoginSucceedsWhenLevelLookupFails(t *testing.T) {
 	}
 }
 
-func TestRefreshKeepsLevelAndFillsInMissingOne(t *testing.T) {
+func TestRefreshLooksUpTheLevel(t *testing.T) {
 	a := newTestAuthenticator(t, "http://unused")
-	lookups := 0
-	a.SetLevelFunc(func(string) (string, error) {
-		lookups++
-		return LevelUser, nil
-	})
+	level, lookupErr := LevelGuest, error(nil)
+	a.SetLevelFunc(func(string) (string, error) { return level, lookupErr })
 
-	// A token with a level keeps it without a new lookup
-	session, _, err := a.Refresh(a.issueToken(Session{User: "Admin", Level: LevelAdmin}), "test")
-	if err != nil || session.Level != LevelAdmin || lookups != 0 {
-		t.Fatalf("Refresh = %+v, %v (%d lookups)", session, err, lookups)
+	// Changed in the WebUI: the new level, also in the renewed token
+	session, refreshed, err := a.Refresh(a.issueToken(Session{User: "Hans", Level: LevelAdmin}), "test")
+	if err != nil || session.Level != LevelGuest {
+		t.Fatalf("Refresh = %+v, %v", session, err)
 	}
-
-	// A token from before levels were stored gets one
-	session, refreshed, err := a.Refresh(a.issueToken(Session{User: "Gast"}), "test")
-	if err != nil || session.Level != LevelUser || lookups != 1 {
-		t.Fatalf("Refresh = %+v, %v (%d lookups)", session, err, lookups)
-	}
-	if verified, _ := a.Verify(refreshed); verified.Level != LevelUser {
+	if verified, _ := a.Verify(refreshed); verified.Level != LevelGuest {
 		t.Fatalf("refreshed token has level %q", verified.Level)
+	}
+
+	// Deleted in the WebUI (the level function says so without an error)
+	level = LevelUnknown
+	if session, _, _ := a.Refresh(a.issueToken(Session{User: "Hans", Level: LevelUser}), "test"); session.Level != LevelUnknown {
+		t.Fatalf("deleted user kept level %q", session.Level)
+	}
+
+	// ReGa not answering: the stored level stays
+	level, lookupErr = LevelUnknown, errors.New("timeout")
+	if session, _, _ := a.Refresh(a.issueToken(Session{User: "Hans", Level: LevelUser}), "test"); session.Level != LevelUser {
+		t.Fatalf("failed lookup changed the level to %q", session.Level)
 	}
 }
 

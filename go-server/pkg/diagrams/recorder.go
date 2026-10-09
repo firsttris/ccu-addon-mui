@@ -382,8 +382,9 @@ func (r *Recorder) Import(key string, samples []Sample) error {
 	return r.write(writes)
 }
 
-// Prune deletes the per-minute values older than MinuteRetention and those
-// of series no longer wanted
+// Prune deletes the per-minute values older than MinuteRetention. The
+// hourly values stay, also of series no longer wanted: a diagram made
+// again shows their history.
 func (r *Recorder) Prune() {
 	cutoff := r.now().Add(-MinuteRetention).UTC().Format("2006-01-02")
 	base := filepath.Join(r.dir, resolutions[minuteRes].name)

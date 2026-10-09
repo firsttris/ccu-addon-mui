@@ -43,7 +43,7 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { useChannelNames } from "./channelNames";
 import { ChannelMeta, NameField, useRename } from "./ChannelMeta";
-import { useChannels } from "../../queries";
+import { useChannelList } from "../../queries";
 import { isHiddenChannel } from "../../hooks/channels";
 import { humanize } from "../../controls/generic/parameters";
 import { cn } from "../../lib/utils";
@@ -66,6 +66,7 @@ import { PanelSkeleton } from "../../components/ui/skeleton";
 import { m } from "../../paraglide/messages";
 
 import { DEVICE_TABS, type DeviceTab } from "./deviceTabs";
+import { errorText } from "../../lib/errors";
 export { DEVICE_TABS, type DeviceTab };
 
 const Section = (props: HTMLAttributes<HTMLElement>) => <Panel {...props} />;
@@ -157,10 +158,14 @@ export const DeviceSettings = () => {
   const [transferSince, setTransferSince] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
   const watching = transferSince !== null && now - transferSince < 120_000;
+  // Renders again when "sending" turns into "done" and when watching ends,
+  // not every second
   useEffect(() => {
     if (transferSince === null) return;
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
+    const timers = [4000, 120_000].map((ms) =>
+      setTimeout(() => setNow(Date.now()), transferSince + ms - Date.now()),
+    );
+    return () => timers.forEach(clearTimeout);
   }, [transferSince]);
   const hasMaintenance = device?.children?.includes(`${address}:0`) === true;
   const { data: maintenance } = useParamset(
@@ -297,7 +302,7 @@ export const DeviceSettings = () => {
     return label === type ? humanize(type) : label;
   };
   const rename = useRename();
-  const { data: allChannels } = useChannels({ all: true });
+  const { data: allChannels } = useChannelList();
   const regaOf = new Map(
     (allChannels ?? [])
       .filter((c) => c.address.startsWith(`${address}:`))
@@ -485,7 +490,11 @@ export const DeviceSettings = () => {
               type="button"
               variant="outline"
               className="text-destructive hover:text-destructive"
-              onClick={() => setDeleting(true)}
+              onClick={() => {
+                // Each time without reset or force, also after a cancel
+                setDeleteOptions({ reset: false, force: false });
+                setDeleting(true);
+              }}
             >
               <TrashIcon />
               {m.DELETE_DEVICE()}
@@ -742,7 +751,7 @@ export const DeviceSettings = () => {
                   navigate({ to: "/setup" });
                 },
                 onError: (error) =>
-                  showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+                  showToast(errorText(error, m.CHANGE_FAILED)),
                 onSettled: () => setDeleting(false),
               },
             )

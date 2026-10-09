@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import AppWindowIcon from '~icons/lucide/app-window';
 import { useEffects } from '../../contexts/EffectsContext';
-import { getLocale } from '../../paraglide/runtime';
 import { m } from '../../paraglide/messages';
-import { cn } from '../../lib/utils';
+import { cn, formatNumber } from '../../lib/utils';
 
 interface TemperatureDisplayProps {
   localTarget: number;
@@ -13,8 +12,7 @@ interface TemperatureDisplayProps {
   color: string;
 }
 
-const formatTemperature = (value: number) =>
-  new Intl.NumberFormat(getLocale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
+const formatTemperature = (value: number) => formatNumber(value, 1, 1);
 
 // Counts changes of a value, to restart an animation on each one
 const useChangeCount = (value: number) => {

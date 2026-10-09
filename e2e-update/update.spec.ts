@@ -23,7 +23,12 @@ const fakeUpdateServer = async (page: Page) => {
   await page.addInitScript(
     ([latest]) => {
       type Socket = { send: (data: string) => void; dispatchMessage: (payload: unknown) => void; close: () => void };
-      const page = window as unknown as { WebSocket: { prototype: Socket }; servedVersion: () => Promise<string>; restartServer: () => Promise<void> };
+      const page = window as unknown as {
+        WebSocket: { prototype: Socket };
+        servedVersion: () => Promise<string>;
+        restartServer: () => Promise<void>;
+        updateChecks?: number;
+      };
       const proto = page.WebSocket.prototype;
       const send = proto.send;
       proto.send = function (this: Socket, data: string) {
@@ -31,7 +36,11 @@ const fakeUpdateServer = async (page: Page) => {
         const later = (ms: number, payload: unknown) => setTimeout(() => this.dispatchMessage(payload), ms);
         if (message.type === 'checkSelfUpdate') {
           void page.servedVersion().then((current) =>
-            later(20, { type: 'checkSelfUpdate_response', requestId: message.requestId, current, latest, installable: true }),
+            setTimeout(() => {
+              this.dispatchMessage({ type: 'checkSelfUpdate_response', requestId: message.requestId, current, latest, installable: true });
+              // Answered: a test can wait for it before checking there is no notice
+              page.updateChecks = (page.updateChecks ?? 0) + 1;
+            }, 20),
           );
           return;
         }
@@ -112,6 +121,8 @@ test('fragt nach "Überspringen" bei dieser Version nicht mehr', async ({ page }
   await expect(page.getByRole('dialog')).toContainText(`MUI ${NEW} ist erschienen`);
   await page.getByRole('button', { name: 'Überspringen' }).click();
   await page.reload();
-  await page.waitForTimeout(1500);
+  // The app asked and got the answer, and still shows no notice
+  await expect.poll(() => page.evaluate(() => (window as unknown as { updateChecks?: number }).updateChecks ?? 0)).toBeGreaterThan(0);
+  await page.waitForTimeout(300);
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });

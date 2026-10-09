@@ -8,6 +8,7 @@ import { TableSkeletonRows } from '../../components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { usePageTitle } from '../../contexts/PageTitleContext';
+import { errorText } from '../../lib/errors';
 
 const dateFormat = new Intl.DateTimeFormat(defaultLang, { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -58,7 +59,7 @@ export const Sessions = () => {
                       onClick={() =>
                         revoke.mutate(session.id, {
                           onSuccess: () => showToast(m.DEVICE_LOGGED_OUT(), 'info'),
-                          onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+                          onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
                         })
                       }
                     >

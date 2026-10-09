@@ -9,6 +9,7 @@ import { OnlyOnCCU, Panel } from './Panel';
 import { usePasswordRetry } from './usePasswordRetry';
 import { m } from '../../paraglide/messages';
 import type { Firewall as FirewallConfig, FirewallService } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 type Access = FirewallService['access'];
 
@@ -133,7 +134,7 @@ export const Firewall = () => {
           setBusy(false);
         }
       },
-      (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
 
   const accessOptions: { value: Access; label: string }[] = [

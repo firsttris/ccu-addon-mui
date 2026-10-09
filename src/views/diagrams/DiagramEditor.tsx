@@ -13,6 +13,8 @@ import { datapointLabel } from '../History';
 import { m } from '../../paraglide/messages';
 import { palette, type Period } from './chart';
 import type { Diagram, DiagramSeries } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
+import { Field } from '../../components/Field';
 
 export const MAX_SERIES = 12;
 export const SYSVAR = 'sysvar';
@@ -88,13 +90,6 @@ export const useCandidates = () => {
 
 const seriesKey = (s: DiagramSeries) => `${s.address}.${s.datapoint}`;
 
-const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-    {label}
-    {children}
-  </label>
-);
-
 // Creating or changing a diagram: its name, the period shown first and its
 // data sources with color, label and unit (the WebUI's
 // DiagramSettingsDetailPage, without its fixed value types)
@@ -138,7 +133,7 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
       queryClient.invalidateQueries({ queryKey: ['diagramData'] });
       onClose();
     },
-    onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+    onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
   });
 
   const valid = name.trim() !== '' && series.length > 0;

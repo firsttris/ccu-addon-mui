@@ -14,7 +14,7 @@ import { useSystemInfo } from '../../queries';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Badge } from '../../components/ui/badge';
 import { m } from '../../paraglide/messages';
-import { cn } from '../../lib/utils';
+import { cn, formatNumber } from '../../lib/utils';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { CcuFirmwareButton, CcuFirmwareUpload } from './CcuFirmwareUpload';
@@ -25,7 +25,6 @@ import { Button } from '../../components/ui/button';
 import DownloadIcon from '~icons/lucide/circle-arrow-down';
 import type { CheckFirmwareUpdateResponse, SystemState as State } from '../../types/protocol';
 import { WEBUI_URL } from '../../components/WebUILink';
-import { getLocale } from '../../paraglide/runtime';
 
 export { isNewerVersion };
 
@@ -215,9 +214,9 @@ const Versions = () => {
 };
 
 const gigabytes = (bytes: number) =>
-  `${new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 1 }).format(bytes / 1024 ** 3)} GB`;
+  `${formatNumber(bytes / 1024 ** 3, 1)} GB`;
 const percent = (value: number) =>
-  `${new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 1 }).format(value)} %`;
+  `${formatNumber(value, 1)} %`;
 
 // "3 d 4 h 5 min", as help.cgi's uptime
 export const formatUptime = (seconds: number) => {
@@ -247,7 +246,7 @@ const SystemState = ({ state }: { state: State }) => {
   add(
     m.SYS_TEMPERATURE(),
     state.temperature !== undefined &&
-      `${new Intl.NumberFormat(getLocale(), { maximumFractionDigits: 1 }).format(state.temperature)} °C`,
+      `${formatNumber(state.temperature, 1)} °C`,
   );
   add(m.SYS_OS(), state.os && state.kernel ? `${state.os} (${state.kernel})` : state.os || state.kernel);
   add(m.SYS_ROOT_FREE(), !!state.rootTotal && `${gigabytes(state.rootFree ?? 0)} / ${gigabytes(state.rootTotal)}`);

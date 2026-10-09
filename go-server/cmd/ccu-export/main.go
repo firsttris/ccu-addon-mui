@@ -144,10 +144,7 @@ func export(cfg *config.Config, withRPC bool) (*fakeccu.Fixture, error) {
 	}
 
 	if withRPC {
-		rpc, err := ccurpc.New(cfg)
-		if err != nil {
-			return nil, err
-		}
+		rpc := ccurpc.New(cfg)
 		for _, iface := range ccurpc.Interfaces(cfg) {
 			data, err := exportInterface(rpc, iface.Name)
 			if err != nil {

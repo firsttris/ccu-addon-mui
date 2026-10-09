@@ -14,6 +14,7 @@ import { Input } from '../../components/ui/input';
 import { ListSkeletonItems } from '../../components/ui/skeleton';
 import { Panel } from './Panel';
 import { m } from '../../paraglide/messages';
+import { errorText } from '../../lib/errors';
 
 type List = 'rooms' | 'trades';
 
@@ -30,7 +31,7 @@ const GroupMembers = ({ list, group }: { list: List; group: { id: number; name: 
   const set = (channelId: number, member: boolean) =>
     change.mutate(
       { type: 'setGroupMember', groupId: group.id, channelId, member, list },
-      { onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`) },
+      { onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)) },
     );
 
   return (
@@ -105,7 +106,7 @@ const GroupList = ({ list, title, placeholder }: { list: List; title: string; pl
         showToast(success, 'info');
         onSuccess?.();
       },
-      onError: (error) => showToast(`${m.CHANGE_FAILED()}: ${error.message}`),
+      onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     });
 
   return (

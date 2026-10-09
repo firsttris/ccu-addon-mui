@@ -206,8 +206,9 @@ func (a *Authenticator) AutoLogin(username, device string) (Session, string, err
 }
 
 // Refresh verifies a token and returns a new one with a fresh lifetime, so
-// a device that is used regularly never has to log in again. Tokens issued
-// before levels were stored get the level looked up now.
+// a device that is used regularly never has to log in again. The level is
+// looked up again: it may have been changed or the user deleted in the
+// WebUI. If it can't be read (ReGa busy), the stored one stays.
 func (a *Authenticator) Refresh(token, device string) (Session, string, error) {
 	session, err := a.Verify(token)
 	if err != nil {
@@ -221,8 +222,10 @@ func (a *Authenticator) Refresh(token, device string) (Session, string, error) {
 	if !a.checkSession(&session, device) {
 		return Session{}, "", ErrInvalidToken
 	}
-	if session.Level == LevelUnknown {
-		session.Level = a.lookupLevel(session.User)
+	if a.level != nil {
+		if level, err := a.level(session.User); err == nil {
+			session.Level = level
+		}
 	}
 	return session, a.issueToken(session), nil
 }

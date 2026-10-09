@@ -16,6 +16,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { m } from '../../paraglide/messages';
 import { ConditionRow, DestinationRow } from './ProgramRows';
 import { newBranch, newCondition, newDestination, newProgram, newRule, programProblems } from './programModel';
+import { errorText } from '../../lib/errors';
 
 // The program editor: WENN / SONST WENN / SONST with their conditions and
 // actions, like the WebUI's (rega/esp/programs.htm). Saved as a whole.
@@ -329,7 +330,7 @@ export const ProgramEditor = () => {
                 },
                 onError: (error) => {
                   setConfirm(null);
-                  showToast(`${m.CHANGE_FAILED()}: ${error.message}`);
+                  showToast(errorText(error, m.CHANGE_FAILED));
                 },
               },
             )

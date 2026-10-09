@@ -3,6 +3,7 @@ package rega
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -199,6 +200,9 @@ func (c *Client) GetAllChannels() ([]Channel, error) {
 	return parseChannels(output), nil
 }
 
+// ErrUnknownUser: ReGa has no user of that name (deleted in the WebUI)
+var ErrUnknownUser = errors.New("unknown user")
+
 // GetUserLevel returns the level of a CCU user as stored in ReGa
 // (1 = guest, 2 = user, 8 = admin).
 func (c *Client) GetUserLevel(username string) (int, error) {
@@ -212,7 +216,7 @@ func (c *Client) GetUserLevel(username string) (int, error) {
 	}
 	level, err := strconv.Atoi(strings.TrimSpace(output))
 	if err != nil {
-		return 0, fmt.Errorf("no user level for %q", username)
+		return 0, fmt.Errorf("%w: %q", ErrUnknownUser, username)
 	}
 	return level, nil
 }
@@ -266,12 +270,7 @@ func (c *Client) AcceptDevice(address string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	switch result := strings.TrimSpace(output); result {
-	case SetOK, SetNotFound:
-		return result, nil
-	default:
-		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
-	}
+	return resultOnly(output)
 }
 
 // validateName guards a name substituted into a string literal: ReGa has no
@@ -298,11 +297,7 @@ func (c *Client) SetName(address, name string) (result, previous string, err err
 	if err != nil {
 		return "", "", err
 	}
-	result, previous, _ = strings.Cut(strings.TrimRight(output, "\r\n"), "\t")
-	if result != SetOK && result != SetNotFound {
-		return "", "", fmt.Errorf("unexpected response from ReGa: %q", output)
-	}
-	return result, previous, nil
+	return resultWithValue(output)
 }
 
 // SetGroupMember adds a channel to a room or trade (member) or removes it.
@@ -319,12 +314,7 @@ func (c *Client) SetGroupMember(groupID, channelID int64, member bool) (string, 
 	if err != nil {
 		return "", err
 	}
-	switch result := strings.TrimSpace(output); result {
-	case SetOK, SetNotFound:
-		return result, nil
-	default:
-		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
-	}
+	return resultOnly(output)
 }
 
 // Results of SetDatapoint
@@ -356,13 +346,7 @@ func (c *Client) SetDatapoint(interfaceName, address, attribute, value string) (
 		return "", "", err
 	}
 
-	result, previous, _ = strings.Cut(strings.TrimRight(output, "\r\n"), "\t")
-	switch result {
-	case SetOK, SetNotFound:
-		return result, previous, nil
-	default:
-		return "", "", fmt.Errorf("unexpected response from ReGa: %q", output)
-	}
+	return resultWithValue(output)
 }
 
 // GetDeviceProblems returns all devices with a low battery or that are

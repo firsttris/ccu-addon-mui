@@ -150,11 +150,7 @@ func (c *Client) SetSysvar(id int64, value string, text bool) (result, previous 
 	if err != nil {
 		return "", "", err
 	}
-	result, previous, _ = strings.Cut(strings.TrimRight(output, "\r\n"), "\t")
-	if result != SetOK && result != SetNotFound {
-		return "", "", fmt.Errorf("unexpected response from ReGa: %q", output)
-	}
-	return result, previous, nil
+	return resultWithValue(output)
 }
 
 // Program is a ReGa program.
@@ -212,12 +208,7 @@ func (c *Client) ProgramAction(id int64, action string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	switch result := strings.TrimSpace(output); result {
-	case SetOK, SetNotFound:
-		return result, nil
-	default:
-		return "", fmt.Errorf("unexpected response from ReGa: %q", output)
-	}
+	return resultOnly(output)
 }
 
 // SetLogicOption sets "visible" of a program or system variable, or
