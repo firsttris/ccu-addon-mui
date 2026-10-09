@@ -179,6 +179,10 @@ func run(ctx context.Context, cfg *config.Config) error {
 		}
 	}
 
+	if platform.stop != nil {
+		platform.stop()
+	}
+
 	logger.Info("✅ Shutdown complete")
 	return nil
 }
@@ -193,6 +197,9 @@ type platformHooks struct {
 	recordDiagrams func(ctx context.Context)
 	event          func(event *types.CCUEvent)
 	start          func()
+	// stop waits for what the platform runs until ctx ends and still
+	// writes then
+	stop func()
 }
 
 func (p platformHooks) diagramsRecording(ctx context.Context) {

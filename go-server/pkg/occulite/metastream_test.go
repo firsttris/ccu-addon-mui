@@ -79,7 +79,7 @@ func TestLayoutsFollowTheirRooms(t *testing.T) {
 		setLayout(t, h.tiles, ID(path), name)
 	}
 
-	since, err := h.client.MetaEvents(context.Background(), 0, h.onMetaEvent)
+	since, err := h.client.MetaEvents(context.Background(), 0, nil, h.onMetaEvent)
 	if since != 9 {
 		t.Fatalf("since %d (%v)", since, err)
 	}

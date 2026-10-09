@@ -58,6 +58,11 @@ type homeState struct {
 	read map[string]bool
 	// The interface of every device and channel address
 	interfaces map[string]string
+
+	// The metadata snapshot and the device lists, kept while the streams
+	// tell their changes (cache.go)
+	meta        metaCache
+	deviceLists deviceCache
 }
 
 var _ home.Source = (*Home)(nil)
@@ -101,12 +106,6 @@ const callTimeout = 15 * time.Second
 
 func (h *Home) context() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), callTimeout)
-}
-
-func (h *Home) snapshot() (Snapshot, error) {
-	ctx, cancel := h.context()
-	defer cancel()
-	return h.client.Snapshot(ctx)
 }
 
 // ID is the stable number the app knows a room, function or channel by:
@@ -234,6 +233,8 @@ func uniqueSlug(name string, taken map[string]bool) string {
 }
 
 func (h *Home) CreateGroup(list, name string) (string, int64, error) {
+	// The change goes into the store before the answer: not the kept snapshot
+	defer h.metaChanged()
 	enumID, ok := groupEnums[list]
 	if !ok {
 		return home.SetNotFound, 0, nil
@@ -258,6 +259,8 @@ func (h *Home) CreateGroup(list, name string) (string, int64, error) {
 }
 
 func (h *Home) changeNode(list string, id int64, fn func(ctx context.Context, path string) error) (string, string, error) {
+	// The change goes into the store before the answer: not the kept snapshot
+	defer h.metaChanged()
 	enumID, ok := groupEnums[list]
 	if !ok {
 		return home.SetNotFound, "", nil
@@ -294,6 +297,8 @@ func (h *Home) DeleteGroup(list string, id int64) (string, string, error) {
 
 // SetGroupMember puts a channel into a room or function, or takes it out
 func (h *Home) SetGroupMember(groupID, channelID int64, member bool) (string, error) {
+	// The change goes into the store before the answer: not the kept snapshot
+	defer h.metaChanged()
 	snapshot, err := h.snapshot()
 	if err != nil {
 		return "", err
@@ -343,7 +348,7 @@ func (h *Home) channels() []channelInfo {
 	var list []channelInfo
 	interfaces := map[string]string{}
 	for _, iface := range h.rpc.InterfaceNames() {
-		descriptions, err := h.rpc.ListDevices(iface)
+		descriptions, err := h.listDevices(iface)
 		if err != nil {
 			logger.Debugf("listDevices %s: %v", iface, err)
 			continue
@@ -464,12 +469,14 @@ func (h *Home) channel(snapshot Snapshot, ch channelInfo) (home.Channel, bool) {
 	return c, true
 }
 
-// readValues reads a channel's values once when the state store did not
-// have them: HmIP and virtual channels answer from the process's cache,
+// readValues reads a channel's values once, for what the state store does
+// not have: HmIP and virtual channels answer from the process's cache,
 // BidCos asks the device and waits for the event stream instead
 func (h *Home) readValues(ch channelInfo) {
 	h.mu.Lock()
-	done := h.read[ch.desc.Address] || len(h.values[ch.desc.Address]) > 0
+	// Once per channel, also when the state store had some of its values:
+	// it keeps only the datapoints occulited's cards draw (devstate/keys.go)
+	done := h.read[ch.desc.Address]
 	h.read[ch.desc.Address] = true
 	h.mu.Unlock()
 	if done || strings.HasPrefix(ch.iface, "BidCos") {
@@ -581,6 +588,8 @@ func (h *Home) GetDeviceNames() (map[string]string, error) {
 // SetName renames a device or channel; the object is created when the
 // store has none yet (a newly paired device)
 func (h *Home) SetName(address, name string) (string, string, error) {
+	// The change goes into the store before the answer: not the kept snapshot
+	defer h.metaChanged()
 	iface := h.interfaceOf(address)
 	if iface == "" {
 		return home.SetNotFound, "", nil
@@ -746,7 +755,7 @@ func (h *Home) ChangeFavorite(change home.FavoriteChange) (string, string, error
 func (h *Home) devices() []channelInfo {
 	var list []channelInfo
 	for _, iface := range h.rpc.InterfaceNames() {
-		descriptions, err := h.rpc.ListDevices(iface)
+		descriptions, err := h.listDevices(iface)
 		if err != nil {
 			continue
 		}
@@ -794,6 +803,8 @@ func (h *Home) GetInbox() ([]home.InboxDevice, error) {
 // ("<type> <address>"), so it leaves the inbox; renaming follows in the
 // app as on a CCU
 func (h *Home) AcceptDevice(address string) (string, error) {
+	// The change goes into the store before the answer: not the kept snapshot
+	defer h.metaChanged()
 	for _, d := range h.devices() {
 		if d.desc.Address != address {
 			continue
@@ -824,7 +835,7 @@ func (h *Home) GetVirtualKeys() ([]home.VirtualKey, error) {
 	}
 	keys := []home.VirtualKey{}
 	for _, iface := range h.rpc.InterfaceNames() {
-		descriptions, err := h.rpc.ListDevices(iface)
+		descriptions, err := h.listDevices(iface)
 		if err != nil {
 			continue
 		}

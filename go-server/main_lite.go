@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"ccu-addon-mui-server/pkg/ccurpc"
@@ -54,7 +55,13 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 	wsServer.SetHome(homeModel)
 	// Layouts follow their rooms and functions when they are moved
 	homeModel.SetTiles(wsServer.Tiles())
-	go homeModel.FollowMeta(ctx)
+	// It writes the change stream's revision when it ends: run waits for it
+	var following sync.WaitGroup
+	following.Add(1)
+	go func() {
+		defer following.Done()
+		homeModel.FollowMeta(ctx)
+	}()
 	// Heating groups through occulited, which names their devices itself
 	groups := occulite.NewGroups(client)
 	wsServer.SetGroupService(groups)
@@ -89,6 +96,7 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 
 	logger.Info("🪶 openccu-lite " + occulite.Version())
 	return platformHooks{
+		stop: following.Wait,
 		// lite-rpc's event stream instead of a callback server: it resumes
 		// after a break, and the state store gives the values up to then
 		events: func(ctx context.Context, handle func(*types.CCUEvent), deviceChanged func(iface, address string)) {
@@ -107,6 +115,8 @@ func follow(ctx context.Context, client *occulite.Client, homeModel *occulite.Ho
 			cancel()
 			if err == nil {
 				homeModel.Seed(entries)
+				// Device changes may have been lost too: read the lists again
+				homeModel.DevicesChanged("")
 				logger.Info(fmt.Sprintf("🪶 %d values from openccu-lite's state store", len(entries)))
 				return eventID
 			}
@@ -118,6 +128,9 @@ func follow(ctx context.Context, client *occulite.Client, homeModel *occulite.Ho
 		}
 		return ""
 	}
+	// The device lists are kept while the stream tells their changes
+	homeModel.FollowingEvents(true)
+	defer homeModel.FollowingEvents(false)
 	lastID := seed()
 	for ctx.Err() == nil {
 		resync := make(chan struct{}, 1)
@@ -130,7 +143,10 @@ func follow(ctx context.Context, client *occulite.Client, homeModel *occulite.Ho
 			}
 		}()
 		client.Stream(streamCtx, lastID, func(m occulite.StreamMessage) {
-			lastID = m.ID
+			// resync carries no id (it is not in the server's ring)
+			if m.ID != "" {
+				lastID = m.ID
+			}
 			switch m.Kind {
 			case "event", "state":
 				key := m.Data.Key
@@ -140,9 +156,13 @@ func follow(ctx context.Context, client *occulite.Client, homeModel *occulite.Ho
 				homeModel.OnEvent(m.Data.Address, key, m.Data.Value)
 				handle(types.NewCCUEvent(m.Data.Interface, m.Data.Address, key, m.Data.Value))
 			case "newDevices", "deleteDevices", "updateDevice", "replaceDevice", "readdedDevice":
+				homeModel.DevicesChanged(m.Data.Interface)
 				for _, address := range m.Data.Addresses {
 					deviceChanged(m.Data.Interface, address)
 				}
+			case "interface":
+				// A process went up, down or restarted: its devices may differ
+				homeModel.DevicesChanged(m.Data.Interface)
 			case "resync":
 				logger.Info("🪶 openccu-lite's event stream lost events (" + m.Data.Reason + "): reading the state store again")
 				select {

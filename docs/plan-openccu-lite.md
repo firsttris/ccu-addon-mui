@@ -276,7 +276,12 @@ Katalog. Direktverknüpfungen bleiben, die laufen zwischen den Geräten und deck
   sind immer bestätigt, alle anderen bekommen `FORBIDDEN`.
 - Offene Verbindungen prüfen die Sitzung jede Minute neu; ein Abmelden in openccu-lite beendet sie. Ohne
   gültige Sitzung antwortet der Server `SESSION_REQUIRED`, und die App schickt zu occulites `/login`
-  statt ihr eigenes Login-Formular zu zeigen.
+  statt ihr eigenes Login-Formular zu zeigen. Kann occulited die Sitzung gerade nicht prüfen, kommt
+  `SYSTEM_UNAVAILABLE`, und die App fragt nach drei Sekunden wieder.
+- **Was der Server zwischenspeichert:** den Metadaten-Snapshot, solange der Change-Stream verbunden ist (jedes
+  Event und jede eigene Änderung verwirft ihn), und die Gerätelisten der Funkdienste, solange lite-rpc's
+  Event-Stream läuft (Geräte- und `interface`-Events verwerfen die Liste der Schnittstelle, `resync` alle).
+  Ohne Stream wird beides bei jeder Anfrage gelesen.
 - **Wessen Rechte:** Was ein Nutzer auslöst (Schalten, Umbenennen, Räume, Paramsets, Anlernen, Heizgruppen),
   schickt der Server mit dessen Sitzung an occulited, also an `lite-rpc` und die Metadaten- und System-API.
   So prüft das System selbst, was das Konto darf, und sein Journal nennt den Nutzer statt des Add-ons. Das

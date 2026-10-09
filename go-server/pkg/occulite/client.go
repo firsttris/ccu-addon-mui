@@ -133,3 +133,19 @@ func (c *Client) do(ctx context.Context, method, path, bearer string, body, out 
 	}
 	return json.Unmarshal(data, out)
 }
+
+// streamHeaderTimeout is how long a stream may take to answer its request:
+// the streams have no timeout of their own, and their silence watch starts
+// only with the answer. A variable for tests.
+var streamHeaderTimeout = 30 * time.Second
+
+// streamTransport is the transport of a stream: the client's when it has
+// one (tests), else one that waits streamHeaderTimeout for the headers
+func (c *Client) streamTransport() http.RoundTripper {
+	if c.HTTP.Transport != nil {
+		return c.HTTP.Transport
+	}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.ResponseHeaderTimeout = streamHeaderTimeout
+	return transport
+}

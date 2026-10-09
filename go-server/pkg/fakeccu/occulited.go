@@ -233,6 +233,7 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		store.Revision++
+		c.publishMeta(map[string]interface{}{"kind": "object.updated", "ref": ref, "value": object})
 		w.Header().Set("ETag", fmt.Sprint(store.Revision))
 		writeJSON(w, http.StatusOK, object)
 	case strings.HasPrefix(r.URL.Path, "/api/rpc/v1/xmlrpc/") && r.Method == http.MethodPost:
@@ -241,6 +242,8 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 		c.handleLiteState(w)
 	case r.URL.Path == "/api/rpc/v1/events" && r.Method == http.MethodGet:
 		c.handleLiteEvents(w, r)
+	case r.URL.Path == "/api/meta/v1/events/sse" && r.Method == http.MethodGet:
+		c.handleMetaEvents(w, r)
 	case strings.HasPrefix(r.URL.Path, "/api/meta/v1/enums/"):
 		c.handleLiteNodes(w, r)
 	case r.URL.Path == "/api/system/v1/service-messages" && r.Method == http.MethodGet:
@@ -300,7 +303,11 @@ func (c *CCU) handleLiteEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.WriteHeader(http.StatusOK)
 	write := func(e liteEvent) {
-		fmt.Fprintf(w, "id: fake-%d\nevent: %s\ndata: %s\n\n", e.id, e.kind, e.data)
+		// resync is not in the ring: no id, as occulited
+		if e.id > 0 {
+			fmt.Fprintf(w, "id: fake-%d\n", e.id)
+		}
+		fmt.Fprintf(w, "event: %s\ndata: %s\n\n", e.kind, e.data)
 		flusher.Flush()
 	}
 	fmt.Fprint(w, ": connected\n\n")
@@ -335,8 +342,9 @@ func (c *CCU) handleLiteEvents(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Rooms and functions: POST /enums/{enum}/nodes, PATCH and DELETE
-// /enums/{enum}/nodes/{path}
+// Rooms and functions: POST /enums/{enum}/nodes, PATCH (rename, move) and
+// DELETE (the subtree) /enums/{enum}/nodes/{path}, with their events on the
+// change stream as occulited's internal/meta/store.go sends them
 func (c *CCU) handleLiteNodes(w http.ResponseWriter, r *http.Request) {
 	rest := strings.TrimPrefix(r.URL.Path, "/api/meta/v1/enums/")
 	enumID, nodePath, _ := strings.Cut(rest, "/nodes")
@@ -349,58 +357,224 @@ func (c *CCU) handleLiteNodes(w http.ResponseWriter, r *http.Request) {
 		apiError(w, http.StatusNotFound, "not_found", "no enum "+enumID)
 		return
 	}
-	index := -1
-	for i, node := range enum.Tree {
-		if node.ID == nodePath {
-			index = i
-		}
-	}
 	var body struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
+		ID     string          `json:"id"`
+		Name   string          `json:"name"`
+		Parent json.RawMessage `json:"parent"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
+	// parent: absent (nil), null (the root) or a node's path
+	parent := func() (path string, present bool) {
+		if len(body.Parent) == 0 {
+			return "", false
+		}
+		_ = json.Unmarshal(body.Parent, &path)
+		return path, true
+	}
+	children := func(parentPath string) *[]liteNode {
+		if parentPath == "" {
+			return &enum.Tree
+		}
+		siblings, index := findLiteNode(enum, strings.TrimPrefix(parentPath, enumID+"/"))
+		if index < 0 {
+			return nil
+		}
+		return &(*siblings)[index].Children
+	}
 	switch r.Method {
 	case http.MethodPost:
-		for _, node := range enum.Tree {
+		parentPath, _ := parent()
+		list := children(parentPath)
+		if list == nil {
+			apiError(w, 422, "unknown-path", parentPath)
+			return
+		}
+		for _, node := range *list {
 			if node.ID == body.ID {
 				apiError(w, http.StatusConflict, "duplicate", body.ID)
 				return
 			}
 		}
-		enum.Tree = append(enum.Tree, liteNode{ID: body.ID, Name: body.Name})
+		*list = append(*list, liteNode{ID: body.ID, Name: body.Name})
+		path := enumID + "/" + body.ID
+		if parentPath != "" {
+			path = parentPath + "/" + body.ID
+		}
 		store.Revision++
-		writeJSON(w, http.StatusCreated, map[string]string{"path": enumID + "/" + body.ID})
+		c.publishMeta(map[string]interface{}{"kind": "node.created", "enum": enumID, "path": path})
+		writeJSON(w, http.StatusCreated, map[string]string{"path": path})
 	case http.MethodPatch:
+		siblings, index := findLiteNode(enum, nodePath)
 		if index < 0 {
 			apiError(w, 422, "unknown-path", nodePath)
 			return
 		}
+		from := enumID + "/" + nodePath
 		if body.Name != "" {
-			enum.Tree[index].Name = body.Name
+			(*siblings)[index].Name = body.Name
+			store.Revision++
+			c.publishMeta(map[string]interface{}{"kind": "node.updated", "enum": enumID, "path": from})
 		}
-		store.Revision++
-		writeJSON(w, http.StatusOK, enum.Tree[index])
+		if parentPath, move := parent(); move {
+			if parentPath == from || strings.HasPrefix(parentPath, from+"/") {
+				apiError(w, 422, "invalid-move", parentPath)
+				return
+			}
+			node := (*siblings)[index]
+			*siblings = append((*siblings)[:index:index], (*siblings)[index+1:]...)
+			list := children(parentPath)
+			if list == nil {
+				apiError(w, 422, "unknown-path", parentPath)
+				return
+			}
+			*list = append(*list, node)
+			to := enumID + "/" + node.ID
+			if parentPath != "" {
+				to = parentPath + "/" + node.ID
+			}
+			// The members' paths are rewritten in the same revision
+			for _, object := range store.Objects {
+				for i, e := range object.Enums {
+					if e == from || strings.HasPrefix(e, from+"/") {
+						object.Enums[i] = to + strings.TrimPrefix(e, from)
+					}
+				}
+			}
+			store.Revision++
+			c.publishMeta(map[string]interface{}{"kind": "node.moved", "enum": enumID, "from": from, "to": to})
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"path": nodePath})
 	case http.MethodDelete:
+		siblings, index := findLiteNode(enum, nodePath)
 		if index < 0 {
 			apiError(w, 422, "unknown-path", nodePath)
 			return
 		}
 		path := enumID + "/" + nodePath
-		enum.Tree = append(enum.Tree[:index], enum.Tree[index+1:]...)
+		*siblings = append((*siblings)[:index:index], (*siblings)[index+1:]...)
 		for _, object := range store.Objects {
 			kept := object.Enums[:0]
 			for _, e := range object.Enums {
-				if e != path {
+				if e != path && !strings.HasPrefix(e, path+"/") {
 					kept = append(kept, e)
 				}
 			}
 			object.Enums = kept
 		}
 		store.Revision++
+		// One event for the whole subtree
+		c.publishMeta(map[string]interface{}{"kind": "node.deleted", "enum": enumID, "path": path})
 		w.WriteHeader(http.StatusNoContent)
 	default:
 		apiError(w, http.StatusMethodNotAllowed, "method", r.Method)
+	}
+}
+
+// findLiteNode finds the node at path (ids below the enum, "a/b"): the
+// slice that holds it and its index, -1 when there is none
+func findLiteNode(enum *liteEnum, path string) (*[]liteNode, int) {
+	siblings := &enum.Tree
+	ids := strings.Split(path, "/")
+	for depth, id := range ids {
+		index := -1
+		for i := range *siblings {
+			if (*siblings)[i].ID == id {
+				index = i
+			}
+		}
+		if index < 0 {
+			return nil, -1
+		}
+		if depth == len(ids)-1 {
+			return siblings, index
+		}
+		siblings = &(*siblings)[index].Children
+	}
+	return nil, -1
+}
+
+type metaEvent struct {
+	revision int64
+	data     []byte
+}
+
+// publishMeta adds an event to the change stream at the store's revision;
+// c.mu is held
+func (c *CCU) publishMeta(event map[string]interface{}) {
+	event["revision"] = c.store().Revision
+	data, _ := json.Marshal(event)
+	e := metaEvent{revision: c.store().Revision, data: data}
+	c.metaEvents = append(c.metaEvents, e)
+	for stream := range c.metaStreams {
+		select {
+		case stream <- e:
+		default:
+		}
+	}
+}
+
+// The metadata change stream (SSE, meta-api.md "The change stream"): data:
+// alone, replayed from ?since=
+func (c *CCU) handleMetaEvents(w http.ResponseWriter, r *http.Request) {
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "no streaming", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.WriteHeader(http.StatusOK)
+	write := func(e metaEvent) {
+		fmt.Fprintf(w, "data: %s\n\n", e.data)
+		flusher.Flush()
+	}
+	fmt.Fprint(w, ": connected\n\n")
+	since, _ := strconv.ParseInt(r.URL.Query().Get("since"), 10, 64)
+	stream := make(chan metaEvent, 256)
+	c.mu.Lock()
+	var missed []metaEvent
+	for _, e := range c.metaEvents {
+		if since > 0 && e.revision > since {
+			missed = append(missed, e)
+		}
+	}
+	if c.metaStreams == nil {
+		c.metaStreams = map[chan metaEvent]bool{}
+	}
+	c.metaStreams[stream] = true
+	c.mu.Unlock()
+	defer func() {
+		c.mu.Lock()
+		delete(c.metaStreams, stream)
+		c.mu.Unlock()
+	}()
+	for _, e := range missed {
+		write(e)
+	}
+	flusher.Flush()
+	for {
+		select {
+		case <-r.Context().Done():
+			return
+		case e := <-stream:
+			write(e)
+		case <-time.After(30 * time.Second):
+			fmt.Fprint(w, ": ping\n\n")
+			flusher.Flush()
+		}
+	}
+}
+
+// LiteResync sends resync on lite-rpc's event stream, as occulited does when
+// a client lost events it cannot replay: without an id
+func (c *CCU) LiteResync(reason string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	data, _ := json.Marshal(map[string]string{"reason": reason})
+	for stream := range c.liteStreams {
+		select {
+		case stream <- liteEvent{kind: "resync", data: data}:
+		default:
+		}
 	}
 }
 
