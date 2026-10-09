@@ -42,6 +42,9 @@ type CCU struct {
 	liteEvents  []liteEvent
 	liteStreams map[chan liteEvent]bool
 	liteGroups  []*liteGroup
+	// The metadata change stream's events and who follows it
+	metaEvents  []metaEvent
+	metaStreams map[chan metaEvent]bool
 	liteGroupID int
 	// ConfigDir is the fake /etc/config, for the security settings
 	// flag files (sshEnabled, authEnabled, httpsRedirectEnabled)

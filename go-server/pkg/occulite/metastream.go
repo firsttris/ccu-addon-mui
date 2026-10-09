@@ -41,7 +41,7 @@ func (c *Client) MetaEvents(ctx context.Context, since int64, handle func(MetaEv
 	if token := c.token(); token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
-	resp, err := (&http.Client{Transport: c.HTTP.Transport}).Do(req)
+	resp, err := (&http.Client{Transport: c.streamTransport()}).Do(req)
 	if err != nil {
 		return since, err
 	}
@@ -127,6 +127,8 @@ func (h *Home) FollowMeta(ctx context.Context) {
 var errUnchanged = errors.New("unchanged")
 
 func (h *Home) onMetaEvent(event MetaEvent) {
+	// What was below a deleted node is only in the snapshot from before
+	before, known := h.lastRead()
 	switch event.Kind {
 	case "resync", "import":
 		// resync: the server no longer has the events since our revision;
@@ -150,12 +152,25 @@ func (h *Home) onMetaEvent(event MetaEvent) {
 		})
 		h.keepRevision(event.Revision)
 	case "node.deleted":
+		// occulited deletes the subtree with one event: the layouts of the
+		// nodes below go too, as far as the last snapshot read knew them
+		paths := []string{event.Path}
+		if enum, ok := before.Enums[event.Enum]; known && ok {
+			enum.Walk(event.Enum, func(path string, node Node, depth int) {
+				if strings.HasPrefix(path, event.Path+"/") {
+					paths = append(paths, path)
+				}
+			})
+		}
 		h.changeLayouts(func(layouts map[int64]json.RawMessage) bool {
-			if _, ok := layouts[ID(event.Path)]; !ok {
-				return false
+			changed := false
+			for _, path := range paths {
+				if _, ok := layouts[ID(path)]; ok {
+					delete(layouts, ID(path))
+					changed = true
+				}
 			}
-			delete(layouts, ID(event.Path))
-			return true
+			return changed
 		})
 		h.keepRevision(event.Revision)
 	}

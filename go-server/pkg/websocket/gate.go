@@ -60,11 +60,40 @@ func (s *Server) systemAdminError(c *Client) (code, message string) {
 	return "FORBIDDEN", "only the system's administrators may do this"
 }
 
+// checkGate asks the gate whose session the connection carries. An answer
+// other than ErrNoSession means the platform could not tell (occulited
+// restarting, a timeout): kept in gateErr, so the login asks again instead
+// of sending the user to the platform's login page.
+func (s *Server) checkGate(client *Client) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	session, err := s.gate(client.gateRequest.WithContext(ctx))
+	client.gateErr = nil
+	if err != nil && !errors.Is(err, ErrNoSession) {
+		logger.Error("Checking the session of the system:", err)
+		client.gateErr = err
+	}
+	client.gateSession, client.gateOK = session, err == nil
+}
+
 // gateLogin answers auth from the session the gate let through. Without
 // one (it expired) the app's own login would never succeed: SESSION_REQUIRED
-// sends it to the platform's login instead.
+// sends it to the platform's login instead. When the platform could not
+// tell at connect it is asked again; still no answer is SYSTEM_UNAVAILABLE,
+// and the app asks again a little later.
 func (s *Server) gateLogin(client *Client) {
+	if !client.gateOK && client.gateErr != nil && client.gateRequest != nil {
+		// Before watchGate runs: nothing else reads the gate fields yet
+		s.checkGate(client)
+		if client.gateOK {
+			go s.watchGate(client, gateRecheck)
+		}
+	}
 	if !client.gateOK {
+		if client.gateErr != nil {
+			s.sendAuth(client, authResponse{Type: "auth_response", Code: "SYSTEM_UNAVAILABLE", Error: "the system could not check the session"})
+			return
+		}
 		s.sendAuth(client, authResponse{Type: "auth_response", Code: "SESSION_REQUIRED", Error: "no session of the system"})
 		return
 	}
@@ -81,12 +110,12 @@ func (s *Server) gateLogin(client *Client) {
 }
 
 // watchGate checks the session of an open connection again every
-// gateRecheck and closes the connection when it ended or now belongs to
+// interval (gateRecheck) and closes the connection when it ended or now belongs to
 // someone else or another level; the app reconnects and gets
 // SESSION_REQUIRED. A platform that cannot tell keeps the connection.
-func (s *Server) watchGate(client *Client, r *http.Request) {
-	request := r.Clone(context.Background())
-	ticker := time.NewTicker(gateRecheck)
+func (s *Server) watchGate(client *Client, every time.Duration) {
+	request := client.gateRequest
+	ticker := time.NewTicker(every)
 	defer ticker.Stop()
 	for {
 		select {

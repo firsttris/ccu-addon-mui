@@ -17,6 +17,7 @@ import (
 
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/fakeccu"
+	"ccu-addon-mui-server/pkg/occulite"
 	"github.com/gorilla/websocket"
 )
 
@@ -633,6 +634,122 @@ func TestLiteCallsWithTheUsersSession(t *testing.T) {
 	for _, call := range []string{"BidCos-RF setValue", "BidCos-RF listDevices", "HmIP-RF listDevices"} {
 		if direct, proxied := stack.ccu.CallCount(call), stack.ccu.CallCount("lite-rpc "+call); direct == 0 || direct != proxied {
 			t.Fatalf("%s: %d calls, %d through lite-rpc", call, direct, proxied)
+		}
+	}
+}
+
+// occulite changes something as a user of openccu-lite's own pages would:
+// with the admin's session on its API
+func (s *liteStack) occulite(t *testing.T, method, path string, body interface{}) {
+	t.Helper()
+	data, _ := json.Marshal(body)
+	req, _ := http.NewRequest(method, fmt.Sprintf("http://127.0.0.1:%d%s", s.ccu.WebUIPort, path), bytes.NewReader(data))
+	req.Header.Set("Authorization", "Bearer "+fakeccu.LiteSession("Admin"))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		t.Fatalf("%s %s: %d", method, path, resp.StatusCode)
+	}
+}
+
+// eventually repeats check until it holds, for what arrives through a stream
+func eventually(t *testing.T, what string, check func() bool) {
+	t.Helper()
+	for deadline := time.Now().Add(10 * time.Second); time.Now().Before(deadline); time.Sleep(50 * time.Millisecond) {
+		if check() {
+			return
+		}
+	}
+	t.Fatal(what)
+}
+
+// A room moved in openccu-lite keeps its layout (node.moved on the change
+// stream); deleting the room above it takes the layout with it, also for
+// the rooms below (one node.deleted for the subtree)
+func TestLiteLayoutsFollowRoomsMovedInOpenccuLite(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+	if m := liteCall(t, conn, map[string]interface{}{"type": "createGroup", "list": "rooms", "name": "Etage"}); m["success"] != true {
+		t.Fatalf("createGroup: %v", m)
+	}
+	room := findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getRooms"})["rooms"], "Wohnzimmer")
+	oldID := int64(room["id"].(float64))
+	if oldID != occulite.ID("room/wohnzimmer") {
+		t.Fatalf("Wohnzimmer is not room/wohnzimmer: %v", room)
+	}
+	if m := liteCall(t, conn, map[string]interface{}{"type": "setLayout", "id": oldID, "layout": `{"v":7}`}); m["success"] != true {
+		t.Fatalf("setLayout: %v", m)
+	}
+
+	stack.occulite(t, http.MethodPatch, "/api/meta/v1/enums/room/nodes/wohnzimmer", map[string]interface{}{"parent": "room/etage"})
+	newID := occulite.ID("room/etage/wohnzimmer")
+	eventually(t, "the moved room's layout did not follow", func() bool {
+		return liteCall(t, conn, map[string]interface{}{"type": "getLayout", "id": newID})["layout"] == `{"v":7}`
+	})
+	// The rooms say where it is now: the snapshot kept before the move went
+	if room := findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getRooms"})["rooms"], "Wohnzimmer"); int64(room["id"].(float64)) != newID {
+		t.Fatalf("rooms after the move: %v", room)
+	}
+	if layout := liteCall(t, conn, map[string]interface{}{"type": "getLayout", "id": oldID})["layout"]; layout != "" && layout != nil {
+		t.Fatalf("layout left at the old place: %v", layout)
+	}
+
+	stack.occulite(t, http.MethodDelete, "/api/meta/v1/enums/room/nodes/etage?members=detach", nil)
+	eventually(t, "the layout of the room below the deleted one stayed", func() bool {
+		layout := liteCall(t, conn, map[string]interface{}{"type": "getLayout", "id": newID})["layout"]
+		return layout == "" || layout == nil
+	})
+}
+
+// resync on lite-rpc's event stream (events lost): the state store is read
+// again, and events come on afterwards
+func TestLiteResync(t *testing.T) {
+	stack := startLiteStack(t)
+	conn := stack.adminConn(t)
+	const stateReads = "occulited GET /api/rpc/v1/state"
+	eventually(t, "the state store was not read at start", func() bool { return stack.ccu.CallCount(stateReads) == 1 })
+	// Sent to the streams connected at the time: again until it arrived
+	eventually(t, "the state store was not read again after resync", func() bool {
+		if stack.ccu.CallCount(stateReads) >= 2 {
+			return true
+		}
+		stack.ccu.LiteResync("gap")
+		return false
+	})
+
+	if err := conn.WriteJSON(map[string]interface{}{"type": "subscribe", "deviceId": "test", "channels": []string{"LEQ0000001:1"}}); err != nil {
+		t.Fatal(err)
+	}
+	// The stream is open again: a value changed on the device arrives. The
+	// device reports until the event is read, as the new stream may still
+	// be connecting (one read with one deadline: gorilla's connection is
+	// spent after a read timeout)
+	done := make(chan struct{})
+	defer close(done)
+	go func() {
+		ticker := time.NewTicker(200 * time.Millisecond)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-done:
+				return
+			case <-ticker.C:
+				_ = stack.ccu.SetValue("BidCos-RF", "LEQ0000001:1", "STATE", true)
+			}
+		}
+	}()
+	_ = conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	for {
+		var message map[string]interface{}
+		if err := conn.ReadJSON(&message); err != nil {
+			t.Fatalf("no event after resync: %v", err)
+		}
+		if event, ok := message["event"].(map[string]interface{}); ok && event["channel"] == "LEQ0000001:1" && event["datapoint"] == "STATE" {
+			return
 		}
 	}
 }

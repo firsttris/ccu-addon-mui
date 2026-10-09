@@ -122,7 +122,7 @@ func (c *Client) stream(ctx context.Context, lastID string, handle func(StreamMe
 	}
 	// No timeout: the stream runs as long as ctx; a dead connection shows
 	// as silence, the server pings every 15 s
-	resp, err := (&http.Client{Transport: c.HTTP.Transport}).Do(req)
+	resp, err := (&http.Client{Transport: c.streamTransport()}).Do(req)
 	if err != nil {
 		return "", err
 	}

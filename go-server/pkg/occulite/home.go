@@ -58,6 +58,11 @@ type homeState struct {
 	read map[string]bool
 	// The interface of every device and channel address
 	interfaces map[string]string
+
+	// The metadata snapshot read last: what a deleted node had below it
+	// (onMetaEvent)
+	lastMu       sync.Mutex
+	lastSnapshot *Snapshot
 }
 
 var _ home.Source = (*Home)(nil)
@@ -106,7 +111,23 @@ func (h *Home) context() (context.Context, context.CancelFunc) {
 func (h *Home) snapshot() (Snapshot, error) {
 	ctx, cancel := h.context()
 	defer cancel()
-	return h.client.Snapshot(ctx)
+	snapshot, err := h.client.Snapshot(ctx)
+	if err == nil {
+		h.lastMu.Lock()
+		h.lastSnapshot = &snapshot
+		h.lastMu.Unlock()
+	}
+	return snapshot, err
+}
+
+// lastRead is the snapshot read last, if any
+func (h *Home) lastRead() (Snapshot, bool) {
+	h.lastMu.Lock()
+	defer h.lastMu.Unlock()
+	if h.lastSnapshot == nil {
+		return Snapshot{}, false
+	}
+	return *h.lastSnapshot, true
 }
 
 // ID is the stable number the app knows a room, function or channel by:
@@ -464,12 +485,14 @@ func (h *Home) channel(snapshot Snapshot, ch channelInfo) (home.Channel, bool) {
 	return c, true
 }
 
-// readValues reads a channel's values once when the state store did not
-// have them: HmIP and virtual channels answer from the process's cache,
+// readValues reads a channel's values once, for what the state store does
+// not have: HmIP and virtual channels answer from the process's cache,
 // BidCos asks the device and waits for the event stream instead
 func (h *Home) readValues(ch channelInfo) {
 	h.mu.Lock()
-	done := h.read[ch.desc.Address] || len(h.values[ch.desc.Address]) > 0
+	// Once per channel, also when the state store had some of its values:
+	// it keeps only the datapoints occulited's cards draw (devstate/keys.go)
+	done := h.read[ch.desc.Address]
 	h.read[ch.desc.Address] = true
 	h.mu.Unlock()
 	if done || strings.HasPrefix(ch.iface, "BidCos") {

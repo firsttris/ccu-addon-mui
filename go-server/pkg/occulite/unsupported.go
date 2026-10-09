@@ -35,15 +35,8 @@ func (unsupported) GetDeviceProblems() ([]home.DeviceProblem, error) {
 func (unsupported) GetDeviceHealth() ([]home.DeviceHealth, error) { return nil, home.ErrNotSupported }
 func (unsupported) GetInbox() ([]home.InboxDevice, error)         { return nil, home.ErrNotSupported }
 func (unsupported) AcceptDevice(string) (string, error)           { return "", home.ErrNotSupported }
-func (unsupported) SetChannelTile(int64, string) (string, string, error) {
-	return "", "", home.ErrNotSupported
-}
 func (unsupported) SetChannelMode(string, string, int) (string, error) {
 	return "", home.ErrNotSupported
-}
-func (unsupported) GetLayout(int64) (string, string, error) { return "", "", home.ErrNotSupported }
-func (unsupported) SetLayout(int64, string) (string, string, error) {
-	return "", "", home.ErrNotSupported
 }
 func (unsupported) GetFavorites(string) ([]home.Favorite, error) { return nil, home.ErrNotSupported }
 func (unsupported) ChangeFavorite(home.FavoriteChange) (string, string, error) {
