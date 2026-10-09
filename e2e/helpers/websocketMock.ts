@@ -755,6 +755,10 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       { id: 621, name: 'MP3-Gong Flur Status', address: '00185D89A1B2C9:1', interfaceName: 'HmIP-RF', type: 'ACOUSTIC_SIGNAL_TRANSMITTER', datapoints: { LEVEL: 0, SOUNDFILE: 0 } },
       { id: 622, name: 'Funkgong Diele', address: 'LEQ0000042:2', interfaceName: 'BidCos-RF', type: 'SIGNAL_CHIME', datapoints: { STATE: false, WORKING: false } },
       { id: 623, name: 'Funkgong Diele Licht', address: 'LEQ0000042:1', interfaceName: 'BidCos-RF', type: 'SIGNAL_LED', datapoints: { STATE: false, WORKING: false } },
+      // Water protection (HmIP-WSS): shut-off valve, flow and pressure
+      { id: 630, name: 'Wasserschutz Hauptleitung', address: '0047D8A9A5B6C7:3', interfaceName: 'HmIP-RF', type: 'VALVE_ACTUATOR_RECEIVER', datapoints: { LEVEL: 1, LEVEL_STATUS: 0, ACTIVITY_STATE: 3 } },
+      { id: 631, name: 'Wasserschutz Durchfluss', address: '0047D8A9A5B6C7:6', interfaceName: 'HmIP-RF', type: 'WATER_FLOW_TRANSMITTER', datapoints: { WATER_FLOW: 3.4, WATER_FLOW_STATUS: 0 } },
+      { id: 632, name: 'Wasserschutz Druck', address: '0047D8A9A5B6C7:7', interfaceName: 'HmIP-RF', type: 'WATER_PRESSURE_TRANSMITTER', datapoints: { WATER_PRESSURE: 3.1, WATER_PRESSURE_STATUS: 0 } },
       {
         id: 602,
         name: 'Wetterstation Garten',

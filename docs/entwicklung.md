@@ -73,6 +73,7 @@ Vite leitet `/ws/mui` an die CCU weiter, deren Adresse steht in `vite.config.mts
 | `npm run test:stack` | Playwright gegen Go-Server + Fake-CCU |
 | `npm run test:visual` | Screenshot-Vergleich (`:update` erneuert die Bilder; in der CI im Playwright-Image) |
 | `npm run docs:screenshots` | die Bilder in `docs/` neu aufnehmen (Mock und Fake-CCU) |
+| `npm run docs:tiles` | die bewegten Bilder der Kacheln (`docs/kacheln/`) neu aufnehmen, braucht `ffmpeg` |
 
 Mehr zu den Tests findest du unter [Tests](tests.md).
 

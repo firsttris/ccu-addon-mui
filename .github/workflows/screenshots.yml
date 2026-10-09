@@ -4,14 +4,16 @@ name: Update screenshots
 # e2e/visual.spec.ts, in the image the "Screenshots" check compares in, and
 # the pictures of the documentation (npm run docs:screenshots). Run it after
 # a change to the look on purpose, then push again (a commit of this
-# workflow doesn't start the checks).
+# workflow doesn't start the checks). "tiles" takes the moving pictures of
+# the tiles in docs/geraete.md (npm run docs:tiles) on their own: an
+# animation never comes out twice the same, so they change on every run.
 on:
   workflow_dispatch:
     inputs:
       what:
         description: Which screenshots
         type: choice
-        options: [both, tests, docs]
+        options: [both, tests, docs, tiles]
         default: both
 
 permissions:
@@ -50,28 +52,37 @@ jobs:
         run: npm ci
 
       - name: Set up Go
-        if: inputs.what != 'tests'
+        if: inputs.what == 'both' || inputs.what == 'docs'
         uses: actions/setup-go@v5
         with:
           go-version-file: go-server/go.mod
           cache-dependency-path: go-server/go.sum
 
       - name: Take the test screenshots
-        if: inputs.what != 'docs'
+        if: inputs.what == 'both' || inputs.what == 'tests'
         run: npx playwright test visual --update-snapshots --reporter=line
         env:
           VISUAL: '1'
 
       - name: Take the documentation pictures
-        if: inputs.what != 'tests'
+        if: inputs.what == 'both' || inputs.what == 'docs'
         run: npm run docs:screenshots
+
+      # ffmpeg with libwebp joins the frames into animated WebP
+      - name: Install ffmpeg
+        if: inputs.what == 'tiles'
+        run: apt-get update && apt-get install -y --no-install-recommends ffmpeg
+
+      - name: Take the moving pictures of the tiles
+        if: inputs.what == 'tiles'
+        run: npm run docs:tiles
 
       - name: Commit what changed
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add e2e/visual.spec.ts-snapshots docs/screenshot-*.png
+          git add e2e/visual.spec.ts-snapshots docs/screenshot-*.png docs/kacheln
           if git diff --cached --quiet; then
             echo "The screenshots are up to date."
           else
