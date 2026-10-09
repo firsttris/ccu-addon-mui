@@ -57,7 +57,14 @@ type Client struct {
 	// updateFirmware, which rfd answers only after the whole transfer
 	// (RFDevice firmware update, minutes; ic_ifacecmd.cgi waits for it)
 	slow map[string]caller
+	// proxy: the calls go through openccu-lite's lite-rpc (proxy.go)
+	proxy *proxy
 
+	// The descriptions, shared by the clients of one system (WithToken)
+	*descriptions
+}
+
+type descriptions struct {
 	mu sync.Mutex
 	// Device descriptions by interface and address; they only change with
 	// a firmware update or re-pairing (see Forget).
@@ -145,9 +152,11 @@ func (c *Client) InterfaceNames() []string {
 
 func newClient(callers map[string]caller) *Client {
 	return &Client{
-		interfaces:           callers,
-		devices:              map[string]DeviceDescription{},
-		paramsetDescriptions: map[string]ParamsetDescription{},
+		interfaces: callers,
+		descriptions: &descriptions{
+			devices:              map[string]DeviceDescription{},
+			paramsetDescriptions: map[string]ParamsetDescription{},
+		},
 	}
 }
 
@@ -405,7 +414,47 @@ func (c *Client) GetParamset(iface, address, paramsetKey string) (map[string]int
 	if reply == nil {
 		reply = map[string]interface{}{}
 	}
+	c.typeValues(iface, address, paramsetKey, reply)
 	return reply, nil
+}
+
+// typeValues gives values that came untyped, as text, the type of their
+// parameter: hmipserver sends those of its virtual devices so (a heating
+// group's settings on openccu-lite: "17.0" for a FLOAT), and the app and
+// putParamset take numbers and booleans only. The description is only asked
+// for when there is text, and comes from the cache.
+func (c *Client) typeValues(iface, address, paramsetKey string, values map[string]interface{}) {
+	text := false
+	for _, v := range values {
+		if _, ok := v.(string); ok {
+			text = true
+			break
+		}
+	}
+	if !text {
+		return
+	}
+	description, err := c.GetParamsetDescription(iface, address, paramsetKey)
+	if err != nil {
+		return
+	}
+	for name, v := range values {
+		s, ok := v.(string)
+		if !ok {
+			continue
+		}
+		switch kind := description[name].Type; kind {
+		case "FLOAT", "INTEGER":
+			values[name] = number(kind, s)
+		case "BOOL":
+			switch strings.TrimSpace(s) {
+			case "1", "true":
+				values[name] = true
+			case "0", "false":
+				values[name] = false
+			}
+		}
+	}
 }
 
 // untypedValueRegex matches a value without type element, which XML-RPC

@@ -1,6 +1,9 @@
 package ccurpc
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 // DeviceDescription describes a device or one of its channels, see the
 // HomeMatic XML-RPC documentation (DeviceDescription).
@@ -145,6 +148,25 @@ func availableFirmware(m map[string]interface{}) string {
 	return available
 }
 
+// number makes MIN, MAX, DEFAULT and the special values of a FLOAT or
+// INTEGER parameter numbers when they came as text: hmipserver sends those
+// of its virtual devices untyped (<value>4.5</value>, read as a string),
+// seen on openccu-lite's heating groups, and the app only uses numbers
+func number(kind string, v interface{}) interface{} {
+	s, ok := v.(string)
+	if !ok || (kind != "FLOAT" && kind != "INTEGER") {
+		return v
+	}
+	f, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
+	if err != nil {
+		return v
+	}
+	if kind == "INTEGER" {
+		return int(f)
+	}
+	return f
+}
+
 func parseParamsetDescription(m map[string]interface{}) ParamsetDescription {
 	description := ParamsetDescription{}
 	for name, raw := range m {
@@ -152,13 +174,14 @@ func parseParamsetDescription(m map[string]interface{}) ParamsetDescription {
 		if !ok {
 			continue
 		}
+		kind := asString(p["TYPE"])
 		parameter := ParameterDescription{
-			Type:       asString(p["TYPE"]),
+			Type:       kind,
 			Operations: asInt(p["OPERATIONS"]),
 			Flags:      asInt(p["FLAGS"]),
-			Default:    p["DEFAULT"],
-			Min:        p["MIN"],
-			Max:        p["MAX"],
+			Default:    number(kind, p["DEFAULT"]),
+			Min:        number(kind, p["MIN"]),
+			Max:        number(kind, p["MAX"]),
 			Unit:       asString(p["UNIT"]),
 			TabOrder:   asInt(p["TAB_ORDER"]),
 			Control:    asString(p["CONTROL"]),
@@ -167,7 +190,7 @@ func parseParamsetDescription(m map[string]interface{}) ParamsetDescription {
 		if specials, ok := p["SPECIAL"].([]interface{}); ok {
 			for _, s := range specials {
 				if sm, ok := s.(map[string]interface{}); ok {
-					parameter.Special = append(parameter.Special, SpecialValue{ID: asString(sm["ID"]), Value: sm["VALUE"]})
+					parameter.Special = append(parameter.Special, SpecialValue{ID: asString(sm["ID"]), Value: number(kind, sm["VALUE"])})
 				}
 			}
 		}

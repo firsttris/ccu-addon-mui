@@ -1,3 +1,5 @@
+//go:build !lite
+
 package websocket
 
 import (
@@ -82,23 +84,6 @@ func (s *Server) handleDevicePrograms(client *Client, message []byte) {
 		return
 	}
 	s.sendJSON(client, deviceProgramsResponse{Type: "getDevicePrograms_response", RequestID: msg.RequestID, Programs: programs})
-}
-
-type virtualKeysResponse struct {
-	Type      string            `json:"type"`
-	RequestID string            `json:"requestId,omitempty"`
-	Keys      []rega.VirtualKey `json:"keys"`
-}
-
-// handleVirtualKeys lists the CCU's virtual keys; pressing them goes through
-// setDatapoint (PRESS_SHORT, PRESS_LONG) like any key.
-func (s *Server) handleVirtualKeys(client *Client, requestID string) {
-	keys, err := s.regaClient.GetVirtualKeys()
-	if err != nil {
-		s.sendRequestError(client, requestID, "getVirtualKeys failed: "+err.Error(), "CCU_ERROR")
-		return
-	}
-	s.sendJSON(client, virtualKeysResponse{Type: "getVirtualKeys_response", RequestID: requestID, Keys: keys})
 }
 
 type comTestResponse struct {

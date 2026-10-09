@@ -98,15 +98,18 @@ const groupByDevice = (messages: ServiceMessage[]) => {
 // All service messages of the CCU, with acknowledging
 export const ServiceMessagesSheet = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
   const { data: messages = [] } = useServiceMessages();
-  const { userLevel } = useWebSocketContext();
+  const { userLevel, platform } = useWebSocketContext();
   const { showToast } = useToast();
   const acknowledge = useAcknowledgeServiceMessage();
   const canAcknowledge = userLevel === 'admin' || userLevel === 'user';
+  // openccu-lite's messages are read-only: only the sticky ones end by
+  // acknowledging, the others when the device reports otherwise
+  const acknowledgeable = (message: ServiceMessage) => platform !== 'lite' || message.type.startsWith('STICKY_');
   const texts = useServiceTexts(messages);
 
   const acknowledgeAll = async () => {
     try {
-      for (const message of messages) {
+      for (const message of messages.filter(acknowledgeable)) {
         await acknowledge.mutateAsync(message.id);
       }
       showToast(m.ACKNOWLEDGED(), 'info');
@@ -128,7 +131,7 @@ export const ServiceMessagesSheet = ({ open, onOpenChange }: { open: boolean; on
           <p className="px-4 text-sm text-muted-foreground">{m.NO_SERVICE_MESSAGES()}</p>
         ) : (
           <>
-            {canAcknowledge && (
+            {canAcknowledge && messages.some(acknowledgeable) && (
               <div className="flex justify-end px-4 pb-3">
                 <Button variant="outline" size="sm" onClick={acknowledgeAll} disabled={acknowledge.isPending}>
                   <CheckIcon />
@@ -173,7 +176,7 @@ export const ServiceMessagesSheet = ({ open, onOpenChange }: { open: boolean; on
                               <span className="break-words">{label}</span>
                             </span>
                             <span className="text-xs text-muted-foreground tabular-nums">{formatTimestamp(message.timestamp)}</span>
-                            {canAcknowledge && (
+                            {canAcknowledge && acknowledgeable(message) && (
                               <Button
                                 variant="ghost"
                                 size="sm"

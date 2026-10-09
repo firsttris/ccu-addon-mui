@@ -1,0 +1,9 @@
+{
+  "id": "mui",
+  "label": { "de": "MUI", "en": "MUI" },
+  "icon": "/addons/mui/icon.svg",
+  "href": "/addons/mui/",
+  "target": "iframe",
+  "order": 20,
+  "keep_alive": true
+}

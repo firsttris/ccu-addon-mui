@@ -23,3 +23,12 @@ merged, reset the working branch to the current `origin/main`
 `git push --force-with-lease -u origin <branch>`) before starting the next
 change. Never merge `main` into the branch, so earlier, already merged
 commits don't show up again in the next PR.
+
+## Bugs in openccu-lite
+
+When a test or an investigation turns up a bug or quirk in openccu-lite itself
+(occulited, or the eQ-3 processes it ships such as hmipserver and rfd) rather
+than in MUI, note it in `docs/plan-openccu-lite.md`, section *Fehler und
+Eigenheiten von openccu-lite*: what, where, the version it showed in, and
+whether it is reported. Work around it in our code or tests only where needed,
+and say in the comment that it is openccu-lite's.

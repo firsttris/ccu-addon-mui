@@ -56,7 +56,8 @@ func (c *lowBatLimitCache) put(key string, limit *float64) {
 }
 
 func (s *Server) handleDeviceHealth(client *Client, requestID string) {
-	devices, err := s.regaClient.GetDeviceHealth()
+	rpc := s.rpcFor(client)
+	devices, err := s.home.GetDeviceHealth()
 	if err != nil {
 		s.sendRequestError(client, requestID, "getDeviceHealth failed: "+err.Error(), "CCU_ERROR")
 		return
@@ -81,7 +82,7 @@ func (s *Server) handleDeviceHealth(client *Client, requestID string) {
 			slots <- struct{}{}
 			defer func() { <-slots }()
 			var limit *float64
-			if master, err := s.rpc.GetParamset(devices[i].Interface, devices[i].Address+":0", "MASTER"); err == nil {
+			if master, err := rpc.GetParamset(devices[i].Interface, devices[i].Address+":0", "MASTER"); err == nil {
 				if v, ok := master["LOW_BAT_LIMIT"].(float64); ok && v > 0 {
 					limit = &v
 				}

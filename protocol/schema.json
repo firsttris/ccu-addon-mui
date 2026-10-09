@@ -2414,6 +2414,9 @@
         "keyMismatch": {
           "type": "string",
           "description": "BidCos-RF: a device that failed to pair for another system security key"
+        },
+        "hmip": {
+          "$ref": "#/definitions/HmIPPairing"
         }
       },
       "required": [
@@ -2825,6 +2828,17 @@
         "elevatedUntil": {
           "type": "string",
           "description": "RFC 3339 time the admin rights end; absent without an expiry or when not elevated"
+        },
+        "platform": {
+          "type": "string",
+          "enum": [
+            "ccu",
+            "lite"
+          ],
+          "description": "What the add-on runs on: a CCU3/OpenCCU or openccu-lite (without ReGa and WebUI); sent when the login succeeded"
+        },
+        "capabilities": {
+          "$ref": "#/definitions/Capabilities"
         }
       },
       "required": [
@@ -12933,6 +12947,10 @@
             "$ref": "#/definitions/DeviceImage"
           },
           "description": "by device type in lower case"
+        },
+        "base": {
+          "type": "string",
+          "description": "where the pictures are served, their path appended: /ws/mui/img/ by this server on a CCU, /config/img/devices/ by lighttpd on openccu-lite; absent from older servers"
         }
       },
       "required": [
@@ -13007,6 +13025,84 @@
       "required": [
         "request",
         "response"
+      ],
+      "additionalProperties": false
+    },
+    "Capabilities": {
+      "type": "object",
+      "properties": {
+        "programs": {
+          "type": "boolean",
+          "description": "ReGa programs and scripts"
+        },
+        "sysvars": {
+          "type": "boolean",
+          "description": "System variables"
+        },
+        "alarms": {
+          "type": "boolean",
+          "description": "Alarm messages (alarm system variables)"
+        },
+        "history": {
+          "type": "boolean",
+          "description": "The system protocol (ReGa history)"
+        },
+        "system": {
+          "type": "boolean",
+          "description": "The CCU's system settings: time, network, firewall, security, certificate, logging, backup, CCU firmware, add-ons, LAN gateways, restart"
+        },
+        "users": {
+          "type": "boolean",
+          "description": "The CCU's users"
+        },
+        "selfUpdate": {
+          "type": "boolean",
+          "description": "Updating this add-on from the app"
+        },
+        "channelOptions": {
+          "type": "boolean",
+          "description": "The ReGa's channel options (visible, operable, logged)"
+        },
+        "comTest": {
+          "type": "boolean",
+          "description": "The communication test"
+        }
+      },
+      "required": [
+        "programs",
+        "sysvars",
+        "alarms",
+        "history",
+        "system",
+        "users",
+        "selfUpdate",
+        "channelOptions",
+        "comTest"
+      ],
+      "additionalProperties": false,
+      "description": "Which parts of the app the platform has; the app hides the others"
+    },
+    "HmIPPairing": {
+      "type": "object",
+      "description": "HmIP-RF on openccu-lite: how the system pairs (GET /api/meta/v1/version hmip). LOCAL asks eQ-3's key server never: a device pairs only with the SGTIN and key from its label, or when its key is one of the system's device keys",
+      "properties": {
+        "keyserverMode": {
+          "type": "string",
+          "description": "LOCAL, KEYSERVER or KEYSERVER_LOCAL"
+        },
+        "deviceKeys": {
+          "type": "integer",
+          "description": "How many device keys the system holds"
+        },
+        "offlinePairing": {
+          "type": "boolean",
+          "description": "false on LOCAL: a device whose key is not on the system cannot pair without its label's key"
+        }
+      },
+      "required": [
+        "keyserverMode",
+        "deviceKeys",
+        "offlinePairing"
       ],
       "additionalProperties": false
     }

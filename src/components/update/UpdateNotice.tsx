@@ -6,7 +6,7 @@ import AlertIcon from '~icons/lucide/triangle-alert';
 import ExternalIcon from '~icons/lucide/external-link';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
-import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { useCapabilities, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { isNewerVersion } from '../../utils/version';
 import { takeOverNow, UPDATED_TO_KEY } from '../../lib/appUpdate';
 import { useEffects } from '../../contexts/EffectsContext';
@@ -37,10 +37,12 @@ const write = (storage: Storage, key: string, value: string | null) => {
 // Tells administrators once per visit that a new version of the add-on is
 // out, and offers to install it (UpdateWizard). The server asks GitHub at
 // most every 6 hours, so every start may ask it. "Später" waits for the next
-// visit, "Überspringen" for the next version.
+// visit, "Überspringen" for the next version. Only where the add-on updates
+// itself: openccu-lite updates add-ons on its own page (Zusatzsoftware).
 export const UpdateNotice = () => {
   const { request } = useWebSocketActions();
   const { connectionStatus, authState, userLevel } = useWebSocketContext();
+  const { selfUpdate } = useCapabilities();
   const effects = useEffects();
   const [latest, setLatest] = useState<{ current: string; latest: string } | null>(null);
   const [asked, setAsked] = useState(false);
@@ -48,7 +50,7 @@ export const UpdateNotice = () => {
   const now = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (asked || connectionStatus !== 'Open' || authState !== 'authenticated' || userLevel !== 'admin') return;
+    if (asked || !selfUpdate || connectionStatus !== 'Open' || authState !== 'authenticated' || userLevel !== 'admin') return;
     setAsked(true);
     request({ type: 'checkSelfUpdate' }, { timeoutMs: 30000 })
       .then((answer) => {
@@ -58,7 +60,7 @@ export const UpdateNotice = () => {
         setLatest({ current, latest: answer.latest });
       })
       .catch(() => undefined);
-  }, [asked, connectionStatus, authState, userLevel, request]);
+  }, [asked, selfUpdate, connectionStatus, authState, userLevel, request]);
 
   if (!latest) return null;
   if (installing) return <UpdateWizard version={latest.latest} current={latest.current} onClose={() => setLatest(null)} />;

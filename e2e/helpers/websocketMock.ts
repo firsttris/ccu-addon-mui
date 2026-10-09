@@ -17,6 +17,11 @@ type Message = {
 export type WebSocketMockOptions = {
   // Like the go-server with AUTH_MODE=ccu: only Admin/secret can log in
   requireLogin?: boolean;
+  // Answer as openccu-lite: no ReGa, no WebUI, so no programs, system
+  // variables, alarms or system settings
+  lite?: boolean;
+  // openccu-lite whose session expired: the gate passed no session
+  sessionExpired?: boolean;
 };
 
 export const VALID_TOKEN = 'test-token';
@@ -33,11 +38,29 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
   await page.exposeFunction('__mockProtocol', (json: string) => {
     recorded.push(JSON.parse(json));
   });
-  await page.addInitScript(({ requireLogin, validToken }) => {
+  await page.addInitScript(({ requireLogin, validToken, lite, sessionExpired }) => {
     const record = (message: unknown) =>
       (window as Window & { __mockProtocol?: (json: string) => void }).__mockProtocol?.(JSON.stringify(message));
 
     type AnyPayload = Record<string, unknown>;
+
+    // What the login tells about the platform (platform.go)
+    const platform = lite
+      ? {
+          platform: 'lite',
+          capabilities: {
+            programs: false,
+            sysvars: false,
+            alarms: false,
+            history: false,
+            system: false,
+            users: false,
+            selfUpdate: false,
+            channelOptions: false,
+            comTest: false,
+          },
+        }
+      : {};
 
     const rooms = [
       { id: 1, name: 'Wohnzimmer' },
@@ -878,14 +901,18 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       state.sentMessages.push(message);
 
       if (message.type === 'auth') {
+        if (sessionExpired) {
+          delayedBroadcast({ type: 'auth_response', success: false, authRequired: false, elevated: false, code: 'SESSION_REQUIRED', error: 'no session of the system' });
+          return;
+        }
         if (!requireLogin) {
-          delayedBroadcast({ type: 'auth_response', success: true, authRequired: false, level: 'admin', elevated: true });
+          delayedBroadcast({ type: 'auth_response', success: true, authRequired: false, level: 'admin', elevated: true, ...platform });
           return;
         }
         state.authenticated = message.token === validToken;
         delayedBroadcast(
           state.authenticated
-            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken, elevated: false }
+            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken, elevated: false, ...platform }
             : { type: 'auth_response', success: false, authRequired: true, code: 'LOGIN_REQUIRED', elevated: false },
         );
         return;
@@ -895,7 +922,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         state.authenticated = message.username === 'Admin' && message.password === 'secret';
         delayedBroadcast(
           state.authenticated
-            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken, elevated: false }
+            ? { type: 'auth_response', success: true, authRequired: true, user: 'Admin', level: 'admin', token: validToken, elevated: false, ...platform }
             : { type: 'auth_response', success: false, authRequired: true, code: 'INVALID_CREDENTIALS', elevated: false },
         );
         return;
@@ -903,6 +930,28 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
       if (!state.authenticated) {
         delayedBroadcast({ type: 'error', error: 'authentication required', code: 'AUTH_REQUIRED', requestId: message.requestId });
+        return;
+      }
+
+      // Pairing: not in install mode; openccu-lite in the local key mode
+      if (message.type === 'getInstallMode') {
+        delayedBroadcast({
+          type: 'getInstallMode_response',
+          success: true,
+          seconds: 0,
+          ...(lite && message.interfaceName === 'HmIP-RF'
+            ? { hmip: { keyserverMode: 'LOCAL', deviceKeys: 2, offlinePairing: false } }
+            : {}),
+          requestId: message.requestId,
+        });
+        return;
+      }
+      if (message.type === 'getInbox') {
+        delayedBroadcast({ type: 'getInbox_response', success: true, devices: [], requestId: message.requestId });
+        return;
+      }
+      if (message.type === 'getInterfaces') {
+        delayedBroadcast({ type: 'getInterfaces_response', success: true, interfaces: ['HmIP-RF', 'BidCos-RF'], requestId: message.requestId });
         return;
       }
 
@@ -942,6 +991,18 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         const sysvar = sysvars.find((sv) => sv.id === message.id);
         if (sysvar && message.type === 'setSysvar') sysvar.value = message.value as boolean;
         delayedBroadcast({ type: `${message.type}_response`, success: true, requestId: message.requestId });
+        return;
+      }
+
+      if (message.type === 'getSystemInfo') {
+        delayedBroadcast({
+          type: 'getSystemInfo_response',
+          success: true,
+          addonVersion: '1.0.0',
+          firmwareVersion: '3.83.6',
+          radioInterfaces: [],
+          requestId: message.requestId,
+        });
         return;
       }
 
@@ -1232,5 +1293,10 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         broadcast({ type: 'sysvars', sysvars });
       },
     };
-  }, { requireLogin: options.requireLogin === true, validToken: VALID_TOKEN });
+  }, {
+    requireLogin: options.requireLogin === true,
+    validToken: VALID_TOKEN,
+    lite: options.lite === true,
+    sessionExpired: options.sessionExpired === true,
+  });
 };

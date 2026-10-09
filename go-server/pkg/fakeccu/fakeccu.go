@@ -34,6 +34,18 @@ type CCU struct {
 	// When the fake started: the time stamp of its maintenance values
 	Started time.Time
 	mu      sync.Mutex
+	// Lite makes it an openccu-lite: no ReGa, and occulited's APIs on the
+	// WebUI port instead of the WebUI (occulited.go)
+	Lite bool
+	lite *liteStore
+	// The event stream's messages and who follows it (occulited.go)
+	liteEvents  []liteEvent
+	liteStreams map[chan liteEvent]bool
+	liteGroups  []*liteGroup
+	// The metadata change stream's events and who follows it
+	metaEvents  []metaEvent
+	metaStreams map[chan metaEvent]bool
+	liteGroupID int
 	// ConfigDir is the fake /etc/config, for the security settings
 	// flag files (sshEnabled, authEnabled, httpsRedirectEnabled)
 	ConfigDir string
@@ -215,6 +227,10 @@ func (c *CCU) Close() {
 // --- ReGa -------------------------------------------------------------
 
 func (c *CCU) handleRega(w http.ResponseWriter, r *http.Request) {
+	if c.Lite {
+		http.Error(w, "openccu-lite has no ReGa", http.StatusNotFound)
+		return
+	}
 	// ReGa reads and writes ISO-8859-1 (see package latin1)
 	body, _ := io.ReadAll(r.Body)
 	// rega.ExecuteComplete: the script's last line writes the end marker
@@ -1279,6 +1295,9 @@ func (c *CCU) setDatapoint(values map[string]string) string {
 // setValue changes a datapoint and sends the event; c.mu must be held.
 func (c *CCU) setValue(ch *Channel, datapoint string, value interface{}) {
 	ch.Datapoints[datapoint] = value
+	if c.Lite {
+		c.publishLite("event", map[string]interface{}{"interface": ch.Interface, "address": ch.Address, "key": datapoint, "value": value})
+	}
 	for id, url := range c.callbacks[ch.Interface] {
 		c.events <- callbackEvent{url: url, interfaceID: id, address: ch.Address, datapoint: datapoint, value: value}
 	}
@@ -1511,6 +1530,10 @@ func (c *CCU) handleControl(w http.ResponseWriter, r *http.Request) {
 func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/fake/") {
 		c.handleControl(w, r)
+		return
+	}
+	if c.Lite {
+		c.handleOcculited(w, r)
 		return
 	}
 	if strings.HasPrefix(r.URL.Path, "/pages/jpages/group/") && r.Method == http.MethodPost {
@@ -2143,6 +2166,10 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 				}
 			}
 		}
+		if c.Lite {
+			// The central's own virtual keys, as rfd and HMIPServer list them
+			return append(append([]map[string]interface{}{}, data.Devices...), c.virtualKeyDevices(iface)...), ""
+		}
 		return data.Devices, ""
 	case "setBidcosInterface":
 		roaming := 0
@@ -2181,6 +2208,9 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 	case "getParamsetDescription":
 		address, key := stringParam(params, 0), stringParam(params, 1)
 		description, ok := data.ParamsetDescriptions[address][key]
+		if !ok && c.Lite && isVirtualKey(address) && key == "VALUES" {
+			description, ok = virtualKeyValues, true
+		}
 		if !ok && strings.Contains(key, ":") {
 			// Link parameters: the same for every partner
 			description, ok = data.ParamsetDescriptions[address]["LINK"]

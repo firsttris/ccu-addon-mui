@@ -1,33 +1,23 @@
 package rega
 
 import (
+	"ccu-addon-mui-server/pkg/home"
 	"fmt"
 	"strconv"
 	"strings"
 )
 
-// Favorite is a favorite list of the CCU, as the WebUI shows them under
-// "Favoriten": channels, system variables and programs from any room.
-type Favorite struct {
-	ID    int64          `json:"id"`
-	Name  string         `json:"name"`
-	Items []FavoriteItem `json:"items"`
-}
+type Favorite = home.Favorite
 
-// FavoriteItem is an entry of a favorite list, in list order.
-type FavoriteItem struct {
-	ID int64 `json:"id"`
-	// CHANNEL, SYSVAR, PROGRAM or SEPARATOR
-	Type string `json:"type"`
-}
+type FavoriteItem = home.FavoriteItem
 
 // Changes to favorite lists, see favorite_change.tcl
 const (
-	FavoriteCreate = "create"
-	FavoriteRename = "rename"
-	FavoriteDelete = "delete"
-	FavoriteAdd    = "add"
-	FavoriteRemove = "remove"
+	FavoriteCreate = home.FavoriteCreate
+	FavoriteRename = home.FavoriteRename
+	FavoriteDelete = home.FavoriteDelete
+	FavoriteAdd    = home.FavoriteAdd
+	FavoriteRemove = home.FavoriteRemove
 )
 
 func parseFavorites(output string) []Favorite {
@@ -75,18 +65,7 @@ func (c *Client) GetFavorites(username string) ([]Favorite, error) {
 	return parseFavorites(output), nil
 }
 
-// FavoriteChange is a change of a favorite list.
-type FavoriteChange struct {
-	Action string
-	// The list (all but create) and the channel, system variable or
-	// program (add, remove)
-	ListID int64
-	ItemID int64
-	// The name (create, rename)
-	Name string
-	// The user a new list is for; all users if empty
-	Username string
-}
+type FavoriteChange = home.FavoriteChange
 
 // ChangeFavorite applies a change and returns SetOK with the new list's id
 // (create) or the list's previous name, or SetNotFound.

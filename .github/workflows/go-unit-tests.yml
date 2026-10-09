@@ -49,11 +49,16 @@ jobs:
         run: go mod download
 
       - name: Vet and format
-        run: go vet ./... && test -z "$(gofmt -l .)"
+        run: go vet ./... && go vet -tags lite ./... && test -z "$(gofmt -l .)"
 
       # -race: several handlers run in their own goroutines
       - name: Run unit tests with coverage
         run: go test -race ./... -covermode=atomic -coverprofile=coverage.out
+
+      # The server for openccu-lite (-tags lite) against the fake's
+      # openccu-lite
+      - name: Test the openccu-lite build
+        run: go test -race -tags lite ./...
 
       - name: Print coverage summary
         run: go tool cover -func=coverage.out

@@ -17,6 +17,26 @@ protokolliert.
   Client erfinden. Die Sperre gilt für Anmeldung, Admin-Token, Passwort ändern und die Passwortabfragen bei
   Backup und Restore.
 
+### Auf openccu-lite
+
+Dort meldet nicht das Add-on an, sondern openccu-lite: Jede Anfrage unter `/addons/` geht durch occulites
+Sitzungs-Gate, das ohne Anmeldung auf `/login` umleitet und die Sitzung im Header `X-Occulite-Session`
+weitergibt, auch am WebSocket-Upgrade. Der Server prüft sie bei occulited (`/api/auth/v1/state`, nur eine
+angemeldete Sitzung mit derselben `sid` zählt) und übernimmt Benutzer und Stufe: *configure* und
+*administer* sind Administratoren, *operate* Benutzer, *read* Gäste. Geräte löschen, ersetzen und
+aktualisieren sowie Heizgruppen ändern darf auf openccu-lite nur *administer*: Dafür braucht es dort die
+Rechte `rpc:admin` und `system:write`, die *configure* nicht hat, und MUI soll einem Konto nicht mehr
+erlauben als das System selbst. Darum schickt der Server alles, was ein Nutzer ändert, mit dessen Sitzung an
+occulited (Funkdienste über `lite-rpc`, Metadaten, Heizgruppen): Das System prüft die Stufe dann selbst,
+und sein Journal nennt den Nutzer. Das Token des Add-ons hat nur `meta:read`, `rpc:operate` und
+`system:read`, für das, was der Server von sich aus liest. Dem Header traut der Server nur im
+Paket für openccu-lite; auf der CCU könnte ihn jeder Client selbst setzen. Offene Verbindungen prüfen die
+Sitzung jede Minute neu und schließen sich, sobald sie endet (Abmelden in openccu-lite) oder einem anderen
+Benutzer oder einer anderen Stufe gehört; ist occulited nur kurz nicht erreichbar, bleiben sie offen. Tokens,
+Sitzungsliste und die erneute Passworteingabe gibt es dort nicht: Administratoren sind immer bestätigt,
+`elevate` antwortet allen anderen `FORBIDDEN`. Das Add-on läuft als eigener Benutzer ohne Root und schreibt nur
+in seine eigenen Verzeichnisse.
+
 ## Tokens
 
 Nach der Anmeldung bekommt die App Tokens, die der Server mit HMAC-SHA256 signiert:

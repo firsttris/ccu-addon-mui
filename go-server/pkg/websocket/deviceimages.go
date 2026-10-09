@@ -18,6 +18,16 @@ type deviceImagesResponse struct {
 	Type      string                     `json:"type"`
 	RequestID string                     `json:"requestId,omitempty"`
 	Images    map[string]devimages.Image `json:"images"`
+	// Base is where the app loads the pictures from (SetDeviceImageBase)
+	Base string `json:"base,omitempty"`
+}
+
+// SetDeviceImageBase sets where the app loads the device pictures from, when
+// not from this server: openccu-lite serves them itself at the CCU's
+// /config/img/devices/ (openccu-lite docs/addons.md, since 1.0.0-dev.45),
+// and its lighttpd passes only /addons/mui/ to this server
+func (s *Server) SetDeviceImageBase(base string) {
+	s.deviceImageBase = base
 }
 
 var (
@@ -41,7 +51,11 @@ func (s *Server) loadDeviceImages() map[string]devimages.Image {
 // handleDeviceImages sends the picture and channel marks of every device
 // type (lower case), as the WebUI's DEVDB.tcl lists them
 func (s *Server) handleDeviceImages(client *Client, requestID string) {
-	s.sendJSON(client, deviceImagesResponse{Type: "getDeviceImages_response", RequestID: requestID, Images: s.loadDeviceImages()})
+	base := s.deviceImageBase
+	if base == "" {
+		base = DeviceImagePath
+	}
+	s.sendJSON(client, deviceImagesResponse{Type: "getDeviceImages_response", RequestID: requestID, Images: s.loadDeviceImages(), Base: base})
 }
 
 // deviceImageHandler serves the picture files; the WebUI shows them

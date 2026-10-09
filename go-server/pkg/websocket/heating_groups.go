@@ -26,6 +26,35 @@ func SetGroupsFile(path string) {
 	}
 }
 
+// GroupService keeps the heating groups somewhere other than the CCU's
+// HMServer: on openccu-lite occulited's /api/system/v1/groups, which also
+// names the group's device and marks its members (no ReGa step after)
+type GroupService interface {
+	List() ([]heatinggroups.Group, error)
+	SuitableMembers(groupType string) (backup.SuitableMembers, error)
+	// Save creates (ID 0) or changes a group and returns its id
+	Save(change backup.GroupChange) (int, error)
+	Delete(id int) error
+}
+
+// SetGroupService keeps the heating groups with service instead of the
+// HMServer
+func (s *Server) SetGroupService(service GroupService) {
+	s.groups = service
+}
+
+// listGroups reads the heating groups
+func (s *Server) listGroups() ([]heatinggroups.Group, error) {
+	if s.groups != nil {
+		return s.groups.List()
+	}
+	groups, err := heatinggroups.Read(groupsFile)
+	if errors.Is(err, heatinggroups.ErrNoFile) {
+		return []heatinggroups.Group{}, nil
+	}
+	return groups, err
+}
+
 type heatingGroupsResponse struct {
 	Type      string                `json:"type"`
 	RequestID string                `json:"requestId,omitempty"`
@@ -39,10 +68,7 @@ func (s *Server) handleHeatingGroups(client *Client, requestID string) {
 		s.sendRequestError(client, requestID, "only administrators may see the heating groups", "FORBIDDEN")
 		return
 	}
-	groups, err := heatinggroups.Read(groupsFile)
-	if errors.Is(err, heatinggroups.ErrNoFile) {
-		groups, err = []heatinggroups.Group{}, nil
-	}
+	groups, err := s.listGroups()
 	if err != nil {
 		s.sendRequestError(client, requestID, "getHeatingGroups failed: "+err.Error(), "CCU_ERROR")
 		return
@@ -97,7 +123,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		s.sendRequestError(client, msg.RequestID, "only administrators may change heating groups", "FORBIDDEN")
 		return
 	}
-	if s.backup == nil {
+	if s.backup == nil && s.groups == nil {
 		s.sendRequestError(client, msg.RequestID, "heating groups need the WebUI", "NOT_SUPPORTED")
 		return
 	}
@@ -107,7 +133,13 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 			s.sendRequestError(client, msg.RequestID, "unknown group type", "INVALID_VALUE")
 			return
 		}
-		members, err := s.backup.SuitableGroupMembers(msg.GroupType)
+		var members backup.SuitableMembers
+		var err error
+		if s.groups != nil {
+			members, err = s.groups.SuitableMembers(msg.GroupType)
+		} else {
+			members, err = s.backup.SuitableGroupMembers(msg.GroupType)
+		}
 		if err != nil {
 			s.sendRequestError(client, msg.RequestID, "getHeatingGroupMembers failed: "+err.Error(), "CCU_ERROR")
 			return
@@ -117,7 +149,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		g := msg.Group
 		g.Name = strings.TrimSpace(g.Name)
 		entry := audit.Entry{User: client.user, Action: "saveHeatingGroup", Target: g.Name, Value: g}
-		if code, errorMsg := configureError(client); code != "" {
+		if code, errorMsg := s.groupChangeError(client); code != "" {
 			s.recordAudit(entry, code)
 			s.sendRequestError(client, msg.RequestID, errorMsg, code)
 			return
@@ -127,7 +159,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 			s.sendRequestError(client, msg.RequestID, "invalid heating group", "INVALID_VALUE")
 			return
 		}
-		existing, _ := heatinggroups.Read(groupsFile)
+		existing, _ := s.listGroups()
 		var previous *heatinggroups.Group
 		for i := range existing {
 			if int(existing[i].ID) == g.ID {
@@ -149,9 +181,16 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 				deviceName = g.Name + " " + groupDeviceAddress(g.ID)
 			}
 		}
-		id, err := s.backup.SaveHeatingGroup(client.user, msg.Password, backup.GroupChange{
+		change := backup.GroupChange{
 			ID: g.ID, Name: g.Name, Type: g.Type, ForbidSingleOperation: g.ForbidSingleOperation, Members: g.Members, DeviceName: deviceName,
-		})
+		}
+		var id int
+		var err error
+		if s.groups != nil {
+			id, err = s.groupsFor(client).Save(change)
+		} else {
+			id, err = s.backup.SaveHeatingGroup(client.user, msg.Password, change)
+		}
 		if err != nil {
 			s.groupChangeFailed(client, msg.RequestID, entry, err)
 			return
@@ -171,16 +210,19 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 				}
 			}
 		}
-		go s.setupGroupDevice(groupDeviceAddress(id), deviceName, rename, previous == nil, g.Members, removed)
+		// occulited names the group's device and marks the members itself
+		if s.groups == nil {
+			go s.setupGroupDevice(groupDeviceAddress(id), deviceName, rename, previous == nil, g.Members, removed)
+		}
 		s.sendJSON(client, heatingGroupSavedResponse{Type: "saveHeatingGroup_response", RequestID: msg.RequestID, Success: true, ID: id})
 	case "deleteHeatingGroup":
 		entry := audit.Entry{User: client.user, Action: "deleteHeatingGroup", Target: strconv.Itoa(msg.ID)}
-		if code, errorMsg := configureError(client); code != "" {
+		if code, errorMsg := s.groupChangeError(client); code != "" {
 			s.recordAudit(entry, code)
 			s.sendRequestError(client, msg.RequestID, errorMsg, code)
 			return
 		}
-		existing, _ := heatinggroups.Read(groupsFile)
+		existing, _ := s.listGroups()
 		var previous *heatinggroups.Group
 		for i := range existing {
 			if int(existing[i].ID) == msg.ID {
@@ -194,6 +236,16 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		}
 		entry.Target = previous.Name
 		entry.Previous = *previous
+		if s.groups != nil {
+			err := s.groupsFor(client).Delete(msg.ID)
+			if err != nil {
+				s.groupChangeFailed(client, msg.RequestID, entry, err)
+				return
+			}
+			s.recordAudit(entry, rega.SetOK)
+			s.sendJSON(client, changeResponse{Type: "deleteHeatingGroup_response", RequestID: msg.RequestID, Success: true})
+			return
+		}
 		if err := s.backup.DeleteHeatingGroup(client.user, msg.Password, msg.ID); err != nil {
 			s.groupChangeFailed(client, msg.RequestID, entry, err)
 			return
@@ -267,4 +319,27 @@ func containsString(list []string, value string) bool {
 		}
 	}
 	return false
+}
+
+// groupChangeError: administrators with a recent password; on openccu-lite
+// the system's administrators only
+func (s *Server) groupChangeError(client *Client) (string, string) {
+	if code, message := configureError(client); code != "" {
+		return code, message
+	}
+	return s.systemAdminError(client)
+}
+
+// SetGroupSessions gives the heating groups a user changes: with the
+// user's session, so the system checks the user's level (openccu-lite)
+func (s *Server) SetGroupSessions(forSession func(session string) GroupService) {
+	s.groupSessions = forSession
+}
+
+// groupsFor are the heating groups as client changes them
+func (s *Server) groupsFor(client *Client) GroupService {
+	if s.groupSessions != nil && client.gateSession.Value != "" {
+		return s.groupSessions(client.gateSession.Value)
+	}
+	return s.groups
 }

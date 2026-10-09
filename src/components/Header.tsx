@@ -19,6 +19,8 @@ import LayoutGridIcon from '~icons/lucide/layout-grid';
 import CheckIcon from '~icons/lucide/check';
 import XIcon from '~icons/lucide/x';
 import RotateCcwIcon from '~icons/lucide/rotate-ccw';
+import ArrowLeftIcon from '~icons/lucide/arrow-left';
+import PuzzleIcon from '~icons/lucide/puzzle';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { LanguageChoice, useUserLanguageSync } from './LanguageChoice';
 import { useTheme } from '../contexts/ThemeContext';
@@ -73,6 +75,19 @@ const NavLink = ({ onClick, icon, children }: { onClick: () => void; icon: React
   </button>
 );
 
+// A page of the platform around the app (openccu-lite), in the whole window:
+// out of its frame, or out of the app where it fills the window
+const NavAnchor = ({ href, icon, children }: { href: string; icon: React.ReactNode; children: React.ReactNode }) => (
+  <a
+    href={href}
+    target="_top"
+    className="flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-accent [&_svg]:size-[18px] [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
+  >
+    {icon}
+    <span className="truncate">{children}</span>
+  </a>
+);
+
 const NavSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="flex flex-col gap-0.5">
     <div className="px-3 pb-1 text-xs font-medium text-muted-foreground">{title}</div>
@@ -100,7 +115,7 @@ const NavMenu = ({
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const effects = useEffects();
-  const { authRequired, logout, userLevel } = useWebSocketContext();
+  const { authRequired, logout, userLevel, capabilities, platform } = useWebSocketContext();
   // Loaded when the menu is first opened, then kept in the query cache
   const { data: rooms = [] } = useRooms({ enabled: open });
   const { data: trades = [] } = useTrades({ enabled: open });
@@ -121,6 +136,19 @@ const NavMenu = ({
           <SheetDescription className="sr-only">{m.MENU()}</SheetDescription>
         </SheetHeader>
         <nav className="flex flex-col gap-5 px-2 pb-4">
+          {/* The way back to openccu-lite on every page: it shows the app
+              without its own top bar when the user chooses so (the
+              manifest's ui.fullscreen, occulited docs/manifest-format.md) */}
+          {platform === 'lite' && (
+            <NavSection title="openccu-lite">
+              <NavAnchor href="/" icon={<ArrowLeftIcon />}>
+                {m.LITE_BACK()}
+              </NavAnchor>
+              <NavAnchor href="/addons" icon={<PuzzleIcon />}>
+                {m.ADDONS()}
+              </NavAnchor>
+            </NavSection>
+          )}
           {/* On phones the header has no room for it */}
           {arrange && !arrange.editing && (
             <div className="sm:hidden">
@@ -158,12 +186,16 @@ const NavMenu = ({
             <NavLink icon={<ListIcon />} onClick={() => go(() => navigate({ to: '/devices' }))}>
               {m.ALL_DEVICES()}
             </NavLink>
-            <NavLink icon={<BracesIcon />} onClick={() => go(() => navigate({ to: '/sysvars' }))}>
-              {m.SYSVARS()}
-            </NavLink>
-            <NavLink icon={<PlayIcon />} onClick={() => go(() => navigate({ to: '/programs' }))}>
-              {m.PROGRAMS()}
-            </NavLink>
+            {capabilities.sysvars && (
+              <NavLink icon={<BracesIcon />} onClick={() => go(() => navigate({ to: '/sysvars' }))}>
+                {m.SYSVARS()}
+              </NavLink>
+            )}
+            {capabilities.programs && (
+              <NavLink icon={<PlayIcon />} onClick={() => go(() => navigate({ to: '/programs' }))}>
+                {m.PROGRAMS()}
+              </NavLink>
+            )}
             <NavLink icon={<ChartIcon />} onClick={() => go(() => navigate({ to: '/diagrams' }))}>
               {m.DIAGRAMS()}
             </NavLink>

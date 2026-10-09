@@ -1,0 +1,44 @@
+{
+  "format": 1,
+  "id": "mui",
+  "name": "MUI",
+  "description": {
+    "de": "Homematic-Geräte verwalten und bedienen: anlernen, einstellen, direkt verknüpfen, mit Kacheln für Handy und Tablet.",
+    "en": "Manage and operate Homematic devices: pair, configure, link directly, with tiles for phone and tablet."
+  },
+  "homepage": "https://github.com/firsttris/ccu-addon-mui",
+  "licence": "AGPL-3.0-only",
+  "release": {
+    "github": "firsttris/ccu-addon-mui",
+    "asset": "mui-{version}-{arch}-lite.tar.gz"
+  },
+  "requires": {
+    "architectures": [
+      "aarch64",
+      "x86_64"
+    ]
+  },
+  "ui": {
+    "icon": "dist/icon.svg",
+    "session_header": true,
+    "fullscreen": true
+  },
+  "runtime": {
+    "daemon": true,
+    "needs": [
+      "rfd",
+      "hmipserver",
+      "hs485d"
+    ],
+    "start": "early",
+    "api_scopes": [
+      "meta:read",
+      "rpc:operate",
+      "system:read"
+    ],
+    "note": {
+      "de": "Spricht mit rfd, HMIPServer und hs485d über lite-rpc und mit occulited über dessen API. Änderungen eines Benutzers gehen mit dessen Sitzung; das Token deckt nur, was das Add-on selbst tut (Metadaten und Servicemeldungen lesen, Zustandsspeicher und Events, Sticky-Meldungen zurücksetzen).",
+      "en": "Talks to rfd, HMIPServer and hs485d through lite-rpc and to occulited through its API. A user's changes go with that user's session; the token covers only what the add-on does by itself (reading metadata and service messages, the state store and events, resetting sticky messages)."
+    }
+  }
+}

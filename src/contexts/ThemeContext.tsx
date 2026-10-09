@@ -33,6 +33,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [systemDark, setSystemDark] = useState(() => darkQuery()?.matches ?? false);
   const mode = (storedDark ?? systemDark) ? 'dark' : 'light';
 
+  // openccu-lite opens the app in its frame with its theme (?theme=
+  // system|light|dark) and posts a change; the menu's switch still works
+  useEffect(() => {
+    const follow = (theme: unknown) => {
+      if (theme === 'dark' || theme === 'light') setStoredDark(theme === 'dark');
+      else if (theme === 'system') setStoredDark(null);
+    };
+    follow(new URLSearchParams(window.location.search).get('theme'));
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin === window.location.origin && event.data?.type === 'openccu-lite:theme') follow(event.data.theme);
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+    // Once: the first setter writes the same state and storage
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const query = darkQuery();
     if (!query) return;

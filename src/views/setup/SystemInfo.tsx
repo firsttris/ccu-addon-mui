@@ -17,6 +17,7 @@ import { m } from '../../paraglide/messages';
 import { cn, formatNumber } from '../../lib/utils';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { LiteSystemLinks } from './LiteHints';
 import { CcuFirmwareButton, CcuFirmwareUpload } from './CcuFirmwareUpload';
 import { DeviceFirmware } from './DeviceFirmware';
 import { AddonSelfUpdate } from './AddonSelfUpdate';
@@ -104,28 +105,42 @@ const FirmwareUpdate = ({ current }: { current: string }) => {
   );
 };
 
-export const SystemInfo = () => (
-  <>
-    <Versions />
-    <Help />
-    <SystemSettings />
-    <GeneralSettings />
-    <Network />
-    <Security />
-    <Firewall />
-    <Certificate />
-    <Addons />
-    <DeviceFirmware />
-    <Logging />
-    <Backup />
-  </>
-);
+export const SystemInfo = () => {
+  // On openccu-lite its own interface has the system settings
+  const { capabilities } = useWebSocketContext();
+  return (
+    <>
+      <Versions />
+      {!capabilities.system && <LiteSystemLinks />}
+      <Help />
+      {capabilities.system && <SystemSettings />}
+      <GeneralSettings />
+      {capabilities.system && (
+        <>
+          <Network />
+          <Security />
+          <Firewall />
+          <Certificate />
+          <Addons />
+        </>
+      )}
+      {/* openccu-lite fetches and deploys device firmware on its Updates page */}
+      {capabilities.system && (
+        <>
+          <DeviceFirmware />
+          <Logging />
+          <Backup />
+        </>
+      )}
+    </>
+  );
+};
 
 // Versions and the radio modules with their duty cycle
 const Versions = () => {
   usePageTitle(m.SETUP());
   const { data, isError } = useSystemInfo();
-  const { elevated } = useWebSocketContext();
+  const { elevated, capabilities } = useWebSocketContext();
   const [uploading, setUploading] = useState(false);
   if (isError) {
     return null;
@@ -145,13 +160,19 @@ const Versions = () => {
         <dt className="text-muted-foreground">{m.ADDON_VERSION()}</dt>
         <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {data.addonVersion || import.meta.env.VITE_APP_VERSION || '–'}
-          <AddonSelfUpdate current={data.addonVersion || import.meta.env.VITE_APP_VERSION || ''} />
+          {capabilities.selfUpdate ? (
+            <AddonSelfUpdate current={data.addonVersion || import.meta.env.VITE_APP_VERSION || ''} />
+          ) : (
+            <a href="/addons" target="_top" className="text-xs text-muted-foreground underline underline-offset-4">
+              {m.LITE_ADDON_UPDATE()}
+            </a>
+          )}
         </dd>
         <dt className="text-muted-foreground">{m.FIRMWARE_VERSION()}</dt>
         <dd className="flex flex-wrap items-center gap-x-3 gap-y-1">
           {data.firmwareVersion || '–'}
-          {data.firmwareVersion && <FirmwareUpdate current={data.firmwareVersion} />}
-          <CcuFirmwareButton disabled={!elevated} onClick={() => setUploading(true)} />
+          {capabilities.system && data.firmwareVersion && <FirmwareUpdate current={data.firmwareVersion} />}
+          {capabilities.system && <CcuFirmwareButton disabled={!elevated} onClick={() => setUploading(true)} />}
         </dd>
         {data.product && (
           <>
@@ -277,33 +298,41 @@ const SystemState = ({ state }: { state: State }) => {
 
 // Help and licences, as the WebUI's help page links them (help.cgi): the
 // OpenCCU documentation, eQ-3's service pages, the licences of the CCU's
-// software, and this add-on's documentation and licence
-const helpLinks = (): [string, string][] => [
+// software, and this add-on's documentation and licence. On openccu-lite its
+// documentation and its licence page (/licenses) instead of the CCU's.
+const helpLinks = (lite: boolean): [string, string][] => [
   [m.HELP_ADDON_DOCS(), 'https://github.com/firsttris/ccu-addon-mui#readme'],
   [m.HELP_ADDON_LICENSE(), 'https://github.com/firsttris/ccu-addon-mui/blob/main/LICENSE'],
-  [m.HELP_OPENCCU_DOCS(), 'https://github.com/openccu/openccu/wiki'],
+  lite
+    ? [m.HELP_OPENCCU_LITE_DOCS(), 'https://github.com/hobbyquaker/openccu-lite#readme']
+    : [m.HELP_OPENCCU_DOCS(), 'https://github.com/openccu/openccu/wiki'],
   [m.HELP_HOMEMATIC(), 'http://www.eq-3.de/service.html'],
   [m.HELP_HOMEMATIC_IP(), 'https://www.homematic-ip.com/service.html'],
-  [m.HELP_CCU_LICENSES(), `${WEBUI_URL.replace(/\/?$/, '/')}licenseinfo.htm`],
+  lite
+    ? [m.HELP_OPENCCU_LITE_LICENSES(), '/licenses']
+    : [m.HELP_CCU_LICENSES(), `${WEBUI_URL.replace(/\/?$/, '/')}licenseinfo.htm`],
 ];
 
-const Help = () => (
-  <Panel aria-label={m.HELP()}>
-    <h2>{m.HELP()}</h2>
-    <ul className="flex flex-col gap-1.5 text-sm">
-      {helpLinks().map(([label, href]) => (
-        <li key={href}>
-          <a
-            className="text-primary underline-offset-4 hover:underline"
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {label} ↗
-          </a>
-        </li>
-      ))}
-    </ul>
-    <p className="text-xs">{m.HELP_COPYRIGHT()}</p>
-  </Panel>
-);
+const Help = () => {
+  const { platform } = useWebSocketContext();
+  return (
+    <Panel aria-label={m.HELP()}>
+      <h2>{m.HELP()}</h2>
+      <ul className="flex flex-col gap-1.5 text-sm">
+        {helpLinks(platform === 'lite').map(([label, href]) => (
+          <li key={href}>
+            <a
+              className="text-primary underline-offset-4 hover:underline"
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {label} ↗
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs">{m.HELP_COPYRIGHT()}</p>
+    </Panel>
+  );
+};

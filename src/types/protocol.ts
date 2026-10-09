@@ -1223,6 +1223,27 @@ export interface GetInstallModeResponse {
    * BidCos-RF: a device that failed to pair for another system security key
    */
   keyMismatch?: string;
+  hmip?: HmIPPairing;
+}
+/**
+ * HmIP-RF on openccu-lite: how the system pairs (GET /api/meta/v1/version hmip). LOCAL asks eQ-3's key server never: a device pairs only with the SGTIN and key from its label, or when its key is one of the system's device keys
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "HmIPPairing".
+ */
+export interface HmIPPairing {
+  /**
+   * LOCAL, KEYSERVER or KEYSERVER_LOCAL
+   */
+  keyserverMode: string;
+  /**
+   * How many device keys the system holds
+   */
+  deviceKeys: number;
+  /**
+   * false on LOCAL: a device whose key is not on the system cannot pair without its label's key
+   */
+  offlinePairing: boolean;
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema
@@ -5577,6 +5598,10 @@ export interface GetDeviceImagesResponse {
   images: {
     [k: string]: DeviceImage;
   };
+  /**
+   * where the pictures are served, their path appended: /ws/mui/img/ by this server on a CCU, /config/img/devices/ by lighttpd on openccu-lite; absent from older servers
+   */
+  base?: string;
 }
 /**
  * a device type's picture from the WebUI's DEVDB.tcl
@@ -5681,6 +5706,55 @@ export interface AuthResponse {
    * RFC 3339 time the admin rights end; absent without an expiry or when not elevated
    */
   elevatedUntil?: string;
+  /**
+   * What the add-on runs on: a CCU3/OpenCCU or openccu-lite (without ReGa and WebUI); sent when the login succeeded
+   */
+  platform?: "ccu" | "lite";
+  capabilities?: Capabilities;
+}
+/**
+ * Which parts of the app the platform has; the app hides the others
+ *
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "Capabilities".
+ */
+export interface Capabilities {
+  /**
+   * ReGa programs and scripts
+   */
+  programs: boolean;
+  /**
+   * System variables
+   */
+  sysvars: boolean;
+  /**
+   * Alarm messages (alarm system variables)
+   */
+  alarms: boolean;
+  /**
+   * The system protocol (ReGa history)
+   */
+  history: boolean;
+  /**
+   * The CCU's system settings: time, network, firewall, security, certificate, logging, backup, CCU firmware, add-ons, LAN gateways, restart
+   */
+  system: boolean;
+  /**
+   * The CCU's users
+   */
+  users: boolean;
+  /**
+   * Updating this add-on from the app
+   */
+  selfUpdate: boolean;
+  /**
+   * The ReGa's channel options (visible, operable, logged)
+   */
+  channelOptions: boolean;
+  /**
+   * The communication test
+   */
+  comTest: boolean;
 }
 /**
  * A failed request; requestId if the request had one

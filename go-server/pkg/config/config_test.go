@@ -112,3 +112,28 @@ func TestLoadEnvOverridesAndInvalidIntFallback(t *testing.T) {
 		t.Fatalf("expected CallbackHost 10.0.0.5, got %q", cfg.CallbackHost)
 	}
 }
+
+// On openccu-lite the add-on may write only its own directories: DATA_DIR
+// puts all its own files there, explicit settings still win
+func TestDataDirHoldsTheOwnFiles(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("DATA_DIR", dir)
+	t.Setenv("RULES_FILE", "/elsewhere/rules.json")
+	cfg := Load()
+	for name, got := range map[string]string{
+		"mui-auth.key":      cfg.AuthKeyFile,
+		"mui-sessions.json": cfg.SessionsFile,
+		"mui-push.json":     cfg.PushFile,
+		"mui-diagrams.json": cfg.DiagramsFile,
+		"mui-tiles.json":    cfg.TilesFile,
+		"mui-audit.log":     cfg.AuditLogFile,
+		"mui-diagrams":      cfg.DiagramsDir,
+	} {
+		if got != filepath.Join(dir, name) {
+			t.Errorf("%s = %q", name, got)
+		}
+	}
+	if cfg.RulesFile != "/elsewhere/rules.json" || cfg.DataDir != dir {
+		t.Errorf("rules %q, data dir %q", cfg.RulesFile, cfg.DataDir)
+	}
+}

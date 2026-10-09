@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
 import type { Channel } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
+import { useWebSocketContext } from '../../hooks/useWebsocket';
 
 // Channel types shown as a lamp or a plain switch (SwitchControl)
 const SWITCH_TYPES = new Set(['SWITCH_VIRTUAL_RECEIVER', 'SWITCH']);
@@ -77,6 +78,8 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
   const { data: rooms = [] } = useRooms();
   const { data: trades = [] } = useTrades();
   const change = useConfigChange();
+  // The ReGa's channel options; openccu-lite has none
+  const { capabilities } = useWebSocketContext();
 
   const run = (variables: Parameters<typeof change.mutate>[0], success?: string) =>
     change.mutate(variables, {
@@ -171,26 +174,28 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
           </NativeSelect>
         </Field>
       )}
-      <Field label={m.CHANNEL_OPTIONS()}>
-        <fieldset
-          aria-label={`${m.CHANNEL_OPTIONS()} ${channel.address}`}
-          disabled={!canEdit}
-          className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] [&_label]:flex [&_label]:items-center [&_label]:gap-1.5"
-        >
-          {options.map(({ option, label, checked }) => (
-            <label key={option}>
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={(event) =>
-                  run({ type: 'setChannelOption', id: channel.id, option, value: event.target.checked })
-                }
-              />
-              {label}
-            </label>
-          ))}
-        </fieldset>
-      </Field>
+      {capabilities.channelOptions && (
+        <Field label={m.CHANNEL_OPTIONS()}>
+          <fieldset
+            aria-label={`${m.CHANNEL_OPTIONS()} ${channel.address}`}
+            disabled={!canEdit}
+            className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] [&_label]:flex [&_label]:items-center [&_label]:gap-1.5"
+          >
+            {options.map(({ option, label, checked }) => (
+              <label key={option}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(event) =>
+                    run({ type: 'setChannelOption', id: channel.id, option, value: event.target.checked })
+                  }
+                />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+        </Field>
+      )}
     </div>
   );
 };

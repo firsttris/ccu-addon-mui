@@ -3,11 +3,12 @@ import { fireEvent, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderWithTheme } from '../test/render';
 import { ToastProvider } from '../contexts/ToastContext';
+import { CCU_CAPABILITIES } from '../hooks/capabilities';
 
 vi.mock('../hooks/useWebsocket', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../hooks/useWebsocket')>()),
   useWebSocketActions: () => ({ request: vi.fn(async () => ({})) }),
-  useWebSocketContext: () => ({ userLevel: 'admin', elevated: false }),
+  useWebSocketContext: () => ({ userLevel: 'admin', elevated: false, capabilities: CCU_CAPABILITIES }),
 }));
 
 const { Dashboard } = await import('./Dashboard');

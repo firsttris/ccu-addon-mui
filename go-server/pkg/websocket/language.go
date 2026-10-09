@@ -16,10 +16,15 @@ import (
 // userAccountConfigAdmin.htm): /etc/config/userprofiles/<user>.lang with
 // 0 (automatic, the browser's), 1 (German) or 2 (English). The same choice
 // then applies in the add-on and in the old WebUI. The directory is in the
-// configured CCU config directory; userProfilesDir without one.
+// configured CCU config directory; userProfilesDir without one. On
+// openccu-lite, without a WebUI to share them with, they are the add-on's
+// own data in DATA_DIR: /etc/config is not the add-on's to write there.
 var userProfilesDir = "/etc/config/userprofiles"
 
 func (s *Server) profilesDir() string {
+	if s.platform == PlatformLite && s.cfg != nil && s.cfg.DataDir != "" {
+		return filepath.Join(s.cfg.DataDir, "userprofiles")
+	}
 	if s.cfg != nil && s.cfg.ConfigDir != "" {
 		return filepath.Join(s.cfg.ConfigDir, "userprofiles")
 	}

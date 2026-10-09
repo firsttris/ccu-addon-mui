@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { RequestError, useWebSocketActions } from '../hooks/useWebsocket';
+import { RequestError, useCapabilities, useWebSocketActions } from '../hooks/useWebsocket';
 import { AlarmMessage, ServiceMessage, ProgramDefinition } from '../types/protocol';
 import { applyEvent, groupChannelsByType, shareGroups, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
@@ -144,8 +144,9 @@ export const useInstallMode = (interfaceName: string, { enabled = true }: { enab
     queryKey: ['installMode', interfaceName],
     queryFn: async () => {
       const response = await request({ type: 'getInstallMode', interfaceName });
-      // BidCos-RF: a device that failed for another security key
-      return { seconds: response.seconds ?? 0, keyMismatch: response.keyMismatch };
+      // BidCos-RF: a device that failed for another security key; HmIP-RF
+      // on openccu-lite: how the system pairs
+      return { seconds: response.seconds ?? 0, keyMismatch: response.keyMismatch, hmip: response.hmip };
     },
     refetchInterval: (query) => ((query.state.data?.seconds ?? 0) > 0 ? 1000 : false),
     retry: false,
@@ -251,11 +252,14 @@ export const useDeviceFirmwareChanged = () => {
 
 // ReGa sends no events for system variables. After getSysvars the server
 // reads them for all apps and sends a 'sysvars' message when they change
-// (useWebsocket puts it into this query).
+// (useWebsocket puts it into this query). Not asked for on a platform
+// without them (openccu-lite): the lists stay empty.
 export const useSysvars = () => {
   const { request, recent } = useWebSocketActions();
+  const { sysvars: enabled } = useCapabilities();
   return useQuery({
     queryKey: ['sysvars'],
+    enabled,
     queryFn: async () => {
       const startedAt = recent.time();
       const sysvars = (await request({ type: 'getSysvars' })).sysvars ?? [];
@@ -267,8 +271,10 @@ export const useSysvars = () => {
 
 export const usePrograms = () => {
   const { request } = useWebSocketActions();
+  const { programs: enabled } = useCapabilities();
   return useQuery({
     queryKey: ['programs'],
+    enabled,
     queryFn: async () => (await request({ type: 'getPrograms' })).programs ?? [],
   });
 };
@@ -679,7 +685,10 @@ export const useServiceMessages = () => {
 // them when they change ('alarmMessages').
 export const useAlarmMessages = () => {
   const { request, recent } = useWebSocketActions();
+  // openccu-lite has no alarm variables
+  const { alarms: enabled } = useCapabilities();
   return useQuery({
+    enabled,
     queryKey: ['alarmMessages'],
     queryFn: async () => {
       const startedAt = recent.time();

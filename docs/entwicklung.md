@@ -123,6 +123,10 @@ docs/                diese Dokumentation
 3. **Server**: Trag den Typ in `go-server/pkg/websocket/websocket.go` im Dispatcher `handleMessage` ein und
    schreib einen Handler dafür. Für Einstellungen gibt es `configure(...)`: Es prüft die Rechte, führt die
    Aktion aus, schreibt ins Audit-Log und antwortet. Für das Bedienen von Geräten nimmst du `canOperate`.
+   Räume, Gewerke, Kanäle, Namen, Favoriten und Servicemeldungen liest und ändert der Handler über `s.home`
+   (die Schnittstelle `home.Source` in `go-server/pkg/home`), nicht direkt über die ReGa: Auf der CCU steckt
+   die ReGa dahinter, auf openccu-lite dessen APIs. Nur was es ausschließlich auf der CCU gibt, etwa
+   Programme oder Systemvariablen, ruft `s.regaClient` direkt.
 4. **Fake-CCU**: Braucht die Aktion etwas Neues von der CCU, etwa ein Skript, eine XML-RPC-Methode oder eine
    CGI-Seite, bildest du es in `go-server/pkg/fakeccu` nach. Neue ReGa-Vorlagen erkennt die Fake-CCU von
    selbst an ihrem Text, du ergänzt nur die Antwort als neuen Fall in `runScript` (`fakeccu.go`).
@@ -211,6 +215,7 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `AUTH_MODE` | `ccu` | `none` schaltet die Anmeldung ab |
 | `AUTH_KEY_FILE`, `SESSIONS_FILE`, `AUDIT_LOG_FILE`, `PUSH_FILE`, `DIAGRAMS_FILE`, `RULES_FILE`, `TILES_FILE` | unter `/usr/local/etc/config` | Dateien des Add-ons |
 | `DIAGRAMS_DIR` | `/usr/local/mui-diagrams` | Diagrammwerte |
+| `DATA_DIR` | – | ein Verzeichnis für alle Dateien des Add-ons und die Diagrammwerte; auf openccu-lite `/usr/local/etc/config/addons/mui`, weil das Add-on dort nur in eigene Verzeichnisse schreiben darf. Einzeln gesetzte Pfade gehen vor |
 | `BACKUP_DIR` | `/usr/local/tmp/mui-backups` auf der CCU, sonst `$TMPDIR/mui-backups` | Backups bis zum Download, Uploads |
 | `CCU_CONFIG_DIR`, `CCU_STATUS_DIR` | `/etc/config`, `/var/status` | Konfiguration der CCU |
 | `ADDONS_DIR`, `SYSLOG_CONFIG`, `LOG_DIR`, `TIME_CONF_FILE`, `NTP_CLIENT_FILE`, `TZ_FILE`, `GROUPS_FILE` | Pfade der CCU | Zusatzsoftware, Logs, Uhr, Heizgruppen |
@@ -221,11 +226,63 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `FIRMWARE_UPLOAD_DIR`, `FIRMWARE_STAGED_LINK` | `/usr/local/tmp`, `/usr/local/.firmwareUpdate` | Hochgeladene CCU-Updates und der Link, über den die WebUI das geprüfte Update bereitstellt |
 | `CCU_FIRMWARE_RELEASES` | `https://github.com/openccu/openccu/releases/download` | Releases mit SHA256-Dateien |
 | `ADDON_RELEASE_URL`, `ADDON_UPDATE_DIR` | GitHub-API der neuesten Release, `/usr/local/tmp` | Update des Add-ons ohne Neustart der CCU: woher die neue Version kommt und wo sie ausgepackt wird |
+| `OCCULITE_URL`, `OCCULITE_TOKEN_FILE` | `http://127.0.0.1`, `/run/occulite/addon-tokens/mui.api` | nur openccu-lite: occulited und das API-Token des Add-ons |
+| `LITE_FORCE` | – | nur openccu-lite: startet das Lite-Binary auch ohne openccu-lite, etwa gegen die Fake-CCU mit `-lite` |
 | `PUSH_SUBJECT` | GitHub-URL | Kontakt in Push-Anfragen |
 | `DEBUG` | `false` | ausführliches Log |
 
 Wie man alle Pfade für eine Testumgebung umbiegt, siehst du an den Stack-Tests in
 `playwright.stack.config.ts`.
+
+## openccu-lite
+
+Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go build -tags lite` für
+[openccu-lite](https://github.com/hobbyquaker/openccu-lite), das keine ReGa und keine WebUI hat.
+
+- **Was sich unterscheidet**, steht in Dateien mit Build-Tag: `main_ccu.go` und `main_lite.go` verbinden die
+  Plattform, `pkg/websocket/dispatch_ccu.go` verteilt, was nur eine CCU hat (Programme, Systemvariablen,
+  Alarme, Benutzer, die Systemeinstellungen der WebUI). Die Handler-Dateien dafür tragen `//go:build !lite`.
+  Das Hausmodell (Räume, Gewerke, Kanäle, Namen) liegt hinter `home.Source`: auf der CCU `pkg/rega`, auf
+  openccu-lite `pkg/occulite`.
+- **Werte und Events:** Auf openccu-lite meldet sich der Server nicht per `init` als Callback-Server an.
+  Er liest beim Start den Zustandsspeicher (`/api/rpc/v1/state`) und folgt ab dort dem Event-Stream
+  (`/api/rpc/v1/events`), der nach einer Unterbrechung das Verpasste nachholt; meldet er `resync`, liest
+  der Server den Zustandsspeicher neu. Die Funkdienste erreicht er über occulites `lite-rpc`
+  (`ccurpc.NewProxy`, XML-RPC unter `/api/rpc/v1/xmlrpc/<Interface>`), nicht über ihre lokalen Ports. Was
+  ein Nutzer auslöst, geht mit dessen Sitzung (`Client.WithToken`, `Home.ForSession`), alles andere mit dem
+  Token des Add-ons.
+- **Eigene Daten:** Kachel-Layouts und die Kachelwahl je Kanal liegen wie auf der CCU in `mui-tiles.json`
+  (`pkg/tiles`), auf openccu-lite im Datenverzeichnis. Der Modus von Eingangskanälen und die Favoritenlisten
+  liegen dort in `mui-lite.json`, weil es keine ReGa für sie gibt. Räume, Gewerke und Namen ändert der Server in occulites Metadaten-Speicher; Räume heißen dort
+  Pfade (`room/eg/wohnzimmer`), Kanäle `HmIP-RF.<Adresse>`, und die App bekommt daraus feste Zahlen-IDs
+  (`occulite.ID`).
+- **Geräteverwaltung:** Anlernen, Paramsets und Direktverknüpfungen laufen wie auf der CCU über XML-RPC,
+  hier durch `lite-rpc`.
+  Einen Posteingang hat openccu-lite nicht: Neu sind dort die Geräte ohne Eintrag im Metadaten-Speicher,
+  *Übernehmen* legt ihn mit dem Namen `<Typ> <Adresse>` an. Heizgruppen gehen über occulites
+  `/api/system/v1/groups` (`occulite.Groups`), Gerätefirmware lädt und verteilt occulite selbst.
+- **Servicemeldungen und Gesundheit:** Die Servicemeldungen sammelt occulited selbst
+  (`/api/system/v1/service-messages`); eine Sticky-Meldung bestätigt der Server, indem er sie am Gerät
+  zurücksetzt. Geräteprobleme und Geräte-Gesundheit kommen aus den Werten der Wartungskanäle. Alarme gibt
+  es ohne ReGa nicht; Push-Benachrichtigungen und Regeln laufen unverändert.
+- **Hinweise statt Lücken:** Statt der Programme zeigt die App auf openccu-lite, wo Automationen dort laufen
+  (Node-RED unter `/addons/red/`, die Zusatzsoftware, Direktverknüpfungen), und unter *System* Links auf
+  occulites eigene Seiten (`src/views/setup/LiteHints.tsx`). In occulites Rahmen übernimmt sie dessen
+  Hell/Dunkel und Sprache (`?theme=`, `?lang=`, `postMessage` `openccu-lite:theme`).
+- **Anmeldung:** Auf openccu-lite meldet occulites Gate vor `/addons/` die Sitzung im Header
+  `X-Occulite-Session`, auch am WebSocket-Upgrade. Deshalb verbindet sich die App installiert mit
+  `/addons/mui/ws`.
+- **Die App** ist für beide gleich. Bei der Anmeldung schickt der Server `platform` und `capabilities` mit,
+  danach blendet sie aus, was es nicht gibt.
+- **Paket:** `make build-lite` baut die Server für aarch64 und x86_64, `npm run build` packt daraus
+  `mui-<version>-aarch64-lite.tar.gz` und `mui-<version>-x86_64-lite.tar.gz` mit `openccu-lite.json`. Das
+  Add-on läuft dort als eigener Benutzer und schreibt nur nach `/usr/local/etc/config/addons/mui`
+  (`DATA_DIR`); `addon_installer/rc.d/mui-lite` und `addon_installer/lite/` sind die Teile dafür.
+- **Testen:** `go test -tags lite ./...` startet den Lite-Server gegen die Fake-CCU im Lite-Modus
+  (`fakeccu.CCU.Lite`): keine ReGa, dafür occulites APIs aus der Fixture. Von Hand geht das mit
+  `go run ./cmd/fakeccu -lite`, das die Umgebung für den Server ausgibt.
+
+Der Plan für die weiteren Schritte steht in [plan-openccu-lite.md](plan-openccu-lite.md).
 
 ## Release
 

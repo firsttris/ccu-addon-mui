@@ -1,3 +1,5 @@
+//go:build !lite
+
 package websocket
 
 import (
@@ -70,6 +72,7 @@ func gatewayState(g settings.LanGateway, modules []ccurpc.RadioInterface) lanGat
 // assignment through setBidcosInterface. For administrators, elevated,
 // with audit log.
 func (s *Server) handleLanGateways(client *Client, msgType string, message []byte) {
+	rpc := s.rpcFor(client)
 	var msg struct {
 		RequestID string                `json:"requestId"`
 		Gateways  []settings.LanGateway `json:"gateways"`
@@ -99,7 +102,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 	}
 	modules := []ccurpc.RadioInterface{}
 	if s.rpc != nil {
-		if list, err := s.rpc.ListBidcosInterfaces(bidcosRF); err == nil {
+		if list, err := rpc.ListBidcosInterfaces(bidcosRF); err == nil {
 			modules = list
 		}
 	}
@@ -204,7 +207,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 			invalid(fmt.Sprintf("unknown radio module %q", msg.Module))
 			return
 		}
-		if err := s.rpc.SetBidcosInterface(bidcosRF, msg.Address, msg.Module, msg.Roaming); err != nil {
+		if err := rpc.SetBidcosInterface(bidcosRF, msg.Address, msg.Module, msg.Roaming); err != nil {
 			code := "CCU_ERROR"
 			if errors.Is(err, ccurpc.ErrInvalidAddress) {
 				code = "INVALID_VALUE"

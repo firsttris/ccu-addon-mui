@@ -114,6 +114,14 @@ type Config struct {
 	// user partition, as /bin/install_addon does (/usr/local/tmp)
 	AddonReleaseURL string
 	AddonUpdateDir  string
+	// DataDir holds the add-on's own data on openccu-lite (DATA_DIR); empty
+	// on a CCU, where it is spread as above
+	DataDir string
+	// openccu-lite: occulited behind the system's web server, and the
+	// add-on's own API token (minted at every start with the manifest's
+	// api_scopes)
+	OcculiteURL       string
+	OcculiteTokenFile string
 }
 
 func Load() *Config {
@@ -185,6 +193,9 @@ func Load() *Config {
 		CcuFirmwareReleases:  getEnv("CCU_FIRMWARE_RELEASES", "https://github.com/openccu/openccu/releases/download"),
 		AddonReleaseURL:      getEnv("ADDON_RELEASE_URL", "https://api.github.com/repos/firsttris/ccu-addon-mui/releases/latest"),
 		AddonUpdateDir:       getEnv("ADDON_UPDATE_DIR", "/usr/local/tmp"),
+		DataDir:              os.Getenv(dataDirEnv),
+		OcculiteURL:          getEnv("OCCULITE_URL", "http://127.0.0.1"),
+		OcculiteTokenFile:    getEnv("OCCULITE_TOKEN_FILE", "/run/occulite/addon-tokens/mui.api"),
 	}
 }
 
@@ -237,7 +248,15 @@ func defaultAuthKeyFile() string {
 	return defaultConfigFile("mui-auth.key")
 }
 
+// dataDirEnv names one directory for all the add-on's own data. On
+// openccu-lite the add-on may write only its own directories
+// (/usr/local/etc/config/addons/mui), on a CCU it is unset.
+const dataDirEnv = "DATA_DIR"
+
 func defaultConfigFile(name string) string {
+	if dir := os.Getenv(dataDirEnv); dir != "" {
+		return filepath.Join(dir, name)
+	}
 	const ccuConfigDir = "/usr/local/etc/config"
 	if info, err := os.Stat(ccuConfigDir); err == nil && info.IsDir() {
 		return ccuConfigDir + "/" + name
@@ -249,6 +268,9 @@ func defaultConfigFile(name string) string {
 // flash), next to the config directory, or in the working directory when
 // running locally.
 func defaultDataDir(name string) string {
+	if dir := os.Getenv(dataDirEnv); dir != "" {
+		return filepath.Join(dir, name)
+	}
 	const ccuDataDir = "/usr/local"
 	if info, err := os.Stat("/usr/local/etc/config"); err == nil && info.IsDir() {
 		return ccuDataDir + "/" + name

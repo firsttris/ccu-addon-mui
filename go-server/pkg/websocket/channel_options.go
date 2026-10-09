@@ -38,7 +38,7 @@ func (s *Server) operable(client *Client, address string) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if r.addresses == nil || time.Since(r.loaded) > readOnlyTTL {
-		addresses, err := s.regaClient.GetReadOnlyChannels()
+		addresses, err := s.home.GetReadOnlyChannels()
 		if err != nil {
 			return false
 		}

@@ -48,7 +48,7 @@ const NavGroup = ({ title, children }: { title: string; children: ReactNode }) =
 // variables, programs) live in it too, but are open to everyone who may
 // operate, so they don't show the admin-only notice.
 export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode; adminOnly?: boolean }) => {
-  const { userLevel, elevated, authRequired } = useWebSocketContext();
+  const { userLevel, elevated, authRequired, capabilities } = useWebSocketContext();
   const isAdmin = userLevel === 'admin';
   // Until the server answered the login, the level is not known yet: no
   // notice and placeholders for the admin pages instead of a guess
@@ -99,7 +99,7 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
                 )}
               </Link>
             )}
-            {isAdmin && elevated && (
+            {isAdmin && elevated && capabilities.users && (
               <Link to="/setup/users" className={navLink}>
                 <UsersIcon />
                 {m.USERS()}
@@ -121,7 +121,7 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
                 ))}
               </div>
             )}
-            {isAdmin && (
+            {isAdmin && capabilities.system && (
               <Link to="/setup/gateways" className={navLink}>
                 <GatewayIcon />
                 {m.LGW_TITLE()}
@@ -135,22 +135,27 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
             )}
           </NavGroup>
           <NavGroup title={m.LOGIC()}>
-            <Link to="/sysvars" className={navLink}>
-              <BracesIcon />
-              {m.SYSVARS()}
-            </Link>
+            {capabilities.sysvars && (
+              <Link to="/sysvars" className={navLink}>
+                <BracesIcon />
+                {m.SYSVARS()}
+              </Link>
+            )}
             <Link to="/programs" className={navLink}>
               <PlayIcon />
-              {m.PROGRAMS()}
+              {/* openccu-lite: where automations go there instead */}
+              {capabilities.programs ? m.PROGRAMS() : m.LITE_AUTOMATION_TITLE()}
             </Link>
             <Link to="/virtual-keys" className={navLink}>
               <KeyboardIcon />
               {m.VKEYS_TITLE()}
             </Link>
-            <Link to="/history" className={navLink}>
-              <HistoryIcon />
-              {m.HIST_TITLE()}
-            </Link>
+            {capabilities.history && (
+              <Link to="/history" className={navLink}>
+                <HistoryIcon />
+                {m.HIST_TITLE()}
+              </Link>
+            )}
             <Link to="/diagrams" className={navLink}>
               <ChartIcon />
               {m.DIAGRAMS()}

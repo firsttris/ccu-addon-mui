@@ -42,9 +42,11 @@ export const cleanLabel = (text: string) =>
 const LocalPairing = ({
   interfaceName,
   disabled,
+  open,
 }: {
   interfaceName: string;
   disabled: boolean;
+  open?: boolean;
 }) => {
   const action = usePairingAction();
   const { showToast } = useToast();
@@ -53,7 +55,7 @@ const LocalPairing = ({
   const valid =
     SGTIN_PATTERN.test(cleanLabel(sgtin)) && KEY_PATTERN.test(cleanLabel(key));
   return (
-    <details className="rounded-lg border px-3 py-2 text-sm">
+    <details className="rounded-lg border px-3 py-2 text-sm" open={open}>
       <summary className="cursor-pointer font-medium">{m.PAIR_LOCAL()}</summary>
       <p className="mt-2 text-xs text-muted-foreground">
         {m.PAIR_LOCAL_HINT()}
@@ -168,8 +170,12 @@ export const Pairing = () => {
     (name) => name !== "BidCos-Wired" || connected.includes(name),
   );
   const wired = interfaceName === "BidCos-Wired";
-  const { data: { seconds, keyMismatch } = { seconds: 0 }, dataUpdatedAt } =
+  const { data: { seconds, keyMismatch, hmip } = { seconds: 0 }, dataUpdatedAt } =
     useInstallMode(interfaceName, { enabled: !wired });
+  // openccu-lite in the local key mode: eQ-3's key server is never asked,
+  // a new device pairs with its label only (occulited docs/meta-api.md,
+  // "Feature detection")
+  const localKeys = interfaceName === "HmIP-RF" && hmip?.offlinePairing === false;
   const active = seconds > 0;
   const { data: inbox = [] } = useInbox({ poll: active });
   const action = usePairingAction();
@@ -286,10 +292,16 @@ export const Pairing = () => {
           </DialogButton>
         )}
       </Row>
+      {localKeys && (
+        <p role="note" className="text-sm text-muted-foreground">
+          {m.PAIR_LOCAL_KEYS({ count: hmip?.deviceKeys ?? 0 })}
+        </p>
+      )}
       {interfaceName === "HmIP-RF" && (
         <LocalPairing
           interfaceName={interfaceName}
           disabled={action.isPending}
+          open={localKeys}
         />
       )}
       {interfaceName === "BidCos-RF" && (

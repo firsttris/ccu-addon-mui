@@ -2,7 +2,7 @@ name: Release
 
 # A tag vX.Y.Z releases that version: the button in "Bump version" (bump.yml) or
 # `npm run release:patch|minor|major` on a checkout creates it. First the full CI (build, Go and
-# Playwright tests), then the shared GitHub release from firsttris/workflows, which checks the tag
+# Playwright tests, openccu-lite VM), then the shared GitHub release from firsttris/workflows, which checks the tag
 # against package.json and attaches the add-on archives built by build.yml. Run by hand on main:
 # only the checks, nothing is released.
 on:
@@ -20,8 +20,12 @@ jobs:
   e2e:
     uses: ./.github/workflows/playwright-e2e.yml
 
+  # The add-on installed on a real openccu-lite (VM)
+  lite-vm:
+    uses: ./.github/workflows/lite-vm.yml
+
   release:
-    needs: [build, go, e2e]
+    needs: [build, go, e2e, lite-vm]
     if: startsWith(github.ref, 'refs/tags/v')
     uses: firsttris/workflows/.github/workflows/github-release.yml@v1
     with:
@@ -34,6 +38,8 @@ jobs:
         - **`mui-*-arm-ccu3-raspi.tar.gz`** (ARM): CCU3, OpenCCU auf Raspberry Pi 2/3/4/5 und auf ARM-Boards wie Tinkerboard oder ODROID
         - **`mui-*-x86_64-pc.tar.gz`** (x86_64): OpenCCU als VM (OVA für Proxmox, VMware, VirtualBox, Synology), als Docker- oder LXC-Container auf einem NAS oder Server, oder direkt installiert auf einem Mini-PC wie einem Intel NUC
 
-        Das falsche Archiv bricht bei der Installation mit „Error (2)“ ab.
+        - **`mui-*-aarch64-lite.tar.gz`**, **`mui-*-x86_64-lite.tar.gz`**: [openccu-lite](https://github.com/hobbyquaker/openccu-lite) auf Raspberry Pi 3/4/5 bzw. als VM; dort am einfachsten über den Add-on-Katalog installieren
+
+        Das falsche Archiv bricht bei der Installation mit „Error (2)“ ab. Neben jedem Archiv liegt eine `.sha256` zum Prüfen.
     permissions:
       contents: write

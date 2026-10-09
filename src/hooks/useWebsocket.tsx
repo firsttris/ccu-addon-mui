@@ -16,6 +16,7 @@ import { useToast } from '../contexts/ToastContext';
 import { applyEvent } from './channels';
 import { RecentUpdates } from './recentUpdates';
 import type { Protocol } from '../types/protocol';
+import { Capabilities, CCU_CAPABILITIES, Platform } from './capabilities';
 import { m } from '../paraglide/messages';
 import { emitSelfUpdateProgress } from '../lib/selfUpdateProgress';
 import type { SelfUpdateProgressMessage } from '../types/protocol';
@@ -49,6 +50,9 @@ interface Response {
   elevated?: boolean;
   // When the admin rights end (RFC 3339)
   elevatedUntil?: string;
+  // auth_response: what the add-on runs on and what it can do there
+  platform?: Platform;
+  capabilities?: Capabilities;
   // Lists the server sends to all apps when they change
   sysvars?: unknown[];
   alarms?: unknown[];
@@ -96,8 +100,10 @@ export interface RequestOptions {
 
 type EventListener = (event: HmEvent) => void;
 
-// 'pending' until the server answered the auth message sent on connect
-export type AuthState = 'pending' | 'authenticated' | 'loginRequired';
+// 'pending' until the server answered the auth message sent on connect;
+// 'sessionRequired' when the platform's session (openccu-lite) expired:
+// only its own login page can renew it
+export type AuthState = 'pending' | 'authenticated' | 'loginRequired' | 'sessionRequired';
 
 interface PendingRequest {
   resolve: (response: unknown) => void;
@@ -151,11 +157,20 @@ const writeToken = (token: string | null, key = TOKEN_STORAGE_KEY) => {
   }
 };
 
-// Connect to WebSocket server via same host (works in dev and production)
-const wsUrl =
-  window.location.protocol === 'https:'
-    ? `wss://${window.location.host}/ws/mui`
-    : `ws://${window.location.host}/ws/mui`;
+// The WebSocket server on the same host, the paths to try in order.
+// Installed, the app lies under /addons/mui/ and so does the WebSocket: on
+// openccu-lite only there the session gate passes the login on
+// (X-Occulite-Session). A CCU whose lighttpd has not loaded the new mui.conf
+// yet (update_script's reload missing or failed) knows only /ws/mui, so the
+// app falls back to it while no connection has opened. The dev server
+// proxies /ws/mui.
+export const socketPaths = (base: string) => (base === '/' ? ['/ws/mui'] : [`${base}ws`, '/ws/mui']);
+const paths = socketPaths(import.meta.env.BASE_URL);
+const socketUrl = (path: string) =>
+  `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${path}`;
+
+// openccu-lite could not check the session (occulited restarting): ask again
+const AUTH_RETRY_MS = 3000;
 
 export const useWebsocket = () => {
   const [authState, setAuthState] = useState<AuthState>('pending');
@@ -166,6 +181,19 @@ export const useWebsocket = () => {
   // When the admin rights end (ms), unknown without authentication
   const [elevatedUntil, setElevatedUntil] = useState<number>();
   const [loginError, setLoginError] = useState<string | null>(null);
+  // A CCU until the server says otherwise
+  const [platform, setPlatform] = useState<Platform>('ccu');
+  const [capabilities, setCapabilities] = useState<Capabilities>(CCU_CAPABILITIES);
+  // The path in use (socketPaths) and whether any connection opened yet:
+  // after that the path stays. A ref, read for every (re)connect: switching
+  // waits for the next attempt (reconnectInterval) instead of reconnecting
+  // at once, as a new url would
+  const pathRef = useRef(0);
+  const openedRef = useRef(false);
+  const url = useCallback(() => socketUrl(paths[pathRef.current]), []);
+  // Counts the auth messages to send again (SYSTEM_UNAVAILABLE)
+  const [authAttempt, setAuthAttempt] = useState(0);
+  const authRetryRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const deviceId = useUniqueDeviceID();
   const { showToast } = useToast();
@@ -263,7 +291,13 @@ export const useWebsocket = () => {
     }
   };
 
-  const { sendMessage, readyState, getWebSocket } = useWebSocket(wsUrl, {
+  const { sendMessage, readyState, getWebSocket } = useWebSocket(url, {
+    onOpen: () => {
+      openedRef.current = true;
+    },
+    onClose: () => {
+      if (!openedRef.current) pathRef.current = (pathRef.current + 1) % paths.length;
+    },
     shouldReconnect: () => true,
     reconnectInterval: 3000,
     reconnectAttempts: Infinity,
@@ -334,6 +368,19 @@ export const useWebsocket = () => {
     setAuthRequired(response.authRequired === true);
     if (!response.success) {
       readyRef.current = false;
+      if (response.code === 'SESSION_REQUIRED') {
+        setLoginError(null);
+        setAuthState('sessionRequired');
+        return;
+      }
+      if (response.code === 'SYSTEM_UNAVAILABLE') {
+        // The session may well be valid: no login page, ask again shortly
+        setLoginError(null);
+        setAuthState('pending');
+        clearTimeout(authRetryRef.current);
+        authRetryRef.current = setTimeout(() => setAuthAttempt((attempt) => attempt + 1), AUTH_RETRY_MS);
+        return;
+      }
       if (response.code === 'LOGIN_REQUIRED') {
         // No or an outdated token: not an error the user has to see
         writeToken(null);
@@ -359,6 +406,8 @@ export const useWebsocket = () => {
     setUserLevel(response.level ?? '');
     setElevated(response.elevated === true);
     setElevatedUntil(response.elevatedUntil ? Date.parse(response.elevatedUntil) : undefined);
+    if (response.platform) setPlatform(response.platform);
+    if (response.capabilities) setCapabilities(response.capabilities);
     setAuthState('authenticated');
     readyRef.current = true;
 
@@ -393,6 +442,7 @@ export const useWebsocket = () => {
       );
     } else {
       readyRef.current = false;
+      clearTimeout(authRetryRef.current);
       // Requests already sent get no answer on a lost connection: fail them
       // now instead of after their timeout (queries retry once reconnected).
       // Those still queued are sent after the next login.
@@ -403,7 +453,9 @@ export const useWebsocket = () => {
         pending.reject(new RequestError('connection lost', 'NOT_CONNECTED'));
       }
     }
-  }, [readyState, sendMessage]);
+  }, [readyState, sendMessage, authAttempt]);
+
+  useEffect(() => () => clearTimeout(authRetryRef.current), []);
 
   const login = useCallback(
     (username: string, password: string) => {
@@ -473,8 +525,30 @@ export const useWebsocket = () => {
   );
 
   const state = useMemo(
-    () => ({ ...actions, connectionStatus, authState, authRequired, userLevel, elevated, elevatedUntil, loginError }),
-    [actions, connectionStatus, authState, authRequired, userLevel, elevated, elevatedUntil, loginError],
+    () => ({
+      ...actions,
+      connectionStatus,
+      authState,
+      authRequired,
+      userLevel,
+      elevated,
+      elevatedUntil,
+      loginError,
+      platform,
+      capabilities,
+    }),
+    [
+      actions,
+      connectionStatus,
+      authState,
+      authRequired,
+      userLevel,
+      elevated,
+      elevatedUntil,
+      loginError,
+      platform,
+      capabilities,
+    ],
   );
 
   return { actions, state };
@@ -503,6 +577,10 @@ const WebSocketContext = createContext<UseWebsocketReturnType | undefined>(undef
 // and must not re-render when the connection state changes.
 const WebSocketActionsContext = createContext<WebSocketActions | undefined>(undefined);
 
+// What the platform has, for the queries: changes only on login. A CCU's
+// without a provider.
+const CapabilitiesContext = createContext<Capabilities>(CCU_CAPABILITIES);
+
 export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { actions, state } = useWebsocket();
   const queryClient = useQueryClient();
@@ -526,7 +604,9 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   return (
     <WebSocketActionsContext.Provider value={actions}>
-      <WebSocketContext.Provider value={state}>{children}</WebSocketContext.Provider>
+      <CapabilitiesContext.Provider value={state.capabilities}>
+        <WebSocketContext.Provider value={state}>{children}</WebSocketContext.Provider>
+      </CapabilitiesContext.Provider>
     </WebSocketActionsContext.Provider>
   );
 };
@@ -538,6 +618,12 @@ export const useWebSocketContext = () => {
   }
   return context;
 };
+
+export const useCapabilities = () => useContext(CapabilitiesContext);
+
+// The platform the server runs on; a CCU without a provider, as the
+// capabilities
+export const usePlatform = (): Platform => useContext(WebSocketContext)?.platform ?? 'ccu';
 
 export const useWebSocketActions = () => {
   const context = useContext(WebSocketActionsContext);

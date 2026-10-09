@@ -5,9 +5,10 @@ import { useWebSocketActions } from '../hooks/useWebsocket';
 import { cn } from '../lib/utils';
 import type { DeviceImage as Image } from '../types/protocol';
 
-// The WebUI's line drawings of the devices (DEVDB.tcl, served by the
-// server at /ws/mui/img/), tinted to the theme: multiplied onto the muted
-// background in the light theme, inverted and screened in the dark one
+// The WebUI's line drawings of the devices (DEVDB.tcl), tinted to the
+// theme: multiplied onto the muted background in the light theme, inverted
+// and screened in the dark one. The server says where they are served: by
+// itself at /ws/mui/img/ on a CCU, by openccu-lite at /config/img/devices/
 
 export const DEVICE_IMAGE_PATH = '/ws/mui/img/';
 
@@ -15,16 +16,21 @@ export const useDeviceImages = () => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['deviceImages'],
-    queryFn: async () => (await request({ type: 'getDeviceImages' })).images ?? {},
+    queryFn: async () => {
+      const response = await request({ type: 'getDeviceImages' });
+      return { images: response.images ?? {}, base: response.base ?? DEVICE_IMAGE_PATH };
+    },
     // DEVDB.tcl only changes with the CCU firmware
     staleTime: Infinity,
     retry: false,
   });
 };
 
-export const useDeviceImage = (type?: string): Image | undefined => {
+// The picture of a device type, with the URL to load it from
+export const useDeviceImage = (type?: string): (Image & { url: string }) | undefined => {
   const { data } = useDeviceImages();
-  return type ? data?.[type.toLowerCase()] : undefined;
+  const image = type ? data?.images[type.toLowerCase()] : undefined;
+  return image && data ? { ...image, url: data.base + image.path } : undefined;
 };
 
 interface DeviceImageProps {
@@ -58,7 +64,7 @@ export const DeviceImage = ({ type, size, channel, className, fallback }: Device
       {show ? (
         <>
           <img
-            src={DEVICE_IMAGE_PATH + image.path}
+            src={image.url}
             alt=""
             width={inner}
             height={inner}
