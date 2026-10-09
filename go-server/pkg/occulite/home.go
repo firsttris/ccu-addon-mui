@@ -59,10 +59,10 @@ type homeState struct {
 	// The interface of every device and channel address
 	interfaces map[string]string
 
-	// The metadata snapshot and the device lists, kept while the streams
-	// tell their changes (cache.go)
-	meta        metaCache
-	deviceLists deviceCache
+	// The metadata snapshot read last: what a deleted node had below it
+	// (onMetaEvent)
+	lastMu       sync.Mutex
+	lastSnapshot *Snapshot
 }
 
 var _ home.Source = (*Home)(nil)
@@ -106,6 +106,28 @@ const callTimeout = 15 * time.Second
 
 func (h *Home) context() (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), callTimeout)
+}
+
+func (h *Home) snapshot() (Snapshot, error) {
+	ctx, cancel := h.context()
+	defer cancel()
+	snapshot, err := h.client.Snapshot(ctx)
+	if err == nil {
+		h.lastMu.Lock()
+		h.lastSnapshot = &snapshot
+		h.lastMu.Unlock()
+	}
+	return snapshot, err
+}
+
+// lastRead is the snapshot read last, if any
+func (h *Home) lastRead() (Snapshot, bool) {
+	h.lastMu.Lock()
+	defer h.lastMu.Unlock()
+	if h.lastSnapshot == nil {
+		return Snapshot{}, false
+	}
+	return *h.lastSnapshot, true
 }
 
 // ID is the stable number the app knows a room, function or channel by:
@@ -233,8 +255,6 @@ func uniqueSlug(name string, taken map[string]bool) string {
 }
 
 func (h *Home) CreateGroup(list, name string) (string, int64, error) {
-	// The change goes into the store before the answer: not the kept snapshot
-	defer h.metaChanged()
 	enumID, ok := groupEnums[list]
 	if !ok {
 		return home.SetNotFound, 0, nil
@@ -259,8 +279,6 @@ func (h *Home) CreateGroup(list, name string) (string, int64, error) {
 }
 
 func (h *Home) changeNode(list string, id int64, fn func(ctx context.Context, path string) error) (string, string, error) {
-	// The change goes into the store before the answer: not the kept snapshot
-	defer h.metaChanged()
 	enumID, ok := groupEnums[list]
 	if !ok {
 		return home.SetNotFound, "", nil
@@ -297,8 +315,6 @@ func (h *Home) DeleteGroup(list string, id int64) (string, string, error) {
 
 // SetGroupMember puts a channel into a room or function, or takes it out
 func (h *Home) SetGroupMember(groupID, channelID int64, member bool) (string, error) {
-	// The change goes into the store before the answer: not the kept snapshot
-	defer h.metaChanged()
 	snapshot, err := h.snapshot()
 	if err != nil {
 		return "", err
@@ -348,7 +364,7 @@ func (h *Home) channels() []channelInfo {
 	var list []channelInfo
 	interfaces := map[string]string{}
 	for _, iface := range h.rpc.InterfaceNames() {
-		descriptions, err := h.listDevices(iface)
+		descriptions, err := h.rpc.ListDevices(iface)
 		if err != nil {
 			logger.Debugf("listDevices %s: %v", iface, err)
 			continue
@@ -588,8 +604,6 @@ func (h *Home) GetDeviceNames() (map[string]string, error) {
 // SetName renames a device or channel; the object is created when the
 // store has none yet (a newly paired device)
 func (h *Home) SetName(address, name string) (string, string, error) {
-	// The change goes into the store before the answer: not the kept snapshot
-	defer h.metaChanged()
 	iface := h.interfaceOf(address)
 	if iface == "" {
 		return home.SetNotFound, "", nil
@@ -755,7 +769,7 @@ func (h *Home) ChangeFavorite(change home.FavoriteChange) (string, string, error
 func (h *Home) devices() []channelInfo {
 	var list []channelInfo
 	for _, iface := range h.rpc.InterfaceNames() {
-		descriptions, err := h.listDevices(iface)
+		descriptions, err := h.rpc.ListDevices(iface)
 		if err != nil {
 			continue
 		}
@@ -803,8 +817,6 @@ func (h *Home) GetInbox() ([]home.InboxDevice, error) {
 // ("<type> <address>"), so it leaves the inbox; renaming follows in the
 // app as on a CCU
 func (h *Home) AcceptDevice(address string) (string, error) {
-	// The change goes into the store before the answer: not the kept snapshot
-	defer h.metaChanged()
 	for _, d := range h.devices() {
 		if d.desc.Address != address {
 			continue
@@ -835,7 +847,7 @@ func (h *Home) GetVirtualKeys() ([]home.VirtualKey, error) {
 	}
 	keys := []home.VirtualKey{}
 	for _, iface := range h.rpc.InterfaceNames() {
-		descriptions, err := h.listDevices(iface)
+		descriptions, err := h.rpc.ListDevices(iface)
 		if err != nil {
 			continue
 		}

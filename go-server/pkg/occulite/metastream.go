@@ -27,9 +27,8 @@ type MetaEvent struct {
 
 // MetaEvents follows GET /api/meta/v1/events/sse from the revision since
 // (0: from now) until the stream ends, and returns the last revision seen.
-// The messages carry data: alone; the server pings every 30 s. connected
-// (may be nil) runs once the stream is open, before its first event.
-func (c *Client) MetaEvents(ctx context.Context, since int64, connected func(), handle func(MetaEvent)) (int64, error) {
+// The messages carry data: alone; the server pings every 30 s.
+func (c *Client) MetaEvents(ctx context.Context, since int64, handle func(MetaEvent)) (int64, error) {
 	path := "/api/meta/v1/events/sse"
 	if since > 0 {
 		path += "?since=" + strconv.FormatInt(since, 10)
@@ -49,9 +48,6 @@ func (c *Client) MetaEvents(ctx context.Context, since int64, connected func(), 
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return since, fmt.Errorf("status %d", resp.StatusCode)
-	}
-	if connected != nil {
-		connected()
 	}
 	// 75 s without a byte (not even the ping) is a dead connection
 	alive := make(chan struct{}, 1)
@@ -107,9 +103,7 @@ func (h *Home) FollowMeta(ctx context.Context) {
 	for ctx.Err() == nil {
 		started := time.Now()
 		var err error
-		since, err = h.client.MetaEvents(ctx, since, func() { h.metaLive(true) }, h.onMetaEvent)
-		// Without the stream nothing says when the snapshot changes
-		h.metaLive(false)
+		since, err = h.client.MetaEvents(ctx, since, h.onMetaEvent)
 		h.keepRevision(since)
 		if ctx.Err() != nil {
 			return
@@ -134,9 +128,7 @@ var errUnchanged = errors.New("unchanged")
 
 func (h *Home) onMetaEvent(event MetaEvent) {
 	// What was below a deleted node is only in the snapshot from before
-	before, known := h.lastSnapshot()
-	// Every event changes the store, or says it may have changed (resync)
-	h.metaChanged()
+	before, known := h.lastRead()
 	switch event.Kind {
 	case "resync", "import":
 		// resync: the server no longer has the events since our revision;

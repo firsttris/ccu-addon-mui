@@ -1100,10 +1100,6 @@ func (c *CCU) addInboxDevice(iface, address, deviceType string) {
 		map[string]interface{}{"ADDRESS": address + ":1", "TYPE": "SWITCH", "PARENT": address, "PARENT_TYPE": deviceType, "INDEX": 1, "PARAMSETS": []interface{}{"MASTER", "VALUES"}, "VERSION": 1},
 	)
 	c.fixture.Inbox = append(c.fixture.Inbox, address)
-	if c.Lite {
-		// occulited passes the process's newDevices on to the event stream
-		c.publishLite("newDevices", map[string]interface{}{"interface": iface, "addresses": []string{address, address + ":1"}})
-	}
 }
 
 // replaceDevice moves the old device's place (channels, rooms, programs)
@@ -2129,17 +2125,10 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		if !c.replaceDevice(iface, stringParam(params, 0), stringParam(params, 1)) {
 			return nil, "Unknown instance"
 		}
-		if c.Lite {
-			old, new := stringParam(params, 0), stringParam(params, 1)
-			c.publishLite("replaceDevice", map[string]interface{}{"interface": iface, "addresses": []string{old, new}, "old": old, "new": new})
-		}
 		return "", ""
 	case "deleteDevice":
 		if !c.deleteDevice(iface, stringParam(params, 0)) {
 			return nil, "Unknown instance"
-		}
-		if c.Lite {
-			c.publishLite("deleteDevices", map[string]interface{}{"interface": iface, "addresses": []string{stringParam(params, 0)}})
 		}
 		return "", ""
 	case "init":

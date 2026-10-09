@@ -31,10 +31,17 @@ behebt der Pull Request, der dieses Dokument enthält, jeweils mit einem Test, d
 | 4.9 Toter Code | **Bestätigt.** | Entfernt |
 | 4.10 Lizenztext „MIT" | **Bestätigt, aber schon auf `main`.** | Nicht hier: gehört in einen eigenen PR gegen `main` |
 | 5.1 Polling-Angaben | **Teilweise übertrieben.** Posteingang (3 s) und Anlernstatus (1 s) pollen nur, solange der Anlernmodus läuft; die Servicemeldungen liest der Server alle 5 Minuten und bei Wartungs-Events, nicht „alle paar Sekunden". | — |
-| 5.2.1 Snapshot cachen | **Bestätigt.** | Gehalten, solange der Metadaten-Stream verbunden ist; jedes Event und jede eigene Änderung verwirft ihn (`cache.go`, Tests `TestSnapshotKeptWhileTheStreamIsConnected`, `TestLiteKeepsSnapshotAndDeviceLists`) |
-| 5.2.2 `listDevices` cachen | **Bestätigt.** | Gehalten, solange lite-rpc's Event-Stream läuft; Geräte- und `interface`-Events verwerfen die Liste der Schnittstelle, `resync` alle (`cache.go`, `main_lite.go`, dieselben Tests) |
-| 5.2.3–5.2.8 | Zutreffend, aber im Verhältnis klein: `roomOf` kostet bei 100 Geräten und 500 Objekten ~50 000 Präfixvergleiche pro Minute, die Token-Datei liegt im RAM (`/run`), `WithToken` teilt den Transport. | Nichts; nach den beiden Caches nicht mehr der Engpass |
-| 7. Fehlende Tests | **Bestätigt.** | Fake-occulited hat jetzt den Metadaten-Stream, verschachtelte Räume mit Verschieben und Löschen, `resync` und Geräte-Events; neue Integrationstests für Verschieben, Caches und `resync`, Unit-Tests für Gate-Wiederholung und Stufenwechsel |
+| 5.2.1 Snapshot cachen | **Zutreffend, aber nicht gemessen.** | **Nach Rücksprache nicht umgesetzt** (siehe unten) |
+| 5.2.2 `listDevices` cachen | **Zutreffend, aber nicht gemessen.** | **Nach Rücksprache nicht umgesetzt** (siehe unten) |
+| 5.2.3–5.2.8 | Zutreffend, aber im Verhältnis klein: `roomOf` kostet bei 100 Geräten und 500 Objekten ~50 000 Präfixvergleiche pro Minute, die Token-Datei liegt im RAM (`/run`), `WithToken` teilt den Transport. | Nichts |
+| 7. Fehlende Tests | **Bestätigt.** | Fake-occulited hat jetzt den Metadaten-Stream, verschachtelte Räume mit Verschieben und Löschen und `resync`; neue Integrationstests für Verschieben und Löschen und für `resync`, Unit-Tests für Gate-Wiederholung und Stufenwechsel |
+
+**Warum keine Server-Caches:** Die App hält mit React Query schon, was sich pro Gerät lohnt (Räume und Gewerke
+5 Minuten). Was trotzdem beim Server ankommt (Kanäle eines Raums, Polling der Gesundheit, mehrere Geräte), ginge
+schneller, aber niemand hat gemessen, ob es auf einem Pi spürbar ist; die Aufrufe laufen lokal. Gegen die Caches
+sprechen ihre Invalidierung über zwei Streams und dass der CCU-Pfad die ReGa ebenfalls bei jeder Anfrage fragt.
+Erst wenn der VM-Test oder ein System mit vielen Geräten zeigt, dass Raumwechsel zu langsam sind, käme zuerst der
+`listDevices`-Cache, mit Messung. Abschnitt 5 bleibt als Analyse stehen.
 
 Nebenbei aufgefallen und mit behoben: Der Server wartete beim Beenden nicht auf das Folgen des
 Metadaten-Streams, das zum Schluss noch die Revision schreibt (`main.go platformHooks.stop`).

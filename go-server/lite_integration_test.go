@@ -705,62 +705,6 @@ func TestLiteLayoutsFollowRoomsMovedInOpenccuLite(t *testing.T) {
 	})
 }
 
-// While the streams run, a room's channels cost neither the metadata
-// snapshot nor listDevices; a change made in openccu-lite still shows, and
-// so does a newly paired device
-func TestLiteKeepsSnapshotAndDeviceLists(t *testing.T) {
-	stack := startLiteStack(t)
-	conn := stack.adminConn(t)
-	room := findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getRooms"})["rooms"], "Wohnzimmer")
-	roomID := fmt.Sprint(int64(room["id"].(float64)))
-	channels := func() []interface{} {
-		return liteCall(t, conn, map[string]interface{}{"type": "getChannels", "roomId": roomID})["channels"].([]interface{})
-	}
-	const snapshots, lists = "occulited GET /api/meta/v1/snapshot", "lite-rpc HmIP-RF listDevices"
-	// Kept once the change stream is connected
-	eventually(t, "the snapshot was read for every request", func() bool {
-		before := stack.ccu.CallCount(snapshots)
-		channels()
-		return stack.ccu.CallCount(snapshots) == before
-	})
-	snapshotReads, listCalls := stack.ccu.CallCount(snapshots), stack.ccu.CallCount(lists)
-	for i := 0; i < 3; i++ {
-		channels()
-	}
-	if n := stack.ccu.CallCount(snapshots) - snapshotReads; n != 0 {
-		t.Fatalf("%d snapshot reads for three requests", n)
-	}
-	if n := stack.ccu.CallCount(lists) - listCalls; n != 0 {
-		t.Fatalf("%d listDevices for three requests", n)
-	}
-
-	// Renamed in openccu-lite: the change stream drops the kept snapshot
-	stack.occulite(t, http.MethodPatch, "/api/meta/v1/objects/BidCos-RF.LEQ0000001:1", map[string]interface{}{"name": "Von außen"})
-	eventually(t, "the name changed in openccu-lite did not show", func() bool {
-		for _, c := range channels() {
-			if c.(map[string]interface{})["name"] == "Von außen" {
-				return true
-			}
-		}
-		return false
-	})
-
-	// A new device: newDevices on the event stream drops the kept list
-	inbox := func() bool {
-		for _, d := range liteCall(t, conn, map[string]interface{}{"type": "getInbox"})["devices"].([]interface{}) {
-			if d.(map[string]interface{})["address"] == "0001D3C99C0FFE" {
-				return true
-			}
-		}
-		return false
-	}
-	if inbox() {
-		t.Fatal("in the inbox before it was paired")
-	}
-	stack.ccu.AddInboxDevice("HmIP-RF", "0001D3C99C0FFE", "HmIP-PSM")
-	eventually(t, "the newly paired device did not show in the inbox", inbox)
-}
-
 // resync on lite-rpc's event stream (events lost): the state store is read
 // again, and events come on afterwards
 func TestLiteResync(t *testing.T) {
