@@ -120,8 +120,8 @@ eines Wartungswerts (`UNREACH`, `LOW_BAT`, `CONFIG_PENDING` …) neu, sonst alle
 | | `setDatapoint` | Datenpunkt per ReGa setzen. Antwort `setDatapoint_response` mit `FORBIDDEN`, `NOT_FOUND`, `INVALID_REQUEST`, `CCU_ERROR` | Bed. (A). Kanäle mit Option „bedienbar=aus“ dürfen nur Admins bedienen (`operable`, Cache 30 s) |
 | | `getDeviceProblems` | Geräte mit LOW_BAT oder UNREACH | alle |
 | | `getDeviceHealth` | Wartungswerte aller Geräte mit Zeitstempel (`get_device_health.tcl`: LOW_BAT, OPERATING_VOLTAGE, RSSI_DEVICE/PEER, UNREACH, STICKY_UNREACH, CONFIG_PENDING, UPDATE_PENDING, DUTY_CYCLE, SABOTAGE), bei HmIP zusätzlich `lowBatLimit` aus MASTER `LOW_BAT_LIMIT` (Cache 1 h) | alle |
-| | `getLayout` | Kachel-Layout einer Ansicht (ReGa-Metadaten `muiLayout`) | alle |
-| | `setLayout` | Kachel-Layout speichern (für alle Geräte gleich) | Bed. (A) |
+| | `getLayout` | Kachel-Layout einer Ansicht (`mui-tiles.json`, leer, wenn keins) | alle |
+| | `setLayout` | Kachel-Layout eines Raums, Gewerks oder einer Favoritenliste speichern (für alle Geräte gleich) | Bed. (A) |
 | | `getVirtualKeys` | Virtuelle Taster der CCU | alle |
 | | `getDevicePrograms` | Programme, die ein Gerät verwenden | alle |
 | Favoriten | `getFavorites` | Favoritenlisten, die der Benutzer sieht | alle |
@@ -149,7 +149,7 @@ eines Wartungswerts (`UNREACH`, `LOW_BAT`, `CONFIG_PENDING` …) neu, sonst alle
 | | `putParamset` | MASTER-Paramset schreiben (gegen die Beschreibung geprüft und konvertiert) | Admin+T (A) |
 | | `listDevices` | Geräte aller Interfaces mit Kanälen, Link-Rollen und Firmware | alle (Gäste und Benutzer sehen Geräteeinstellungen schreibgeschützt) |
 | | `rename` | Gerät oder Kanal umbenennen | Admin+T (A) |
-| | `setChannelTile` | Kachel eines Kanals festlegen (`muiTile`: light/switch/leer) | Admin+T (A) |
+| | `setChannelTile` | Kachel eines Kanals festlegen (light/switch/leer, in `mui-tiles.json`) | Admin+T (A) |
 | | `setChannelOption` | Kanaloptionen der WebUI (z. B. `usable`, sichtbar, protokolliert) | Admin+T (A) |
 | | `installFirmware` | Geräte-Firmware-Update starten (XML-RPC `installFirmware`, BidCos `updateFirmware`) | Admin+T (A) |
 | | `startComTest`, `pollComTest` | Funktionstest eines Geräts | Admin |

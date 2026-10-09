@@ -207,7 +207,7 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `WIRED_PORT` | bei `localhost` aus `InterfacesList.xml` (nur mit Wired-Gateway), sonst `0` (aus) | BidCos-Wired (hs485d); aus dem LAN von Hand setzen, meist `2000` |
 | `CCU_WEBUI_URL` | `http://<CCU_HOST>` | WebUI für JSON-RPC und CGI-Seiten |
 | `AUTH_MODE` | `ccu` | `none` schaltet die Anmeldung ab |
-| `AUTH_KEY_FILE`, `SESSIONS_FILE`, `AUDIT_LOG_FILE`, `PUSH_FILE`, `DIAGRAMS_FILE`, `RULES_FILE` | unter `/usr/local/etc/config` | Dateien des Add-ons |
+| `AUTH_KEY_FILE`, `SESSIONS_FILE`, `AUDIT_LOG_FILE`, `PUSH_FILE`, `DIAGRAMS_FILE`, `RULES_FILE`, `TILES_FILE` | unter `/usr/local/etc/config` | Dateien des Add-ons |
 | `DIAGRAMS_DIR` | `/usr/local/mui-diagrams` | Diagrammwerte |
 | `BACKUP_DIR` | `/usr/local/tmp/mui-backups` auf der CCU, sonst `$TMPDIR/mui-backups` | Backups bis zum Download, Uploads |
 | `CCU_CONFIG_DIR`, `CCU_STATUS_DIR` | `/etc/config`, `/var/status` | Konfiguration der CCU |

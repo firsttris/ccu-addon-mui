@@ -58,10 +58,9 @@ anderen, rücken die übrigen in der Reihe zur Seite.
 - **Favoritenlisten** stellst du selbst zusammen. Dort gibt es keine Bereiche: Alle Kacheln liegen auf
   einer Fläche, zuerst in der Reihenfolge der Liste.
 
-*Fertig* speichert das Layout in der CCU am Raum, Gewerk oder an der Favoritenliste; es gilt damit auf
-allen Geräten und passt sich für Handy, Tablet und Desktop an. *Abbrechen* verwirft die Änderungen,
-*Automatisch anordnen* stellt die ursprüngliche Anordnung wieder her. Layouts aus älteren Versionen, die alle Kacheln ohne Bereiche
-gemischt hatten, verwirft die App einmalig.
+*Fertig* speichert das Layout auf der CCU (Datei `mui-tiles.json`), sofort und auch über einen Neustart
+hinweg; es gilt damit auf allen Geräten und passt sich für Handy, Tablet und Desktop an. *Abbrechen*
+verwirft die Änderungen, *Automatisch anordnen* stellt die ursprüngliche Anordnung wieder her.
 
 <img src="screenshot-anordnen.png" alt="Favoritenliste im Modus Anordnen mit Thermostat, Lichtern und Rollladen" width="900">
 

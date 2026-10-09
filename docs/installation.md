@@ -156,6 +156,7 @@ unter *Zusatzsoftware → Neustart* oder per SSH mit `/usr/local/etc/config/rc.d
 | `/usr/local/etc/config/mui-push.json` | Push-Schlüssel und Abos |
 | `/usr/local/etc/config/mui-diagrams.json` | Diagramme |
 | `/usr/local/etc/config/mui-rules.json` | Benachrichtigungsregeln |
+| `/usr/local/etc/config/mui-tiles.json` | Kachel-Layouts und die Kachelart je Kanal |
 | `/usr/local/mui-diagrams/` | aufgezeichnete Werte (Minutenwerte 60 Tage, Stundenwerte unbegrenzt) |
 | `/var/log/mui-websocket-server.log` | Log des Servers (im RAM; wird es größer als 1 MB, beim Start oder im Betrieb, kommt es nach `.old`) |
 
