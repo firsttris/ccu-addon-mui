@@ -37,7 +37,8 @@ type Channel struct {
 	Trades []int64 `json:"trades,omitempty"`
 
 	// Tile is the tile chosen for the channel in the add-on ("light" or
-	// "switch"), stored as ReGa metadata; empty lets the app decide.
+	// "switch"), filled in by the server from mui-tiles.json; empty lets
+	// the app decide.
 	Tile string `json:"tile,omitempty"`
 
 	// Mode is what an input channel (MULTI_MODE_INPUT_TRANSMITTER) is wired
@@ -123,7 +124,7 @@ const MaxChannelMode = 5
 // parseChannels parses the output of get_channels.tcl.
 func parseChannels(output string) []Channel {
 	isRecord := func(line string) bool {
-		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "A\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t") || strings.HasPrefix(line, "T\t") || strings.HasPrefix(line, "F\t") || strings.HasPrefix(line, "O\t")
+		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "A\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t") || strings.HasPrefix(line, "F\t") || strings.HasPrefix(line, "O\t")
 	}
 
 	channels := []Channel{}
@@ -174,13 +175,6 @@ func parseChannels(output string) []Channel {
 			channel := &channels[len(channels)-1]
 			channel.Rooms = parseIDs(fields[1])
 			channel.Trades = parseIDs(fields[2])
-		case "T":
-			if len(fields) < 2 || len(channels) == 0 {
-				continue
-			}
-			if fields[1] == TileLight || fields[1] == TileSwitch {
-				channels[len(channels)-1].Tile = fields[1]
-			}
 		case "O":
 			if len(fields) < 2 || len(channels) == 0 {
 				continue

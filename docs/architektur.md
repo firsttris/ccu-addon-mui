@@ -65,7 +65,7 @@ go-server/
   main.go              Start: Konfiguration, Dienste verdrahten, Shutdown
   pkg/websocket        WebSocket-Server, Dispatcher für 153 Nachrichtentypen, Rechte, Audit-Aufrufe,
                        HTTP-Endpunkte für Backup, Upload und Logs
-  pkg/rega             ReGa: 58 HM-Script-Vorlagen (embed), Ausführen, Parsen, Validieren
+  pkg/rega             ReGa: 55 HM-Script-Vorlagen (embed), Ausführen, Parsen, Validieren
   pkg/ccurpc           XML-RPC-Client zu BidCos-RF, HmIP-RF, VirtualDevices; Cache für Beschreibungen
   pkg/xmlrpc           XML-RPC-Server für die Events der CCU, Anmeldung und Überwachung
   pkg/subscriptions    welche Verbindung welche Kanäle sieht
@@ -79,6 +79,7 @@ go-server/
   pkg/rules            Benachrichtigungsregeln ohne Programm (Push)
   pkg/devimages        Gerätebilder der WebUI (DEVDB.tcl) mit markiertem Kanal
   pkg/sysinfo          Systeminformationen wie help.cgi: Hardware, Speicher, Last, Temperatur, Netzwerk
+  pkg/tiles            Kachel-Layouts und die Kachelart je Kanal (mui-tiles.json)
   pkg/addons, logs, heatinggroups, config, logger, types
   pkg/fakeccu          eine nachgebaute CCU für Tests und Entwicklung
   cmd/fakeccu          startet die Fake-CCU mit einer Fixture
@@ -103,7 +104,7 @@ Schnittstelle nimmt, folgt den Quellen der WebUI in OpenCCU.
 Die Logikschicht der CCU kennt Räume, Gewerke, Kanäle mit Namen, Systemvariablen, Programme, Favoriten,
 Benutzer und das Systemprotokoll. Der Server schickt ihr HM-Script per `POST /rega.exe`:
 
-- **58 Vorlagen** in `pkg/rega/scripts/*.tcl` (die Endung ist historisch, Inhalt ist HM-Script), ins Binary
+- **55 Vorlagen** in `pkg/rega/scripts/*.tcl` (die Endung ist historisch, Inhalt ist HM-Script), ins Binary
   eingebettet. Platzhalter wie `{{ADDRESS}}` werden ersetzt.
 - Die Skripte geben **tabulatorgetrennte Zeilen** aus, das JSON baut Go. So muss im Skript nichts maskiert
   werden.
@@ -113,9 +114,12 @@ Benutzer und das Systemprotokoll. Der Server schickt ihr HM-Script per `POST /re
 - **Werte schreiben** läuft über ReGa (`State()`), wie in der WebUI, auch an ein Gerät, das als nicht
   erreichbar gilt (bei HmIP-Batteriegeräten ist `UNREACH` oft veraltet). Das Skript meldet den alten Wert
   fürs Audit-Log.
-- Eigene Daten legt das Add-on als **Metadaten** an ReGa-Objekten ab, wie die WebUI mit
-  `Interface.setMetadata`: das Kachel-Layout an Raum, Gewerk oder Favoritenliste, die Kachelart am Kanal.
-  Dadurch gehören sie zur CCU, landen im Backup und gelten auf allen Geräten.
+- Eigene Daten wie das Kachel-Layout und die Kachelart am Kanal legt das Add-on **nicht** in ReGa ab,
+  sondern in eigenen Dateien unter `/usr/local/etc/config` (`pkg/tiles`, `mui-tiles.json`), atomar
+  geschrieben. ReGa schreibt sein Objektmodell nur alle paar Minuten auf den Flash und beim Beenden gar
+  nicht (`rega.conf`: `CheckModifiedCycle`, `AutoSaveDOMOnExit=0`); ein Neustart kurz nach dem Anordnen,
+  etwa beim Installieren eines Add-ons über die WebUI der CCU3, verlor so das Layout. Die Dateien gehören
+  trotzdem zur CCU, landen im Backup und gelten auf allen Geräten.
 
 ### XML-RPC zu den Funkdiensten
 

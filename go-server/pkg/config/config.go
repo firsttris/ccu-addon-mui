@@ -49,6 +49,8 @@ type Config struct {
 	AppDir string
 	// RulesFile keeps the notification rules
 	RulesFile string
+	// TilesFile keeps the tile layouts and the tiles chosen for channels
+	TilesFile string
 	// PushSubject is the contact sent to the push services (VAPID "sub")
 	PushSubject string
 	// AddonsDir holds the add-on scripts (the WebUI's Zusatzsoftware)
@@ -157,6 +159,7 @@ func Load() *Config {
 		SessionsFile:         getEnv("SESSIONS_FILE", defaultConfigFile("mui-sessions.json")),
 		PushFile:             getEnv("PUSH_FILE", defaultConfigFile("mui-push.json")),
 		RulesFile:            getEnv("RULES_FILE", defaultConfigFile("mui-rules.json")),
+		TilesFile:            getEnv("TILES_FILE", defaultConfigFile("mui-tiles.json")),
 		WWWDir:               getEnv("CCU_WWW_DIR", "/www"),
 		AppDir:               getEnv("APP_DIR", "/usr/local/addons/mui"),
 		PushSubject:          getEnv("PUSH_SUBJECT", "https://github.com/firsttris/ccu-addon-mui"),

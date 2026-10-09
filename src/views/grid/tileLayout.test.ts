@@ -88,16 +88,8 @@ describe('tileLayout', () => {
     expect(parseLayout('')).toBeNull();
   });
 
-  it('reads layouts of version 2 with five times the columns', () => {
-    const v2 = { v: 2, order: ['climate'], sections: { climate: { lg: [{ i: 'd:B', x: 3, y: 0, w: 3 }] } } };
-    expect(parseLayout(JSON.stringify(v2))).toEqual({
-      v: 3,
-      order: ['climate'],
-      sections: { climate: { lg: [{ i: 'd:B', x: 15, y: 0, w: 15 }] } },
-    });
-  });
-
-  it('drops the old layout of one grid for all tiles', () => {
+  it('reads only the current version', () => {
+    expect(parseLayout(JSON.stringify({ v: 2, order: ['climate'], sections: {} }))).toBeNull();
     expect(parseLayout(JSON.stringify({ v: 1, layouts: { lg: [] } }))).toBeNull();
   });
 

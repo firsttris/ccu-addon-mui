@@ -114,13 +114,10 @@ func Scripts() map[string]string {
 		"acknowledge_alarm_message":   acknowledgeAlarmMessageScript,
 		"get_favorites":               getFavoritesScript,
 		"favorite_change":             favoriteChangeScript,
-		"set_channel_tile":            setChannelTileScript,
 		"set_channel_mode":            setChannelModeScript,
 		"get_program":                 getProgramScript,
 		"save_program":                saveProgramScript,
 		"delete_program":              deleteProgramScript,
-		"get_layout":                  getLayoutScript,
-		"set_layout":                  setLayoutScript,
 		"get_system_settings":         getSystemSettingsScript,
 		"set_location":                setLocationScript,
 		"save_system":                 saveSystemScript,
@@ -153,9 +150,6 @@ var getFavoritesScript string
 //go:embed scripts/favorite_change.tcl
 var favoriteChangeScript string
 
-//go:embed scripts/set_channel_tile.tcl
-var setChannelTileScript string
-
 //go:embed scripts/set_channel_mode.tcl
 var setChannelModeScript string
 
@@ -167,12 +161,6 @@ var saveProgramScript string
 
 //go:embed scripts/delete_program.tcl
 var deleteProgramScript string
-
-//go:embed scripts/get_layout.tcl
-var getLayoutScript string
-
-//go:embed scripts/set_layout.tcl
-var setLayoutScript string
 
 //go:embed scripts/get_system_settings.tcl
 var getSystemSettingsScript string

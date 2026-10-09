@@ -33,6 +33,7 @@ import (
 	"ccu-addon-mui-server/pkg/selfupdate"
 	"ccu-addon-mui-server/pkg/settings"
 	"ccu-addon-mui-server/pkg/subscriptions"
+	"ccu-addon-mui-server/pkg/tiles"
 	"ccu-addon-mui-server/pkg/types"
 )
 
@@ -242,6 +243,8 @@ type Server struct {
 	// The diagrams and the recorder of their values
 	diagrams *diagrams.Store
 	recorder *diagrams.Recorder
+	// Tile layouts and the tiles chosen for channels (mui-tiles.json)
+	tiles *tiles.Store
 	// The WebUI's general settings and where the diagram values are
 	settings    *settings.Service
 	diagramsDir string
@@ -912,6 +915,7 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 			s.sendRequestError(client, msg.RequestID, "getChannels failed: "+err.Error(), "")
 			return
 		}
+		s.applyTiles(channels)
 		s.sendJSON(client, channelsResponse{RequestID: msg.RequestID, DeviceID: msg.DeviceID, All: true, Channels: channels})
 		return
 	}
@@ -935,6 +939,7 @@ func (s *Server) handleGetChannels(client *Client, message []byte) {
 		s.sendRequestError(client, msg.RequestID, "getChannels failed: "+err.Error(), "")
 		return
 	}
+	s.applyTiles(channels)
 
 	s.sendJSON(client, channelsResponse{
 		RequestID:  msg.RequestID,
@@ -2483,7 +2488,7 @@ func (s *Server) handleFavorites(client *Client, msgType string, message []byte)
 }
 
 // handleSetChannelTile stores the tile shown for a channel (light or
-// switch, empty for the app's choice) in the CCU, for every device.
+// switch, empty for the app's choice) in mui-tiles.json, for every device.
 // Setup, for administrators only.
 func (s *Server) handleSetChannelTile(client *Client, message []byte) {
 	var msg struct {
@@ -2497,9 +2502,11 @@ func (s *Server) handleSetChannelTile(client *Client, message []byte) {
 	}
 	s.configure(client, msg.RequestID, audit.Entry{Action: "setChannelTile", Target: fmt.Sprintf("channel %d", msg.ID), Value: msg.Tile},
 		func() (interface{}, string, error) {
-			// The audit log names the channel; there is no previous value
-			result, _, err := s.regaClient.SetChannelTile(msg.ID, msg.Tile)
-			return nil, result, err
+			if s.tiles == nil {
+				return nil, "NOT_AVAILABLE", nil
+			}
+			previous := s.tiles.Tile(msg.ID)
+			return previous, rega.SetOK, s.tiles.SetTile(msg.ID, msg.Tile)
 		})
 }
 
@@ -2583,6 +2590,49 @@ func (s *Server) handleAllLinks(client *Client, requestID string) {
 	s.sendJSON(client, allLinksResponse{Type: "getAllLinks_response", RequestID: requestID, Links: links})
 }
 
+// SetTiles enables tile layouts and the tiles chosen for channels
+func (s *Server) SetTiles(store *tiles.Store) {
+	s.tiles = store
+}
+
+// applyTiles sets the tile chosen for each channel, if one was
+func (s *Server) applyTiles(channels []rega.Channel) {
+	if s.tiles == nil {
+		return
+	}
+	for i := range channels {
+		channels[i].Tile = s.tiles.Tile(channels[i].ID)
+	}
+}
+
+// viewIDs are the rooms, trades and favorite lists (of all users): what a
+// layout can be stored for
+func (s *Server) viewIDs() (map[int64]bool, error) {
+	if s.regaClient == nil {
+		return nil, fmt.Errorf("ReGa is not available")
+	}
+	rooms, err := s.regaClient.GetRooms()
+	if err != nil {
+		return nil, err
+	}
+	trades, err := s.regaClient.GetTrades()
+	if err != nil {
+		return nil, err
+	}
+	favorites, err := s.regaClient.GetFavorites("")
+	if err != nil {
+		return nil, err
+	}
+	ids := map[int64]bool{}
+	for _, v := range append(rooms, trades...) {
+		ids[v.ID] = true
+	}
+	for _, f := range favorites {
+		ids[f.ID] = true
+	}
+	return ids, nil
+}
+
 type layoutResponse struct {
 	Type      string `json:"type"`
 	RequestID string `json:"requestId,omitempty"`
@@ -2591,8 +2641,8 @@ type layoutResponse struct {
 }
 
 // handleLayout reads or stores the tile layout of a room, trade or favorite
-// list, the same for every device. Arranging tiles is operating: anyone but
-// a guest.
+// list in mui-tiles.json, the same for every device. Arranging tiles is
+// operating: anyone but a guest.
 func (s *Server) handleLayout(client *Client, msgType string, message []byte) {
 	var msg struct {
 		RequestID string `json:"requestId"`
@@ -2604,14 +2654,10 @@ func (s *Server) handleLayout(client *Client, msgType string, message []byte) {
 		return
 	}
 	if msgType == "getLayout" {
-		result, layout, err := s.regaClient.GetLayout(msg.ID)
-		if err != nil {
-			s.sendRequestError(client, msg.RequestID, "getLayout failed: "+err.Error(), "CCU_ERROR")
-			return
-		}
-		if result != rega.SetOK {
-			s.sendRequestError(client, msg.RequestID, "getLayout: "+result, result)
-			return
+		// Without the store (file unreadable) the tiles show as not arranged
+		layout := ""
+		if s.tiles != nil {
+			layout = s.tiles.Layout(msg.ID)
 		}
 		s.sendJSON(client, layoutResponse{Type: "getLayout_response", RequestID: msg.RequestID, Layout: layout})
 		return
@@ -2623,21 +2669,33 @@ func (s *Server) handleLayout(client *Client, msgType string, message []byte) {
 		s.sendRequestError(client, msg.RequestID, "guests may not arrange tiles", "FORBIDDEN")
 		return
 	}
-	result, _, err := s.regaClient.SetLayout(msg.ID, msg.Layout)
+	if s.tiles == nil {
+		finish("NOT_AVAILABLE")
+		s.sendRequestError(client, msg.RequestID, "setLayout is not available", "NOT_AVAILABLE")
+		return
+	}
+	// Only rooms, trades and favorite lists; layouts of deleted ones go
+	views, err := s.viewIDs()
 	if err != nil {
+		finish("CCU_ERROR")
+		s.sendRequestError(client, msg.RequestID, "setLayout failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	if !views[msg.ID] {
+		finish(rega.SetNotFound)
+		s.sendRequestError(client, msg.RequestID, "setLayout: "+rega.SetNotFound, rega.SetNotFound)
+		return
+	}
+	if err := s.tiles.SetLayout(msg.ID, msg.Layout, func(id int64) bool { return views[id] }); err != nil {
 		code := "CCU_ERROR"
-		if strings.HasPrefix(err.Error(), "invalid") {
+		if errors.Is(err, tiles.ErrInvalid) {
 			code = "INVALID_VALUE"
 		}
 		finish(code)
 		s.sendRequestError(client, msg.RequestID, "setLayout failed: "+err.Error(), code)
 		return
 	}
-	finish(result)
-	if result != rega.SetOK {
-		s.sendRequestError(client, msg.RequestID, "setLayout: "+result, result)
-		return
-	}
+	finish(rega.SetOK)
 	s.sendJSON(client, changeResponse{Type: "setLayout_response", RequestID: msg.RequestID, Success: true})
 }
 

@@ -452,7 +452,7 @@ export interface Channel {
   rooms?: number[];
   trades?: number[];
   /**
-   * Tile chosen in the add-on (ReGa metadata)
+   * Tile chosen in the add-on (stored by the server in mui-tiles.json)
    */
   tile?: "light" | "switch";
   /**

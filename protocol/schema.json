@@ -700,7 +700,7 @@
             "light",
             "switch"
           ],
-          "description": "Tile chosen in the add-on (ReGa metadata)"
+          "description": "Tile chosen in the add-on (stored by the server in mui-tiles.json)"
         },
         "mode": {
           "type": "integer",

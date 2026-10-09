@@ -13,9 +13,6 @@ export const COLS = { lg: 60, md: 50, sm: 30, xs: 20, xxs: 10 } as const;
 export type BreakpointName = keyof typeof BREAKPOINTS;
 export const BREAKPOINT_NAMES = Object.keys(BREAKPOINTS) as BreakpointName[];
 
-// Version 2 had a fifth of the columns (12 at lg)
-const V2_SCALE = 5;
-
 export const ROW_HEIGHT = 8;
 export const MARGIN = 12;
 
@@ -74,28 +71,14 @@ export const defaultLayout = (tiles: TileSpec[], bp: BreakpointName, widthPx: nu
   return out;
 };
 
+// Stored by the server in mui-tiles.json, from version 3 on (older ones
+// were ReGa metadata and are not read)
 export const parseLayout = (json: string | undefined): SavedLayout | null => {
   if (!json) return null;
   try {
     const parsed = JSON.parse(json);
-    // Version 1 put all tiles into one grid: dropped, the sections come back
-    if (!parsed || !Array.isArray(parsed.order) || !parsed.sections || typeof parsed.sections !== 'object') return null;
-    if (parsed.v === 3) return parsed as SavedLayout;
-    if (parsed.v !== 2) return null;
-    const scale = (layout: SectionLayout): SectionLayout =>
-      Object.fromEntries(
-        Object.entries(layout).map(([bp, tiles]) => [
-          bp,
-          (tiles ?? []).map((t) => ({ ...t, x: t.x * V2_SCALE, w: t.w * V2_SCALE })),
-        ]),
-      );
-    return {
-      v: 3,
-      order: parsed.order,
-      sections: Object.fromEntries(
-        Object.entries(parsed.sections as Record<string, SectionLayout>).map(([key, layout]) => [key, scale(layout)]),
-      ),
-    };
+    if (!parsed || parsed.v !== 3 || !Array.isArray(parsed.order) || !parsed.sections || typeof parsed.sections !== 'object') return null;
+    return parsed as SavedLayout;
   } catch {
     return null;
   }

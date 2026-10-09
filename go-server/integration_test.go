@@ -117,6 +117,7 @@ func startStack(t *testing.T, authMode string) (*fakeccu.CCU, *websocket.Conn) {
 		BackupDir:          filepath.Join(t.TempDir(), "backups"),
 		PushFile:           filepath.Join(t.TempDir(), "push.json"),
 		RulesFile:          filepath.Join(t.TempDir(), "rules.json"),
+		TilesFile:          filepath.Join(t.TempDir(), "tiles.json"),
 		WWWDir:             "../fixtures/www",
 		PushSubject:        "mailto:test@example.com",
 		AddonsDir:          addonsDir(t),
@@ -1344,11 +1345,21 @@ func TestStackChannelTile(t *testing.T) {
 	if m := receive(t, conn, byRequestID("t1")); m["success"] != true {
 		t.Fatalf("setChannelTile failed: %v", m)
 	}
-	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "roomId": "1", "requestId": "t2"})
+	// Every channel list carries it, from mui-tiles.json
+	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "all": true, "requestId": "t2"})
+	found := false
 	for _, raw := range receive(t, conn, byRequestID("t2"))["channels"].([]interface{}) {
-		if ch := raw.(map[string]interface{}); ch["id"] == 101.0 && ch["tile"] != "switch" {
-			t.Fatalf("tile not stored: %v", ch)
+		if ch := raw.(map[string]interface{}); ch["id"] == 101.0 {
+			found = true
+			if ch["tile"] != "switch" {
+				t.Fatalf("tile not stored: %v", ch)
+			}
+		} else if ch["tile"] != nil {
+			t.Fatalf("tile on another channel: %v", ch)
 		}
+	}
+	if !found {
+		t.Fatal("channel 101 not listed")
 	}
 	send(t, conn, message{"type": "setChannelTile", "requestId": "t3", "id": 101, "tile": "lamp"})
 	if m := receive(t, conn, byRequestID("t3")); m["code"] != "INVALID_VALUE" {
@@ -1451,13 +1462,18 @@ func TestStackLayout(t *testing.T) {
 	if m := receive(t, conn, byRequestID("y2")); m["layout"] != layout {
 		t.Fatalf("layout not stored: %v", m)
 	}
-	send(t, conn, message{"type": "setLayout", "requestId": "y3", "id": 1, "layout": `{"x":"^"}`})
+	send(t, conn, message{"type": "setLayout", "requestId": "y3", "id": 1, "layout": `[1, 2]`})
 	if m := receive(t, conn, byRequestID("y3")); m["code"] != "INVALID_VALUE" {
 		t.Fatalf("expected INVALID_VALUE, got %v", m)
 	}
-	send(t, conn, message{"type": "getLayout", "requestId": "y4", "id": 424242})
+	// Only for rooms, trades and favorite lists
+	send(t, conn, message{"type": "setLayout", "requestId": "y4", "id": 424242, "layout": layout})
 	if m := receive(t, conn, byRequestID("y4")); m["code"] != "NOT_FOUND" {
 		t.Fatalf("expected NOT_FOUND, got %v", m)
+	}
+	send(t, conn, message{"type": "getLayout", "requestId": "y5", "id": 424242})
+	if m := receive(t, conn, byRequestID("y5")); m["layout"] != "" {
+		t.Fatalf("expected no layout, got %v", m)
 	}
 }
 
