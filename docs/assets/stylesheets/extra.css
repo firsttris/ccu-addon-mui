@@ -19,3 +19,11 @@
 .md-typeset table:not([class]) {
   font-size: .75rem;
 }
+/* Die bewegten Kacheln in der Geräteunterstützung: in ihrer Größe in der App
+   (width), auch wenn die Tabelle die Spalte schmal machen will */
+.md-typeset img[src^="kacheln/"] {
+  max-width: none;
+  margin-top: .4rem;
+  box-shadow: none;
+  border-radius: 14px;
+}

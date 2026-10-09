@@ -42,40 +42,42 @@ gestaltete Kachel gibt, nicht, dass sie jede Funktion des Geräts abdeckt.
 
 ## Eigene Kacheln
 
-Welche Kachel ein Kanal bekommt, entscheidet sein Kanaltyp (`src/controls/registry.ts`):
+Welche Kachel ein Kanal bekommt, entscheidet sein Kanaltyp (`src/controls/registry.ts`). Die Bilder zeigen
+jede Kachel im Demo-Zuhause der Tests, wie sie auf Meldungen der CCU reagiert (aufgenommen mit
+`npm run docs:tiles`):
 
-| Kachel | Kanaltypen | Beispiele |
-|---|---|---|
-| Thermostat | `HEATING_CLIMATECONTROL_TRANSCEIVER`, `CLIMATECONTROL_RT_TRANSCEIVER`, `THERMALCONTROL_TRANSMIT` | HmIP-eTRV, -WTH, -STHD, -BWTH, HmIPW-STHD, HM-CC-RT-DN, HM-TC-IT-WM-W-EU |
-| Fußbodenheizung | `CLIMATECONTROL_FLOOR_TRANSCEIVER` | HmIP-FALMOT-C12, HmIPW-FALMOT-C12 |
-| Licht und Schalter | `SWITCH_VIRTUAL_RECEIVER`, `SWITCH` | HmIP-PS, -PSM, -BSM, -FSM, -FS6, HmIPW-DRS8, HM-LC-Sw1-FM |
-| Dimmer | `DIMMER_VIRTUAL_RECEIVER`, `DIMMER`, `DUAL_WHITE_BRIGHTNESS` | HmIP-PDT, -BDT, -WUA, HmIPW-DRD3, HM-LC-Dim1T, HM-LC-DW-WM |
-| Farblicht | `UNIVERSAL_LIGHT_RECEIVER`; bei BidCos `RGBW_COLOR` (Farbe oder Weiß), `RGBW_AUTOMATIC` (Farbprogramme wie Lagerfeuer, TV-Simulation) und `DUAL_WHITE_COLOR` (Mischung der beiden Weiß), wie `rgbw.fn` und `dual_white_controller.fn` | HmIP-RGBW, -LSC, -DRG-DALI, HM-LC-RGBW-WM, HM-LC-DW-WM |
-| Rollladen und Jalousie | `BLIND_VIRTUAL_RECEIVER`, `SHUTTER_VIRTUAL_RECEIVER`, `BLIND`, `JALOUSIE` | HmIP-BROLL, -FROLL, -BBL, -FBL, HmIPW-DRBL4, HM-LC-Bl1-FM, HM-LC-Ja1PBU-FM |
-| Fenster | `SHUTTER_CONTACT`, `ROTARY_HANDLE_SENSOR`, `ROTARY_HANDLE_TRANSCEIVER` | HmIP-SWDO, -SCI, -SRH, HM-Sec-SCo, HM-Sec-RHS |
-| Fensterantrieb | `WINDOW_DRIVE_RECEIVER`: öffnen, schließen, Stopp; `WINMATIC` zusätzlich verriegeln, `AKKU` mit Ladezustand | HmIP-MOD-WD-VK, HM-Sec-Win |
-| Türschloss | `KEYMATIC`, `DOOR_LOCK_TRANSCEIVER`, `DOOR_LOCK_STATE_TRANSMITTER` | HM-Sec-Key, HmIP-DLD |
-| Garagentor | `DOOR_RECEIVER` | HmIP-MOD-HO, -MOD-TM |
-| Rauchmelder | `SMOKE_DETECTOR` | HmIP-SWSD, HM-Sec-SD-2 |
-| Bewegung und Präsenz | `MOTION_DETECTOR`, `MOTIONDETECTOR_TRANSCEIVER`, `MOTIONDETECTOR_VIRTUAL_TRANSCEIVER`, `PRESENCEDETECTOR_TRANSCEIVER` | HmIP-SMI, -SMO, -SPI, HmIPW-SMI55, HM-Sen-MDIR-O |
-| Wassermelder | `WATER_DETECTION_TRANSMITTER`, `WATERDETECTIONSENSOR` | HmIP-SWD, HM-Sec-WDS |
-| Sirene | `ALARM_SWITCH_VIRTUAL_RECEIVER` | HmIP-ASIR, -ASIR-2, -ASIR-O |
-| Gong und MP3 | `ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER`: Ton (Systemton oder Datei 1–252), Lautstärke, abspielen und stoppen wie `acoustic_signal.fn`; `SIGNAL_CHIME`, `SIGNAL_LED`: Gong und Blitzlicht auslösen (Melodien und Blinkmuster werden in Programmen gewählt) | HmIP-MP3P, HM-OU-CFM-Pl, -CFM-TW, -CF-Pl, -CM-PCB |
-| Zutritt | `ACCESS_TRANSCEIVER` (eine Kachel je Gerät) | HmIP-WKP, -FWI |
-| Klima und Wetter | `CLIMATE_TRANSCEIVER`, `WEATHER_TRANSMIT`, `WEATHER` | HmIP-STHO, -SWO, HM-WDS10-TH-O, HM-WDS100 |
-| Regen | `RAIN_DETECTION_TRANSMITTER`: Regen, Heizung, Temperatur | HmIP-SRD |
-| Helligkeit | `BRIGHTNESS_TRANSMITTER`, `LUXMETER`: aktuell, Durchschnitt, Minimum, Maximum | HmIP-SLO, HM-Sen-LI-O |
-| CO₂ | `CARBON_DIOXIDE_RECEIVER` (ppm, bewertet nach Umweltbundesamt), `SENSOR_FOR_CARBON_DIOXIDE` (Stufe) | HmIP-SCTH230, HM-CC-SCD |
-| Feinstaub | `TEMP_HUMIDITY_PARTICULATE_MATTER_TRANSMITTER`: PM2.5 (bewertet nach dem Europäischen Luftqualitätsindex), PM10, Partikelgröße, Temperatur, Luftfeuchte | HmIP-SFD |
-| Bodenfeuchte | `SOIL_MOISTURE_TRANSMITTER`: Feuchte, Bodentemperatur | ELV-SH-SMSI |
-| Erschütterung und Neigung | `ACCELERATION_TRANSCEIVER`, je nach Betriebsart Erschütterung, Lage oder Neigung | HmIP-SAM, -STV, ELV-SH-CTV, -TACO |
-| Netzausfall | `POWER_MAINS_TRANSMITTER` | HmIP-PMFS |
-| Bewässerung | `WATER_SWITCH_VIRTUAL_RECEIVER`: Ventil auf und zu, mit `ON_TIME` auch für 10, 30 oder 60 Minuten; `FLOW_METER_TRANSMITTER`: Durchfluss, Menge seit dem Öffnen, Gesamtmenge | HmIP-WSM, ELV-SH-WSM |
-| Wasserschutz | `VALVE_ACTUATOR_RECEIVER` (Absperrventil), `WATER_FLOW_TRANSMITTER`, `WATER_PRESSURE_TRANSMITTER` | HmIP-WSS |
-| Taster | `KEY_TRANSCEIVER`, `KEY`, `VIRTUAL_KEY` (eine Kachel je Gerät) | HmIP-WRC2, -WRC6, -BRC2, HM-PB-2-WM55, Fernbedienungen |
-| Eingang | `MULTI_MODE_INPUT_TRANSMITTER`, je nach Betriebsart Taster, Schalter, Kontakt oder Level | HmIP-FCI1, -FCI6, -DSD-PCB, die Eingänge von HmIP-BSL, -DRSI4, HmIPW-DRI16 |
-| Energiezähler | `ENERGIE_METER_TRANSMITTER`, `POWERMETER` (eine Kachel je Gerät) | HmIP-ESI, HmIP-PSM, HM-ES-PMSw1 |
-| Access Point / Bus | `ACCESSPOINT_GENERIC_RECEIVER` (eine Kachel je Gerät) | HmIPW-DRAP |
+| Kachel | Kanaltypen und Beispielgeräte |
+|---|---|
+| **Thermostat**<br><img src="kacheln/thermostat.webp" width="284" loading="lazy" alt="Kachel Thermostat"> | `HEATING_CLIMATECONTROL_TRANSCEIVER`, `CLIMATECONTROL_RT_TRANSCEIVER`, `THERMALCONTROL_TRANSMIT`<br><br>**Beispiele:** HmIP-eTRV, -WTH, -STHD, -BWTH, HmIPW-STHD, HM-CC-RT-DN, HM-TC-IT-WM-W-EU |
+| **Fußbodenheizung**<br><img src="kacheln/fussbodenheizung.webp" width="300" loading="lazy" alt="Kachel Fußbodenheizung"> | `CLIMATECONTROL_FLOOR_TRANSCEIVER`<br><br>**Beispiele:** HmIP-FALMOT-C12, HmIPW-FALMOT-C12 |
+| **Licht und Schalter**<br><img src="kacheln/schalter.webp" width="162" loading="lazy" alt="Kachel Licht und Schalter"> | `SWITCH_VIRTUAL_RECEIVER`, `SWITCH`<br><br>**Beispiele:** HmIP-PS, -PSM, -BSM, -FSM, -FS6, HmIPW-DRS8, HM-LC-Sw1-FM |
+| **Dimmer**<br><img src="kacheln/dimmer.webp" width="162" loading="lazy" alt="Kachel Dimmer"> | `DIMMER_VIRTUAL_RECEIVER`, `DIMMER`, `DUAL_WHITE_BRIGHTNESS`<br><br>**Beispiele:** HmIP-PDT, -BDT, -WUA, HmIPW-DRD3, HM-LC-Dim1T, HM-LC-DW-WM |
+| **Farblicht**<br><img src="kacheln/farblicht.webp" width="300" loading="lazy" alt="Kachel Farblicht"> | `UNIVERSAL_LIGHT_RECEIVER`; bei BidCos `RGBW_COLOR` (Farbe oder Weiß), `RGBW_AUTOMATIC` (Farbprogramme wie Lagerfeuer, TV-Simulation) und `DUAL_WHITE_COLOR` (Mischung der beiden Weiß), wie `rgbw.fn` und `dual_white_controller.fn`<br><br>**Beispiele:** HmIP-RGBW, -LSC, -DRG-DALI, HM-LC-RGBW-WM, HM-LC-DW-WM |
+| **Rollladen und Jalousie**<br><img src="kacheln/rollladen.webp" width="300" loading="lazy" alt="Kachel Rollladen und Jalousie"> | `BLIND_VIRTUAL_RECEIVER`, `SHUTTER_VIRTUAL_RECEIVER`, `BLIND`, `JALOUSIE`<br><br>**Beispiele:** HmIP-BROLL, -FROLL, -BBL, -FBL, HmIPW-DRBL4, HM-LC-Bl1-FM, HM-LC-Ja1PBU-FM |
+| **Fenster**<br><img src="kacheln/fenster.webp" width="284" loading="lazy" alt="Kachel Fenster"> | `SHUTTER_CONTACT`, `ROTARY_HANDLE_SENSOR`, `ROTARY_HANDLE_TRANSCEIVER`<br><br>**Beispiele:** HmIP-SWDO, -SCI, -SRH, HM-Sec-SCo, HM-Sec-RHS |
+| **Fensterantrieb**<br><img src="kacheln/fensterantrieb.webp" width="284" loading="lazy" alt="Kachel Fensterantrieb"> | `WINDOW_DRIVE_RECEIVER`: öffnen, schließen, Stopp; `WINMATIC` zusätzlich verriegeln, `AKKU` mit Ladezustand<br><br>**Beispiele:** HmIP-MOD-WD-VK, HM-Sec-Win |
+| **Türschloss**<br><img src="kacheln/tuerschloss.webp" width="300" loading="lazy" alt="Kachel Türschloss"> | `KEYMATIC`, `DOOR_LOCK_TRANSCEIVER`, `DOOR_LOCK_STATE_TRANSMITTER`<br><br>**Beispiele:** HM-Sec-Key, HmIP-DLD |
+| **Garagentor**<br><img src="kacheln/garagentor.webp" width="300" loading="lazy" alt="Kachel Garagentor"> | `DOOR_RECEIVER`<br><br>**Beispiele:** HmIP-MOD-HO, -MOD-TM |
+| **Rauchmelder**<br><img src="kacheln/rauchmelder.webp" width="284" loading="lazy" alt="Kachel Rauchmelder"> | `SMOKE_DETECTOR`<br><br>**Beispiele:** HmIP-SWSD, HM-Sec-SD-2 |
+| **Bewegung und Präsenz**<br><img src="kacheln/bewegung.webp" width="284" loading="lazy" alt="Kachel Bewegung und Präsenz"> | `MOTION_DETECTOR`, `MOTIONDETECTOR_TRANSCEIVER`, `MOTIONDETECTOR_VIRTUAL_TRANSCEIVER`, `PRESENCEDETECTOR_TRANSCEIVER`<br><br>**Beispiele:** HmIP-SMI, -SMO, -SPI, HmIPW-SMI55, HM-Sen-MDIR-O |
+| **Wassermelder**<br><img src="kacheln/wassermelder.webp" width="284" loading="lazy" alt="Kachel Wassermelder"> | `WATER_DETECTION_TRANSMITTER`, `WATERDETECTIONSENSOR`<br><br>**Beispiele:** HmIP-SWD, HM-Sec-WDS |
+| **Sirene**<br><img src="kacheln/sirene.webp" width="284" loading="lazy" alt="Kachel Sirene"> | `ALARM_SWITCH_VIRTUAL_RECEIVER`<br><br>**Beispiele:** HmIP-ASIR, -ASIR-2, -ASIR-O |
+| **Gong und MP3**<br><img src="kacheln/gong.webp" width="284" loading="lazy" alt="Kachel Gong und MP3"> | `ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER`: Ton (Systemton oder Datei 1–252), Lautstärke, abspielen und stoppen wie `acoustic_signal.fn`; `SIGNAL_CHIME`, `SIGNAL_LED`: Gong und Blitzlicht auslösen (Melodien und Blinkmuster werden in Programmen gewählt)<br><br>**Beispiele:** HmIP-MP3P, HM-OU-CFM-Pl, -CFM-TW, -CF-Pl, -CM-PCB |
+| **Zutritt**<br><img src="kacheln/zutritt.webp" width="284" loading="lazy" alt="Kachel Zutritt"> | `ACCESS_TRANSCEIVER` (eine Kachel je Gerät)<br><br>**Beispiele:** HmIP-WKP, -FWI |
+| **Klima und Wetter**<br><img src="kacheln/klima.webp" width="284" loading="lazy" alt="Kachel Klima und Wetter"> | `CLIMATE_TRANSCEIVER`, `WEATHER_TRANSMIT`, `WEATHER`<br><br>**Beispiele:** HmIP-STHO, -SWO, HM-WDS10-TH-O, HM-WDS100 |
+| **Regen**<br><img src="kacheln/regen.webp" width="284" loading="lazy" alt="Kachel Regen"> | `RAIN_DETECTION_TRANSMITTER`: Regen, Heizung, Temperatur<br><br>**Beispiele:** HmIP-SRD |
+| **Helligkeit**<br><img src="kacheln/helligkeit.webp" width="284" loading="lazy" alt="Kachel Helligkeit"> | `BRIGHTNESS_TRANSMITTER`, `LUXMETER`: aktuell, Durchschnitt, Minimum, Maximum<br><br>**Beispiele:** HmIP-SLO, HM-Sen-LI-O |
+| **CO₂**<br><img src="kacheln/co2.webp" width="284" loading="lazy" alt="Kachel CO₂"> | `CARBON_DIOXIDE_RECEIVER` (ppm, bewertet nach Umweltbundesamt), `SENSOR_FOR_CARBON_DIOXIDE` (Stufe)<br><br>**Beispiele:** HmIP-SCTH230, HM-CC-SCD |
+| **Feinstaub**<br><img src="kacheln/feinstaub.webp" width="284" loading="lazy" alt="Kachel Feinstaub"> | `TEMP_HUMIDITY_PARTICULATE_MATTER_TRANSMITTER`: PM2.5 (bewertet nach dem Europäischen Luftqualitätsindex), PM10, Partikelgröße, Temperatur, Luftfeuchte<br><br>**Beispiele:** HmIP-SFD |
+| **Bodenfeuchte**<br><img src="kacheln/bodenfeuchte.webp" width="284" loading="lazy" alt="Kachel Bodenfeuchte"> | `SOIL_MOISTURE_TRANSMITTER`: Feuchte, Bodentemperatur<br><br>**Beispiele:** ELV-SH-SMSI |
+| **Erschütterung und Neigung**<br><img src="kacheln/erschuetterung.webp" width="284" loading="lazy" alt="Kachel Erschütterung und Neigung"> | `ACCELERATION_TRANSCEIVER`, je nach Betriebsart Erschütterung, Lage oder Neigung<br><br>**Beispiele:** HmIP-SAM, -STV, ELV-SH-CTV, -TACO |
+| **Netzausfall**<br><img src="kacheln/netzausfall.webp" width="284" loading="lazy" alt="Kachel Netzausfall"> | `POWER_MAINS_TRANSMITTER`<br><br>**Beispiele:** HmIP-PMFS |
+| **Bewässerung**<br><img src="kacheln/bewaesserung.webp" width="284" loading="lazy" alt="Kachel Bewässerung"> | `WATER_SWITCH_VIRTUAL_RECEIVER`: Ventil auf und zu, mit `ON_TIME` auch für 10, 30 oder 60 Minuten; `FLOW_METER_TRANSMITTER`: Durchfluss, Menge seit dem Öffnen, Gesamtmenge<br><br>**Beispiele:** HmIP-WSM, ELV-SH-WSM |
+| **Wasserschutz**<br><img src="kacheln/wasserschutz.webp" width="284" loading="lazy" alt="Kachel Wasserschutz"> | `VALVE_ACTUATOR_RECEIVER` (Absperrventil), `WATER_FLOW_TRANSMITTER`, `WATER_PRESSURE_TRANSMITTER`<br><br>**Beispiele:** HmIP-WSS |
+| **Taster**<br><img src="kacheln/taster.webp" width="284" loading="lazy" alt="Kachel Taster"> | `KEY_TRANSCEIVER`, `KEY`, `VIRTUAL_KEY` (eine Kachel je Gerät)<br><br>**Beispiele:** HmIP-WRC2, -WRC6, -BRC2, HM-PB-2-WM55, Fernbedienungen |
+| **Eingang**<br><img src="kacheln/eingang.webp" width="284" loading="lazy" alt="Kachel Eingang"> | `MULTI_MODE_INPUT_TRANSMITTER`, je nach Betriebsart Taster, Schalter, Kontakt oder Level<br><br>**Beispiele:** HmIP-FCI1, -FCI6, -DSD-PCB, die Eingänge von HmIP-BSL, -DRSI4, HmIPW-DRI16 |
+| **Energiezähler**<br><img src="kacheln/energiezaehler.webp" width="284" loading="lazy" alt="Kachel Energiezähler"><br><img src="kacheln/gaszaehler.webp" width="284" loading="lazy" alt="Kachel Energiezähler"> | `ENERGIE_METER_TRANSMITTER`, `POWERMETER` (eine Kachel je Gerät)<br><br>**Beispiele:** HmIP-ESI, HmIP-PSM, HM-ES-PMSw1 |
+| **Access Point / Bus**<br><img src="kacheln/accesspoint.webp" width="284" loading="lazy" alt="Kachel Access Point / Bus"> | `ACCESSPOINT_GENERIC_RECEIVER` (eine Kachel je Gerät)<br><br>**Beispiele:** HmIPW-DRAP |
 
 Eingänge zeigen, wofür sie in den Einstellungen eingerichtet sind (Betriebsart): Tastendrücke leuchten auf,
 ein Kontakt zeigt offen oder geschlossen, ein Level seinen Wert. Die Betriebsart merkt sich die CCU wie
@@ -90,6 +92,8 @@ Statuskanäle (`*_TRANSMITTER`) neben ihrem virtuellen Empfänger.
 
 Alles ohne eigene Kachel rendert `GenericControl` aus der Beschreibung der Werte (`VALUES`-Paramset), die
 die CCU für jeden Kanal liefert:
+
+<img src="kacheln/generisch.webp" width="284" loading="lazy" alt="Generische Kachel">
 
 | Parametertyp | Element |
 |---|---|

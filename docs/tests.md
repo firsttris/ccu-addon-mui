@@ -151,6 +151,13 @@ Die Bilder der Dokumentation (`docs/screenshot-*.png`) nimmt `npm run docs:scree
 Kacheln aus dem Mock (`e2e/docs-screenshots.spec.ts`), die Einrichten-Seiten aus der Fake-CCU
 (`e2e-stack/docs-screenshots.spec.ts`). Derselbe Workflow kann auch sie erneuern.
 
+Die bewegten Bilder der Kacheln in [Geräteunterstützung](geraete.md#eigene-kacheln) (`docs/kacheln/*.webp`)
+nimmt `npm run docs:tiles` auf (`e2e/docs-tiles.spec.ts`, braucht `ffmpeg` mit libwebp): Jede Kachel des
+Mocks spielt eine kurze Szene, in der der Mock Meldungen der CCU schickt (ein Fenster kippt und öffnet, der
+Rauchmelder schlägt an). Chromiums Screencast liefert jedes gemalte Bild mit seiner Zeit, ffmpeg macht daraus
+eine animierte WebP mit 15 Bildern pro Sekunde. Eine Animation kommt nie zweimal gleich heraus, deshalb hat
+der Workflow dafür eine eigene Auswahl `tiles`.
+
 ## CI
 
 | Workflow | Auslöser | Schritte |
