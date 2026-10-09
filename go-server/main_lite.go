@@ -53,6 +53,7 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 	}
 	wsServer.SetHome(homeModel)
 	// Layouts follow their rooms and functions when they are moved
+	homeModel.SetTiles(wsServer.Tiles())
 	go homeModel.FollowMeta(ctx)
 	// Heating groups through occulited, which names their devices itself
 	groups := occulite.NewGroups(client)

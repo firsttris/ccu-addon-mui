@@ -185,7 +185,7 @@ step "app in the browser"
 code=$(curl -s -o "$WORK/backup.sbk" -w '%{http_code}' --max-time 300 -H "$AUTH" "$BASE/api/system/v1/backup")
 [ "$code" = 200 ] || fail "backup: HTTP $code"
 tar -xOf "$WORK/backup.sbk" usr_local.tar.gz | tar -tz > "$OUT/backup-files.txt" || fail "backup is not an .sbk with usr_local.tar.gz"
-for file in etc/config/addons/mui/mui-lite.json etc/config/addons/mui/userprofiles; do
+for file in etc/config/addons/mui/mui-lite.json etc/config/addons/mui/mui-tiles.json etc/config/addons/mui/userprofiles; do
   grep -q "$file" "$OUT/backup-files.txt" || fail "the backup lacks $file: $(grep addons/mui "$OUT/backup-files.txt" | head -20)"
 done
 say "backup: $(grep -c addons/mui "$OUT/backup-files.txt") entries of the add-on, program files $(grep -q 'addons/mui/go-server' "$OUT/backup-files.txt" && echo in it || echo not in it)"

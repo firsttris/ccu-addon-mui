@@ -16,6 +16,7 @@ import (
 	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/home"
 	"ccu-addon-mui-server/pkg/logger"
+	"ccu-addon-mui-server/pkg/tiles"
 )
 
 // RPC is the part of ccurpc.Client the home model reads devices and values
@@ -43,6 +44,9 @@ type Home struct {
 type homeState struct {
 	unsupported
 	store *store
+	// The tile layouts (pkg/tiles), kept by the server for every platform;
+	// here only to move them with their rooms and functions
+	tiles *tiles.Store
 
 	mu sync.Mutex
 	// The last value of every datapoint by channel address, and since when
@@ -453,7 +457,6 @@ func (h *Home) channel(snapshot Snapshot, ch channelInfo) (home.Channel, bool) {
 		}
 	}
 	h.store.read(func(data *ownData) {
-		c.Tile = data.Tiles[id]
 		if mode, ok := data.Modes[ref]; ok {
 			c.Mode = &mode
 		}
@@ -642,34 +645,10 @@ func typedValue(kind, value string) (interface{}, error) {
 
 // --- The add-on's own data ---------------------------------------------
 
-func (h *Home) GetLayout(id int64) (string, string, error) {
-	layout := ""
-	h.store.read(func(data *ownData) { layout = data.Layouts[id] })
-	return home.SetOK, layout, nil
-}
-
-func (h *Home) SetLayout(id int64, layout string) (string, string, error) {
-	err := h.store.change(func(data *ownData) error {
-		if layout == "" {
-			delete(data.Layouts, id)
-		} else {
-			data.Layouts[id] = layout
-		}
-		return nil
-	})
-	return home.SetOK, "", err
-}
-
-func (h *Home) SetChannelTile(id int64, tile string) (string, string, error) {
-	err := h.store.change(func(data *ownData) error {
-		if tile == "" {
-			delete(data.Tiles, id)
-		} else {
-			data.Tiles[id] = tile
-		}
-		return nil
-	})
-	return home.SetOK, "", err
+// SetTiles gives the home model the tile layouts, which follow their rooms
+// and functions when openccu-lite moves them (FollowMeta)
+func (h *Home) SetTiles(store *tiles.Store) {
+	h.tiles = store
 }
 
 func (h *Home) SetChannelMode(iface, address string, mode int) (string, error) {

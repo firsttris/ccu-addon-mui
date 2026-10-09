@@ -6,9 +6,36 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"testing"
 	"time"
+
+	"ccu-addon-mui-server/pkg/tiles"
 )
+
+func openTiles(t *testing.T, dir string) *tiles.Store {
+	t.Helper()
+	store, err := tiles.Open(filepath.Join(dir, "mui-tiles.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return store
+}
+
+// layoutOf is a layout that names its view, "" for none
+func layoutOf(name string) string {
+	if name == "" {
+		return ""
+	}
+	return `{"name":"` + name + `"}`
+}
+
+func setLayout(t *testing.T, store *tiles.Store, id int64, name string) {
+	t.Helper()
+	if err := store.SetLayout(id, layoutOf(name), func(int64) bool { return true }); err != nil {
+		t.Fatal(err)
+	}
+}
 
 // A moved room keeps its layout, and so do the rooms below it; a deleted
 // room's layout goes
@@ -42,27 +69,26 @@ func TestLayoutsFollowTheirRooms(t *testing.T) {
 	}))
 	defer server.Close()
 
-	h, err := NewHome(New(server.URL, ""), nil, t.TempDir())
+	dir := t.TempDir()
+	h, err := NewHome(New(server.URL, ""), nil, dir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	h.store.data.Layouts[ID("room/og/bad")] = "bad"
-	h.store.data.Layouts[ID("room/og/bad/dusche")] = "dusche"
-	h.store.data.Layouts[ID("room/keller")] = "keller"
-	h.store.data.Layouts[ID("room/og")] = "og"
+	h.SetTiles(openTiles(t, dir))
+	for path, name := range map[string]string{"room/og/bad": "bad", "room/og/bad/dusche": "dusche", "room/keller": "keller", "room/og": "og"} {
+		setLayout(t, h.tiles, ID(path), name)
+	}
 
 	since, err := h.client.MetaEvents(context.Background(), 0, h.onMetaEvent)
 	if since != 9 {
 		t.Fatalf("since %d (%v)", since, err)
 	}
 	want := map[int64]string{ID("room/eg/bad"): "bad", ID("room/eg/bad/dusche"): "dusche", ID("room/og"): "og"}
-	got := h.store.data.Layouts
-	if len(got) != len(want) {
-		t.Fatalf("layouts %v", got)
-	}
-	for id, layout := range want {
-		if got[id] != layout {
-			t.Fatalf("layout %d: %q, want %q (%v)", id, got[id], layout, got)
+	// Written to mui-tiles.json: read back as after a restart
+	got := openTiles(t, dir)
+	for _, path := range []string{"room/og/bad", "room/og/bad/dusche", "room/keller", "room/eg/bad", "room/eg/bad/dusche", "room/og"} {
+		if layout, name := got.Layout(ID(path)), want[ID(path)]; layout != layoutOf(name) {
+			t.Fatalf("layout of %s: %q, want %q", path, layout, layoutOf(name))
 		}
 	}
 	if h.store.data.MetaRevision != 9 {
@@ -83,10 +109,12 @@ func TestFollowMetaStartsFromTheKeptRevision(t *testing.T) {
 	defer server.Close()
 	dir := t.TempDir()
 	h, _ := NewHome(New(server.URL, ""), nil, dir)
-	h.store.data.Layouts[900001] = "favorites"
+	h.SetTiles(openTiles(t, dir))
+	setLayout(t, h.tiles, 900001, "favorites")
 	h.keepRevision(12)
 
 	h, _ = NewHome(New(server.URL, ""), nil, dir)
+	h.SetTiles(openTiles(t, dir))
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go h.FollowMeta(ctx)
@@ -98,8 +126,9 @@ func TestFollowMetaStartsFromTheKeptRevision(t *testing.T) {
 	}
 	var revision int64
 	var layout string
-	h.store.read(func(data *ownData) { revision, layout = data.MetaRevision, data.Layouts[900001] })
-	if revision != 2000 || layout != "favorites" {
+	h.store.read(func(data *ownData) { revision = data.MetaRevision })
+	layout = h.tiles.Layout(900001)
+	if revision != 2000 || layout != layoutOf("favorites") {
 		t.Fatalf("revision %d, layout %q", revision, layout)
 	}
 }

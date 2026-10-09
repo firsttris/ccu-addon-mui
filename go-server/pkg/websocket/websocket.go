@@ -2639,6 +2639,11 @@ func (s *Server) SetTiles(store *tiles.Store) {
 	s.tiles = store
 }
 
+// Tiles is the store of tile layouts, nil when it could not be read
+func (s *Server) Tiles() *tiles.Store {
+	return s.tiles
+}
+
 // applyTiles sets the tile chosen for each channel, if one was
 func (s *Server) applyTiles(channels []rega.Channel) {
 	if s.tiles == nil {

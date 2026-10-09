@@ -91,6 +91,19 @@ func (s *Store) SetLayout(id int64, layout string, exists func(id int64) bool) e
 	return s.save(file{Layouts: layouts, Tiles: s.data.Tiles})
 }
 
+// ChangeLayouts lets fn move or drop layouts, as openccu-lite's rooms and
+// functions move (their ids follow the path); written when fn says it
+// changed something
+func (s *Store) ChangeLayouts(fn func(layouts map[int64]json.RawMessage) bool) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	layouts := maps.Clone(s.data.Layouts)
+	if !fn(layouts) {
+		return nil
+	}
+	return s.save(file{Layouts: layouts, Tiles: s.data.Tiles})
+}
+
 // Tile returns the tile chosen for a channel, "" for the app's own choice
 func (s *Store) Tile(id int64) string {
 	s.mu.Lock()

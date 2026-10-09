@@ -55,7 +55,8 @@ Wie sich MUI auf openccu-lite verhält, wo es anders ist als auf der CCU:
 - **Diagramme:** neue Reihen beginnen mit dem aktuellen Wert, ohne Import aus einem Systemprotokoll.
 - **HmIP anlernen:** Im lokalen Schlüsselmodus (`hmip.keyserver_mode` LOCAL) fragt das System den Keyserver
   von eQ-3 nie; der Anlerndialog sagt das und öffnet gleich das Anlernen mit SGTIN und KEY vom Aufkleber.
-- **Eigene Daten** (Layouts, Favoriten, Sprache, Diagramme) liegen in `DATA_DIR`. Die Layouts hängen am Pfad
+- **Eigene Daten** (Layouts, Favoriten, Sprache, Diagramme) liegen in `DATA_DIR`, die Layouts und die
+  Kachelwahl in `mui-tiles.json` wie auf der CCU (seit #220 auch dort eine eigene Datei). Die Layouts hängen am Pfad
   eines Raums; verschiebt man ihn in openccu-lite, zieht MUI sie über occulites Change-Stream mit
   (`node.moved`), für die Räume darunter auch, und löscht sie mit dem Raum (`node.deleted`).
 - **lighttpd-Fragment:** occulited übernimmt es nur, wenn jede Direktive auf einer Zeile steht (seine
@@ -233,8 +234,9 @@ Systemvariablen-Reihen und ohne Import aus der ReGa-Historie), Sitzungen.
 - Posteingang (`getInbox`, `acceptDevice`): aus den `newDevices`-Events selbst führen, statt aus ReGa.
 - Servicemeldungen und Gerätegesundheit: System API bzw. die Wartungskanäle `:0` per XML-RPC.
 - Heizgruppen, Gerätefirmware-Verwaltung: System API.
-- Kachel-Layouts (`muiLayout`), Kachelwahl (`muiTile`), Kanalmodus: heute als ReGa-Metadaten, auf Lite in
-  einer eigenen Datei unter `/usr/local/etc/config/addons/mui/`. Die Metadata API kann pro Objekt nur 16 KiB
+- Kachel-Layouts und Kachelwahl: eine eigene Datei `mui-tiles.json` (#220, auf der CCU unter
+  `/usr/local/etc/config`, auf Lite unter `/usr/local/etc/config/addons/mui/`). Kanalmodus: auf der CCU
+  ReGa-Metadaten, auf Lite in `mui-lite.json`. Die Metadata API kann pro Objekt nur 16 KiB
   für alle Add-ons zusammen speichern und hat keine Daten an Räumen. Für Layouts pro Raum ist eine eigene
   Datei sauberer.
 - Favoriten: Lite hat ein Enum `favorite` mit einem Knoten pro Benutzerkonto und die Reihenfolge in
@@ -378,7 +380,7 @@ openccu-lite und occulited gehen als Issue in dessen Repository.
 
 1. **Layouts pro Raum:** Knoten haben kein `meta`, das Format ist für Version 1 fest; die eigene Datei ist
    richtig. Verschiebt man einen Raum, meldet der Change-Stream `node.moved` mit `from` und `to`.
-   *Umgesetzt:* MUI zieht die Layouts damit mit. Die letzte Revision steht in `mui-lite.json`, nach einem
+   *Umgesetzt:* MUI zieht die Layouts in `mui-tiles.json` damit mit. Die letzte Revision steht in `mui-lite.json`, nach einem
    Neustart holt der Server so die Verschiebungen nach, die er verpasst hat. Bei `resync` (so alte Events
    hat occulited nicht mehr) und `import` (ein Backup ersetzt den Speicher) lässt sich nichts nachholen; die
    Layouts bleiben dann, wo sie sind, denn ein zurückgespieltes Backup bringt die alten Pfade mit.

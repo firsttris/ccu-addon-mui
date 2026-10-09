@@ -125,6 +125,7 @@ func TestDataDirHoldsTheOwnFiles(t *testing.T) {
 		"mui-sessions.json": cfg.SessionsFile,
 		"mui-push.json":     cfg.PushFile,
 		"mui-diagrams.json": cfg.DiagramsFile,
+		"mui-tiles.json":    cfg.TilesFile,
 		"mui-audit.log":     cfg.AuditLogFile,
 		"mui-diagrams":      cfg.DiagramsDir,
 	} {

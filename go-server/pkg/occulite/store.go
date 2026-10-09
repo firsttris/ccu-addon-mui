@@ -10,16 +10,14 @@ import (
 )
 
 // ownData is what the add-on keeps for itself on openccu-lite, where the
-// CCU kept it as ReGa metadata: the tile layouts of rooms, functions and
-// favorite lists, the tile chosen for a channel, an input channel's mode,
-// and the favorite lists. In the add-on's data directory
-// (mui-lite.json), so it is in openccu-lite's backups.
+// CCU keeps it as ReGa metadata: an input channel's mode and the favorite
+// lists. In the add-on's data directory (mui-lite.json), so it is in
+// openccu-lite's backups. The tile layouts and the tiles chosen for
+// channels are in mui-tiles.json beside it, as on a CCU (pkg/tiles).
 type ownData struct {
-	Layouts   map[int64]string `json:"layouts,omitempty"`
-	Tiles     map[int64]string `json:"tiles,omitempty"`
-	Modes     map[string]int   `json:"modes,omitempty"`
-	Favorites []favoriteList   `json:"favorites,omitempty"`
-	NextID    int64            `json:"nextId,omitempty"`
+	Modes     map[string]int `json:"modes,omitempty"`
+	Favorites []favoriteList `json:"favorites,omitempty"`
+	NextID    int64          `json:"nextId,omitempty"`
 	// The last revision of the metadata change stream seen, so that a
 	// restart resumes there and moves in between still reach the layouts
 	MetaRevision int64 `json:"metaRevision,omitempty"`
@@ -48,12 +46,6 @@ func openStore(dir string) (*store, error) {
 		if err := atomicfile.ReadJSON(s.path, &s.data); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return nil, err
 		}
-	}
-	if s.data.Layouts == nil {
-		s.data.Layouts = map[int64]string{}
-	}
-	if s.data.Tiles == nil {
-		s.data.Tiles = map[int64]string{}
 	}
 	if s.data.Modes == nil {
 		s.data.Modes = map[string]int{}

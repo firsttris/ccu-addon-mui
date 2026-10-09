@@ -188,7 +188,7 @@ Heizgruppen-Geräts kommt dort an, und in der Geräteliste ist ein Bild wirklich
 (`app-device.png` zeigt die Geräteseite).
 
 Dazwischen prüft das Skript, dass `/addons/mui/` ohne Sitzung zur Anmeldung umleitet, dass openccu-lites
-Backup (`GET /api/system/v1/backup`) `mui-lite.json` und die Sprachprofile enthält, und dass das Journal
+Backup (`GET /api/system/v1/backup`) `mui-lite.json`, `mui-tiles.json` und die Sprachprofile enthält, und dass das Journal
 des Add-ons keine Schreibfehler (`EACCES`, `EROFS`, *permission denied*) und keinen Panic enthält. Ein
 Wiederherstellen ersetzt `/usr/local` und startet das System neu; dass es die Dateien zurückbringt, ist
 Sache des Systems, dass sie im Backup sind, unsere. Die Dauer jedes Schritts steht in der Zusammenfassung

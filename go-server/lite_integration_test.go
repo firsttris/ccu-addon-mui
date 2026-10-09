@@ -78,6 +78,7 @@ func startLiteStack(t *testing.T) *liteStack {
 		PushFile:           filepath.Join(data, "mui-push.json"),
 		RulesFile:          filepath.Join(data, "mui-rules.json"),
 		DiagramsFile:       filepath.Join(data, "mui-diagrams.json"),
+		TilesFile:          filepath.Join(data, "mui-tiles.json"),
 		DiagramsDir:        diagramsDir,
 		PushSubject:        "mailto:test@example.com",
 		OcculiteURL:        fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort),

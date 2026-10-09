@@ -56,6 +56,14 @@ func run(ctx context.Context, cfg *config.Config) error {
 	deviceRPC := newDeviceRPC(cfg)
 	wsServer.SetDeviceRPC(deviceRPC)
 
+	// Tile layouts and the tiles chosen for channels, the add-on's own on
+	// every platform (on openccu-lite they follow moved rooms)
+	if store, err := tiles.Open(cfg.TilesFile); err != nil {
+		logger.Error("Tile layouts disabled:", err)
+	} else {
+		wsServer.SetTiles(store)
+	}
+
 	// What differs between a CCU and openccu-lite (main_ccu.go,
 	// main_lite.go): the home model, the login, the system settings
 	platform, err := setupPlatform(ctx, cfg, wsServer, deviceRPC)
@@ -100,14 +108,6 @@ func run(ctx context.Context, cfg *config.Config) error {
 		wsServer.SetDiagrams(store, recorder)
 		go recorder.Run(ctx, 5*time.Minute, func(err error) { logger.Error("Failed to write diagram values:", err) })
 		platform.diagramsRecording(ctx)
-	}
-
-	// Tile layouts and the tiles chosen for channels, the add-on's own on
-	// every platform
-	if store, err := tiles.Open(cfg.TilesFile); err != nil {
-		logger.Error("Tile layouts disabled:", err)
-	} else {
-		wsServer.SetTiles(store)
 	}
 
 	// Alarms and service messages send no events either

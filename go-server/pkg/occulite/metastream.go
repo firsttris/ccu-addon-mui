@@ -145,17 +145,31 @@ func (h *Home) onMetaEvent(event MetaEvent) {
 			logger.Error("Reading openccu-lite's metadata after a move:", err)
 			return
 		}
-		h.changeOwn(func(data *ownData) bool {
-			data.MetaRevision = event.Revision
-			moveLayouts(data.Layouts, snapshot, event.Enum, event.From, event.To)
-			return true
+		h.changeLayouts(func(layouts map[int64]json.RawMessage) bool {
+			return moveLayouts(layouts, snapshot, event.Enum, event.From, event.To)
 		})
+		h.keepRevision(event.Revision)
 	case "node.deleted":
-		h.changeOwn(func(data *ownData) bool {
-			data.MetaRevision = event.Revision
-			delete(data.Layouts, ID(event.Path))
+		h.changeLayouts(func(layouts map[int64]json.RawMessage) bool {
+			if _, ok := layouts[ID(event.Path)]; !ok {
+				return false
+			}
+			delete(layouts, ID(event.Path))
 			return true
 		})
+		h.keepRevision(event.Revision)
+	}
+}
+
+// changeLayouts changes the tile layouts (mui-tiles.json) before the
+// revision is kept: a restart in between replays the event, and a move
+// whose layout already went is a no-op
+func (h *Home) changeLayouts(fn func(map[int64]json.RawMessage) bool) {
+	if h.tiles == nil {
+		return
+	}
+	if err := h.tiles.ChangeLayouts(fn); err != nil {
+		logger.Error("Writing the tile layouts:", err)
 	}
 }
 
@@ -188,7 +202,7 @@ func (h *Home) changeOwn(fn func(*ownData) bool) {
 
 // moveLayouts gives the layouts of a moved node and of the nodes below it
 // their new keys: the node at from is now at to, its children with it
-func moveLayouts(layouts map[int64]string, snapshot Snapshot, enumID, from, to string) bool {
+func moveLayouts[V any](layouts map[int64]V, snapshot Snapshot, enumID, from, to string) bool {
 	enum, ok := snapshot.Enums[enumID]
 	if !ok {
 		return false
