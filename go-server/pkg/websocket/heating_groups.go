@@ -262,7 +262,7 @@ func (s *Server) deleteHeatingGroup(client *Client, msg heatingGroupRequest) {
 	}
 	// The members may be operated alone again (GroupListPage.ftl)
 	go func() {
-		if _, err := s.regaClient.SetupGroupDevice("NONE", "", false, nil, deviceAddresses(members)); err != nil {
+		if _, err := s.groupDeviceSetup("NONE", "", false, nil, deviceAddresses(members)); err != nil {
 			logger.Error("Failed to update the devices of a deleted heating group:", err)
 		}
 	}()
@@ -274,7 +274,7 @@ func (s *Server) deleteHeatingGroup(client *Client, msg heatingGroupRequest) {
 func (s *Server) setupGroupDevice(address, name string, rename, wait bool, members, removed []string) {
 	deadline := time.Now().Add(groupDeviceWait)
 	for {
-		result, err := s.regaClient.SetupGroupDevice(address, name, rename, deviceAddresses(members), deviceAddresses(removed))
+		result, err := s.groupDeviceSetup(address, name, rename, deviceAddresses(members), deviceAddresses(removed))
 		if err != nil {
 			logger.Error("Failed to set up the device of a heating group:", err)
 			return

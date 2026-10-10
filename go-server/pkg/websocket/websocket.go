@@ -107,7 +107,6 @@ type Server struct {
 	// The WebUI's general settings and where the diagram values are
 	settings    *settings.Service
 	diagramsDir string
-	regaClient  *rega.Client
 	// The home model: rooms, trades, channels, names, favorites, service
 	// messages (the ReGa on a CCU)
 	home            home.Source

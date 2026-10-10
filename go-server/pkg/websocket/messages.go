@@ -63,7 +63,7 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 	}
 	acknowledge := s.homeFor(client).AcknowledgeServiceMessage
 	if alarm {
-		acknowledge = s.regaClient.AcknowledgeAlarmMessage
+		acknowledge = s.acknowledgeAlarm
 	}
 	result, messageType, err := acknowledge(msg.ID)
 	if err != nil {

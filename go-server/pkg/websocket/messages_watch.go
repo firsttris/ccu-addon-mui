@@ -83,10 +83,11 @@ func (s *Server) ServiceEvent(datapoint string) {
 
 func (s *Server) readAlarms(maxAge time.Duration) ([]rega.AlarmMessage, error) {
 	// openccu-lite has no alarm variables (no ReGa)
-	if s.regaClient == nil {
+	read := s.alarmReader()
+	if read == nil {
 		return []rega.AlarmMessage{}, nil
 	}
-	return s.messages.alarms.get(maxAge, s.regaClient.GetAlarmMessages)
+	return s.messages.alarms.get(maxAge, read)
 }
 
 func (s *Server) readServiceMessages(maxAge time.Duration) ([]rega.ServiceMessage, error) {
@@ -134,7 +135,7 @@ func (s *Server) RunMessageWatch(ctx context.Context) {
 }
 
 func (s *Server) pollAlarms() {
-	if s.regaClient == nil || !s.hasMessageWatchers(true) {
+	if s.alarmReader() == nil || !s.hasMessageWatchers(true) {
 		s.messages.mu.Lock()
 		s.messages.lastAlarms = nil
 		s.messages.mu.Unlock()

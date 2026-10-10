@@ -10,10 +10,12 @@ import (
 	"ccu-addon-mui-server/pkg/rega"
 )
 
-// ccuState is the part of the Server only a CCU fills: its logs, the
-// system variables of its ReGa and its users (state_lite.go is empty)
+// ccuState is the part of the Server only a CCU fills: its ReGa, its
+// logs, the system variables of its ReGa and its users (state_lite.go is
+// empty). Files both builds share reach the ReGa through rega_ccu.go.
 type ccuState struct {
-	logs *logs.Service
+	regaClient *rega.Client
+	logs       *logs.Service
 	// The system variables last sent to the connections (sysvars.go)
 	lastSysvars []byte
 	sysvarsMu   sync.Mutex

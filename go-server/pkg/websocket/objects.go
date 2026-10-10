@@ -2,32 +2,23 @@ package websocket
 
 import (
 	"fmt"
-	"strings"
 
 	"ccu-addon-mui-server/pkg/audit"
-	"ccu-addon-mui-server/pkg/rega"
 )
 
-// handleObjects creates, renames and deletes rooms, trades and system
-// variables. All of it is setup.
+// handleObjects creates, renames and deletes rooms and trades. All of it
+// is setup.
 func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 	var msg struct {
 		RequestID string `json:"requestId"`
 		List      string `json:"list"`
 		ID        int64  `json:"id"`
 		Name      string `json:"name"`
-		rega.NewSysvar
-		// editSysvar: the info text and the channel (0: none)
-		Description string `json:"description"`
-		Channel     int64  `json:"channel"`
 	}
 	if !s.decode(client, message, &msg) {
 		return
 	}
 	target := fmt.Sprintf("%s %d", msg.List, msg.ID)
-	if strings.HasSuffix(msgType, "Sysvar") {
-		target = fmt.Sprintf("sysvar %d", msg.ID)
-	}
 	var created int64
 	switch msgType {
 	case "createGroup":
@@ -47,35 +38,6 @@ func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target},
 			func() (any, string, error) {
 				result, previous, err := s.homeFor(client).DeleteGroup(msg.List, msg.ID)
-				return previous, result, err
-			})
-	case "createSysvar":
-		// The outer Name takes the JSON field; the embedded one stays empty
-		sysvar := msg.NewSysvar
-		sysvar.Name = msg.Name
-		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: msg.Kind, Value: msg.Name},
-			func() (any, string, error) {
-				result, id, err := s.regaClient.CreateSysvar(sysvar)
-				created = id
-				return nil, result, err
-			}, &created)
-	case "editSysvar":
-		sysvar := msg.NewSysvar
-		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: sysvar},
-			func() (any, string, error) {
-				result, err := s.regaClient.EditSysvar(msg.ID, sysvar, msg.Description, msg.Channel)
-				return nil, result, err
-			})
-	case "renameSysvar":
-		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Name},
-			func() (any, string, error) {
-				result, previous, err := s.regaClient.RenameSysvar(msg.ID, msg.Name)
-				return previous, result, err
-			})
-	case "deleteSysvar":
-		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target},
-			func() (any, string, error) {
-				result, previous, err := s.regaClient.DeleteSysvar(msg.ID)
 				return previous, result, err
 			})
 	}

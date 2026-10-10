@@ -1,3 +1,7 @@
+//go:build !lite
+
+// The alarms come from the ReGa: only a CCU has them (rega_ccu.go)
+
 package websocket
 
 import (
