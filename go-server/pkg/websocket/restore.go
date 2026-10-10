@@ -54,7 +54,7 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		Language  string `json:"language"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_MESSAGE")
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
 		return
 	}
 	if s.backup == nil {

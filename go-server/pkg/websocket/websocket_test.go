@@ -36,6 +36,31 @@ func TestHandleMessageInvalidJSONSendsError(t *testing.T) {
 	}
 }
 
+// A message that does not parse is answered with INVALID_REQUEST and, where
+// it has one, its requestId, so the waiting request fails at once
+func TestInvalidMessageAnswersInvalidRequest(t *testing.T) {
+	s := NewServer(nil, nil)
+	for _, message := range []string{
+		`{`,
+		`{"type":"setDatapoint","requestId":"r1","address":5}`,
+		`{"type":"subscribe","requestId":"r1","channels":"A:1"}`,
+	} {
+		client := &Client{send: make(chan []byte, 1)}
+		s.handleMessage(client, []byte(message))
+		var resp types.ErrorResponse
+		if err := json.Unmarshal(<-client.send, &resp); err != nil {
+			t.Fatal(err)
+		}
+		want := "r1"
+		if message == `{` {
+			want = ""
+		}
+		if resp.Code != "INVALID_REQUEST" || resp.RequestID != want {
+			t.Errorf("%s: got %+v", message, resp)
+		}
+	}
+}
+
 func TestHandleMessageMissingTypeSendsError(t *testing.T) {
 	s := NewServer(nil, nil)
 	client := &Client{send: make(chan []byte, 1)}
@@ -432,8 +457,8 @@ func TestSendDoesNotBlockOnFullBuffer(t *testing.T) {
 
 	done := make(chan struct{})
 	go func() {
-		s.sendError(client, "first")
-		s.sendError(client, "second") // buffer full, must be dropped
+		s.sendRequestError(client, "", "first", "")
+		s.sendRequestError(client, "", "second", "") // buffer full, must be dropped
 		close(done)
 	}()
 

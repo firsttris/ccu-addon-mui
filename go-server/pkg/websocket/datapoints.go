@@ -27,7 +27,7 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		Value         interface{} `json:"value"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendError(client, "invalid setDatapoint message: "+err.Error())
+		s.sendRequestError(client, msg.RequestID, "invalid setDatapoint message: "+err.Error(), "INVALID_REQUEST")
 		return
 	}
 

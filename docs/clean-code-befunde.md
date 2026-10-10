@@ -25,7 +25,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 |---|---|---|---|
 | 1 | Kein Linter oder Formatter erzwingt den Stil (Frontend: erledigt mit Biome) | beide | M |
 | 2 | Code, den nur die CCU braucht, ohne Build-Tag (erledigt) | Go | S |
-| 3 | Uneinheitliche Fehlercodes, `requestId` geht verloren | Go | S |
+| 3 | Uneinheitliche Fehlercodes, `requestId` geht verloren (erledigt) | Go | S |
 | 4 | Kopierte Helfer und Reste im Frontend | Frontend | S–M |
 | 5 | Veraltete Go-Idiome, Logger ohne `Errorf` | Go | S |
 | 6 | Gleicher Anfang in jedem Handler, Antwort-Structs | Go | M |
@@ -104,21 +104,15 @@ Bewusst gemischt bleiben `handleObjects` (Systemvariablen) und `handleServiceMes
 bestätigen). Ihre CCU-Fälle teilen sich Parsing, Audit und Rechteprüfung mit den gemeinsamen Fällen und
 sind nur über `dispatch_ccu.go` erreichbar. Eine Aufteilung würde diesen Teil verdoppeln.
 
-### 3. Uneinheitliche Fehlercodes, `requestId` geht verloren ✔
+### 3. Uneinheitliche Fehlercodes, `requestId` geht verloren: erledigt
 
-- **Zwei Codes für denselben Fehler.** Eine ungültige Nachricht beantwortet der Server meist mit
-  `INVALID_REQUEST` (34-mal). Viermal kommt stattdessen `INVALID_MESSAGE`:
-  - `backup.go:43`
-  - `restore.go:57`
-  - `login.go:101`
-  - `login.go:189`
-
-  Die App muss deshalb beide Codes kennen (`src/hooks/useWebsocket.tsx:81–82`).
-- **Fehler ohne `requestId`.** `datapoints.go:30` und `home.go:17` antworten mit `sendError` statt
-  `sendRequestError`. Damit fehlt der Antwort die `requestId`, obwohl `dispatch` sie kennt.
-
-**Vorschlag:** Überall `INVALID_REQUEST` verwenden und `INVALID_MESSAGE` aus der App entfernen. Die
-`requestId` an alle Handler weiterreichen.
+- Eine Nachricht, die sich nicht lesen lässt, beantwortet der Server jetzt überall mit `INVALID_REQUEST`.
+  Das gilt auch für kaputtes JSON und eine kaputte Anmeldung. `INVALID_MESSAGE` gibt es nicht mehr, auch
+  nicht in der App.
+- `setDatapoint` und `subscribe` antworten darauf mit ihrer `requestId`, wenn die Nachricht eine hat. Die
+  wartende Anfrage scheitert dann sofort statt nach dem Timeout.
+- `sendError` und `sendErrorCode` sind entfallen. Fehler gehen nur noch über `sendRequestError`.
+- Die `requestId` aus `dispatch` an alle Handler weiterzureichen, gehört zu #6, einheitliche Signaturen.
 
 ### 4. Kopierte Helfer und Reste im Frontend
 
@@ -319,7 +313,7 @@ und die Tests nach Domänen aufteilen.
 Jeder Schritt ist ein eigener PR:
 
 1. ~~Build-Tags (#2)~~ erledigt.
-2. Fehlercodes vereinheitlichen (#3).
+2. ~~Fehlercodes vereinheitlichen (#3)~~ erledigt.
 3. `staticcheck` in der CI (#1); fürs Frontend ist das mit Biome erledigt.
 4. Mechanische Go-Modernisierung und Logger (#5).
 5. Kopierte Frontend-Helfer und Reste (#4).
