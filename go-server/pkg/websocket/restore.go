@@ -42,13 +42,7 @@ func (s *Server) serveRestoreUpload(w http.ResponseWriter, r *http.Request) {
 // then the CCU reboots (restoreBackup). It replaces every setting of the
 // CCU: an elevated administrator, the password once more, audit log.
 func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
-	var msg struct {
-		RequestID string `json:"requestId"`
-		ID        string `json:"id"`
-		Password  string `json:"password"`
-		Key       string `json:"key"`
-		Language  string `json:"language"`
-	}
+	var msg restoreRequest
 	if !s.decode(client, message, &msg) {
 		return
 	}
@@ -57,73 +51,28 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		return
 	}
 	entry := audit.Entry{User: client.user, Action: msgType, Target: "CCU"}
-	finish := func(result string) { s.recordAudit(entry, result) }
 	if !s.mayConfigure(client, msg.RequestID, entry) {
 		return
 	}
 	response := restoreResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}
-
-	if msgType == "prepareRestore" || msgType == "prepareCcuFirmware" || msgType == "prepareAddonUpload" || msgType == "prepareDeviceFirmwareUpload" {
-		var id string
-		var err error
-		if msgType == "prepareCcuFirmware" && onCCU() {
-			id, err = s.backup.PrepareFirmwareUpload(s.cfg.FirmwareUploadDir)
-		} else {
-			id, err = s.backup.PrepareUpload()
-		}
-		if err != nil {
-			finish("CCU_ERROR")
-			s.sendRequestError(client, msg.RequestID, err.Error(), "CCU_ERROR")
-			return
-		}
-		finish(rega.SetOK)
-		response.ID, response.URL = id, RestorePath+id
-		s.sendJSON(client, response)
+	if uploads[msgType] {
+		s.prepareUpload(client, msgType, entry, response)
 		return
 	}
-
+	step, ok := restoreSteps[msgType]
+	if !ok {
+		return
+	}
 	// Without authentication the WebUI's administrator
 	username := client.user
 	if s.auth == nil {
 		username = "Admin"
 	} else if err := s.auth.CheckLockout(username, client.source); err != nil {
-		finish("TOO_MANY_ATTEMPTS")
+		s.recordAudit(entry, "TOO_MANY_ATTEMPTS")
 		s.sendRequestError(client, msg.RequestID, err.Error(), "TOO_MANY_ATTEMPTS")
 		return
 	}
-	var err error
-	switch msgType {
-	case "checkRestore":
-		response.NeedsKey, err = s.backup.CheckRestore(msg.ID, username, msg.Password)
-	case "restoreBackup":
-		disarm := armRestoreReboot()
-		err = s.backup.Restore(msg.ID, username, msg.Password, msg.Key)
-		if err != nil {
-			disarm()
-		}
-	case "checkCcuFirmware":
-		response.Eula, err = s.backup.CheckFirmware(msg.ID, username, msg.Password, msg.Language)
-	case "downloadCcuFirmware":
-		var verify func() error
-		if verify, err = s.firmwareDownloadCheck(); err == nil {
-			response.Eula, err = s.backup.DownloadFirmware(username, msg.Password, msg.Language, verify)
-			if err != nil {
-				// Up to the image's size on the CCU's partition until a reboot
-				s.removeUnstagedDownload()
-			}
-		}
-	case "installCcuFirmware":
-		if onCCU() && !s.firmwareStaged() {
-			err = errFirmwareNotStaged
-		} else {
-			err = s.backup.InstallFirmware(username, msg.Password)
-		}
-	case "cancelCcuFirmware":
-		err = s.backup.CancelFirmware(username, msg.Password)
-	case "installAddon":
-		response.Reboot, err = s.backup.InstallAddon(msg.ID, username, msg.Password)
-	}
-	if err != nil {
+	if err := step.run(s, msg, username, &response); err != nil {
 		code := codeOf(err,
 			errorCode{errDirectDownloadUnsupported, "NOT_SUPPORTED"},
 			errorCode{errFirmwareNotStaged, "FIRMWARE_NOT_STAGED"},
@@ -131,18 +80,111 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		if code == "INVALID_CREDENTIALS" && s.auth != nil {
 			s.auth.RecordFailure(username, client.source)
 		}
-		finish(code)
+		s.recordAudit(entry, code)
 		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), code)
 		return
 	}
-	switch msgType {
-	case "restoreBackup":
-		logger.Infof("💾 Backup restored by %q, the CCU reboots", username)
-	case "installCcuFirmware":
-		logger.Infof("⬆️ Firmware update started by %q, the CCU reboots", username)
-	case "installAddon":
-		logger.Infof("📦 Add-on installed by %q (reboot: %t)", username, response.Reboot)
+	if step.done != nil {
+		step.done(username, response)
 	}
-	finish(rega.SetOK)
+	s.recordAudit(entry, rega.SetOK)
 	s.sendJSON(client, response)
+}
+
+type restoreRequest struct {
+	RequestID string `json:"requestId"`
+	ID        string `json:"id"`
+	Password  string `json:"password"`
+	Key       string `json:"key"`
+	Language  string `json:"language"`
+}
+
+// The uploads a step prepares: the browser sends the file to the URL
+// answered
+var uploads = map[string]bool{
+	"prepareRestore": true, "prepareCcuFirmware": true, "prepareAddonUpload": true, "prepareDeviceFirmwareUpload": true,
+}
+
+func (s *Server) prepareUpload(client *Client, msgType string, entry audit.Entry, response restoreResponse) {
+	var id string
+	var err error
+	if msgType == "prepareCcuFirmware" && onCCU() {
+		id, err = s.backup.PrepareFirmwareUpload(s.cfg.FirmwareUploadDir)
+	} else {
+		id, err = s.backup.PrepareUpload()
+	}
+	if err != nil {
+		s.recordAudit(entry, "CCU_ERROR")
+		s.sendRequestError(client, response.RequestID, err.Error(), "CCU_ERROR")
+		return
+	}
+	s.recordAudit(entry, rega.SetOK)
+	response.ID, response.URL = id, RestorePath+id
+	s.sendJSON(client, response)
+}
+
+// A step with the administrator's password: run fills the response, done
+// logs what happened after it worked
+type restoreStep struct {
+	run  func(s *Server, msg restoreRequest, username string, response *restoreResponse) error
+	done func(username string, response restoreResponse)
+}
+
+var restoreSteps = map[string]restoreStep{
+	"checkRestore": {run: func(s *Server, msg restoreRequest, username string, response *restoreResponse) (err error) {
+		response.NeedsKey, err = s.backup.CheckRestore(msg.ID, username, msg.Password)
+		return err
+	}},
+	"restoreBackup": {
+		run: func(s *Server, msg restoreRequest, username string, _ *restoreResponse) error {
+			disarm := armRestoreReboot()
+			err := s.backup.Restore(msg.ID, username, msg.Password, msg.Key)
+			if err != nil {
+				disarm()
+			}
+			return err
+		},
+		done: func(username string, _ restoreResponse) {
+			logger.Infof("💾 Backup restored by %q, the CCU reboots", username)
+		},
+	},
+	"checkCcuFirmware": {run: func(s *Server, msg restoreRequest, username string, response *restoreResponse) (err error) {
+		response.Eula, err = s.backup.CheckFirmware(msg.ID, username, msg.Password, msg.Language)
+		return err
+	}},
+	"downloadCcuFirmware": {run: func(s *Server, msg restoreRequest, username string, response *restoreResponse) error {
+		verify, err := s.firmwareDownloadCheck()
+		if err != nil {
+			return err
+		}
+		response.Eula, err = s.backup.DownloadFirmware(username, msg.Password, msg.Language, verify)
+		if err != nil {
+			// Up to the image's size on the CCU's partition until a reboot
+			s.removeUnstagedDownload()
+		}
+		return err
+	}},
+	"installCcuFirmware": {
+		run: func(s *Server, msg restoreRequest, username string, _ *restoreResponse) error {
+			if onCCU() && !s.firmwareStaged() {
+				return errFirmwareNotStaged
+			}
+			return s.backup.InstallFirmware(username, msg.Password)
+		},
+		done: func(username string, _ restoreResponse) {
+			logger.Infof("⬆️ Firmware update started by %q, the CCU reboots", username)
+		},
+	},
+	"cancelCcuFirmware": {run: func(s *Server, msg restoreRequest, username string, _ *restoreResponse) error {
+		return s.backup.CancelFirmware(username, msg.Password)
+	}},
+	"installAddon": {
+		run: func(s *Server, msg restoreRequest, username string, response *restoreResponse) (err error) {
+			response.Reboot, err = s.backup.InstallAddon(msg.ID, username, msg.Password)
+			return err
+		},
+		done: func(username string, response restoreResponse) {
+			logger.Infof("📦 Add-on installed by %q (reboot: %t)", username, response.Reboot)
+		},
+	},
 }

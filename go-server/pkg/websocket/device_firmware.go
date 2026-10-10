@@ -175,13 +175,7 @@ type deviceFirmwareResponse struct {
 // prepareDeviceFirmwareUpload) and deleteDeviceFirmware change them:
 // elevated, with audit log and a WebUI session for the HMServer.
 func (s *Server) handleDeviceFirmware(client *Client, msgType string, message []byte) {
-	var msg struct {
-		RequestID  string `json:"requestId"`
-		ID         string `json:"id"`
-		DeviceType string `json:"deviceType"`
-		FileName   string `json:"fileName"`
-		Password   string `json:"password"`
-	}
+	var msg deviceFirmwareRequest
 	if !s.decode(client, message, &msg) {
 		return
 	}
@@ -192,41 +186,127 @@ func (s *Server) handleDeviceFirmware(client *Client, msgType string, message []
 	response := deviceFirmwareResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}
 	switch msgType {
 	case "getDeviceFirmware":
-		files, err := backup.ListDeviceFirmware(s.deviceFirmwareDir())
-		if err != nil {
-			s.sendRequestError(client, msg.RequestID, "getDeviceFirmware failed: "+err.Error(), "CCU_ERROR")
-			return
-		}
-		response.Files = &files
-		s.sendJSON(client, response)
-		return
+		s.listDeviceFirmware(client, response)
 	case "checkDeviceFirmware":
-		versions, err := s.fetchDeviceFirmwareCatalog()
-		if err != nil {
-			s.sendRequestError(client, msg.RequestID, "checkDeviceFirmware failed: "+err.Error(), "UPDATE_SERVER_ERROR")
-			return
-		}
-		response.Versions = &versions
-		s.sendJSON(client, response)
-		return
+		s.checkDeviceFirmware(client, response)
 	case "getDeviceFirmwareChangelog":
-		changelog, err := backup.DeviceFirmwareChangelog(s.deviceFirmwareDir(), msg.ID)
-		if errors.Is(err, backup.ErrUploadNotFound) {
-			s.sendRequestError(client, msg.RequestID, "no changelog", rega.SetNotFound)
-			return
+		s.deviceFirmwareChangelog(client, msg, response)
+	default:
+		if change, ok := deviceFirmwareChanges[msgType]; ok {
+			s.changeDeviceFirmware(client, msgType, msg, change, response)
 		}
-		if err != nil {
-			s.sendRequestError(client, msg.RequestID, "getDeviceFirmwareChangelog failed: "+err.Error(), "CCU_ERROR")
-			return
-		}
-		response.Changelog = &changelog
-		s.sendJSON(client, response)
+	}
+}
+
+type deviceFirmwareRequest struct {
+	RequestID  string `json:"requestId"`
+	ID         string `json:"id"`
+	DeviceType string `json:"deviceType"`
+	FileName   string `json:"fileName"`
+	Password   string `json:"password"`
+}
+
+func (s *Server) listDeviceFirmware(client *Client, response deviceFirmwareResponse) {
+	files, err := backup.ListDeviceFirmware(s.deviceFirmwareDir())
+	if err != nil {
+		s.sendRequestError(client, response.RequestID, "getDeviceFirmware failed: "+err.Error(), "CCU_ERROR")
 		return
 	}
+	response.Files = &files
+	s.sendJSON(client, response)
+}
 
-	entry := audit.Entry{User: client.user, Action: msgType, Target: msg.DeviceType}
-	if msgType != "downloadDeviceFirmware" {
-		entry.Target = msg.ID
+func (s *Server) checkDeviceFirmware(client *Client, response deviceFirmwareResponse) {
+	versions, err := s.fetchDeviceFirmwareCatalog()
+	if err != nil {
+		s.sendRequestError(client, response.RequestID, "checkDeviceFirmware failed: "+err.Error(), "UPDATE_SERVER_ERROR")
+		return
+	}
+	response.Versions = &versions
+	s.sendJSON(client, response)
+}
+
+func (s *Server) deviceFirmwareChangelog(client *Client, msg deviceFirmwareRequest, response deviceFirmwareResponse) {
+	changelog, err := backup.DeviceFirmwareChangelog(s.deviceFirmwareDir(), msg.ID)
+	if errors.Is(err, backup.ErrUploadNotFound) {
+		s.sendRequestError(client, msg.RequestID, "no changelog", rega.SetNotFound)
+		return
+	}
+	if err != nil {
+		s.sendRequestError(client, msg.RequestID, "getDeviceFirmwareChangelog failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	response.Changelog = &changelog
+	s.sendJSON(client, response)
+}
+
+// A change of the firmware files on the CCU, with the administrator's
+// password (the WebUI's session); it may name its audit target better
+type deviceFirmwareChange func(s *Server, msg deviceFirmwareRequest, username string, entry *audit.Entry) error
+
+var (
+	errInvalidDeviceType     = errors.New("invalid device type")
+	errUpdateServer          = errors.New("update server")
+	errUnknownDeviceFirmware = errors.New("unknown device firmware")
+)
+
+// The codes of the changes' own errors
+var deviceFirmwareErrors = []errorCode{
+	{errInvalidDeviceType, "INVALID_VALUE"},
+	{errUpdateServer, "UPDATE_SERVER_ERROR"},
+	{errUnknownDeviceFirmware, rega.SetNotFound},
+}
+
+var deviceFirmwareChanges = map[string]deviceFirmwareChange{
+	"downloadDeviceFirmware": func(s *Server, msg deviceFirmwareRequest, username string, _ *audit.Entry) error {
+		if msg.DeviceType == "" || len(msg.DeviceType) > 64 || strings.ContainsAny(msg.DeviceType, "/\\\"\r\n") {
+			return errInvalidDeviceType
+		}
+		// The session first: no download for nothing
+		if err := s.backup.EnsureSession(username, msg.Password); err != nil {
+			return err
+		}
+		path, err := s.downloadDeviceFirmware(msg.DeviceType)
+		if err != nil {
+			return fmt.Errorf("%w: %v", errUpdateServer, err)
+		}
+		defer os.Remove(path)
+		return s.backup.AddDeviceFirmware(username, msg.Password, path, downloadProduct(msg.DeviceType)+".tgz")
+	},
+	"addDeviceFirmware": func(s *Server, msg deviceFirmwareRequest, username string, _ *audit.Entry) error {
+		path, err := s.backup.DeviceFirmwarePath(msg.ID)
+		if err != nil {
+			return err
+		}
+		err = s.backup.AddDeviceFirmware(username, msg.Password, path, msg.FileName)
+		if !errors.Is(err, backup.ErrSessionRequired) {
+			// Kept for the retry with the password
+			s.backup.Discard(msg.ID)
+		}
+		return err
+	},
+	"deleteDeviceFirmware": func(s *Server, msg deviceFirmwareRequest, username string, entry *audit.Entry) error {
+		files, err := backup.ListDeviceFirmware(s.deviceFirmwareDir())
+		var name string
+		for _, f := range files {
+			if f.ID == msg.ID {
+				name = f.Name
+			}
+		}
+		if err != nil || name == "" {
+			return errUnknownDeviceFirmware
+		}
+		entry.Target = name
+		return s.backup.DeleteDeviceFirmware(username, msg.Password, msg.ID, name)
+	},
+}
+
+// changeDeviceFirmware runs a change for an elevated administrator and
+// answers with the firmware files as they are now
+func (s *Server) changeDeviceFirmware(client *Client, msgType string, msg deviceFirmwareRequest, change deviceFirmwareChange, response deviceFirmwareResponse) {
+	entry := audit.Entry{User: client.user, Action: msgType, Target: msg.ID}
+	if msgType == "downloadDeviceFirmware" {
+		entry.Target = msg.DeviceType
 	}
 	if !s.mayConfigure(client, msg.RequestID, entry) {
 		return
@@ -240,54 +320,8 @@ func (s *Server) handleDeviceFirmware(client *Client, msgType string, message []
 	if s.auth == nil {
 		username = "Admin"
 	}
-	var err error
-	switch msgType {
-	case "downloadDeviceFirmware":
-		if msg.DeviceType == "" || len(msg.DeviceType) > 64 || strings.ContainsAny(msg.DeviceType, "/\\\"\r\n") {
-			s.recordAudit(entry, "INVALID_VALUE")
-			s.sendRequestError(client, msg.RequestID, "invalid device type", "INVALID_VALUE")
-			return
-		}
-		// The session first: no download for nothing
-		if err = s.backup.EnsureSession(username, msg.Password); err != nil {
-			break
-		}
-		var path string
-		path, err = s.downloadDeviceFirmware(msg.DeviceType)
-		if err != nil {
-			s.recordAudit(entry, "UPDATE_SERVER_ERROR")
-			s.sendRequestError(client, msg.RequestID, "downloadDeviceFirmware failed: "+err.Error(), "UPDATE_SERVER_ERROR")
-			return
-		}
-		err = s.backup.AddDeviceFirmware(username, msg.Password, path, downloadProduct(msg.DeviceType)+".tgz")
-		os.Remove(path)
-	case "addDeviceFirmware":
-		var path string
-		if path, err = s.backup.DeviceFirmwarePath(msg.ID); err == nil {
-			err = s.backup.AddDeviceFirmware(username, msg.Password, path, msg.FileName)
-			if !errors.Is(err, backup.ErrSessionRequired) {
-				// Kept for the retry with the password
-				s.backup.Discard(msg.ID)
-			}
-		}
-	case "deleteDeviceFirmware":
-		files, listErr := backup.ListDeviceFirmware(s.deviceFirmwareDir())
-		var name string
-		for _, f := range files {
-			if f.ID == msg.ID {
-				name = f.Name
-			}
-		}
-		if listErr != nil || name == "" {
-			s.recordAudit(entry, rega.SetNotFound)
-			s.sendRequestError(client, msg.RequestID, "unknown device firmware", rega.SetNotFound)
-			return
-		}
-		entry.Target = name
-		err = s.backup.DeleteDeviceFirmware(username, msg.Password, msg.ID, name)
-	}
-	if err != nil {
-		s.failChange(client, msg.RequestID, entry, err)
+	if err := change(s, msg, username, &entry); err != nil {
+		s.failChange(client, msg.RequestID, entry, err, deviceFirmwareErrors...)
 		return
 	}
 	s.recordAudit(entry, rega.SetOK)
