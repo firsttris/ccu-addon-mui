@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"time"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -31,8 +30,7 @@ func (s *Server) handleCertificate(client *Client, msgType string, message []byt
 		PEM       string `json:"pem"`
 		Password  string `json:"password"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {
@@ -54,9 +52,7 @@ func (s *Server) handleCertificate(client *Client, msgType string, message []byt
 	}
 	// The key never goes into the audit log
 	entry := audit.Entry{User: client.user, Action: msgType, Target: "server.pem"}
-	if code, errorMsg := configureError(client); code != "" {
-		s.recordAudit(entry, code)
-		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+	if !s.mayConfigure(client, msg.RequestID, entry) {
 		return
 	}
 	if msgType == "uploadCertificate" {

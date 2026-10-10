@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -26,8 +25,7 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 		Attribute     string `json:"attribute"`
 		Value         any    `json:"value"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid setDatapoint message: "+err.Error(), "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 

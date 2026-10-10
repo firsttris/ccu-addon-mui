@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"context"
-	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -110,8 +109,7 @@ func (s *Server) handleDiagrams(client *Client, msgType string, message []byte) 
 		To        int64             `json:"to"`
 		Buckets   int               `json:"buckets"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if s.diagrams == nil || s.recorder == nil {
@@ -149,7 +147,7 @@ func (s *Server) handleDiagrams(client *Client, msgType string, message []byte) 
 		s.saveDiagram(client, msg.RequestID, msg.Diagram)
 	case "deleteDiagram":
 		entry := audit.Entry{User: client.user, Action: "deleteDiagram", Target: msg.ID}
-		if !s.diagramAllowed(client, msg.RequestID, &entry) {
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		previous, err := s.diagrams.Delete(msg.ID)
@@ -165,15 +163,6 @@ func (s *Server) handleDiagrams(client *Client, msgType string, message []byte) 
 	}
 }
 
-func (s *Server) diagramAllowed(client *Client, requestID string, entry *audit.Entry) bool {
-	if code, errorMsg := configureError(client); code != "" {
-		s.recordAudit(*entry, code)
-		s.sendRequestError(client, requestID, errorMsg, code)
-		return false
-	}
-	return true
-}
-
 func (s *Server) recordAudit(entry audit.Entry, result string) {
 	entry.Result = result
 	if err := s.audit.Record(entry); err != nil {
@@ -183,7 +172,7 @@ func (s *Server) recordAudit(entry audit.Entry, result string) {
 
 func (s *Server) saveDiagram(client *Client, requestID string, d diagrams.Diagram) {
 	entry := audit.Entry{User: client.user, Action: "saveDiagram", Target: d.Name, Value: d}
-	if !s.diagramAllowed(client, requestID, &entry) {
+	if !s.mayConfigure(client, requestID, entry) {
 		return
 	}
 	before := s.diagrams.Keys()

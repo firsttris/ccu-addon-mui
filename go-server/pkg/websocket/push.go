@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"net/url"
 	"time"
 
@@ -38,8 +37,7 @@ func (s *Server) handlePush(client *Client, msgType string, message []byte) {
 		Language     string            `json:"language"`
 		Device       string            `json:"device"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if s.notifier == nil {

@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -22,8 +21,7 @@ func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 		Description string `json:"description"`
 		Channel     int64  `json:"channel"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	target := fmt.Sprintf("%s %d", msg.List, msg.ID)
@@ -90,8 +88,7 @@ func (s *Server) handleRename(client *Client, message []byte) {
 		Address   string `json:"address"`
 		Name      string `json:"name"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	s.configure(client, msg.RequestID, audit.Entry{Action: "rename", Target: msg.Address, Value: msg.Name},
@@ -109,8 +106,7 @@ func (s *Server) handleSetGroupMember(client *Client, message []byte) {
 		ChannelID int64  `json:"channelId"`
 		Member    bool   `json:"member"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	target := fmt.Sprintf("group %d channel %d", msg.GroupID, msg.ChannelID)

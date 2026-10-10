@@ -3,8 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
-
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/rega"
 )
@@ -30,8 +28,7 @@ func (s *Server) handleRunScript(client *Client, message []byte) {
 		RequestID string `json:"requestId"`
 		Script    string `json:"script"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	logged := msg.Script
@@ -40,9 +37,7 @@ func (s *Server) handleRunScript(client *Client, message []byte) {
 	}
 	entry := audit.Entry{User: client.user, Action: "runScript", Target: "script", Value: logged}
 	finish := func(result string) { s.recordAudit(entry, result) }
-	if code, errorMsg := configureError(client); code != "" {
-		finish(code)
-		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+	if !s.mayConfigure(client, msg.RequestID, entry) {
 		return
 	}
 	fail := func(err error) {

@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
@@ -76,8 +75,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		SNMPUser     string `json:"snmpUser"`
 		SNMPPassword string `json:"snmpPassword"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {
@@ -114,9 +112,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		// password is never written to the audit log.
 		entry := audit.Entry{User: client.user, Action: "setSnmp", Target: "SNMP",
 			Value: map[string]any{"enabled": msg.SNMP, "user": msg.SNMPUser}, Previous: s.settings.Flag(settings.SNMPEnabled)}
-		if code, errorMsg := configureError(client); code != "" {
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		if msg.SNMP {
@@ -146,9 +142,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		// lighttpd restarts as in the WebUI, after the answer
 		previous, _ := s.settings.SecurityLevel()
 		entry := audit.Entry{User: client.user, Action: "setSecurityLevel", Target: "security level", Value: msg.Level, Previous: previous}
-		if code, errorMsg := configureError(client); code != "" {
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		if !settings.ValidSecurityLevel(msg.Level) {
@@ -178,9 +172,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		// takes it on the next start
 		previous, _ := s.settings.SessionTimeout()
 		entry := audit.Entry{User: client.user, Action: "setSessionTimeout", Target: "rega.conf", Value: msg.Seconds, Previous: previous}
-		if code, errorMsg := configureError(client); code != "" {
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		if err := s.settings.SetSessionTimeout(msg.Seconds); err != nil {
@@ -197,9 +189,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		entry := audit.Entry{User: client.user, Action: "setSecurity", Target: "security", Value: map[string]any{
 			"ssh": next.SSH, "auth": next.Auth, "httpsRedirect": next.HTTPSRedirect, "sshPasswordChanged": msg.SSHPassword != "",
 		}, Previous: current}
-		if code, errorMsg := configureError(client); code != "" {
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		if strings.ContainsAny(msg.SSHPassword, "\r\n") || !execSafe(msg.SSHPassword) {
@@ -263,9 +253,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		// this add-on too. The key is checked before the answer; the reset
 		// itself stops the add-ons, so it runs after it.
 		entry := audit.Entry{User: client.user, Action: "factoryReset", Target: "CCU"}
-		if code, errorMsg := configureError(client); code != "" {
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		// Irreversible: the password every time, not only a recent one
@@ -301,9 +289,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 	case "changeSecurityKey":
 		// The key is never written to the audit log
 		entry := audit.Entry{User: client.user, Action: "changeSecurityKey", Target: "system security key"}
-		if code, errorMsg := configureError(client); code != "" {
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		if err := s.backup.ChangeSecurityKey(client.user, msg.Password, msg.Key); err != nil {

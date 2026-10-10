@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"sync"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -53,8 +52,7 @@ type paramsetResponse struct {
 func (s *Server) handleParamsetRequest(client *Client, msgType string, message []byte) {
 	rpc := s.rpcFor(client)
 	var msg paramsetRequest
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message: "+err.Error(), "")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if s.rpc == nil {
@@ -181,8 +179,7 @@ func (s *Server) handlePutParamset(client *Client, message []byte) {
 		paramsetRequest
 		Values map[string]any `json:"values"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message: "+err.Error(), "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 

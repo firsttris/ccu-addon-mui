@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -27,8 +26,7 @@ func (s *Server) handleServiceMessages(client *Client, msgType string, message [
 		RequestID string `json:"requestId"`
 		ID        int64  `json:"id"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	switch msgType {

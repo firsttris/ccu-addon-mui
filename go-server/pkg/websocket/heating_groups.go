@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -116,8 +115,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		ID       int    `json:"id"`
 		Password string `json:"password"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {

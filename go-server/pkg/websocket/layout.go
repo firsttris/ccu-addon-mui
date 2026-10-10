@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -52,8 +51,7 @@ func (s *Server) handleLayout(client *Client, msgType string, message []byte) {
 		ID        int64  `json:"id"`
 		Layout    string `json:"layout"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if msgType == "getLayout" {

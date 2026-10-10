@@ -189,8 +189,7 @@ func (s *Server) handleDeviceFirmware(client *Client, msgType string, message []
 		FileName   string `json:"fileName"`
 		Password   string `json:"password"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {
@@ -236,9 +235,7 @@ func (s *Server) handleDeviceFirmware(client *Client, msgType string, message []
 	if msgType != "downloadDeviceFirmware" {
 		entry.Target = msg.ID
 	}
-	if code, errorMsg := configureError(client); code != "" {
-		s.recordAudit(entry, code)
-		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+	if !s.mayConfigure(client, msg.RequestID, entry) {
 		return
 	}
 	if s.backup == nil {

@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -83,8 +82,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 		Roaming   bool                  `json:"roaming"`
 		Password  string                `json:"password"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {
@@ -132,9 +130,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 	case "setBidcosInterface":
 		entry = audit.Entry{User: client.user, Action: "setBidcosInterface", Target: msg.Address, Value: map[string]any{"module": msg.Module, "roaming": msg.Roaming}}
 	}
-	if code, errorMsg := configureError(client); code != "" {
-		s.recordAudit(entry, code)
-		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+	if !s.mayConfigure(client, msg.RequestID, entry) {
 		return
 	}
 	invalid := func(text string) {

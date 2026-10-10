@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -50,8 +49,7 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		Key       string `json:"key"`
 		Language  string `json:"language"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if s.backup == nil {
@@ -60,9 +58,7 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 	}
 	entry := audit.Entry{User: client.user, Action: msgType, Target: "CCU"}
 	finish := func(result string) { s.recordAudit(entry, result) }
-	if code, errorMsg := configureError(client); code != "" {
-		finish(code)
-		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+	if !s.mayConfigure(client, msg.RequestID, entry) {
 		return
 	}
 	response := restoreResponse{Type: msgType + "_response", RequestID: msg.RequestID, Success: true}

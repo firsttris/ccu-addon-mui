@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -26,8 +25,7 @@ func (s *Server) handleSetChannelOption(client *Client, message []byte) {
 		Option    string `json:"option"`
 		Value     bool   `json:"value"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	s.configure(client, msg.RequestID, audit.Entry{Action: "setChannelOption", Target: fmt.Sprintf("channel %d %s", msg.ID, msg.Option), Value: msg.Value},

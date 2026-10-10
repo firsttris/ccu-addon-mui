@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"errors"
 	"time"
 
@@ -36,8 +35,7 @@ func (s *Server) handleAddons(client *Client, msgType string, message []byte) {
 		Operation string `json:"operation"`
 		Language  string `json:"language"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if s.addons == nil {

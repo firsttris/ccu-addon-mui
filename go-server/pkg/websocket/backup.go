@@ -3,8 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
-
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/backup"
 	"ccu-addon-mui-server/pkg/logger"
@@ -39,8 +37,7 @@ func (s *Server) handleCreateBackup(client *Client, message []byte) {
 		RequestID string `json:"requestId"`
 		Password  string `json:"password"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if s.backup == nil {
@@ -49,9 +46,7 @@ func (s *Server) handleCreateBackup(client *Client, message []byte) {
 	}
 	entry := audit.Entry{User: client.user, Action: "createBackup", Target: "CCU"}
 	finish := func(result string) { s.recordAudit(entry, result) }
-	if code, errorMsg := configureError(client); code != "" {
-		finish(code)
-		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+	if !s.mayConfigure(client, msg.RequestID, entry) {
 		return
 	}
 
