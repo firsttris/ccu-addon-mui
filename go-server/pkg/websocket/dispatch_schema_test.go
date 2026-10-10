@@ -35,16 +35,14 @@ func TestDispatcherMatchesSchema(t *testing.T) {
 		}
 	}
 
-	source, err := os.ReadFile("websocket.go")
+	// The case labels of handleMessage and dispatch
+	source, err := os.ReadFile("dispatch.go")
 	if err != nil {
 		t.Fatal(err)
 	}
-	// The case labels from handleMessage to the end of dispatch
 	text := string(source)
-	start := strings.Index(text, "func (s *Server) handleMessage(")
-	end := strings.Index(text, "func (s *Server) handleSubscribe(")
-	if start < 0 || end < start {
-		t.Fatal("handleMessage/dispatch not found in websocket.go")
+	if !strings.Contains(text, "func (s *Server) handleMessage(") || !strings.Contains(text, "func (s *Server) dispatch(") {
+		t.Fatal("handleMessage/dispatch not found in dispatch.go")
 	}
 	// What only a CCU has is dispatched from dispatch_ccu.go
 	ccuOnly, err := os.ReadFile("dispatch_ccu.go")
@@ -52,7 +50,7 @@ func TestDispatcherMatchesSchema(t *testing.T) {
 		t.Fatal(err)
 	}
 	handled := map[string]bool{}
-	for _, line := range regexp.MustCompile(`(?m)^\s*case (".*"):`).FindAllStringSubmatch(text[start:end]+string(ccuOnly), -1) {
+	for _, line := range regexp.MustCompile(`(?m)^\s*case (".*"):`).FindAllStringSubmatch(text+string(ccuOnly), -1) {
 		for _, quoted := range regexp.MustCompile(`"([^"]+)"`).FindAllStringSubmatch(line[1], -1) {
 			handled[quoted[1]] = true
 		}

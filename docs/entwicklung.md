@@ -120,9 +120,13 @@ docs/                diese Dokumentation
    `request` und `response` sowie die Definitionen `MeinTypRequest` und `MeinTypResponse`. Nimm die Antwort
    außerdem in `ServerMessage` auf. Alle Objekte bekommen `"additionalProperties": false`.
 2. **Typen erzeugen**: `npm run generate:protocol`.
-3. **Server**: Trag den Typ in `go-server/pkg/websocket/websocket.go` im Dispatcher `handleMessage` ein und
-   schreib einen Handler dafür. Für Einstellungen gibt es `configure(...)`: Es prüft die Rechte, führt die
-   Aktion aus, schreibt ins Audit-Log und antwortet. Für das Bedienen von Geräten nimmst du `canOperate`.
+3. **Server**: Trag den Typ in `go-server/pkg/websocket/dispatch.go` im Dispatcher `dispatch` ein (was nur
+   eine CCU hat, in `dispatch_ccu.go`), bei reinen Lesezugriffen auch in `parallelReads`. Den Handler
+   schreibst du in die Datei seiner Domäne, etwa `devices.go`, `links.go`, `pairing.go`, `logic.go`
+   (Programme und Systemvariablen) oder `favorites.go`; `websocket.go` selbst enthält nur den Server und die
+   Verbindungen, `client.go` die einzelne Verbindung. Für Einstellungen gibt es `configure(...)` in
+   `configure.go`: Es prüft die Rechte, führt die Aktion aus, schreibt ins Audit-Log und antwortet. Für das
+   Bedienen von Geräten nimmst du `canOperate`.
    Räume, Gewerke, Kanäle, Namen, Favoriten und Servicemeldungen liest und ändert der Handler über `s.home`
    (die Schnittstelle `home.Source` in `go-server/pkg/home`), nicht direkt über die ReGa: Auf der CCU steckt
    die ReGa dahinter, auf openccu-lite dessen APIs. Nur was es ausschließlich auf der CCU gibt, etwa
