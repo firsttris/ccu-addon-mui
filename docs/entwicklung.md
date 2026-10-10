@@ -253,7 +253,8 @@ Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go 
   Plattform, `pkg/websocket/dispatch_ccu.go` verteilt, was nur eine CCU hat (Programme, Systemvariablen,
   Alarme, Benutzer, die Systemeinstellungen der WebUI). Die Handler-Dateien dafür tragen `//go:build !lite`,
   Felder des Servers, die nur die CCU braucht, stehen in `ccuState` (`pkg/websocket/state_ccu.go`).
-  `staticcheck -tags lite ./...` zeigt, was dabei noch fehlt: Es meldet CCU-Code als ungenutzt.
+  Die CI prüft beide Builds mit `staticcheck`; fehlt einer CCU-Datei das Tag, meldet es ihren Code im
+  Lite-Build als ungenutzt.
   Das Hausmodell (Räume, Gewerke, Kanäle, Namen) liegt hinter `home.Source`: auf der CCU `pkg/rega`, auf
   openccu-lite `pkg/occulite`.
 - **Werte und Events:** Auf openccu-lite meldet sich der Server nicht per `init` als Callback-Server an.

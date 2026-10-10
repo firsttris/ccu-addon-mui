@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math/big"
 	"net/http"
 	"net/url"
 	"strings"
@@ -98,21 +97,32 @@ func encrypt(sub Subscription, payload []byte, salt []byte, serverKey *ecdh.Priv
 // VAPID signs the requests to the push services (RFC 8292).
 type VAPID struct {
 	key *ecdsa.PrivateKey
+	// The key's encodings, computed once: the uncompressed public point the
+	// browser subscribes with and the 32 private bytes the store keeps
+	public, private []byte
 	// Subject: a contact for the push service, a mailto: or https: URL
 	Subject string
 }
 
+func vapidOf(key *ecdsa.PrivateKey, subject string) (*VAPID, error) {
+	public, err := key.PublicKey.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	private, err := key.Bytes()
+	if err != nil {
+		return nil, err
+	}
+	return &VAPID{key: key, public: public, private: private, Subject: subject}, nil
+}
+
 // PublicKey is the application server key the browser subscribes with
 // (uncompressed P-256 point, base64url).
-func (v *VAPID) PublicKey() string {
-	return base64.RawURLEncoding.EncodeToString(elliptic.Marshal(elliptic.P256(), v.key.X, v.key.Y)) //nolint:staticcheck // the wire format of the key
-}
+func (v *VAPID) PublicKey() string { return encodeKey(v.public) }
 
 func encodeKey(b []byte) string { return base64.RawURLEncoding.EncodeToString(b) }
 
-func (v *VAPID) privateBytes() []byte {
-	return v.key.D.FillBytes(make([]byte, 32))
-}
+func (v *VAPID) privateBytes() []byte { return v.private }
 
 // NewVAPID creates a key, or loads one from its 32 private bytes (base64url).
 func NewVAPID(private string, subject string) (*VAPID, error) {
@@ -121,16 +131,17 @@ func NewVAPID(private string, subject string) (*VAPID, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &VAPID{key: key, Subject: subject}, nil
+		return vapidOf(key, subject)
 	}
 	d, err := b64(private)
-	if err != nil || len(d) != 32 {
+	if err != nil {
 		return nil, fmt.Errorf("invalid VAPID key")
 	}
-	key := &ecdsa.PrivateKey{D: new(big.Int).SetBytes(d)}
-	key.Curve = elliptic.P256()
-	key.X, key.Y = elliptic.P256().ScalarBaseMult(d) //nolint:staticcheck // deriving the public point
-	return &VAPID{key: key, Subject: subject}, nil
+	key, err := ecdsa.ParseRawPrivateKey(elliptic.P256(), d)
+	if err != nil {
+		return nil, fmt.Errorf("invalid VAPID key")
+	}
+	return vapidOf(key, subject)
 }
 
 // header returns the Authorization header for an endpoint.

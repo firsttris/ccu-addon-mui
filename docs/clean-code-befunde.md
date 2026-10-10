@@ -23,7 +23,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 
 | # | Befund | Bereich | Größe |
 |---|---|---|---|
-| 1 | Kein Linter oder Formatter erzwingt den Stil (Frontend: erledigt mit Biome) | beide | M |
+| 1 | Kein Linter oder Formatter erzwingt den Stil (erledigt: Biome, staticcheck) | beide | M |
 | 2 | Code, den nur die CCU braucht, ohne Build-Tag (erledigt) | Go | S |
 | 3 | Uneinheitliche Fehlercodes, `requestId` geht verloren (erledigt) | Go | S |
 | 4 | Kopierte Helfer und Reste im Frontend | Frontend | S–M |
@@ -75,14 +75,14 @@ Ebenfalls noch offen:
 - Die Importe sind nicht sortiert. Biomes `organizeImports` ist abgeschaltet, weil es fast jede Datei
   geändert hätte.
 
-**Go**
+**Go: erledigt.** Die CI führt `staticcheck` (fest auf v0.8.1) für beide Builds aus, mit und ohne
+`-tags lite`. Dafür ist der Push-Code auf die Byte-Kodierungen von `crypto/ecdsa` aus Go 1.25 umgestellt
+(SA1019). Ein Test sichert ab, dass ein gespeicherter Schlüssel denselben öffentlichen Schlüssel behält.
+Der Panic-Test löst sein `panic` jetzt ausdrücklich aus statt über eine nil-Map (SA5000).
+`golangci-lint` lässt sich derzeit nicht nutzen: Die verfügbare Version ist mit Go 1.25 gebaut, das
+Projekt verlangt Go 1.27.1.
 
-- Die CI prüft nur `go vet` und `gofmt`, `staticcheck` läuft nicht.
-- `golangci-lint` lässt sich derzeit nicht nutzen: Die verfügbare Version ist mit Go 1.25 gebaut, das
-  Projekt verlangt Go 1.27.1.
-
-**Vorschlag:** `staticcheck` in `go-unit-tests.yml` aufnehmen und dabei mit `GOTOOLCHAIN=go1.27.1`
-bauen. `utils/` in `lib/` aufgehen lassen.
+**Noch offen:** `utils/` in `lib/` aufgehen lassen (siehe #4).
 
 ### 2. Code, den nur die CCU braucht, steht in Dateien ohne Build-Tag: erledigt
 
@@ -166,8 +166,6 @@ mehr exportieren.
   - 31-mal steht `logger.X(fmt.Sprintf(…))` im Code ✔, weil es kein `Errorf` und kein `Infof` gibt.
   - `Info` und `Error` sind identisch und schreiben kein Level ✔ (`pkg/logger/logger.go:16–22`).
   - `logger` importiert `config` nur für `LogStartupInfo`.
-- **Veraltete Krypto-Aufrufe.** `push/webpush.go` nutzt `crypto/elliptic` und `ecdsa.PrivateKey.D`
-  (SA1019). Die drei `//nolint:staticcheck` dort sind begründet, mit `crypto/ecdh` ginge es aber ohne.
 
 **Vorschlag:** Den Logger um `Errorf`, `Infof` und ein Level-Präfix ergänzen. `LogStartupInfo` nach
 `main` verschieben. Der Rest ist mechanisch.
@@ -314,7 +312,7 @@ Jeder Schritt ist ein eigener PR:
 
 1. ~~Build-Tags (#2)~~ erledigt.
 2. ~~Fehlercodes vereinheitlichen (#3)~~ erledigt.
-3. `staticcheck` in der CI (#1); fürs Frontend ist das mit Biome erledigt.
+3. ~~`staticcheck` in der CI (#1)~~ erledigt; fürs Frontend mit Biome.
 4. Mechanische Go-Modernisierung und Logger (#5).
 5. Kopierte Frontend-Helfer und Reste (#4).
 6. `Security.tsx` und `queries/index.ts` aufteilen (#11), weil ihre Nahtstellen schon markiert sind.
