@@ -83,83 +83,98 @@ func parseNamedObjects(output string) []NamedObject {
 const MaxChannelMode = 5
 
 // parseChannels parses the output of get_channels.tcl.
+// The lines of a channel after its "C" line: how many fields they need at
+// least and what they set on the channel. status collects battery and
+// reachability by maintenance channel, written once per device.
+var channelLines = map[string]struct {
+	fields int
+	apply  func(c *Channel, fields []string, status map[string]map[string]bool)
+}{
+	// The maintenance channel, no state reported yet
+	"A": {2, func(c *Channel, fields []string, _ map[string]map[string]bool) { c.StatusAddress = fields[1] }},
+	// The maintenance channel and one of its states
+	"S": {4, func(c *Channel, fields []string, status map[string]map[string]bool) {
+		c.StatusAddress = fields[1]
+		value, err := strconv.ParseBool(fields[3])
+		if err != nil {
+			// Never reported by the device
+			return
+		}
+		if status[fields[1]] == nil {
+			status[fields[1]] = map[string]bool{}
+		}
+		status[fields[1]][normalizeStatusType(fields[2])] = value
+	}},
+	// Rooms and trades
+	"M": {3, func(c *Channel, fields []string, _ map[string]map[string]bool) {
+		c.Rooms = parseIDs(fields[1])
+		c.Trades = parseIDs(fields[2])
+	}},
+	// The channel mode
+	"O": {2, func(c *Channel, fields []string, _ map[string]map[string]bool) {
+		if mode, err := strconv.Atoi(strings.TrimSpace(fields[1])); err == nil && mode >= 0 && mode <= MaxChannelMode {
+			c.Mode = &mode
+		}
+	}},
+	// Visible, operable, logged, AES
+	"F": {4, func(c *Channel, fields []string, _ map[string]map[string]bool) {
+		c.Hidden = fields[1] == "false"
+		c.ReadOnly = fields[2] == "false"
+		c.Logged = fields[3] == "true"
+		c.AES = len(fields) > 4 && fields[4] == "true"
+	}},
+	// A datapoint and its value
+	"D": {4, func(c *Channel, fields []string, _ map[string]map[string]bool) {
+		c.Datapoints[fields[1]] = parseValue(fields[2], rejoin(fields, 3))
+	}},
+}
+
 func parseChannels(output string) []Channel {
 	isRecord := func(line string) bool {
-		return strings.HasPrefix(line, "C\t") || strings.HasPrefix(line, "A\t") || strings.HasPrefix(line, "S\t") || strings.HasPrefix(line, "D\t") || strings.HasPrefix(line, "M\t") || strings.HasPrefix(line, "F\t") || strings.HasPrefix(line, "O\t")
+		kind, _, ok := strings.Cut(line, "\t")
+		_, known := channelLines[kind]
+		return ok && (kind == "C" || known)
 	}
-
 	channels := []Channel{}
-	// Battery and reachability by maintenance channel: written once per
-	// device, they apply to all its channels
 	status := map[string]map[string]bool{}
 	for _, fields := range splitRecords(output, isRecord) {
-		switch fields[0] {
-		case "C":
-			if len(fields) < 6 {
-				continue
+		if fields[0] == "C" {
+			if channel, ok := channelOf(fields); ok {
+				channels = append(channels, channel)
 			}
-			id, err := strconv.ParseInt(fields[1], 10, 64)
-			if err != nil {
-				continue
-			}
-			channels = append(channels, Channel{
-				ID:            id,
-				Address:       fields[2],
-				Type:          fields[3],
-				InterfaceName: fields[4],
-				Name:          rejoin(fields, 5),
-				Datapoints:    map[string]any{},
-			})
-		case "A":
-			if len(fields) < 2 || len(channels) == 0 {
-				continue
-			}
-			channels[len(channels)-1].StatusAddress = fields[1]
-		case "S":
-			if len(fields) < 4 || len(channels) == 0 {
-				continue
-			}
-			channels[len(channels)-1].StatusAddress = fields[1]
-			value, err := strconv.ParseBool(fields[3])
-			if err != nil {
-				// Never reported by the device
-				continue
-			}
-			if status[fields[1]] == nil {
-				status[fields[1]] = map[string]bool{}
-			}
-			status[fields[1]][normalizeStatusType(fields[2])] = value
-		case "M":
-			if len(fields) < 3 || len(channels) == 0 {
-				continue
-			}
-			channel := &channels[len(channels)-1]
-			channel.Rooms = parseIDs(fields[1])
-			channel.Trades = parseIDs(fields[2])
-		case "O":
-			if len(fields) < 2 || len(channels) == 0 {
-				continue
-			}
-			if mode, err := strconv.Atoi(strings.TrimSpace(fields[1])); err == nil && mode >= 0 && mode <= MaxChannelMode {
-				channels[len(channels)-1].Mode = &mode
-			}
-		case "F":
-			if len(fields) < 4 || len(channels) == 0 {
-				continue
-			}
-			channel := &channels[len(channels)-1]
-			channel.Hidden = fields[1] == "false"
-			channel.ReadOnly = fields[2] == "false"
-			channel.Logged = fields[3] == "true"
-			channel.AES = len(fields) > 4 && fields[4] == "true"
-		case "D":
-			if len(fields) < 4 || len(channels) == 0 {
-				continue
-			}
-			channel := &channels[len(channels)-1]
-			channel.Datapoints[fields[1]] = parseValue(fields[2], rejoin(fields, 3))
+			continue
+		}
+		line := channelLines[fields[0]]
+		if len(fields) >= line.fields && len(channels) > 0 {
+			line.apply(&channels[len(channels)-1], fields, status)
 		}
 	}
+	withStatus(channels, status)
+	return channels
+}
+
+// channelOf reads a "C" line: id, address, type, interface and name
+func channelOf(fields []string) (Channel, bool) {
+	if len(fields) < 6 {
+		return Channel{}, false
+	}
+	id, err := strconv.ParseInt(fields[1], 10, 64)
+	if err != nil {
+		return Channel{}, false
+	}
+	return Channel{
+		ID:            id,
+		Address:       fields[2],
+		Type:          fields[3],
+		InterfaceName: fields[4],
+		Name:          rejoin(fields, 5),
+		Datapoints:    map[string]any{},
+	}, true
+}
+
+// withStatus gives each channel the battery and reachability of its
+// maintenance channel; without either there is none to watch
+func withStatus(channels []Channel, status map[string]map[string]bool) {
 	for i := range channels {
 		channel := &channels[i]
 		if channel.StatusAddress == "" {
@@ -167,7 +182,6 @@ func parseChannels(output string) []Channel {
 		}
 		reported := status[channel.StatusAddress]
 		if len(reported) == 0 {
-			// Neither battery nor reachability: no maintenance channel to watch
 			channel.StatusAddress = ""
 			continue
 		}
@@ -176,7 +190,6 @@ func parseChannels(output string) []Channel {
 			channel.Status[statusType] = value
 		}
 	}
-	return channels
 }
 
 // normalizeStatusType maps the BidCos name LOWBAT to the HmIP name LOW_BAT.
