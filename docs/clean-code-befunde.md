@@ -30,9 +30,9 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | 5 | Veraltete Go-Idiome, Logger ohne `Errorf` (erledigt) | Go | S |
 | 6 | Gleicher Anfang in jedem Handler, Antwort-Structs (erledigt) | Go | M |
 | 7 | Fehlerbehandlung bei Änderungen mehrfach kopiert (erledigt) | Go | S |
-| 8 | Selbstgebaute TTL-Caches neben `cachedList[T]` | Go | M |
-| 9 | Globale Variablen, Abhängigkeit von der Aufrufreihenfolge | Go | M |
-| 10 | Handler gehen an `home.Source` vorbei direkt zur ReGa | Go | M |
+| 8 | Selbstgebaute TTL-Caches neben `cachedList[T]` (erledigt) | Go | M |
+| 9 | Globale Variablen, Abhängigkeit von der Aufrufreihenfolge (erledigt bis auf `SetHome`) | Go | M |
+| 10 | Handler gehen an `home.Source` vorbei direkt zur ReGa (erledigt) | Go | M |
 | 11 | Zu große Frontend-Dateien (bis auf `DeviceSettings.tsx` erledigt) | Frontend | L |
 | 12 | Wiederholte UI-Bausteine und Zahlenformatierung | Frontend | M |
 | 13 | Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen (größtenteils erledigt) | Go | L |
@@ -171,7 +171,7 @@ sind nur über `dispatch_ccu.go` erreichbar. Eine Aufteilung würde diesen Teil 
 - **Bleibt, wie es ist:** Die Prüfungen auf ReGa-Fehlertexte („invalid …“) bilden je nach Handler bewusst
   auf `INVALID_VALUE` oder `INVALID_REQUEST` ab.
 
-### 8. Selbstgebaute TTL-Caches neben `cachedList[T]`
+### 8. Selbstgebaute TTL-Caches neben `cachedList[T]`: erledigt
 
 `messages_watch.go:56` bietet mit `cachedList[T]` schon einen generischen Cache. Viermal ist trotzdem
 von Hand derselbe Cache aus Mutex, Wert und Zeitstempel gebaut:
@@ -183,7 +183,18 @@ von Hand derselbe Cache aus Mutex, Wert und Zeitstempel gebaut:
 
 **Vorschlag:** `cachedList[T]` zu einem `cached[T]` verallgemeinern und überall nutzen.
 
-### 9. Globale Variablen, Abhängigkeit von der Aufrufreihenfolge
+**Erledigt:** `cache.go` hat jetzt `cached[T]`. `get(maxAge, read)` liest neu, wenn der Wert zu alt
+ist, und behält einen fehlgeschlagenen Lesevorgang nicht. Den Cache nutzen jetzt die Meldungen, die
+Benutzer für die automatische Anmeldung, die Kanäle mit „nur lesen“ und der Firmware-Katalog.
+
+Zwei Caches bleiben, wie sie sind:
+
+- `health.go`: Die Grenzwerte für schwache Batterien werden pro Gerät gemerkt, nicht als ein Wert.
+  Der Cache ist aber kein globaler Wert mehr, sondern ein Feld von `Server` (siehe #9).
+- `selfupdate.go`: Der Cache gehört zum Paket `selfupdate` und behält auch Fehler. Nach einem
+  Fehler fragt er schon nach 10 Minuten wieder, sonst nach 6 Stunden.
+
+### 9. Globale Variablen, Abhängigkeit von der Aufrufreihenfolge: erledigt bis auf `SetHome`
 
 - **Globale Variablen für die Produktion.** `SetGroupsFile` (`heating_groups.go:23`) und
   `SetClockFiles` (`clock.go:24`) sind als „für Tests“ dokumentiert, `main_ccu.go:77–78` ruft sie aber
@@ -200,7 +211,19 @@ von Hand derselbe Cache aus Mutex, Wert und Zeitstempel gebaut:
 **Vorschlag:** Die Pfade als Felder in `Server` oder in die Konfiguration aufnehmen, den Cache in
 `Server` verlegen. Die Verdrahtung in `main` sollte nicht von der Reihenfolge abhängen.
 
-### 10. Handler gehen an `home.Source` vorbei direkt zur ReGa
+**Erledigt:**
+
+- `SetGroupsFile`, `SetClockFiles` und die globalen Pfade gibt es nicht mehr. Die Handler lesen die
+  Pfade aus `s.cfg`. `clockFiles` fasst die Pfade der Uhrzeit zusammen, und die Lese- und
+  Schreibfunktionen bekommen ihren Pfad als Parameter. Die Tests übergeben eigene Pfade.
+- `lowBatLimits` ist ein Feld von `Server`.
+- `NewServer` setzt `regaClient` nur noch einmal, über `SetRega`.
+
+**Bleibt:** `SetRega` setzt `s.home`, auf openccu-lite setzt `main_lite.go` die Quelle danach mit
+`SetHome`. `homeModel.SetTiles` braucht die Kacheln aus `main.go`. Beides steht an genau einer Stelle
+und ist im Code kommentiert. Eine eigene Verdrahtung dafür wäre mehr Code, als sie spart.
+
+### 10. Handler gehen an `home.Source` vorbei direkt zur ReGa: erledigt
 
 `s.regaClient` kommt in 16 Dateien von `pkg/websocket` vor, auch in Dateien, die beide Builds nutzen:
 `heating_groups.go:260` und `:285` sowie `diagrams.go:60` und `:257`. Auf openccu-lite ist
@@ -208,6 +231,18 @@ von Hand derselbe Cache aus Mutex, Wert und Zeitstempel gebaut:
 
 **Vorschlag:** Diese Aufrufe hinter Schnittstellen legen, so wie es `GroupService` schon tut. Dann
 kennen gemeinsam genutzte Dateien `*rega.Client` gar nicht.
+
+**Erledigt, ohne neue Schnittstellen:** `regaClient` steht jetzt in `ccuState` (`state_ccu.go`). Der
+Build für openccu-lite kennt das Feld also gar nicht. Ein Zugriff aus einer gemeinsam genutzten
+Datei fällt deshalb schon beim Übersetzen auf. Die gemeinsam genutzten Dateien rufen stattdessen
+kleine Funktionen auf, die je Build einmal existieren:
+
+- `rega_ccu.go`: die Aufrufe an die ReGa
+- `rega_lite.go`: die Antworten für openccu-lite (keine Daten oder `errNoRega`)
+
+Die Alarme liest `alarmReader`. Die Funktion gibt die Lesefunktion zurück, oder `nil`, wenn es
+keine gibt. Das Anlegen, Bearbeiten, Umbenennen und Löschen von Systemvariablen ist aus
+`objects.go` als `handleSysvarChange` nach `sysvars.go` umgezogen, das nur die CCU baut.
 
 ## Groß: lange Dateien und Funktionen
 
@@ -288,4 +323,5 @@ Jeder Schritt ist ein eigener PR:
 5. ~~Kopierte Frontend-Helfer und Reste (#4)~~ erledigt.
 6. ~~Große Frontend-Dateien aufteilen (#11)~~ erledigt bis auf `DeviceSettings.tsx`.
 7. ~~Handler vereinheitlichen (#6, #7)~~ erledigt; ~~die langen Handler aufteilen (#13)~~ größtenteils erledigt.
-8. Der Rest: #8, #9, #10, #12, #14, `DeviceSettings.tsx`, `fakeccu.go`.
+8. ~~Caches, Globale, ReGa-Aufrufe (#8, #9, #10)~~ erledigt.
+9. Der Rest: #12, #14, `DeviceSettings.tsx`.
