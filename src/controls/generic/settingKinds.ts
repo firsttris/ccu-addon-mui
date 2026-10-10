@@ -115,7 +115,8 @@ export const unitLabel = (unit: string): string => {
   return match[1] ? `${match[1]} ${word}` : word;
 };
 
-const number = (value: number, digits = 2) => formatNumber(value, digits);
+// A setting's number in the app's language, at most two decimals by default
+export const number = (value: number, digits = 2) => formatNumber(value, digits);
 
 // A duration in seconds, readable: "2 min 30 s", "1,5 s", "1 h", "0 s"
 export const formatDuration = (seconds: number) => {
