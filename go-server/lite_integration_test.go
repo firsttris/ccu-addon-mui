@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,10 +14,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/websocket"
+
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/fakeccu"
 	"ccu-addon-mui-server/pkg/occulite"
-	"github.com/gorilla/websocket"
 )
 
 // liteStack is the server built for openccu-lite against the fake's
@@ -27,16 +27,6 @@ type liteStack struct {
 	ccu    *fakeccu.CCU
 	wsPort int
 	data   string
-}
-
-func litePort(t *testing.T) int {
-	t.Helper()
-	l, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer l.Close()
-	return l.Addr().(*net.TCPAddr).Port
 }
 
 func startLiteStack(t *testing.T) *liteStack {
@@ -85,7 +75,7 @@ func startLiteStack(t *testing.T) *liteStack {
 		OcculiteURL:        fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort),
 		OcculiteTokenFile:  tokenFile,
 	}
-	cfg.WSPort, cfg.RPCServerPort = litePort(t), litePort(t)
+	cfg.WSPort, cfg.RPCServerPort = freePort(t), freePort(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
 	go func() {
@@ -123,24 +113,12 @@ func (s *liteStack) dial(session string) (*websocket.Conn, error) {
 	return conn, err
 }
 
-// call sends a request and returns the answer with its requestId
+// liteCall sends a request with a new requestId and returns its answer
 func liteCall(t *testing.T, conn *websocket.Conn, request map[string]any) map[string]any {
 	t.Helper()
 	request["requestId"] = fmt.Sprint(time.Now().UnixNano())
 	request["deviceId"] = "test"
-	if err := conn.WriteJSON(request); err != nil {
-		t.Fatal(err)
-	}
-	_ = conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	for {
-		var answer map[string]any
-		if err := conn.ReadJSON(&answer); err != nil {
-			t.Fatalf("%v: %v", request["type"], err)
-		}
-		if answer["requestId"] == request["requestId"] || (request["type"] == "auth" && answer["type"] == "auth_response") {
-			return answer
-		}
-	}
+	return call(t, conn, request)
 }
 
 func TestLiteLoginThroughTheGate(t *testing.T) {

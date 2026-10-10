@@ -74,9 +74,10 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
 
 - **Pakete**: ReGa (Skripte, Parser, Validierung, Programm-Code), XML-RPC-Client und -Server, Anmeldung und
   Tokens, Einstellungen, Diagramme, Push, Audit, Add-ons, Logs …
-- **Integration** (`go-server/integration_test.go`, 64 Tests): startet die Fake-CCU auf freien Ports und den
-  **echten** Server mit temporären Dateien, wartet auf die Anmeldung für Events und spricht dann über einen
-  WebSocket-Client mit ihm: anmelden, schalten, Events, Rechte, Admin-Token, Paramsets, Anlernen,
+- **Integration** (65 Tests): `go-server/integration_test.go` baut den Stack auf, die Tests stehen nach
+  Domänen in `stack_devices_test.go`, `stack_logic_test.go` und `stack_system_test.go`. Jeder Test startet
+  die Fake-CCU auf freien Ports und den **echten** Server mit temporären Dateien, wartet auf die Anmeldung
+  für Events und spricht dann über einen WebSocket-Client mit ihm: anmelden, schalten, Events, Rechte, Admin-Token, Paramsets, Anlernen,
   Verknüpfungen, Programme, Backup …
 - **openccu-lite** (`go test -tags lite ./...`): Dieselbe Fake-CCU im Lite-Modus (`fakeccu.CCU.Lite`) hat
   keine ReGa und keine WebUI, sondern beantwortet occulites APIs aus derselben Fixture: Metadaten (Namen,

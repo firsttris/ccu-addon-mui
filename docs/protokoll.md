@@ -290,8 +290,8 @@ dürfen.
   sind verboten.
 - `npm run generate:protocol` erzeugt daraus `src/types/protocol.ts`. Die CI prüft, dass die Datei aktuell ist.
 - `request()` in der App ist darüber typisiert: Typ der Anfrage rein, passender Typ der Antwort raus.
-- `go-server/integration_test.go` validiert jede Nachricht, die der echte Server in den Tests schickt, gegen
-  `#/definitions/ServerMessage`.
+- Die Stack-Tests in `go-server` validieren jede Nachricht, die der echte Server in den Tests schickt, gegen
+  `#/definitions/ServerMessage` (`read` in `stack_helpers_test.go`). Das gilt auch für den Lite-Build.
 
 Wie man eine neue Nachricht hinzufügt, steht in [Entwicklung](entwicklung.md#eine-neue-nachricht).
 
