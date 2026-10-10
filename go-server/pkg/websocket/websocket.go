@@ -94,7 +94,9 @@ type Server struct {
 	cfg             *config.Config
 	// Channels non-administrators may not operate
 	readOnly cached[map[string]bool]
-	addons   *addons.Service
+	// The LOW_BAT limits of the device types (health.go)
+	lowBatLimits lowBatLimitCache
+	addons       *addons.Service
 	// What only a CCU has (state_ccu.go); empty on openccu-lite
 	ccuState //lint:ignore U1000 empty on openccu-lite, filled on a CCU
 	// The diagrams and the recorder of their values
@@ -189,7 +191,6 @@ type DeviceRPC interface {
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 	s := &Server{
 		cfg:             cfg,
-		regaClient:      regaClient,
 		clients:         make(map[*Client]bool),
 		subscriptionMgr: subscriptions.NewManager(),
 		platform:        PlatformCCU,

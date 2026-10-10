@@ -16,16 +16,6 @@ import (
 	"ccu-addon-mui-server/pkg/rega"
 )
 
-// Where the HMServer keeps the heating groups (CCU.getHeatingGroupList)
-var groupsFile = "/etc/config/groups.gson"
-
-// SetGroupsFile sets where groups.gson is (for tests)
-func SetGroupsFile(path string) {
-	if path != "" {
-		groupsFile = path
-	}
-}
-
 // GroupService keeps the heating groups somewhere other than the CCU's
 // HMServer: on openccu-lite occulited's /api/system/v1/groups, which also
 // names the group's device and marks its members (no ReGa step after)
@@ -48,7 +38,7 @@ func (s *Server) listGroups() ([]heatinggroups.Group, error) {
 	if s.groups != nil {
 		return s.groups.List()
 	}
-	groups, err := heatinggroups.Read(groupsFile)
+	groups, err := heatinggroups.Read(s.cfg.GroupsFile)
 	if errors.Is(err, heatinggroups.ErrNoFile) {
 		return []heatinggroups.Group{}, nil
 	}

@@ -74,8 +74,6 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 	wsServer.SetAddons(addons.New(cfg.AddonsDir, "mui", cfg.WebUIURL))
 	wsServer.SetSelfUpdate(selfupdate.New(cfg.AddonReleaseURL, cfg.AddonUpdateDir))
 	wsServer.SetLogs(logs.New(cfg.SyslogConfig, cfg.LogDir))
-	websocket.SetClockFiles(cfg.TimeConfFile, cfg.NTPClientFile, cfg.TZFile)
-	websocket.SetGroupsFile(cfg.GroupsFile)
 	settings.StatusDir = cfg.StatusDir
 	wsServer.SetSettings(settings.New(cfg.ConfigDir), cfg.DiagramsDir)
 

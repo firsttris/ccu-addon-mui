@@ -16,24 +16,18 @@ import (
 	"ccu-addon-mui-server/pkg/logger"
 )
 
-// The files cp_time.cgi keeps the time server and the time zone in
-var (
-	ntpClientFile = "/etc/config/ntpclient"
-	tzFile        = "/etc/config/TZ"
-	zoneTabFile   = "/usr/share/zoneinfo/zone.tab"
-)
+// clockFiles: where the WebUI keeps location and time zone (time.conf, as
+// cp_time.cgi), the time servers (ntpclient) and TZ, and the system's
+// list of zones (zone.tab)
+type clockFiles struct {
+	timeConf, ntpClient, tz, zoneTab string
+}
 
-// SetClockFiles sets where time.conf, ntpclient and TZ are (for tests)
-func SetClockFiles(timeConf, ntpClient, tz string) {
-	if timeConf != "" {
-		timeConfFile = timeConf
-	}
-	if ntpClient != "" {
-		ntpClientFile = ntpClient
-	}
-	if tz != "" {
-		tzFile = tz
-	}
+const zoneTabFile = "/usr/share/zoneinfo/zone.tab"
+
+// clockFiles of the server's configuration
+func (s *Server) clockFiles() clockFiles {
+	return clockFiles{timeConf: s.cfg.TimeConfFile, ntpClient: s.cfg.NTPClientFile, tz: s.cfg.TZFile, zoneTab: zoneTabFile}
 }
 
 // The WebUI's time zones (cp_time.cgi TIMEZONES) with what it writes to TZ;
@@ -72,12 +66,12 @@ var timeZones = map[string]string{
 var zoneTabLine = regexp.MustCompile(`(?m)^[^#]\S+\t\S+\t(\S+)`)
 
 // timeZoneList: the WebUI's zones and zone.tab's, sorted
-func timeZoneList() []string {
+func timeZoneList(zoneTab string) []string {
 	seen := map[string]bool{}
 	for zone := range timeZones {
 		seen[zone] = true
 	}
-	if data, err := os.ReadFile(zoneTabFile); err == nil {
+	if data, err := os.ReadFile(zoneTab); err == nil {
 		for _, m := range zoneTabLine.FindAllStringSubmatch(string(data), -1) {
 			seen[m[1]] = true
 		}
@@ -87,11 +81,11 @@ func timeZoneList() []string {
 }
 
 // tzValue is what set_location_config writes to TZ for a zone; "" if unknown
-func tzValue(zone string) string {
+func tzValue(zone, zoneTab string) string {
 	if value, ok := timeZones[zone]; ok {
 		return value
 	}
-	for _, known := range timeZoneList() {
+	for _, known := range timeZoneList(zoneTab) {
 		if known == zone {
 			return zone
 		}
@@ -102,8 +96,8 @@ func tzValue(zone string) string {
 var ntpLine = regexp.MustCompile(`(?m)^\s*NTPSERVERS\s*=\s*'?([^'\n]*)'?\s*$`)
 
 // readTimeServers reads ntpclient as get_timeservers does; ok false without it
-func readTimeServers() (string, bool) {
-	data, err := os.ReadFile(ntpClientFile)
+func readTimeServers(path string) (string, bool) {
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", false
 	}
@@ -116,21 +110,21 @@ func readTimeServers() (string, bool) {
 // Host names and addresses, separated by blanks
 var timeServersRegex = regexp.MustCompile(`^[A-Za-z0-9.:\-\[\] ]{0,255}$`)
 
-func writeTimeServers(servers string) error {
+func writeTimeServers(path, servers string) error {
 	servers = strings.Join(strings.Fields(servers), " ")
 	if !timeServersRegex.MatchString(servers) {
 		return fmt.Errorf("invalid time servers")
 	}
-	return atomicfile.Write(ntpClientFile, []byte("NTPSERVERS='"+servers+"'\n"), 0o644)
+	return atomicfile.Write(path, []byte("NTPSERVERS='"+servers+"'\n"), 0o644)
 }
 
 // writeTimeZone writes time.conf's TIMEZONE and TZ, as set_location_config
-func writeTimeZone(zone string) error {
-	value := tzValue(zone)
+func writeTimeZone(f clockFiles, zone string) error {
+	value := tzValue(zone, f.zoneTab)
 	if value == "" {
 		return fmt.Errorf("invalid time zone")
 	}
-	values := readTimeConf()
+	values := readTimeConf(f.timeConf)
 	if values == nil {
 		return fmt.Errorf("time.conf is missing")
 	}
@@ -139,10 +133,10 @@ func writeTimeZone(zone string) error {
 	for _, key := range []string{"COUNTRY", "CITY", "LATITUDE", "LONGITUDE", "TIMEZONE"} {
 		b.WriteString(key + "=" + values[key] + "\n")
 	}
-	if err := atomicfile.Write(timeConfFile, []byte(b.String()), 0o644); err != nil {
+	if err := atomicfile.Write(f.timeConf, []byte(b.String()), 0o644); err != nil {
 		return err
 	}
-	return atomicfile.Write(tzFile, []byte(value+"\n"), 0o644)
+	return atomicfile.Write(f.tz, []byte(value+"\n"), 0o644)
 }
 
 // clockAvailable: the add-on runs on the CCU itself, where date, hwclock and
