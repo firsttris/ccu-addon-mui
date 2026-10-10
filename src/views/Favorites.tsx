@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import StarIcon from '~icons/lucide/star';
 import PlusIcon from '~icons/lucide/plus';
@@ -7,15 +7,22 @@ import { useChannels, useFavoriteChange, useFavorites, useLogicAction, useProgra
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
 import { usePageTitle } from '../contexts/PageTitleContext';
-import { Favorite as FavoriteList } from '../types/protocol';
-import { Program, Sysvar } from '../types/types';
+import type { Favorite as FavoriteList } from '../types/protocol';
+import type { Program, Sysvar } from '../types/types';
 import { Dashboard, NavTabs } from './Dashboard';
 import { Controls, Item, List, Name, SysvarControl } from './Logic';
 import { FavoriteEditor } from './FavoriteEditor';
 import { DialogButton } from '../components/ConfirmDialog';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import { m } from '../paraglide/messages';
 import { rememberView } from '../lib/startPage';
 import { errorText } from '../lib/errors';

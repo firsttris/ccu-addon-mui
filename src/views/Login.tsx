@@ -8,7 +8,6 @@ import { Label } from '../components/ui/label';
 import { loginErrorText } from '../lib/errors';
 import { cn } from '../lib/utils';
 
-
 export const Login = () => {
   const { login, loginError, connectionStatus } = useWebSocketContext();
   const { on: effects } = useEffects();
@@ -118,10 +117,7 @@ const House = () => (
       </pattern>
     </defs>
     <line x1="22" y1="112" x2="218" y2="112" className="login-ground" />
-    <path
-      d="M64 59 L120 14 L176 59 V106 a6 6 0 0 1 -6 6 H70 a6 6 0 0 1 -6 -6 Z"
-      className="login-house-fill"
-    />
+    <path d="M64 59 L120 14 L176 59 V106 a6 6 0 0 1 -6 6 H70 a6 6 0 0 1 -6 -6 Z" className="login-house-fill" />
     <path d="M64 60 V106 a6 6 0 0 0 6 6 H170 a6 6 0 0 0 6 -6 V60 M52 68 L120 14 L188 68" className="login-wall" />
 
     {/* The CCU in the gable, with its radio rings */}

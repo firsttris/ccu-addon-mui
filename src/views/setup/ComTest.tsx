@@ -9,7 +9,12 @@ import { m } from '../../paraglide/messages';
 const POLL_MS = 3000;
 const GIVE_UP_MS = 60000;
 
-type State = { kind: 'idle' } | { kind: 'running' } | { kind: 'ok'; time: string } | { kind: 'none' } | { kind: 'error'; message: string };
+type State =
+  | { kind: 'idle' }
+  | { kind: 'running' }
+  | { kind: 'ok'; time: string }
+  | { kind: 'none' }
+  | { kind: 'error'; message: string };
 
 // The function test of a device, as the WebUI's device dialog: the CCU
 // asks the device to answer (Device.startComTest) and waits for it
@@ -18,7 +23,12 @@ export const ComTest = ({ address }: { address: string }) => {
   const { request } = useWebSocketActions();
   const [state, setState] = useState<State>({ kind: 'idle' });
   const cancelled = useRef(false);
-  useEffect(() => () => void (cancelled.current = true), []);
+  useEffect(
+    () => () => {
+      cancelled.current = true;
+    },
+    [],
+  );
 
   const run = async () => {
     setState({ kind: 'running' });
@@ -47,9 +57,13 @@ export const ComTest = ({ address }: { address: string }) => {
           {state.kind === 'running' ? m.COMTEST_RUNNING() : m.COMTEST_START()}
         </Button>
         <span role="status" className="text-sm">
-          {state.kind === 'ok' && <span className="text-emerald-700 dark:text-emerald-400">{m.COMTEST_OK({ time: state.time })}</span>}
+          {state.kind === 'ok' && (
+            <span className="text-emerald-700 dark:text-emerald-400">{m.COMTEST_OK({ time: state.time })}</span>
+          )}
           {state.kind === 'none' && <span className="text-amber-700 dark:text-amber-400">{m.COMTEST_NONE()}</span>}
-          {state.kind === 'error' && <span className="text-destructive">{m.COMTEST_FAILED({ message: state.message })}</span>}
+          {state.kind === 'error' && (
+            <span className="text-destructive">{m.COMTEST_FAILED({ message: state.message })}</span>
+          )}
         </span>
       </div>
       <p className="text-xs">{m.COMTEST_HINT()}</p>

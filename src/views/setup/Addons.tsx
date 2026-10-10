@@ -57,7 +57,10 @@ export const Addons = () => {
     setAsking(null);
     try {
       await request({ type: 'addonAction', id: addon.id, operation }, { queue: false, timeoutMs: 60000 });
-      showToast(operation === 'restart' ? m.ADDONS_RESTARTED({ name: addon.name }) : m.ADDONS_UNINSTALLED({ name: addon.name }), 'info');
+      showToast(
+        operation === 'restart' ? m.ADDONS_RESTARTED({ name: addon.name }) : m.ADDONS_UNINSTALLED({ name: addon.name }),
+        'info',
+      );
       if (operation === 'uninstall') {
         await queryClient.invalidateQueries({ queryKey: ['addons'] });
       }
@@ -78,8 +81,12 @@ export const Addons = () => {
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span className="font-medium">{addon.name}</span>
                 {addon.version && <span className="text-sm text-muted-foreground tabular-nums">{addon.version}</span>}
-                {newer && newer !== '?' && newer !== addon.version && <Badge variant="secondary">{m.ADDONS_NEWER({ version: newer })}</Badge>}
-                {newer && newer === addon.version && <span className="text-xs text-muted-foreground">{m.ADDONS_CURRENT()}</span>}
+                {newer && newer !== '?' && newer !== addon.version && (
+                  <Badge variant="secondary">{m.ADDONS_NEWER({ version: newer })}</Badge>
+                )}
+                {newer && newer === addon.version && (
+                  <span className="text-xs text-muted-foreground">{m.ADDONS_CURRENT()}</span>
+                )}
                 {newer === '?' && <span className="text-xs text-muted-foreground">{m.ADDONS_CHECK_FAILED()}</span>}
               </div>
               {addon.info && addon.info.length > 0 && <p className="text-xs">{addon.info.join(' · ')}</p>}
@@ -93,7 +100,12 @@ export const Addons = () => {
                   </Button>
                 )}
                 {addon.updateUrl && !newer && (
-                  <DialogButton type="button" className="h-8" aria-label={`${m.ADDONS_CHECK()} ${addon.name}`} onClick={() => check(addon)}>
+                  <DialogButton
+                    type="button"
+                    className="h-8"
+                    aria-label={`${m.ADDONS_CHECK()} ${addon.name}`}
+                    onClick={() => check(addon)}
+                  >
                     {m.ADDONS_CHECK()}
                   </DialogButton>
                 )}

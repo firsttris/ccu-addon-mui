@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import SearchIcon from '~icons/lucide/search';
 import { useDevices, useRooms } from '../queries';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 import { channelTypeName } from '../i18n/channelTypeNames';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
@@ -40,6 +40,12 @@ interface DeviceGroup {
 
 const deviceOf = (channel: Channel) => channel.address.split(':')[0];
 
+// The channel type in words; types without a translation made readable
+const typeLabel = (type: string) => {
+  const label = channelTypeName(type);
+  return label === type ? humanize(type) : label;
+};
+
 // Choosing channels in a dialog: the devices with their pictures (the
 // channel pointed at marked), sorted by device type, a search over name,
 // device, type, room and address, and check boxes to take several at once,
@@ -55,11 +61,6 @@ export const ChannelPicker = ({
   single = false,
   includeHidden = false,
 }: ChannelPickerProps) => {
-  // The channel type in words; types without a translation made readable
-  const typeLabel = (type: string) => {
-    const label = channelTypeName(type);
-    return label === type ? humanize(type) : label;
-  };
   const { data: devices = [] } = useDevices();
   const { data: rooms = [] } = useRooms();
   const [query, setQuery] = useState('');
@@ -148,6 +149,7 @@ export const ChannelPicker = ({
             </Label>
           </div>
         )}
+        {/* biome-ignore lint/a11y/useSemanticElements: Safari drops the list role of a ul without bullets; the role says it explicitly */}
         <div className="-mx-6 min-h-0 flex-1 overflow-y-auto border-y px-6" role="list" aria-label={m.PICKER_DEVICES()}>
           {groups.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">{m.PICKER_NONE()}</p>}
           {groups.map((group) => {
@@ -156,6 +158,7 @@ export const ChannelPicker = ({
             const open = group.channels.filter((c) => !chosen.has(c.id)).map((c) => c.id);
             const allOn = open.length > 0 && open.every((id) => selected.has(id));
             return (
+              // biome-ignore lint/a11y/useSemanticElements: see the list role above
               <div key={group.address} role="listitem" aria-label={group.name}>
                 {heading && (
                   <div className="sticky top-0 z-10 -mx-6 bg-background/95 px-6 pt-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase backdrop-blur">
@@ -169,6 +172,7 @@ export const ChannelPicker = ({
                     channel={pointed?.startsWith(`${group.address}:`) ? pointed.split(':')[1] : undefined}
                   />
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    {/* biome-ignore lint/a11y/noLabelWithoutControl: holds the "all" checkbox when the device has several channels */}
                     <label className="flex items-center gap-2">
                       <span className="min-w-0 flex-1 truncate font-medium">{group.name}</span>
                       {!single && group.channels.length > 1 && open.length > 0 && (

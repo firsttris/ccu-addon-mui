@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>MUI</title>
   <g transform="translate(-27 17)" fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">
     <path d="M128 258 236 166l108 92v108a20 20 0 0 1-20 20H148a20 20 0 0 1-20-20z" stroke-width="34"/>
     <path d="M204 386v-70a12 12 0 0 1 12-12h40a12 12 0 0 1 12 12v70" stroke-width="30"/>

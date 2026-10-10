@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { defaultLayout, defaultWidth, flowLayout, moveSection, orderSections, parseLayout, responsiveLayouts, rowsFor, toSaved } from './tileLayout';
+import {
+  defaultLayout,
+  defaultWidth,
+  flowLayout,
+  moveSection,
+  orderSections,
+  parseLayout,
+  responsiveLayouts,
+  rowsFor,
+  toSaved,
+} from './tileLayout';
 
 const tiles = [
   { key: 'c:A:1', minPx: 150 },
@@ -31,7 +41,12 @@ describe('tileLayout', () => {
   });
 
   it('keeps saved positions, drops tiles that are gone and adds new ones', () => {
-    const saved = { lg: [{ i: 'd:B', x: 0, y: 0, w: 6 }, { i: 'c:GONE:1', x: 6, y: 0, w: 2 }] };
+    const saved = {
+      lg: [
+        { i: 'd:B', x: 0, y: 0, w: 6 },
+        { i: 'c:GONE:1', x: 6, y: 0, w: 2 },
+      ],
+    };
     const lg = responsiveLayouts(tiles, saved, { 'd:B': 300 }, 1376).lg!;
     expect(lg.map((t) => t.i)).toEqual(['d:B', 'c:A:1', 'c:A:2']);
     expect(lg[0]).toMatchObject({ x: 0, w: 6, h: rowsFor(300) });
@@ -68,7 +83,10 @@ describe('tileLayout', () => {
       { i: 'c', x: 40, y: 0, w: 20, h: 10 },
     ];
     const at = (i: string, x: number, y: number) => {
-      const out = flowLayout(row.map((t) => (t.i === i ? { ...t, x, y, moved: true } : t)), 60);
+      const out = flowLayout(
+        row.map((t) => (t.i === i ? { ...t, x, y, moved: true } : t)),
+        60,
+      );
       return [...out].sort((p, q) => p.y - q.y || p.x - q.x).map((t) => `${t.i}${t.y}`);
     };
     // c dragged onto a: they swap places, b moves aside
@@ -95,7 +113,12 @@ describe('tileLayout', () => {
 
   it('orders sections as saved, new ones after them in their place', () => {
     const sections = ['climate', 'lights', 'blinds', 'sensors'].map((key) => ({ key }));
-    expect(orderSections(sections, ['blinds', 'climate']).map((s) => s.key)).toEqual(['blinds', 'climate', 'lights', 'sensors']);
+    expect(orderSections(sections, ['blinds', 'climate']).map((s) => s.key)).toEqual([
+      'blinds',
+      'climate',
+      'lights',
+      'sensors',
+    ]);
     expect(orderSections(sections, []).map((s) => s.key)).toEqual(['climate', 'lights', 'blinds', 'sensors']);
   });
 

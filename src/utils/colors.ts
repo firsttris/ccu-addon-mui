@@ -34,7 +34,7 @@ export const getPercentageColor = (percentage: number): string => {
  */
 export const getPercentageGradient = (percentage: number): string => {
   const color = getPercentageColor(percentage);
-  
+
   if (percentage < 10) {
     return `linear-gradient(135deg, #01579B, ${color})`;
   } else if (percentage < 25) {

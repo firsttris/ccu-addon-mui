@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { RequestError, useWebSocketActions, useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
-import { appliedLanguage, applyLanguage, LanguageChoice as Choice } from '../i18n/language';
+import { appliedLanguage, applyLanguage, type LanguageChoice as Choice } from '../i18n/language';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { errorText } from '../lib/errors';
@@ -68,7 +68,9 @@ export const LanguageChoice = () => {
         className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1"
       >
         {choices.map(({ value, label }) => (
+          // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
           <button
+            type="button"
             key={value}
             role="radio"
             aria-checked={appliedLanguage === value}

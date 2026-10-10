@@ -50,7 +50,13 @@ const periodLabels: Record<Period, () => string> = {
   year: m.DIAG_PERIOD_YEAR,
 };
 
-const rangeFormat = new Intl.DateTimeFormat(defaultLang, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const rangeFormat = new Intl.DateTimeFormat(defaultLang, {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 const MINUTE = 60 * 1000;
 // Points of a line: about one per two pixels of a wide chart
 const MAX_LINE_POINTS = 600;
@@ -94,7 +100,12 @@ const useSeriesData = (diagram: Diagram, from: number, to: number, enabled: bool
     // Live: one entry for the span that moves on with the minute
     // (refetchInterval), not a new one every minute, which would also show
     // the old values as placeholder and draw the chart in again
-    queryKey: ['diagramData', diagram.id, diagram.series.map(keyOf).join(','), ...(live ? ['live', to - from] : [from, to])],
+    queryKey: [
+      'diagramData',
+      diagram.id,
+      diagram.series.map(keyOf).join(','),
+      ...(live ? ['live', to - from] : [from, to]),
+    ],
     queryFn: async () =>
       (
         await request({
@@ -126,7 +137,8 @@ const toRender = (
   const scaled = raw.map(([t, avg, lo, hi]) => [t + shift, avg * factor, lo * factor, hi * factor] as ChartPoint);
   const aggregate = (s.aggregate || 'avg') as Aggregate;
   const kind = s.chart || defaultKind(scaled, aggregate);
-  const bars = kind === 'bar' || aggregate === 'delta' ? toBars(scaled, from, to, barInterval(to - from), aggregate) : [];
+  const bars =
+    kind === 'bar' || aggregate === 'delta' ? toBars(scaled, from, to, barInterval(to - from), aggregate) : [];
   let points = aggregatePoints(
     scaled.filter((p) => p[0] >= from),
     aggregate === 'delta' ? 'avg' : aggregate,
@@ -176,7 +188,11 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
         const current = toRender(s, data.data, from, to, 0);
         const previous = compare && before.data ? toRender(s, before.data, from, to, width) : null;
         // Wh and W in kWh and kW once they get large
-        const largest = Math.max(0, ...current.bars.map((b) => Math.abs(b.v)), ...current.points.map((p) => Math.abs(p[3])));
+        const largest = Math.max(
+          0,
+          ...current.bars.map((b) => Math.abs(b.v)),
+          ...current.points.map((p) => Math.abs(p[3])),
+        );
         const { unit, factor } = scaleUnit(s.unit ?? '', largest);
         const scale = <T extends { points: ChartPoint[]; bars: RenderSeries['bars'] }>(r: T): T =>
           factor === 1
@@ -194,7 +210,10 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
           color: s.color || palette[i % palette.length],
           unit,
           axis: (s.axis || '') as RenderSeries['axis'],
-          compare: scaledPrevious && current.kind !== 'state' ? { points: scaledPrevious.points, bars: scaledPrevious.bars } : undefined,
+          compare:
+            scaledPrevious && current.kind !== 'state'
+              ? { points: scaledPrevious.points, bars: scaledPrevious.bars }
+              : undefined,
         };
       }),
     [diagram.series, data.data, before.data, compare, names, from, to, width],
@@ -215,10 +234,11 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
   const exportCSV = () => {
     const table: ChartSeries[] = shown.map((s) => ({
       ...s,
-      points: s.kind === 'bar' || s.aggregate === 'delta' ? s.bars.map((b) => [b.t0, b.v, b.v, b.v] as ChartPoint) : s.points,
+      points:
+        s.kind === 'bar' || s.aggregate === 'delta' ? s.bars.map((b) => [b.t0, b.v, b.v, b.v] as ChartPoint) : s.points,
     }));
     const csv = toCSV(table, defaultLang.startsWith('de'));
-    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+    const url = URL.createObjectURL(new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = `${diagram.name.replace(/[^\p{L}\p{N}_-]+/gu, '_')}.csv`;
@@ -246,13 +266,25 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
     data.data === undefined ? (
       <Skeleton className="w-full" style={{ height }} />
     ) : empty ? (
-      <div className="flex h-40 items-center justify-center rounded-lg bg-muted/40 text-sm text-muted-foreground">{m.DIAG_NO_DATA()}</div>
+      <div className="flex h-40 items-center justify-center rounded-lg bg-muted/40 text-sm text-muted-foreground">
+        {m.DIAG_NO_DATA()}
+      </div>
     ) : (
-      <TimeChart label={diagram.name} series={shown} from={from} to={to} height={height} animationKey={animationKey} live={live} onZoom={zoom} />
+      <TimeChart
+        label={diagram.name}
+        series={shown}
+        from={from}
+        to={to}
+        height={height}
+        animationKey={animationKey}
+        live={live}
+        onZoom={zoom}
+      />
     );
 
   const toolbar = (
     <div className="flex flex-wrap items-center gap-2">
+      {/* biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing */}
       <div role="group" aria-label={m.DIAG_PERIOD()} className="inline-flex rounded-lg bg-muted p-0.5">
         {(Object.keys(periods) as Period[]).map((p) => (
           <button
@@ -269,19 +301,47 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
           </button>
         ))}
       </div>
-      <Button type="button" variant="outline" size="icon" className="size-7" aria-label={m.DIAG_EARLIER()} onClick={() => shift(-1)}>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="size-7"
+        aria-label={m.DIAG_EARLIER()}
+        onClick={() => shift(-1)}
+      >
         <ChevronLeftIcon />
       </Button>
-      <Button type="button" variant="outline" size="icon" className="size-7" aria-label={m.DIAG_LATER()} disabled={live} onClick={() => shift(1)}>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="size-7"
+        aria-label={m.DIAG_LATER()}
+        disabled={live}
+        onClick={() => shift(1)}
+      >
         <ChevronRightIcon />
       </Button>
       {'zoomed' in range && (
-        <Button type="button" variant="outline" size="sm" className="h-7" onClick={() => setRange({ period: range.period, end: null })}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7"
+          onClick={() => setRange({ period: range.period, end: null })}
+        >
           <ZoomOutIcon />
           {m.DIAG_ZOOM_RESET()}
         </Button>
       )}
-      <Button type="button" variant={compare ? 'secondary' : 'ghost'} size="sm" className="h-7" aria-pressed={compare} onClick={() => setCompare((c) => !c)}>
+      <Button
+        type="button"
+        variant={compare ? 'secondary' : 'ghost'}
+        size="sm"
+        className="h-7"
+        aria-pressed={compare}
+        onClick={() => setCompare((c) => !c)}
+      >
         <HistoryIcon />
         {m.DIAG_COMPARE()}
       </Button>
@@ -301,9 +361,13 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
   );
 
   const legend = (
-    <ul className={cn('grid gap-x-4 gap-y-1.5', compact && !fullscreen ? 'grid-cols-1' : 'sm:grid-cols-2 xl:grid-cols-3')} aria-label={m.DIAG_SERIES()}>
+    <ul
+      className={cn('grid gap-x-4 gap-y-1.5', compact && !fullscreen ? 'grid-cols-1' : 'sm:grid-cols-2 xl:grid-cols-3')}
+      aria-label={m.DIAG_SERIES()}
+    >
       {series.map((s) => {
         const stats = seriesStats(s);
+        const cost = stats?.sum !== undefined ? costOf(stats.sum, s.unit, energyPrice) : null;
         return (
           <li key={s.key}>
             <button
@@ -318,7 +382,10 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
                   return next;
                 })
               }
-              className={cn('flex w-full items-start gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-accent', hidden.has(s.key) && 'opacity-40')}
+              className={cn(
+                'flex w-full items-start gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm hover:bg-accent',
+                hidden.has(s.key) && 'opacity-40',
+              )}
             >
               <span className="mt-1 h-3 w-1.5 shrink-0 rounded-full" style={{ background: s.color }} />
               <span className="flex min-w-0 flex-col leading-tight">
@@ -330,9 +397,11 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
                     </span>
                   )}
                 </span>
-                {stats?.sum !== undefined && costOf(stats.sum, s.unit, energyPrice) !== null && (
+                {cost !== null && energyPrice && (
                   <span className="text-xs font-medium text-emerald-700 tabular-nums dark:text-emerald-400">
-                    {m.DIAG_COST({ value: costFormat(energyPrice!.currency).format(costOf(stats.sum, s.unit, energyPrice)!) })}
+                    {m.DIAG_COST({
+                      value: costFormat(energyPrice.currency).format(cost),
+                    })}
                   </span>
                 )}
                 {stats && s.kind !== 'state' && !(s.kind === 'step' && stats.min === 0 && stats.max === 1) && (
@@ -355,20 +424,48 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
       <div className="flex flex-wrap items-center gap-1">
         <h2 className="mr-auto">{diagram.name}</h2>
         {!compact && (
-          <Button type="button" variant="ghost" size="sm" className="h-8" disabled={empty || !data.data} onClick={exportCSV}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8"
+            disabled={empty || !data.data}
+            onClick={exportCSV}
+          >
             <DownloadIcon />
             <span className="hidden sm:inline">{m.DIAG_EXPORT()}</span>
           </Button>
         )}
-        <Button type="button" variant="ghost" size="icon" className="size-8" aria-label={m.DIAG_FULLSCREEN()} onClick={() => setFullscreen(true)}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          aria-label={m.DIAG_FULLSCREEN()}
+          onClick={() => setFullscreen(true)}
+        >
           <MaximizeIcon />
         </Button>
         {canEdit && !compact && (
           <>
-            <Button type="button" variant="ghost" size="icon" className="size-8" aria-label={m.EDIT()} onClick={() => setEditing(true)}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label={m.EDIT()}
+              onClick={() => setEditing(true)}
+            >
               <PencilIcon />
             </Button>
-            <Button type="button" variant="ghost" size="icon" className="size-8" aria-label={m.DIAG_DELETE()} onClick={() => setDeleting(true)}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label={m.DIAG_DELETE()}
+              onClick={() => setDeleting(true)}
+            >
               <TrashIcon />
             </Button>
           </>
@@ -377,10 +474,15 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
       {toolbar}
       {!fullscreen && chart(compact ? 210 : 300)}
       {legend}
-      {!compact && !empty && data.data !== undefined && <p className="text-xs">{compare ? `${m.DIAG_ZOOM_HINT()} · ${m.DIAG_COMPARE_HINT()}` : m.DIAG_ZOOM_HINT()}</p>}
+      {!compact && !empty && data.data !== undefined && (
+        <p className="text-xs">{compare ? `${m.DIAG_ZOOM_HINT()} · ${m.DIAG_COMPARE_HINT()}` : m.DIAG_ZOOM_HINT()}</p>
+      )}
       {fullscreen && (
         <Dialog open onOpenChange={(open) => !open && setFullscreen(false)}>
-          <DialogContent aria-label={diagram.name} className="flex max-h-[calc(100vh-16px)] w-[calc(100vw-16px)] max-w-[calc(100vw-16px)] flex-col gap-3 overflow-y-auto sm:max-w-[calc(100vw-32px)]">
+          <DialogContent
+            aria-label={diagram.name}
+            className="flex max-h-[calc(100vh-16px)] w-[calc(100vw-16px)] max-w-[calc(100vw-16px)] flex-col gap-3 overflow-y-auto sm:max-w-[calc(100vw-32px)]"
+          >
             <DialogHeader>
               <DialogTitle>{diagram.name}</DialogTitle>
               <DialogDescription className="sr-only">{diagram.name}</DialogDescription>
@@ -393,7 +495,14 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
       )}
       {editing && <DiagramEditor diagram={diagram} onClose={() => setEditing(false)} />}
       {deleting && (
-        <ConfirmDialog title={m.DIAG_DELETE()} confirmLabel={m.DELETE()} destructive busy={remove.isPending} onConfirm={() => remove.mutate()} onCancel={() => setDeleting(false)}>
+        <ConfirmDialog
+          title={m.DIAG_DELETE()}
+          confirmLabel={m.DELETE()}
+          destructive
+          busy={remove.isPending}
+          onConfirm={() => remove.mutate()}
+          onCancel={() => setDeleting(false)}
+        >
           {m.DIAG_DELETE_QUESTION({ name: diagram.name })}
         </ConfirmDialog>
       )}
@@ -410,7 +519,10 @@ const useLiveUpdates = (diagrams: Diagram[] | undefined, subscribeToSeries = tru
   const queryClient = useQueryClient();
   const pending = useRef(new Map<string, number>());
   const addresses = useMemo(
-    () => [...new Set((diagrams ?? []).flatMap((d) => d.series.filter((s) => s.address !== SYSVAR).map((s) => s.address)))].sort().join('\n'),
+    () =>
+      [...new Set((diagrams ?? []).flatMap((d) => d.series.filter((s) => s.address !== SYSVAR).map((s) => s.address)))]
+        .sort()
+        .join('\n'),
     [diagrams],
   );
 
@@ -481,7 +593,13 @@ export const Diagrams = () => {
         </Panel>
       ) : (
         diagrams.data.diagrams.map((diagram) => (
-          <DiagramCard key={diagram.id} diagram={diagram} canEdit={canEdit} names={names} energyPrice={diagrams.data?.energyPrice} />
+          <DiagramCard
+            key={diagram.id}
+            diagram={diagram}
+            canEdit={canEdit}
+            names={names}
+            energyPrice={diagrams.data?.energyPrice}
+          />
         ))
       )}
       <p className="text-xs text-muted-foreground">{m.DIAG_HINT()}</p>
@@ -499,7 +617,10 @@ export const PlaceDiagrams = ({ place }: { place: number }) => {
     // Without the recorder (an older server) there are none
     retry: false,
   });
-  const shown = useMemo(() => (diagrams.data?.diagrams ?? []).filter((d) => d.places?.includes(place)), [diagrams.data, place]);
+  const shown = useMemo(
+    () => (diagrams.data?.diagrams ?? []).filter((d) => d.places?.includes(place)),
+    [diagrams.data, place],
+  );
   useLiveUpdates(shown, false);
   return shown.length > 0 ? <PlaceDiagramTiles diagrams={shown} energyPrice={diagrams.data?.energyPrice} /> : null;
 };
@@ -511,7 +632,14 @@ const PlaceDiagramTiles = ({ diagrams: shown, energyPrice }: { diagrams: Diagram
   return (
     <section aria-label={m.DIAGRAMS()} className="grid gap-4 lg:grid-cols-2">
       {shown.map((diagram) => (
-        <DiagramCard key={diagram.id} diagram={diagram} canEdit={false} names={names} energyPrice={energyPrice} compact />
+        <DiagramCard
+          key={diagram.id}
+          diagram={diagram}
+          canEdit={false}
+          names={names}
+          energyPrice={energyPrice}
+          compact
+        />
       ))}
     </section>
   );

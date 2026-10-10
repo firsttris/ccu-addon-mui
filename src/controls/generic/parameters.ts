@@ -5,7 +5,15 @@ import webUILabels from './parameterLabels.json';
 // commonly have. The CCU only gives technical names; these follow the
 // wording of the WebUI where it has one.
 
-export type ParameterGroup = 'operation' | 'heating' | 'switching' | 'radio' | 'other' | 'schedule' | 'expert' | 'hidden';
+export type ParameterGroup =
+  | 'operation'
+  | 'heating'
+  | 'switching'
+  | 'radio'
+  | 'other'
+  | 'schedule'
+  | 'expert'
+  | 'hidden';
 
 type Entry = { group: ParameterGroup; de: string; en: string };
 
@@ -35,7 +43,11 @@ const catalog: Record<string, Entry> = {
   HUMIDITY_LIMIT_VALUE: entry('heating', 'Grenzwert Luftfeuchte', 'Humidity limit'),
   MANU_MODE_PRIORITIZATION: entry('heating', 'Vorrang des Manuell-Modus', 'Priority of manual mode'),
   PARTY_MODE_PRIORITIZATION: entry('heating', 'Vorrang des Party-Modus', 'Priority of party mode'),
-  MIN_MAX_VALUE_NOT_RELEVANT_FOR_MANU_MODE: entry('heating', 'Min./Max. im Manuell-Modus ignorieren', 'Ignore min./max. in manual mode'),
+  MIN_MAX_VALUE_NOT_RELEVANT_FOR_MANU_MODE: entry(
+    'heating',
+    'Min./Max. im Manuell-Modus ignorieren',
+    'Ignore min./max. in manual mode',
+  ),
   CLIMATE_FUNCTION: entry('heating', 'Klimafunktion', 'Climate function'),
   AUTO_HYDRAULIC_ADJUSTMENT: entry('heating', 'Automatischer hydraulischer Abgleich', 'Automatic hydraulic balancing'),
   PWM_AT_LOW_VALVE_POSITION: entry('heating', 'PWM bei kleiner Ventilöffnung', 'PWM at low valve position'),
@@ -44,7 +56,11 @@ const catalog: Record<string, Entry> = {
   VALVE_MAXIMUM_POSITION: entry('heating', 'Maximale Ventilöffnung', 'Maximum valve opening'),
   TEMPERATURE_COMFORT_COOLING: entry('heating', 'Komforttemperatur Kühlen', 'Comfort temperature cooling'),
   TEMPERATURE_LOWERING_COOLING: entry('heating', 'Absenktemperatur Kühlen', 'Lowering temperature cooling'),
-  TEMPERATURE_WINDOW_OPEN_COOLING: entry('heating', 'Fenster-offen-Temperatur Kühlen', 'Window open temperature cooling'),
+  TEMPERATURE_WINDOW_OPEN_COOLING: entry(
+    'heating',
+    'Fenster-offen-Temperatur Kühlen',
+    'Window open temperature cooling',
+  ),
   TWO_POINT_HYSTERESIS: entry('heating', 'Zweipunkt-Hysterese', 'Two-point hysteresis'),
   TWO_POINT_HYSTERESIS_HUMIDITY: entry('heating', 'Zweipunkt-Hysterese Luftfeuchte', 'Two-point hysteresis humidity'),
   DURATION_5MIN: entry('heating', 'Dauer in 5-Minuten-Schritten', 'Duration in 5 minute steps'),
@@ -53,7 +69,11 @@ const catalog: Record<string, Entry> = {
   DISPLAY_CONTRAST: entry('operation', 'Display-Kontrast', 'Display contrast'),
   SHOW_HUMIDITY: entry('operation', 'Luftfeuchte anzeigen', 'Show humidity'),
   SHOW_SET_TEMPERATURE: entry('operation', 'Solltemperatur anzeigen', 'Show target temperature'),
-  BUTTON_RESPONSE_WITHOUT_BACKLIGHT: entry('operation', 'Tasten reagieren ohne Beleuchtung', 'Buttons react without backlight'),
+  BUTTON_RESPONSE_WITHOUT_BACKLIGHT: entry(
+    'operation',
+    'Tasten reagieren ohne Beleuchtung',
+    'Buttons react without backlight',
+  ),
   GLOBAL_BUTTON_LOCK: entry('operation', 'Bediensperre', 'Button lock'),
   KEYPRESS_SIGNAL: entry('operation', 'Tastenton', 'Key press sound'),
   LED_DISABLE_CHANNELSTATE: entry('operation', 'Status-LED aus', 'Status LED off'),
@@ -61,17 +81,41 @@ const catalog: Record<string, Entry> = {
   LED_FLASH_UNLOCKED: entry('operation', 'LED blinkt bei entriegelt', 'LED flashes when unlocked'),
   DBL_PRESS_TIME: entry('operation', 'Zeit für Doppelklick', 'Double press time'),
   LONG_PRESS_TIME: entry('operation', 'Zeit für langen Tastendruck', 'Long press time'),
-  REPEATED_LONG_PRESS_TIMEOUT_VALUE: entry('operation', 'Langer Tastendruck: Wiederholung (Wert)', 'Repeated long press (value)'),
-  REPEATED_LONG_PRESS_TIMEOUT_UNIT: entry('operation', 'Langer Tastendruck: Wiederholung (Einheit)', 'Repeated long press (unit)'),
+  REPEATED_LONG_PRESS_TIMEOUT_VALUE: entry(
+    'operation',
+    'Langer Tastendruck: Wiederholung (Wert)',
+    'Repeated long press (value)',
+  ),
+  REPEATED_LONG_PRESS_TIMEOUT_UNIT: entry(
+    'operation',
+    'Langer Tastendruck: Wiederholung (Einheit)',
+    'Repeated long press (unit)',
+  ),
   // Switching and moving
   POWERUP_JUMPTARGET: entry('switching', 'Verhalten nach Stromausfall', 'Behaviour after power failure'),
   ON_TIME_BASE: entry('switching', 'Einschaltdauer (Basis)', 'On time (base)'),
   ON_TIME_FACTOR: entry('switching', 'Einschaltdauer (Faktor)', 'On time (factor)'),
   ON_MIN_LEVEL: entry('switching', 'Minimaler Einschaltwert', 'Minimum on level'),
-  REFERENCE_RUNNING_TIME_BOTTOM_TOP_VALUE: entry('switching', 'Fahrzeit unten → oben (Wert)', 'Running time bottom → top (value)'),
-  REFERENCE_RUNNING_TIME_BOTTOM_TOP_UNIT: entry('switching', 'Fahrzeit unten → oben (Einheit)', 'Running time bottom → top (unit)'),
-  REFERENCE_RUNNING_TIME_TOP_BOTTOM_VALUE: entry('switching', 'Fahrzeit oben → unten (Wert)', 'Running time top → bottom (value)'),
-  REFERENCE_RUNNING_TIME_TOP_BOTTOM_UNIT: entry('switching', 'Fahrzeit oben → unten (Einheit)', 'Running time top → bottom (unit)'),
+  REFERENCE_RUNNING_TIME_BOTTOM_TOP_VALUE: entry(
+    'switching',
+    'Fahrzeit unten → oben (Wert)',
+    'Running time bottom → top (value)',
+  ),
+  REFERENCE_RUNNING_TIME_BOTTOM_TOP_UNIT: entry(
+    'switching',
+    'Fahrzeit unten → oben (Einheit)',
+    'Running time bottom → top (unit)',
+  ),
+  REFERENCE_RUNNING_TIME_TOP_BOTTOM_VALUE: entry(
+    'switching',
+    'Fahrzeit oben → unten (Wert)',
+    'Running time top → bottom (value)',
+  ),
+  REFERENCE_RUNNING_TIME_TOP_BOTTOM_UNIT: entry(
+    'switching',
+    'Fahrzeit oben → unten (Einheit)',
+    'Running time top → bottom (unit)',
+  ),
   REFERENCE_RUNNING_TIME_SLATS_VALUE: entry('switching', 'Fahrzeit Lamellen (Wert)', 'Slats running time (value)'),
   REFERENCE_RUNNING_TIME_SLATS_UNIT: entry('switching', 'Fahrzeit Lamellen (Einheit)', 'Slats running time (unit)'),
   REFERENCE_RUN_COUNTER: entry('switching', 'Fahrten bis zur Referenzfahrt', 'Runs until reference run'),
@@ -114,10 +158,26 @@ const catalog: Record<string, Entry> = {
   // Radio and system
   CYCLIC_INFO_MSG: entry('radio', 'Zyklische Statusmeldung', 'Cyclic status message'),
   CYCLIC_INFO_MSG_DIS: entry('radio', 'Zyklische Statusmeldung: Intervall', 'Cyclic status message: interval'),
-  CYCLIC_INFO_MSG_DIS_UNCHANGED: entry('radio', 'Zyklische Statusmeldung: bei unverändertem Wert', 'Cyclic status message: unchanged value'),
-  CYCLIC_INFO_MSG_OVERDUE_THRESHOLD: entry('radio', 'Ausbleibende Meldungen bis „nicht erreichbar“', 'Missed messages until unreachable'),
-  CYCLIC_BIDI_INFO_MSG_DISCARD_FACTOR: entry('radio', 'Bidirektionale Meldungen verwerfen (Faktor)', 'Discard bidirectional messages (factor)'),
-  CYCLIC_BIDI_INFO_MSG_DISCARD_VALUE: entry('radio', 'Bidirektionale Meldungen verwerfen (Wert)', 'Discard bidirectional messages (value)'),
+  CYCLIC_INFO_MSG_DIS_UNCHANGED: entry(
+    'radio',
+    'Zyklische Statusmeldung: bei unverändertem Wert',
+    'Cyclic status message: unchanged value',
+  ),
+  CYCLIC_INFO_MSG_OVERDUE_THRESHOLD: entry(
+    'radio',
+    'Ausbleibende Meldungen bis „nicht erreichbar“',
+    'Missed messages until unreachable',
+  ),
+  CYCLIC_BIDI_INFO_MSG_DISCARD_FACTOR: entry(
+    'radio',
+    'Bidirektionale Meldungen verwerfen (Faktor)',
+    'Discard bidirectional messages (factor)',
+  ),
+  CYCLIC_BIDI_INFO_MSG_DISCARD_VALUE: entry(
+    'radio',
+    'Bidirektionale Meldungen verwerfen (Wert)',
+    'Discard bidirectional messages (value)',
+  ),
   ARR_TIMEOUT: entry('radio', 'Wartezeit auf Antwort', 'Response timeout'),
   DUTYCYCLE_LIMIT: entry('radio', 'Duty-Cycle-Grenze', 'Duty cycle limit'),
   ENABLE_ROUTING: entry('radio', 'Routing', 'Routing'),
@@ -174,4 +234,12 @@ export const parameterLabel = (name: string) => {
   return (webUILabels as Record<'de' | 'en', Record<string, string>>)[de ? 'de' : 'en'][name] ?? humanize(name);
 };
 
-export const GROUP_ORDER: ParameterGroup[] = ['operation', 'heating', 'switching', 'radio', 'other', 'schedule', 'expert'];
+export const GROUP_ORDER: ParameterGroup[] = [
+  'operation',
+  'heating',
+  'switching',
+  'radio',
+  'other',
+  'schedule',
+  'expert',
+];

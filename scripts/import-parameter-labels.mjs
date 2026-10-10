@@ -50,7 +50,7 @@ const readTexts = (lang) => {
   const texts = {};
   const dir = `webui/js/lang/${lang}`;
   const files = new Set(fs.readdirSync(path.join(base, 'www', dir)));
-  for (const key of overlay.keys()) if (key.startsWith(dir + '/')) files.add(key.slice(dir.length + 1));
+  for (const key of overlay.keys()) if (key.startsWith(`${dir}/`)) files.add(key.slice(dir.length + 1));
   for (const file of [...files].filter((f) => f.startsWith('translate.lang')).sort()) {
     for (const match of read(`${dir}/${file}`).matchAll(/^\s*"([^"]+)"\s*:\s*"((?:[^"\\]|\\.)*)"/gm)) {
       texts[match[1]] ??= match[2];
@@ -59,7 +59,19 @@ const readTexts = (lang) => {
   return texts;
 };
 
-const entities = { auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß', amp: '&', nbsp: ' ', quot: '"', deg: '°' };
+const entities = {
+  auml: 'ä',
+  ouml: 'ö',
+  uuml: 'ü',
+  Auml: 'Ä',
+  Ouml: 'Ö',
+  Uuml: 'Ü',
+  szlig: 'ß',
+  amp: '&',
+  nbsp: ' ',
+  quot: '"',
+  deg: '°',
+};
 const plain = (html) =>
   html
     .replace(/\\"/g, '"')
@@ -99,5 +111,7 @@ for (const [key, value] of Object.entries(table).sort(([a], [b]) => a.localeComp
 }
 
 const out = 'src/controls/generic/parameterLabels.json';
-fs.writeFileSync(out, JSON.stringify(labels, null, 1) + '\n');
-console.log(`${Object.keys(labels.de).length} names (de), ${Object.keys(labels.en).length} (en), ${unresolved} without a text -> ${out}`);
+fs.writeFileSync(out, `${JSON.stringify(labels, null, 1)}\n`);
+console.log(
+  `${Object.keys(labels.de).length} names (de), ${Object.keys(labels.en).length} (en), ${unresolved} without a text -> ${out}`,
+);

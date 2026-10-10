@@ -1,4 +1,4 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { login } from './helpers';
 
 // The pictures of the documentation (docs/screenshot-*.png) that need the

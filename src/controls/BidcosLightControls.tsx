@@ -1,4 +1,4 @@
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { NativeSelect } from '../components/ui/select';
@@ -6,7 +6,7 @@ import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { HueBar, hsvToRgb } from './ColorLightControl';
 import { LevelBar } from './light/LevelBar';
-import { RGB } from './light/PendantLamp';
+import type { RGB } from './light/PendantLamp';
 
 // The color and white channels of the BidCos LED controllers, as the
 // WebUI's rgbw.fn and dual_white_controller.fn show them. Their brightness
@@ -52,6 +52,7 @@ export const RgbwColorControl = ({ channel }: { channel: Channel }) => {
       <Header channel={channel} color={color} state={white ? m.RGBW_WHITE() : `${m.COLOR()} ${hue}°`} />
       <div className="flex flex-col gap-3 px-3.5 pt-3 pb-3.5">
         <HueBar label={m.COLOR_OF({ name: channel.name })} hue={hue} onChange={(h) => set(hueToColor(h))} />
+        {/* biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing */}
         <div className="flex flex-wrap justify-between gap-1.5" role="group" aria-label={m.QUICK_COLORS()}>
           <button
             type="button"
@@ -111,6 +112,7 @@ export const RgbwProgramControl = ({ channel }: { channel: Channel }) => {
           }
         >
           {PROGRAMS.map((label, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: the index is the program number
             <option key={index} value={index}>
               {label()}
             </option>

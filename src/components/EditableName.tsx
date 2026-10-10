@@ -66,7 +66,13 @@ export const EditableName = ({ name, onRename, onDelete, children }: EditableNam
     <div className="flex min-w-0 flex-1 items-center gap-2">
       <span className="min-w-0 flex-1 truncate font-medium">{name}</span>
       {children}
-      <Button type="button" size="icon" variant="ghost" aria-label={m.EDIT_NAME({ name })} onClick={() => setEditing(true)}>
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        aria-label={m.EDIT_NAME({ name })}
+        onClick={() => setEditing(true)}
+      >
         <PencilIcon />
       </Button>
       {onDelete && (

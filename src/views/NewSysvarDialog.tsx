@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useChannelList, useObjectChange } from '../queries';
 import { useToast } from '../contexts/ToastContext';
-import { Sysvar } from '../types/types';
+import type { Sysvar } from '../types/types';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Input } from '../components/ui/input';
 import { NativeSelect } from '../components/ui/select';
@@ -135,7 +135,9 @@ export const NewSysvarDialog = ({ sysvar, onClose }: { sysvar?: Sysvar; onClose:
           <Field label={m.SYSVAR_CHANNEL()}>
             <NativeSelect value={String(channel)} onChange={(e) => setChannel(Number(e.target.value))}>
               <option value="0">{m.SYSVAR_NO_CHANNEL()}</option>
-              {channel !== 0 && !channels.some((c) => c.id === channel) && <option value={String(channel)}>{channel}</option>}
+              {channel !== 0 && !channels.some((c) => c.id === channel) && (
+                <option value={String(channel)}>{channel}</option>
+              )}
               {[...channels]
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map((c) => (

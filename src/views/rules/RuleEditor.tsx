@@ -61,7 +61,8 @@ const ConditionRow = ({
         : `${condition.value}${parameter?.unit ? ` ${parameter.unit}` : ''}`;
     return `${channel.name}: ${datapointLabel(condition.datapoint)} ${opLabel(condition.op, discrete)} ${shown}`;
   }, [channel, condition, options, parameter, value, discrete]);
-  useEffect(() => onText(text), [text]); // eslint-disable-line react-hooks/exhaustive-deps
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reports when the text changes; onText is a new function every render
+  useEffect(() => onText(text), [text]);
 
   return (
     <li className="grid grid-cols-2 items-end gap-2 p-2.5 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]">
@@ -148,9 +149,10 @@ const SyncAddress = ({
   condition: RuleCondition;
   onChange: (c: RuleCondition) => void;
 }) => {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only when another channel is picked
   useEffect(() => {
     onChange({ ...condition, address: channel.address, interfaceName: channel.interfaceName });
-  }, [channel.address, channel.interfaceName]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [channel.address, channel.interfaceName]);
   return null;
 };
 
@@ -215,6 +217,7 @@ export const RuleEditor = ({ rule: initial, onClose }: { rule: NotificationRule;
           <ul className="flex flex-col divide-y rounded-lg border" aria-label={m.RULE_CONDITIONS()}>
             {rule.conditions.map((condition, i) => (
               <ConditionRow
+                // biome-ignore lint/suspicious/noArrayIndexKey: conditions have no id; the rows are controlled
                 key={i}
                 index={i}
                 condition={condition}

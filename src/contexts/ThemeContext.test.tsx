@@ -21,12 +21,22 @@ describe('ThemeProvider in openccu-lite', () => {
     render(<ThemeProvider>x</ThemeProvider>);
     expect(document.documentElement.dataset.theme).toBe('light');
     act(() => {
-      window.dispatchEvent(new MessageEvent('message', { origin: window.location.origin, data: { type: 'openccu-lite:theme', theme: 'dark' } }));
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          origin: window.location.origin,
+          data: { type: 'openccu-lite:theme', theme: 'dark' },
+        }),
+      );
     });
     expect(document.documentElement.dataset.theme).toBe('dark');
     // Another site's message changes nothing
     act(() => {
-      window.dispatchEvent(new MessageEvent('message', { origin: 'https://evil.example', data: { type: 'openccu-lite:theme', theme: 'light' } }));
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          origin: 'https://evil.example',
+          data: { type: 'openccu-lite:theme', theme: 'light' },
+        }),
+      );
     });
     expect(document.documentElement.dataset.theme).toBe('dark');
   });

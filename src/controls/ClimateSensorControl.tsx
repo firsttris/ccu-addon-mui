@@ -3,14 +3,15 @@ import CloudRainIcon from '~icons/lucide/cloud-rain';
 import SunIcon from '~icons/lucide/sun';
 import SunDimIcon from '~icons/lucide/sun-dim';
 import DropletsIcon from '~icons/lucide/droplets';
-import { ReactNode } from 'react';
-import { Channel, DatapointValue } from '../types/types';
+import type { ReactNode } from 'react';
+import type { Channel, DatapointValue } from '../types/types';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 import { cn, formatNumber } from '../lib/utils';
 
-export const number = (value: DatapointValue | undefined) => (typeof value === 'number' && Number.isFinite(value) ? value : undefined);
+export const number = (value: DatapointValue | undefined) =>
+  typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 export const format = (value: number, digits = 1) => formatNumber(value, digits, digits);
 
 // Dew point by the Magnus formula (°C), good to ±0.4 °C between -45 and 60 °C
@@ -57,7 +58,15 @@ const HumidityRing = ({ humidity }: { humidity: number }) => {
   const circumference = 2 * Math.PI * r;
   const level = comfort(humidity);
   return (
-    <div className="relative size-[68px] shrink-0" role="meter" aria-label={m.HUMIDITY()} aria-valuemin={0} aria-valuemax={100} aria-valuenow={humidity}>
+    // biome-ignore lint/a11y/useSemanticElements: drawn by the app; the native meter draws itself
+    <div
+      className="relative size-[68px] shrink-0"
+      role="meter"
+      aria-label={m.HUMIDITY()}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={humidity}
+    >
       <svg viewBox="0 0 64 64" className="size-full -rotate-90" aria-hidden>
         <circle cx="32" cy="32" r={r} fill="none" strokeWidth="5" className="stroke-muted" />
         <circle
@@ -83,7 +92,17 @@ const HumidityRing = ({ humidity }: { humidity: number }) => {
   );
 };
 
-export const Extra = ({ icon, label, value, active }: { icon: ReactNode; label: string; value: string; active?: boolean }) => (
+export const Extra = ({
+  icon,
+  label,
+  value,
+  active,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  active?: boolean;
+}) => (
   <div className="flex min-w-0 items-center gap-2 rounded-xl bg-muted/50 px-2.5 py-2">
     <span className={cn('shrink-0 [&_svg]:size-4', active ? 'text-sky-500' : 'text-muted-foreground')}>{icon}</span>
     <span className="flex min-w-0 flex-col leading-tight">
@@ -111,7 +130,10 @@ export const ClimateSensorControl = ({ channel }: { channel: Channel }) => {
   const a = (alpha: number) => Math.min(1, alpha * effects.k);
 
   const extras: ReactNode[] = [];
-  if (wind !== undefined) extras.push(<Extra key="wind" icon={<WindIcon />} label={m.WIND()} value={`${format(wind)} km/h`} active={wind >= 20} />);
+  if (wind !== undefined)
+    extras.push(
+      <Extra key="wind" icon={<WindIcon />} label={m.WIND()} value={`${format(wind)} km/h`} active={wind >= 20} />,
+    );
   if (raining !== undefined || rainCounter !== undefined)
     extras.push(
       <Extra
@@ -123,9 +145,19 @@ export const ClimateSensorControl = ({ channel }: { channel: Channel }) => {
       />,
     );
   if (illumination !== undefined)
-    extras.push(<Extra key="lux" icon={<SunDimIcon />} label={m.BRIGHTNESS()} value={`${format(illumination, 0)} lx`} />);
+    extras.push(
+      <Extra key="lux" icon={<SunDimIcon />} label={m.BRIGHTNESS()} value={`${format(illumination, 0)} lx`} />,
+    );
   if (sunshine !== undefined)
-    extras.push(<Extra key="sun" icon={<SunIcon />} label={m.SUNSHINE()} value={`${format(sunshine, 0)} min`} active={sunshine > 0} />);
+    extras.push(
+      <Extra
+        key="sun"
+        icon={<SunIcon />}
+        label={m.SUNSHINE()}
+        value={`${format(sunshine, 0)} min`}
+        active={sunshine > 0}
+      />,
+    );
 
   return (
     <Tile
@@ -134,7 +166,9 @@ export const ClimateSensorControl = ({ channel }: { channel: Channel }) => {
       aria-label={channel.name}
       style={
         effects.on && temperature !== undefined
-          ? { background: `radial-gradient(70% 80% at 0% 0%, rgba(${r},${g},${b},${a(0.13)}), transparent 70%), var(--card)` }
+          ? {
+              background: `radial-gradient(70% 80% at 0% 0%, rgba(${r},${g},${b},${a(0.13)}), transparent 70%), var(--card)`,
+            }
           : undefined
       }
     >
@@ -145,9 +179,15 @@ export const ClimateSensorControl = ({ channel }: { channel: Channel }) => {
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-col">
             <span
+              // A name only goes on an element with a role: read as one value with its unit
+              role="img"
               className="text-[44px] leading-none font-semibold tracking-[-0.04em] tabular-nums"
-              style={effects.on && temperature !== undefined ? { textShadow: `0 0 ${18 * effects.k}px rgba(${r},${g},${b},0.45)` } : undefined}
-              aria-label={temperature !== undefined ? `${m.TEMPERATURE()} ${format(temperature)} °C` : undefined}
+              style={
+                effects.on && temperature !== undefined
+                  ? { textShadow: `0 0 ${18 * effects.k}px rgba(${r},${g},${b},0.45)` }
+                  : undefined
+              }
+              aria-label={`${m.TEMPERATURE()} ${temperature !== undefined ? `${format(temperature)} °C` : '–'}`}
             >
               {temperature !== undefined ? format(temperature) : '–'}
               <span className="ml-0.5 align-top text-lg font-medium text-muted-foreground">°C</span>

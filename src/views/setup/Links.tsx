@@ -1,22 +1,27 @@
-import { ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useChannelList, useDevices, useLinkAction, useLinkParamset, useLinks, useParamset } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
-import { TranslationKey, useTranslations } from '../../i18n/utils';
-import { Channel, DatapointValue, DeviceChannel, Link, ParamsetDescription } from '../../types/types';
+import { type TranslationKey, useTranslations } from '../../i18n/utils';
+import type { Channel, DatapointValue, DeviceChannel, Link, ParamsetDescription } from '../../types/types';
 import { ChannelField } from '../../components/ChannelField';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
-import { formatParameterValue, ParameterValue, ParamsetView, shownParameters } from '../../controls/generic/ParamsetView';
+import {
+  formatParameterValue,
+  ParameterValue,
+  ParamsetView,
+  shownParameters,
+} from '../../controls/generic/ParamsetView';
 import {
   BIDCOS_PERMANENT,
   decodeHmipTime,
   detectProfile,
   encodeHmipTime,
-  LinkProfile,
+  type LinkProfile,
   linkParameterNames,
   loadProfileTable,
   PERMANENT,
-  ProfileField,
+  type ProfileField,
   profilesFor,
   receiverKey,
   senderKey,
@@ -33,7 +38,9 @@ import { NativeSelect } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
 import { errorText } from '../../lib/errors';
 
-const Row = ({ children }: { children: ReactNode }) => <div className="flex flex-wrap items-center gap-2">{children}</div>;
+const Row = ({ children }: { children: ReactNode }) => (
+  <div className="flex flex-wrap items-center gap-2">{children}</div>
+);
 
 const shareRole = (a: string[] = [], b: string[] = []) => a.some((role) => b.includes(role));
 
@@ -118,7 +125,13 @@ const ProfileFieldRow = ({
   }
   return (
     <FieldRow label={label}>
-      <ParameterValue name={first} label={label} parameter={parameter} value={values[first]} onSet={(_, value) => setAll(value)} />
+      <ParameterValue
+        name={first}
+        label={label}
+        parameter={parameter}
+        value={values[first]}
+        onSet={(_, value) => setAll(value)}
+      />
     </FieldRow>
   );
 };
@@ -164,6 +177,7 @@ export const useLinkProfiles = (interfaceName: string, link: Link, enabled = tru
     });
   const { data: table } = useQuery({
     queryKey: ['linkProfiles', receiverType],
+    // biome-ignore lint/style/noNonNullAssertion: enabled only with a receiverType
     queryFn: () => loadProfileTable(receiverType!),
     staleTime: Infinity,
     enabled: enabled && !!receiverType,
@@ -236,7 +250,13 @@ export const LinkParameters = ({ interfaceName, link }: { interfaceName: string;
   const shortFields = shownFields.filter((f) => !f.params[0].startsWith('LONG_'));
   const fieldList = (fields: ProfileField[]) =>
     fields.map((field) => (
-      <ProfileFieldRow key={field.params.join()} field={field} description={description.data} values={merged} onSet={setValues} />
+      <ProfileFieldRow
+        key={field.params.join()}
+        field={field}
+        description={description.data}
+        values={merged}
+        onSet={setValues}
+      />
     ));
 
   return (
@@ -245,7 +265,11 @@ export const LinkParameters = ({ interfaceName, link }: { interfaceName: string;
         <div className="flex flex-col gap-2">
           <label className="flex flex-wrap items-center gap-2 text-sm font-medium">
             {m.LINK_PROFILE()}
-            <NativeSelect className="max-w-xs" value={profileId} onChange={(event) => choose(Number(event.target.value))}>
+            <NativeSelect
+              className="max-w-xs"
+              value={profileId}
+              onChange={(event) => choose(Number(event.target.value))}
+            >
               {profiles.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name[lang] || p.name.de}
@@ -275,7 +299,9 @@ export const LinkParameters = ({ interfaceName, link }: { interfaceName: string;
       )}
       {shownParameters(description.data).length > 0 && (
         <details open={profiles.length === 0 || profileId === 0} className="group">
-          <summary className="cursor-pointer text-sm font-medium text-muted-foreground">{m.LINK_ALL_PARAMETERS()}</summary>
+          <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
+            {m.LINK_ALL_PARAMETERS()}
+          </summary>
           <div className="mt-2">
             <ParamsetView
               label={`${m.LINK_PARAMETERS()} ${link.sender} ${link.receiver}`}
@@ -324,7 +350,8 @@ export const LinkParameters = ({ interfaceName, link }: { interfaceName: string;
             <ul className="flex list-disc flex-col gap-1 pl-5">
               {changes.map(([name, value]) => (
                 <li key={name}>
-                  <strong>{t(name as TranslationKey)}</strong>: {formatParameterValue(description.data[name], current[name])} →{' '}
+                  <strong>{t(name as TranslationKey)}</strong>:{' '}
+                  {formatParameterValue(description.data[name], current[name])} →{' '}
                   {formatParameterValue(description.data[name], value)}
                 </li>
               ))}
@@ -346,7 +373,12 @@ interface LinksProps {
 export const useLinkChannelInfo = () => {
   const { data: devices = [] } = useDevices();
   return useMemo(
-    () => new Map(devices.flatMap((d) => (d.channels ?? []).map((channel) => [channel.address, { channel, deviceType: d.type }] as const))),
+    () =>
+      new Map(
+        devices.flatMap((d) =>
+          (d.channels ?? []).map((channel) => [channel.address, { channel, deviceType: d.type }] as const),
+        ),
+      ),
     [devices],
   );
 };
@@ -364,7 +396,6 @@ export const AddLinkForm = ({
   const { data: devices = [] } = useDevices();
   const names = useChannelNames();
   const action = useLinkAction();
-  const label = (address: string) => `${names.get(address) ?? address} (${address})`;
   const anyDevice = device === undefined;
   const linkable = useMemo(
     () =>
@@ -405,7 +436,11 @@ export const AddLinkForm = ({
     return devices
       .filter((d) => d.interfaceName === interfaceName && d.address !== deviceAddress)
       .flatMap((d) => d.channels ?? [])
-      .filter((c) => shareRole(ownChannel.linkSourceRoles, c.linkTargetRoles) || shareRole(ownChannel.linkTargetRoles, c.linkSourceRoles));
+      .filter(
+        (c) =>
+          shareRole(ownChannel.linkSourceRoles, c.linkTargetRoles) ||
+          shareRole(ownChannel.linkTargetRoles, c.linkSourceRoles),
+      );
   }, [devices, interfaceName, deviceAddress, ownChannel]);
 
   const ownChannels = useMemo(() => asChannels(linkable), [asChannels, linkable]);

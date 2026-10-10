@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import RulerIcon from '~icons/lucide/ruler';
 import ArrowUpIcon from '~icons/lucide/arrow-up-to-line';
 import ArrowLeftRightIcon from '~icons/lucide/arrow-left-right';
@@ -6,7 +6,7 @@ import ArrowRightIcon from '~icons/lucide/arrow-right';
 import ArrowLeftIcon from '~icons/lucide/arrow-left';
 import CylinderIcon from '~icons/lucide/cylinder';
 import SigmaIcon from '~icons/lucide/sigma';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { useParamset, useParamsetDescription } from '../queries';
 import { m } from '../paraglide/messages';
 import { DetectorTile } from './DetectorControls';

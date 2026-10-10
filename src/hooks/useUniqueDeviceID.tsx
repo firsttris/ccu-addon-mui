@@ -11,7 +11,7 @@ const getOrCreateDeviceID = () => {
   } catch {
     // Storage blocked: a new id below
   }
-  const uniqueId = 'id-' + Math.random().toString(36).substring(2, 16);
+  const uniqueId = `id-${Math.random().toString(36).substring(2, 16)}`;
   try {
     localStorage.setItem(LOCAL_STORAGE_KEY, uniqueId);
   } catch {

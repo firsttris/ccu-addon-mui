@@ -63,6 +63,7 @@ export const Rules = () => {
         )}
       </div>
       {canEdit && (
+        // biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing
         <div className="flex flex-wrap items-center gap-2" role="group" aria-label={m.RULE_PRESETS()}>
           <span className="text-sm text-muted-foreground">{m.RULE_PRESETS()}:</span>
           {presets.map((preset) => (

@@ -4,7 +4,12 @@
 export type PushSupport = 'ok' | 'unsupported' | 'insecure' | 'denied';
 
 export const pushSupport = (): PushSupport => {
-  if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+  if (
+    typeof window === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window) ||
+    !('Notification' in window)
+  ) {
     // Push needs HTTPS (or localhost)
     return typeof window !== 'undefined' && !window.isSecureContext ? 'insecure' : 'unsupported';
   }

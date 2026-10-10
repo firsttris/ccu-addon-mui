@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BlindVirtualReceiverChannel } from '../types/types';
+import type { BlindVirtualReceiverChannel } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import ChevronUpIcon from '~icons/lucide/chevron-up';
 import ChevronDownIcon from '~icons/lucide/chevron-down';
@@ -16,7 +16,8 @@ interface ControlProps {
 
 const STEP = 5;
 
-const button = 'press flex h-11 items-center justify-center rounded-xl border bg-background/60 hover:bg-accent [&_svg]:size-5';
+const button =
+  'press flex h-11 items-center justify-center rounded-xl border bg-background/60 hover:bg-accent [&_svg]:size-5';
 
 // The window is a vertical slider: tap or drag anywhere in it to set the
 // height. The shutter follows the pointer; the new level is sent once on
@@ -34,13 +35,17 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const windowRef = useRef<HTMLDivElement>(null);
   const keyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => () => {
-    if (keyTimer.current) clearTimeout(keyTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (keyTimer.current) clearTimeout(keyTimer.current);
+    },
+    [],
+  );
 
   const send = (percent: number) => setDataPoint(interfaceName, address, 'LEVEL', percent / 100);
 
   const levelAt = (clientY: number) => {
+    // biome-ignore lint/style/noNonNullAssertion: only called from the pointer events of the mounted element
     const rect = windowRef.current!.getBoundingClientRect();
     const fraction = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
     return Math.round(((1 - fraction) * 100) / STEP) * STEP;
@@ -104,9 +109,11 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   // Slats of venetian blinds: HmIP LEVEL_2, BidCos JALOUSIE LEVEL_SLATS.
   // Roller shutters report LEVEL_2 empty (null), they get no slats.
   const dp = datapoints as unknown as Record<string, unknown>;
-  const slatsKey = typeof dp.LEVEL_SLATS === 'number' ? 'LEVEL_SLATS' : typeof dp.LEVEL_2 === 'number' ? 'LEVEL_2' : null;
+  const slatsKey =
+    typeof dp.LEVEL_SLATS === 'number' ? 'LEVEL_SLATS' : typeof dp.LEVEL_2 === 'number' ? 'LEVEL_2' : null;
   const slats = slatsKey ? Math.round(Math.min(1, Math.max(0, Number(dp[slatsKey]))) * 100) : null;
-  const status = shown === 0 ? m.BLIND_CLOSED() : shown === 100 ? m.BLIND_FULLY_OPEN() : m.BLIND_PERCENT_OPEN({ percent: shown });
+  const status =
+    shown === 0 ? m.BLIND_CLOSED() : shown === 100 ? m.BLIND_FULLY_OPEN() : m.BLIND_PERCENT_OPEN({ percent: shown });
   const a = (alpha: number) => Math.min(1, alpha * effects.k);
 
   return (
@@ -192,10 +199,17 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <button className={button} onClick={() => send(100)} aria-label={m.BLIND_UP()} title={m.BLIND_UP()}>
+            <button
+              type="button"
+              className={button}
+              onClick={() => send(100)}
+              aria-label={m.BLIND_UP()}
+              title={m.BLIND_UP()}
+            >
               <ChevronUpIcon />
             </button>
             <button
+              type="button"
               className={button}
               onClick={() => setDataPoint(interfaceName, address, 'STOP', true)}
               aria-label={m.BLIND_STOP()}
@@ -203,7 +217,13 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             >
               <SquareIcon className="!size-4 fill-current" />
             </button>
-            <button className={button} onClick={() => send(0)} aria-label={m.BLIND_DOWN()} title={m.BLIND_DOWN()}>
+            <button
+              type="button"
+              className={button}
+              onClick={() => send(0)}
+              aria-label={m.BLIND_DOWN()}
+              title={m.BLIND_DOWN()}
+            >
               <ChevronDownIcon />
             </button>
           </div>

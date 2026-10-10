@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { DAY, HOUR, aggregatePoints, downsample, scaleUnit, barInterval, intervalStart, isBinary, nearest, niceTicks, seriesStats, timeTicks, toBars, toCSV, type ChartPoint } from './chart';
+import {
+  DAY,
+  HOUR,
+  aggregatePoints,
+  downsample,
+  scaleUnit,
+  barInterval,
+  intervalStart,
+  isBinary,
+  nearest,
+  niceTicks,
+  seriesStats,
+  timeTicks,
+  toBars,
+  toCSV,
+  type ChartPoint,
+} from './chart';
 
 describe('niceTicks', () => {
   it('chooses round steps covering the range', () => {
@@ -107,7 +123,20 @@ describe('aggregatePoints and seriesStats', () => {
     expect(aggregatePoints(points, 'max').map((p) => p[1])).toEqual([3, 6]);
   });
   it('sums bars of a counter', () => {
-    const s = { key: 'k', label: '', color: '', unit: 'Wh', kind: 'bar' as const, axis: '' as const, aggregate: 'delta' as const, points, bars: [{ t0: 0, t1: 1, v: 10 }, { t0: 1, t1: 2, v: 5 }] };
+    const s = {
+      key: 'k',
+      label: '',
+      color: '',
+      unit: 'Wh',
+      kind: 'bar' as const,
+      axis: '' as const,
+      aggregate: 'delta' as const,
+      points,
+      bars: [
+        { t0: 0, t1: 1, v: 10 },
+        { t0: 1, t1: 2, v: 5 },
+      ],
+    };
     expect(seriesStats(s)).toEqual({ current: 5, min: 5, max: 10, avg: 7.5, sum: 15 });
     expect(seriesStats({ ...s, kind: 'line', aggregate: 'avg' })).toMatchObject({ current: 4, min: 1, max: 6, avg: 3 });
   });

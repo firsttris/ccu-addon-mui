@@ -37,7 +37,6 @@ const regaLevels = () => [
 // A syslog server as set_log_config writes it: host name, IPv4 or IPv6
 export const validLogHost = (host: string) => /^[A-Za-z0-9.:[\]_-]{0,253}$/.test(host);
 
-
 // The logging settings of the WebUI's Zentralen-Wartung: how much the
 // HomeMatic IP server, rfd (BidCos-RF) and the logic layer log, where to
 // send the log, and the log files to download. Only on the CCU itself.
@@ -73,7 +72,8 @@ export const Logging = () => {
       </Panel>
     );
   }
-  const changed = draft.host !== data.host || draft.rfd !== data.rfd || draft.hmip !== data.hmip || draft.rega !== data.rega;
+  const changed =
+    draft.host !== data.host || draft.rfd !== data.rfd || draft.hmip !== data.hmip || draft.rega !== data.rega;
   const hostValid = validLogHost(draft.host.trim());
 
   const save = async () => {
@@ -98,7 +98,12 @@ export const Logging = () => {
     }
   };
 
-  const select = <T extends string | number>(label: string, value: T, options: { value: T; label: string }[], set: (value: T) => void) => (
+  const select = <T extends string | number>(
+    label: string,
+    value: T,
+    options: { value: T; label: string }[],
+    set: (value: T) => void,
+  ) => (
     <label className="flex flex-col gap-1">
       <span className="text-xs text-muted-foreground">{label}</span>
       <NativeSelect

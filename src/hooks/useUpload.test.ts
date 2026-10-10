@@ -11,7 +11,9 @@ describe('useUpload', () => {
       'fetch',
       vi.fn((_url: string, init: RequestInit) => {
         signal = init.signal ?? undefined;
-        return new Promise((_resolve, reject) => signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))));
+        return new Promise((_resolve, reject) =>
+          signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError'))),
+        );
       }),
     );
     const { result, unmount } = renderHook(() => useUpload());
@@ -22,7 +24,10 @@ describe('useUpload', () => {
   });
 
   it('fails with the server message', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('too large', { status: 413 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('too large', { status: 413 })),
+    );
     const { result } = renderHook(() => useUpload());
     await expect(result.current('/upload/1', new File(['x'], 'a.tgz'))).rejects.toThrow('too large');
   });

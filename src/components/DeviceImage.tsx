@@ -75,6 +75,7 @@ export const DeviceImage = ({ type, size, channel, className, fallback }: Device
           />
           {shapes && (
             <svg
+              aria-hidden="true"
               className="pointer-events-none absolute text-sky-500 dark:text-sky-400"
               style={{ left: pad, top: pad, width: inner, height: inner }}
               viewBox="0 0 1 1"
@@ -83,6 +84,7 @@ export const DeviceImage = ({ type, size, channel, className, fallback }: Device
               {shapes.map((s, i) =>
                 s.kind === 'rect' ? (
                   <rect
+                    // biome-ignore lint/suspicious/noArrayIndexKey: the shapes of a fixed device image
                     key={i}
                     x={s.x}
                     y={s.y}
@@ -96,6 +98,7 @@ export const DeviceImage = ({ type, size, channel, className, fallback }: Device
                   />
                 ) : (
                   <ellipse
+                    // biome-ignore lint/suspicious/noArrayIndexKey: the shapes of a fixed device image
                     key={i}
                     cx={s.x + s.w / 2}
                     cy={s.y + s.h / 2}
@@ -111,12 +114,10 @@ export const DeviceImage = ({ type, size, channel, className, fallback }: Device
             </svg>
           )}
         </>
+      ) : fallback === undefined ? (
+        <CpuIcon className="text-muted-foreground" style={{ width: size * 0.45, height: size * 0.45 }} />
       ) : (
-        (fallback === undefined ? (
-          <CpuIcon className="text-muted-foreground" style={{ width: size * 0.45, height: size * 0.45 }} />
-        ) : (
-          fallback
-        ))
+        fallback
       )}
     </span>
   );

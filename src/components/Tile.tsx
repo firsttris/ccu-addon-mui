@@ -1,11 +1,19 @@
-import * as React from 'react';
+import type * as React from 'react';
 import RadioIcon from '~icons/lucide/radio-tower';
 import BatteryLowIcon from '~icons/lucide/battery-low';
-import { ChannelStatus } from '../types/types';
+import type { ChannelStatus } from '../types/types';
 import { cn } from '../lib/utils';
 import { m } from '../paraglide/messages';
 
-const StatusStrip = ({ severity, icon, children }: { severity: 'warning' | 'error'; icon: React.ReactNode; children: React.ReactNode }) => (
+const StatusStrip = ({
+  severity,
+  icon,
+  children,
+}: {
+  severity: 'warning' | 'error';
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) => (
   <div
     role="status"
     className={cn(

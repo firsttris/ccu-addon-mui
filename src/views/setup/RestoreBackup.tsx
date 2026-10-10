@@ -43,7 +43,10 @@ export const RestoreBackup = ({ onCancel }: { onCancel: () => void }) => {
     try {
       const prepared = await request({ type: 'prepareRestore' }, { queue: false });
       await upload(prepared.url, file);
-      const checked = await request({ type: 'checkRestore', id: prepared.id, password }, { queue: false, timeoutMs: RESTORE_TIMEOUT_MS });
+      const checked = await request(
+        { type: 'checkRestore', id: prepared.id, password },
+        { queue: false, timeoutMs: RESTORE_TIMEOUT_MS },
+      );
       setId(prepared.id);
       setNeedsKey(checked.needsKey);
       setStep('confirm');
@@ -95,7 +98,13 @@ export const RestoreBackup = ({ onCancel }: { onCancel: () => void }) => {
           {needsKey && (
             <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
               {m.RESTORE_KEY()}
-              <Input type="password" aria-label={m.RESTORE_KEY()} autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} />
+              <Input
+                type="password"
+                aria-label={m.RESTORE_KEY()}
+                autoComplete="off"
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
+              />
             </label>
           )}
           {errorLine}

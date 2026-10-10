@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect } from 'react';
+import type React from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 // How much glow and motion the dashboard shows. Set per device in the menu:

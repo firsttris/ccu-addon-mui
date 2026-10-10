@@ -1,4 +1,4 @@
-import { Channel, DatapointValue, HeatingClimateControlTransceiverChannel } from '../types/types';
+import type { Channel, DatapointValue, HeatingClimateControlTransceiverChannel } from '../types/types';
 import { useDevices, useParamset, useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { useEffects, rgba } from '../contexts/EffectsContext';
@@ -28,16 +28,21 @@ const OFF_TEMPERATURE = 4.5;
 
 export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const effects = useEffects();
-  const datapoints = channel.datapoints as HeatingClimateControlTransceiverChannel['datapoints'] & Record<string, DatapointValue>;
+  const datapoints = channel.datapoints as HeatingClimateControlTransceiverChannel['datapoints'] &
+    Record<string, DatapointValue>;
   // BidCos thermostats (HM-CC-RT-DN, HM-TC-IT-WM) name things differently:
   // SET_TEMPERATURE, CONTROL_MODE 0 auto, 1 manual, 3 boost, VALVE_STATE
   // in percent, and actions AUTO_MODE, MANU_MODE, BOOST_MODE.
   const bidcos = typeof datapoints.SET_TEMPERATURE === 'number';
   const targetTemperature = Number(bidcos ? datapoints.SET_TEMPERATURE : datapoints.SET_POINT_TEMPERATURE);
   const currentTemperature = Number(datapoints.ACTUAL_TEMPERATURE);
-  const humidity = (typeof datapoints.ACTUAL_HUMIDITY === 'number' ? datapoints.ACTUAL_HUMIDITY : datapoints.HUMIDITY) as number | undefined;
+  const humidity = (
+    typeof datapoints.ACTUAL_HUMIDITY === 'number' ? datapoints.ACTUAL_HUMIDITY : datapoints.HUMIDITY
+  ) as number | undefined;
   const windowOpen = datapoints.WINDOW_STATE === 1;
-  const isRadiatorThermostat = bidcos ? channel.type === 'CLIMATECONTROL_RT_TRANSCEIVER' : datapoints.VALVE_STATE !== undefined;
+  const isRadiatorThermostat = bidcos
+    ? channel.type === 'CLIMATECONTROL_RT_TRANSCEIVER'
+    : datapoints.VALVE_STATE !== undefined;
   const manualMode = bidcos ? datapoints.CONTROL_MODE === 1 : datapoints.SET_POINT_MODE === 1;
   const boostMode = bidcos ? datapoints.CONTROL_MODE === 3 : datapoints.BOOST_MODE === true;
   // Holiday mode until a set time (the WebUI's "Urlaubsmodus", its party dialog)
@@ -67,7 +72,12 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   const setDataPoint = useSetDataPoint();
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const { localTarget, updateLocalTarget, commitTemperatureChange, decreaseTemperature, increaseTemperature } =
-    useThermostatState({ targetTemperature, channel, datapoint: bidcos ? 'SET_TEMPERATURE' : 'SET_POINT_TEMPERATURE', range });
+    useThermostatState({
+      targetTemperature,
+      channel,
+      datapoint: bidcos ? 'SET_TEMPERATURE' : 'SET_POINT_TEMPERATURE',
+      range,
+    });
 
   // Heating: boost, the target above the room, or a radiator's valve open
   const demand = boostMode || localTarget > currentTemperature || (valve ?? 0) > 0;
@@ -98,7 +108,8 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   };
 
   // BidCos can't end a boost directly: back to automatic
-  const handleToggleBoost = () => (bidcos ? (boostMode ? set('AUTO_MODE', true) : set('BOOST_MODE', true)) : set('BOOST_MODE', !boostMode));
+  const handleToggleBoost = () =>
+    bidcos ? (boostMode ? set('AUTO_MODE', true) : set('BOOST_MODE', true)) : set('BOOST_MODE', !boostMode);
 
   const badge = boostMode
     ? { text: m.BOOST(), className: 'bg-orange-500/15 text-orange-700 dark:text-orange-300' }
@@ -112,7 +123,9 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
           : { text: manualMode ? m.MANUAL() : m.AUTO(), className: 'bg-muted text-muted-foreground' };
 
   const kind = isRadiatorThermostat
-    ? [m.RADIATOR_THERMOSTAT(), valve !== undefined ? m.VALVE({ percent: valve }) : undefined].filter(Boolean).join(' · ')
+    ? [m.RADIATOR_THERMOSTAT(), valve !== undefined ? m.VALVE({ percent: valve }) : undefined]
+        .filter(Boolean)
+        .join(' · ')
     : m.WALL_THERMOSTAT();
   // The device's picture from the WebUI (DEVDB.tcl), a skeleton while the
   // device and picture lists load, nothing for a device without one
@@ -146,7 +159,9 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
               <span className="truncate text-xs text-muted-foreground">{kind}</span>
             </div>
           </div>
-          <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium transition-colors', badge.className)}>
+          <span
+            className={cn('shrink-0 rounded-full px-2 py-0.5 text-xs font-medium transition-colors', badge.className)}
+          >
             {badge.text}
           </span>
         </div>

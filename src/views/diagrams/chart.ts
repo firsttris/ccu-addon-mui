@@ -17,10 +17,24 @@ export const DAY = 24 * HOUR;
 export const periods = { day: DAY, week: 7 * DAY, month: 30 * DAY, year: 365 * DAY } as const;
 export type Period = keyof typeof periods;
 
-export const palette = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#64748b', '#14b8a6', '#8b5cf6'];
+export const palette = [
+  '#3b82f6',
+  '#ef4444',
+  '#22c55e',
+  '#f59e0b',
+  '#a855f7',
+  '#06b6d4',
+  '#ec4899',
+  '#84cc16',
+  '#f97316',
+  '#64748b',
+  '#14b8a6',
+  '#8b5cf6',
+];
 
 // A series of only 0 and 1 (switches, contacts) is drawn as steps
-export const isBinary = (points: ChartPoint[]) => points.length > 0 && points.every((p) => (p[2] === 0 || p[2] === 1) && (p[3] === 0 || p[3] === 1));
+export const isBinary = (points: ChartPoint[]) =>
+  points.length > 0 && points.every((p) => (p[2] === 0 || p[2] === 1) && (p[3] === 0 || p[3] === 1));
 
 // Round numbers from min to max for an axis, about count of them
 export const niceTicks = (min: number, max: number, count = 5): number[] => {
@@ -122,7 +136,7 @@ export const toCSV = (series: ChartSeries[], decimalComma: boolean): string => {
   };
   const header = ['time', ...series.map((s) => (s.unit ? `${s.label} (${s.unit})` : s.label))].map(csvField).join(';');
   const rows = times.map((t) => [time(t), ...byTime.map((m) => number(m.get(t)))].join(';'));
-  return [header, ...rows].join('\n') + '\n';
+  return `${[header, ...rows].join('\n')}\n`;
 };
 
 export type ChartKind = 'line' | 'area' | 'bar' | 'step' | 'state';
@@ -186,7 +200,13 @@ export const nextInterval = (t: number, interval: Interval) => {
 // interval): a bar is the increase since the interval before, points
 // before from give the first one its start; a counter that started again
 // from zero counts from there.
-export const toBars = (points: ChartPoint[], from: number, to: number, interval: Interval, aggregate: Aggregate): Bar[] => {
+export const toBars = (
+  points: ChartPoint[],
+  from: number,
+  to: number,
+  interval: Interval,
+  aggregate: Aggregate,
+): Bar[] => {
   const bars: Bar[] = [];
   let i = 0;
   let previous: number | undefined;
@@ -233,7 +253,13 @@ export const seriesStats = (s: RenderSeries) => {
     const values = s.bars.map((b) => b.v);
     if (values.length === 0) return null;
     const sum = values.reduce((a, b) => a + b, 0);
-    return { current: values[values.length - 1], min: Math.min(...values), max: Math.max(...values), avg: sum / values.length, sum };
+    return {
+      current: values[values.length - 1],
+      min: Math.min(...values),
+      max: Math.max(...values),
+      avg: sum / values.length,
+      sum,
+    };
   }
   if (s.points.length === 0) return null;
   const n = s.points.length;
@@ -266,4 +292,6 @@ export const downsample = (points: ChartPoint[], n: number): ChartPoint[] => {
 
 // Large energy and power values in kWh and kW
 export const scaleUnit = (unit: string, max: number): { unit: string; factor: number } =>
-  (unit === 'Wh' || unit === 'W') && Math.abs(max) >= 10000 ? { unit: `k${unit}`, factor: 1 / 1000 } : { unit, factor: 1 };
+  (unit === 'Wh' || unit === 'W') && Math.abs(max) >= 10000
+    ? { unit: `k${unit}`, factor: 1 / 1000 }
+    : { unit, factor: 1 };

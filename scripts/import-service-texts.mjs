@@ -37,7 +37,19 @@ const readTexts = (lang) => {
   return texts;
 };
 
-const entities = { auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß', amp: '&', nbsp: ' ', quot: '"', deg: '°' };
+const entities = {
+  auml: 'ä',
+  ouml: 'ö',
+  uuml: 'ü',
+  Auml: 'Ä',
+  Ouml: 'Ö',
+  Uuml: 'Ü',
+  szlig: 'ß',
+  amp: '&',
+  nbsp: ' ',
+  quot: '"',
+  deg: '°',
+};
 const plain = (html) =>
   html
     .replace(/\\"/g, '"')
@@ -74,7 +86,7 @@ for (const line of table.split('\n')) {
 }
 
 const sorted = Object.fromEntries(Object.entries(result).sort(([a], [b]) => a.localeCompare(b)));
-const json = JSON.stringify(sorted, null, 1) + '\n';
+const json = `${JSON.stringify(sorted, null, 1)}\n`;
 for (const out of ['src/components/serviceMessages/texts.json', 'go-server/pkg/push/servicetexts.json']) {
   fs.writeFileSync(out, json);
 }

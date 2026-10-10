@@ -3,14 +3,14 @@ import { Link as RouterLink } from '@tanstack/react-router';
 import ArrowRightIcon from '~icons/lucide/arrow-right';
 import { useChannelList, useDevices, useLinkAction, useLinkParamset, useRooms } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
-import { InterfaceLink } from '../../types/protocol';
+import type { InterfaceLink } from '../../types/protocol';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import { DeviceImage } from '../../components/DeviceImage';
 import { ListSkeletonItems } from '../../components/ui/skeleton';
 import { detectProfile } from '../../controls/links/linkProfiles';
 import { getLocale } from '../../paraglide/runtime';
 import { useChannelNames } from './channelNames';
-import { LinkParameters, useLinkChannelInfo, useLinkProfiles } from './Links';
+import { LinkParameters, useLinkProfiles } from './Links';
 import { m } from '../../paraglide/messages';
 import { errorText } from '../../lib/errors';
 
@@ -112,7 +112,6 @@ const LinkRow = ({
     if (focus) ref.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
   }, [focus, ref]);
   const behaviour = useBehaviour(link, near);
-  const channelInfo = useLinkChannelInfo();
   const sender = endpoint(link.sender);
   const receiver = endpoint(link.receiver);
   return (

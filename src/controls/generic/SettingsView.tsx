@@ -1,23 +1,18 @@
-import { ReactNode, useEffect, useId, useState } from "react";
-import MinusIcon from "~icons/lucide/minus";
-import PlusIcon from "~icons/lucide/plus";
-import UndoIcon from "~icons/lucide/rotate-ccw";
-import {
-  DatapointValue,
-  Operation,
-  ParameterDescription,
-  ParamsetDescription,
-} from "../../types/types";
-import { getLocale } from "../../paraglide/runtime";
-import { m } from "../../paraglide/messages";
-import { Switch } from "../../components/ui/switch";
-import { Input } from "../../components/ui/input";
-import { NativeSelect } from "../../components/ui/select";
-import { TimePicker } from "../../components/ui/time-picker";
-import { Button } from "../../components/ui/button";
-import { cn, formatNumber } from "../../lib/utils";
-import { shownParameters } from "./ParamsetView";
-import { parameterLabel } from "./parameters";
+import { type ReactNode, useEffect, useId, useState } from 'react';
+import MinusIcon from '~icons/lucide/minus';
+import PlusIcon from '~icons/lucide/plus';
+import UndoIcon from '~icons/lucide/rotate-ccw';
+import { type DatapointValue, Operation, type ParameterDescription, type ParamsetDescription } from '../../types/types';
+import { getLocale } from '../../paraglide/runtime';
+import { m } from '../../paraglide/messages';
+import { Switch } from '../../components/ui/switch';
+import { Input } from '../../components/ui/input';
+import { NativeSelect } from '../../components/ui/select';
+import { TimePicker } from '../../components/ui/time-picker';
+import { Button } from '../../components/ui/button';
+import { cn, formatNumber } from '../../lib/utils';
+import { shownParameters } from './ParamsetView';
+import { parameterLabel } from './parameters';
 import {
   combineSettings,
   controlOf,
@@ -27,12 +22,12 @@ import {
   formatTimeOfDay,
   isPercent,
   monthName,
-  Setting,
+  type Setting,
   stepOf,
   timeOfDayStep,
   unitLabel,
   unitSeconds,
-} from "./settingKinds";
+} from './settingKinds';
 
 type OnSet = (name: string, value: string | number | boolean) => void;
 
@@ -41,7 +36,7 @@ const number = (value: number, digits = 2) => formatNumber(value, digits);
 // A number for the input field: decimal comma in German, no grouping
 const editable = (value: number) => {
   const text = String(Number(value.toFixed(3)));
-  return getLocale() === "de" ? text.replace(".", ",") : text;
+  return getLocale() === 'de' ? text.replace('.', ',') : text;
 };
 
 const roundTo = (value: number, step: number) => {
@@ -51,15 +46,15 @@ const roundTo = (value: number, step: number) => {
 
 const clamp = (p: ParameterDescription, value: number) => {
   let next = value;
-  if (typeof p.min === "number") next = Math.max(p.min, next);
-  if (typeof p.max === "number") next = Math.min(p.max, next);
-  return p.type === "INTEGER" ? Math.round(next) : next;
+  if (typeof p.min === 'number') next = Math.max(p.min, next);
+  if (typeof p.max === 'number') next = Math.min(p.max, next);
+  return p.type === 'INTEGER' ? Math.round(next) : next;
 };
 
 const rangeHint = (name: string, p: ParameterDescription) => {
-  if (typeof p.min !== "number" || typeof p.max !== "number") return undefined;
+  if (typeof p.min !== 'number' || typeof p.max !== 'number') return undefined;
   if (isPercent(name, p)) return undefined;
-  const unit = p.unit && p.unit !== "100%" ? ` ${p.unit}` : "";
+  const unit = p.unit && p.unit !== '100%' ? ` ${p.unit}` : '';
   return `${number(p.min)} – ${number(p.max)}${unit}`;
 };
 
@@ -81,22 +76,17 @@ const Stepper = ({
   onChange: (value: number) => void;
   wide?: boolean;
 }) => {
-  const [draft, setDraft] = useState(
-    value === undefined ? "" : editable(value),
-  );
-  useEffect(
-    () => setDraft(value === undefined ? "" : editable(value)),
-    [value],
-  );
-  const parsed = Number(draft.trim().replace(",", "."));
+  const [draft, setDraft] = useState(value === undefined ? '' : editable(value));
+  useEffect(() => setDraft(value === undefined ? '' : editable(value)), [value]);
+  const parsed = Number(draft.trim().replace(',', '.'));
   const outOfRange =
-    draft !== "" &&
+    draft !== '' &&
     (Number.isNaN(parsed) ||
-      (typeof parameter.min === "number" && parsed < parameter.min) ||
-      (typeof parameter.max === "number" && parsed > parameter.max));
+      (typeof parameter.min === 'number' && parsed < parameter.min) ||
+      (typeof parameter.max === 'number' && parsed > parameter.max));
   const commit = () => {
-    if (draft === "" || Number.isNaN(parsed)) {
-      setDraft(value === undefined ? "" : editable(value));
+    if (draft === '' || Number.isNaN(parsed)) {
+      setDraft(value === undefined ? '' : editable(value));
       return;
     }
     const next = clamp(parameter, parsed);
@@ -104,29 +94,15 @@ const Stepper = ({
     else setDraft(editable(next));
   };
   const nudge = (direction: 1 | -1) =>
-    onChange(
-      clamp(
-        parameter,
-        roundTo(
-          (value ?? (parameter.min as number) ?? 0) + direction * step,
-          step,
-        ),
-      ),
-    );
-  const atMin =
-    typeof parameter.min === "number" &&
-    value !== undefined &&
-    value <= parameter.min;
-  const atMax =
-    typeof parameter.max === "number" &&
-    value !== undefined &&
-    value >= parameter.max;
+    onChange(clamp(parameter, roundTo((value ?? (parameter.min as number) ?? 0) + direction * step, step)));
+  const atMin = typeof parameter.min === 'number' && value !== undefined && value <= parameter.min;
+  const atMax = typeof parameter.max === 'number' && value !== undefined && value >= parameter.max;
   return (
     <div className="flex items-center gap-1.5">
       <div
         className={cn(
-          "flex h-9 items-center overflow-hidden rounded-md border shadow-xs",
-          outOfRange && "border-destructive",
+          'flex h-9 items-center overflow-hidden rounded-md border shadow-xs',
+          outOfRange && 'border-destructive',
         )}
       >
         <button
@@ -140,8 +116,8 @@ const Stepper = ({
         </button>
         <input
           className={cn(
-            "h-full border-x bg-transparent text-center text-sm tabular-nums outline-none focus-visible:bg-muted/50",
-            wide ? "w-24" : "w-16",
+            'h-full border-x bg-transparent text-center text-sm tabular-nums outline-none focus-visible:bg-muted/50',
+            wide ? 'w-24' : 'w-16',
           )}
           aria-label={label}
           aria-invalid={outOfRange}
@@ -150,12 +126,12 @@ const Stepper = ({
           onChange={(event) => setDraft(event.target.value)}
           onBlur={commit}
           onKeyDown={(event) => {
-            if (event.key === "Enter") commit();
-            if (event.key === "ArrowUp") {
+            if (event.key === 'Enter') commit();
+            if (event.key === 'ArrowUp') {
               event.preventDefault();
               nudge(1);
             }
-            if (event.key === "ArrowDown") {
+            if (event.key === 'ArrowDown') {
               event.preventDefault();
               nudge(-1);
             }
@@ -188,15 +164,12 @@ const PercentSlider = ({
   value: number | undefined;
   onChange: (value: number) => void;
 }) => {
-  const scale =
-    parameter.type === "FLOAT" || parameter.unit === "100%" ? 100 : 1;
+  const scale = parameter.type === 'FLOAT' || parameter.unit === '100%' ? 100 : 1;
   const shown = value === undefined ? 0 : Math.round(value * scale);
   const [draft, setDraft] = useState(shown);
   useEffect(() => setDraft(shown), [shown]);
-  const max =
-    typeof parameter.max === "number" ? Math.round(parameter.max * scale) : 100;
-  const min =
-    typeof parameter.min === "number" ? Math.round(parameter.min * scale) : 0;
+  const max = typeof parameter.max === 'number' ? Math.round(parameter.max * scale) : 100;
+  const min = typeof parameter.min === 'number' ? Math.round(parameter.min * scale) : 0;
   return (
     <div className="flex items-center gap-3">
       <input
@@ -209,15 +182,9 @@ const PercentSlider = ({
         step={1}
         value={draft}
         onChange={(event) => setDraft(Number(event.target.value))}
-        onPointerUp={() =>
-          draft !== shown && onChange(clamp(parameter, draft / scale))
-        }
-        onKeyUp={() =>
-          draft !== shown && onChange(clamp(parameter, draft / scale))
-        }
-        onBlur={() =>
-          draft !== shown && onChange(clamp(parameter, draft / scale))
-        }
+        onPointerUp={() => draft !== shown && onChange(clamp(parameter, draft / scale))}
+        onKeyUp={() => draft !== shown && onChange(clamp(parameter, draft / scale))}
+        onBlur={() => draft !== shown && onChange(clamp(parameter, draft / scale))}
       />
       <span className="w-12 text-right text-sm tabular-nums">{draft} %</span>
     </div>
@@ -235,12 +202,9 @@ const Segmented = ({
   value: number | undefined;
   onChange: (value: number) => void;
 }) => (
-  <div
-    role="radiogroup"
-    aria-label={label}
-    className="inline-flex w-fit flex-wrap rounded-lg bg-muted p-0.5"
-  >
+  <div role="radiogroup" aria-label={label} className="inline-flex w-fit flex-wrap rounded-lg bg-muted p-0.5">
     {options.map((option, index) => (
+      // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
       <button
         key={option}
         type="button"
@@ -249,8 +213,8 @@ const Segmented = ({
         onClick={() => onChange(index)}
         className={
           value === index
-            ? "h-8 rounded-md bg-background px-3 text-sm font-medium shadow-xs"
-            : "h-8 rounded-md px-3 text-sm text-muted-foreground hover:text-foreground"
+            ? 'h-8 rounded-md bg-background px-3 text-sm font-medium shadow-xs'
+            : 'h-8 rounded-md px-3 text-sm text-muted-foreground hover:text-foreground'
         }
       >
         {enumLabel(option)}
@@ -277,32 +241,23 @@ const SingleControl = ({
 }) => {
   const writable = !readOnly && (parameter.operations & Operation.WRITE) !== 0;
   const special = parameter.special?.find((s) => s.value === value);
-  const control = special ? "readonly" : controlOf(name, parameter, writable);
-  const num = typeof value === "number" ? value : undefined;
+  const control = special ? 'readonly' : controlOf(name, parameter, writable);
+  const num = typeof value === 'number' ? value : undefined;
   switch (control) {
-    case "action":
+    case 'action':
       return (
-        <Button
-          size="sm"
-          variant="outline"
-          type="button"
-          onClick={() => onSet(name, true)}
-        >
+        <Button size="sm" variant="outline" type="button" onClick={() => onSet(name, true)}>
           {m.RUN()}
         </Button>
       );
-    case "switch":
+    case 'switch':
       return (
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
           {value === true ? m.SETTING_ON() : m.SETTING_OFF()}
-          <Switch
-            aria-label={label}
-            checked={value === true}
-            onCheckedChange={(on) => onSet(name, on)}
-          />
+          <Switch aria-label={label} checked={value === true} onCheckedChange={(on) => onSet(name, on)} />
         </label>
       );
-    case "segmented":
+    case 'segmented':
       return (
         <Segmented
           label={label}
@@ -311,16 +266,16 @@ const SingleControl = ({
           onChange={(index) => onSet(name, index)}
         />
       );
-    case "choice":
+    case 'choice':
       return (
         <NativeSelect
           className="h-9 w-auto max-w-[280px] min-w-[160px]"
           aria-label={label}
-          value={num ?? ""}
+          value={num ?? ''}
           onChange={(event) => onSet(name, Number(event.target.value))}
         >
           {(parameter.valueList ?? []).map((option, index) =>
-            option === "RESERVED" ? null : (
+            option === 'RESERVED' ? null : (
               <option key={option} value={index}>
                 {enumLabel(option)}
               </option>
@@ -328,16 +283,10 @@ const SingleControl = ({
           )}
         </NativeSelect>
       );
-    case "percent":
-      return (
-        <PercentSlider
-          label={label}
-          parameter={parameter}
-          value={num}
-          onChange={(next) => onSet(name, next)}
-        />
-      );
-    case "timeOfDay": {
+    case 'percent':
+      return <PercentSlider label={label} parameter={parameter} value={num} onChange={(next) => onSet(name, next)} />;
+    case 'timeOfDay': {
+      // biome-ignore lint/style/noNonNullAssertion: controlOf picks timeOfDay only when there is a step
       const step = timeOfDayStep(name, parameter)!;
       const max = parameter.max as number;
       // DST times in quarter hours, decalcification in half hours (the
@@ -354,52 +303,45 @@ const SingleControl = ({
         />
       );
     }
-    case "month":
+    case 'month':
       return (
         <NativeSelect
           className="h-9 w-40"
           aria-label={label}
-          value={num ?? ""}
+          value={num ?? ''}
           onChange={(event) => onSet(name, Number(event.target.value))}
         >
           {Array.from({ length: 12 }, (_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: the index is the month
             <option key={i + 1} value={i + 1}>
               {monthName(i + 1)}
             </option>
           ))}
         </NativeSelect>
       );
-    case "stepper":
-    case "number":
+    case 'stepper':
+    case 'number':
       return (
         <Stepper
           label={label}
           parameter={parameter}
           value={num}
           step={stepOf(name, parameter)}
-          unit={
-            parameter.unit && parameter.unit !== "100%"
-              ? parameter.unit
-              : undefined
-          }
+          unit={parameter.unit && parameter.unit !== '100%' ? parameter.unit : undefined}
           onChange={(next) => onSet(name, next)}
-          wide={control === "number"}
+          wide={control === 'number'}
         />
       );
-    case "text":
+    case 'text':
       return (
         <TextControl
           label={label}
-          value={typeof value === "string" ? value : ""}
+          value={typeof value === 'string' ? value : ''}
           onChange={(next) => onSet(name, next)}
         />
       );
     default:
-      return (
-        <span className="text-sm tabular-nums">
-          {readableValue(name, parameter, value)}
-        </span>
-      );
+      return <span className="text-sm tabular-nums">{readableValue(name, parameter, value)}</span>;
   }
 };
 
@@ -432,26 +374,23 @@ export const readableValue = (
   parameter: ParameterDescription,
   value: DatapointValue | undefined,
 ): string => {
-  if (value === null || value === undefined || value === "") return "–";
+  if (value === null || value === undefined || value === '') return '–';
   const special = parameter.special?.find((s) => s.value === value);
   if (special) return enumLabel(special.id);
-  if (typeof value === "number") {
-    if (parameter.type === "ENUM") {
+  if (typeof value === 'number') {
+    if (parameter.type === 'ENUM') {
       const option = parameter.valueList?.[value];
       return option ? enumLabel(option) : String(value);
     }
     if (isPercent(name, parameter))
-      return `${Math.round(value * (parameter.type === "FLOAT" || parameter.unit === "100%" ? 100 : 1))} %`;
+      return `${Math.round(value * (parameter.type === 'FLOAT' || parameter.unit === '100%' ? 100 : 1))} %`;
     const step = timeOfDayStep(name, parameter);
     if (step) return formatTimeOfDay(step === 30 ? value * 30 : value);
-    if (/_MONTH$/.test(name) && value >= 1 && value <= 12)
-      return monthName(value);
+    if (/_MONTH$/.test(name) && value >= 1 && value <= 12) return monthName(value);
   }
-  if (typeof value === "boolean")
-    return value ? m.SETTING_ON() : m.SETTING_OFF();
-  if (typeof value === "number") {
-    const unit =
-      parameter.unit && parameter.unit !== "100%" ? ` ${parameter.unit}` : "";
+  if (typeof value === 'boolean') return value ? m.SETTING_ON() : m.SETTING_OFF();
+  if (typeof value === 'number') {
+    const unit = parameter.unit && parameter.unit !== '100%' ? ` ${parameter.unit}` : '';
     return `${number(value)}${unit}`;
   }
   return String(value);
@@ -465,7 +404,7 @@ const DurationControl = ({
   readOnly,
   onSet,
 }: {
-  setting: Extract<Setting, { kind: "duration" }>;
+  setting: Extract<Setting, { kind: 'duration' }>;
   label: string;
   values: Record<string, DatapointValue>;
   readOnly: boolean;
@@ -474,30 +413,18 @@ const DurationControl = ({
   const value = values[setting.valueName];
   const unitIndex = values[setting.unitName];
   const units = setting.unit.valueList ?? [];
-  const unit = typeof unitIndex === "number" ? units[unitIndex] : undefined;
-  const seconds =
-    typeof value === "number" && unit
-      ? value * (unitSeconds(unit) ?? 0)
-      : undefined;
+  const unit = typeof unitIndex === 'number' ? units[unitIndex] : undefined;
+  const seconds = typeof value === 'number' && unit ? value * (unitSeconds(unit) ?? 0) : undefined;
   const writable =
     !readOnly &&
     (setting.value.operations & Operation.WRITE) !== 0 &&
     (setting.unit.operations & Operation.WRITE) !== 0;
-  const total =
-    seconds === undefined
-      ? ""
-      : seconds === 0
-        ? m.SETTING_DURATION_NONE()
-        : `= ${formatDuration(seconds)}`;
+  const total = seconds === undefined ? '' : seconds === 0 ? m.SETTING_DURATION_NONE() : `= ${formatDuration(seconds)}`;
   if (!writable) {
     return (
       <span className="text-sm tabular-nums">
-        {typeof value === "number" && unit
-          ? `${number(value)} × ${unitLabel(unit)}`
-          : "–"}
-        {seconds !== undefined && (
-          <span className="ml-2 text-muted-foreground">{total}</span>
-        )}
+        {typeof value === 'number' && unit ? `${number(value)} × ${unitLabel(unit)}` : '–'}
+        {seconds !== undefined && <span className="ml-2 text-muted-foreground">{total}</span>}
       </span>
     );
   }
@@ -507,7 +434,7 @@ const DurationControl = ({
         <Stepper
           label={`${label} (${m.SETTING_COUNT()})`}
           parameter={setting.value}
-          value={typeof value === "number" ? value : undefined}
+          value={typeof value === 'number' ? value : undefined}
           step={1}
           onChange={(next) => onSet(setting.valueName, next)}
         />
@@ -515,10 +442,8 @@ const DurationControl = ({
         <NativeSelect
           className="h-9 w-28"
           aria-label={`${label} (${m.SETTING_UNIT()})`}
-          value={typeof unitIndex === "number" ? unitIndex : ""}
-          onChange={(event) =>
-            onSet(setting.unitName, Number(event.target.value))
-          }
+          value={typeof unitIndex === 'number' ? unitIndex : ''}
+          onChange={(event) => onSet(setting.unitName, Number(event.target.value))}
         >
           {units.map((option, index) => (
             <option key={option} value={index}>
@@ -527,10 +452,7 @@ const DurationControl = ({
           ))}
         </NativeSelect>
       </span>
-      <span
-        className="min-w-[88px] text-sm text-muted-foreground tabular-nums"
-        aria-live="polite"
-      >
+      <span className="min-w-[88px] text-sm text-muted-foreground tabular-nums" aria-live="polite">
         {total}
       </span>
     </div>
@@ -552,25 +474,17 @@ const Row = ({
 }) => {
   const id = useId();
   return (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing
     <div
       className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2.5"
       role="group"
       aria-labelledby={id}
     >
       <div className="flex min-w-[180px] flex-1 flex-col">
-        <span
-          id={id}
-          className={cn(
-            "flex items-center gap-1.5 text-sm",
-            changed && "font-semibold",
-          )}
-        >
+        <span id={id} className={cn('flex items-center gap-1.5 text-sm', changed && 'font-semibold')}>
           {label}
           {changed && (
-            <span
-              aria-label={m.SETTING_CHANGED()}
-              className="size-1.5 shrink-0 rounded-full bg-blue-600"
-            />
+            <span role="img" aria-label={m.SETTING_CHANGED()} className="size-1.5 shrink-0 rounded-full bg-blue-600" />
           )}
         </span>
         {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
@@ -609,89 +523,57 @@ interface SettingsViewProps {
 // choices, sliders for percent, steppers with unit and range, times of day
 // and durations as number × unit; a setting off its default can be put
 // back to it
-export const SettingsView = ({
-  label,
-  description,
-  values,
-  onSet,
-  readOnly = false,
-  changed,
-}: SettingsViewProps) => {
+export const SettingsView = ({ label, description, values, onSet, readOnly = false, changed }: SettingsViewProps) => {
   const settings = combineSettings(shownParameters(description));
-  const isDefault = (
-    p: ParameterDescription,
-    value: DatapointValue | undefined,
-  ) =>
+  const isDefault = (p: ParameterDescription, value: DatapointValue | undefined) =>
     p.default === undefined ||
     p.default === null ||
     value === undefined ||
     value === p.default ||
-    (typeof p.default === "number" &&
-      typeof value === "number" &&
-      Math.abs(p.default - value) < 1e-6);
+    (typeof p.default === 'number' && typeof value === 'number' && Math.abs(p.default - value) < 1e-6);
   return (
+    // biome-ignore lint/a11y/useSemanticElements: Safari drops the list role of a ul without bullets; the role says it explicitly
     <div aria-label={label} role="list" className="flex flex-col divide-y">
       {settings.map((setting) => {
-        if (setting.kind === "duration") {
+        if (setting.kind === 'duration') {
           const rowLabel = durationLabel(setting);
           const offDefault =
-            !isDefault(setting.value, values[setting.valueName]) ||
-            !isDefault(setting.unit, values[setting.unitName]);
+            !isDefault(setting.value, values[setting.valueName]) || !isDefault(setting.unit, values[setting.unitName]);
           return (
+            // biome-ignore lint/a11y/useSemanticElements: see the list role above
             <div role="listitem" key={setting.name}>
               <Row
                 label={rowLabel}
-                changed={
-                  !!changed?.has(setting.valueName) ||
-                  !!changed?.has(setting.unitName)
-                }
+                changed={!!changed?.has(setting.valueName) || !!changed?.has(setting.unitName)}
                 onReset={
                   !readOnly && offDefault
                     ? () => {
-                        onSet(
-                          setting.valueName,
-                          setting.value.default as number,
-                        );
+                        onSet(setting.valueName, setting.value.default as number);
                         onSet(setting.unitName, setting.unit.default as number);
                       }
                     : undefined
                 }
               >
-                <DurationControl
-                  setting={setting}
-                  label={rowLabel}
-                  values={values}
-                  readOnly={readOnly}
-                  onSet={onSet}
-                />
+                <DurationControl setting={setting} label={rowLabel} values={values} readOnly={readOnly} onSet={onSet} />
               </Row>
             </div>
           );
         }
         const { name, parameter } = setting;
         const rowLabel = parameterLabel(name);
-        const writable =
-          !readOnly && (parameter.operations & Operation.WRITE) !== 0;
+        const writable = !readOnly && (parameter.operations & Operation.WRITE) !== 0;
         const control = controlOf(name, parameter, writable);
-        const hint =
-          control === "stepper" || control === "number"
-            ? rangeHint(name, parameter)
-            : undefined;
+        const hint = control === 'stepper' || control === 'number' ? rangeHint(name, parameter) : undefined;
         return (
+          // biome-ignore lint/a11y/useSemanticElements: see the list role above
           <div role="listitem" key={name}>
             <Row
               label={rowLabel}
               hint={hint}
               changed={!!changed?.has(name)}
               onReset={
-                writable &&
-                parameter.type !== "ACTION" &&
-                !isDefault(parameter, values[name])
-                  ? () =>
-                      onSet(
-                        name,
-                        parameter.default as string | number | boolean,
-                      )
+                writable && parameter.type !== 'ACTION' && !isDefault(parameter, values[name])
+                  ? () => onSet(name, parameter.default as string | number | boolean)
                   : undefined
               }
             >

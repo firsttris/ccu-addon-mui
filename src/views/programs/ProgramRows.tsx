@@ -2,8 +2,8 @@ import { ScriptTestButton } from './ScriptTest';
 import { useState } from 'react';
 import XIcon from '~icons/lucide/x';
 import { TimeModuleDialog, useTimeTexts } from './TimeModuleDialog';
-import { ProgramCondition, ProgramDestination, TimeModule } from '../../types/protocol';
-import { ParameterDescription } from '../../types/types';
+import type { ProgramCondition, ProgramDestination, TimeModule } from '../../types/protocol';
+import type { ParameterDescription } from '../../types/types';
 import { useSysvars } from '../../queries';
 import { Button } from '../../components/ui/button';
 import { NativeSelect } from '../../components/ui/select';
@@ -24,10 +24,10 @@ import {
 import {
   COMPARE,
   conditionKind,
-  ConditionKind,
+  type ConditionKind,
   describeTimeModule,
   destinationKind,
-  DestinationKind,
+  type DestinationKind,
   newCondition,
   newDestination,
   sysvarValueType,
@@ -44,7 +44,9 @@ const RemoveButton = ({ label, onClick }: { label: string; onClick: () => void }
 );
 
 const Row = ({ children, className }: { children: React.ReactNode; className?: string }) => (
-  <div className={cn('flex flex-wrap items-end gap-x-3 gap-y-2 rounded-xl border bg-card p-3', className)}>{children}</div>
+  <div className={cn('flex flex-wrap items-end gap-x-3 gap-y-2 rounded-xl border bg-card p-3', className)}>
+    {children}
+  </div>
 );
 
 // --- Comparisons of numbers (ConditionType 5, 6, 8-11)
@@ -155,8 +157,10 @@ export const ConditionRow = ({
   const { data: sysvars = [] } = useSysvars();
   const sysvar = kind === 'sysvar' ? sysvars.find((sv) => sv.id === condition.leftValue) : undefined;
 
-  const options = kind === 'device' ? discreteOptions(parameter) : kind === 'sysvar' ? sysvarOptions(sysvar) : undefined;
-  const isText = (kind === 'device' && parameter?.type === 'STRING') || (kind === 'sysvar' && sysvar?.kind === 'string');
+  const options =
+    kind === 'device' ? discreteOptions(parameter) : kind === 'sysvar' ? sysvarOptions(sysvar) : undefined;
+  const isText =
+    (kind === 'device' && parameter?.type === 'STRING') || (kind === 'sysvar' && sysvar?.kind === 'string');
   // A datapoint the channel doesn't describe (e.g. no paramset description)
   // keeps its raw value
   const unknownDatapoint = kind === 'device' && !!condition.datapoint && !parameter;
@@ -345,14 +349,19 @@ export const DestinationRow = ({
       : kind === 'sysvar'
         ? sysvarOptions(sysvar)
         : undefined;
-  const isText = (kind === 'device' && parameter?.type === 'STRING') || (kind === 'sysvar' && sysvar?.kind === 'string');
+  const isText =
+    (kind === 'device' && parameter?.type === 'STRING') || (kind === 'sysvar' && sysvar?.kind === 'string');
   const unknownDatapoint = kind === 'device' && !!destination.datapoint && !parameter;
   // "mit Wert aus": the value of a system variable instead of a fixed one
   const fromSysvar = destination.valueType === 'ivtSystemId';
   const isNumber =
-    !fromSysvar && ((kind === 'device' && (parameter || unknownDatapoint)) || (kind === 'sysvar' && sysvar)) && !options && !isText;
+    !fromSysvar &&
+    ((kind === 'device' && (parameter || unknownDatapoint)) || (kind === 'sysvar' && sysvar)) &&
+    !options &&
+    !isText;
   const fixedValue = (): Pick<ProgramDestination, 'valueType' | 'value'> => {
-    if (kind === 'sysvar') return { valueType: sysvarValueType(sysvar), value: sysvarOptions(sysvar)?.[0]?.value ?? '0' };
+    if (kind === 'sysvar')
+      return { valueType: sysvarValueType(sysvar), value: sysvarOptions(sysvar)?.[0]?.value ?? '0' };
     const discrete = parameter?.type === 'ACTION' ? [{ value: '1' }] : discreteOptions(parameter);
     return { valueType: valueTypeOf(parameter), value: discrete?.[0]?.value ?? '0' };
   };
@@ -390,7 +399,12 @@ export const DestinationRow = ({
               onChange={(name) => {
                 const p = datapoints[name];
                 const discrete = p?.type === 'ACTION' ? [{ value: '1' }] : discreteOptions(p);
-                onChange({ ...destination, datapoint: name, valueType: valueTypeOf(p), value: discrete?.[0]?.value ?? '0' });
+                onChange({
+                  ...destination,
+                  datapoint: name,
+                  valueType: valueTypeOf(p),
+                  value: discrete?.[0]?.value ?? '0',
+                });
               }}
             />
           )}
@@ -417,7 +431,10 @@ export const DestinationRow = ({
             aria-label={m.PRG_VALUE_FROM()}
             value={fromSysvar ? 'sysvar' : 'fixed'}
             onChange={(e) =>
-              onChange({ ...destination, ...(e.target.value === 'sysvar' ? { valueType: 'ivtSystemId', value: '0' } : fixedValue()) })
+              onChange({
+                ...destination,
+                ...(e.target.value === 'sysvar' ? { valueType: 'ivtSystemId', value: '0' } : fixedValue()),
+              })
             }
           >
             <option value="fixed">{m.PRG_VALUE_FIXED()}</option>
@@ -426,11 +443,19 @@ export const DestinationRow = ({
         </Field>
       )}
       {fromSysvar && (
-        <SysvarSelect value={Number(destination.value)} onChange={(sv) => onChange({ ...destination, value: String(sv.id) })} />
+        <SysvarSelect
+          value={Number(destination.value)}
+          onChange={(sv) => onChange({ ...destination, value: String(sv.id) })}
+        />
       )}
       {options && !fromSysvar && (
         <Field label={m.PRG_VALUE()}>
-          <ValueSelect label={m.PRG_VALUE()} value={destination.value} options={options} onChange={(value) => onChange({ ...destination, value })} />
+          <ValueSelect
+            label={m.PRG_VALUE()}
+            value={destination.value}
+            options={options}
+            onChange={(value) => onChange({ ...destination, value })}
+          />
         </Field>
       )}
       {isNumber && (

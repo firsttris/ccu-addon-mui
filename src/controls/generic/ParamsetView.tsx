@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
-  DatapointValue,
+  type DatapointValue,
   Operation,
-  ParameterDescription,
+  type ParameterDescription,
   ParameterFlag,
-  ParamsetDescription,
+  type ParamsetDescription,
 } from '../../types/types';
-import { defaultLang, TranslationKey, useTranslations } from '../../i18n/utils';
+import { defaultLang, type TranslationKey, useTranslations } from '../../i18n/utils';
 import { m } from '../../paraglide/messages';
 import { Switch } from '../../components/ui/switch';
 import { Input } from '../../components/ui/input';
@@ -24,7 +24,7 @@ const isPercent = (p: ParameterDescription) => p.unit === '100%';
 
 const toDisplay = (p: ParameterDescription, value: number) => (isPercent(p) ? value * 100 : value);
 const fromDisplay = (p: ParameterDescription, value: number) => (isPercent(p) ? value / 100 : value);
-const unitOf = (p: ParameterDescription) => (isPercent(p) ? '%' : p.unit ?? '');
+const unitOf = (p: ParameterDescription) => (isPercent(p) ? '%' : (p.unit ?? ''));
 
 // Parameters worth showing: visible, not internal, and either readable or
 // an action. Write-only modifiers (ON_TIME, RAMP_TIME) are left out.
@@ -41,10 +41,7 @@ export const shownParameters = (description: ParamsetDescription) =>
     .sort(([a, pa], [b, pb]) => pa.tabOrder - pb.tabOrder || a.localeCompare(b));
 
 // A value as text, e.g. for the list of changes before saving
-export const formatParameterValue = (
-  parameter: ParameterDescription,
-  value: DatapointValue | undefined,
-): string => {
+export const formatParameterValue = (parameter: ParameterDescription, value: DatapointValue | undefined): string => {
   if (value === null || value === undefined || value === '') {
     return '–';
   }
@@ -57,7 +54,7 @@ export const formatParameterValue = (
     case 'ACTION':
       return value ? m.YES() : m.NO();
     case 'ENUM':
-      return typeof value === 'number' ? parameter.valueList?.[value] ?? String(value) : String(value);
+      return typeof value === 'number' ? (parameter.valueList?.[value] ?? String(value)) : String(value);
     case 'FLOAT':
     case 'INTEGER':
       return typeof value === 'number'
@@ -228,7 +225,9 @@ export const ParamsetView = ({
             title={name}
           >
             <span className={named ? 'min-w-0' : 'truncate'}>{nameOf(name)}</span>
-            {changed?.has(name) && <span aria-label="•" className="size-1.5 shrink-0 rounded-full bg-blue-600" />}
+            {changed?.has(name) && (
+              <span role="img" aria-label="•" className="size-1.5 shrink-0 rounded-full bg-blue-600" />
+            )}
           </dt>
           <dd className="m-0 flex items-center justify-end text-right tabular-nums">
             <ParameterValue

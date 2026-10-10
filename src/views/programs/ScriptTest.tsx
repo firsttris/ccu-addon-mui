@@ -33,18 +33,23 @@ export const ScriptResult = ({ result }: { result: Result | null }) => {
   if (!result) return null;
   if ('syntaxError' in result || 'failed' in result) {
     return (
-      <pre role="alert" className="max-h-60 overflow-auto rounded-md bg-destructive/10 p-2 font-mono text-xs whitespace-pre-wrap text-destructive">
-        {'syntaxError' in result ? `${m.SCRIPT_SYNTAX_ERROR()}: ${result.syntaxError}` : `${m.CHANGE_FAILED()}: ${result.failed}`}
+      <pre
+        role="alert"
+        className="max-h-60 overflow-auto rounded-md bg-destructive/10 p-2 font-mono text-xs whitespace-pre-wrap text-destructive"
+      >
+        {'syntaxError' in result
+          ? `${m.SCRIPT_SYNTAX_ERROR()}: ${result.syntaxError}`
+          : `${m.CHANGE_FAILED()}: ${result.failed}`}
       </pre>
     );
   }
   return (
-    <pre
+    <section
       aria-label={m.SCRIPT_OUTPUT()}
       className="max-h-60 overflow-auto rounded-md bg-muted/60 p-2 font-mono text-xs whitespace-pre-wrap text-foreground"
     >
       {result.output || m.SCRIPT_NO_OUTPUT()}
-    </pre>
+    </section>
   );
 };
 
@@ -56,7 +61,12 @@ export const ScriptTestButton = ({ script }: { script: string }) => {
   return (
     <div className="flex w-full flex-col gap-2">
       <div>
-        <DialogButton type="button" className="h-8" disabled={!elevated || busy || script.trim() === ''} onClick={() => run(script)}>
+        <DialogButton
+          type="button"
+          className="h-8"
+          disabled={!elevated || busy || script.trim() === ''}
+          onClick={() => run(script)}
+        >
           <PlayIcon />
           {m.SCRIPT_TEST()}
         </DialogButton>
@@ -83,6 +93,7 @@ export const ScriptTestDialog = ({ onDone }: { onDone: () => void }) => {
           aria-label={m.PRG_KIND_SCRIPT()}
           className="min-h-48 w-full rounded-md border bg-transparent p-2 font-mono text-[13px] text-foreground"
           spellCheck={false}
+          // biome-ignore lint/a11y/noAutofocus: the dialog opens to type a script
           autoFocus
           placeholder={'WriteLine("Hallo");'}
           value={script}

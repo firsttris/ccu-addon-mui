@@ -30,7 +30,13 @@ const views = [
   // The longest page with the most glowing tiles: their blur comes out a
   // few hundred pixels different from run to run; a new line of text is
   // thousands
-  { name: 'all-devices', path: '/devices', ready: 'Rauchmelder Flur', loaded: ['Rauchtest', 'Berechtigt: Benutzer 1'], maxDiffPixels: 500 },
+  {
+    name: 'all-devices',
+    path: '/devices',
+    ready: 'Rauchmelder Flur',
+    loaded: ['Rauchtest', 'Berechtigt: Benutzer 1'],
+    maxDiffPixels: 500,
+  },
 ];
 
 test.use({ locale: 'de-DE', timezoneId: 'Europe/Berlin' });
@@ -55,17 +61,15 @@ const settle = async (page: Page) => {
 // A sheet or dialog slides in: until its animations ended, a screenshot
 // may catch it on the way
 const opened = async (page: Page) => {
-  await page
-    .getByRole('dialog')
-    .evaluate((el) =>
-      Promise.all(
-        el
-          .getAnimations({ subtree: true })
-          // Not the endless ones (a pulsing dot)
-          .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
-          .map((a) => a.finished),
-      ),
-    );
+  await page.getByRole('dialog').evaluate((el) =>
+    Promise.all(
+      el
+        .getAnimations({ subtree: true })
+        // Not the endless ones (a pulsing dot)
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished),
+    ),
+  );
   await page.evaluate(() => document.fonts.ready);
 };
 
@@ -105,7 +109,7 @@ for (const dark of [false, true]) {
         });
       }
 
-      test('login', async ({ page, context }) => {
+      test('login', async ({ context }) => {
         // A fresh page that has to log in
         await context.clearCookies();
         const loginPage = await context.newPage();

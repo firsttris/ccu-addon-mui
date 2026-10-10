@@ -36,10 +36,17 @@ export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
   const effects = useEffects();
   return (
     <div className="absolute inset-x-0 bottom-0 flex justify-center gap-1">
-      <button className={iconButton} onClick={onPowerOff} title={m.POWER_OFF()} aria-label={m.POWER_OFF()}>
+      <button
+        type="button"
+        className={iconButton}
+        onClick={onPowerOff}
+        title={m.POWER_OFF()}
+        aria-label={m.POWER_OFF()}
+      >
         <PowerIcon />
       </button>
       <button
+        type="button"
         className={cn(iconButton, manualMode && 'bg-sky-500/15 text-sky-600 hover:text-sky-600 dark:text-sky-300')}
         onClick={onToggleMode}
         title={manualMode ? m.SWITCH_MANUAL() : m.SWITCH_AUTO()}
@@ -48,18 +55,34 @@ export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
         {manualMode ? <HandIcon /> : <CalendarIcon />}
       </button>
       {onComfort && (
-        <button className={iconButton} onClick={onComfort} title={m.COMFORT_TEMPERATURE()} aria-label={m.COMFORT_TEMPERATURE()}>
+        <button
+          type="button"
+          className={iconButton}
+          onClick={onComfort}
+          title={m.COMFORT_TEMPERATURE()}
+          aria-label={m.COMFORT_TEMPERATURE()}
+        >
           <SunIcon />
         </button>
       )}
       {onLowering && (
-        <button className={iconButton} onClick={onLowering} title={m.LOWERING_TEMPERATURE()} aria-label={m.LOWERING_TEMPERATURE()}>
+        <button
+          type="button"
+          className={iconButton}
+          onClick={onLowering}
+          title={m.LOWERING_TEMPERATURE()}
+          aria-label={m.LOWERING_TEMPERATURE()}
+        >
           <MoonIcon />
         </button>
       )}
       {canBoost && (
         <button
-          className={cn(iconButton, boostMode && 'bg-orange-500/15 text-orange-600 hover:text-orange-600 dark:text-orange-300')}
+          type="button"
+          className={cn(
+            iconButton,
+            boostMode && 'bg-orange-500/15 text-orange-600 hover:text-orange-600 dark:text-orange-300',
+          )}
           onClick={onToggleBoost}
           title={m.BOOST()}
           aria-label={m.BOOST()}

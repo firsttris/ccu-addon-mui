@@ -1,10 +1,16 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useChannelList, useParamsetDescription, useSysvars } from '../../queries';
-import { Operation, ParameterDescription, ParameterFlag, ParamsetDescription, Sysvar } from '../../types/types';
+import {
+  Operation,
+  type ParameterDescription,
+  ParameterFlag,
+  type ParamsetDescription,
+  type Sysvar,
+} from '../../types/types';
 import { NativeSelect } from '../../components/ui/select';
 import { ChannelField } from '../../components/ChannelField';
 import { Input } from '../../components/ui/input';
-import { TranslationKey, useTranslations } from '../../i18n/utils';
+import { type TranslationKey, useTranslations } from '../../i18n/utils';
 import { m } from '../../paraglide/messages';
 
 // The inputs of the program editor: channels, datapoints, system variables
@@ -12,6 +18,7 @@ import { m } from '../../paraglide/messages';
 // dest.inc).
 
 export const Field = ({ label, children }: { label: string; children: ReactNode }) => (
+  // biome-ignore lint/a11y/noLabelWithoutControl: the control comes as children
   <label className="flex min-w-0 flex-col gap-1 text-xs">
     <span className="text-muted-foreground">{label}</span>
     {children}
@@ -21,7 +28,15 @@ export const Field = ({ label, children }: { label: string; children: ReactNode 
 const selectClass = 'h-9 min-w-0 max-w-full md:text-[13px]';
 
 // A channel of any device, chosen in the channel dialog (pictures, search)
-export const ChannelSelect = ({ value, onChange, label }: { value: number; onChange: (id: number) => void; label: string }) => {
+export const ChannelSelect = ({
+  value,
+  onChange,
+  label,
+}: {
+  value: number;
+  onChange: (id: number) => void;
+  label: string;
+}) => {
   const { data: channels = [] } = useChannelList();
   return (
     <div className="flex min-w-0 flex-col gap-1 text-xs">
@@ -46,7 +61,10 @@ export const useDatapoints = (channelId: number, need: 'read' | 'write') => {
     const mask = need === 'read' ? Operation.READ | Operation.EVENT : Operation.WRITE;
     return Object.fromEntries(
       Object.entries(description).filter(
-        ([, p]) => (p.operations & mask) !== 0 && (p.flags & ParameterFlag.VISIBLE) !== 0 && (p.flags & ParameterFlag.INTERNAL) === 0,
+        ([, p]) =>
+          (p.operations & mask) !== 0 &&
+          (p.flags & ParameterFlag.VISIBLE) !== 0 &&
+          (p.flags & ParameterFlag.INTERNAL) === 0,
       ),
     ) as ParamsetDescription;
   }, [channel, description, need]);
@@ -65,7 +83,12 @@ export const DatapointSelect = ({
   const names = Object.keys(datapoints).sort();
   return (
     <Field label={m.PRG_DATAPOINT()}>
-      <NativeSelect className={selectClass} aria-label={m.PRG_DATAPOINT()} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+      <NativeSelect
+        className={selectClass}
+        aria-label={m.PRG_DATAPOINT()}
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+      >
         <option value="">{m.PRG_CHOOSE()}</option>
         {names.map((name) => (
           <option key={name} value={name}>
@@ -121,7 +144,8 @@ export const NumberInput = ({
     return Number.isNaN(n) ? '' : String(Math.round((isPercent(parameter) ? n * 100 : n) * 1000) / 1000);
   };
   const [draft, setDraft] = useState(shown(value));
-  useEffect(() => setDraft(shown(value)), [value]); // eslint-disable-line react-hooks/exhaustive-deps
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new value from outside, not every render, resets the draft
+  useEffect(() => setDraft(shown(value)), [value]);
   const commit = () => {
     const n = Number(draft.replace(',', '.'));
     if (draft === '' || Number.isNaN(n)) return setDraft(shown(value));
@@ -170,7 +194,11 @@ export const ValueSelect = ({
 // The discrete choices of a datapoint, or undefined for numbers and texts
 export const discreteOptions = (p?: ParameterDescription) => {
   if (!p) return undefined;
-  if (p.type === 'BOOL') return [{ value: '1', label: m.BOOL_TRUE() }, { value: '0', label: m.BOOL_FALSE() }];
+  if (p.type === 'BOOL')
+    return [
+      { value: '1', label: m.BOOL_TRUE() },
+      { value: '0', label: m.BOOL_FALSE() },
+    ];
   if (p.type === 'ACTION') return [{ value: '1', label: m.KEY_PRESS() }];
   if (p.type === 'ENUM') return (p.valueList ?? []).map((label, index) => ({ value: String(index), label }));
   return undefined;

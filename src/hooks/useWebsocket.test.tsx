@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { ToastProvider } from '../contexts/ToastContext';
 
 // react-use-websocket replaced by a socket the test drives: its ready state,
@@ -152,7 +152,16 @@ describe('useWebsocket', () => {
     fromServer({ event: { channel: 'A:1', datapoint: 'STATE', value: true } });
     expect(events).toEqual([{ channel: 'A:1', datapoint: 'STATE', value: true }]);
     const channels = hook.result.current.actions.recent.channelsSince(
-      [{ id: 1, name: 'Licht', address: 'A:1', interfaceName: 'HmIP-RF', type: 'SWITCH_VIRTUAL_RECEIVER', datapoints: { STATE: false } }],
+      [
+        {
+          id: 1,
+          name: 'Licht',
+          address: 'A:1',
+          interfaceName: 'HmIP-RF',
+          type: 'SWITCH_VIRTUAL_RECEIVER',
+          datapoints: { STATE: false },
+        },
+      ],
       startedAt,
     );
     expect(channels[0].datapoints).toEqual({ STATE: true });

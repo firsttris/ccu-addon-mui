@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ParamsetView, shownParameters } from './ParamsetView';
 import { renderWithTheme } from '../../test/render';
-import { DatapointValue, ParameterDescription, ParamsetDescription } from '../../types/types';
+import type { DatapointValue, ParameterDescription, ParamsetDescription } from '../../types/types';
 
 // Raw XML-RPC description (as in the fixtures) → the JSON the server sends
 const fromRaw = (raw: Record<string, Record<string, unknown>> | null): ParamsetDescription =>
@@ -33,7 +33,10 @@ const fromRaw = (raw: Record<string, Record<string, unknown>> | null): ParamsetD
 
 type Fixture = {
   channels: { address: string; datapoints: Record<string, DatapointValue> }[];
-  interfaces: Record<string, { paramsetDescriptions?: Record<string, Record<string, Record<string, Record<string, unknown>> | null>> }>;
+  interfaces: Record<
+    string,
+    { paramsetDescriptions?: Record<string, Record<string, Record<string, Record<string, unknown>> | null>> }
+  >;
 };
 
 const fixturesDir = path.resolve(__dirname, '../../../fixtures');
@@ -58,14 +61,18 @@ describe.each(fixtures)('descriptions in %s', (_, fixture) => {
     ),
   );
 
-  it.each(cases)('%s renders', (label, address, description) => {
-    const values = fixture.channels.find((c) => c.address === address)?.datapoints ?? {};
-    renderWithTheme(<ParamsetView label={label} description={description} values={values} onSet={() => {}} />);
-    const list = screen.getByLabelText(label);
-    expect(within(list).queryAllByRole('term')).toHaveLength(shownParameters(description).length);
-    // The virtual keys' MASTER paramset has over 1000 parameters, which
-    // takes about 5 s in jsdom on the CI runners
-  }, 30_000);
+  it.each(cases)(
+    '%s renders',
+    (label, address, description) => {
+      const values = fixture.channels.find((c) => c.address === address)?.datapoints ?? {};
+      renderWithTheme(<ParamsetView label={label} description={description} values={values} onSet={() => {}} />);
+      const list = screen.getByLabelText(label);
+      expect(within(list).queryAllByRole('term')).toHaveLength(shownParameters(description).length);
+      // The virtual keys' MASTER paramset has over 1000 parameters, which
+      // takes about 5 s in jsdom on the CI runners
+    },
+    30_000,
+  );
 });
 
 const description: ParamsetDescription = {
@@ -76,7 +83,15 @@ const description: ParamsetDescription = {
   WINDOW: { type: 'ENUM', operations: 5, flags: 1, tabOrder: 4, valueList: ['CLOSED', 'OPEN'] },
   ON_TIME: { type: 'FLOAT', operations: 2, flags: 1, tabOrder: 5, unit: 's' },
   SECRET: { type: 'BOOL', operations: 5, flags: 3, tabOrder: 6 },
-  DELAY: { type: 'FLOAT', operations: 7, flags: 1, tabOrder: 7, min: 0, max: 100, special: [{ id: 'NOT_USED', value: 0 }] },
+  DELAY: {
+    type: 'FLOAT',
+    operations: 7,
+    flags: 1,
+    tabOrder: 7,
+    min: 0,
+    max: 100,
+    special: [{ id: 'NOT_USED', value: 0 }],
+  },
 };
 
 describe('ParamsetView', () => {

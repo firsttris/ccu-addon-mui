@@ -37,7 +37,13 @@ const fakeUpdateServer = async (page: Page) => {
         if (message.type === 'checkSelfUpdate') {
           void page.servedVersion().then((current) =>
             setTimeout(() => {
-              this.dispatchMessage({ type: 'checkSelfUpdate_response', requestId: message.requestId, current, latest, installable: true });
+              this.dispatchMessage({
+                type: 'checkSelfUpdate_response',
+                requestId: message.requestId,
+                current,
+                latest,
+                installable: true,
+              });
               // Answered: a test can wait for it before checking there is no notice
               page.updateChecks = (page.updateChecks ?? 0) + 1;
             }, 20),
@@ -46,11 +52,17 @@ const fakeUpdateServer = async (page: Page) => {
         }
         if (message.type === 'installSelfUpdate') {
           const total = 5 * 1024 * 1024;
-          for (let i = 0; i <= 5; i++) later(100 + i * 150, { type: 'selfUpdateProgress', phase: 'download', done: (total * i) / 5, total });
+          for (let i = 0; i <= 5; i++)
+            later(100 + i * 150, { type: 'selfUpdateProgress', phase: 'download', done: (total * i) / 5, total });
           later(1100, { type: 'selfUpdateProgress', phase: 'verify' });
           later(1300, { type: 'selfUpdateProgress', phase: 'unpack' });
           later(1500, { type: 'selfUpdateProgress', phase: 'install' });
-          later(2000, { type: 'installSelfUpdate_response', requestId: message.requestId, success: true, version: latest });
+          later(2000, {
+            type: 'installSelfUpdate_response',
+            requestId: message.requestId,
+            success: true,
+            version: latest,
+          });
           // The update script restarts the server a few seconds later
           setTimeout(async () => {
             await page.restartServer();
@@ -94,7 +106,9 @@ test('installiert das Update und läuft danach in der neuen Version', async ({ p
   // The app reloads by itself into the new version and says so
   await expect(page.getByRole('dialog')).toContainText(`MUI ${NEW} ist installiert und läuft`, { timeout: 60_000 });
   // The new app's files, from the new service worker
-  const script = await page.evaluate(async () => (await (await fetch('/addons/mui/index.html')).text()).match(/index-[\w-]+\.js/)?.[0]);
+  const script = await page.evaluate(
+    async () => (await (await fetch('/addons/mui/index.html')).text()).match(/index-[\w-]+\.js/)?.[0],
+  );
   const html = await (await fetch(`${SERVER}/addons/mui/index.html`)).text();
   expect(html).toContain(script);
 });
@@ -122,7 +136,9 @@ test('fragt nach "Überspringen" bei dieser Version nicht mehr', async ({ page }
   await page.getByRole('button', { name: 'Überspringen' }).click();
   await page.reload();
   // The app asked and got the answer, and still shows no notice
-  await expect.poll(() => page.evaluate(() => (window as unknown as { updateChecks?: number }).updateChecks ?? 0)).toBeGreaterThan(0);
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { updateChecks?: number }).updateChecks ?? 0))
+    .toBeGreaterThan(0);
   await page.waitForTimeout(300);
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });

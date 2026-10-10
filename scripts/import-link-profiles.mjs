@@ -58,10 +58,11 @@ const wwwList = (rel) => {
   const files = new Set();
   const dirs = new Set();
   if (fs.existsSync(dir)) {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) (entry.isDirectory() ? dirs : files).add(entry.name);
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true }))
+      (entry.isDirectory() ? dirs : files).add(entry.name);
   }
   for (const key of overlay.keys()) {
-    if (!key.startsWith(rel + '/')) continue;
+    if (!key.startsWith(`${rel}/`)) continue;
     const [first, ...rest] = key.slice(rel.length + 1).split('/');
     (rest.length ? dirs : files).add(first);
   }
@@ -158,13 +159,15 @@ const parseFile = (receiver, rel) => {
     if (!m) return;
     const [, n, param, raw] = m;
     if (param === 'UI_WHITELIST' || param === 'UI_BLACKLIST') {
-      (lists[n] ??= {})[param === 'UI_WHITELIST' ? 'whitelist' : 'blacklist'] = raw.replace(/[{}]/g, '').trim().split(/\s+/);
+      lists[n] ??= {};
+      lists[n][param === 'UI_WHITELIST' ? 'whitelist' : 'blacklist'] = raw.replace(/[{}]/g, '').trim().split(/\s+/);
       return;
     }
     if (param.startsWith('UI_')) return;
     const value = parseValue(raw, vars);
     if (value === undefined) throw new Error(`${rel}:${i + 1}: can't read the value of PROFILE_${n}(${param}): ${raw}`);
-    (values[n] ??= {})[param] = value;
+    values[n] ??= {};
+    values[n][param] = value;
   });
   // Settings shown per profile
   const fields = {};
@@ -175,7 +178,9 @@ const parseFile = (receiver, rel) => {
     const add = (field) => {
       if (!shown.some((f) => f.params.join() === field.params.join())) shown.push(field);
     };
-    for (const m of block.matchAll(/getTimeSelector\s+(\w+)\s+ps\s+PROFILE_\$prn\s+(\w+)\s+\$prn\s+\$special_input_id\s+(\w+)/g)) {
+    for (const m of block.matchAll(
+      /getTimeSelector\s+(\w+)\s+ps\s+PROFILE_\$prn\s+(\w+)\s+\$prn\s+\$special_input_id\s+(\w+)/g,
+    )) {
       add({ kind: 'time', params: [m[3]], label: m[1] });
     }
     for (const m of block.matchAll(/get_ComboBox options (\$param|[\w|]+)/g)) {
@@ -187,7 +192,9 @@ const parseFile = (receiver, rel) => {
       const label = [...before.matchAll(/<td>\\?\$\{(\w+)\}<\/td>/g)].pop()?.[1];
       // Its choices: set since the last array_clear options
       const since = before.slice(before.lastIndexOf('array_clear options'));
-      const options = Object.fromEntries([...since.matchAll(/set options\((\d+)\)\s+"\\?\$\{(\w+)\}"/g)].map((o) => [o[1], o[2]]));
+      const options = Object.fromEntries(
+        [...since.matchAll(/set options\((\d+)\)\s+"\\?\$\{(\w+)\}"/g)].map((o) => [o[1], o[2]]),
+      );
       add({
         kind: 'value',
         params: params.split('|'),
@@ -256,7 +263,7 @@ fs.mkdirSync(outDir, { recursive: true });
 let total = 0;
 for (const [receiver, senders] of Object.entries(result)) {
   const file = path.join(outDir, `${receiver}.json`);
-  fs.writeFileSync(file, JSON.stringify(senders) + '\n');
+  fs.writeFileSync(file, `${JSON.stringify(senders)}\n`);
   total += fs.statSync(file).size;
   console.log(receiver, Object.keys(senders).length, 'senders');
 }

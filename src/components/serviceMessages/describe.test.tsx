@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeServiceMessage, ServiceTexts } from '../ServiceMessages';
+import { describeServiceMessage, type ServiceTexts } from '../ServiceMessages';
 import texts from './texts.json';
 
 describe('describeServiceMessage', () => {

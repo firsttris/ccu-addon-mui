@@ -26,7 +26,7 @@ export const Home = () => {
   }
   const favorite =
     startPage === 'favorites'
-      ? favorites?.find((f) => String(f.id) === stored(LAST_FAVORITE_KEY)) ?? favorites?.[0]
+      ? (favorites?.find((f) => String(f.id) === stored(LAST_FAVORITE_KEY)) ?? favorites?.[0])
       : lastView?.kind === 'favorite'
         ? favorites?.find((f) => String(f.id) === lastView.id)
         : undefined;

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { GenericControlView as GenericControl } from './GenericControl';
 import { renderWithTheme } from '../test/render';
-import { GenericChannel } from '../types/types';
+import type { GenericChannel } from '../types/types';
 
 const channel: GenericChannel = {
   id: 1,
@@ -18,8 +18,12 @@ describe('GenericControl', () => {
     renderWithTheme(<GenericControl channel={channel} />);
 
     const list = screen.getByLabelText('Fenstergriff');
-    const terms = within(list).getAllByRole('term').map((el) => el.textContent);
-    const values = within(list).getAllByRole('definition').map((el) => el.textContent);
+    const terms = within(list)
+      .getAllByRole('term')
+      .map((el) => el.textContent);
+    const values = within(list)
+      .getAllByRole('definition')
+      .map((el) => el.textContent);
     expect(terms).toEqual(['ERROR', 'SABOTAGE', 'STATE', 'TEMPERATURE', 'TEXT']);
     expect(values[0]).toBe('–');
     expect(values[1]).toMatch(/^(No|Nein)$/);

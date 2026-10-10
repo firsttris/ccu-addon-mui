@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { networkErrors, validNetmask } from './Network';
 
 describe('network checks', () => {
-  const manual = { dhcp: false, hostname: 'ccu', ip: '192.168.1.30', netmask: '255.255.255.0', gateway: '192.168.1.1', dns1: '', dns2: '' };
+  const manual = {
+    dhcp: false,
+    hostname: 'ccu',
+    ip: '192.168.1.30',
+    netmask: '255.255.255.0',
+    gateway: '192.168.1.1',
+    dns1: '',
+    dns2: '',
+  };
   it('accepts a valid setup', () => {
     expect(networkErrors(manual)).toEqual({});
     expect(networkErrors({ ...manual, dhcp: true, ip: 'x' })).toEqual({});

@@ -39,7 +39,14 @@ export const AllLinks = () => {
       <div className="flex flex-wrap gap-2">
         <div className="relative max-w-md flex-1 basis-60">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input type="search" aria-label={m.SEARCH()} placeholder={m.SEARCH()} value={query} onChange={(e) => setQuery(e.target.value)} className="pl-9" />
+          <Input
+            type="search"
+            aria-label={m.SEARCH()}
+            placeholder={m.SEARCH()}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="pl-9"
+          />
         </div>
         <NativeSelect aria-label={m.ROOMS()} className="w-auto" value={room} onChange={(e) => setRoom(e.target.value)}>
           <option value="">{m.LINKS_ALL_ROOMS()}</option>
@@ -67,7 +74,6 @@ export const AllLinks = () => {
           }}
         />
       </section>
-
     </div>
   );
 };

@@ -76,7 +76,11 @@ export const History = () => {
   const total = history.data?.pages[0]?.total ?? 0;
   const needle = query.trim().toLowerCase();
   const shown = needle
-    ? entries.filter((e) => `${e.name} ${e.datapoint ? datapointLabel(e.datapoint) : ''} ${formatEntryValue(e)}`.toLowerCase().includes(needle))
+    ? entries.filter((e) =>
+        `${e.name} ${e.datapoint ? datapointLabel(e.datapoint) : ''} ${formatEntryValue(e)}`
+          .toLowerCase()
+          .includes(needle),
+      )
     : entries;
 
   const clear = async () => {
@@ -127,14 +131,21 @@ export const History = () => {
           <TableBody>
             {history.isPending && <TableSkeletonRows columns={3} rows={8} />}
             {shown.map((entry, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: entries have no id; equal ones in a row are told apart by position
               <TableRow key={`${entry.time}-${entry.group}-${index}`}>
-                <TableCell className="hidden whitespace-nowrap text-muted-foreground tabular-nums sm:table-cell">{formatTime(entry.time)}</TableCell>
+                <TableCell className="hidden whitespace-nowrap text-muted-foreground tabular-nums sm:table-cell">
+                  {formatTime(entry.time)}
+                </TableCell>
                 <TableCell className="font-medium">
                   {entry.name}
-                  <span className="block text-xs font-normal text-muted-foreground tabular-nums sm:hidden">{formatTime(entry.time)}</span>
+                  <span className="block text-xs font-normal text-muted-foreground tabular-nums sm:hidden">
+                    {formatTime(entry.time)}
+                  </span>
                 </TableCell>
                 <TableCell>
-                  {entry.datapoint && <span className="mr-1.5 text-muted-foreground">{datapointLabel(entry.datapoint)}:</span>}
+                  {entry.datapoint && (
+                    <span className="mr-1.5 text-muted-foreground">{datapointLabel(entry.datapoint)}:</span>
+                  )}
                   {formatEntryValue(entry)}
                 </TableCell>
               </TableRow>
@@ -155,14 +166,26 @@ export const History = () => {
           {history.isPending ? ' ' : m.HIST_COUNT({ shown: entries.length, total })}
         </p>
         {history.hasNextPage && (
-          <Button type="button" variant="outline" size="sm" disabled={history.isFetchingNextPage} onClick={() => history.fetchNextPage()}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={history.isFetchingNextPage}
+            onClick={() => history.fetchNextPage()}
+          >
             {m.HIST_MORE()}
           </Button>
         )}
       </div>
 
       {clearing && (
-        <ConfirmDialog title={m.HIST_CLEAR()} confirmLabel={m.HIST_CLEAR()} destructive onConfirm={clear} onCancel={() => setClearing(false)}>
+        <ConfirmDialog
+          title={m.HIST_CLEAR()}
+          confirmLabel={m.HIST_CLEAR()}
+          destructive
+          onConfirm={clear}
+          onCancel={() => setClearing(false)}
+        >
           {m.HIST_CLEAR_CONFIRM()}
         </ConfirmDialog>
       )}

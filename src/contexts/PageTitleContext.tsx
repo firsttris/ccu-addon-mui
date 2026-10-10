@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import type React from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 // Arranging the tiles of the current page, from the header: "Arrange"
 // starts it, and while arranging the header shows its buttons in that place

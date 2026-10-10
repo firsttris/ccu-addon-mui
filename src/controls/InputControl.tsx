@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import CircleDotIcon from "~icons/lucide/circle-dot";
-import ToggleLeftIcon from "~icons/lucide/toggle-left";
-import DoorOpenIcon from "~icons/lucide/door-open";
-import DoorClosedIcon from "~icons/lucide/door-closed";
-import GaugeIcon from "~icons/lucide/gauge";
-import CircleOffIcon from "~icons/lucide/circle-off";
-import { Channel, DatapointValue } from "../types/types";
-import { m } from "../paraglide/messages";
-import { DetectorTile, Tone } from "./DetectorControls";
+import { useEffect, useRef, useState } from 'react';
+import CircleDotIcon from '~icons/lucide/circle-dot';
+import ToggleLeftIcon from '~icons/lucide/toggle-left';
+import DoorOpenIcon from '~icons/lucide/door-open';
+import DoorClosedIcon from '~icons/lucide/door-closed';
+import GaugeIcon from '~icons/lucide/gauge';
+import CircleOffIcon from '~icons/lucide/circle-off';
+import type { Channel, DatapointValue } from '../types/types';
+import { m } from '../paraglide/messages';
+import { DetectorTile, type Tone } from './DetectorControls';
 
 // What an input is wired to, the WebUI's metadata "channelMode"
 // (translate.lang.channelDescription.js, chType_MULTI_MODE_INPUT_TRANSMITTER_*)
@@ -39,7 +39,7 @@ export const contactOpen = (channel: Channel): boolean | undefined => {
   return undefined;
 };
 
-type Press = "short" | "long";
+type Press = 'short' | 'long';
 
 // The last press reported while the tile is shown; lights up for a moment
 const usePress = (channel: Channel) => {
@@ -52,12 +52,7 @@ const usePress = (channel: Channel) => {
       first.current = false;
       return;
     }
-    const kind =
-      dp.PRESS_LONG === true
-        ? "long"
-        : dp.PRESS_SHORT === true
-          ? "short"
-          : null;
+    const kind = dp.PRESS_LONG === true ? 'long' : dp.PRESS_SHORT === true ? 'short' : null;
     if (!kind) return;
     setPress(kind);
     setActive(true);
@@ -77,7 +72,7 @@ export const InputControl = ({ channel }: { channel: Channel }) => {
   const { press, active } = usePress(channel);
   const dp = channel.datapoints as Record<string, DatapointValue>;
 
-  let tone: Tone = "calm";
+  let tone: Tone = 'calm';
   let icon = <CircleDotIcon />;
   let status: string = m.INPUT_WAITING();
   switch (mode) {
@@ -87,44 +82,30 @@ export const InputControl = ({ channel }: { channel: Channel }) => {
       status = m.INPUT_NO_FUNCTION();
       break;
     case 1:
-      tone = active ? "active" : "calm";
-      if (press)
-        status =
-          press === "long" ? m.INPUT_PRESSED_LONG() : m.INPUT_PRESSED_SHORT();
+      tone = active ? 'active' : 'calm';
+      if (press) status = press === 'long' ? m.INPUT_PRESSED_LONG() : m.INPUT_PRESSED_SHORT();
       break;
     case 2:
       icon = <ToggleLeftIcon />;
-      tone = active ? "active" : "calm";
+      tone = active ? 'active' : 'calm';
       if (press) status = m.INPUT_SWITCHED();
       break;
     case 3: {
       const open = contactOpen(channel);
       icon = open ? <DoorOpenIcon /> : <DoorClosedIcon />;
-      tone = open ? "active" : "calm";
-      status =
-        open === undefined
-          ? m.WINDOW_UNKNOWN()
-          : open
-            ? m.WINDOW_STATE_OPEN()
-            : m.WINDOW_CLOSED();
+      tone = open ? 'active' : 'calm';
+      status = open === undefined ? m.WINDOW_UNKNOWN() : open ? m.WINDOW_STATE_OPEN() : m.WINDOW_CLOSED();
       break;
     }
     case 4: {
       icon = <GaugeIcon />;
       const value = dp.VALUE_8BIT;
-      status = typeof value === "number" ? String(value) : m.WINDOW_UNKNOWN();
+      status = typeof value === 'number' ? String(value) : m.WINDOW_UNKNOWN();
       break;
     }
   }
 
   return (
-    <DetectorTile
-      channel={channel}
-      tone={tone}
-      waves={active}
-      icon={icon}
-      status={status}
-      detail={modeLabel[mode]()}
-    />
+    <DetectorTile channel={channel} tone={tone} waves={active} icon={icon} status={status} detail={modeLabel[mode]()} />
   );
 };

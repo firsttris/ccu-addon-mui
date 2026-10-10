@@ -50,20 +50,23 @@ export const UpdateNotice = () => {
   const now = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (asked || !selfUpdate || connectionStatus !== 'Open' || authState !== 'authenticated' || userLevel !== 'admin') return;
+    if (asked || !selfUpdate || connectionStatus !== 'Open' || authState !== 'authenticated' || userLevel !== 'admin')
+      return;
     setAsked(true);
     request({ type: 'checkSelfUpdate' }, { timeoutMs: 30000 })
       .then((answer) => {
         const current = answer.current || import.meta.env.VITE_APP_VERSION || '';
         if (!answer.installable || !isNewerVersion(answer.latest, current)) return;
-        if (read(localStorage, SKIPPED_KEY) === answer.latest || read(sessionStorage, LATER_KEY) === answer.latest) return;
+        if (read(localStorage, SKIPPED_KEY) === answer.latest || read(sessionStorage, LATER_KEY) === answer.latest)
+          return;
         setLatest({ current, latest: answer.latest });
       })
       .catch(() => undefined);
   }, [asked, selfUpdate, connectionStatus, authState, userLevel, request]);
 
   if (!latest) return null;
-  if (installing) return <UpdateWizard version={latest.latest} current={latest.current} onClose={() => setLatest(null)} />;
+  if (installing)
+    return <UpdateWizard version={latest.latest} current={latest.current} onClose={() => setLatest(null)} />;
 
   const close = (key: string, storage: Storage) => {
     write(storage, key, latest.latest);
@@ -85,11 +88,19 @@ export const UpdateNotice = () => {
             className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-sky-500/15 via-violet-500/5 to-transparent"
           />
         )}
-        <UpdateHero icon={<GiftIcon />} iconKey="gift" motion="fx-swing-a [animation-iteration-count:infinite] [animation-duration:2.4s]" progress={0} running />
+        <UpdateHero
+          icon={<GiftIcon />}
+          iconKey="gift"
+          motion="fx-swing-a [animation-iteration-count:infinite] [animation-duration:2.4s]"
+          progress={0}
+          running
+        />
         <DialogHeader className="relative items-center gap-3 text-center sm:items-center sm:text-center">
           <DialogTitle className="text-xl">{m.UPDATE_AVAILABLE()}</DialogTitle>
           <VersionJump from={latest.current} to={latest.latest} />
-          <DialogDescription>{m.UPDATE_NEW_VERSION({ latest: latest.latest, current: latest.current })}</DialogDescription>
+          <DialogDescription>
+            {m.UPDATE_NEW_VERSION({ latest: latest.latest, current: latest.current })}
+          </DialogDescription>
           <a
             href={`https://github.com/firsttris/ccu-addon-mui/releases/tag/v${latest.latest}`}
             target="_blank"
@@ -101,12 +112,7 @@ export const UpdateNotice = () => {
           </a>
         </DialogHeader>
         <div className="flex flex-col gap-2">
-          <Button
-            ref={now}
-            size="lg"
-            className={updateButton}
-            onClick={() => setInstalling(true)}
-          >
+          <Button ref={now} size="lg" className={updateButton} onClick={() => setInstalling(true)}>
             <DownloadIcon />
             {m.UPDATE_NOW()}
           </Button>
@@ -158,7 +164,9 @@ export const UpdateDone = () => {
         />
         <DialogHeader className="relative items-center text-center sm:items-center sm:text-center">
           <DialogTitle className="text-xl">{ok ? m.UPDATE_DONE_TITLE() : m.UPDATE_OLD_APP_TITLE()}</DialogTitle>
-          <DialogDescription>{ok ? m.UPDATE_DONE({ version }) : m.UPDATE_OLD_APP({ version, running })}</DialogDescription>
+          <DialogDescription>
+            {ok ? m.UPDATE_DONE({ version }) : m.UPDATE_OLD_APP({ version, running })}
+          </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-center">
           {!ok && (

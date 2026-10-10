@@ -1,5 +1,5 @@
 import { useParamsetDescription } from '../queries';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 
 // Names of an enum datapoint's values from the channel's paramset
 // description. `fallback` is the usual order, for showing a state while the
@@ -13,7 +13,12 @@ export const useValueList = (channel: Channel, datapoint: string, fallback: stri
   return {
     known: Boolean(list && list.length > 0),
     // Name of the current value, e.g. "PRIMARY_ALARM"
-    name: typeof value === 'number' ? names[value] : typeof value === 'string' && Number.isNaN(Number(value)) ? value : undefined,
+    name:
+      typeof value === 'number'
+        ? names[value]
+        : typeof value === 'string' && Number.isNaN(Number(value))
+          ? value
+          : undefined,
     indexOf: (name: string) => (list ?? []).indexOf(name),
   };
 };

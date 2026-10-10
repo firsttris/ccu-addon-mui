@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 import { EVENT_GRACE_MS, RecentUpdates } from './recentUpdates';
 import { RequestError, shouldRetry } from './useWebsocket';
 

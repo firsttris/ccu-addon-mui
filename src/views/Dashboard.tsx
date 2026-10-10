@@ -1,10 +1,20 @@
 import { PlaceDiagrams } from './diagrams/Diagrams';
 import { LightsStat, TemperatureStat, WindowsStat } from './OverviewStats';
-import { ComponentType, Fragment as ReactFragment, memo, ReactNode, Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  type ComponentType,
+  Fragment as ReactFragment,
+  memo,
+  type ReactNode,
+  Suspense,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Link } from '@tanstack/react-router';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 import { sameItems } from '../hooks/channels';
-import { controlOverrides, SectionId } from '../controls/registry';
+import { controlOverrides, type SectionId } from '../controls/registry';
 import { ControlComponent } from '../components/ControlComponent';
 import { AlarmBanner, AlarmsSheet } from '../components/Alarms';
 import { windowState } from '../controls/WindowControl';
@@ -18,8 +28,8 @@ import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
 import { usePageArrange } from '../contexts/PageTitleContext';
 import { Button } from '../components/ui/button';
-import { GridDashboard, GridTile } from './grid/GridDashboard';
-import { moveSection, orderSections, parseLayout, SavedLayout, SectionLayout } from './grid/tileLayout';
+import { GridDashboard, type GridTile } from './grid/GridDashboard';
+import { moveSection, orderSections, parseLayout, type SavedLayout, type SectionLayout } from './grid/tileLayout';
 import ChevronUpIcon from '~icons/lucide/chevron-up';
 import ChevronDownIcon from '~icons/lucide/chevron-down';
 import { isLight as isLightTile, useLightTradeIds } from '../controls/light/isLight';
@@ -42,6 +52,7 @@ export const NavTabs = ({ label, items, activeId, to }: NavTabsProps) => {
   const listRef = useRef<HTMLDivElement>(null);
   const [marker, setMarker] = useState<{ left: number; width: number } | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: measures again when the active tab or the tabs change
   useLayoutEffect(() => {
     const update = () => {
       const active = listRef.current?.querySelector<HTMLElement>('[aria-current="page"]');
@@ -247,7 +258,13 @@ const sectionGrids: Record<SectionId | 'generic', string> = {
 // A control for all channels of a device: rendered again only when one of
 // them changed (the list itself is new whenever its section is rebuilt)
 const DeviceTile = memo(
-  function DeviceTile({ component: Component, channels }: { component: ComponentType<{ channels: Channel[] }>; channels: Channel[] }) {
+  function DeviceTile({
+    component: Component,
+    channels,
+  }: {
+    component: ComponentType<{ channels: Channel[] }>;
+    channels: Channel[];
+  }) {
     return (
       <Suspense fallback={<TileSkeleton />}>
         <Component channels={channels} />
@@ -409,7 +426,17 @@ interface DashboardProps {
   freeOrder?: number[];
 }
 
-export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, onRetry, extra, empty, freeOrder }: DashboardProps) => {
+export const Dashboard = ({
+  tabs,
+  layoutId,
+  channelsByType,
+  isLoading,
+  error,
+  onRetry,
+  extra,
+  empty,
+  freeOrder,
+}: DashboardProps) => {
   const { userLevel } = useWebSocketContext();
   const { data: layoutJson } = useLayout(layoutId);
   const setLayout = useSetLayout();

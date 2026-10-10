@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { controlOverrides } from './registry';
 import { WINMATIC_LOCKED, winmaticState } from './WaterControls';
 import { groupChannelsByType } from '../hooks/channels';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 
 describe('water and window drive tiles', () => {
   it('are registered for their channel types', () => {
@@ -28,10 +28,18 @@ describe('water and window drive tiles', () => {
 
   it('hides the irrigation valve state channel next to its switchable channel', () => {
     const channel = (type: string, address: string) =>
-      ({ id: 1, name: type, address, interfaceName: 'HmIP-RF', type, datapoints: { STATE: false } }) as unknown as Channel;
-    const types = groupChannelsByType([channel('WATER_SWITCH_TRANSMITTER', 'A:1'), channel('WATER_SWITCH_VIRTUAL_RECEIVER', 'A:2')]).map(
-      ([type]) => type,
-    );
+      ({
+        id: 1,
+        name: type,
+        address,
+        interfaceName: 'HmIP-RF',
+        type,
+        datapoints: { STATE: false },
+      }) as unknown as Channel;
+    const types = groupChannelsByType([
+      channel('WATER_SWITCH_TRANSMITTER', 'A:1'),
+      channel('WATER_SWITCH_VIRTUAL_RECEIVER', 'A:2'),
+    ]).map(([type]) => type);
     expect(types).toEqual(['WATER_SWITCH_VIRTUAL_RECEIVER']);
   });
 });

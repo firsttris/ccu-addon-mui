@@ -20,8 +20,8 @@ import {
   changedValues,
   DAY_END,
   DAYS,
-  Day,
-  DayProfile,
+  type Day,
+  type DayProfile,
   formatMinutes,
   profileLayout,
   readWeek,
@@ -30,7 +30,7 @@ import {
   setSlotTemperature,
   SLOT_STEP,
   splitSlot,
-  WeekProfile,
+  type WeekProfile,
 } from './weekProfile';
 
 interface WeekProfileSheetProps {
@@ -60,12 +60,17 @@ const DayBar = ({ day, now, compact }: { day: DayProfile; now?: number; compact?
       const width = ((slot.end - start) / DAY_END) * 100;
       return (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: switching points have no id; the rows are controlled
           key={i}
           className="flex items-center justify-center overflow-hidden border-r border-background/40 text-[11px] font-semibold text-white last:border-r-0"
           style={{ width: `${width}%`, background: getTemperatureColor(slot.temperature) }}
           title={`${formatMinutes(start)}–${formatMinutes(slot.end)} · ${formatTemperature(slot.temperature)} °C`}
         >
-          {width > 9 && <span className="truncate px-1 drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">{formatTemperature(slot.temperature)}</span>}
+          {width > 9 && (
+            <span className="truncate px-1 drop-shadow-[0_1px_1px_rgba(0,0,0,0.4)]">
+              {formatTemperature(slot.temperature)}
+            </span>
+          )}
         </div>
       );
     })}
@@ -82,7 +87,11 @@ const DayBar = ({ day, now, compact }: { day: DayProfile; now?: number; compact?
 const TimeAxis = () => (
   <div className="relative ml-10 h-4 text-[10px] text-muted-foreground tabular-nums">
     {[0, 6, 12, 18, 24].map((hour) => (
-      <span key={hour} className="absolute -translate-x-1/2 first:translate-x-0 last:-translate-x-full" style={{ left: `${(hour / 24) * 100}%` }}>
+      <span
+        key={hour}
+        className="absolute -translate-x-1/2 first:translate-x-0 last:-translate-x-full"
+        style={{ left: `${(hour / 24) * 100}%` }}
+      >
         {hour}
       </span>
     ))}
@@ -106,6 +115,7 @@ const DayEditor = ({
       const start = index === 0 ? 0 : day[index - 1].end;
       const last = index === day.length - 1;
       return (
+        // biome-ignore lint/suspicious/noArrayIndexKey: switching points have no id; the rows are controlled
         <li key={index} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5">
           <span
             aria-hidden
@@ -147,7 +157,9 @@ const DayEditor = ({
                 <MinusIcon />
               </Button>
             )}
-            <span className="w-16 text-center text-sm font-semibold tabular-nums">{formatTemperature(slot.temperature)} °C</span>
+            <span className="w-16 text-center text-sm font-semibold tabular-nums">
+              {formatTemperature(slot.temperature)} °C
+            </span>
             {!readOnly && (
               <Button
                 variant="outline"
@@ -193,11 +205,23 @@ const DayEditor = ({
 );
 
 // Viewing and editing the week schedule of a thermostat or heating group
-export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, name, activeProfile }: WeekProfileSheetProps) => {
+export const WeekProfileSheet = ({
+  open,
+  onOpenChange,
+  interfaceName,
+  address,
+  name,
+  activeProfile,
+}: WeekProfileSheetProps) => {
   const { showToast } = useToast();
   const { userLevel, elevated } = useWebSocketContext();
   const canEdit = userLevel === 'admin' && elevated;
-  const { data: description, isPending: loadingDescription } = useParamsetDescription(interfaceName, address, 'MASTER', { enabled: open });
+  const { data: description, isPending: loadingDescription } = useParamsetDescription(
+    interfaceName,
+    address,
+    'MASTER',
+    { enabled: open },
+  );
   const { data: values } = useParamset(interfaceName, address, 'MASTER', { enabled: open });
   const putParamset = usePutParamset();
   const setDataPoint = useSetDataPoint();
@@ -237,7 +261,10 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
 
   // The names of the HM-CC-RT-DN's one profile have no "P1_" (profile 0)
   const key = prefixed ? profile : 0;
-  const stored = useMemo(() => (values && profiles > 0 ? readWeek(values, key, slots) : null), [values, key, slots, profiles]);
+  const stored = useMemo(
+    () => (values && profiles > 0 ? readWeek(values, key, slots) : null),
+    [values, key, slots, profiles],
+  );
   const week = draft ?? stored;
   const changes = useMemo(
     () => (week && values ? changedValues(values, key, week, slots) : {}),
@@ -284,7 +311,9 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
           </SheetDescription>
         </SheetHeader>
 
-        {!loadingDescription && profiles === 0 && <p className="px-4 text-sm text-muted-foreground">{m.NO_WEEK_PROFILE()}</p>}
+        {!loadingDescription && profiles === 0 && (
+          <p className="px-4 text-sm text-muted-foreground">{m.NO_WEEK_PROFILE()}</p>
+        )}
 
         {profiles > 0 && (
           <div className="flex flex-col gap-5 px-4 pb-28">
@@ -304,9 +333,14 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
 
             {profiles > 1 && (
               <div className="flex flex-wrap items-center gap-2">
-                <div role="tablist" aria-label={m.WEEK_PROFILE()} className="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
+                <div
+                  role="tablist"
+                  aria-label={m.WEEK_PROFILE()}
+                  className="flex flex-wrap gap-1 rounded-lg bg-muted p-1"
+                >
                   {Array.from({ length: profiles }, (_, i) => i + 1).map((n) => (
                     <button
+                      type="button"
                       key={n}
                       role="tab"
                       aria-selected={profile === n}
@@ -317,38 +351,48 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
                       }}
                       className={cn(
                         'flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors disabled:opacity-40',
-                        profile === n ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+                        profile === n
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground',
                       )}
                     >
                       {m.PROFILE_N({ n })}
-                      {runningProfile === n && <span className="size-1.5 rounded-full bg-green-500" aria-label={m.ACTIVE_PROFILE()} />}
+                      {runningProfile === n && (
+                        <span
+                          role="img"
+                          className="size-1.5 rounded-full bg-green-500"
+                          aria-label={m.ACTIVE_PROFILE()}
+                        />
+                      )}
                     </button>
                   ))}
                 </div>
-                {runningProfile !== undefined && runningProfile !== profile && (pointer ? canEdit : userLevel !== 'guest') && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (pointer) {
-                        // A setting of the device: through putParamset, like the WebUI's
-                        // device parameters (tc_it_dev_master.tcl)
-                        putParamset.mutate(
-                          { interfaceName, address, values: { WEEK_PROGRAM_POINTER: profile - 1 } },
-                          {
-                            onSuccess: () => showToast(m.PROFILE_ACTIVATED(), 'info'),
-                            onError: (error) => showToast(`${m.SAVE_FAILED()}: ${error.message}`),
-                          },
-                        );
-                        return;
-                      }
-                      setDataPoint(interfaceName, address, 'ACTIVE_PROFILE', profile);
-                      showToast(m.PROFILE_ACTIVATED(), 'info');
-                    }}
-                  >
-                    {m.USE_PROFILE()}
-                  </Button>
-                )}
+                {runningProfile !== undefined &&
+                  runningProfile !== profile &&
+                  (pointer ? canEdit : userLevel !== 'guest') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (pointer) {
+                          // A setting of the device: through putParamset, like the WebUI's
+                          // device parameters (tc_it_dev_master.tcl)
+                          putParamset.mutate(
+                            { interfaceName, address, values: { WEEK_PROGRAM_POINTER: profile - 1 } },
+                            {
+                              onSuccess: () => showToast(m.PROFILE_ACTIVATED(), 'info'),
+                              onError: (error) => showToast(`${m.SAVE_FAILED()}: ${error.message}`),
+                            },
+                          );
+                          return;
+                        }
+                        setDataPoint(interfaceName, address, 'ACTIVE_PROFILE', profile);
+                        showToast(m.PROFILE_ACTIVATED(), 'info');
+                      }}
+                    >
+                      {m.USE_PROFILE()}
+                    </Button>
+                  )}
               </div>
             )}
 
@@ -357,6 +401,7 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
                 <section aria-label={m.WEEK_PROFILE()} className="flex flex-col gap-1.5">
                   {DAYS.map((d, index) => (
                     <button
+                      type="button"
                       key={d}
                       aria-pressed={index === selectedDay}
                       aria-label={dayName(index, 'long')}
@@ -366,7 +411,12 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
                         index === selectedDay && 'bg-accent ring-1 ring-ring/40',
                       )}
                     >
-                      <span className={cn('w-8 shrink-0 text-sm', index === todayIndex() ? 'font-semibold' : 'text-muted-foreground')}>
+                      <span
+                        className={cn(
+                          'w-8 shrink-0 text-sm',
+                          index === todayIndex() ? 'font-semibold' : 'text-muted-foreground',
+                        )}
+                      >
                         {dayName(index, 'short')}
                       </span>
                       <div className="min-w-0 flex-1">
@@ -381,15 +431,25 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="text-base font-semibold">
                       {dayName(selectedDay, 'long')}
-                      {selectedDay === todayIndex() && <span className="ml-2 text-sm font-normal text-muted-foreground">{m.TODAY()}</span>}
+                      {selectedDay === todayIndex() && (
+                        <span className="ml-2 text-sm font-normal text-muted-foreground">{m.TODAY()}</span>
+                      )}
                     </h3>
                     {canEdit && (
                       <div className="flex flex-wrap gap-1.5">
-                        <Button variant="outline" size="sm" onClick={() => copyTo(DAYS.slice(0, 5).filter((d) => d !== day))}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyTo(DAYS.slice(0, 5).filter((d) => d !== day))}
+                        >
                           <CopyIcon />
                           {m.COPY_TO_WEEKDAYS()}
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => copyTo(DAYS.slice(5).filter((d) => d !== day))}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyTo(DAYS.slice(5).filter((d) => d !== day))}
+                        >
                           {m.COPY_TO_WEEKEND()}
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => copyTo(DAYS.filter((d) => d !== day))}>
@@ -399,7 +459,12 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
                     )}
                   </div>
                   <DayBar day={week[day]} now={selectedDay === todayIndex() ? nowMinutes() : undefined} />
-                  <DayEditor day={week[day]} maxSlots={slots} readOnly={!canEdit} onChange={(next) => updateDay(day, next)} />
+                  <DayEditor
+                    day={week[day]}
+                    maxSlots={slots}
+                    readOnly={!canEdit}
+                    onChange={(next) => updateDay(day, next)}
+                  />
                 </section>
               </>
             )}
@@ -427,7 +492,8 @@ export const WeekProfileSheet = ({ open, onOpenChange, interfaceName, address, n
             onCancel={() => setConfirming(false)}
           >
             <p>
-              {m.PROFILE_N({ n: profile })} · {changeCount === 1 ? m.CHANGES_ONE() : m.CHANGES_COUNT({ count: changeCount })}
+              {m.PROFILE_N({ n: profile })} ·{' '}
+              {changeCount === 1 ? m.CHANGES_ONE() : m.CHANGES_COUNT({ count: changeCount })}
             </p>
             <p className="mt-2 text-muted-foreground">{m.PROFILE_SAVE_HINT()}</p>
           </ConfirmDialog>

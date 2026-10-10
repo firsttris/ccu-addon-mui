@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import CloudRainIcon from '~icons/lucide/cloud-rain';
 import CloudIcon from '~icons/lucide/cloud';
 import ThermometerIcon from '~icons/lucide/thermometer';
@@ -12,12 +12,12 @@ import PlugZapIcon from '~icons/lucide/plug-zap';
 import UnplugIcon from '~icons/lucide/unplug';
 import VibrateIcon from '~icons/lucide/vibrate';
 import RotateIcon from '~icons/lucide/rotate-3d';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { Tile } from '../components/Tile';
 import { useParamset } from '../queries';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
-import { DetectorTile, Tone } from './DetectorControls';
+import { DetectorTile, type Tone } from './DetectorControls';
 import { Extra, format, number } from './ClimateSensorControl';
 import { useValueList } from './useValueList';
 
@@ -69,7 +69,12 @@ export const MeasureTile = ({
       </span>
       {caption && <span className="-mb-2 text-xs font-medium text-muted-foreground">{caption}</span>}
       <div className="flex items-end justify-between gap-3">
-        <span className="text-[40px] leading-none font-semibold tracking-[-0.04em] tabular-nums" aria-label={`${label} ${value} ${unit}`}>
+        <span
+          // A name only goes on an element with a role: read as one value with its unit
+          role="img"
+          className="text-[40px] leading-none font-semibold tracking-[-0.04em] tabular-nums"
+          aria-label={`${label} ${value} ${unit}`}
+        >
           {value}
           <span className="ml-1 text-lg font-medium text-muted-foreground">{unit}</span>
         </span>
@@ -120,9 +125,12 @@ export const BrightnessControl = ({ channel }: { channel: Channel }) => {
   const average = measured(dp, 'AVERAGE_ILLUMINATION');
   const lowest = measured(dp, 'LOWEST_ILLUMINATION');
   const highest = measured(dp, 'HIGHEST_ILLUMINATION');
-  if (average !== undefined) extras.push(<Extra key="avg" icon={<SigmaIcon />} label={m.ILLUMINATION_AVERAGE()} value={lux(average)} />);
-  if (lowest !== undefined) extras.push(<Extra key="low" icon={<ArrowDownIcon />} label={m.ILLUMINATION_LOWEST()} value={lux(lowest)} />);
-  if (highest !== undefined) extras.push(<Extra key="high" icon={<ArrowUpIcon />} label={m.ILLUMINATION_HIGHEST()} value={lux(highest)} />);
+  if (average !== undefined)
+    extras.push(<Extra key="avg" icon={<SigmaIcon />} label={m.ILLUMINATION_AVERAGE()} value={lux(average)} />);
+  if (lowest !== undefined)
+    extras.push(<Extra key="low" icon={<ArrowDownIcon />} label={m.ILLUMINATION_LOWEST()} value={lux(lowest)} />);
+  if (highest !== undefined)
+    extras.push(<Extra key="high" icon={<ArrowUpIcon />} label={m.ILLUMINATION_HIGHEST()} value={lux(highest)} />);
   return (
     <MeasureTile
       channel={channel}
@@ -170,8 +178,23 @@ export const Co2LevelControl = ({ channel }: { channel: Channel }) => {
   const { name } = useValueList(channel, 'STATE', SCD_LEVELS);
   const tone: Tone = name === 'LEVEL_ADDED_STRONG' ? 'alarm' : name === 'LEVEL_ADDED' ? 'active' : 'calm';
   const status =
-    name === 'LEVEL_ADDED_STRONG' ? m.CO2_LEVEL_ADDED_STRONG() : name === 'LEVEL_ADDED' ? m.CO2_LEVEL_ADDED() : name === 'LEVEL_NORMAL' ? m.CO2_LEVEL_NORMAL() : m.WINDOW_UNKNOWN();
-  return <DetectorTile channel={channel} tone={tone} waves={tone !== 'calm'} icon={<WindIcon />} status={status} detail={m.CO2()} />;
+    name === 'LEVEL_ADDED_STRONG'
+      ? m.CO2_LEVEL_ADDED_STRONG()
+      : name === 'LEVEL_ADDED'
+        ? m.CO2_LEVEL_ADDED()
+        : name === 'LEVEL_NORMAL'
+          ? m.CO2_LEVEL_NORMAL()
+          : m.WINDOW_UNKNOWN();
+  return (
+    <DetectorTile
+      channel={channel}
+      tone={tone}
+      waves={tone !== 'calm'}
+      icon={<WindIcon />}
+      status={status}
+      detail={m.CO2()}
+    />
+  );
 };
 
 // --- Particulate matter (HmIP-SFD), rated by PM2.5 with the European Air
@@ -181,7 +204,17 @@ export const Co2LevelControl = ({ channel }: { channel: Channel }) => {
 type PmRating = 'PM_GOOD' | 'PM_FAIR' | 'PM_MODERATE' | 'PM_POOR' | 'PM_VERY_POOR' | 'PM_EXTREMELY_POOR';
 
 export const pmRating = (pm25: number): PmRating =>
-  pm25 <= 10 ? 'PM_GOOD' : pm25 <= 20 ? 'PM_FAIR' : pm25 <= 25 ? 'PM_MODERATE' : pm25 <= 50 ? 'PM_POOR' : pm25 <= 75 ? 'PM_VERY_POOR' : 'PM_EXTREMELY_POOR';
+  pm25 <= 10
+    ? 'PM_GOOD'
+    : pm25 <= 20
+      ? 'PM_FAIR'
+      : pm25 <= 25
+        ? 'PM_MODERATE'
+        : pm25 <= 50
+          ? 'PM_POOR'
+          : pm25 <= 75
+            ? 'PM_VERY_POOR'
+            : 'PM_EXTREMELY_POOR';
 
 // Static references: a lookup m[key] would put every text into the bundle
 const pmLabel: Record<PmRating, () => string> = {
@@ -212,10 +245,16 @@ export const ParticulateMatterControl = ({ channel }: { channel: Channel }) => {
   const size = measured(dp, 'TYPICAL_PARTICLE_SIZE');
   const rating = pm25 !== undefined ? pmRating(pm25) : undefined;
   const extras: ReactNode[] = [];
-  if (pm10 !== undefined) extras.push(<Extra key="pm10" icon={<WindIcon />} label="PM10" value={`${format(pm10)} µg/m³`} />);
-  if (size !== undefined) extras.push(<Extra key="size" icon={<RulerIcon />} label={m.PARTICLE_SIZE()} value={`${format(size, 2)} µm`} />);
-  if (temperature !== undefined) extras.push(<Extra key="t" icon={<ThermometerIcon />} label={m.TEMPERATURE()} value={`${format(temperature)} °C`} />);
-  if (humidity !== undefined) extras.push(<Extra key="h" icon={<DropletsIcon />} label={m.HUMIDITY()} value={`${format(humidity, 0)} %`} />);
+  if (pm10 !== undefined)
+    extras.push(<Extra key="pm10" icon={<WindIcon />} label="PM10" value={`${format(pm10)} µg/m³`} />);
+  if (size !== undefined)
+    extras.push(<Extra key="size" icon={<RulerIcon />} label={m.PARTICLE_SIZE()} value={`${format(size, 2)} µm`} />);
+  if (temperature !== undefined)
+    extras.push(
+      <Extra key="t" icon={<ThermometerIcon />} label={m.TEMPERATURE()} value={`${format(temperature)} °C`} />,
+    );
+  if (humidity !== undefined)
+    extras.push(<Extra key="h" icon={<DropletsIcon />} label={m.HUMIDITY()} value={`${format(humidity, 0)} %`} />);
   return (
     <MeasureTile
       channel={channel}
@@ -242,7 +281,9 @@ export const SoilMoistureControl = ({ channel }: { channel: Channel }) => {
   const rating = moisture !== undefined ? soilRating(moisture) : undefined;
   const extras: ReactNode[] = [];
   if (temperature !== undefined)
-    extras.push(<Extra key="t" icon={<ThermometerIcon />} label={m.SOIL_TEMPERATURE()} value={`${format(temperature)} °C`} />);
+    extras.push(
+      <Extra key="t" icon={<ThermometerIcon />} label={m.SOIL_TEMPERATURE()} value={`${format(temperature)} °C`} />,
+    );
   return (
     <MeasureTile
       channel={channel}
@@ -292,13 +333,25 @@ export const tiltReading = (
     case 2:
       if (taco) {
         const names = [m.TILT_HORIZONTAL, m.TILT_TILTED, m.TILT_TILTED];
-        return { label: m.TILT_POSITION(), value: position !== undefined ? names[position]() : '–', active: (position ?? 0) > 0 };
+        return {
+          label: m.TILT_POSITION(),
+          value: position !== undefined ? names[position]() : '–',
+          active: (position ?? 0) > 0,
+        };
       }
-      return { label: m.TILT_POSITION(), value: motion ? m.TILT_NOT_HORIZONTAL() : m.TILT_HORIZONTAL(), active: motion };
+      return {
+        label: m.TILT_POSITION(),
+        value: motion ? m.TILT_NOT_HORIZONTAL() : m.TILT_HORIZONTAL(),
+        active: motion,
+      };
     case 3:
       if (taco) {
         const names = [m.TILT_HORIZONTAL, m.TILT_TILTED, m.TILT_VERTICAL];
-        return { label: m.TILT_POSITION_A(), value: position !== undefined ? names[position]() : '–', active: (position ?? 0) > 0 };
+        return {
+          label: m.TILT_POSITION_A(),
+          value: position !== undefined ? names[position]() : '–',
+          active: (position ?? 0) > 0,
+        };
       }
       return { label: m.TILT_ANGLE(), value: angle !== undefined ? `${format(angle, 0)}°` : '–', active: false };
   }
@@ -319,7 +372,13 @@ export const TiltSensorControl = ({ channel }: { channel: Channel }) => {
       tone={reading?.active ? 'active' : 'calm'}
       waves={Boolean(reading?.active && mode === 1)}
       icon={mode === 1 ? <VibrateIcon /> : <RotateIcon />}
-      status={reading ? `${reading.label}: ${reading.value}` : angle !== undefined ? `${m.TILT_ANGLE()}: ${format(angle, 0)}°` : m.INPUT_NO_FUNCTION()}
+      status={
+        reading
+          ? `${reading.label}: ${reading.value}`
+          : angle !== undefined
+            ? `${m.TILT_ANGLE()}: ${format(angle, 0)}°`
+            : m.INPUT_NO_FUNCTION()
+      }
       detail={showAngle ? `${m.TILT_ANGLE()} ${format(angle, 0)}°` : undefined}
     />
   );

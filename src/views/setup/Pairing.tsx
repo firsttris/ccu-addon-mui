@@ -1,24 +1,19 @@
-import { DeviceImage } from "../../components/DeviceImage";
-import { Panel } from "./Panel";
-import { ReactNode, useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import {
-  useInbox,
-  useInstallMode,
-  useInterfaces,
-  usePairingAction,
-} from "../../queries";
-import { useToast } from "../../contexts/ToastContext";
-import { DialogButton } from "../../components/ConfirmDialog";
-import { m } from "../../paraglide/messages";
-import { NativeSelect } from "../../components/ui/select";
-import { usePageTitle } from "../../contexts/PageTitleContext";
-import { ReplaceDeviceDialog } from "./ReplaceDeviceDialog";
-import { Input } from "../../components/ui/input";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
-import { RequestError } from "../../hooks/useWebsocket";
-import type { InboxDevice } from "../../types/protocol";
-import { errorText } from "../../lib/errors";
+import { DeviceImage } from '../../components/DeviceImage';
+import { Panel } from './Panel';
+import { type ReactNode, useEffect, useState } from 'react';
+import { Link } from '@tanstack/react-router';
+import { useInbox, useInstallMode, useInterfaces, usePairingAction } from '../../queries';
+import { useToast } from '../../contexts/ToastContext';
+import { DialogButton } from '../../components/ConfirmDialog';
+import { m } from '../../paraglide/messages';
+import { NativeSelect } from '../../components/ui/select';
+import { usePageTitle } from '../../contexts/PageTitleContext';
+import { ReplaceDeviceDialog } from './ReplaceDeviceDialog';
+import { Input } from '../../components/ui/input';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { RequestError } from '../../hooks/useWebsocket';
+import type { InboxDevice } from '../../types/protocol';
+import { errorText } from '../../lib/errors';
 
 const Row = ({ children }: { children: ReactNode }) => (
   <div className="flex flex-wrap items-center gap-2">{children}</div>
@@ -26,16 +21,14 @@ const Row = ({ children }: { children: ReactNode }) => (
 
 // BidCos-Wired (RS485 bus) only with a Wired gateway; it has no pairing
 // mode, the bus is searched instead (cp_add_device.cgi action_wir_search)
-const INTERFACES = ["HmIP-RF", "BidCos-RF", "BidCos-Wired"];
+const INTERFACES = ['HmIP-RF', 'BidCos-RF', 'BidCos-Wired'];
 const PAIRING_SECONDS = 60;
 
 // The SGTIN and KEY from an HmIP device's label (cp_add_device.cgi:
 // dashes left out; the key in base32 or as 32 hexadecimal digits)
 export const SGTIN_PATTERN = /^[0-9A-F]{24}$/;
-export const KEY_PATTERN =
-  /^([0-9A-F]{32}|[0-9ABCEFGHJKLMNPQRSTUWXYZ]{20,26})$/;
-export const cleanLabel = (text: string) =>
-  text.replace(/[-\s]/g, "").toUpperCase();
+export const KEY_PATTERN = /^([0-9A-F]{32}|[0-9ABCEFGHJKLMNPQRSTUWXYZ]{20,26})$/;
+export const cleanLabel = (text: string) => text.replace(/[-\s]/g, '').toUpperCase();
 
 // Pairing an HmIP device without the key server ("Anlernen ohne
 // Internetzugang"): only this device, with the key from its label
@@ -50,16 +43,13 @@ const LocalPairing = ({
 }) => {
   const action = usePairingAction();
   const { showToast } = useToast();
-  const [sgtin, setSgtin] = useState("");
-  const [key, setKey] = useState("");
-  const valid =
-    SGTIN_PATTERN.test(cleanLabel(sgtin)) && KEY_PATTERN.test(cleanLabel(key));
+  const [sgtin, setSgtin] = useState('');
+  const [key, setKey] = useState('');
+  const valid = SGTIN_PATTERN.test(cleanLabel(sgtin)) && KEY_PATTERN.test(cleanLabel(key));
   return (
     <details className="rounded-lg border px-3 py-2 text-sm" open={open}>
       <summary className="cursor-pointer font-medium">{m.PAIR_LOCAL()}</summary>
-      <p className="mt-2 text-xs text-muted-foreground">
-        {m.PAIR_LOCAL_HINT()}
-      </p>
+      <p className="mt-2 text-xs text-muted-foreground">{m.PAIR_LOCAL_HINT()}</p>
       <div className="mt-2 flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">SGTIN</span>
@@ -67,9 +57,7 @@ const LocalPairing = ({
             className="w-72 font-mono"
             value={sgtin}
             onChange={(e) => setSgtin(e.target.value)}
-            aria-invalid={
-              sgtin !== "" && !SGTIN_PATTERN.test(cleanLabel(sgtin))
-            }
+            aria-invalid={sgtin !== '' && !SGTIN_PATTERN.test(cleanLabel(sgtin))}
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -78,7 +66,7 @@ const LocalPairing = ({
             className="w-72 font-mono"
             value={key}
             onChange={(e) => setKey(e.target.value)}
-            aria-invalid={key !== "" && !KEY_PATTERN.test(cleanLabel(key))}
+            aria-invalid={key !== '' && !KEY_PATTERN.test(cleanLabel(key))}
           />
         </label>
         <DialogButton
@@ -87,7 +75,7 @@ const LocalPairing = ({
           onClick={() =>
             action.mutate(
               {
-                type: "setInstallMode",
+                type: 'setInstallMode',
                 interfaceName,
                 on: true,
                 seconds: PAIRING_SECONDS,
@@ -95,8 +83,7 @@ const LocalPairing = ({
                 key,
               },
               {
-                onError: (error) =>
-                  showToast(errorText(error, m.CHANGE_FAILED)),
+                onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
               },
             )
           }
@@ -110,34 +97,25 @@ const LocalPairing = ({
 
 // The system security key a BidCos device was paired with before
 // (cp_add_device.cgi put_key_dialog): set as temporary key, then try again
-const TempKeyDialog = ({
-  serial,
-  onRetry,
-  onClose,
-}: {
-  serial: string;
-  onRetry: () => void;
-  onClose: () => void;
-}) => {
+const TempKeyDialog = ({ serial, onRetry, onClose }: { serial: string; onRetry: () => void; onClose: () => void }) => {
   const action = usePairingAction();
   const { showToast } = useToast();
-  const [key, setKey] = useState("");
+  const [key, setKey] = useState('');
   return (
     <ConfirmDialog
       title={m.PAIR_KEY_TITLE()}
       confirmLabel={m.PAIR_KEY_RETRY()}
-      busy={key === "" || action.isPending}
+      busy={key === '' || action.isPending}
       onCancel={onClose}
       onConfirm={() =>
         action.mutate(
-          { type: "setTempKey", interfaceName: "BidCos-RF", key },
+          { type: 'setTempKey', interfaceName: 'BidCos-RF', key },
           {
             onSuccess: () => {
               onClose();
               onRetry();
             },
-            onError: (error) =>
-              showToast(errorText(error, m.CHANGE_FAILED)),
+            onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
           },
         )
       }
@@ -145,15 +123,8 @@ const TempKeyDialog = ({
       <div className="flex flex-col gap-3">
         <p>{m.PAIR_KEY_TEXT({ serial })}</p>
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">
-            {m.PAIR_KEY_LABEL()}
-          </span>
-          <Input
-            type="password"
-            autoComplete="off"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-          />
+          <span className="text-xs text-muted-foreground">{m.PAIR_KEY_LABEL()}</span>
+          <Input type="password" autoComplete="off" value={key} onChange={(e) => setKey(e.target.value)} />
         </label>
       </div>
     </ConfirmDialog>
@@ -166,21 +137,20 @@ export const Pairing = () => {
   const { showToast } = useToast();
   const [interfaceName, setInterfaceName] = useState(INTERFACES[0]);
   const { data: connected = [] } = useInterfaces();
-  const interfaces = INTERFACES.filter(
-    (name) => name !== "BidCos-Wired" || connected.includes(name),
-  );
-  const wired = interfaceName === "BidCos-Wired";
-  const { data: { seconds, keyMismatch, hmip } = { seconds: 0 }, dataUpdatedAt } =
-    useInstallMode(interfaceName, { enabled: !wired });
+  const interfaces = INTERFACES.filter((name) => name !== 'BidCos-Wired' || connected.includes(name));
+  const wired = interfaceName === 'BidCos-Wired';
+  const { data: { seconds, keyMismatch, hmip } = { seconds: 0 }, dataUpdatedAt } = useInstallMode(interfaceName, {
+    enabled: !wired,
+  });
   // openccu-lite in the local key mode: eQ-3's key server is never asked,
   // a new device pairs with its label only (occulited docs/meta-api.md,
   // "Feature detection")
-  const localKeys = interfaceName === "HmIP-RF" && hmip?.offlinePairing === false;
+  const localKeys = interfaceName === 'HmIP-RF' && hmip?.offlinePairing === false;
   const active = seconds > 0;
   const { data: inbox = [] } = useInbox({ poll: active });
   const action = usePairingAction();
   const [replacing, setReplacing] = useState<InboxDevice | null>(null);
-  const [serial, setSerial] = useState("");
+  const [serial, setSerial] = useState('');
   // A device with another security key: by serial number or in install mode
   const [mismatch, setMismatch] = useState<{
     serial: string;
@@ -189,18 +159,17 @@ export const Pairing = () => {
   // The CCU reports such a device once (getKeyMismatchDevice resets it).
   // A failed addDevice reports it there too: then it stays a retry by
   // serial number instead of turning into install mode.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dataUpdatedAt: the same device reported again opens the dialog again
   useEffect(() => {
     if (keyMismatch)
       setMismatch((prev) =>
-        prev?.serial === keyMismatch.toUpperCase()
-          ? prev
-          : { serial: keyMismatch, bySerial: false },
+        prev?.serial === keyMismatch.toUpperCase() ? prev : { serial: keyMismatch, bySerial: false },
       );
   }, [keyMismatch, dataUpdatedAt]);
 
   const startPairing = () => {
     run({
-      type: "setInstallMode",
+      type: 'setInstallMode',
       interfaceName,
       on: true,
       seconds: PAIRING_SECONDS,
@@ -208,32 +177,23 @@ export const Pairing = () => {
   };
   const addBySerial = (address: string) =>
     action.mutate(
-      { type: "addDeviceBySerial", interfaceName: "BidCos-RF", address },
+      { type: 'addDeviceBySerial', interfaceName: 'BidCos-RF', address },
       {
         onSuccess: () => {
-          showToast(
-            m.PAIR_SERIAL_DONE({ serial: address.toUpperCase() }),
-            "info",
-          );
-          setSerial("");
+          showToast(m.PAIR_SERIAL_DONE({ serial: address.toUpperCase() }), 'info');
+          setSerial('');
         },
         onError: (error) => {
-          if (error instanceof RequestError && error.code === "KEY_MISMATCH")
+          if (error instanceof RequestError && error.code === 'KEY_MISMATCH')
             setMismatch({ serial: address.toUpperCase(), bySerial: true });
-          else
-            showToast(
-              `${m.PAIR_SERIAL_FAILED({ serial: address })}: ${error.message}`,
-            );
+          else showToast(`${m.PAIR_SERIAL_FAILED({ serial: address })}: ${error.message}`);
         },
       },
     );
 
-  const run = (
-    variables: Parameters<typeof action.mutate>[0],
-    success?: string,
-  ) =>
+  const run = (variables: Parameters<typeof action.mutate>[0], success?: string) =>
     action.mutate(variables, {
-      onSuccess: () => success && showToast(success, "info"),
+      onSuccess: () => success && showToast(success, 'info'),
       onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     });
 
@@ -257,9 +217,7 @@ export const Pairing = () => {
             type="button"
             primary
             disabled={action.isPending}
-            onClick={() =>
-              run({ type: "searchWiredDevices" }, m.WIRED_SEARCH_DONE())
-            }
+            onClick={() => run({ type: 'searchWiredDevices' }, m.WIRED_SEARCH_DONE())}
           >
             {m.WIRED_SEARCH()}
           </DialogButton>
@@ -276,7 +234,7 @@ export const Pairing = () => {
               type="button"
               onClick={() =>
                 run({
-                  type: "setInstallMode",
+                  type: 'setInstallMode',
                   interfaceName,
                   on: false,
                   seconds: 0,
@@ -297,24 +255,14 @@ export const Pairing = () => {
           {m.PAIR_LOCAL_KEYS({ count: hmip?.deviceKeys ?? 0 })}
         </p>
       )}
-      {interfaceName === "HmIP-RF" && (
-        <LocalPairing
-          interfaceName={interfaceName}
-          disabled={action.isPending}
-          open={localKeys}
-        />
+      {interfaceName === 'HmIP-RF' && (
+        <LocalPairing interfaceName={interfaceName} disabled={action.isPending} open={localKeys} />
       )}
-      {interfaceName === "BidCos-RF" && (
+      {interfaceName === 'BidCos-RF' && (
         <div className="flex flex-wrap items-end gap-3">
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">
-              {m.PAIR_SERIAL()}
-            </span>
-            <Input
-              className="w-48 font-mono"
-              value={serial}
-              onChange={(e) => setSerial(e.target.value.trim())}
-            />
+            <span className="text-xs text-muted-foreground">{m.PAIR_SERIAL()}</span>
+            <Input className="w-48 font-mono" value={serial} onChange={(e) => setSerial(e.target.value.trim())} />
           </label>
           <DialogButton
             type="button"
@@ -329,9 +277,7 @@ export const Pairing = () => {
         <TempKeyDialog
           serial={mismatch.serial}
           onClose={() => setMismatch(null)}
-          onRetry={() =>
-            mismatch.bySerial ? addBySerial(mismatch.serial) : startPairing()
-          }
+          onRetry={() => (mismatch.bySerial ? addBySerial(mismatch.serial) : startPairing())}
         />
       )}
 
@@ -356,12 +302,12 @@ export const Pairing = () => {
                     }}
                   >
                     {device.name}
-                  </Link>{" "}
+                  </Link>{' '}
                   ({device.type})
                 </span>
               </span>
               <span className="flex flex-wrap gap-2">
-                {device.interfaceName !== "HmIP-RF" && (
+                {device.interfaceName !== 'HmIP-RF' && (
                   <DialogButton
                     type="button"
                     aria-label={`${m.REPLACE_BUTTON()} ${device.name}`}
@@ -372,12 +318,7 @@ export const Pairing = () => {
                 )}
                 <DialogButton
                   type="button"
-                  onClick={() =>
-                    run(
-                      { type: "acceptDevice", address: device.address },
-                      m.ACCEPTED(),
-                    )
-                  }
+                  onClick={() => run({ type: 'acceptDevice', address: device.address }, m.ACCEPTED())}
                 >
                   {m.ACCEPT()}
                 </DialogButton>
@@ -386,12 +327,7 @@ export const Pairing = () => {
           ))}
         </ul>
       )}
-      {replacing && (
-        <ReplaceDeviceDialog
-          device={replacing}
-          onDone={() => setReplacing(null)}
-        />
-      )}
+      {replacing && <ReplaceDeviceDialog device={replacing} onDone={() => setReplacing(null)} />}
     </Panel>
   );
 };

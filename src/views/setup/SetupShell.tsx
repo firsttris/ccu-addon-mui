@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import CpuIcon from '~icons/lucide/cpu';
 import RadioIcon from '~icons/lucide/radio';
@@ -114,6 +114,7 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
             {!levelKnown && (
               <div role="status" aria-label={m.LOADING()} className="flex gap-1 lg:flex-col lg:gap-0.5">
                 {['w-20', 'w-28', 'w-24', 'w-16', 'w-20'].map((width, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: placeholder rows, nothing but their position
                   <div key={i} className="flex h-9 shrink-0 items-center gap-2.5 px-3">
                     <Skeleton className="size-4 rounded" />
                     <Skeleton className={`h-3.5 ${width}`} />

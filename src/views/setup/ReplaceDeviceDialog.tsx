@@ -20,10 +20,15 @@ export const ReplaceDeviceDialog = ({ device, onDone }: { device: InboxDevice; o
   const names = useChannelNames();
   const [old, setOld] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const { data: candidates, isPending, isError } = useQuery({
+  const {
+    data: candidates,
+    isPending,
+    isError,
+  } = useQuery({
     queryKey: ['replaceable', device.interfaceName, device.address],
     queryFn: async () =>
-      (await request({ type: 'listReplaceableDevices', interfaceName: device.interfaceName, address: device.address })).devices,
+      (await request({ type: 'listReplaceableDevices', interfaceName: device.interfaceName, address: device.address }))
+        .devices,
     retry: false,
   });
 
@@ -35,7 +40,9 @@ export const ReplaceDeviceDialog = ({ device, onDone }: { device: InboxDevice; o
         { type: 'replaceDevice', interfaceName: device.interfaceName, address: device.address, oldAddress: old },
         { queue: false, timeoutMs: 60000 },
       );
-      await Promise.all(['inbox', 'devices', 'channels'].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
+      await Promise.all(
+        ['inbox', 'devices', 'channels'].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
+      );
       showToast(m.REPLACE_DONE({ name: names.get(old) ?? old }), 'info');
       onDone();
     } catch (error) {

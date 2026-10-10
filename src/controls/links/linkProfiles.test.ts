@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ParamsetDescription } from '../../types/types';
+import type { ParamsetDescription } from '../../types/types';
 import {
   decodeHmipTime,
   detectProfile,
   encodeHmipTime,
-  LinkProfile,
+  type LinkProfile,
   linkParameterNames,
   PERMANENT,
   profilesFor,
@@ -25,7 +25,11 @@ const profile = (id: number, values: LinkProfile['values'], extra: Partial<LinkP
   ...extra,
 });
 
-const on = profile(1, { SHORT_PROFILE_ACTION_TYPE: [1], SHORT_JT_ON: [1, 3], SHORT_ON_TIME_BASE: { default: 7, min: 0, max: 7 } });
+const on = profile(1, {
+  SHORT_PROFILE_ACTION_TYPE: [1],
+  SHORT_JT_ON: [1, 3],
+  SHORT_ON_TIME_BASE: { default: 7, min: 0, max: 7 },
+});
 const off = profile(2, { SHORT_PROFILE_ACTION_TYPE: [1], SHORT_JT_ON: [4, 6] });
 const description = {
   SHORT_PROFILE_ACTION_TYPE: { type: 'INTEGER' },
@@ -42,21 +46,36 @@ describe('linkProfiles', () => {
     expect(upDown?.values.LONG_JT_OFFDELAY).toEqual([4, 8, 3]);
   });
 
-  it('picks the light receiver\'s table by device and mode, as linkHmIP_UNIVERSAL_LIGHT_RECEIVER.tcl', () => {
+  it("picks the light receiver's table by device and mode, as linkHmIP_UNIVERSAL_LIGHT_RECEIVER.tcl", () => {
     expect(receiverKey('SWITCH_VIRTUAL_RECEIVER', 'HmIP-BSM', {})).toBe('SWITCH_VIRTUAL_RECEIVER');
     expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', {})).toBeUndefined();
-    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', { deviceOperationMode: 1 })).toBe('UNIVERSAL_LIGHT_RECEIVER_RGB(W)');
-    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', { deviceOperationMode: 2 })).toBe('UNIVERSAL_LIGHT_RECEIVER_TW');
-    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', { deviceOperationMode: 3 })).toBe('UNIVERSAL_LIGHT_RECEIVER_PWM');
-    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-DRG-DALI', { maxCapabilities: 0 })).toBe('SWITCH_VIRTUAL_RECEIVER');
-    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-DRG-DALI', { maxCapabilities: 4 })).toBe('UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI');
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', { deviceOperationMode: 1 })).toBe(
+      'UNIVERSAL_LIGHT_RECEIVER_RGB(W)',
+    );
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', { deviceOperationMode: 2 })).toBe(
+      'UNIVERSAL_LIGHT_RECEIVER_TW',
+    );
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-RGBW', { deviceOperationMode: 3 })).toBe(
+      'UNIVERSAL_LIGHT_RECEIVER_PWM',
+    );
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-DRG-DALI', { maxCapabilities: 0 })).toBe(
+      'SWITCH_VIRTUAL_RECEIVER',
+    );
+    expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-DRG-DALI', { maxCapabilities: 4 })).toBe(
+      'UNIVERSAL_LIGHT_RECEIVER_RGBW_DALI',
+    );
     expect(receiverKey('UNIVERSAL_LIGHT_RECEIVER', 'HmIP-LSC', {})).toBe('UNIVERSAL_LIGHT_RECEIVER_LSC');
     // Light senders under the names the light tables use
     const lights = { UNIVERSAL_LIGHT_RECEIVER_TW: { COND_SWITCH_TRANSMITTER_HUMIDITY: [], SWITCH_TRANSCEIVER: [] } };
-    expect(senderKey(lights, 'UNIVERSAL_LIGHT_RECEIVER_TW', 'LEVEL_COMMAND_TRANSMITTER_HUMIDITY', {})).toBe('COND_SWITCH_TRANSMITTER_HUMIDITY');
-    expect(senderKey(lights, 'UNIVERSAL_LIGHT_RECEIVER_TW', 'KEY_TRANSCEIVER', { senderDeviceType: 'HmIP-MOD-RC8', operationMode: 2 })).toBe(
-      'SWITCH_TRANSCEIVER',
+    expect(senderKey(lights, 'UNIVERSAL_LIGHT_RECEIVER_TW', 'LEVEL_COMMAND_TRANSMITTER_HUMIDITY', {})).toBe(
+      'COND_SWITCH_TRANSMITTER_HUMIDITY',
     );
+    expect(
+      senderKey(lights, 'UNIVERSAL_LIGHT_RECEIVER_TW', 'KEY_TRANSCEIVER', {
+        senderDeviceType: 'HmIP-MOD-RC8',
+        operationMode: 2,
+      }),
+    ).toBe('SWITCH_TRANSCEIVER');
   });
 
   it('picks the sender profiles by operation mode and channel, as the WebUI', () => {
@@ -69,12 +88,15 @@ describe('linkProfiles', () => {
         KEY_TRANSCEIVER: [],
       },
     };
-    const key = (type: string, opts: Parameters<typeof senderKey>[3]) => senderKey(table, 'SWITCH_VIRTUAL_RECEIVER', type, opts);
+    const key = (type: string, opts: Parameters<typeof senderKey>[3]) =>
+      senderKey(table, 'SWITCH_VIRTUAL_RECEIVER', type, opts);
     expect(key('MULTI_MODE_INPUT_TRANSMITTER', { operationMode: 2 })).toBe('MULTI_MODE_INPUT_TRANSMITTER_2');
     expect(key('MULTI_MODE_INPUT_TRANSMITTER', { operationMode: 1, receiverDeviceType: 'HmIP-FDC' })).toBe(
       'MULTI_MODE_INPUT_TRANSMITTER_1_FDC',
     );
-    expect(key('MULTI_MODE_INPUT_TRANSMITTER', { operationMode: 1, receiverDeviceType: 'HmIP-BSM' })).toBe('MULTI_MODE_INPUT_TRANSMITTER_1');
+    expect(key('MULTI_MODE_INPUT_TRANSMITTER', { operationMode: 1, receiverDeviceType: 'HmIP-BSM' })).toBe(
+      'MULTI_MODE_INPUT_TRANSMITTER_1',
+    );
     // Mode not read (yet) or without a file of its own: the plain type
     expect(key('MULTI_MODE_INPUT_TRANSMITTER', {})).toBe('MULTI_MODE_INPUT_TRANSMITTER');
     expect(key('ROTARY_CONTROL_TRANSCEIVER', { senderAddress: '0001:2' })).toBe('ROTARY_CONTROL_TRANSCEIVER_2');
@@ -90,7 +112,11 @@ describe('linkProfiles', () => {
 
   it('writes the first values, keeping adjustable ones of the current profile', () => {
     const current = { SHORT_PROFILE_ACTION_TYPE: 1, SHORT_JT_ON: 3, SHORT_ON_TIME_BASE: 2 };
-    expect(profileValues(on, description, current, false)).toEqual({ SHORT_PROFILE_ACTION_TYPE: 1, SHORT_JT_ON: 1, SHORT_ON_TIME_BASE: 7 });
+    expect(profileValues(on, description, current, false)).toEqual({
+      SHORT_PROFILE_ACTION_TYPE: 1,
+      SHORT_JT_ON: 1,
+      SHORT_ON_TIME_BASE: 7,
+    });
     expect(profileValues(on, description, current, true)).toEqual(current);
   });
 
@@ -132,9 +158,10 @@ describe('linkParameterNames', () => {
   });
 
   it('falls back to the catalog and readable enum values, marking long presses', () => {
-    expect(names.nameOf('LONG_HUMIDITY_LIMIT_VALUE')).toBe('Luftfeuchtigkeitswert für die Ansteuerung eines externen Luftentfeuchters (lang)');
+    expect(names.nameOf('LONG_HUMIDITY_LIMIT_VALUE')).toBe(
+      'Luftfeuchtigkeitswert für die Ansteuerung eines externen Luftentfeuchters (lang)',
+    );
     expect(names.nameOf('SHORT_ON_TIME')).toBe('On time');
     expect(names.optionOf('SHORT_ON_TIME_MODE', 0, 'ABSOLUTE')).toBe('Absolute');
   });
 });
-

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '../../lib/utils';
-import { RGB, WARM } from './PendantLamp';
+import { type RGB, WARM } from './PendantLamp';
 
 const STEP = 5;
 
@@ -19,12 +19,16 @@ export const LevelBar = ({ label, value, onChange, color = WARM }: LevelBarProps
   const bar = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<number | null>(null);
   const keyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (keyTimer.current) clearTimeout(keyTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (keyTimer.current) clearTimeout(keyTimer.current);
+    },
+    [],
+  );
   const shown = drag ?? value;
 
   const at = (clientX: number) => {
+    // biome-ignore lint/style/noNonNullAssertion: only called from the pointer events of the mounted element
     const rect = bar.current!.getBoundingClientRect();
     return Math.round((Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * 100) / STEP) * STEP;
   };
@@ -54,7 +58,12 @@ export const LevelBar = ({ label, value, onChange, color = WARM }: LevelBarProps
       onPointerCancel={() => setDrag(null)}
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => {
-        const delta = event.key === 'ArrowRight' || event.key === 'ArrowUp' ? STEP : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -STEP : 0;
+        const delta =
+          event.key === 'ArrowRight' || event.key === 'ArrowUp'
+            ? STEP
+            : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+              ? -STEP
+              : 0;
         if (!delta) return;
         event.preventDefault();
         const next = Math.max(0, Math.min(100, shown + delta));

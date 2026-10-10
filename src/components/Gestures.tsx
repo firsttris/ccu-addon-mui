@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import ChevronsRightIcon from '~icons/lucide/chevrons-right';
 import { cn } from '../lib/utils';
 
@@ -22,7 +22,15 @@ interface HoldButtonProps {
 
 // A button that has to be held for a moment; a ring fills while held.
 // Space or Enter held down works the same.
-export const HoldButton = ({ label, hint, icon, onConfirm, tone = 'text-amber-500', className, disabled }: HoldButtonProps) => {
+export const HoldButton = ({
+  label,
+  hint,
+  icon,
+  onConfirm,
+  tone = 'text-amber-500',
+  className,
+  disabled,
+}: HoldButtonProps) => {
   const [progress, setProgress] = useState(0);
   const frame = useRef<number | null>(null);
   const start = useRef<number | null>(null);
@@ -33,6 +41,7 @@ export const HoldButton = ({ label, hint, icon, onConfirm, tone = 'text-amber-50
     start.current = null;
     setProgress(0);
   };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: cleanup on unmount only; stop reads refs
   useEffect(() => stop, []);
 
   const begin = () => {
@@ -161,7 +170,11 @@ export const SlideToConfirm = ({ label, onConfirm, tone = 'bg-amber-500', icon, 
     >
       <div
         aria-hidden
-        className={cn('absolute inset-y-0 left-0 rounded-full opacity-25', tone, !dragging && 'transition-[width] duration-300')}
+        className={cn(
+          'absolute inset-y-0 left-0 rounded-full opacity-25',
+          tone,
+          !dragging && 'transition-[width] duration-300',
+        )}
         style={{ width: `calc(${position * 100}% + ${KNOB * (1 - position) + 4}px)` }}
       />
       <span

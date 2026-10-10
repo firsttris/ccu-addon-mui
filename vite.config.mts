@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
-import fs from 'fs';
+import fs from 'node:fs';
 import Icons from 'unplugin-icons/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import tailwindcss from '@tailwindcss/vite';
@@ -86,7 +86,8 @@ export default defineConfig(({ command, mode, isPreview }) => ({
       manifest: {
         name: 'MUI · Moderne WebUI für Homematic CCU3 und OpenCCU',
         short_name: 'MUI',
-        description: 'MUI: die komplette WebUI für Homematic CCU3 und OpenCCU, neu gebaut. Live per WebSocket, als App installierbar.',
+        description:
+          'MUI: die komplette WebUI für Homematic CCU3 und OpenCCU, neu gebaut. Live per WebSocket, als App installierbar.',
         lang: 'de',
         display: 'standalone',
         // Dark like the app's dark theme, so the splash screen does not flash white

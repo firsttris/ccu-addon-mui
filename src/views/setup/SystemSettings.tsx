@@ -179,7 +179,8 @@ export const Clock = () => {
           className={row}
           onSubmit={(event) => {
             event.preventDefault();
-            if (clock) save({ type: 'setClock', time: `${clock.replace('T', ' ')}:00`.slice(0, 19) }, m.SYS_CLOCK_SET());
+            if (clock)
+              save({ type: 'setClock', time: `${clock.replace('T', ' ')}:00`.slice(0, 19) }, m.SYS_CLOCK_SET());
           }}
         >
           <label className={label}>
@@ -228,12 +229,14 @@ const Location = () => {
 
   // Only when the stored values change: refetching (every minute, after
   // saving another card) must not overwrite what is being typed
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only the stored value, see above
   useEffect(() => {
     if (data) setLatitude(String(data.latitude));
-  }, [data?.latitude]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data?.latitude]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only the stored value, see above
   useEffect(() => {
     if (data) setLongitude(String(data.longitude));
-  }, [data?.longitude]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data?.longitude]);
 
   if (isError) {
     return null;

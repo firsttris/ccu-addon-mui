@@ -1,4 +1,4 @@
-import { DatapointValue, ParamsetDescription } from '../../types/types';
+import type { DatapointValue, ParamsetDescription } from '../../types/types';
 
 // The week program of HmIP actuators (SWITCH_/BLIND_/DIMMER_WEEK_PROFILE
 // channel), as the WebUI's HmIPWeeklyProgram.js (OpenCCU-Base) reads and
@@ -41,7 +41,8 @@ export const WORKDAYS = 2 | 4 | 8 | 16 | 32;
 export const WEEKEND = 64 | 1;
 
 const pad = (n: number) => String(n).padStart(2, '0');
-const num = (value: DatapointValue | undefined, fallback = 0) => (typeof value === 'number' ? value : Number(value ?? fallback) || fallback);
+const num = (value: DatapointValue | undefined, fallback = 0) =>
+  typeof value === 'number' ? value : Number(value ?? fallback) || fallback;
 
 // Entry numbers the device has, from its description (75 for most)
 export const entryNumbers = (description: ParamsetDescription) =>
@@ -75,7 +76,9 @@ export const parseWeekProgram = (description: ParamsetDescription, values: Value
 
 // Sort key: fixed time, or noon-ish for sunrise/sunset entries
 const minutesOf = (entry: WeekProgramEntry) =>
-  entry.condition === 1 ? (entry.astroType === 0 ? 6 * 60 : 19 * 60) + entry.astroOffset : entry.hour * 60 + entry.minute;
+  entry.condition === 1
+    ? (entry.astroType === 0 ? 6 * 60 : 19 * 60) + entry.astroOffset
+    : entry.hour * 60 + entry.minute;
 
 // A free entry number for a new switching point, or undefined when full
 export const freeNumber = (description: ParamsetDescription, values: Values, taken: Set<string>) =>

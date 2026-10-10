@@ -1,4 +1,4 @@
-import { DatapointValue, ParamsetDescription } from '../../../types/types';
+import type { DatapointValue, ParamsetDescription } from '../../../types/types';
 
 // The week profiles of a HomeMatic IP thermostat or heating group live in
 // the MASTER paramset of its climate channel, as pairs per day and slot:
@@ -58,7 +58,12 @@ export const profileLayout = (description: ParamsetDescription | undefined) => {
 
 // The used slots of one day: up to and including the one ending at 24:00.
 // Values out of order or missing end the day at the last sensible slot.
-export const readDay = (values: Record<string, DatapointValue>, profile: number, day: Day, slots: number): DayProfile => {
+export const readDay = (
+  values: Record<string, DatapointValue>,
+  profile: number,
+  day: Day,
+  slots: number,
+): DayProfile => {
   const result: DayProfile = [];
   let previous = 0;
   for (let slot = 1; slot <= slots; slot++) {
@@ -131,7 +136,9 @@ export const setSlotEnd = (day: DayProfile, index: number, end: number): DayProf
 
 export const setSlotTemperature = (day: DayProfile, index: number, temperature: number): DayProfile =>
   day.map((slot, i) =>
-    i === index ? { ...slot, temperature: clamp(Math.round(temperature * 2) / 2, MIN_TEMPERATURE, MAX_TEMPERATURE) } : slot,
+    i === index
+      ? { ...slot, temperature: clamp(Math.round(temperature * 2) / 2, MIN_TEMPERATURE, MAX_TEMPERATURE) }
+      : slot,
   );
 
 // Splits a slot in the middle (if there is room and a slot to spare)
@@ -163,7 +170,9 @@ export const temperatureAt = (day: DayProfile, minutes: number) =>
 // The next change after a time of day, if any today
 export const nextChange = (day: DayProfile, minutes: number) => {
   const index = day.findIndex((slot) => minutes < slot.end);
-  return index >= 0 && index < day.length - 1 ? { at: day[index].end, temperature: day[index + 1].temperature } : undefined;
+  return index >= 0 && index < day.length - 1
+    ? { at: day[index].end, temperature: day[index + 1].temperature }
+    : undefined;
 };
 
 export const formatMinutes = (minutes: number) =>

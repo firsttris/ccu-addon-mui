@@ -147,7 +147,12 @@ const GroupList = ({ list, title, placeholder }: { list: List; title: string; pl
           }
         }}
       >
-        <Input aria-label={placeholder} placeholder={placeholder} value={name} onChange={(e) => setName(e.target.value)} />
+        <Input
+          aria-label={placeholder}
+          placeholder={placeholder}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
         <Button type="submit" variant="outline" disabled={name.trim() === '' || change.isPending}>
           <PlusIcon />
           {m.ADD()}

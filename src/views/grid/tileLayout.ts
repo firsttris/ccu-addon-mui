@@ -77,7 +77,8 @@ export const parseLayout = (json: string | undefined): SavedLayout | null => {
   if (!json) return null;
   try {
     const parsed = JSON.parse(json);
-    if (!parsed || parsed.v !== 3 || !Array.isArray(parsed.order) || !parsed.sections || typeof parsed.sections !== 'object') return null;
+    if (parsed?.v !== 3 || !Array.isArray(parsed.order) || !parsed.sections || typeof parsed.sections !== 'object')
+      return null;
     return parsed as SavedLayout;
   } catch {
     return null;
@@ -152,7 +153,7 @@ export const flowLayout = (layout: Layout, cols: number): Layout => {
     x += w;
     rowHeight = Math.max(rowHeight, t.h);
   }
-  return layout.map((t) => placed.get(t.i)!);
+  return layout.map((t) => placed.get(t.i) ?? t);
 };
 
 // Overlapping while dragging: nothing is pushed away, flowLayout puts every

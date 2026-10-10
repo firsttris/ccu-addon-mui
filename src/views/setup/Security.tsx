@@ -1,20 +1,16 @@
-import { useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  RequestError,
-  useWebSocketActions,
-  useWebSocketContext,
-} from "../../hooks/useWebsocket";
-import { Input } from "../../components/ui/input";
-import { Switch } from "../../components/ui/switch";
-import { Button } from "../../components/ui/button";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
-import { PanelSkeleton } from "../../components/ui/skeleton";
-import { useToast } from "../../contexts/ToastContext";
-import { OnlyOnCCU, Panel } from "./Panel";
-import { usePasswordRetry } from "./usePasswordRetry";
-import { m } from "../../paraglide/messages";
-import { errorText } from "../../lib/errors";
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
+import { Input } from '../../components/ui/input';
+import { Switch } from '../../components/ui/switch';
+import { Button } from '../../components/ui/button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { PanelSkeleton } from '../../components/ui/skeleton';
+import { useToast } from '../../contexts/ToastContext';
+import { OnlyOnCCU, Panel } from './Panel';
+import { usePasswordRetry } from './usePasswordRetry';
+import { m } from '../../paraglide/messages';
+import { errorText } from '../../lib/errors';
 
 const ToggleRow = ({
   id,
@@ -36,12 +32,7 @@ const ToggleRow = ({
       {label}
       <span className="text-xs text-muted-foreground">{hint}</span>
     </label>
-    <Switch
-      id={id}
-      checked={checked}
-      disabled={disabled}
-      onCheckedChange={onChange}
-    />
+    <Switch id={id} checked={checked} disabled={disabled} onCheckedChange={onChange} />
   </div>
 );
 
@@ -53,8 +44,8 @@ export const KEY_PATTERN = /^[0-9a-zA-Z_]{5,}$/;
 const SecurityKey = ({ disabled }: { disabled: boolean }) => {
   const { request } = useWebSocketActions();
   const { showToast } = useToast();
-  const [key, setKey] = useState("");
-  const [repeat, setRepeat] = useState("");
+  const [key, setKey] = useState('');
+  const [repeat, setRepeat] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const password = usePasswordRetry();
@@ -67,15 +58,15 @@ const SecurityKey = ({ disabled }: { disabled: boolean }) => {
         try {
           await request(
             {
-              type: "changeSecurityKey",
+              type: 'changeSecurityKey',
               key,
               ...(pw !== undefined ? { password: pw } : {}),
             },
             { queue: false, timeoutMs: 60000 },
           );
-          showToast(m.SEC_KEY_SET(), "info");
-          setKey("");
-          setRepeat("");
+          showToast(m.SEC_KEY_SET(), 'info');
+          setKey('');
+          setRepeat('');
           setConfirming(false);
         } finally {
           setBusy(false);
@@ -84,9 +75,9 @@ const SecurityKey = ({ disabled }: { disabled: boolean }) => {
       (error) => {
         const code = error instanceof RequestError ? error.code : undefined;
         showToast(
-          code === "KEY_SAME"
+          code === 'KEY_SAME'
             ? m.SEC_KEY_SAME()
-            : code === "KEY_NOT_ALL_DEVICES"
+            : code === 'KEY_NOT_ALL_DEVICES'
               ? m.SEC_KEY_NOT_ALL()
               : errorText(error, m.CHANGE_FAILED),
         );
@@ -100,9 +91,7 @@ const SecurityKey = ({ disabled }: { disabled: boolean }) => {
       <p className="text-xs">{m.SEC_KEY_HINT()}</p>
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">
-            {m.SEC_KEY_NEW()}
-          </span>
+          <span className="text-xs text-muted-foreground">{m.SEC_KEY_NEW()}</span>
           <Input
             type="password"
             autoComplete="new-password"
@@ -110,13 +99,11 @@ const SecurityKey = ({ disabled }: { disabled: boolean }) => {
             disabled={disabled}
             value={key}
             onChange={(e) => setKey(e.target.value)}
-            aria-invalid={key !== "" && !KEY_PATTERN.test(key)}
+            aria-invalid={key !== '' && !KEY_PATTERN.test(key)}
           />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">
-            {m.SEC_KEY_REPEAT()}
-          </span>
+          <span className="text-xs text-muted-foreground">{m.SEC_KEY_REPEAT()}</span>
           <Input
             type="password"
             autoComplete="new-password"
@@ -124,21 +111,14 @@ const SecurityKey = ({ disabled }: { disabled: boolean }) => {
             disabled={disabled}
             value={repeat}
             onChange={(e) => setRepeat(e.target.value)}
-            aria-invalid={repeat !== "" && repeat !== key}
+            aria-invalid={repeat !== '' && repeat !== key}
           />
         </label>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={disabled || !valid}
-          onClick={() => setConfirming(true)}
-        >
+        <Button type="button" variant="outline" disabled={disabled || !valid} onClick={() => setConfirming(true)}>
           {m.SEC_KEY_SET_BUTTON()}
         </Button>
       </div>
-      {key !== "" && !KEY_PATTERN.test(key) && (
-        <p className="text-xs text-destructive">{m.SEC_KEY_RULE()}</p>
-      )}
+      {key !== '' && !KEY_PATTERN.test(key) && <p className="text-xs text-destructive">{m.SEC_KEY_RULE()}</p>}
       {confirming && (
         <ConfirmDialog
           title={m.SEC_KEY()}
@@ -161,13 +141,7 @@ const SecurityKey = ({ disabled }: { disabled: boolean }) => {
 // How long an idle WebUI session lasts (cp_security.cgi
 // action_set_session_timeout: 180 to 600 s in rega.conf, taken on the next
 // start of the CCU)
-const SessionTimeout = ({
-  current,
-  disabled,
-}: {
-  current: number;
-  disabled: boolean;
-}) => {
+const SessionTimeout = ({ current, disabled }: { current: number; disabled: boolean }) => {
   const { request } = useWebSocketActions();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -179,9 +153,9 @@ const SessionTimeout = ({
   const save = async () => {
     setBusy(true);
     try {
-      await request({ type: "setSessionTimeout", seconds }, { queue: false });
-      showToast(m.SEC_TIMEOUT_SAVED(), "info");
-      await queryClient.invalidateQueries({ queryKey: ["security"] });
+      await request({ type: 'setSessionTimeout', seconds }, { queue: false });
+      showToast(m.SEC_TIMEOUT_SAVED(), 'info');
+      await queryClient.invalidateQueries({ queryKey: ['security'] });
     } catch (error) {
       showToast(errorText(error, m.CHANGE_FAILED));
     } finally {
@@ -194,9 +168,7 @@ const SessionTimeout = ({
       <p className="text-xs text-muted-foreground">{m.SEC_TIMEOUT_HINT()}</p>
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">
-            {m.SEC_TIMEOUT_SECONDS()}
-          </span>
+          <span className="text-xs text-muted-foreground">{m.SEC_TIMEOUT_SECONDS()}</span>
           <Input
             type="number"
             inputMode="numeric"
@@ -219,30 +191,28 @@ const SessionTimeout = ({
           {m.SEC_TIMEOUT_SAVE()}
         </Button>
       </div>
-      {!valid && (
-        <p className="text-xs text-destructive">{m.SEC_TIMEOUT_RANGE()}</p>
-      )}
+      {!valid && <p className="text-xs text-destructive">{m.SEC_TIMEOUT_RANGE()}</p>}
     </div>
   );
 };
 
-type Level = "HIGH" | "MEDIUM" | "LOW";
+type Level = 'HIGH' | 'MEDIUM' | 'LOW';
 
 // The levels of the WebUI's security wizard (DialogChooseSecuritySettings,
 // texts from translate.lang.extension.js secLevel*)
 const LEVELS: { id: Level; title: () => string; caption: () => string }[] = [
   {
-    id: "HIGH",
+    id: 'HIGH',
     title: () => m.SEC_LEVEL_HIGH(),
     caption: () => m.SEC_LEVEL_HIGH_HINT(),
   },
   {
-    id: "MEDIUM",
+    id: 'MEDIUM',
     title: () => m.SEC_LEVEL_MEDIUM(),
     caption: () => m.SEC_LEVEL_MEDIUM_HINT(),
   },
   {
-    id: "LOW",
+    id: 'LOW',
     title: () => m.SEC_LEVEL_LOW(),
     caption: () => m.SEC_LEVEL_LOW_HINT(),
   },
@@ -251,40 +221,30 @@ const LEVELS: { id: Level; title: () => string; caption: () => string }[] = [
 // Firewall and authentication set together by one level
 // (CCU.setSecurityLevel); a change in the firewall afterwards makes the
 // level "custom"
-const SecurityLevel = ({
-  current,
-  disabled,
-}: {
-  current: string;
-  disabled: boolean;
-}) => {
+const SecurityLevel = ({ current, disabled }: { current: string; disabled: boolean }) => {
   const { request } = useWebSocketActions();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Level | null>(null);
   const [busy, setBusy] = useState(false);
   const password = usePasswordRetry();
-  const choice = selected ?? (current === "CUSTOM" ? null : (current as Level));
-  const apply = () =>
+  const choice = selected ?? (current === 'CUSTOM' ? null : (current as Level));
+  const apply = (level: Level) =>
     password.run(
       async (pw) => {
         setBusy(true);
         try {
           await request(
             {
-              type: "setSecurityLevel",
-              level: choice!,
+              type: 'setSecurityLevel',
+              level,
               ...(pw !== undefined ? { password: pw } : {}),
             },
             { queue: false, timeoutMs: 60000 },
           );
-          showToast(m.SEC_LEVEL_SAVED(), "info");
+          showToast(m.SEC_LEVEL_SAVED(), 'info');
           setSelected(null);
-          await Promise.all(
-            ["security", "firewall"].map((key) =>
-              queryClient.invalidateQueries({ queryKey: [key] }),
-            ),
-          );
+          await Promise.all(['security', 'firewall'].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
         } finally {
           setBusy(false);
         }
@@ -295,18 +255,13 @@ const SecurityLevel = ({
     <div className="flex flex-col gap-2">
       <h3 className="flex items-center gap-2 text-sm font-medium">
         {m.SEC_LEVEL()}
-        {current === "CUSTOM" && (
-          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-normal">
-            {m.SEC_LEVEL_CUSTOM()}
-          </span>
+        {current === 'CUSTOM' && (
+          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{m.SEC_LEVEL_CUSTOM()}</span>
         )}
       </h3>
-      <div
-        role="radiogroup"
-        aria-label={m.SEC_LEVEL()}
-        className="grid gap-2 sm:grid-cols-3"
-      >
+      <div role="radiogroup" aria-label={m.SEC_LEVEL()} className="grid gap-2 sm:grid-cols-3">
         {LEVELS.map((level) => (
+          // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
           <button
             key={level.id}
             type="button"
@@ -314,19 +269,15 @@ const SecurityLevel = ({
             aria-checked={choice === level.id}
             disabled={disabled || busy}
             onClick={() => setSelected(level.id)}
-            className={`flex flex-col gap-1 rounded-lg border p-3 text-left text-sm transition-colors disabled:opacity-60 ${choice === level.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50"}`}
+            className={`flex flex-col gap-1 rounded-lg border p-3 text-left text-sm transition-colors disabled:opacity-60 ${choice === level.id ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'hover:bg-muted/50'}`}
           >
             <span className="font-medium">
               {level.title()}
               {current === level.id && (
-                <span className="ml-2 text-xs font-normal text-muted-foreground">
-                  ({m.SEC_LEVEL_ACTIVE()})
-                </span>
+                <span className="ml-2 text-xs font-normal text-muted-foreground">({m.SEC_LEVEL_ACTIVE()})</span>
               )}
             </span>
-            <span className="text-xs text-muted-foreground">
-              {level.caption()}
-            </span>
+            <span className="text-xs text-muted-foreground">{level.caption()}</span>
           </button>
         ))}
       </div>
@@ -335,11 +286,7 @@ const SecurityLevel = ({
         <>
           {password.field}
           <div className="flex justify-end">
-            <Button
-              type="button"
-              disabled={disabled || busy || password.blocked}
-              onClick={apply}
-            >
+            <Button type="button" disabled={disabled || busy || password.blocked} onClick={() => apply(selected)}>
               {m.SEC_LEVEL_APPLY()}
             </Button>
           </div>
@@ -355,31 +302,21 @@ const SecurityLevel = ({
 // setSNMPUser.sh (SNMPv3 with SHA and AES) and opens SNMP in the firewall
 export const SNMP_USER_PATTERN = /^[A-Za-z0-9._-]{1,32}$/;
 
-const Snmp = ({
-  current,
-  disabled,
-}: {
-  current: boolean;
-  disabled: boolean;
-}) => {
+const Snmp = ({ current, disabled }: { current: boolean; disabled: boolean }) => {
   const { request } = useWebSocketActions();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [on, setOn] = useState(current);
-  const [user, setUser] = useState("");
-  const [secret, setSecret] = useState("");
-  const [repeat, setRepeat] = useState("");
+  const [user, setUser] = useState('');
+  const [secret, setSecret] = useState('');
+  const [repeat, setRepeat] = useState('');
   const [busy, setBusy] = useState(false);
   const password = usePasswordRetry();
   useEffect(() => setOn(current), [current]);
   // Switching on, or a new user or password while on
-  const changing = on !== current || (on && (user !== "" || secret !== ""));
+  const changing = on !== current || (on && (user !== '' || secret !== ''));
   const valid =
-    !on ||
-    (SNMP_USER_PATTERN.test(user) &&
-      secret.length >= 8 &&
-      secret === repeat &&
-      !/["\\\r\n]/.test(secret));
+    !on || (SNMP_USER_PATTERN.test(user) && secret.length >= 8 && secret === repeat && !/["\\\r\n]/.test(secret));
   const save = () =>
     password.run(
       async (pw) => {
@@ -387,22 +324,18 @@ const Snmp = ({
         try {
           await request(
             {
-              type: "setSnmp",
+              type: 'setSnmp',
               snmp: on,
               ...(on ? { snmpUser: user, snmpPassword: secret } : {}),
               ...(pw !== undefined ? { password: pw } : {}),
             },
             { queue: false, timeoutMs: 60000 },
           );
-          showToast(m.SAVED(), "info");
-          setUser("");
-          setSecret("");
-          setRepeat("");
-          await Promise.all(
-            ["security", "firewall"].map((key) =>
-              queryClient.invalidateQueries({ queryKey: [key] }),
-            ),
-          );
+          showToast(m.SAVED(), 'info');
+          setUser('');
+          setSecret('');
+          setRepeat('');
+          await Promise.all(['security', 'firewall'].map((key) => queryClient.invalidateQueries({ queryKey: [key] })));
         } finally {
           setBusy(false);
         }
@@ -422,22 +355,18 @@ const Snmp = ({
       {on && (
         <div className="flex flex-wrap items-end gap-3 pl-1">
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">
-              {m.SEC_SNMP_USER()}
-            </span>
+            <span className="text-xs text-muted-foreground">{m.SEC_SNMP_USER()}</span>
             <Input
               autoComplete="off"
               className="w-56"
               disabled={disabled || busy}
               value={user}
               onChange={(e) => setUser(e.target.value)}
-              aria-invalid={user !== "" && !SNMP_USER_PATTERN.test(user)}
+              aria-invalid={user !== '' && !SNMP_USER_PATTERN.test(user)}
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">
-              {m.SEC_SNMP_PASSWORD()}
-            </span>
+            <span className="text-xs text-muted-foreground">{m.SEC_SNMP_PASSWORD()}</span>
             <Input
               type="password"
               autoComplete="new-password"
@@ -445,13 +374,11 @@ const Snmp = ({
               disabled={disabled || busy}
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
-              aria-invalid={secret !== "" && secret.length < 8}
+              aria-invalid={secret !== '' && secret.length < 8}
             />
           </label>
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">
-              {m.SEC_SNMP_REPEAT()}
-            </span>
+            <span className="text-xs text-muted-foreground">{m.SEC_SNMP_REPEAT()}</span>
             <Input
               type="password"
               autoComplete="new-password"
@@ -459,23 +386,17 @@ const Snmp = ({
               disabled={disabled || busy}
               value={repeat}
               onChange={(e) => setRepeat(e.target.value)}
-              aria-invalid={repeat !== "" && repeat !== secret}
+              aria-invalid={repeat !== '' && repeat !== secret}
             />
           </label>
         </div>
       )}
-      {on && (
-        <p className="text-xs text-muted-foreground">{m.SEC_SNMP_RULES()}</p>
-      )}
+      {on && <p className="text-xs text-muted-foreground">{m.SEC_SNMP_RULES()}</p>}
       {changing && (
         <>
           {password.field}
           <div className="flex justify-end">
-            <Button
-              type="button"
-              disabled={disabled || busy || !valid || password.blocked}
-              onClick={save}
-            >
+            <Button type="button" disabled={disabled || busy || !valid || password.blocked} onClick={save}>
               {m.SEC_SNMP_SAVE()}
             </Button>
           </div>
@@ -485,7 +406,7 @@ const Snmp = ({
   );
 };
 
-export const RESET_WORD = "ZURÜCKSETZEN";
+export const RESET_WORD = 'ZURÜCKSETZEN';
 
 // Resetting the CCU to factory settings (cp_security.cgi system reset):
 // all devices, programs and settings go, and add-ons with them, this one
@@ -494,8 +415,8 @@ const FactoryReset = ({ disabled }: { disabled: boolean }) => {
   const { request } = useWebSocketActions();
   const { showToast } = useToast();
   const [open, setOpen] = useState(false);
-  const [word, setWord] = useState("");
-  const [key, setKey] = useState("");
+  const [word, setWord] = useState('');
+  const [key, setKey] = useState('');
   const [needsKey, setNeedsKey] = useState(false);
   const [keyWrong, setKeyWrong] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -503,8 +424,8 @@ const FactoryReset = ({ disabled }: { disabled: boolean }) => {
   const password = usePasswordRetry();
   const close = () => {
     setOpen(false);
-    setWord("");
-    setKey("");
+    setWord('');
+    setKey('');
     setKeyWrong(false);
   };
   const reset = () =>
@@ -514,7 +435,7 @@ const FactoryReset = ({ disabled }: { disabled: boolean }) => {
         try {
           await request(
             {
-              type: "factoryReset",
+              type: 'factoryReset',
               ...(key ? { key } : {}),
               ...(pw !== undefined ? { password: pw } : {}),
             },
@@ -528,26 +449,21 @@ const FactoryReset = ({ disabled }: { disabled: boolean }) => {
       },
       (error) => {
         const code = error instanceof RequestError ? error.code : undefined;
-        if (code === "KEY_REQUIRED") setNeedsKey(true);
-        else if (code === "KEY_WRONG") setKeyWrong(true);
+        if (code === 'KEY_REQUIRED') setNeedsKey(true);
+        else if (code === 'KEY_WRONG') setKeyWrong(true);
         else showToast(errorText(error, m.CHANGE_FAILED));
       },
     );
   if (started) {
     return (
-      <div
-        role="alert"
-        className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm"
-      >
+      <div role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
         {m.RESET_STARTED()}
       </div>
     );
   }
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-destructive/30 p-3">
-      <h3 className="text-sm font-medium text-destructive">
-        {m.RESET_TITLE()}
-      </h3>
+      <h3 className="text-sm font-medium text-destructive">{m.RESET_TITLE()}</h3>
       <p className="text-xs text-muted-foreground">{m.RESET_HINT()}</p>
       <Button
         type="button"
@@ -563,12 +479,7 @@ const FactoryReset = ({ disabled }: { disabled: boolean }) => {
           title={m.RESET_TITLE()}
           confirmLabel={m.RESET_BUTTON()}
           destructive
-          busy={
-            busy ||
-            word !== RESET_WORD ||
-            (needsKey && key === "") ||
-            password.blocked
-          }
+          busy={busy || word !== RESET_WORD || (needsKey && key === '') || password.blocked}
           onConfirm={reset}
           onCancel={close}
         >
@@ -581,9 +492,7 @@ const FactoryReset = ({ disabled }: { disabled: boolean }) => {
             <p className="font-medium">{m.RESET_WARNING_BACKUP()}</p>
             {needsKey && (
               <label className="flex flex-col gap-1">
-                <span className="text-xs text-muted-foreground">
-                  {m.RESET_KEY()}
-                </span>
+                <span className="text-xs text-muted-foreground">{m.RESET_KEY()}</span>
                 <Input
                   type="password"
                   autoComplete="off"
@@ -594,22 +503,12 @@ const FactoryReset = ({ disabled }: { disabled: boolean }) => {
                   }}
                   aria-invalid={keyWrong}
                 />
-                {keyWrong && (
-                  <span className="text-xs text-destructive">
-                    {m.RESET_KEY_WRONG()}
-                  </span>
-                )}
+                {keyWrong && <span className="text-xs text-destructive">{m.RESET_KEY_WRONG()}</span>}
               </label>
             )}
             <label className="flex flex-col gap-1">
-              <span className="text-xs text-muted-foreground">
-                {m.RESET_TYPE({ word: RESET_WORD })}
-              </span>
-              <Input
-                autoComplete="off"
-                value={word}
-                onChange={(e) => setWord(e.target.value)}
-              />
+              <span className="text-xs text-muted-foreground">{m.RESET_TYPE({ word: RESET_WORD })}</span>
+              <Input autoComplete="off" value={word} onChange={(e) => setWord(e.target.value)} />
             </label>
             {password.field}
           </div>
@@ -630,14 +529,14 @@ export const Security = () => {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const { data, isError } = useQuery({
-    queryKey: ["security"],
-    queryFn: () => request({ type: "getSecurity" }),
-    enabled: userLevel === "admin",
+    queryKey: ['security'],
+    queryFn: () => request({ type: 'getSecurity' }),
+    enabled: userLevel === 'admin',
     retry: false,
   });
   const [ssh, setSsh] = useState(false);
-  const [sshPassword, setSshPassword] = useState("");
-  const [sshRepeat, setSshRepeat] = useState("");
+  const [sshPassword, setSshPassword] = useState('');
+  const [sshRepeat, setSshRepeat] = useState('');
   const [auth, setAuth] = useState(false);
   const [https, setHttps] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -650,7 +549,7 @@ export const Security = () => {
     setHttps(data.httpsRedirect);
   }, [data]);
 
-  if (userLevel !== "admin") return null;
+  if (userLevel !== 'admin') return null;
   if (isError) return <OnlyOnCCU title={m.SEC_TITLE()} />;
   if (!data) {
     return (
@@ -661,11 +560,7 @@ export const Security = () => {
     );
   }
 
-  const changed =
-    ssh !== data.ssh ||
-    auth !== data.auth ||
-    https !== data.httpsRedirect ||
-    sshPassword !== "";
+  const changed = ssh !== data.ssh || auth !== data.auth || https !== data.httpsRedirect || sshPassword !== '';
   const restarts = auth !== data.auth || https !== data.httpsRedirect;
   const valid = sshPassword === sshRepeat && !/[\r\n]/.test(sshPassword);
   const disabled = !elevated || busy;
@@ -677,7 +572,7 @@ export const Security = () => {
         try {
           await request(
             {
-              type: "setSecurity",
+              type: 'setSecurity',
               ssh,
               auth,
               httpsRedirect: https,
@@ -686,10 +581,10 @@ export const Security = () => {
             },
             { queue: false, timeoutMs: 60000 },
           );
-          showToast(restarts ? m.SEC_SAVED_RESTART() : m.SAVED(), "info");
-          setSshPassword("");
-          setSshRepeat("");
-          await queryClient.invalidateQueries({ queryKey: ["security"] });
+          showToast(restarts ? m.SEC_SAVED_RESTART() : m.SAVED(), 'info');
+          setSshPassword('');
+          setSshRepeat('');
+          await queryClient.invalidateQueries({ queryKey: ['security'] });
         } finally {
           setBusy(false);
         }
@@ -713,9 +608,7 @@ export const Security = () => {
         {ssh && (
           <div className="flex flex-wrap items-end gap-3 pl-1">
             <label className="flex flex-col gap-1">
-              <span className="text-xs text-muted-foreground">
-                {m.SEC_SSH_PASSWORD()}
-              </span>
+              <span className="text-xs text-muted-foreground">{m.SEC_SSH_PASSWORD()}</span>
               <Input
                 type="password"
                 autoComplete="new-password"
@@ -726,9 +619,7 @@ export const Security = () => {
               />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="text-xs text-muted-foreground">
-                {m.SEC_SSH_REPEAT()}
-              </span>
+              <span className="text-xs text-muted-foreground">{m.SEC_SSH_REPEAT()}</span>
               <Input
                 type="password"
                 autoComplete="new-password"
@@ -736,7 +627,7 @@ export const Security = () => {
                 disabled={disabled}
                 value={sshRepeat}
                 onChange={(e) => setSshRepeat(e.target.value)}
-                aria-invalid={sshRepeat !== "" && sshRepeat !== sshPassword}
+                aria-invalid={sshRepeat !== '' && sshRepeat !== sshPassword}
               />
             </label>
           </div>
@@ -758,18 +649,10 @@ export const Security = () => {
           onChange={setHttps}
         />
       </div>
-      {restarts && (
-        <p className="text-xs text-amber-700 dark:text-amber-400">
-          {m.SEC_RESTART_HINT()}
-        </p>
-      )}
+      {restarts && <p className="text-xs text-amber-700 dark:text-amber-400">{m.SEC_RESTART_HINT()}</p>}
       {password.field}
       <div className="flex justify-end">
-        <Button
-          type="button"
-          disabled={disabled || !changed || !valid || password.blocked}
-          onClick={save}
-        >
+        <Button type="button" disabled={disabled || !changed || !valid || password.blocked} onClick={save}>
           {m.SAVE()}
         </Button>
       </div>

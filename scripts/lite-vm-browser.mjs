@@ -56,10 +56,23 @@ const watch = (page, name) => {
     if (ours(m.location()?.url) || ours(page.url())) problems.push(`${name}: console: ${m.text()}`);
     else console.log(`${name}: openccu-lite's console: ${m.text()}`);
   });
-  page.on('pageerror', (e) => (ours(page.url()) ? problems.push(`${name}: exception: ${e.message}`) : console.log(`${name}: openccu-lite's exception: ${e.message}`)));
+  page.on('pageerror', (e) =>
+    ours(page.url())
+      ? problems.push(`${name}: exception: ${e.message}`)
+      : console.log(`${name}: openccu-lite's exception: ${e.message}`),
+  );
   // ERR_ABORTED: a request the next page's navigation cut off, no failure
-  page.on('requestfailed', (r) => ours(r.url()) && r.failure()?.errorText !== 'net::ERR_ABORTED' && problems.push(`${name}: failed: ${r.url()} ${r.failure()?.errorText}`));
-  page.on('response', (r) => ours(r.url()) && r.status() >= 400 && problems.push(`${name}: HTTP ${r.status()}: ${r.url()}`));
+  page.on(
+    'requestfailed',
+    (r) =>
+      ours(r.url()) &&
+      r.failure()?.errorText !== 'net::ERR_ABORTED' &&
+      problems.push(`${name}: failed: ${r.url()} ${r.failure()?.errorText}`),
+  );
+  page.on(
+    'response',
+    (r) => ours(r.url()) && r.status() >= 400 && problems.push(`${name}: HTTP ${r.status()}: ${r.url()}`),
+  );
 };
 
 // Waits for the room in the app's list of rooms
@@ -80,7 +93,10 @@ try {
   watch(page, 'app');
   await page.goto(`${base}/addons/mui/rooms?theme=dark&lang=en`, { waitUntil: 'domcontentloaded' });
   await roomShown(page);
-  const html = await page.evaluate(() => ({ theme: document.documentElement.dataset.theme, lang: document.documentElement.lang }));
+  const html = await page.evaluate(() => ({
+    theme: document.documentElement.dataset.theme,
+    lang: document.documentElement.lang,
+  }));
   if (html.theme !== 'dark') problems.push(`theme from ?theme=dark: ${html.theme}`);
   if (html.lang !== 'en') problems.push(`language from ?lang=en: ${html.lang}`);
   console.log(`app started: room "${room}" listed, theme ${html.theme}, language ${html.lang}`);
@@ -124,7 +140,12 @@ try {
         ['fullscreen-desktop', {}],
         ['fullscreen-phone', { ...devices['iPhone 13'], defaultBrowserType: undefined }],
       ]) {
-        const view = await session({ ...options, colorScheme: 'light', locale: 'de-DE', ...(name.endsWith('desktop') ? { viewport: { width: 1440, height: 900 } } : {}) });
+        const view = await session({
+          ...options,
+          colorScheme: 'light',
+          locale: 'de-DE',
+          ...(name.endsWith('desktop') ? { viewport: { width: 1440, height: 900 } } : {}),
+        });
         const page = await view.newPage();
         watch(page, name);
         await page.goto(`${base}/nav/mui`, { waitUntil: 'domcontentloaded' });
@@ -135,12 +156,16 @@ try {
         await app.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
         const back = app.getByRole('link', { name: /^(Zurück zu openccu-lite|Back to openccu-lite)$/ });
         await back.waitFor({ timeout: 10_000 });
-        if ((await back.getAttribute('href')) !== '/' || (await back.getAttribute('target')) !== '_top') problems.push(`${name}: the way back is not a link to / in the whole window`);
+        if ((await back.getAttribute('href')) !== '/' || (await back.getAttribute('target')) !== '_top')
+          problems.push(`${name}: the way back is not a link to / in the whole window`);
         await shot(page, `${name}-menu.png`);
         await view.close();
       }
       // Back as it was, for the screenshots in the frame below
-      await context.request.put(`${base}/api/auth/v1/me/preferences`, { headers: { 'X-Occulite-Request': '1' }, data: prefs });
+      await context.request.put(`${base}/api/auth/v1/me/preferences`, {
+        headers: { 'X-Occulite-Request': '1' },
+        data: prefs,
+      });
     }
     await context.close();
   }
@@ -172,8 +197,10 @@ try {
   }
   // openccu-lite has no WebUI: no link into it, and the help links to
   // openccu-lite's documentation and licences
-  if ((await frame.getByText(/alter WebUI|old WebUI/).count()) > 0) problems.push('a link into the WebUI on openccu-lite (setup/system)');
-  if ((await frame.locator('a[href="/licenses"]').count()) !== 1) problems.push("no link to openccu-lite's licences in the help");
+  if ((await frame.getByText(/alter WebUI|old WebUI/).count()) > 0)
+    problems.push('a link into the WebUI on openccu-lite (setup/system)');
+  if ((await frame.locator('a[href="/licenses"]').count()) !== 1)
+    problems.push("no link to openccu-lite's licences in the help");
 
   // The device pictures: openccu-lite serves them since 1.0.0-dev.45
   // (hobbyquaker/openccu-lite#10). The device list shows one per device, the
@@ -185,14 +212,20 @@ try {
     await open('setup');
     const picture = frame.locator('[data-device-image]:not([data-device-image="none"]) img').first();
     await picture.waitFor({ timeout: 30_000 });
-    await frame.waitForFunction((img) => img.complete && img.naturalWidth > 0, await picture.elementHandle(), { timeout: 30_000 });
+    await frame.waitForFunction((img) => img.complete && img.naturalWidth > 0, await picture.elementHandle(), {
+      timeout: 30_000,
+    });
     console.log(`device picture shown: ${await picture.getAttribute('src')}`);
     // The heating group of the room Wohnzimmer (phase showcase, after the
     // one of the phase levels)
     await open('device/VirtualDevices/INT0000002');
     // The page has a hidden copy for small screens: the visible picture
-    await frame.locator('[data-device-image]:not([data-device-image="none"]) img >> visible=true').first().waitFor({ timeout: 30_000 });
-    if ((await frame.getByText(/alter WebUI|old WebUI/).count()) > 0) problems.push('a link into the WebUI on openccu-lite (device page)');
+    await frame
+      .locator('[data-device-image]:not([data-device-image="none"]) img >> visible=true')
+      .first()
+      .waitFor({ timeout: 30_000 });
+    if ((await frame.getByText(/alter WebUI|old WebUI/).count()) > 0)
+      problems.push('a link into the WebUI on openccu-lite (device page)');
     await shot(shell, 'app-device.png');
   }
   await pages.close();

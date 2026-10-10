@@ -68,6 +68,8 @@ Vite leitet `/ws/mui` an die CCU weiter, deren Adresse steht in `vite.config.mts
 | `npm run export:ccu` | eine echte CCU nur lesend auslesen und als Fixture speichern |
 | `npm test` | Unit-Tests (Vitest) |
 | `npm run typecheck` | TypeScript prüfen |
+| `npm run lint` | Formatierung und Lint-Regeln prüfen ([Biome](https://biomejs.dev), Regeln in `biome.json`) |
+| `npm run lint:fix` | Formatieren und behebbare Lint-Befunde beheben |
 | `npm run test:go` | Go-Tests |
 | `npm run test:e2e` | Playwright mit Mock-WebSocket |
 | `npm run test:stack` | Playwright gegen Go-Server + Fake-CCU |
@@ -106,6 +108,10 @@ docs/                diese Dokumentation
 - **Die Quelle nennen.** Wenn eine Quelle ein Detail entscheidet, schreib sie in den Kommentar oder die
   Commit-Nachricht, zum Beispiel „wie in der WebUI `door_opener.fn`“. So kann später jeder nachvollziehen,
   warum etwas so ist.
+- **Formatierung und Lint-Regeln** setzt [Biome](https://biomejs.dev) durch (`biome.json`), die CI prüft
+  beides, auch Warnungen. Lass vor dem Commit `npm run lint:fix` laufen; die Erweiterung `biomejs.biome`
+  für VS Code formatiert beim Speichern. Schlägt eine Regel an, obwohl der Code stimmt, nimm die Stelle
+  mit `// biome-ignore <regel>: <Grund>` aus, statt die Regel abzuschalten.
 - **Texte** der Oberfläche gibt es auf Deutsch und Englisch. Halte sie kurz und vermeide Fachjargon, wo es
   geht.
 - **Ein Feature, ein Pull Request.** Kleine PRs lassen sich leichter prüfen. Gemergt wird, wenn die CI grün

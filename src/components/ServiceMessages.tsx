@@ -1,3 +1,4 @@
+// biome-ignore-all lint/correctness/useJsxKeyInIterable: the icons sit in lookup tuples, not in rendered lists
 import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import RadioIcon from '~icons/lucide/radio-tower';
@@ -10,7 +11,7 @@ import CheckIcon from '~icons/lucide/check-check';
 import { useAcknowledgeServiceMessage, useServiceMessages } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
-import { ServiceMessage } from '../types/protocol';
+import type { ServiceMessage } from '../types/protocol';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
@@ -61,7 +62,11 @@ export const useServiceTexts = (messages: Pick<ServiceMessage, 'type'>[]) => {
 export const describeServiceMessage = (message: Pick<ServiceMessage, 'type' | 'value'>, texts?: ServiceTexts) => {
   const type = normalize(message.type);
   if (type === 'ERROR_CODE') {
-    return { label: m.SM_ERROR_CODE({ value: message.value ?? '' }), severity: 'error' as Severity, icon: <TriangleAlertIcon /> };
+    return {
+      label: m.SM_ERROR_CODE({ value: message.value ?? '' }),
+      severity: 'error' as Severity,
+      icon: <TriangleAlertIcon />,
+    };
   }
   const webUIText = () => {
     const text = texts?.[`${type}=TRUE`] ?? texts?.[type];
@@ -82,7 +87,12 @@ const formatTimestamp = (timestamp?: string) => {
   if (!timestamp) return '';
   const date = new Date(timestamp.replace(' ', 'T'));
   if (Number.isNaN(date.getTime())) return timestamp;
-  return new Intl.DateTimeFormat(getLocale(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).format(date);
+  return new Intl.DateTimeFormat(getLocale(), {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
 };
 
 // Messages of the same device together, in order of appearance
@@ -96,7 +106,13 @@ const groupByDevice = (messages: ServiceMessage[]) => {
 };
 
 // All service messages of the CCU, with acknowledging
-export const ServiceMessagesSheet = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => {
+export const ServiceMessagesSheet = ({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) => {
   const { data: messages = [] } = useServiceMessages();
   const { userLevel, platform } = useWebSocketContext();
   const { showToast } = useToast();
@@ -175,7 +191,9 @@ export const ServiceMessagesSheet = ({ open, onOpenChange }: { open: boolean; on
                               {icon}
                               <span className="break-words">{label}</span>
                             </span>
-                            <span className="text-xs text-muted-foreground tabular-nums">{formatTimestamp(message.timestamp)}</span>
+                            <span className="text-xs text-muted-foreground tabular-nums">
+                              {formatTimestamp(message.timestamp)}
+                            </span>
                             {canAcknowledge && acknowledgeable(message) && (
                               <Button
                                 variant="ghost"

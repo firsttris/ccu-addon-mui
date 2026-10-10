@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { expect, Page, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { installWebSocketMock } from './helpers/websocketMock';
 
 // The moving pictures of the tiles in docs/geraete.md (docs/kacheln/*.webp):
@@ -27,7 +27,12 @@ type Step = { at: number; channel: string; datapoint: string; value: unknown };
 // before the scene starts
 type Scene = { file: string; tile: string; partial?: boolean; ms?: number; setup?: Step[]; steps?: Step[] };
 
-const at = (ms: number, channel: string, datapoint: string, value: unknown): Step => ({ at: ms, channel, datapoint, value });
+const at = (ms: number, channel: string, datapoint: string, value: unknown): Step => ({
+  at: ms,
+  channel,
+  datapoint,
+  value,
+});
 
 // One scene per tile of the table in docs/geraete.md, in its order
 const scenes: Scene[] = [
@@ -44,7 +49,11 @@ const scenes: Scene[] = [
   {
     file: 'fussbodenheizung',
     tile: 'Fußbodenheizung Bad',
-    steps: [at(400, '00201D8994A2B1:1', 'LEVEL', 0.15), at(1800, '00201D8994A2B1:1', 'LEVEL', 1), at(3200, '00201D8994A2B1:1', 'LEVEL', 0.62)],
+    steps: [
+      at(400, '00201D8994A2B1:1', 'LEVEL', 0.15),
+      at(1800, '00201D8994A2B1:1', 'LEVEL', 1),
+      at(3200, '00201D8994A2B1:1', 'LEVEL', 0.62),
+    ],
   },
   {
     file: 'schalter',
@@ -54,27 +63,48 @@ const scenes: Scene[] = [
   {
     file: 'dimmer',
     tile: 'Esstisch',
-    steps: [at(400, '0001D3C99C1A2B:4', 'LEVEL', 0.15), at(1500, '0001D3C99C1A2B:4', 'LEVEL', 1), at(2700, '0001D3C99C1A2B:4', 'LEVEL', 0.6)],
+    steps: [
+      at(400, '0001D3C99C1A2B:4', 'LEVEL', 0.15),
+      at(1500, '0001D3C99C1A2B:4', 'LEVEL', 1),
+      at(2700, '0001D3C99C1A2B:4', 'LEVEL', 0.6),
+    ],
   },
   {
     file: 'farblicht',
     tile: 'LED-Streifen',
-    steps: [at(400, '0001E0A99B2C3D:2', 'HUE', 20), at(1500, '0001E0A99B2C3D:2', 'HUE', 160), at(2700, '0001E0A99B2C3D:2', 'HUE', 275)],
+    steps: [
+      at(400, '0001E0A99B2C3D:2', 'HUE', 20),
+      at(1500, '0001E0A99B2C3D:2', 'HUE', 160),
+      at(2700, '0001E0A99B2C3D:2', 'HUE', 275),
+    ],
   },
   {
     file: 'rollladen',
     tile: 'Raffstore Büro',
-    steps: [at(400, '0045D8A9A2B3C4:4', 'LEVEL', 0.15), at(1800, '0045D8A9A2B3C4:4', 'LEVEL_2', 1), at(2600, '0045D8A9A2B3C4:4', 'LEVEL', 0.7), at(3000, '0045D8A9A2B3C4:4', 'LEVEL_2', 0.5)],
+    steps: [
+      at(400, '0045D8A9A2B3C4:4', 'LEVEL', 0.15),
+      at(1800, '0045D8A9A2B3C4:4', 'LEVEL_2', 1),
+      at(2600, '0045D8A9A2B3C4:4', 'LEVEL', 0.7),
+      at(3000, '0045D8A9A2B3C4:4', 'LEVEL_2', 0.5),
+    ],
   },
   {
     file: 'fenster',
     tile: 'Fenstergriff Wohnzimmer',
-    steps: [at(300, '0000DBE9A5C1F2:1', 'STATE', 0), at(1400, '0000DBE9A5C1F2:1', 'STATE', 1), at(2600, '0000DBE9A5C1F2:1', 'STATE', 2)],
+    steps: [
+      at(300, '0000DBE9A5C1F2:1', 'STATE', 0),
+      at(1400, '0000DBE9A5C1F2:1', 'STATE', 1),
+      at(2600, '0000DBE9A5C1F2:1', 'STATE', 2),
+    ],
   },
   {
     file: 'fensterantrieb',
     tile: 'Oberlicht Treppenhaus',
-    steps: [at(400, '00299D89A1B2C2:1', 'LEVEL', 0.5), at(1500, '00299D89A1B2C2:1', 'LEVEL', 1), at(3200, '00299D89A1B2C2:1', 'LEVEL', 0)],
+    steps: [
+      at(400, '00299D89A1B2C2:1', 'LEVEL', 0.5),
+      at(1500, '00299D89A1B2C2:1', 'LEVEL', 1),
+      at(3200, '00299D89A1B2C2:1', 'LEVEL', 0),
+    ],
   },
   {
     file: 'tuerschloss',
@@ -89,7 +119,10 @@ const scenes: Scene[] = [
   {
     file: 'rauchmelder',
     tile: 'Rauchmelder Flur',
-    steps: [at(600, '000A1B2C3D4E5F:1', 'SMOKE_DETECTOR_ALARM_STATUS', 1), at(3000, '000A1B2C3D4E5F:1', 'SMOKE_DETECTOR_ALARM_STATUS', 0)],
+    steps: [
+      at(600, '000A1B2C3D4E5F:1', 'SMOKE_DETECTOR_ALARM_STATUS', 1),
+      at(3000, '000A1B2C3D4E5F:1', 'SMOKE_DETECTOR_ALARM_STATUS', 0),
+    ],
   },
   {
     file: 'bewegung',
@@ -116,32 +149,54 @@ const scenes: Scene[] = [
       at(3000, '0039E0A9A4B5C6:3', 'OPTICAL_ALARM_ACTIVE', false),
     ],
   },
-  { file: 'gong', tile: 'MP3-Gong Flur', steps: [at(500, '00185D89A1B2C9:2', 'LEVEL', 0.6), at(2500, '00185D89A1B2C9:2', 'LEVEL', 0)] },
+  {
+    file: 'gong',
+    tile: 'MP3-Gong Flur',
+    steps: [at(500, '00185D89A1B2C9:2', 'LEVEL', 0.6), at(2500, '00185D89A1B2C9:2', 'LEVEL', 0)],
+  },
   { file: 'zutritt', tile: 'Zutritt', steps: [at(600, '002BE0C98ECD57:1', 'ACCESS_AUTHORIZATION', 1)] },
   {
     file: 'klima',
     tile: 'Küche Klima',
-    steps: [at(500, '000E1BE9A4C5D6:1', 'ACTUAL_TEMPERATURE', 22.6), at(1500, '000E1BE9A4C5D6:1', 'HUMIDITY', 64), at(2700, '000E1BE9A4C5D6:1', 'ACTUAL_TEMPERATURE', 21.4)],
+    steps: [
+      at(500, '000E1BE9A4C5D6:1', 'ACTUAL_TEMPERATURE', 22.6),
+      at(1500, '000E1BE9A4C5D6:1', 'HUMIDITY', 64),
+      at(2700, '000E1BE9A4C5D6:1', 'ACTUAL_TEMPERATURE', 21.4),
+    ],
   },
   {
     file: 'regen',
     tile: 'Regensensor',
-    steps: [at(500, '00199D89A1B2C3:1', 'RAINING', true), at(1200, '00199D89A1B2C3:1', 'HEATER_STATE', true), at(3000, '00199D89A1B2C3:1', 'RAINING', false)],
+    steps: [
+      at(500, '00199D89A1B2C3:1', 'RAINING', true),
+      at(1200, '00199D89A1B2C3:1', 'HEATER_STATE', true),
+      at(3000, '00199D89A1B2C3:1', 'RAINING', false),
+    ],
   },
   {
     file: 'helligkeit',
     tile: 'Lichtsensor Terrasse',
-    steps: [at(500, '00199D89A1B2C4:1', 'CURRENT_ILLUMINATION', 9000), at(2000, '00199D89A1B2C4:1', 'CURRENT_ILLUMINATION', 800)],
+    steps: [
+      at(500, '00199D89A1B2C4:1', 'CURRENT_ILLUMINATION', 9000),
+      at(2000, '00199D89A1B2C4:1', 'CURRENT_ILLUMINATION', 800),
+    ],
   },
   {
     file: 'co2',
     tile: 'CO₂ Arbeitszimmer',
-    steps: [at(400, '00199D89A1B2C5:1', 'CONCENTRATION', 1150), at(1400, '00199D89A1B2C5:1', 'CONCENTRATION', 1800), at(2800, '00199D89A1B2C5:1', 'CONCENTRATION', 820)],
+    steps: [
+      at(400, '00199D89A1B2C5:1', 'CONCENTRATION', 1150),
+      at(1400, '00199D89A1B2C5:1', 'CONCENTRATION', 1800),
+      at(2800, '00199D89A1B2C5:1', 'CONCENTRATION', 820),
+    ],
   },
   {
     file: 'feinstaub',
     tile: 'Feinstaub Wohnzimmer',
-    steps: [at(500, '00199D89A1B2C6:1', 'MASS_CONCENTRATION_PM_2_5', 28), at(2200, '00199D89A1B2C6:1', 'MASS_CONCENTRATION_PM_2_5', 7.4)],
+    steps: [
+      at(500, '00199D89A1B2C6:1', 'MASS_CONCENTRATION_PM_2_5', 28),
+      at(2200, '00199D89A1B2C6:1', 'MASS_CONCENTRATION_PM_2_5', 7.4),
+    ],
   },
   {
     file: 'bodenfeuchte',
@@ -156,7 +211,10 @@ const scenes: Scene[] = [
   {
     file: 'netzausfall',
     tile: 'Netzausfall Keller',
-    steps: [at(500, '00199D89A1B2C9:1', 'POWER_MAINS_FAILURE', true), at(2600, '00199D89A1B2C9:1', 'POWER_MAINS_FAILURE', false)],
+    steps: [
+      at(500, '00199D89A1B2C9:1', 'POWER_MAINS_FAILURE', true),
+      at(2600, '00199D89A1B2C9:1', 'POWER_MAINS_FAILURE', false),
+    ],
   },
   {
     file: 'bewaesserung',
@@ -183,7 +241,11 @@ const scenes: Scene[] = [
     file: 'energiezaehler',
     tile: 'Stromzähler',
     // Faster the more power, backwards while feeding in
-    steps: [at(300, '003FA2698BC439:1', 'POWER', 2400), at(2000, '003FA2698BC439:1', 'POWER', -800), at(3400, '003FA2698BC439:1', 'POWER', 87)],
+    steps: [
+      at(300, '003FA2698BC439:1', 'POWER', 2400),
+      at(2000, '003FA2698BC439:1', 'POWER', -800),
+      at(3400, '003FA2698BC439:1', 'POWER', 87),
+    ],
     ms: 4600,
   },
   {
@@ -200,7 +262,11 @@ const scenes: Scene[] = [
     steps: [at(800, '003FA2698BC439:1', 'GAS_FLOW', 2.6), at(2800, '003FA2698BC439:1', 'GAS_FLOW', 0.4)],
     ms: 4200,
   },
-  { file: 'accesspoint', tile: 'HmIPW-DRAP', steps: [at(800, '00179A4989A48D:1', 'VOLTAGE', 23.9), at(2000, '00179A4989A48D:1', 'VOLTAGE', 24.4)] },
+  {
+    file: 'accesspoint',
+    tile: 'HmIPW-DRAP',
+    steps: [at(800, '00179A4989A48D:1', 'VOLTAGE', 23.9), at(2000, '00179A4989A48D:1', 'VOLTAGE', 24.4)],
+  },
   { file: 'generisch', tile: 'Leistungsschwelle Waschmaschine', ms: 2000 },
 ];
 
@@ -285,7 +351,11 @@ const record = async (page: Page, scene: Scene) => {
   await cdp.send('Page.stopScreencast');
   await cdp.detach();
   await tile.evaluate((el) => el.removeAttribute('data-docs-tile'));
-  await page.evaluate(() => document.querySelectorAll('style').forEach((style) => style.textContent?.includes('data-docs-tile') && style.remove()));
+  await page.evaluate(() => {
+    for (const style of document.querySelectorAll('style')) {
+      if (style.textContent?.includes('data-docs-tile')) style.remove();
+    }
+  });
   if (frames.length === 0) throw new Error(`no frames for ${scene.tile}`);
 
   // Each frame as long as it was on screen (the last one until the end)

@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { RADIUS, CENTER_X, CENTER_Y, ROTATE_ANGLE, DEFAULT_RANGE, TemperatureRange } from './constants';
+import { RADIUS, CENTER_X, CENTER_Y, ROTATE_ANGLE, DEFAULT_RANGE, STEP, type TemperatureRange } from './constants';
 import { createArcPath, polarToCartesian } from './utils';
 import { useTemperatureConversion } from './hooks/useTemperatureConversion';
 import { useDragInteraction } from './hooks/useDragInteraction';
@@ -55,10 +55,30 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
   const targetHandle = polarToCartesian(CENTER_X, CENTER_Y, RADIUS, targetAngle);
   const width = isDragging ? 22 : 18;
 
+  // A slider is operated with the keys too (WAI-ARIA slider pattern): the
+  // arrows step like the buttons, Home and End go to the ends of the range
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    const keys: Record<string, number> = {
+      ArrowUp: localTarget + STEP,
+      ArrowRight: localTarget + STEP,
+      ArrowDown: localTarget - STEP,
+      ArrowLeft: localTarget - STEP,
+      Home: range.min,
+      End: range.max,
+    };
+    if (!(event.key in keys)) return;
+    event.preventDefault();
+    const temp = Math.min(range.max, Math.max(range.min, keys[event.key]));
+    onTemperatureChange(temp);
+    onInteractionEnd(temp);
+  };
+
   return (
     <svg
       ref={svgRef}
       viewBox="0 0 260 260"
+      tabIndex={0}
+      // biome-ignore lint/a11y/noNoninteractiveElementToInteractiveRole: the dial is drawn, an svg is the slider
       role="slider"
       aria-label={`${m.TARGET_TEMPERATURE()} ${label}`}
       aria-valuemin={range.min}
@@ -69,6 +89,7 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
+      onKeyDown={onKeyDown}
     >
       <defs>
         <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
@@ -89,7 +110,13 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
             />
           </g>
         )}
-        <path d={currentPath} className="fill-none [stroke-linecap:round]" stroke={currentColor} strokeWidth={5} opacity={0.5} />
+        <path
+          d={currentPath}
+          className="fill-none [stroke-linecap:round]"
+          stroke={currentColor}
+          strokeWidth={5}
+          opacity={0.5}
+        />
         <path
           d={targetPathSolid}
           className="fill-none [stroke-linecap:round] transition-[stroke,stroke-width] duration-300"

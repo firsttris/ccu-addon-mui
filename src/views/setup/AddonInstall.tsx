@@ -33,7 +33,10 @@ export const AddonInstall = ({ onClose }: { onClose: () => void }) => {
     try {
       const prepared = await request({ type: 'prepareAddonUpload' }, { queue: false });
       await upload(prepared.url, file);
-      const installed = await request({ type: 'installAddon', id: prepared.id, password }, { queue: false, timeoutMs: INSTALL_TIMEOUT_MS });
+      const installed = await request(
+        { type: 'installAddon', id: prepared.id, password },
+        { queue: false, timeoutMs: INSTALL_TIMEOUT_MS },
+      );
       setResult(installed.reboot ? 'reboot' : 'installed');
       await queryClient.invalidateQueries({ queryKey: ['addons'] });
     } catch (e) {
@@ -72,7 +75,13 @@ export const AddonInstall = ({ onClose }: { onClose: () => void }) => {
         </label>
         <label className="flex flex-col gap-1.5 text-sm text-muted-foreground">
           {m.CCUFW_PASSWORD()}
-          <Input type="password" aria-label={m.PASSWORD()} autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input
+            type="password"
+            aria-label={m.PASSWORD()}
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </label>
         {busy && <p className="text-sm">{m.ADDON_INSTALL_WAIT()}</p>}
         {error && (

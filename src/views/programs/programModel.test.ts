@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { TimeModule } from '../../types/protocol';
+import type { TimeModule } from '../../types/protocol';
 import {
   clockOf,
   dateOf,
   describeTimeModule,
   SUN,
   timeModeOf,
-  TimeTexts,
+  type TimeTexts,
   today,
   WORKDAY_BITS,
   clockOfSeconds,
@@ -47,7 +47,16 @@ describe('programModel', () => {
     const program = newProgram();
     expect(programProblems(program)).toEqual(['name']);
     expect(programProblems({ ...program, name: 'A "B"' })).toEqual(['name']);
-    const script = { ...program, name: 'P', rules: [{ ...program.rules[0], destinations: [{ ...program.rules[0].destinations[0], valueType: 'ivtString', value: 'a^b' }] }] };
+    const script = {
+      ...program,
+      name: 'P',
+      rules: [
+        {
+          ...program.rules[0],
+          destinations: [{ ...program.rules[0].destinations[0], valueType: 'ivtString', value: 'a^b' }],
+        },
+      ],
+    };
     expect(programProblems(script)).toEqual(['script']);
   });
 });
@@ -80,17 +89,29 @@ describe('describeTimeModule', () => {
       seconds: (n) => `${n}s`,
     },
   };
-  const tm = (patch: Partial<TimeModule>): TimeModule => ({ ...newTimeModule(), time: '2007-01-01 19:30:00', ...patch });
+  const tm = (patch: Partial<TimeModule>): TimeModule => ({
+    ...newTimeModule(),
+    time: '2007-01-01 19:30:00',
+    ...patch,
+  });
 
   it('says when and how often', () => {
     expect(describeTimeModule(tm({}), x)).toBe('täglich, um 19:30');
     expect(describeTimeModule(tm({ duration: 5400 }), x)).toBe('täglich, 19:30-21:00');
-    expect(describeTimeModule(tm({ time: '0', sunOffset: SUN.DAYTIME, weekdays: WORKDAY_BITS }), x)).toBe('werktags, tagsüber');
+    expect(describeTimeModule(tm({ time: '0', sunOffset: SUN.DAYTIME, weekdays: WORKDAY_BITS }), x)).toBe(
+      'werktags, tagsüber',
+    );
     expect(describeTimeModule(tm({ time: '0' }), x)).toBe('täglich, ganztägig');
     expect(describeTimeModule(tm({ timerType: TIMER.PERIODIC, period: 900 }), x)).toBe('alle 15min, um 19:30');
-    expect(describeTimeModule(tm({ timerType: TIMER.WEEKLY, weekdays: 1 | 4, repetitionValue: 2 }), x)).toBe('alle 2 Wochen Mo, Mi, um 19:30');
-    expect(describeTimeModule(tm({ timerType: TIMER.MONTHLY, weekdays: 16, period: 1, repetitionValue: 1 }), x)).toBe('am 1. Fr alle 1, um 19:30');
-    expect(describeTimeModule(tm({ timerType: TIMER.YEARLY, period: 24, repetitionValue: 2 }), x)).toBe('24. Feb, um 19:30');
+    expect(describeTimeModule(tm({ timerType: TIMER.WEEKLY, weekdays: 1 | 4, repetitionValue: 2 }), x)).toBe(
+      'alle 2 Wochen Mo, Mi, um 19:30',
+    );
+    expect(describeTimeModule(tm({ timerType: TIMER.MONTHLY, weekdays: 16, period: 1, repetitionValue: 1 }), x)).toBe(
+      'am 1. Fr alle 1, um 19:30',
+    );
+    expect(describeTimeModule(tm({ timerType: TIMER.YEARLY, period: 24, repetitionValue: 2 }), x)).toBe(
+      '24. Feb, um 19:30',
+    );
   });
 
   it('reads the dates ReGa prints', () => {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSetDataPoint } from '../../../queries';
-import { DEFAULT_RANGE, STEP, TemperatureRange } from '../constants';
-import { Channel } from '../../../types/types';
+import { DEFAULT_RANGE, STEP, type TemperatureRange } from '../constants';
+import type { Channel } from '../../../types/types';
 
 interface UseThermostatStateProps {
   targetTemperature: number;
@@ -58,18 +58,13 @@ export const useThermostatState = ({
     if (commitTimeoutRef.current) {
       clearTimeout(commitTimeoutRef.current);
     }
-    pendingCommitRef.current = () =>
-      setDataPoint(
-        channel.interfaceName,
-        channel.address,
-        datapoint,
-        temp
-      );
+    pendingCommitRef.current = () => setDataPoint(channel.interfaceName, channel.address, datapoint, temp);
     commitTimeoutRef.current = setTimeout(flushCommit, 500);
   };
 
   // Send a pending change right away when the control goes away (e.g. the
   // user navigates to another room) instead of dropping it.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: on unmount only; flushCommit reads refs
   useEffect(() => flushCommit, []);
 
   const decreaseTemperature = () => {

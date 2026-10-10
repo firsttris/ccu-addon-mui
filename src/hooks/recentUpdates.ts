@@ -1,4 +1,4 @@
-import { Channel, HmEvent } from '../types/types';
+import type { Channel, HmEvent } from '../types/types';
 import { applyEvent } from './channels';
 
 // What the server pushed lately: events, and whole lists (system variables,

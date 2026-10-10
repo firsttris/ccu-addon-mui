@@ -1,5 +1,5 @@
-import { ReactNode, useEffect, useRef } from 'react';
-import { EnergyMeterChannel } from '../types/types';
+import { type ReactNode, useEffect, useRef } from 'react';
+import type { EnergyMeterChannel } from '../types/types';
 import { cn, formatNumber } from '../lib/utils';
 import ZapIcon from '~icons/lucide/zap';
 import FlameIcon from '~icons/lucide/flame';
@@ -76,9 +76,13 @@ const RegisterRow = ({
         <div className="flex gap-px rounded-[4px] bg-zinc-900 p-[3px] font-mono text-[13px] leading-none font-semibold tabular-nums">
           {[...whole, ...fraction].map((d, i) => {
             const red = i >= whole.length;
-            const cell = cn('h-[19px] w-[13px] rounded-[2px] py-[3px] text-center', red ? 'bg-red-700 text-white' : 'bg-zinc-800 text-zinc-100');
+            const cell = cn(
+              'h-[19px] w-[13px] rounded-[2px] py-[3px] text-center',
+              red ? 'bg-red-700 text-white' : 'bg-zinc-800 text-zinc-100',
+            );
             if (i < whole.length + decimals - 1 || !rolling) {
               return (
+                // biome-ignore lint/suspicious/noArrayIndexKey: digit positions of the meter
                 <span key={i} className={cell}>
                   {d}
                 </span>
@@ -86,12 +90,14 @@ const RegisterRow = ({
             }
             // The turning roll: 0-9 and 0 again, started at the current digit
             return (
+              // biome-ignore lint/suspicious/noArrayIndexKey: digit positions of the meter
               <span key={i} className={cn(cell, 'overflow-hidden py-0')}>
                 <span
                   className="fx-roll flex flex-col"
                   style={{ animationDuration: `${roll}s`, animationDelay: `${(-roll * last) / 10}s` }}
                 >
                   {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((n, k) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: digit positions of the meter
                     <span key={k} className="flex h-[19px] shrink-0 items-center justify-center">
                       {n}
                     </span>
@@ -107,7 +113,8 @@ const RegisterRow = ({
   );
 };
 
-const meterCase = 'flex flex-col gap-2 rounded-[12px] border-[3px] border-zinc-300 bg-zinc-100 p-2.5 dark:border-zinc-700 dark:bg-zinc-800';
+const meterCase =
+  'flex flex-col gap-2 rounded-[12px] border-[3px] border-zinc-300 bg-zinc-100 p-2.5 dark:border-zinc-700 dark:bg-zinc-800';
 
 // One turn of the disc: the red mark comes round every 320 px of its edge
 const DISC_TURN = 320;
@@ -175,7 +182,13 @@ const GasMeter = ({ flow, volume }: { flow: number; volume: number }) => {
   const speed = Math.min(1, Math.max(0, (Math.log10(Math.max(0.01, rate)) + 2) / (Math.log10(6) + 2)));
   return (
     <div className={meterCase}>
-      <RegisterRow label={m.METER_READING()} value={volume} decimals={2} unit="m³" roll={rate > 0 ? Number((8 - 7.2 * speed).toFixed(2)) : 0} />
+      <RegisterRow
+        label={m.METER_READING()}
+        value={volume}
+        decimals={2}
+        unit="m³"
+        roll={rate > 0 ? Number((8 - 7.2 * speed).toFixed(2)) : 0}
+      />
     </div>
   );
 };
@@ -207,7 +220,10 @@ export const EnergyMeterControl = ({ channels }: EnergyMeterControlProps) => {
     : power !== undefined || sorted.some((c) => c.datapoints.ENERGY_COUNTER !== undefined);
   const isGas = hasGas && (gasCounters.length > 0 || isSet(gasFlow));
   // Meter readings shown: the ones set, or the first one of a new meter
-  const readings = energyCounters.length > 0 || hasGas ? energyCounters : sorted.filter((c) => c.datapoints.ENERGY_COUNTER !== undefined).slice(0, 1);
+  const readings =
+    energyCounters.length > 0 || hasGas
+      ? energyCounters
+      : sorted.filter((c) => c.datapoints.ENERGY_COUNTER !== undefined).slice(0, 1);
 
   const registers: Register[] = readings.map((channel, index) => ({
     key: channel.address,

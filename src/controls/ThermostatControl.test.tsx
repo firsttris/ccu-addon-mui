@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen } from '@testing-library/react';
 import { renderWithTheme } from '../test/render';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 
 const setDataPoint = vi.fn();
 vi.mock('../queries', async (importOriginal) => ({
@@ -12,7 +12,11 @@ vi.mock('../queries', async (importOriginal) => ({
   useDevices: () => ({ data: undefined }),
 }));
 vi.mock('./ThermostatControl/profile/WeekProfileSheet', () => ({ WeekProfileSheet: () => null }));
-vi.mock('../components/DeviceImage', () => ({ DeviceImage: () => null, useDeviceImage: () => undefined, useDeviceImages: () => ({ isPending: false }) }));
+vi.mock('../components/DeviceImage', () => ({
+  DeviceImage: () => null,
+  useDeviceImage: () => undefined,
+  useDeviceImages: () => ({ isPending: false }),
+}));
 
 const { ThermostatControl } = await import('./ThermostatControl');
 
@@ -69,10 +73,33 @@ describe('ThermostatControl', () => {
     expect(setDataPoint.mock.calls.map((c) => c[2])).toEqual(['COMFORT_MODE', 'LOWERING_MODE']);
   });
 
+  it('steps the target temperature with the arrow keys on the dial', () => {
+    renderWithTheme(
+      <ThermostatControl
+        channel={channel('HEATING_CLIMATECONTROL_TRANSCEIVER', 'HmIP-RF', {
+          SET_POINT_TEMPERATURE: 21,
+          ACTUAL_TEMPERATURE: 20,
+          SET_POINT_MODE: 0,
+          BOOST_MODE: false,
+        })}
+      />,
+    );
+    const dial = screen.getByRole('slider');
+    fireEvent.keyDown(dial, { key: 'ArrowUp' });
+    expect(dial.getAttribute('aria-valuenow')).toBe('21.5');
+    fireEvent.keyDown(dial, { key: 'ArrowDown' });
+    fireEvent.keyDown(dial, { key: 'ArrowDown' });
+    expect(dial.getAttribute('aria-valuenow')).toBe('20.5');
+  });
+
   it('shows no boost where the device has none', () => {
     renderWithTheme(
       <ThermostatControl
-        channel={channel('HEATING_CLIMATECONTROL_TRANSCEIVER', 'HmIP-RF', { SET_POINT_TEMPERATURE: 21, ACTUAL_TEMPERATURE: 20, SET_POINT_MODE: 0 })}
+        channel={channel('HEATING_CLIMATECONTROL_TRANSCEIVER', 'HmIP-RF', {
+          SET_POINT_TEMPERATURE: 21,
+          ACTUAL_TEMPERATURE: 20,
+          SET_POINT_MODE: 0,
+        })}
       />,
     );
     expect(screen.queryByRole('button', { name: boost })).toBeNull();

@@ -100,7 +100,10 @@ export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; 
     try {
       // As the WebUI offers before the update (askCreateBackup, ticked)
       if (backupFirst) {
-        const backup = await request({ type: 'createBackup', password }, { queue: false, timeoutMs: BACKUP_TIMEOUT_MS });
+        const backup = await request(
+          { type: 'createBackup', password },
+          { queue: false, timeoutMs: BACKUP_TIMEOUT_MS },
+        );
         downloadBackup(backup.url, backup.fileName);
       }
       await request({ type: 'installCcuFirmware', password }, { queue: false, timeoutMs: FIRMWARE_TIMEOUT_MS });
@@ -152,12 +155,12 @@ export const CcuFirmwareUpload = ({ onClose, download }: { onClose: () => void; 
           </label>
           {eula && (
             <>
-              <pre
+              <section
                 aria-label={m.CCUFW_EULA()}
-                className="max-h-48 overflow-auto rounded-md border bg-muted/40 p-2 text-xs whitespace-pre-wrap text-foreground"
+                className="font-mono max-h-48 overflow-auto rounded-md border bg-muted/40 p-2 text-xs whitespace-pre-wrap text-foreground"
               >
                 {eula}
-              </pre>
+              </section>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
                 {m.CCUFW_ACCEPT()}

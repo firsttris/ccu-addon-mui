@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Channel } from '../../../types/types';
+import type { Channel } from '../../../types/types';
 
 const setDataPoint = vi.fn();
 vi.mock('../../../queries', () => ({ useSetDataPoint: () => setDataPoint }));
@@ -14,9 +14,12 @@ describe('useThermostatState', () => {
   afterEach(() => vi.useRealTimers());
 
   it('shows a value from the CCU that came in while the user turned the dial', () => {
-    const { result, rerender } = renderHook(({ target }) => useThermostatState({ targetTemperature: target, channel }), {
-      initialProps: { target: 20 },
-    });
+    const { result, rerender } = renderHook(
+      ({ target }) => useThermostatState({ targetTemperature: target, channel }),
+      {
+        initialProps: { target: 20 },
+      },
+    );
     act(() => result.current.increaseTemperature());
     expect(result.current.localTarget).toBe(20.5);
 
@@ -31,9 +34,12 @@ describe('useThermostatState', () => {
   });
 
   it('keeps waiting while the user goes on', () => {
-    const { result, rerender } = renderHook(({ target }) => useThermostatState({ targetTemperature: target, channel }), {
-      initialProps: { target: 20 },
-    });
+    const { result, rerender } = renderHook(
+      ({ target }) => useThermostatState({ targetTemperature: target, channel }),
+      {
+        initialProps: { target: 20 },
+      },
+    );
     act(() => result.current.updateLocalTarget(22));
     rerender({ target: 21 });
     act(() => vi.advanceTimersByTime(2000));

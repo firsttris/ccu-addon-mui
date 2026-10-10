@@ -14,7 +14,14 @@ const tickNumber = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 1
 const hourFormat = new Intl.DateTimeFormat(defaultLang, { hour: '2-digit', minute: '2-digit' });
 const dayFormat = new Intl.DateTimeFormat(defaultLang, { day: '2-digit', month: '2-digit' });
 const monthFormat = new Intl.DateTimeFormat(defaultLang, { month: 'short', year: '2-digit' });
-const tooltipFormat = new Intl.DateTimeFormat(defaultLang, { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+const tooltipFormat = new Intl.DateTimeFormat(defaultLang, {
+  weekday: 'short',
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
 export const formatValue = (v: number, unit: string) => `${numberFormat.format(v)}${unit ? ` ${unit}` : ''}`;
 
@@ -40,13 +47,18 @@ export const isBinaryValues = (s: RenderSeries) => s.kind !== 'bar' && isBinary(
 
 // The scale a series uses: the side chosen, else one per unit; switches
 // drawn as steps get one of their own from 0 to 1
-const scaleKey = (s: RenderSeries) => (s.axis ? `axis:${s.axis}` : isBinaryValues(s) ? `bin:${s.key}` : `unit:${s.unit}`);
+const scaleKey = (s: RenderSeries) =>
+  s.axis ? `axis:${s.axis}` : isBinaryValues(s) ? `bin:${s.key}` : `unit:${s.unit}`;
 
 const barAt = (bars: Bar[], t: number) => bars.find((b) => t >= b.t0 && t < b.t1);
 
 // A value as shown: on/off for states and switches
 export const formatSeriesValue = (s: RenderSeries, v: number) =>
-  s.kind === 'state' || (s.kind === 'step' && isBinaryValues(s)) ? (v >= 0.5 ? m.ON() : m.OFF()) : formatValue(v, s.unit);
+  s.kind === 'state' || (s.kind === 'step' && isBinaryValues(s))
+    ? v >= 0.5
+      ? m.ON()
+      : m.OFF()
+    : formatValue(v, s.unit);
 
 interface TimeChartProps {
   label: string;
@@ -66,7 +78,16 @@ interface TimeChartProps {
 // interval, steps, and states as bands below the chart. A value axis per
 // side, gaps where values are missing, the period before for comparison.
 // Hovering shows the values, dragging zooms in.
-export const TimeChart = ({ label, series, from, to, height = 300, animationKey = '', live = false, onZoom }: TimeChartProps) => {
+export const TimeChart = ({
+  label,
+  series,
+  from,
+  to,
+  height = 300,
+  animationKey = '',
+  live = false,
+  onZoom,
+}: TimeChartProps) => {
   const effects = useEffects();
   const strong = effects.level === 'strong';
   // Strong effects draw the series one after the other
@@ -198,15 +219,21 @@ export const TimeChart = ({ label, series, from, to, height = 300, animationKey 
 
   // The paths and the typical spacing of the points change with the data
   // and the size, not while the pointer moves over the chart
+  // biome-ignore lint/correctness/useExhaustiveDependencies: linePaths reads only these, through x, y and baseline
   const lineSeries = useMemo(() => {
-    const result = new Map<string, { paths: ReturnType<typeof linePaths>; before: ReturnType<typeof linePaths> | null }>();
+    const result = new Map<
+      string,
+      { paths: ReturnType<typeof linePaths>; before: ReturnType<typeof linePaths> | null }
+    >();
     for (const s of drawn) {
       const scale = scales.get(scaleKey(s));
       if (s.kind === 'bar' || !scale) continue;
-      result.set(s.key, { paths: linePaths(s, s.points, scale), before: s.compare ? linePaths(s, s.compare.points, scale) : null });
+      result.set(s.key, {
+        paths: linePaths(s, s.points, scale),
+        before: s.compare ? linePaths(s, s.compare.points, scale) : null,
+      });
     }
     return result;
-    // linePaths reads only these, through x, y and baseline
   }, [drawn, scales, width, height, from, to]);
   const steps = useMemo(() => new Map(series.map((s) => [s.key, typicalStep(s.points)])), [series]);
 
@@ -231,16 +258,28 @@ export const TimeChart = ({ label, series, from, to, height = 300, animationKey 
           if (s.kind === 'bar') {
             const bar = barAt(s.bars, hoverTime);
             const before = s.compare && barAt(s.compare.bars, hoverTime);
-            return bar ? [{ s, v: bar.v, before: before?.v, at: (bar.t0 + bar.t1) / 2, range: null as [number, number] | null }] : [];
+            return bar
+              ? [{ s, v: bar.v, before: before?.v, at: (bar.t0 + bar.t1) / 2, range: null as [number, number] | null }]
+              : [];
           }
           const p = nearest(s.points, hoverTime);
           const before = s.compare ? nearest(s.compare.points, hoverTime)?.[1] : undefined;
           if (!p || Math.abs(p[0] - hoverTime) > Math.max(span / 40, (steps.get(s.key) ?? Infinity) * 1.5)) {
             // A state or step lasts until the next value
             const last = s.points.findLast((q) => q[0] <= hoverTime);
-            return (s.kind === 'state' || s.kind === 'step') && last ? [{ s, v: last[1], before, at: hoverTime, range: null }] : [];
+            return (s.kind === 'state' || s.kind === 'step') && last
+              ? [{ s, v: last[1], before, at: hoverTime, range: null }]
+              : [];
           }
-          return [{ s, v: p[1], before, at: p[0], range: p[3] > p[2] && s.aggregate === 'avg' ? ([p[2], p[3]] as [number, number]) : null }];
+          return [
+            {
+              s,
+              v: p[1],
+              before,
+              at: p[0],
+              range: p[3] > p[2] && s.aggregate === 'avg' ? ([p[2], p[3]] as [number, number]) : null,
+            },
+          ];
         });
 
   return (
@@ -291,15 +330,34 @@ export const TimeChart = ({ label, series, from, to, height = 300, animationKey 
         {axisLeft &&
           niceTicks(axisLeft.lo, axisLeft.hi).map((v) => (
             <g key={`l${v}`}>
-              <line x1={left} x2={left + plotWidth} y1={y(axisLeft, v)} y2={y(axisLeft, v)} className="stroke-border" strokeDasharray="2 3" />
-              <text x={left - 6} y={y(axisLeft, v)} dy="0.32em" textAnchor="end" className="fill-muted-foreground text-[11px] tabular-nums">
+              <line
+                x1={left}
+                x2={left + plotWidth}
+                y1={y(axisLeft, v)}
+                y2={y(axisLeft, v)}
+                className="stroke-border"
+                strokeDasharray="2 3"
+              />
+              <text
+                x={left - 6}
+                y={y(axisLeft, v)}
+                dy="0.32em"
+                textAnchor="end"
+                className="fill-muted-foreground text-[11px] tabular-nums"
+              >
                 {tickNumber.format(v)}
               </text>
             </g>
           ))}
         {axisRight &&
           niceTicks(axisRight.lo, axisRight.hi).map((v) => (
-            <text key={`r${v}`} x={left + plotWidth + 6} y={y(axisRight, v)} dy="0.32em" className="fill-muted-foreground text-[11px] tabular-nums">
+            <text
+              key={`r${v}`}
+              x={left + plotWidth + 6}
+              y={y(axisRight, v)}
+              dy="0.32em"
+              className="fill-muted-foreground text-[11px] tabular-nums"
+            >
               {tickNumber.format(v)}
             </text>
           ))}
@@ -324,123 +382,218 @@ export const TimeChart = ({ label, series, from, to, height = 300, animationKey 
         <line x1={left} x2={left + plotWidth} y1={TOP + plotHeight} y2={TOP + plotHeight} className="stroke-border" />
 
         <g key={animationKey} className={effects.on ? 'chart-anim' : undefined} data-level={effects.level}>
-        <g clipPath={`url(#${id}-clip)`}>
-          {/* Bars, side by side per interval, the period before as outline */}
-          {bars.map((s, bi) => {
-            const scale = scales.get(scaleKey(s));
-            if (!scale) return null;
-            const base = baseline(scale);
-            const rect = (b: Bar, outline: boolean) => {
-              const slot = x(b.t1) - x(b.t0);
-              const w = Math.max(1, (slot * 0.78) / bars.length);
-              const bx = x(b.t0) + slot * 0.11 + bi * w;
-              const by = y(scale, b.v);
-              return (
-                <rect
-                  key={`${outline ? 'c' : 'b'}${b.t0}`}
-                  x={bx}
-                  y={Math.min(by, base)}
-                  width={Math.max(1, w - (bars.length > 1 ? 1 : 0))}
-                  height={Math.max(outline ? 0 : 1, Math.abs(base - by))}
-                  rx={Math.min(3, w / 4)}
-                  fill={outline ? 'none' : s.color}
-                  fillOpacity={outline ? undefined : 0.8}
-                  stroke={outline ? s.color : 'none'}
-                  strokeOpacity={0.6}
-                  strokeDasharray={outline ? '3 2' : undefined}
-                  className={outline ? 'chart-fill' : 'chart-bar'}
-                  style={outline ? undefined : ({ '--chart-delay': `${Math.min(600, bi * 120 + (x(b.t0) - left) * (strong ? 0.9 : 0.4))}ms` } as React.CSSProperties)}
-                />
-              );
-            };
-            return (
-              <g key={s.key} data-series={s.key} data-kind="bar">
-                {s.compare?.bars.map((b) => rect(b, true))}
-                {s.bars.map((b) => rect(b, false))}
-              </g>
-            );
-          })}
-          {/* Lines, areas and steps */}
-          {drawn
-            .filter((s) => s.kind !== 'bar')
-            .map((s, i) => {
-              const drawing = lineSeries.get(s.key);
-              if (!drawing) return null;
-              const { paths, before } = drawing;
-              return (
-                <g key={s.key} data-series={s.key} data-kind={s.kind}>
-                  {before && <path d={before.line} className="chart-fill" style={delay(i)} fill="none" stroke={s.color} strokeOpacity={0.45} strokeWidth={1.25} strokeDasharray="4 3" />}
-                  {paths.area && <path d={paths.area} className="chart-fill" style={delay(i)} fill={`url(#${id}-g${drawn.indexOf(s)})`} stroke="none" />}
-                  {paths.band && <path d={paths.band} className="chart-fill" style={delay(i)} fill={s.color} fillOpacity={0.15} stroke="none" />}
-                  <path
-                    d={paths.line}
-                    pathLength={1}
-                    className="chart-line"
-                    style={delay(i)}
-                    fill="none"
-                    stroke={s.color}
-                    strokeWidth={s.kind === 'area' ? 2 : 1.75}
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
+          <g clipPath={`url(#${id}-clip)`}>
+            {/* Bars, side by side per interval, the period before as outline */}
+            {bars.map((s, bi) => {
+              const scale = scales.get(scaleKey(s));
+              if (!scale) return null;
+              const base = baseline(scale);
+              const rect = (b: Bar, outline: boolean) => {
+                const slot = x(b.t1) - x(b.t0);
+                const w = Math.max(1, (slot * 0.78) / bars.length);
+                const bx = x(b.t0) + slot * 0.11 + bi * w;
+                const by = y(scale, b.v);
+                return (
+                  <rect
+                    key={`${outline ? 'c' : 'b'}${b.t0}`}
+                    x={bx}
+                    y={Math.min(by, base)}
+                    width={Math.max(1, w - (bars.length > 1 ? 1 : 0))}
+                    height={Math.max(outline ? 0 : 1, Math.abs(base - by))}
+                    rx={Math.min(3, w / 4)}
+                    fill={outline ? 'none' : s.color}
+                    fillOpacity={outline ? undefined : 0.8}
+                    stroke={outline ? s.color : 'none'}
+                    strokeOpacity={0.6}
+                    strokeDasharray={outline ? '3 2' : undefined}
+                    className={outline ? 'chart-fill' : 'chart-bar'}
+                    style={
+                      outline
+                        ? undefined
+                        : ({
+                            '--chart-delay': `${Math.min(600, bi * 120 + (x(b.t0) - left) * (strong ? 0.9 : 0.4))}ms`,
+                          } as React.CSSProperties)
+                    }
                   />
-                  {paths.dots.map(([cx, cy]) => (
-                    <circle key={`${cx},${cy}`} className="chart-fill" style={delay(i)} cx={cx} cy={cy} r={2.5} fill={s.color} />
-                  ))}
+                );
+              };
+              return (
+                <g key={s.key} data-series={s.key} data-kind="bar">
+                  {s.compare?.bars.map((b) => rect(b, true))}
+                  {s.bars.map((b) => rect(b, false))}
                 </g>
               );
             })}
-        </g>
-
-        {/* States as bands below the chart */}
-        {states.map((s, i) => {
-          const top = lanesTop + i * LANE;
-          const end = Math.min(Date.now(), to);
-          return (
-            <g key={s.key} data-series={s.key} data-kind="state" className="chart-lane" style={delay(i)}>
-              <rect x={left} y={top} width={Math.max(0, plotWidth)} height={LANE - 4} rx={3} className="fill-muted" />
-              {s.points.map((p, j) => {
-                if (p[1] < 0.5 && p[3] < 0.5) return null;
-                const t1 = s.points[j + 1]?.[0] ?? end;
-                const x0 = Math.max(left, x(p[0]));
-                const x1 = Math.min(left + plotWidth, x(t1));
-                return x1 > x0 ? <rect key={p[0]} x={x0} y={top} width={Math.max(1, x1 - x0)} height={LANE - 4} rx={2} fill={s.color} fillOpacity={0.85} /> : null;
+            {/* Lines, areas and steps */}
+            {drawn
+              .filter((s) => s.kind !== 'bar')
+              .map((s, i) => {
+                const drawing = lineSeries.get(s.key);
+                if (!drawing) return null;
+                const { paths, before } = drawing;
+                return (
+                  <g key={s.key} data-series={s.key} data-kind={s.kind}>
+                    {before && (
+                      <path
+                        d={before.line}
+                        className="chart-fill"
+                        style={delay(i)}
+                        fill="none"
+                        stroke={s.color}
+                        strokeOpacity={0.45}
+                        strokeWidth={1.25}
+                        strokeDasharray="4 3"
+                      />
+                    )}
+                    {paths.area && (
+                      <path
+                        d={paths.area}
+                        className="chart-fill"
+                        style={delay(i)}
+                        fill={`url(#${id}-g${drawn.indexOf(s)})`}
+                        stroke="none"
+                      />
+                    )}
+                    {paths.band && (
+                      <path
+                        d={paths.band}
+                        className="chart-fill"
+                        style={delay(i)}
+                        fill={s.color}
+                        fillOpacity={0.15}
+                        stroke="none"
+                      />
+                    )}
+                    <path
+                      d={paths.line}
+                      pathLength={1}
+                      className="chart-line"
+                      style={delay(i)}
+                      fill="none"
+                      stroke={s.color}
+                      strokeWidth={s.kind === 'area' ? 2 : 1.75}
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                    />
+                    {paths.dots.map(([cx, cy]) => (
+                      <circle
+                        key={`${cx},${cy}`}
+                        className="chart-fill"
+                        style={delay(i)}
+                        cx={cx}
+                        cy={cy}
+                        r={2.5}
+                        fill={s.color}
+                      />
+                    ))}
+                  </g>
+                );
               })}
-              <text x={left + 6} y={top + (LANE - 4) / 2} dy="0.32em" className="pointer-events-none fill-foreground/70 text-[10px] font-medium" paintOrder="stroke" stroke="var(--color-muted)" strokeWidth={3}>
-                {s.label}
-              </text>
-            </g>
-          );
-        })}
+          </g>
 
-        {/* The current value of live lines pulses */}
-        {strong &&
-          live &&
-          drawn
-            .filter((s) => s.kind === 'line' || s.kind === 'area')
-            .map((s) => {
-              const scale = scales.get(scaleKey(s));
-              const last = s.points[s.points.length - 1];
-              return scale && last ? <circle key={s.key} className="chart-pulse" cx={x(last[0])} cy={y(scale, last[1])} r={3.5} fill={s.color} /> : null;
-            })}
+          {/* States as bands below the chart */}
+          {states.map((s, i) => {
+            const top = lanesTop + i * LANE;
+            const end = Math.min(Date.now(), to);
+            return (
+              <g key={s.key} data-series={s.key} data-kind="state" className="chart-lane" style={delay(i)}>
+                <rect x={left} y={top} width={Math.max(0, plotWidth)} height={LANE - 4} rx={3} className="fill-muted" />
+                {s.points.map((p, j) => {
+                  if (p[1] < 0.5 && p[3] < 0.5) return null;
+                  const t1 = s.points[j + 1]?.[0] ?? end;
+                  const x0 = Math.max(left, x(p[0]));
+                  const x1 = Math.min(left + plotWidth, x(t1));
+                  return x1 > x0 ? (
+                    <rect
+                      key={p[0]}
+                      x={x0}
+                      y={top}
+                      width={Math.max(1, x1 - x0)}
+                      height={LANE - 4}
+                      rx={2}
+                      fill={s.color}
+                      fillOpacity={0.85}
+                    />
+                  ) : null;
+                })}
+                <text
+                  x={left + 6}
+                  y={top + (LANE - 4) / 2}
+                  dy="0.32em"
+                  className="pointer-events-none fill-foreground/70 text-[10px] font-medium"
+                  paintOrder="stroke"
+                  stroke="var(--color-muted)"
+                  strokeWidth={3}
+                >
+                  {s.label}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* The current value of live lines pulses */}
+          {strong &&
+            live &&
+            drawn
+              .filter((s) => s.kind === 'line' || s.kind === 'area')
+              .map((s) => {
+                const scale = scales.get(scaleKey(s));
+                const last = s.points[s.points.length - 1];
+                return scale && last ? (
+                  <circle
+                    key={s.key}
+                    className="chart-pulse"
+                    cx={x(last[0])}
+                    cy={y(scale, last[1])}
+                    r={3.5}
+                    fill={s.color}
+                  />
+                ) : null;
+              })}
         </g>
 
         {/* Hover and zoom selection */}
-        {hover !== null && !drag && <line x1={hover} x2={hover} y1={TOP} y2={TOP + plotHeight + lanes} className="stroke-foreground/40" />}
+        {hover !== null && !drag && (
+          <line x1={hover} x2={hover} y1={TOP} y2={TOP + plotHeight + lanes} className="stroke-foreground/40" />
+        )}
         {tooltip.map(({ s, v, at }) => {
           const scale = scales.get(scaleKey(s));
           if (!scale || s.kind === 'state' || s.kind === 'bar') return null;
-          return <circle key={s.key} cx={x(at)} cy={y(scale, v)} r={3.5} fill={s.color} className="stroke-background" strokeWidth={1.5} />;
+          return (
+            <circle
+              key={s.key}
+              cx={x(at)}
+              cy={y(scale, v)}
+              r={3.5}
+              fill={s.color}
+              className="stroke-background"
+              strokeWidth={1.5}
+            />
+          );
         })}
         {drag && Math.abs(drag.end - drag.start) > 2 && (
-          <rect x={Math.min(drag.start, drag.end)} y={TOP} width={Math.abs(drag.end - drag.start)} height={plotHeight + lanes} className="fill-primary/15 stroke-primary/50" />
+          <rect
+            x={Math.min(drag.start, drag.end)}
+            y={TOP}
+            width={Math.abs(drag.end - drag.start)}
+            height={plotHeight + lanes}
+            className="fill-primary/15 stroke-primary/50"
+          />
         )}
-        <rect x={left} y={TOP} width={Math.max(0, plotWidth)} height={plotHeight + lanes} fill="transparent" className="cursor-crosshair" />
+        <rect
+          x={left}
+          y={TOP}
+          width={Math.max(0, plotWidth)}
+          height={plotHeight + lanes}
+          fill="transparent"
+          className="cursor-crosshair"
+        />
       </svg>
-      {hoverTime !== null && tooltip.length > 0 && !drag && (
+      {hover !== null && hoverTime !== null && tooltip.length > 0 && !drag && (
         <div
           role="tooltip"
           className="pointer-events-none absolute top-2 z-10 flex max-w-80 flex-col gap-1 rounded-lg border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md"
-          style={hover! > width / 2 ? { right: width - hover! + 12 } : { left: hover! + 12 }}
+          style={hover > width / 2 ? { right: width - hover + 12 } : { left: hover + 12 }}
         >
           <span className="text-muted-foreground">{tooltipFormat.format(hoverTime)}</span>
           {tooltip.map(({ s, v, before, range }) => (
@@ -454,7 +607,11 @@ export const TimeChart = ({ label, series, from, to, height = 300, animationKey 
                     ({numberFormat.format(range[0])}–{numberFormat.format(range[1])})
                   </span>
                 )}
-                {before !== undefined && <span className="ml-1 font-normal text-muted-foreground">· {m.DIAG_BEFORE({ value: formatSeriesValue(s, before) })}</span>}
+                {before !== undefined && (
+                  <span className="ml-1 font-normal text-muted-foreground">
+                    · {m.DIAG_BEFORE({ value: formatSeriesValue(s, before) })}
+                  </span>
+                )}
               </span>
             </span>
           ))}

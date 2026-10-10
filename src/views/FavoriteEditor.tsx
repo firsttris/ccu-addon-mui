@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import CpuIcon from '~icons/lucide/cpu';
 import BracesIcon from '~icons/lucide/braces';
@@ -8,7 +8,7 @@ import XIcon from '~icons/lucide/x';
 import SearchIcon from '~icons/lucide/search';
 import { useChannelList, useFavoriteChange, usePrograms, useRooms, useSysvars } from '../queries';
 import { useToast } from '../contexts/ToastContext';
-import { Favorite, FavoriteItem } from '../types/protocol';
+import type { Favorite, FavoriteItem } from '../types/protocol';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../components/ui/sheet';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -60,7 +60,10 @@ export const FavoriteEditor = ({ favorite, onClose }: { favorite: Favorite; onCl
     const roomNames = new Map(rooms.map((room) => [room.id, room.name]));
     const all = new Map<number, Entry>();
     for (const channel of channels) {
-      const detail = (channel.rooms ?? []).map((id) => roomNames.get(id)).filter(Boolean).join(', ');
+      const detail = (channel.rooms ?? [])
+        .map((id) => roomNames.get(id))
+        .filter(Boolean)
+        .join(', ');
       all.set(channel.id, { id: channel.id, type: 'CHANNEL', name: channel.name, detail });
     }
     for (const sysvar of sysvars.filter((sv) => sv.visible)) {
@@ -99,7 +102,9 @@ export const FavoriteEditor = ({ favorite, onClose }: { favorite: Favorite; onCl
           <div className="flex min-h-11 items-center gap-2 rounded-xl border bg-card px-3 text-[17px] font-semibold">
             <EditableName
               name={favorite.name}
-              onRename={(name) => run({ type: 'renameFavorite', id: favorite.id, name }, () => showToast(m.RENAMED(), 'info'))}
+              onRename={(name) =>
+                run({ type: 'renameFavorite', id: favorite.id, name }, () => showToast(m.RENAMED(), 'info'))
+              }
               onDelete={() => setDeleting(true)}
             />
           </div>
@@ -126,7 +131,9 @@ export const FavoriteEditor = ({ favorite, onClose }: { favorite: Favorite; onCl
                   }
                 />
               ))}
-              <li className="hidden px-3 py-6 text-center text-sm text-muted-foreground only:block">{m.EMPTY_LIST()}</li>
+              <li className="hidden px-3 py-6 text-center text-sm text-muted-foreground only:block">
+                {m.EMPTY_LIST()}
+              </li>
             </ul>
           </section>
 
@@ -161,7 +168,9 @@ export const FavoriteEditor = ({ favorite, onClose }: { favorite: Favorite; onCl
                   }
                 />
               ))}
-              <li className="hidden px-3 py-6 text-center text-sm text-muted-foreground only:block">{m.NO_RESULTS()}</li>
+              <li className="hidden px-3 py-6 text-center text-sm text-muted-foreground only:block">
+                {m.NO_RESULTS()}
+              </li>
             </ul>
           </section>
         </div>

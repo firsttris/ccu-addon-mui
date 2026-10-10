@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import ChevronDownIcon from '~icons/lucide/chevrons-up-down';
 import { useDevices, useRooms } from '../queries';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 import { cn } from '../lib/utils';
 import { m } from '../paraglide/messages';
 import { ChannelPicker } from './ChannelPicker';

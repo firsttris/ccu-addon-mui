@@ -209,6 +209,7 @@ const Versions = () => {
                   <Badge variant={module.connected ? 'success' : 'destructive'}>
                     {module.connected ? m.CONNECTED() : m.DISCONNECTED()}
                   </Badge>
+                  {/* biome-ignore lint/a11y/useSemanticElements: drawn by the app; the native meter draws itself */}
                   <div
                     className="h-2 w-40 overflow-hidden rounded-full bg-muted"
                     role="meter"
@@ -234,10 +235,8 @@ const Versions = () => {
   );
 };
 
-const gigabytes = (bytes: number) =>
-  `${formatNumber(bytes / 1024 ** 3, 1)} GB`;
-const percent = (value: number) =>
-  `${formatNumber(value, 1)} %`;
+const gigabytes = (bytes: number) => `${formatNumber(bytes / 1024 ** 3, 1)} GB`;
+const percent = (value: number) => `${formatNumber(value, 1)} %`;
 
 // "3 d 4 h 5 min", as help.cgi's uptime
 export const formatUptime = (seconds: number) => {
@@ -264,11 +263,7 @@ const SystemState = ({ state }: { state: State }) => {
   );
   add(m.SYS_UPTIME(), state.uptime !== undefined && formatUptime(state.uptime));
   add(m.SYS_LOAD(), state.load);
-  add(
-    m.SYS_TEMPERATURE(),
-    state.temperature !== undefined &&
-      `${formatNumber(state.temperature, 1)} °C`,
-  );
+  add(m.SYS_TEMPERATURE(), state.temperature !== undefined && `${formatNumber(state.temperature, 1)} °C`);
   add(m.SYS_OS(), state.os && state.kernel ? `${state.os} (${state.kernel})` : state.os || state.kernel);
   add(m.SYS_ROOT_FREE(), !!state.rootTotal && `${gigabytes(state.rootFree ?? 0)} / ${gigabytes(state.rootTotal)}`);
   add(m.SYS_USER_FREE(), !!state.userTotal && `${gigabytes(state.userFree ?? 0)} / ${gigabytes(state.userTotal)}`);

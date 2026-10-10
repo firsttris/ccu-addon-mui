@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import type React from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 
 // Light or dark: the system's choice until switched in the menu. The colors
@@ -35,6 +36,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // openccu-lite opens the app in its frame with its theme (?theme=
   // system|light|dark) and posts a change; the menu's switch still works
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once: the first setter writes the same state and storage
   useEffect(() => {
     const follow = (theme: unknown) => {
       if (theme === 'dark' || theme === 'light') setStoredDark(theme === 'dark');
@@ -42,12 +44,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     follow(new URLSearchParams(window.location.search).get('theme'));
     const onMessage = (event: MessageEvent) => {
-      if (event.origin === window.location.origin && event.data?.type === 'openccu-lite:theme') follow(event.data.theme);
+      if (event.origin === window.location.origin && event.data?.type === 'openccu-lite:theme')
+        follow(event.data.theme);
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-    // Once: the first setter writes the same state and storage
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -61,9 +62,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     document.documentElement.dataset.theme = mode;
     // Browser bar and installed app follow the switch, not only the system
-    document
-      .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
-      .forEach((meta) => (meta.content = themeColors[mode]));
+    for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+      meta.content = themeColors[mode];
+    }
   }, [mode]);
 
   return (

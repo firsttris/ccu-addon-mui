@@ -1,12 +1,12 @@
 import { useRef } from 'react';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { useStateChanges } from './SwitchControl';
-import { litTileStyle, PendantLamp, RGB, WARM } from './light/PendantLamp';
+import { litTileStyle, PendantLamp, type RGB, WARM } from './light/PendantLamp';
 import { LevelBar } from './light/LevelBar';
 
 // Backlight colors of HmIP-BSL switches (COLOR datapoint)
@@ -79,6 +79,7 @@ export const DimmerControl = ({ channel }: { channel: Channel }) => {
       style={litTileStyle(level / 100, color, effects.on, effects.k)}
     >
       <button
+        type="button"
         onClick={toggle}
         aria-pressed={on}
         aria-label={`${channel.name}: ${state}`}
@@ -111,6 +112,7 @@ export const DimmerControl = ({ channel }: { channel: Channel }) => {
               onChange={(e) => set('COLOR_BEHAVIOUR', Number(e.target.value))}
             >
               {BEHAVIOURS.map((label, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: the index is the behaviour number
                 <option key={i} value={i}>
                   {label()}
                 </option>
@@ -121,6 +123,7 @@ export const DimmerControl = ({ channel }: { channel: Channel }) => {
         {colorIndex !== undefined && (
           <div className="grid grid-cols-8 gap-1" role="radiogroup" aria-label={m.BACKLIGHT_COLOR()}>
             {BSL_COLORS.map((c, i) => (
+              // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
               <button
                 key={c.name}
                 type="button"

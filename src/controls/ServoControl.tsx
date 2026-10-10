@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import GaugeIcon from '~icons/lucide/gauge';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { m } from '../paraglide/messages';
 import { DetectorTile } from './DetectorControls';
@@ -107,7 +107,7 @@ export const ServoControl = ({ channel }: { channel: Channel }) => {
         </div>
       )}
       {hasRamp && (
-        <label className="flex flex-col gap-1 text-[13px] text-muted-foreground">
+        <div className="flex flex-col gap-1 text-[13px] text-muted-foreground">
           <span className="flex justify-between">
             {m.SERVO_RAMP()}
             <span className="tabular-nums">{ramp} s</span>
@@ -120,7 +120,7 @@ export const ServoControl = ({ channel }: { channel: Channel }) => {
             step={1}
             onCommit={setRamp}
           />
-        </label>
+        </div>
       )}
     </DetectorTile>
   );

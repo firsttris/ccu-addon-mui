@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import PlusIcon from '~icons/lucide/plus';
 import CopyIcon from '~icons/lucide/copy';
@@ -7,7 +7,7 @@ import { useProgram, useProgramChange } from '../../queries';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useToast } from '../../contexts/ToastContext';
 import { usePageTitle } from '../../contexts/PageTitleContext';
-import { ProgramBranch, ProgramDefinition, ProgramRule } from '../../types/protocol';
+import type { ProgramBranch, ProgramDefinition, ProgramRule } from '../../types/protocol';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Switch } from '../../components/ui/switch';
@@ -51,6 +51,7 @@ const BranchEditor = ({ branch, onChange }: { branch: ProgramBranch; onChange: (
   <div className="flex flex-col gap-2">
     {branch.destinations.map((destination, i) => (
       <DestinationRow
+        // biome-ignore lint/suspicious/noArrayIndexKey: program parts have no id in the CCU; the rows are controlled
         key={i}
         destination={destination}
         onChange={(d) => onChange({ ...branch, destinations: branch.destinations.map((x, j) => (j === i ? d : x)) })}
@@ -103,21 +104,36 @@ const RuleEditor = ({
       }
     >
       {rule.groups.map((group, g) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: program parts have no id in the CCU; the rows are controlled
         <div key={g} className="flex flex-col gap-2">
           {g > 0 && <Joiner>{outer}</Joiner>}
           <div className="flex flex-col gap-2 rounded-xl border border-dashed p-2">
             {group.map((condition, c) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: program parts have no id in the CCU; the rows are controlled
               <div key={c} className="flex flex-col gap-2">
                 {c > 0 && <Joiner>{inner}</Joiner>}
                 <ConditionRow
                   condition={condition}
-                  onChange={(next) => setGroup(g, group.map((x, i) => (i === c ? next : x)))}
-                  onRemove={() => setGroup(g, group.filter((_, i) => i !== c))}
+                  onChange={(next) =>
+                    setGroup(
+                      g,
+                      group.map((x, i) => (i === c ? next : x)),
+                    )
+                  }
+                  onRemove={() =>
+                    setGroup(
+                      g,
+                      group.filter((_, i) => i !== c),
+                    )
+                  }
                 />
               </div>
             ))}
             <div>
-              <AddButton label={`${m.ADD_CONDITION()} (${inner})`} onClick={() => setGroup(g, [...group, newCondition('device')])} />
+              <AddButton
+                label={`${m.ADD_CONDITION()} (${inner})`}
+                onClick={() => setGroup(g, [...group, newCondition('device')])}
+              />
             </div>
           </div>
         </div>
@@ -166,13 +182,12 @@ export const ProgramEditor = () => {
   // reconnect, or from the cache first) only replaces an untouched draft:
   // unsaved changes stay. Another program (saved as new) always does.
   const [base, setBase] = useState<ProgramDefinition>();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only when a program was loaded, not on every edit
   useEffect(() => {
     if (loaded && (draft === base || base?.id !== loaded.id)) {
       setDraft(loaded);
       setBase(loaded);
     }
-    // Only when a program was loaded, not on every edit
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
 
   if (isError) {
@@ -182,7 +197,8 @@ export const ProgramEditor = () => {
     return null;
   }
   const problems = programProblems(draft);
-  const setRule = (i: number, rule: ProgramRule) => setDraft({ ...draft, rules: draft.rules.map((r, j) => (j === i ? rule : r)) });
+  const setRule = (i: number, rule: ProgramRule) =>
+    setDraft({ ...draft, rules: draft.rules.map((r, j) => (j === i ? rule : r)) });
 
   const save = () =>
     change.mutate(
@@ -194,7 +210,8 @@ export const ProgramEditor = () => {
           // Saved: the program reloaded now may replace the draft again
           setBase(draft);
           const savedId = 'id' in response ? response.id : undefined;
-          if (isNew && savedId) navigate({ to: '/program/$programId', params: { programId: String(savedId) }, replace: true });
+          if (isNew && savedId)
+            navigate({ to: '/program/$programId', params: { programId: String(savedId) }, replace: true });
         },
         onError: (error) => {
           setConfirm(null);
@@ -231,7 +248,11 @@ export const ProgramEditor = () => {
           />
         </label>
         <label className="flex h-9 items-center gap-2 text-sm">
-          <Switch aria-label={m.ACTIVE()} checked={draft.active} onCheckedChange={(active) => setDraft({ ...draft, active })} />
+          <Switch
+            aria-label={m.ACTIVE()}
+            checked={draft.active}
+            onCheckedChange={(active) => setDraft({ ...draft, active })}
+          />
           {m.ACTIVE()}
         </label>
       </div>
@@ -249,6 +270,7 @@ export const ProgramEditor = () => {
 
       {draft.rules.map((rule, i) => (
         <RuleEditor
+          // biome-ignore lint/suspicious/noArrayIndexKey: program parts have no id in the CCU; the rows are controlled
           key={i}
           rule={rule}
           first={i === 0}
@@ -292,7 +314,12 @@ export const ProgramEditor = () => {
             <Link to="/programs">{m.CANCEL()}</Link>
           </Button>
           {!isNew && (
-            <Button type="button" variant="outline" disabled={problems.length > 0 || change.isPending} onClick={saveAsNew}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={problems.length > 0 || change.isPending}
+              onClick={saveAsNew}
+            >
               <CopyIcon />
               {m.PRG_SAVE_AS_NEW()}
             </Button>

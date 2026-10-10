@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { ToastProvider } from '../contexts/ToastContext';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 
 const request = vi.fn();
 vi.mock('../hooks/useWebsocket', async (importOriginal) => ({
@@ -14,7 +14,14 @@ vi.mock('../hooks/useWebsocket', async (importOriginal) => ({
 const { useSetDataPoint } = await import('./index');
 const { RequestError } = await import('../hooks/useWebsocket');
 
-const light = { id: 1, name: 'Licht', address: 'A:1', interfaceName: 'HmIP-RF', type: 'SWITCH_VIRTUAL_RECEIVER', datapoints: { STATE: false, LEVEL: 0.2 } } as Channel;
+const light = {
+  id: 1,
+  name: 'Licht',
+  address: 'A:1',
+  interfaceName: 'HmIP-RF',
+  type: 'SWITCH_VIRTUAL_RECEIVER',
+  datapoints: { STATE: false, LEVEL: 0.2 },
+} as Channel;
 
 const setup = () => {
   const queryClient = new QueryClient();

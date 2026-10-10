@@ -1,4 +1,4 @@
-import * as React from 'react';
+import type * as React from 'react';
 import { cn } from '../../lib/utils';
 
 // Date and time fields open their picker on a click anywhere in the field,

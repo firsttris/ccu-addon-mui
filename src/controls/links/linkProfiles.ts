@@ -1,4 +1,4 @@
-import { DatapointValue, ParamsetDescription } from '../../types/types';
+import type { DatapointValue, ParamsetDescription } from '../../types/types';
 import { parameterLabel } from '../generic/parameters';
 import { enumLabel } from '../generic/settingKinds';
 
@@ -126,7 +126,9 @@ export const senderKey = (
 
 export const profilesFor = (table: ProfileTable, receiverType: string, senderType: string, peerType?: string) =>
   (table[receiverType]?.[senderType] ?? []).filter(
-    (profile) => !peerType || ((!profile.whitelist || profile.whitelist.includes(peerType)) && !profile.blacklist?.includes(peerType)),
+    (profile) =>
+      !peerType ||
+      ((!profile.whitelist || profile.whitelist.includes(peerType)) && !profile.blacklist?.includes(peerType)),
   );
 
 const isRange = (value: ProfileValue): value is { default: number; min: number; max: number } => !Array.isArray(value);
@@ -236,7 +238,8 @@ export const linkParameterNames = (profiles: LinkProfile[], lang: string, t: (ke
     nameOf: (name: string) => {
       const base = name.replace(/^(SHORT|LONG)_/, '');
       const translated = t(name);
-      const label = labels.get(name) ?? (translated !== name ? translated : (labels.get(`SHORT_${base}`) ?? parameterLabel(base)));
+      const label =
+        labels.get(name) ?? (translated !== name ? translated : (labels.get(`SHORT_${base}`) ?? parameterLabel(base)));
       return name.startsWith('LONG_') ? `${label} (${long})` : label;
     },
     optionOf: (name: string, index: number, option: string) => {

@@ -9,7 +9,8 @@ export const WARM: RGB = [251, 191, 36];
 
 const rgba = ([r, g, b]: RGB, alpha: number) => `rgba(${r},${g},${b},${alpha})`;
 // A lighter tone of the color for the bulb itself
-const lighter = ([r, g, b]: RGB): RGB => [r + (255 - r) * 0.55, g + (255 - g) * 0.55, b + (255 - b) * 0.55].map(Math.round) as RGB;
+const lighter = ([r, g, b]: RGB): RGB =>
+  [r + (255 - r) * 0.55, g + (255 - g) * 0.55, b + (255 - b) * 0.55].map(Math.round) as RGB;
 
 interface PendantLampProps {
   // 0 off .. 1 full brightness

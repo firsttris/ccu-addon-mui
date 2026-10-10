@@ -319,12 +319,12 @@ const ChangelogDialog = ({ file, onClose }: { file: DeviceFirmwareFile; onClose:
       onConfirm={onClose}
       onCancel={onClose}
     >
-      <pre
+      <section
         aria-label={m.DEVFW_CHANGELOG()}
-        className="max-h-80 overflow-auto rounded-md border bg-muted/40 p-2 text-xs whitespace-pre-wrap text-foreground"
+        className="font-mono max-h-80 overflow-auto rounded-md border bg-muted/40 p-2 text-xs whitespace-pre-wrap text-foreground"
       >
         {isError ? m.CHANGE_FAILED() : (data ?? '…')}
-      </pre>
+      </section>
     </ConfirmDialog>
   );
 };

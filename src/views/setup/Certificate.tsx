@@ -84,7 +84,10 @@ export const Certificate = () => {
         setBusy(true);
         try {
           await request(
-            type === 'uploadCertificate' ? { type, pem: file!.pem, ...(pw !== undefined ? { password: pw } : {}) } : { type, ...(pw !== undefined ? { password: pw } : {}) },
+            type === 'uploadCertificate'
+              ? // biome-ignore lint/style/noNonNullAssertion: uploading is disabled until a file is picked
+                { type, pem: file!.pem, ...(pw !== undefined ? { password: pw } : {}) }
+              : { type, ...(pw !== undefined ? { password: pw } : {}) },
             { queue: false, timeoutMs: 60000 },
           );
           showToast(type === 'uploadCertificate' ? m.CERT_UPLOADED() : m.CERT_DELETED(), 'info');
@@ -154,7 +157,13 @@ export const Certificate = () => {
           {m.CERT_UPLOAD()}
         </Button>
         {data.exists && (
-          <Button type="button" variant="outline" className="text-destructive hover:text-destructive" disabled={disabled} onClick={() => setDeleting(true)}>
+          <Button
+            type="button"
+            variant="outline"
+            className="text-destructive hover:text-destructive"
+            disabled={disabled}
+            onClick={() => setDeleting(true)}
+          >
             {m.CERT_DELETE()}
           </Button>
         )}
@@ -167,7 +176,14 @@ export const Certificate = () => {
       {file && <p className="text-xs text-amber-700 dark:text-amber-400">{m.CERT_RESTART_HINT()}</p>}
       {!deleting && password.field}
       {deleting && (
-        <ConfirmDialog title={m.CERT_DELETE()} confirmLabel={m.CERT_DELETE()} destructive busy={busy || password.blocked} onConfirm={() => run('deleteCertificate')} onCancel={() => setDeleting(false)}>
+        <ConfirmDialog
+          title={m.CERT_DELETE()}
+          confirmLabel={m.CERT_DELETE()}
+          destructive
+          busy={busy || password.blocked}
+          onConfirm={() => run('deleteCertificate')}
+          onCancel={() => setDeleting(false)}
+        >
           <div className="flex flex-col gap-3">
             <p>{m.CERT_DELETE_QUESTION()}</p>
             {password.field}

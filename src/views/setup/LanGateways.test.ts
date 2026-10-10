@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { KEY_FORBIDDEN, gatewayErrors } from './LanGateways';
 
 describe('LAN gateway checks', () => {
-  const g = { class: 'RF' as const, type: 'HMLGW2' as const, name: 'Keller', serial: 'NEQ0987654', key: 'geheim', ip: '192.168.178.40' };
+  const g = {
+    class: 'RF' as const,
+    type: 'HMLGW2' as const,
+    name: 'Keller',
+    serial: 'NEQ0987654',
+    key: 'geheim',
+    ip: '192.168.178.40',
+  };
   it('accepts a valid gateway', () => {
     expect(gatewayErrors(g, [])).toEqual({});
     expect(gatewayErrors({ ...g, ip: '', name: '' }, [])).toEqual({});
