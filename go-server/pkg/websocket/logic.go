@@ -18,110 +18,109 @@ type logicResponse struct {
 	Programs  []rega.Program `json:"programs,omitempty"`
 }
 
+type logicRequest struct {
+	RequestID string `json:"requestId"`
+	ID        int64  `json:"id"`
+	Value     any    `json:"value"`
+	Active    bool   `json:"active"`
+	// setLogicOption: "visible" or "operate"
+	Option string `json:"option"`
+}
+
 // handleLogic: system variables and programs. Reading, setting a variable
 // and running a program is operating (not for guests); switching a
 // program on or off is setup.
 func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
-	var msg struct {
-		RequestID string `json:"requestId"`
-		ID        int64  `json:"id"`
-		Value     any    `json:"value"`
-		Active    bool   `json:"active"`
-		// setLogicOption: "visible" or "operate"
-		Option string `json:"option"`
-	}
+	var msg logicRequest
 	if !s.decode(client, message, &msg) {
 		return
 	}
-	respond := func(r logicResponse) {
-		r.Type, r.RequestID, r.Success = msgType+"_response", msg.RequestID, true
-		s.sendJSON(client, r)
-	}
-
 	switch msgType {
 	case "getSysvars":
-		sysvars, err := s.regaClient.GetSysvars()
-		if err != nil {
-			s.sendRequestError(client, msg.RequestID, "getSysvars failed: "+err.Error(), "CCU_ERROR")
-			return
-		}
-		client.watchSysvars(true)
-		respond(logicResponse{Sysvars: sysvars})
-		return
+		s.getSysvars(client, msg)
 	case "getPrograms":
-		programs, err := s.regaClient.GetPrograms()
-		if err != nil {
-			s.sendRequestError(client, msg.RequestID, "getPrograms failed: "+err.Error(), "CCU_ERROR")
-			return
-		}
-		respond(logicResponse{Programs: programs})
-		return
+		s.getPrograms(client, msg)
 	case "setProgramActive":
-		action := rega.ProgramOff
-		if msg.Active {
-			action = rega.ProgramOn
-		}
-		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: fmt.Sprintf("program %d", msg.ID), Value: msg.Active},
-			func() (any, string, error) {
-				result, err := s.regaClient.ProgramAction(msg.ID, action)
-				return !msg.Active, result, err
-			})
-		return
+		s.setProgramActive(client, msg)
 	case "setLogicOption":
-		value, isBool := msg.Value.(bool)
-		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: fmt.Sprintf("%d %s", msg.ID, msg.Option), Value: msg.Value},
-			func() (any, string, error) {
-				if !isBool {
-					return nil, "", fmt.Errorf("invalid value")
-				}
-				result, previous, err := s.regaClient.SetLogicOption(msg.ID, msg.Option, value)
-				return previous, result, err
-			})
-		return
+		s.setLogicOption(client, msg)
+	case "runProgram":
+		s.runProgram(client, msg)
+	case "setSysvar":
+		s.setSysvar(client, msg)
 	}
+}
 
-	// setSysvar, runProgram: operating
-	entry := audit.Entry{User: client.user, Action: msgType, Target: fmt.Sprintf("%d", msg.ID), Value: msg.Value}
-	finish := func(result string) { s.recordAudit(entry, result) }
-	if !canOperate(client.level) {
-		finish("FORBIDDEN")
-		s.sendRequestError(client, msg.RequestID, "guests may not control devices", "FORBIDDEN")
+func (s *Server) getSysvars(client *Client, msg logicRequest) {
+	sysvars, err := s.regaClient.GetSysvars()
+	if err != nil {
+		s.sendRequestError(client, msg.RequestID, "getSysvars failed: "+err.Error(), "CCU_ERROR")
 		return
 	}
-	var result string
-	var err error
-	if msgType == "runProgram" {
-		entry.Target = fmt.Sprintf("program %d", msg.ID)
-		entry.Value = nil
-		// Only programs marked "bedienbar" for users other than administrators
-		if client.level != auth.LevelAdmin && !s.programOperable(msg.ID) {
-			finish("FORBIDDEN")
-			s.sendRequestError(client, msg.RequestID, "this program may only be run by administrators", "FORBIDDEN")
-			return
-		}
-		result, err = s.regaClient.ProgramAction(msg.ID, rega.ProgramRun)
-	} else {
-		entry.Target = fmt.Sprintf("sysvar %d", msg.ID)
-		var value, previous string
-		if value, err = formatValue(msg.Value); err == nil {
+	client.watchSysvars(true)
+	s.sendJSON(client, logicResponse{Type: "getSysvars_response", RequestID: msg.RequestID, Success: true, Sysvars: sysvars})
+}
+
+func (s *Server) getPrograms(client *Client, msg logicRequest) {
+	programs, err := s.regaClient.GetPrograms()
+	if err != nil {
+		s.sendRequestError(client, msg.RequestID, "getPrograms failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	s.sendJSON(client, logicResponse{Type: "getPrograms_response", RequestID: msg.RequestID, Success: true, Programs: programs})
+}
+
+func (s *Server) setProgramActive(client *Client, msg logicRequest) {
+	action := rega.ProgramOff
+	if msg.Active {
+		action = rega.ProgramOn
+	}
+	s.configure(client, msg.RequestID, audit.Entry{Action: "setProgramActive", Target: fmt.Sprintf("program %d", msg.ID), Value: msg.Active},
+		func() (any, string, error) {
+			result, err := s.regaClient.ProgramAction(msg.ID, action)
+			return !msg.Active, result, err
+		})
+}
+
+func (s *Server) setLogicOption(client *Client, msg logicRequest) {
+	value, isBool := msg.Value.(bool)
+	s.configure(client, msg.RequestID, audit.Entry{Action: "setLogicOption", Target: fmt.Sprintf("%d %s", msg.ID, msg.Option), Value: msg.Value},
+		func() (any, string, error) {
+			if !isBool {
+				return nil, "", fmt.Errorf("invalid value")
+			}
+			result, previous, err := s.regaClient.SetLogicOption(msg.ID, msg.Option, value)
+			return previous, result, err
+		})
+}
+
+// Only programs marked "bedienbar" for users other than administrators
+var errProgramAdminOnly = fmt.Errorf("%w: this program may only be run by administrators", errForbidden)
+
+func (s *Server) runProgram(client *Client, msg logicRequest) {
+	s.operate(client, msg.RequestID, audit.Entry{Action: "runProgram", Target: fmt.Sprintf("program %d", msg.ID)},
+		func() (any, string, error) {
+			if client.level != auth.LevelAdmin && !s.programOperable(msg.ID) {
+				return nil, "", errProgramAdminOnly
+			}
+			result, err := s.regaClient.ProgramAction(msg.ID, rega.ProgramRun)
+			return nil, result, err
+		})
+}
+
+func (s *Server) setSysvar(client *Client, msg logicRequest) {
+	s.operate(client, msg.RequestID, audit.Entry{Action: "setSysvar", Target: fmt.Sprintf("sysvar %d", msg.ID), Value: msg.Value},
+		func() (any, string, error) {
+			value, err := formatValue(msg.Value)
+			if err != nil {
+				return nil, "", err
+			}
 			// The app sends numbers and booleans as such; a string is the
 			// text of a string variable
 			_, text := msg.Value.(string)
-			result, previous, err = s.regaClient.SetSysvar(msg.ID, value, text)
-			entry.Previous = previous
-		}
-	}
-	if err != nil {
-		finish("CCU_ERROR")
-		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), "CCU_ERROR")
-		return
-	}
-	finish(result)
-	if result != rega.SetOK {
-		s.sendRequestError(client, msg.RequestID, msgType+": "+result, result)
-		return
-	}
-	respond(logicResponse{})
+			result, previous, err := s.regaClient.SetSysvar(msg.ID, value, text)
+			return previous, result, err
+		})
 }
 
 type programResponse struct {
