@@ -88,7 +88,7 @@ func (s *Server) handleFirewall(client *Client, msgType string, message []byte) 
 		if _, err := s.backup.AdminCall(client.user, msg.Password, "Firewall.setConfiguration", map[string]any{
 			"services": services, "ips": ips, "userports": ports, "mode": next.Mode,
 		}); err != nil {
-			s.securityFailed(client, msg.RequestID, entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 		s.recordAudit(entry, rega.SetOK)

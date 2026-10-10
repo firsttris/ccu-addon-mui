@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"errors"
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/rega"
@@ -55,7 +54,7 @@ func (s *Server) handleRules(client *Client, msgType string, message []byte) {
 		}
 		saved, previous, err := s.rules.Save(msg.Rule)
 		if err != nil {
-			s.ruleFailed(client, msg.RequestID, &entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 		if previous != nil {
@@ -72,7 +71,7 @@ func (s *Server) handleRules(client *Client, msgType string, message []byte) {
 		}
 		previous, err := s.rules.Delete(msg.ID)
 		if err != nil {
-			s.ruleFailed(client, msg.RequestID, &entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 		entry.Previous = previous
@@ -90,16 +89,4 @@ func (s *Server) ruleChanged(id string) {
 		s.ruleRun.Reset(id)
 		go s.ruleRun.Evaluate()
 	}
-}
-
-func (s *Server) ruleFailed(client *Client, requestID string, entry *audit.Entry, err error) {
-	code := "CCU_ERROR"
-	switch {
-	case errors.Is(err, rules.ErrInvalid):
-		code = "INVALID_VALUE"
-	case errors.Is(err, rules.ErrNotFound):
-		code = "NOT_FOUND"
-	}
-	s.recordAudit(*entry, code)
-	s.sendRequestError(client, requestID, entry.Action+" failed: "+err.Error(), code)
 }

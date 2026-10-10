@@ -4,7 +4,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"errors"
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/backup"
@@ -68,12 +67,9 @@ func (s *Server) handleCreateBackup(client *Client, message []byte) {
 
 	created, err := s.backup.Create(username, msg.Password)
 	if err != nil {
-		code := "CCU_ERROR"
-		if errors.Is(err, backup.ErrInvalidCredentials) {
-			code = "INVALID_CREDENTIALS"
-			if s.auth != nil {
-				s.auth.RecordFailure(username, client.source)
-			}
+		code := codeOf(err)
+		if code == "INVALID_CREDENTIALS" && s.auth != nil {
+			s.auth.RecordFailure(username, client.source)
 		}
 		logger.Infof("💾 Backup failed for user %q: %v", username, err)
 		finish(code)

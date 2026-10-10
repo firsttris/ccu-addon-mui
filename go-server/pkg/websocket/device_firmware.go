@@ -297,21 +297,7 @@ func (s *Server) handleDeviceFirmware(client *Client, msgType string, message []
 		err = s.backup.DeleteDeviceFirmware(username, msg.Password, msg.ID, name)
 	}
 	if err != nil {
-		code := "CCU_ERROR"
-		switch {
-		case errors.Is(err, backup.ErrSessionRequired):
-			code = "PASSWORD_REQUIRED"
-		case errors.Is(err, backup.ErrInvalidCredentials):
-			code = "INVALID_CREDENTIALS"
-		case errors.Is(err, backup.ErrInvalidDeviceFirmware):
-			code = "INVALID_FIRMWARE"
-		case errors.Is(err, backup.ErrDeviceFirmwareNeedsNewerCCU):
-			code = "FIRMWARE_NEEDS_NEWER_CCU"
-		case errors.Is(err, backup.ErrUploadNotFound):
-			code = rega.SetNotFound
-		}
-		s.recordAudit(entry, code)
-		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), code)
+		s.failChange(client, msg.RequestID, entry, err)
 		return
 	}
 	s.recordAudit(entry, rega.SetOK)

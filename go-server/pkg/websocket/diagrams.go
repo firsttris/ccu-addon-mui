@@ -3,7 +3,6 @@ package websocket
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -155,7 +154,7 @@ func (s *Server) handleDiagrams(client *Client, msgType string, message []byte) 
 		}
 		previous, err := s.diagrams.Delete(msg.ID)
 		if err != nil {
-			s.diagramFailed(client, msg.RequestID, &entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 		entry.Previous = previous
@@ -175,18 +174,6 @@ func (s *Server) diagramAllowed(client *Client, requestID string, entry *audit.E
 	return true
 }
 
-func (s *Server) diagramFailed(client *Client, requestID string, entry *audit.Entry, err error) {
-	code := "CCU_ERROR"
-	switch {
-	case errors.Is(err, diagrams.ErrInvalid):
-		code = "INVALID_VALUE"
-	case errors.Is(err, diagrams.ErrNotFound):
-		code = "NOT_FOUND"
-	}
-	s.recordAudit(*entry, code)
-	s.sendRequestError(client, requestID, entry.Action+" failed: "+err.Error(), code)
-}
-
 func (s *Server) recordAudit(entry audit.Entry, result string) {
 	entry.Result = result
 	if err := s.audit.Record(entry); err != nil {
@@ -202,7 +189,7 @@ func (s *Server) saveDiagram(client *Client, requestID string, d diagrams.Diagra
 	before := s.diagrams.Keys()
 	saved, previous, err := s.diagrams.Save(d)
 	if err != nil {
-		s.diagramFailed(client, requestID, &entry, err)
+		s.failChange(client, requestID, entry, err)
 		return
 	}
 	if previous != nil {

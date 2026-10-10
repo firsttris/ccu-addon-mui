@@ -2,12 +2,10 @@ package websocket
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/rega"
-	"ccu-addon-mui-server/pkg/tiles"
 )
 
 // viewIDs are the rooms, trades and favorite lists (of all users): what a
@@ -92,10 +90,7 @@ func (s *Server) handleLayout(client *Client, msgType string, message []byte) {
 		return
 	}
 	if err := s.tiles.SetLayout(msg.ID, msg.Layout, func(id int64) bool { return views[id] }); err != nil {
-		code := "CCU_ERROR"
-		if errors.Is(err, tiles.ErrInvalid) {
-			code = "INVALID_VALUE"
-		}
+		code := codeOf(err)
 		finish(code)
 		s.sendRequestError(client, msg.RequestID, "setLayout failed: "+err.Error(), code)
 		return

@@ -4,7 +4,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"errors"
 	"time"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -68,7 +67,7 @@ func (s *Server) handleCertificate(client *Client, msgType string, message []byt
 		}
 	}
 	if _, err := s.backup.AdminCall(client.user, msg.Password, "User.existsCertificate", nil); err != nil {
-		s.securityFailed(client, msg.RequestID, entry, err)
+		s.failChange(client, msg.RequestID, entry, err)
 		return
 	}
 	var err error
@@ -78,12 +77,7 @@ func (s *Server) handleCertificate(client *Client, msgType string, message []byt
 		err = s.settings.DeleteCertificate()
 	}
 	if err != nil {
-		code := "CCU_ERROR"
-		if errors.Is(err, settings.ErrInvalidCertificate) {
-			code = "INVALID_VALUE"
-		}
-		s.recordAudit(entry, code)
-		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), code)
+		s.failChange(client, msg.RequestID, entry, err)
 		return
 	}
 	s.recordAudit(entry, rega.SetOK)

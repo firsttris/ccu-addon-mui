@@ -4,11 +4,9 @@ package websocket
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"ccu-addon-mui-server/pkg/audit"
-	"ccu-addon-mui-server/pkg/backup"
 	"ccu-addon-mui-server/pkg/logger"
 	"ccu-addon-mui-server/pkg/rega"
 )
@@ -130,33 +128,12 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 		response.Reboot, err = s.backup.InstallAddon(msg.ID, username, msg.Password)
 	}
 	if err != nil {
-		code := "CCU_ERROR"
-		switch {
-		case errors.Is(err, backup.ErrInvalidCredentials):
-			code = "INVALID_CREDENTIALS"
-			if s.auth != nil {
-				s.auth.RecordFailure(username, client.source)
-			}
-		case errors.Is(err, backup.ErrInvalidBackup):
-			code = "INVALID_BACKUP"
-		case errors.Is(err, backup.ErrInvalidFirmware):
-			code = "INVALID_FIRMWARE"
-		case errors.Is(err, backup.ErrAddonFailed):
-			code = "ADDON_FAILED"
-		case errors.Is(err, backup.ErrWrongKey):
-			code = "WRONG_KEY"
-		case errors.Is(err, backup.ErrFirmwareTooOld):
-			code = "FIRMWARE_TOO_OLD"
-		case errors.Is(err, backup.ErrUploadNotFound):
-			code = rega.SetNotFound
-		case errors.Is(err, errDirectDownloadUnsupported):
-			code = "NOT_SUPPORTED"
-		case errors.Is(err, errFirmwareNotStaged):
-			code = "FIRMWARE_NOT_STAGED"
-		case errors.Is(err, errFirmwareChecksum):
-			code = "FIRMWARE_CHECKSUM"
-		case errors.Is(err, backup.ErrFirmwareDownloadFailed):
-			code = "DOWNLOAD_FAILED"
+		code := codeOf(err,
+			errorCode{errDirectDownloadUnsupported, "NOT_SUPPORTED"},
+			errorCode{errFirmwareNotStaged, "FIRMWARE_NOT_STAGED"},
+			errorCode{errFirmwareChecksum, "FIRMWARE_CHECKSUM"})
+		if code == "INVALID_CREDENTIALS" && s.auth != nil {
+			s.auth.RecordFailure(username, client.source)
 		}
 		finish(code)
 		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), code)

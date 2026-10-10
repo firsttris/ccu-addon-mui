@@ -167,7 +167,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 				err = errors.New("the CCU did not write the configuration")
 			}
 			if err != nil {
-				s.securityFailed(client, msg.RequestID, entry, err)
+				s.failChange(client, msg.RequestID, entry, err)
 				return
 			}
 			// The password opened the session; the second call uses it
@@ -195,7 +195,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 			err = errors.New("the CCU did not take the key")
 		}
 		if err != nil {
-			s.securityFailed(client, msg.RequestID, entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 	case "setBidcosInterface":
@@ -208,12 +208,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 			return
 		}
 		if err := rpc.SetBidcosInterface(bidcosRF, msg.Address, msg.Module, msg.Roaming); err != nil {
-			code := "CCU_ERROR"
-			if errors.Is(err, ccurpc.ErrInvalidAddress) {
-				code = "INVALID_VALUE"
-			}
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, "setBidcosInterface failed: "+err.Error(), code)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 	}
