@@ -1,6 +1,6 @@
 import type { Channel, DeviceDescription } from '../../../types/protocol';
 import type { DatapointValue, Device, ParamsetDescription } from '../../../types/types';
-import type { WeekProgramKind } from '../../../controls/schedule/WeekProgramSheet';
+import type { WeekProgramKind } from '../../../controls/schedule/weekProgram';
 import { isHiddenChannel } from '../../../hooks/channels';
 import { channelNumberOf } from '../../../lib/address';
 

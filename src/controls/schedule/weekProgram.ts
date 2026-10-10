@@ -116,3 +116,54 @@ export const formatTime = (hour: number, minute: number) => `${pad2(hour)}:${pad
 // Bits of the target channel mask that are set, as 0-based indexes
 export const targetIndexes = (mask: number) =>
   Array.from({ length: 31 }, (_, i) => i).filter((i) => (mask & (1 << i)) !== 0);
+
+export type WeekProgramKind = 'switch' | 'blind' | 'dimmer';
+
+export interface TargetChannel {
+  // Bit in WP_TARGET_CHANNELS
+  index: number;
+  label: string;
+}
+
+// Unsaved edits: entry number → new entry, or null when deleted
+export type Drafts = Record<string, WeekProgramEntry | null>;
+
+// The entries as they will be with the drafts
+export const withDrafts = (description: ParamsetDescription, stored: WeekProgramEntry[], drafts: Drafts) => {
+  const byNumber = new Map(stored.map((e) => [e.number, e]));
+  for (const [number, entry] of Object.entries(drafts)) {
+    if (entry) byNumber.set(number, entry);
+    else byNumber.delete(number);
+  }
+  return parseWeekProgram(
+    description,
+    Object.fromEntries([...byNumber.values()].flatMap((e) => Object.entries(entryValues(description, e)))) as Values,
+  );
+};
+
+// The parameters the drafts change
+export const draftChanges = (description: ParamsetDescription, values: Values, drafts: Drafts): Values => {
+  const next: Values = {};
+  for (const [number, entry] of Object.entries(drafts)) {
+    Object.assign(next, entry ? entryValues(description, entry) : deletedValues(description, number));
+  }
+  return changedValues(values, next);
+};
+
+// Switching points with a change (each is several parameters)
+export const editedPoints = (changes: Values) => new Set(Object.keys(changes).map((name) => name.slice(0, 2))).size;
+
+// A new switching point as the WebUI starts it: every day at 7:00, the
+// first target channel
+export const newEntry = (number: string, targets: TargetChannel[], hasLevel2: boolean): WeekProgramEntry => ({
+  number,
+  weekdays: ALL_DAYS,
+  condition: 0,
+  hour: 7,
+  minute: 0,
+  astroType: 0,
+  astroOffset: 0,
+  targets: targets.length > 0 ? 1 << targets[0].index : 1,
+  level: 1,
+  level2: hasLevel2 ? 0 : undefined,
+});
