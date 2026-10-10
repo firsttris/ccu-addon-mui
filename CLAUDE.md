@@ -1,5 +1,14 @@
 # Notes for Claude
 
+## Documentation
+
+The project's documentation is in `docs/`
+(https://github.com/firsttris/ccu-addon-mui/tree/main/docs). Read what
+touches the change before starting: `entwicklung.md` for commands,
+conventions and how to add a message, a tile or a text, `architektur.md`
+for how app and server are built, `protokoll.md` for the messages between
+them, `tests.md` for the tests and the fake CCU.
+
 ## Reference implementation: OpenCCU
 
 Base every CCU feature on how the original WebUI does it, taken from the
@@ -37,6 +46,23 @@ merged, reset the working branch to the current `origin/main`
 `git push --force-with-lease -u origin <branch>`) before starting the next
 change. Never merge `main` into the branch, so earlier, already merged
 commits don't show up again in the next PR.
+
+## Language
+
+Commit messages, pull requests and the docs in German; comments and
+identifiers in the code in English. The app's texts go in both
+`messages/de.json` and `messages/en.json`.
+
+## With every change
+
+Update what the change affects, in the same PR, and only that:
+
+- the tests: unit, Go, E2E or stack tests for what changed, the fake CCU
+  (`go-server/pkg/fakeccu`, `fixtures/`) when the server talks to the CCU
+  in a new way;
+- the docs in `docs/` that describe it;
+- the README (`README.md` and `README.en.md`) when a feature a user sees
+  is added, changed or removed.
 
 ## Code style
 
