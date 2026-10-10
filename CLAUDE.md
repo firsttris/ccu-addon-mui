@@ -15,6 +15,20 @@ enum values, ReGa scripts and XML-RPC calls there. Name the source file in
 comments and commit messages where it settles a detail (e.g. "as in the
 WebUI's door_opener.fn").
 
+## Reference implementation: openccu-lite
+
+The same for the openccu-lite build: base it on the sources, not on memory.
+
+- https://github.com/hobbyquaker/openccu-lite: the system around it
+  (`docs/porting-from-rega.md`, `docs/addons.md`, `docs/known-issues.md`)
+- https://github.com/hobbyquaker/occulited: the APIs MUI talks to, meta,
+  lite-rpc, system and auth (`docs/meta-api.md`, `docs/meta-format.md`,
+  `docs/system-api.md`, `docs/manifest-format.md`, and as specifications
+  `docs/openapi.json`, `docs/asyncapi.json`, `docs/lite-rpc-methods.json`)
+
+Clone them shallowly as well and look up endpoints, fields, scopes and event
+kinds there; name the source file where it settles a detail.
+
 ## Pull requests
 
 One feature per PR, and each PR carries only its own commits: after a PR is
@@ -24,11 +38,21 @@ merged, reset the working branch to the current `origin/main`
 change. Never merge `main` into the branch, so earlier, already merged
 commits don't show up again in the next PR.
 
-## Bugs in openccu-lite
+## Code style
 
-When a test or an investigation turns up a bug or quirk in openccu-lite itself
-(occulited, or the eQ-3 processes it ships such as hmipserver and rfd) rather
-than in MUI, note it in `docs/plan-openccu-lite.md`, section *Fehler und
-Eigenheiten von openccu-lite*: what, where, the version it showed in, and
-whether it is reported. Work around it in our code or tests only where needed,
-and say in the comment that it is openccu-lite's.
+Functional, not object-oriented: pure functions (data in, data out),
+function tables instead of long `switch`es, no classes, no new interfaces
+where passing a function will do. TypeScript: hooks and function
+components.
+
+- A file does one thing; split by domain once it grows past ~400 lines,
+  a component or function past ~150 (Go: ~70).
+- Pure logic goes next to its component in a `*Model.ts` with unit
+  tests; hooks in `use*.ts`.
+- Code only the CCU needs goes in files with `//go:build !lite`; shared
+  files reach the ReGa through `rega_ccu.go`/`rega_lite.go`.
+- A refactor changes no behavior. Prove it: a sorted line diff for moves,
+  the markup or screenshots before and after for components
+  (`visual.spec.ts`, or a temporary snapshot test with fixed data and time).
+- Biome, `tsc`, `staticcheck` (both builds) and the tests stay green;
+  a `biome-ignore` says why the code is right as it is.
