@@ -136,10 +136,13 @@ docs/                diese Dokumentation
    Räume, Gewerke, Kanäle, Namen, Favoriten und Servicemeldungen liest und ändert der Handler über `s.home`
    (die Schnittstelle `home.Source` in `go-server/pkg/home`), nicht direkt über die ReGa: Auf der CCU steckt
    die ReGa dahinter, auf openccu-lite dessen APIs. Nur was es ausschließlich auf der CCU gibt, etwa
-   Programme oder Systemvariablen, ruft `s.regaClient` direkt.
+   Programme oder Systemvariablen, ruft `s.regaClient` direkt, und zwar nur in Dateien mit `//go:build !lite`.
+   Eine Datei, die beide Builds nutzen, ruft dafür eine kleine Funktion aus `rega_ccu.go`. Ihr Gegenstück
+   für openccu-lite steht in `rega_lite.go`.
 4. **Fake-CCU**: Braucht die Aktion etwas Neues von der CCU, etwa ein Skript, eine XML-RPC-Methode oder eine
    CGI-Seite, bildest du es in `go-server/pkg/fakeccu` nach. Neue ReGa-Vorlagen erkennt die Fake-CCU von
-   selbst an ihrem Text, du ergänzt nur die Antwort als neuen Fall in `runScript` (`fakeccu.go`).
+   selbst an ihrem Text, du ergänzt nur die Antwort in der Tabelle `scriptHandlers` (`scripthandlers.go`). XML-RPC-Methoden stehen
+   in `rpcMethods` (`rpcmethods.go`).
 5. **App**: Schreib in `src/queries/index.ts` eine Query oder Mutation, die `request('meinTyp', …)` aufruft.
    Die Typen kommen aus dem Schema.
 6. **Tests**: Ein Go-Integrationstest in `go-server/integration_test.go` prüft die Antwort automatisch gegen
@@ -252,7 +255,8 @@ Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go 
 - **Was sich unterscheidet**, steht in Dateien mit Build-Tag: `main_ccu.go` und `main_lite.go` verbinden die
   Plattform, `pkg/websocket/dispatch_ccu.go` verteilt, was nur eine CCU hat (Programme, Systemvariablen,
   Alarme, Benutzer, die Systemeinstellungen der WebUI). Die Handler-Dateien dafür tragen `//go:build !lite`,
-  Felder des Servers, die nur die CCU braucht, stehen in `ccuState` (`pkg/websocket/state_ccu.go`).
+  Felder des Servers, die nur die CCU braucht, stehen in `ccuState` (`pkg/websocket/state_ccu.go`), auch
+  `regaClient`: Der Lite-Build kennt ihn nicht, ein Aufruf aus einer gemeinsamen Datei bricht dort das Übersetzen.
   Die CI prüft beide Builds mit `staticcheck`; fehlt einer CCU-Datei das Tag, meldet es ihren Code im
   Lite-Build als ungenutzt.
   Das Hausmodell (Räume, Gewerke, Kanäle, Namen) liegt hinter `home.Source`: auf der CCU `pkg/rega`, auf

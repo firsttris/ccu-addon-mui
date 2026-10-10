@@ -82,11 +82,7 @@ func (s *Server) handleSystemInfo(client *Client, requestID string) {
 		AddonVersion: addonVersion(), FirmwareVersion: firmwareVersion(), RadioInterfaces: []radioInterface{},
 		Product: versionFileValue("PRODUCT"), Platform: versionFileValue("PLATFORM"),
 	}
-	if s.regaClient != nil {
-		if build, err := s.regaClient.BuildLabel(); err == nil {
-			response.RegaBuild = build
-		}
-	}
+	response.RegaBuild = s.regaBuild()
 	// Only on the CCU itself: elsewhere it would describe the add-on's host
 	if response.FirmwareVersion != "" {
 		info := sysinfo.Read()

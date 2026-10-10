@@ -15,4 +15,4 @@ func (s *Server) platformRoutes(*http.ServeMux) {}
 func (s *Server) autoLoginUser() string { return "" }
 
 // SetRega: openccu-lite has no ReGa; the home model is set with SetHome
-func (s *Server) SetRega(client *rega.Client) { s.regaClient = client }
+func (s *Server) SetRega(*rega.Client) {}

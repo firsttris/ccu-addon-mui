@@ -93,8 +93,10 @@ type Server struct {
 	firmwareUpdates sync.Map
 	cfg             *config.Config
 	// Channels non-administrators may not operate
-	readOnly readOnlyChannels
-	addons   *addons.Service
+	readOnly cached[map[string]bool]
+	// The LOW_BAT limits of the device types (health.go)
+	lowBatLimits lowBatLimitCache
+	addons       *addons.Service
 	// What only a CCU has (state_ccu.go); empty on openccu-lite
 	ccuState //lint:ignore U1000 empty on openccu-lite, filled on a CCU
 	// The diagrams and the recorder of their values
@@ -105,7 +107,6 @@ type Server struct {
 	// The WebUI's general settings and where the diagram values are
 	settings    *settings.Service
 	diagramsDir string
-	regaClient  *rega.Client
 	// The home model: rooms, trades, channels, names, favorites, service
 	// messages (the ReGa on a CCU)
 	home            home.Source
@@ -132,7 +133,7 @@ type Server struct {
 	selfUpdate *selfupdate.Updater
 
 	// eQ-3's list of the newest device firmware, kept for a while
-	deviceFirmwareCatalog deviceFirmwareCatalog
+	deviceFirmwareCatalog cached[[]DeviceFirmwareVersion]
 
 	// audit records every change; nil disables it
 	audit *audit.Log
@@ -189,7 +190,6 @@ type DeviceRPC interface {
 func NewServer(cfg *config.Config, regaClient *rega.Client) *Server {
 	s := &Server{
 		cfg:             cfg,
-		regaClient:      regaClient,
 		clients:         make(map[*Client]bool),
 		subscriptionMgr: subscriptions.NewManager(),
 		platform:        PlatformCCU,

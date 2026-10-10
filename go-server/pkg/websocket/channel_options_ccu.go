@@ -8,14 +8,6 @@ import (
 	"ccu-addon-mui-server/pkg/audit"
 )
 
-// invalidate forgets the read-only channels after one was changed here
-// (only the CCU's channel options change them)
-func (r *readOnlyChannels) invalidate() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.addresses = nil
-}
-
 // handleSetChannelOption sets visible, usable or logged of a channel, as
 // the WebUI's channel configuration. Administrators only.
 func (s *Server) handleSetChannelOption(client *Client, message []byte) {
@@ -32,7 +24,7 @@ func (s *Server) handleSetChannelOption(client *Client, message []byte) {
 		func() (any, string, error) {
 			result, _, err := s.regaClient.SetChannelOption(msg.ID, msg.Option, msg.Value)
 			if msg.Option == "usable" {
-				s.readOnly.invalidate()
+				s.readOnly.forget()
 			}
 			return nil, result, err
 		})

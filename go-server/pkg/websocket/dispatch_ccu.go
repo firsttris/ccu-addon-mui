@@ -58,7 +58,7 @@ func (s *Server) dispatchPlatform(client *Client, msgType, requestID string, mes
 	case "getAlarmMessages", "acknowledgeAlarmMessage":
 		s.handleServiceMessages(client, msgType, message)
 	case "createSysvar", "renameSysvar", "deleteSysvar", "editSysvar":
-		s.handleObjects(client, msgType, message)
+		s.handleSysvarChange(client, msgType, message)
 	default:
 		return false
 	}

@@ -16,16 +16,6 @@ import (
 	"ccu-addon-mui-server/pkg/rega"
 )
 
-// Where the HMServer keeps the heating groups (CCU.getHeatingGroupList)
-var groupsFile = "/etc/config/groups.gson"
-
-// SetGroupsFile sets where groups.gson is (for tests)
-func SetGroupsFile(path string) {
-	if path != "" {
-		groupsFile = path
-	}
-}
-
 // GroupService keeps the heating groups somewhere other than the CCU's
 // HMServer: on openccu-lite occulited's /api/system/v1/groups, which also
 // names the group's device and marks its members (no ReGa step after)
@@ -48,7 +38,7 @@ func (s *Server) listGroups() ([]heatinggroups.Group, error) {
 	if s.groups != nil {
 		return s.groups.List()
 	}
-	groups, err := heatinggroups.Read(groupsFile)
+	groups, err := heatinggroups.Read(s.cfg.GroupsFile)
 	if errors.Is(err, heatinggroups.ErrNoFile) {
 		return []heatinggroups.Group{}, nil
 	}
@@ -272,7 +262,7 @@ func (s *Server) deleteHeatingGroup(client *Client, msg heatingGroupRequest) {
 	}
 	// The members may be operated alone again (GroupListPage.ftl)
 	go func() {
-		if _, err := s.regaClient.SetupGroupDevice("NONE", "", false, nil, deviceAddresses(members)); err != nil {
+		if _, err := s.groupDeviceSetup("NONE", "", false, nil, deviceAddresses(members)); err != nil {
 			logger.Error("Failed to update the devices of a deleted heating group:", err)
 		}
 	}()
@@ -284,7 +274,7 @@ func (s *Server) deleteHeatingGroup(client *Client, msg heatingGroupRequest) {
 func (s *Server) setupGroupDevice(address, name string, rename, wait bool, members, removed []string) {
 	deadline := time.Now().Add(groupDeviceWait)
 	for {
-		result, err := s.regaClient.SetupGroupDevice(address, name, rename, deviceAddresses(members), deviceAddresses(removed))
+		result, err := s.groupDeviceSetup(address, name, rename, deviceAddresses(members), deviceAddresses(removed))
 		if err != nil {
 			logger.Error("Failed to set up the device of a heating group:", err)
 			return

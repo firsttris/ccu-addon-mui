@@ -17,10 +17,6 @@ import (
 	"ccu-addon-mui-server/pkg/rega"
 )
 
-// Where the WebUI keeps country, city, coordinates and time zone
-// (cp_time.cgi, get_location_config)
-var timeConfFile = "/etc/config/time.conf"
-
 // What cp_maintenance.cgi runs after saving (action_reboot,
 // action_shutdown); a shutdown first leaves /tmp/shutdown. The safe mode
 // (SafeMode.enter, api/methods/safemode/enter.tcl) leaves safeModeFile
@@ -85,8 +81,8 @@ var runPower = func(action string) {
 var timeConfLine = regexp.MustCompile(`(?m)^\s*([A-Z]+)\s*=\s*'?([^'\n]*)'?\s*$`)
 
 // readTimeConf reads time.conf as get_location_config does; nil without it
-func readTimeConf() map[string]string {
-	data, err := os.ReadFile(timeConfFile)
+func readTimeConf(path string) map[string]string {
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil
 	}
@@ -99,8 +95,8 @@ func readTimeConf() map[string]string {
 
 // writeTimeConfLocation keeps time.conf's coordinates in step with ReGa, as
 // set_location_config writes both; only when the file exists.
-func writeTimeConfLocation(latitude, longitude float64) error {
-	values := readTimeConf()
+func writeTimeConfLocation(path string, latitude, longitude float64) error {
+	values := readTimeConf(path)
 	if values == nil {
 		return nil
 	}
@@ -109,7 +105,7 @@ func writeTimeConfLocation(latitude, longitude float64) error {
 	for _, key := range []string{"COUNTRY", "CITY", "LATITUDE", "LONGITUDE", "TIMEZONE"} {
 		b.WriteString(key + "=" + values[key] + "\n")
 	}
-	return atomicfile.Write(timeConfFile, []byte(b.String()), 0o644)
+	return atomicfile.Write(path, []byte(b.String()), 0o644)
 }
 
 type systemSettingsResponse struct {
@@ -185,11 +181,11 @@ func (s *Server) getSystemSettings(client *Client, msg systemSettingsRequest) {
 		Type: "getSystemSettings_response", RequestID: msg.RequestID, SystemSettings: settings,
 		CanPower: powerAvailable(), CanSetClock: clockAvailable(),
 	}
-	if conf := readTimeConf(); conf != nil {
+	if conf := readTimeConf(s.cfg.TimeConfFile); conf != nil {
 		response.TimeZone, response.City = conf["TIMEZONE"], conf["CITY"]
-		response.TimeZones = timeZoneList()
+		response.TimeZones = timeZoneList(zoneTabFile)
 	}
-	if servers, ok := readTimeServers(); ok {
+	if servers, ok := readTimeServers(s.cfg.NTPClientFile); ok {
 		response.TimeServers = &servers
 	}
 	response.RegaVersion = regaVersion()
@@ -210,8 +206,8 @@ func (s *Server) setLocation(client *Client, msg systemSettingsRequest) {
 			}
 			result, err := s.regaClient.SetLocation(latitude, longitude)
 			if err == nil && result == rega.SetOK {
-				if err := writeTimeConfLocation(latitude, longitude); err != nil {
-					logger.Error("Failed to write", timeConfFile+":", err)
+				if err := writeTimeConfLocation(s.cfg.TimeConfFile, latitude, longitude); err != nil {
+					logger.Error("Failed to write", s.cfg.TimeConfFile+":", err)
 				}
 			}
 			return previous, result, err
@@ -222,11 +218,11 @@ func (s *Server) setTimeServers(client *Client, msgType string, msg systemSettin
 	// cp_time.cgi action_apply_timeserver
 	s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.Servers},
 		func() (any, string, error) {
-			previous, ok := readTimeServers()
+			previous, ok := readTimeServers(s.cfg.NTPClientFile)
 			if !ok {
 				return nil, "NOT_SUPPORTED", nil
 			}
-			if err := writeTimeServers(msg.Servers); err != nil {
+			if err := writeTimeServers(s.cfg.NTPClientFile, msg.Servers); err != nil {
 				return nil, "", err
 			}
 			afterClockChange([]string{"setclock", "noloop"}, []string{"SetInterfaceClock", rfdAddress()})
@@ -238,11 +234,11 @@ func (s *Server) setTimeZone(client *Client, msgType string, msg systemSettingsR
 	// cp_time.cgi action_apply_position: time.conf, TZ, updateTZ.sh
 	s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.TimeZone},
 		func() (any, string, error) {
-			conf := readTimeConf()
+			conf := readTimeConf(s.cfg.TimeConfFile)
 			if conf == nil {
 				return nil, "NOT_SUPPORTED", nil
 			}
-			if err := writeTimeZone(msg.TimeZone); err != nil {
+			if err := writeTimeZone(s.clockFiles(), msg.TimeZone); err != nil {
 				return nil, "", err
 			}
 			afterClockChange([]string{"/bin/updateTZ.sh"}, []string{"/sbin/hwclock", "-wu"}, []string{"SetInterfaceClock", rfdAddress()})

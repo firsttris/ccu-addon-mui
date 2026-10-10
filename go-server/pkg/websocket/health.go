@@ -35,8 +35,6 @@ type lowBatLimitEntry struct {
 	fetched time.Time
 }
 
-var lowBatLimits = &lowBatLimitCache{entries: map[string]lowBatLimitEntry{}}
-
 const lowBatLimitTTL = time.Hour
 
 func (c *lowBatLimitCache) get(key string) (*float64, bool) {
@@ -52,6 +50,9 @@ func (c *lowBatLimitCache) get(key string) (*float64, bool) {
 func (c *lowBatLimitCache) put(key string, limit *float64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	if c.entries == nil {
+		c.entries = map[string]lowBatLimitEntry{}
+	}
 	c.entries[key] = lowBatLimitEntry{limit: limit, fetched: time.Now()}
 }
 
@@ -72,7 +73,7 @@ func (s *Server) handleDeviceHealth(client *Client, requestID string) {
 			continue
 		}
 		key := device.Interface + "." + device.Address
-		if limit, ok := lowBatLimits.get(key); ok {
+		if limit, ok := s.lowBatLimits.get(key); ok {
 			result[i].LowBatLimit = limit
 			continue
 		}
@@ -87,7 +88,7 @@ func (s *Server) handleDeviceHealth(client *Client, requestID string) {
 					limit = &v
 				}
 			}
-			lowBatLimits.put(key, limit)
+			s.lowBatLimits.put(key, limit)
 			result[i].LowBatLimit = limit
 		}(i, key)
 	}

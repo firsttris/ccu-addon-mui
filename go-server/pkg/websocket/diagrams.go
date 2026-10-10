@@ -55,7 +55,7 @@ func (s *Server) recordSysvars() {
 	if !wanted {
 		return
 	}
-	sysvars, err := s.regaClient.GetSysvars()
+	sysvars, err := s.sysvarValues()
 	if err != nil {
 		logger.Error("Failed to read the system variables for the diagrams:", err)
 		return
@@ -230,7 +230,7 @@ func (s *Server) startSeries(added []diagrams.Series) {
 		}
 		var samples []diagrams.Sample
 		for page := 0; s.capabilities.History && page < historyImportPages; page++ {
-			entries, total, err := s.regaClient.GetHistory(page*500, 500, ch.ID)
+			entries, total, err := s.historyPage(page*500, 500, ch.ID)
 			if err != nil {
 				logger.Error("Failed to read the system protocol for the diagrams:", err)
 				break
