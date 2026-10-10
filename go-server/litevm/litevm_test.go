@@ -527,8 +527,7 @@ func values(t *testing.T, configure, operate *websocket.Conn, device string, cha
 	if answer["success"] != true && answer["code"] == "CCU_ERROR" && strings.Contains(fmt.Sprint(answer["error"]), "503") {
 		// openccu-lite's, not MUI's: hmipserver answers no VALUES call of a
 		// heating group without members (occulited: 503 down), and the VM
-		// has no radio devices to add (docs/plan-openccu-lite.md, "Fehler
-		// und Eigenheiten"). Runs again once hmipserver answers.
+		// has no radio devices to add. Runs again once hmipserver answers.
 		t.Logf("SKIPPED setting %s %s: hmipserver does not answer for a group without members: %v", channel, name, answer["error"])
 		return
 	}
@@ -648,7 +647,7 @@ func deviceImages(t *testing.T, v *vm, conn *websocket.Conn) {
 
 // showcase gives the screenshots something to show: rooms with a heating
 // group's thermostat each, named, at a set point. What hmipserver does not
-// answer (a group just made, see docs/plan-openccu-lite.md) is logged only.
+// answer (a group just made) is logged only.
 func showcase(t *testing.T, v *vm) {
 	conn := v.adminConn(t)
 	deviceImages(t, v, conn)

@@ -300,8 +300,6 @@ Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go 
   (`fakeccu.CCU.Lite`): keine ReGa, dafür occulites APIs aus der Fixture. Von Hand geht das mit
   `go run ./cmd/fakeccu -lite`, das die Umgebung für den Server ausgibt.
 
-Der Plan für die weiteren Schritte steht in [plan-openccu-lite.md](plan-openccu-lite.md).
-
 ## Release
 
 Ein Release beginnt mit einem Tag `vX.Y.Z`, nach demselben Schema wie in den anderen Projekten

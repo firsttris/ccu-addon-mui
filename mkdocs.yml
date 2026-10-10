@@ -34,7 +34,6 @@ nav:
       - Sicherheit: sicherheit.md
       - Tests: tests.md
       - Entwicklung: entwicklung.md
-      - 'openccu-lite: Plan und Stand': plan-openccu-lite.md
 
 theme:
   name: material
