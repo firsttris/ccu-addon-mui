@@ -143,6 +143,7 @@ export const SysvarControl = ({
           onChange={(event) => onSet(Number(event.target.value))}
         >
           {(sysvar.valueList ?? []).map((option, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: the index is the value of the list item
             <option key={`${index}-${option}`} value={index}>
               {option}
             </option>

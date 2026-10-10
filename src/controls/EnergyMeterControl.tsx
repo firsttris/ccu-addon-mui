@@ -82,6 +82,7 @@ const RegisterRow = ({
             );
             if (i < whole.length + decimals - 1 || !rolling) {
               return (
+                // biome-ignore lint/suspicious/noArrayIndexKey: digit positions of the meter
                 <span key={i} className={cell}>
                   {d}
                 </span>
@@ -89,12 +90,14 @@ const RegisterRow = ({
             }
             // The turning roll: 0-9 and 0 again, started at the current digit
             return (
+              // biome-ignore lint/suspicious/noArrayIndexKey: digit positions of the meter
               <span key={i} className={cn(cell, 'overflow-hidden py-0')}>
                 <span
                   className="fx-roll flex flex-col"
                   style={{ animationDuration: `${roll}s`, animationDelay: `${(-roll * last) / 10}s` }}
                 >
                   {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((n, k) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: digit positions of the meter
                     <span key={k} className="flex h-[19px] shrink-0 items-center justify-center">
                       {n}
                     </span>

@@ -433,6 +433,7 @@ export const TimeModuleDialog = ({
                     onChange={(e) => set({ repetitionValue: Number(e.target.value) })}
                   >
                     {Array.from({ length: 12 }, (_, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: the index is the month
                       <option key={i} value={i + 1}>
                         {x.month(i)}
                       </option>

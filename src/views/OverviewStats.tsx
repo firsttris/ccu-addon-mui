@@ -198,6 +198,7 @@ export const LightsStat = ({ index, on, total }: { index: number; on: number; to
         <div aria-hidden className="mt-1 flex gap-1">
           {Array.from({ length: total }, (_, i) => (
             <span
+              // biome-ignore lint/suspicious/noArrayIndexKey: segments of a bar, nothing but their position
               key={i}
               className={cn(
                 'h-1 flex-1 rounded-full transition-[background,box-shadow] duration-500',

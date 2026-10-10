@@ -112,6 +112,7 @@ export const DimmerControl = ({ channel }: { channel: Channel }) => {
               onChange={(e) => set('COLOR_BEHAVIOUR', Number(e.target.value))}
             >
               {BEHAVIOURS.map((label, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: the index is the behaviour number
                 <option key={i} value={i}>
                   {label()}
                 </option>

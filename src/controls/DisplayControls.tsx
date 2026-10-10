@@ -175,6 +175,7 @@ const Preview = ({ lines }: { lines: DisplayLine[] }) => (
       const IconComponent = line.icon > 0 ? icons[line.icon - 1]?.[0] : undefined;
       return (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed display lines and numbered options; the position is the identity
           key={index}
           className={cn(
             'flex h-8 items-center gap-1.5 px-2 text-sm font-semibold',
@@ -256,6 +257,7 @@ const LineEditor = ({
         >
           <option value={0}>{m.DISPLAY_NOT_USED()}</option>
           {icons.map(([, name], i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed display lines and numbered options; the position is the identity
             <option key={i} value={i + 1}>
               {name()}
             </option>
@@ -301,6 +303,7 @@ const DisplaySheet = ({
               <p className="text-xs text-muted-foreground">{m.DISPLAY_HINT()}</p>
               {lines.map((line, index) => (
                 <LineEditor
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed display lines and numbered options; the position is the identity
                   key={index}
                   index={index}
                   line={line}
@@ -318,6 +321,7 @@ const DisplaySheet = ({
                   >
                     <option value={-1}>{m.DISPLAY_NOT_USED()}</option>
                     {sounds.map((name, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: fixed display lines and numbered options; the position is the identity
                       <option key={i} value={i}>
                         {name()}
                       </option>
@@ -335,6 +339,7 @@ const DisplaySheet = ({
                       >
                         <option value={0}>{m.DISPLAY_NO_REPETITION()}</option>
                         {Array.from({ length: 14 }, (_, i) => (
+                          // biome-ignore lint/suspicious/noArrayIndexKey: fixed display lines and numbered options; the position is the identity
                           <option key={i} value={i + 1}>
                             {i + 1}
                           </option>
@@ -350,6 +355,7 @@ const DisplaySheet = ({
                         onChange={(e) => setSound({ ...sound, interval: Number(e.target.value) })}
                       >
                         {Array.from({ length: 16 }, (_, i) => (
+                          // biome-ignore lint/suspicious/noArrayIndexKey: fixed display lines and numbered options; the position is the identity
                           <option key={i} value={(i + 1) * 5}>
                             {(i + 1) * 5} s
                           </option>
@@ -455,6 +461,7 @@ export const Rc19DisplayControl = ({ channel }: { channel: Channel }) => {
         onChange={(e) => setMessage({ ...message, [key]: Number(e.target.value) })}
       >
         {options.map((name, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed display lines and numbered options; the position is the identity
           <option key={i} value={i}>
             {name()}
           </option>

@@ -310,6 +310,7 @@ const SingleControl = ({
           onChange={(event) => onSet(name, Number(event.target.value))}
         >
           {Array.from({ length: 12 }, (_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: the index is the month
             <option key={i + 1} value={i + 1}>
               {monthName(i + 1)}
             </option>

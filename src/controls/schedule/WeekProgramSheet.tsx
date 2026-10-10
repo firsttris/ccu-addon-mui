@@ -208,6 +208,7 @@ const EntryDialog = ({
                   className="w-20"
                 >
                   {Array.from({ length: 24 }, (_, h) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: the index is the hour
                     <option key={h} value={h}>
                       {String(h).padStart(2, '0')}
                     </option>

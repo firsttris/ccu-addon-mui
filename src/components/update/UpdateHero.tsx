@@ -144,6 +144,7 @@ export const UpdateHero = ({
         effects.on &&
         CONFETTI.map((bit, i) => (
           <span
+            // biome-ignore lint/suspicious/noArrayIndexKey: a fixed set of confetti bits
             key={i}
             className={cn('fx-confetti absolute top-1/2 left-1/2 size-2', bit.round ? 'rounded-full' : 'rounded-[2px]')}
             style={

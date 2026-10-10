@@ -217,6 +217,7 @@ export const RuleEditor = ({ rule: initial, onClose }: { rule: NotificationRule;
           <ul className="flex flex-col divide-y rounded-lg border" aria-label={m.RULE_CONDITIONS()}>
             {rule.conditions.map((condition, i) => (
               <ConditionRow
+                // biome-ignore lint/suspicious/noArrayIndexKey: conditions have no id; the rows are controlled
                 key={i}
                 index={i}
                 condition={condition}

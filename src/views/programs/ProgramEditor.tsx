@@ -51,6 +51,7 @@ const BranchEditor = ({ branch, onChange }: { branch: ProgramBranch; onChange: (
   <div className="flex flex-col gap-2">
     {branch.destinations.map((destination, i) => (
       <DestinationRow
+        // biome-ignore lint/suspicious/noArrayIndexKey: program parts have no id in the CCU; the rows are controlled
         key={i}
         destination={destination}
         onChange={(d) => onChange({ ...branch, destinations: branch.destinations.map((x, j) => (j === i ? d : x)) })}
@@ -103,10 +104,12 @@ const RuleEditor = ({
       }
     >
       {rule.groups.map((group, g) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: program parts have no id in the CCU; the rows are controlled
         <div key={g} className="flex flex-col gap-2">
           {g > 0 && <Joiner>{outer}</Joiner>}
           <div className="flex flex-col gap-2 rounded-xl border border-dashed p-2">
             {group.map((condition, c) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: program parts have no id in the CCU; the rows are controlled
               <div key={c} className="flex flex-col gap-2">
                 {c > 0 && <Joiner>{inner}</Joiner>}
                 <ConditionRow
@@ -267,6 +270,7 @@ export const ProgramEditor = () => {
 
       {draft.rules.map((rule, i) => (
         <RuleEditor
+          // biome-ignore lint/suspicious/noArrayIndexKey: program parts have no id in the CCU; the rows are controlled
           key={i}
           rule={rule}
           first={i === 0}

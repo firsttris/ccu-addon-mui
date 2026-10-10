@@ -77,6 +77,7 @@ export const AcousticSignalControl = ({ channel }: { channel: Channel }) => {
           onChange={(event) => set('SOUNDFILE', Number(event.target.value))}
         >
           {Array.from({ length: SOUND_FILES + 1 }, (_, n) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: the index is the sound number
             <option key={n} value={n}>
               {soundName(n)}
             </option>

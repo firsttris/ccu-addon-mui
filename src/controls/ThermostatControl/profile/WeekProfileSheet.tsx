@@ -60,6 +60,7 @@ const DayBar = ({ day, now, compact }: { day: DayProfile; now?: number; compact?
       const width = ((slot.end - start) / DAY_END) * 100;
       return (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: switching points have no id; the rows are controlled
           key={i}
           className="flex items-center justify-center overflow-hidden border-r border-background/40 text-[11px] font-semibold text-white last:border-r-0"
           style={{ width: `${width}%`, background: getTemperatureColor(slot.temperature) }}
@@ -114,6 +115,7 @@ const DayEditor = ({
       const start = index === 0 ? 0 : day[index - 1].end;
       const last = index === day.length - 1;
       return (
+        // biome-ignore lint/suspicious/noArrayIndexKey: switching points have no id; the rows are controlled
         <li key={index} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5">
           <span
             aria-hidden

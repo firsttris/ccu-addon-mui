@@ -83,6 +83,7 @@ export const DeviceImage = ({ type, size, channel, className, fallback }: Device
               {shapes.map((s, i) =>
                 s.kind === 'rect' ? (
                   <rect
+                    // biome-ignore lint/suspicious/noArrayIndexKey: the shapes of a fixed device image
                     key={i}
                     x={s.x}
                     y={s.y}
@@ -96,6 +97,7 @@ export const DeviceImage = ({ type, size, channel, className, fallback }: Device
                   />
                 ) : (
                   <ellipse
+                    // biome-ignore lint/suspicious/noArrayIndexKey: the shapes of a fixed device image
                     key={i}
                     cx={s.x + s.w / 2}
                     cy={s.y + s.h / 2}

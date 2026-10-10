@@ -142,6 +142,7 @@ export const DeviceHistory = ({ address }: { address: string }) => {
                   <span className="text-xs text-muted-foreground">{datapointLabel(datapoint)}</span>
                   <ul className="flex flex-col gap-0.5">
                     {list.slice(0, 5).map((e, j) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: a read-only excerpt of the history
                       <li key={j} className="flex justify-between gap-3 tabular-nums">
                         <span className="text-muted-foreground">{formatTime(e.time)}</span>
                         <span>{formatEntryValue(e)}</span>

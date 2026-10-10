@@ -111,6 +111,7 @@ export const RgbwProgramControl = ({ channel }: { channel: Channel }) => {
           }
         >
           {PROGRAMS.map((label, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: the index is the program number
             <option key={index} value={index}>
               {label()}
             </option>

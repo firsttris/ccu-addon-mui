@@ -131,6 +131,7 @@ export const History = () => {
           <TableBody>
             {history.isPending && <TableSkeletonRows columns={3} rows={8} />}
             {shown.map((entry, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: entries have no id; equal ones in a row are told apart by position
               <TableRow key={`${entry.time}-${entry.group}-${index}`}>
                 <TableCell className="hidden whitespace-nowrap text-muted-foreground tabular-nums sm:table-cell">
                   {formatTime(entry.time)}
