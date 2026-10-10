@@ -96,25 +96,28 @@ type heatingGroupSavedResponse struct {
 // How long the virtual device of a new group may take to appear in ReGa
 var groupDeviceWait = 30 * time.Second
 
+// heatingGroupRequest: the fields of the messages handleHeatingGroupChange handles
+type heatingGroupRequest struct {
+	RequestID string `json:"requestId"`
+	GroupType string `json:"groupType"`
+	Group     struct {
+		ID                    int      `json:"id"`
+		Name                  string   `json:"name"`
+		Type                  string   `json:"type"`
+		ForbidSingleOperation bool     `json:"forbidSingleOperation"`
+		Members               []string `json:"members"`
+	} `json:"group"`
+	ID       int    `json:"id"`
+	Password string `json:"password"`
+}
+
 // handleHeatingGroupChange lists the channels a group may contain and
 // saves and deletes groups through the HMServer, as the WebUI's
 // GroupEditPage.ftl and GroupListPage.ftl; changes elevated, with audit
 // log. The HMServer needs a WebUI session: the password once, then the
 // session is kept until it expires (PASSWORD_REQUIRED).
 func (s *Server) handleHeatingGroupChange(client *Client, msgType string, message []byte) {
-	var msg struct {
-		RequestID string `json:"requestId"`
-		GroupType string `json:"groupType"`
-		Group     struct {
-			ID                    int      `json:"id"`
-			Name                  string   `json:"name"`
-			Type                  string   `json:"type"`
-			ForbidSingleOperation bool     `json:"forbidSingleOperation"`
-			Members               []string `json:"members"`
-		} `json:"group"`
-		ID       int    `json:"id"`
-		Password string `json:"password"`
-	}
+	var msg heatingGroupRequest
 	if !s.decode(client, message, &msg) {
 		return
 	}
@@ -128,140 +131,152 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 	}
 	switch msgType {
 	case "getHeatingGroupMembers":
-		if !heatingGroupTypes[msg.GroupType] {
-			s.sendRequestError(client, msg.RequestID, "unknown group type", "INVALID_VALUE")
-			return
-		}
-		var members backup.SuitableMembers
-		var err error
-		if s.groups != nil {
-			members, err = s.groups.SuitableMembers(msg.GroupType)
-		} else {
-			members, err = s.backup.SuitableGroupMembers(msg.GroupType)
-		}
-		if err != nil {
-			s.sendRequestError(client, msg.RequestID, "getHeatingGroupMembers failed: "+err.Error(), "CCU_ERROR")
-			return
-		}
-		s.sendJSON(client, heatingGroupMembersResponse{Type: "getHeatingGroupMembers_response", RequestID: msg.RequestID, Members: members})
+		s.getHeatingGroupMembers(client, msg)
 	case "saveHeatingGroup":
-		g := msg.Group
-		g.Name = strings.TrimSpace(g.Name)
-		entry := audit.Entry{User: client.user, Action: "saveHeatingGroup", Target: g.Name, Value: g}
-		if code, errorMsg := s.groupChangeError(client); code != "" {
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, errorMsg, code)
-			return
+		s.saveHeatingGroup(client, msg)
+	case "deleteHeatingGroup":
+		s.deleteHeatingGroup(client, msg)
+	}
+}
+
+func (s *Server) getHeatingGroupMembers(client *Client, msg heatingGroupRequest) {
+	if !heatingGroupTypes[msg.GroupType] {
+		s.sendRequestError(client, msg.RequestID, "unknown group type", "INVALID_VALUE")
+		return
+	}
+	var members backup.SuitableMembers
+	var err error
+	if s.groups != nil {
+		members, err = s.groups.SuitableMembers(msg.GroupType)
+	} else {
+		members, err = s.backup.SuitableGroupMembers(msg.GroupType)
+	}
+	if err != nil {
+		s.sendRequestError(client, msg.RequestID, "getHeatingGroupMembers failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	s.sendJSON(client, heatingGroupMembersResponse{Type: "getHeatingGroupMembers_response", RequestID: msg.RequestID, Members: members})
+}
+
+func (s *Server) saveHeatingGroup(client *Client, msg heatingGroupRequest) {
+	g := msg.Group
+	g.Name = strings.TrimSpace(g.Name)
+	entry := audit.Entry{User: client.user, Action: "saveHeatingGroup", Target: g.Name, Value: g}
+	if code, errorMsg := s.groupChangeError(client); code != "" {
+		s.recordAudit(entry, code)
+		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		return
+	}
+	if g.Name == "" || len(g.Name) > 100 || strings.ContainsAny(g.Name, "\"\\\r\n\t") || !heatingGroupTypes[g.Type] || g.ID < 0 {
+		s.recordAudit(entry, "INVALID_VALUE")
+		s.sendRequestError(client, msg.RequestID, "invalid heating group", "INVALID_VALUE")
+		return
+	}
+	existing, _ := s.listGroups()
+	var previous *heatinggroups.Group
+	for i := range existing {
+		if int(existing[i].ID) == g.ID {
+			previous = &existing[i]
 		}
-		if g.Name == "" || len(g.Name) > 100 || strings.ContainsAny(g.Name, "\"\\\r\n\t") || !heatingGroupTypes[g.Type] || g.ID < 0 {
-			s.recordAudit(entry, "INVALID_VALUE")
-			s.sendRequestError(client, msg.RequestID, "invalid heating group", "INVALID_VALUE")
-			return
+	}
+	if g.ID != 0 && previous == nil {
+		s.recordAudit(entry, "NOT_FOUND")
+		s.sendRequestError(client, msg.RequestID, "unknown heating group", "NOT_FOUND")
+		return
+	}
+	// The group's virtual device is named "<name> INT000000<id>"; on a
+	// new name the device follows (dialogRenameVirtualGroupDeviceTitle)
+	deviceName := g.Name
+	rename := previous == nil || previous.Name != g.Name
+	if previous != nil {
+		deviceName = previous.DeviceName
+		if rename {
+			deviceName = g.Name + " " + groupDeviceAddress(g.ID)
 		}
-		existing, _ := s.listGroups()
-		var previous *heatinggroups.Group
-		for i := range existing {
-			if int(existing[i].ID) == g.ID {
-				previous = &existing[i]
+	}
+	change := backup.GroupChange{
+		ID: g.ID, Name: g.Name, Type: g.Type, ForbidSingleOperation: g.ForbidSingleOperation, Members: g.Members, DeviceName: deviceName,
+	}
+	var id int
+	var err error
+	if s.groups != nil {
+		id, err = s.groupsFor(client).Save(change)
+	} else {
+		id, err = s.backup.SaveHeatingGroup(client.user, msg.Password, change)
+	}
+	if err != nil {
+		s.failChange(client, msg.RequestID, entry, err)
+		return
+	}
+	if previous != nil {
+		entry.Previous = *previous
+	}
+	s.recordAudit(entry, rega.SetOK)
+	if previous == nil {
+		deviceName = g.Name + " " + groupDeviceAddress(id)
+	}
+	var removed []string
+	if previous != nil {
+		for _, m := range previous.Members {
+			if !slices.Contains(g.Members, m.Address) {
+				removed = append(removed, m.Address)
 			}
 		}
-		if g.ID != 0 && previous == nil {
-			s.recordAudit(entry, "NOT_FOUND")
-			s.sendRequestError(client, msg.RequestID, "unknown heating group", "NOT_FOUND")
-			return
+	}
+	// occulited names the group's device and marks the members itself
+	if s.groups == nil {
+		go s.setupGroupDevice(groupDeviceAddress(id), deviceName, rename, previous == nil, g.Members, removed)
+	}
+	s.sendJSON(client, heatingGroupSavedResponse{Type: "saveHeatingGroup_response", RequestID: msg.RequestID, Success: true, ID: id})
+}
+
+func (s *Server) deleteHeatingGroup(client *Client, msg heatingGroupRequest) {
+	entry := audit.Entry{User: client.user, Action: "deleteHeatingGroup", Target: strconv.Itoa(msg.ID)}
+	if code, errorMsg := s.groupChangeError(client); code != "" {
+		s.recordAudit(entry, code)
+		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		return
+	}
+	existing, _ := s.listGroups()
+	var previous *heatinggroups.Group
+	for i := range existing {
+		if int(existing[i].ID) == msg.ID {
+			previous = &existing[i]
 		}
-		// The group's virtual device is named "<name> INT000000<id>"; on a
-		// new name the device follows (dialogRenameVirtualGroupDeviceTitle)
-		deviceName := g.Name
-		rename := previous == nil || previous.Name != g.Name
-		if previous != nil {
-			deviceName = previous.DeviceName
-			if rename {
-				deviceName = g.Name + " " + groupDeviceAddress(g.ID)
-			}
-		}
-		change := backup.GroupChange{
-			ID: g.ID, Name: g.Name, Type: g.Type, ForbidSingleOperation: g.ForbidSingleOperation, Members: g.Members, DeviceName: deviceName,
-		}
-		var id int
-		var err error
-		if s.groups != nil {
-			id, err = s.groupsFor(client).Save(change)
-		} else {
-			id, err = s.backup.SaveHeatingGroup(client.user, msg.Password, change)
-		}
+	}
+	if previous == nil {
+		s.recordAudit(entry, "NOT_FOUND")
+		s.sendRequestError(client, msg.RequestID, "unknown heating group", "NOT_FOUND")
+		return
+	}
+	entry.Target = previous.Name
+	entry.Previous = *previous
+	if s.groups != nil {
+		err := s.groupsFor(client).Delete(msg.ID)
 		if err != nil {
 			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
-		if previous != nil {
-			entry.Previous = *previous
-		}
 		s.recordAudit(entry, rega.SetOK)
-		if previous == nil {
-			deviceName = g.Name + " " + groupDeviceAddress(id)
-		}
-		var removed []string
-		if previous != nil {
-			for _, m := range previous.Members {
-				if !slices.Contains(g.Members, m.Address) {
-					removed = append(removed, m.Address)
-				}
-			}
-		}
-		// occulited names the group's device and marks the members itself
-		if s.groups == nil {
-			go s.setupGroupDevice(groupDeviceAddress(id), deviceName, rename, previous == nil, g.Members, removed)
-		}
-		s.sendJSON(client, heatingGroupSavedResponse{Type: "saveHeatingGroup_response", RequestID: msg.RequestID, Success: true, ID: id})
-	case "deleteHeatingGroup":
-		entry := audit.Entry{User: client.user, Action: "deleteHeatingGroup", Target: strconv.Itoa(msg.ID)}
-		if code, errorMsg := s.groupChangeError(client); code != "" {
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, errorMsg, code)
-			return
-		}
-		existing, _ := s.listGroups()
-		var previous *heatinggroups.Group
-		for i := range existing {
-			if int(existing[i].ID) == msg.ID {
-				previous = &existing[i]
-			}
-		}
-		if previous == nil {
-			s.recordAudit(entry, "NOT_FOUND")
-			s.sendRequestError(client, msg.RequestID, "unknown heating group", "NOT_FOUND")
-			return
-		}
-		entry.Target = previous.Name
-		entry.Previous = *previous
-		if s.groups != nil {
-			err := s.groupsFor(client).Delete(msg.ID)
-			if err != nil {
-				s.failChange(client, msg.RequestID, entry, err)
-				return
-			}
-			s.recordAudit(entry, rega.SetOK)
-			s.sendJSON(client, changeResponse{Type: "deleteHeatingGroup_response", RequestID: msg.RequestID, Success: true})
-			return
-		}
-		if err := s.backup.DeleteHeatingGroup(client.user, msg.Password, msg.ID); err != nil {
-			s.failChange(client, msg.RequestID, entry, err)
-			return
-		}
-		s.recordAudit(entry, rega.SetOK)
-		var members []string
-		for _, m := range previous.Members {
-			members = append(members, m.Address)
-		}
-		// The members may be operated alone again (GroupListPage.ftl)
-		go func() {
-			if _, err := s.regaClient.SetupGroupDevice("NONE", "", false, nil, deviceAddresses(members)); err != nil {
-				logger.Error("Failed to update the devices of a deleted heating group:", err)
-			}
-		}()
 		s.sendJSON(client, changeResponse{Type: "deleteHeatingGroup_response", RequestID: msg.RequestID, Success: true})
+		return
 	}
+	if err := s.backup.DeleteHeatingGroup(client.user, msg.Password, msg.ID); err != nil {
+		s.failChange(client, msg.RequestID, entry, err)
+		return
+	}
+	s.recordAudit(entry, rega.SetOK)
+	var members []string
+	for _, m := range previous.Members {
+		members = append(members, m.Address)
+	}
+	// The members may be operated alone again (GroupListPage.ftl)
+	go func() {
+		if _, err := s.regaClient.SetupGroupDevice("NONE", "", false, nil, deviceAddresses(members)); err != nil {
+			logger.Error("Failed to update the devices of a deleted heating group:", err)
+		}
+	}()
+	s.sendJSON(client, changeResponse{Type: "deleteHeatingGroup_response", RequestID: msg.RequestID, Success: true})
 }
 
 // setupGroupDevice names the group's virtual device and marks the members'

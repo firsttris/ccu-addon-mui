@@ -131,158 +131,189 @@ type systemSettingsResponse struct {
 	RegaVersion string `json:"regaVersion,omitempty"`
 }
 
+// systemSettingsRequest: the fields of the messages handleSystemSettings handles
+type systemSettingsRequest struct {
+	RequestID string   `json:"requestId"`
+	Latitude  *float64 `json:"latitude"`
+	Longitude *float64 `json:"longitude"`
+	Action    string   `json:"action"`
+	// setTimeServers, setTimeZone, setClock ("2026-10-04 12:30:00")
+	Servers  string `json:"servers"`
+	TimeZone string `json:"timeZone"`
+	Time     string `json:"time"`
+	// setRegaVersion
+	Version string `json:"version"`
+}
+
 // handleSystemSettings reads the location and clock, sets the location
 // (as cp_time.cgi) or reboots or shuts down the CCU (as cp_maintenance.cgi).
 // Administrators only.
 func (s *Server) handleSystemSettings(client *Client, msgType string, message []byte) {
-	var msg struct {
-		RequestID string   `json:"requestId"`
-		Latitude  *float64 `json:"latitude"`
-		Longitude *float64 `json:"longitude"`
-		Action    string   `json:"action"`
-		// setTimeServers, setTimeZone, setClock ("2026-10-04 12:30:00")
-		Servers  string `json:"servers"`
-		TimeZone string `json:"timeZone"`
-		Time     string `json:"time"`
-		// setRegaVersion
-		Version string `json:"version"`
-	}
+	var msg systemSettingsRequest
 	if !s.decode(client, message, &msg) {
 		return
 	}
 	switch msgType {
 	case "getSystemSettings":
-		if client.level != auth.LevelAdmin {
-			s.sendRequestError(client, msg.RequestID, "only administrators may see system settings", "FORBIDDEN")
-			return
-		}
-		settings, err := s.regaClient.GetSystemSettings()
-		if err != nil {
-			s.sendRequestError(client, msg.RequestID, "getSystemSettings failed: "+err.Error(), "CCU_ERROR")
-			return
-		}
-		response := systemSettingsResponse{
-			Type: "getSystemSettings_response", RequestID: msg.RequestID, SystemSettings: settings,
-			CanPower: powerAvailable(), CanSetClock: clockAvailable(),
-		}
-		if conf := readTimeConf(); conf != nil {
-			response.TimeZone, response.City = conf["TIMEZONE"], conf["CITY"]
-			response.TimeZones = timeZoneList()
-		}
-		if servers, ok := readTimeServers(); ok {
-			response.TimeServers = &servers
-		}
-		response.RegaVersion = regaVersion()
-		s.sendJSON(client, response)
+		s.getSystemSettings(client, msg)
 	case "setLocation":
-		if msg.Latitude == nil || msg.Longitude == nil {
-			s.sendRequestError(client, msg.RequestID, "latitude and longitude are required", "INVALID_REQUEST")
-			return
-		}
-		latitude, longitude := *msg.Latitude, *msg.Longitude
-		s.configure(client, msg.RequestID, audit.Entry{Action: "setLocation", Target: "system", Value: rega.FormatCoordinate(latitude) + "," + rega.FormatCoordinate(longitude)},
-			func() (any, string, error) {
-				var previous any
-				if settings, err := s.regaClient.GetSystemSettings(); err == nil {
-					previous = rega.FormatCoordinate(settings.Latitude) + "," + rega.FormatCoordinate(settings.Longitude)
-				}
-				result, err := s.regaClient.SetLocation(latitude, longitude)
-				if err == nil && result == rega.SetOK {
-					if err := writeTimeConfLocation(latitude, longitude); err != nil {
-						logger.Error("Failed to write", timeConfFile+":", err)
-					}
-				}
-				return previous, result, err
-			})
+		s.setLocation(client, msg)
 	case "setTimeServers":
-		// cp_time.cgi action_apply_timeserver
-		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.Servers},
-			func() (any, string, error) {
-				previous, ok := readTimeServers()
-				if !ok {
-					return nil, "NOT_SUPPORTED", nil
-				}
-				if err := writeTimeServers(msg.Servers); err != nil {
-					return nil, "", err
-				}
-				afterClockChange([]string{"setclock", "noloop"}, []string{"SetInterfaceClock", rfdAddress()})
-				return previous, rega.SetOK, nil
-			})
+		s.setTimeServers(client, msgType, msg)
 	case "setTimeZone":
-		// cp_time.cgi action_apply_position: time.conf, TZ, updateTZ.sh
-		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.TimeZone},
-			func() (any, string, error) {
-				conf := readTimeConf()
-				if conf == nil {
-					return nil, "NOT_SUPPORTED", nil
-				}
-				if err := writeTimeZone(msg.TimeZone); err != nil {
-					return nil, "", err
-				}
-				afterClockChange([]string{"/bin/updateTZ.sh"}, []string{"/sbin/hwclock", "-wu"}, []string{"SetInterfaceClock", rfdAddress()})
-				if err := s.regaClient.ClockStep("changed"); err != nil {
-					logger.Error("Failed to tell ReGa about the new time zone:", err)
-				}
-				return conf["TIMEZONE"], rega.SetOK, nil
-			})
+		s.setTimeZone(client, msgType, msg)
 	case "setClock":
-		// cp_time.cgi action_apply_time
-		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.Time},
-			func() (any, string, error) {
-				t, err := parseClock(msg.Time)
-				if err != nil {
-					return nil, "", err
-				}
-				if !clockAvailable() {
-					return nil, "NOT_SUPPORTED", nil
-				}
-				if err := s.regaClient.ClockStep("setting"); err != nil {
-					return nil, "", err
-				}
-				if err := runClock("date", "-s", t.Format("200601021504.05")); err != nil {
-					return nil, "", err
-				}
-				if err := s.regaClient.ClockStep("changed"); err != nil {
-					return nil, "", err
-				}
-				afterClockChange([]string{"/sbin/hwclock", "-wu"}, []string{"SetInterfaceClock", rfdAddress()})
-				return nil, rega.SetOK, nil
-			})
+		s.setClock(client, msgType, msg)
 	case "setRegaVersion":
-		s.configure(client, msg.RequestID, audit.Entry{Action: "setRegaVersion", Target: "system", Value: msg.Version},
-			func() (any, string, error) {
-				previous := regaVersion()
-				if previous == "" {
-					return nil, "NOT_SUPPORTED", nil
-				}
-				if msg.Version != "NORMAL" && msg.Version != "COMMUNITY" {
-					return nil, "", fmt.Errorf("invalid version %q", msg.Version)
-				}
-				// setregaversion.tcl: echo $ReGaVersion > /etc/config/ReGaHssVersion
-				return previous, rega.SetOK, os.WriteFile(regaVersionFile, []byte(msg.Version+"\n"), 0o644)
-			})
+		s.setRegaVersion(client, msg)
 	case "powerAction":
-		if _, ok := powerCommands[msg.Action]; !ok {
-			s.sendRequestError(client, msg.RequestID, "unknown action", "INVALID_REQUEST")
-			return
-		}
-		ran := false
-		s.configure(client, msg.RequestID, audit.Entry{Action: "powerAction", Target: "system", Value: msg.Action},
-			func() (any, string, error) {
-				// Only where the add-on runs on the CCU itself
-				if !powerAvailable() {
-					return nil, "NOT_SUPPORTED", nil
+		s.powerAction(client, msg)
+	}
+}
+
+func (s *Server) getSystemSettings(client *Client, msg systemSettingsRequest) {
+	if client.level != auth.LevelAdmin {
+		s.sendRequestError(client, msg.RequestID, "only administrators may see system settings", "FORBIDDEN")
+		return
+	}
+	settings, err := s.regaClient.GetSystemSettings()
+	if err != nil {
+		s.sendRequestError(client, msg.RequestID, "getSystemSettings failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	response := systemSettingsResponse{
+		Type: "getSystemSettings_response", RequestID: msg.RequestID, SystemSettings: settings,
+		CanPower: powerAvailable(), CanSetClock: clockAvailable(),
+	}
+	if conf := readTimeConf(); conf != nil {
+		response.TimeZone, response.City = conf["TIMEZONE"], conf["CITY"]
+		response.TimeZones = timeZoneList()
+	}
+	if servers, ok := readTimeServers(); ok {
+		response.TimeServers = &servers
+	}
+	response.RegaVersion = regaVersion()
+	s.sendJSON(client, response)
+}
+
+func (s *Server) setLocation(client *Client, msg systemSettingsRequest) {
+	if msg.Latitude == nil || msg.Longitude == nil {
+		s.sendRequestError(client, msg.RequestID, "latitude and longitude are required", "INVALID_REQUEST")
+		return
+	}
+	latitude, longitude := *msg.Latitude, *msg.Longitude
+	s.configure(client, msg.RequestID, audit.Entry{Action: "setLocation", Target: "system", Value: rega.FormatCoordinate(latitude) + "," + rega.FormatCoordinate(longitude)},
+		func() (any, string, error) {
+			var previous any
+			if settings, err := s.regaClient.GetSystemSettings(); err == nil {
+				previous = rega.FormatCoordinate(settings.Latitude) + "," + rega.FormatCoordinate(settings.Longitude)
+			}
+			result, err := s.regaClient.SetLocation(latitude, longitude)
+			if err == nil && result == rega.SetOK {
+				if err := writeTimeConfLocation(latitude, longitude); err != nil {
+					logger.Error("Failed to write", timeConfFile+":", err)
 				}
-				result, err := s.regaClient.SaveSystem()
-				if err == nil && result == rega.SetOK && msg.Action == "safemode" {
-					// enter.tcl writes "1"
-					err = os.WriteFile(safeModeFile, []byte("1\n"), 0o644)
-				}
-				ran = err == nil && result == rega.SetOK
-				return nil, result, err
-			})
-		if ran {
-			runPower(msg.Action)
-		}
+			}
+			return previous, result, err
+		})
+}
+
+func (s *Server) setTimeServers(client *Client, msgType string, msg systemSettingsRequest) {
+	// cp_time.cgi action_apply_timeserver
+	s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.Servers},
+		func() (any, string, error) {
+			previous, ok := readTimeServers()
+			if !ok {
+				return nil, "NOT_SUPPORTED", nil
+			}
+			if err := writeTimeServers(msg.Servers); err != nil {
+				return nil, "", err
+			}
+			afterClockChange([]string{"setclock", "noloop"}, []string{"SetInterfaceClock", rfdAddress()})
+			return previous, rega.SetOK, nil
+		})
+}
+
+func (s *Server) setTimeZone(client *Client, msgType string, msg systemSettingsRequest) {
+	// cp_time.cgi action_apply_position: time.conf, TZ, updateTZ.sh
+	s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.TimeZone},
+		func() (any, string, error) {
+			conf := readTimeConf()
+			if conf == nil {
+				return nil, "NOT_SUPPORTED", nil
+			}
+			if err := writeTimeZone(msg.TimeZone); err != nil {
+				return nil, "", err
+			}
+			afterClockChange([]string{"/bin/updateTZ.sh"}, []string{"/sbin/hwclock", "-wu"}, []string{"SetInterfaceClock", rfdAddress()})
+			if err := s.regaClient.ClockStep("changed"); err != nil {
+				logger.Error("Failed to tell ReGa about the new time zone:", err)
+			}
+			return conf["TIMEZONE"], rega.SetOK, nil
+		})
+}
+
+func (s *Server) setClock(client *Client, msgType string, msg systemSettingsRequest) {
+	// cp_time.cgi action_apply_time
+	s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.Time},
+		func() (any, string, error) {
+			t, err := parseClock(msg.Time)
+			if err != nil {
+				return nil, "", err
+			}
+			if !clockAvailable() {
+				return nil, "NOT_SUPPORTED", nil
+			}
+			if err := s.regaClient.ClockStep("setting"); err != nil {
+				return nil, "", err
+			}
+			if err := runClock("date", "-s", t.Format("200601021504.05")); err != nil {
+				return nil, "", err
+			}
+			if err := s.regaClient.ClockStep("changed"); err != nil {
+				return nil, "", err
+			}
+			afterClockChange([]string{"/sbin/hwclock", "-wu"}, []string{"SetInterfaceClock", rfdAddress()})
+			return nil, rega.SetOK, nil
+		})
+}
+
+func (s *Server) setRegaVersion(client *Client, msg systemSettingsRequest) {
+	s.configure(client, msg.RequestID, audit.Entry{Action: "setRegaVersion", Target: "system", Value: msg.Version},
+		func() (any, string, error) {
+			previous := regaVersion()
+			if previous == "" {
+				return nil, "NOT_SUPPORTED", nil
+			}
+			if msg.Version != "NORMAL" && msg.Version != "COMMUNITY" {
+				return nil, "", fmt.Errorf("invalid version %q", msg.Version)
+			}
+			// setregaversion.tcl: echo $ReGaVersion > /etc/config/ReGaHssVersion
+			return previous, rega.SetOK, os.WriteFile(regaVersionFile, []byte(msg.Version+"\n"), 0o644)
+		})
+}
+
+func (s *Server) powerAction(client *Client, msg systemSettingsRequest) {
+	if _, ok := powerCommands[msg.Action]; !ok {
+		s.sendRequestError(client, msg.RequestID, "unknown action", "INVALID_REQUEST")
+		return
+	}
+	ran := false
+	s.configure(client, msg.RequestID, audit.Entry{Action: "powerAction", Target: "system", Value: msg.Action},
+		func() (any, string, error) {
+			// Only where the add-on runs on the CCU itself
+			if !powerAvailable() {
+				return nil, "NOT_SUPPORTED", nil
+			}
+			result, err := s.regaClient.SaveSystem()
+			if err == nil && result == rega.SetOK && msg.Action == "safemode" {
+				// enter.tcl writes "1"
+				err = os.WriteFile(safeModeFile, []byte("1\n"), 0o644)
+			}
+			ran = err == nil && result == rega.SetOK
+			return nil, result, err
+		})
+	if ran {
+		runPower(msg.Action)
 	}
 }
