@@ -25,7 +25,7 @@ import { useChannelNames } from './channelNames';
 import type { DeviceFirmwareFile } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
 
-export const deviceFirmwareError = (error: Error) =>
+const deviceFirmwareError = (error: Error) =>
   errorText(error, m.CHANGE_FAILED, {
     INVALID_FIRMWARE: m.DEVFW_INVALID,
     FIRMWARE_NEEDS_NEWER_CCU: m.DEVFW_NEEDS_NEWER_CCU,

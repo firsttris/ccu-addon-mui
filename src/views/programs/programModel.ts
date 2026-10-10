@@ -12,7 +12,7 @@ import type { ParameterDescription, Sysvar } from '../../types/types';
 // writes (rega/programs.go), close to ReGa's: condition kinds and value
 // types are ReGa constant names, see the WebUI's sico.fn and dest.fn.
 
-export const ID_ERROR = 65535;
+const ID_ERROR = 65535;
 
 // ConditionType (sico.inc): how a value is compared
 export const COMPARE = {
@@ -197,7 +197,6 @@ export const timeModeOf = (t: TimeModule): TimeMode => {
 // "YYYY-MM-DD" from what ReGa prints ("2026-01-15 00:00:00") or ""
 export const dateOf = (text: string) => (/^\d{4}-\d{2}-\d{2}/.test(text) ? text.slice(0, 10) : '');
 
-const pad2 = (n: number) => String(n).padStart(2, '0');
 const formatDate = (iso: string, locale: string) => {
   const [y, mo, d] = iso.split('-').map(Number);
   return y ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(y, mo - 1, d)) : iso;
@@ -291,5 +290,3 @@ export const describeTimeModule = (tm: TimeModule, x: TimeTexts) => {
   }
   return [pattern, time].filter(Boolean).join(', ');
 };
-
-export { pad2 };

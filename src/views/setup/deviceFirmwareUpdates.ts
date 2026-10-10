@@ -1,6 +1,6 @@
 import type { Device } from '../../types/types';
 import type { DeviceFirmwareVersion } from '../../types/protocol';
-import { isNewerVersion } from '../../utils/version';
+import { isNewerVersion } from '../../lib/version';
 
 export interface OnlineFirmware {
   version: string;

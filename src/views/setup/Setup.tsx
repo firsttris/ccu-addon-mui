@@ -25,6 +25,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { m } from '../../paraglide/messages';
 import { TableSkeletonRows } from '../../components/ui/skeleton';
 import { cn } from '../../lib/utils';
+import { deviceAddressOf } from '../../lib/address';
 
 interface DeviceRow {
   name: string;
@@ -70,7 +71,7 @@ export const Setup = () => {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
 
   const rows = useMemo<DeviceRow[]>(() => {
-    const problemOf = (address: string) => problems.find((p) => p.address.split(':')[0] === address);
+    const problemOf = (address: string) => problems.find((p) => deviceAddressOf(p.address) === address);
     return devices.map((device) => ({
       name: names.get(device.address) ?? device.name ?? device.address,
       type: device.type,

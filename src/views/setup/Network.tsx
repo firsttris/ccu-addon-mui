@@ -10,8 +10,8 @@ import { OnlyOnCCU, Panel } from './Panel';
 import { m } from '../../paraglide/messages';
 import type { NetConfig } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
+import { IPV4 } from '../../lib/validation';
 
-const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
 const HOSTNAME = /^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/;
 
 const toNumber = (ip: string) => ip.split('.').reduce((n, part) => n * 256 + Number(part), 0);

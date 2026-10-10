@@ -14,7 +14,6 @@ import { NativeSelect } from '../../components/ui/select';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ElevateDialog } from '../../components/ElevateDialog';
 import { LevelBar } from '../light/LevelBar';
-import { getLocale } from '../../paraglide/runtime';
 import { m } from '../../paraglide/messages';
 import { cn } from '../../lib/utils';
 import {
@@ -32,6 +31,7 @@ import {
   type WeekProgramEntry,
   WORKDAYS,
 } from './weekProgram';
+import { dayName } from '../../lib/format';
 
 export type WeekProgramKind = 'switch' | 'blind' | 'dimmer';
 
@@ -52,11 +52,7 @@ interface WeekProgramSheetProps {
   targets: TargetChannel[];
 }
 
-// Monday is 2024-01-01
-const dayName = (dayIndex: number, style: 'short' | 'long') =>
-  new Intl.DateTimeFormat(getLocale(), { weekday: style }).format(new Date(2024, 0, 1 + dayIndex));
-
-export const formatDays = (mask: number) => {
+const formatDays = (mask: number) => {
   if (mask === ALL_DAYS) return m.EVERY_DAY();
   if (mask === WORKDAYS) return m.WORKDAYS();
   if (mask === WEEKEND) return m.WEEKEND();

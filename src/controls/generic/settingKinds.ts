@@ -140,7 +140,7 @@ const range = (p: ParameterDescription) =>
 
 // Levels 0..1 (unit "100%", or valve positions without a unit) are shown
 // as percent; so are integers 0..100 named as a position or level
-export const isPercent = (name: string, p: ParameterDescription) => {
+export const isPercentSetting = (name: string, p: ParameterDescription) => {
   if (p.unit === '100%') return true;
   const r = range(p);
   if (!r) return false;
@@ -173,7 +173,7 @@ export const controlOf = (name: string, p: ParameterDescription, writable: boole
       return 'text';
     case 'INTEGER':
     case 'FLOAT': {
-      if (isPercent(name, p)) return 'percent';
+      if (isPercentSetting(name, p)) return 'percent';
       if (timeOfDayStep(name, p)) return 'timeOfDay';
       const r = range(p);
       if (/_MONTH$/.test(name) && r?.min === 1 && r.max === 12) return 'month';

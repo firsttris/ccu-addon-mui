@@ -15,7 +15,7 @@ import { errorText } from '../../lib/errors';
 
 // Websocket messages are limited to 128 KiB; certificate chains are far
 // smaller
-export const MAX_CERTIFICATE_BYTES = 100_000;
+const MAX_CERTIFICATE_BYTES = 100_000;
 
 // A PEM file as the WebUI takes it (cp_network.cgi action_cert_upload):
 // a certificate and its private key

@@ -36,7 +36,7 @@ const ToggleRow = ({
   </div>
 );
 
-export const KEY_PATTERN = /^[0-9a-zA-Z_]{5,}$/;
+const KEY_PATTERN = /^[0-9a-zA-Z_]{5,}$/;
 
 // The system security key of the BidCos devices (cp_security.cgi
 // action_change_key): at least 5 letters, digits or underscores, entered
@@ -300,7 +300,7 @@ const SecurityLevel = ({ current, disabled }: { current: string; disabled: boole
 // SNMP as cp_security.cgi's onSNMPSaveBtn: switching on needs a user and a
 // password of at least 8 characters, entered twice; the CCU then runs
 // setSNMPUser.sh (SNMPv3 with SHA and AES) and opens SNMP in the firewall
-export const SNMP_USER_PATTERN = /^[A-Za-z0-9._-]{1,32}$/;
+const SNMP_USER_PATTERN = /^[A-Za-z0-9._-]{1,32}$/;
 
 const Snmp = ({ current, disabled }: { current: boolean; disabled: boolean }) => {
   const { request } = useWebSocketActions();
@@ -406,7 +406,7 @@ const Snmp = ({ current, disabled }: { current: boolean; disabled: boolean }) =>
   );
 };
 
-export const RESET_WORD = 'ZURÜCKSETZEN';
+const RESET_WORD = 'ZURÜCKSETZEN';
 
 // Resetting the CCU to factory settings (cp_security.cgi system reset):
 // all devices, programs and settings go, and add-ons with them, this one

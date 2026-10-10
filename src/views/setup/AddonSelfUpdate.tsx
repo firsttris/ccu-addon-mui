@@ -5,7 +5,7 @@ import { DialogButton } from '../../components/ConfirmDialog';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { UpdateWizard } from '../../components/update/UpdateWizard';
-import { isNewerVersion } from '../../utils/version';
+import { isNewerVersion } from '../../lib/version';
 import { m } from '../../paraglide/messages';
 import type { CheckSelfUpdateResponse } from '../../types/protocol';
 

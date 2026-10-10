@@ -1,6 +1,7 @@
 import type { DatapointValue, ParamsetDescription } from '../../types/types';
 import { parameterLabel } from '../generic/parameters';
 import { enumLabel } from '../generic/settingKinds';
+import { channelOf } from '../../lib/address';
 
 // The direct link profiles of the WebUI ("easymodes"), imported from
 // OpenCCU-Base by scripts/import-link-profiles.mjs. A profile sets all
@@ -119,7 +120,7 @@ export const senderKey = (
     candidates.push(`${senderType}_${operationMode}`);
   }
   if (senderType === 'ROTARY_CONTROL_TRANSCEIVER' && senderAddress?.includes(':')) {
-    candidates.push(`${senderType}_${senderAddress.split(':')[1]}`);
+    candidates.push(`${senderType}_${channelOf(senderAddress)}`);
   }
   return candidates.find((key) => key in senders) ?? senderType;
 };

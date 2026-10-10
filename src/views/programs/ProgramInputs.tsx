@@ -12,6 +12,8 @@ import { ChannelField } from '../../components/ChannelField';
 import { Input } from '../../components/ui/input';
 import { type TranslationKey, useTranslations } from '../../i18n/utils';
 import { m } from '../../paraglide/messages';
+import { inlineSelectClass } from '../../components/ui/select';
+import { isPercentUnit } from '../../controls/generic/parameters';
 
 // The inputs of the program editor: channels, datapoints, system variables
 // and values as the WebUI's condition and action rows offer them (sico.inc,
@@ -24,8 +26,6 @@ export const Field = ({ label, children }: { label: string; children: ReactNode 
     {children}
   </label>
 );
-
-const selectClass = 'h-9 min-w-0 max-w-full md:text-[13px]';
 
 // A channel of any device, chosen in the channel dialog (pictures, search)
 export const ChannelSelect = ({
@@ -84,7 +84,7 @@ export const DatapointSelect = ({
   return (
     <Field label={m.PRG_DATAPOINT()}>
       <NativeSelect
-        className={selectClass}
+        className={inlineSelectClass}
         aria-label={m.PRG_DATAPOINT()}
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
@@ -106,7 +106,7 @@ export const SysvarSelect = ({ value, onChange }: { value: number; onChange: (sy
   return (
     <Field label={m.PRG_KIND_SYSVAR()}>
       <NativeSelect
-        className={selectClass}
+        className={inlineSelectClass}
         aria-label={m.PRG_KIND_SYSVAR()}
         value={value || ''}
         onChange={(e) => {
@@ -126,8 +126,6 @@ export const SysvarSelect = ({ value, onChange }: { value: number; onChange: (sy
 };
 
 // A number as the user sees it: percent for "100%" datapoints
-const isPercent = (p?: Pick<ParameterDescription, 'unit'>) => p?.unit === '100%';
-
 export const NumberInput = ({
   label,
   value,
@@ -141,7 +139,7 @@ export const NumberInput = ({
 }) => {
   const shown = (v: string) => {
     const n = Number(v);
-    return Number.isNaN(n) ? '' : String(Math.round((isPercent(parameter) ? n * 100 : n) * 1000) / 1000);
+    return Number.isNaN(n) ? '' : String(Math.round((isPercentUnit(parameter) ? n * 100 : n) * 1000) / 1000);
   };
   const [draft, setDraft] = useState(shown(value));
   // biome-ignore lint/correctness/useExhaustiveDependencies: a new value from outside, not every render, resets the draft
@@ -149,10 +147,10 @@ export const NumberInput = ({
   const commit = () => {
     const n = Number(draft.replace(',', '.'));
     if (draft === '' || Number.isNaN(n)) return setDraft(shown(value));
-    const stored = isPercent(parameter) ? n / 100 : n;
+    const stored = isPercentUnit(parameter) ? n / 100 : n;
     onChange(String(parameter?.type === 'INTEGER' ? Math.round(stored) : stored));
   };
-  const unit = isPercent(parameter) ? '%' : parameter?.unit;
+  const unit = isPercentUnit(parameter) ? '%' : parameter?.unit;
   return (
     <span className="flex items-center gap-1.5">
       <Input
@@ -181,7 +179,12 @@ export const ValueSelect = ({
   options: { value: string; label: string }[];
   onChange: (value: string) => void;
 }) => (
-  <NativeSelect className={selectClass} aria-label={label} value={value} onChange={(e) => onChange(e.target.value)}>
+  <NativeSelect
+    className={inlineSelectClass}
+    aria-label={label}
+    value={value}
+    onChange={(e) => onChange(e.target.value)}
+  >
     {options.map((o) => (
       <option key={o.value} value={o.value}>
         {o.label}

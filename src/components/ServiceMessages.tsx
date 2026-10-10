@@ -44,7 +44,7 @@ const known: Record<string, [() => string, Severity, React.ReactNode]> = {
 const normalize = (type: string) => (type === 'LOWBAT' ? 'LOW_BAT' : type);
 
 // Loaded only when a message has none of our own texts
-export const useServiceTexts = (messages: Pick<ServiceMessage, 'type'>[]) => {
+const useServiceTexts = (messages: Pick<ServiceMessage, 'type'>[]) => {
   const needed = messages.some((message) => {
     const type = normalize(message.type);
     return !known[type] && type !== 'ERROR_CODE';

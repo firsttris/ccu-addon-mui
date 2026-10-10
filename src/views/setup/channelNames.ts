@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useChannelList, useDevices } from '../../queries';
+import { deviceAddressOf } from '../../lib/address';
 
 // Names from ReGa by address. A device's name is that of its first channel
 // with a name of its own (the CCU names channels "<type> <address>:<n>"
@@ -12,7 +13,7 @@ export const useChannelNames = () => {
     const names = new Map<string, string>();
     for (const channel of channels ?? []) {
       names.set(channel.address, channel.name);
-      const device = channel.address.split(':')[0];
+      const device = deviceAddressOf(channel.address);
       const existing = names.get(device);
       const generic = channel.name.includes(channel.address);
       if (!existing || (existing.includes(device) && !generic)) {

@@ -19,10 +19,11 @@ import type { Channel } from '../../types/types';
 import type { HeatingGroup, HeatingGroupChange } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
 import { Field } from '../../components/Field';
+import { channelOf, deviceAddressOf } from '../../lib/address';
 
 type GroupType = HeatingGroupChange['type'];
 
-export const groupTypes: { type: GroupType; label: () => string }[] = [
+const groupTypes: { type: GroupType; label: () => string }[] = [
   { type: 'hmip.heating.group', label: () => 'HomeMatic IP' },
   { type: 'HomeMatic.heating', label: () => 'HomeMatic' },
 ];
@@ -62,14 +63,14 @@ export const HeatingGroupEditor = ({ group, onClose }: { group?: HeatingGroup; o
   const { data: regaChannels = [] } = useChannelList();
   const { data: devices = [] } = useDevices();
   const { data: rooms = [] } = useRooms();
-  const channelOf = useMemo(() => {
+  const channelByAddress = useMemo(() => {
     const byAddress = new Map(regaChannels.map((c) => [c.address, c]));
     return (address: string, index: number) =>
       byAddress.get(address) ??
       ({ id: -(index + 1), address, name: names.get(address) ?? address, datapoints: {} } as unknown as Channel);
   }, [regaChannels, names]);
-  const addableChannels = addable.map(channelOf);
-  const deviceType = (address: string) => devices.find((d) => d.address === address.split(':')[0])?.type;
+  const addableChannels = addable.map(channelByAddress);
+  const deviceType = (address: string) => devices.find((d) => d.address === deviceAddressOf(address))?.type;
   const roomsOf = (address: string) =>
     (regaChannels.find((c) => c.address === address)?.rooms ?? [])
       .map((id) => rooms.find((r) => r.id === id)?.name)
@@ -159,7 +160,7 @@ export const HeatingGroupEditor = ({ group, onClose }: { group?: HeatingGroup; o
                   <DeviceImage
                     type={deviceType(address)}
                     size={36}
-                    channel={address.split(':')[1]}
+                    channel={channelOf(address)}
                     className="shrink-0 rounded-md"
                   />
                   <span className="flex min-w-0 flex-1 flex-col leading-tight">

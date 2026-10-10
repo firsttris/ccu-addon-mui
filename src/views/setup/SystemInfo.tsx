@@ -21,7 +21,7 @@ import { LiteSystemLinks } from './LiteHints';
 import { CcuFirmwareButton, CcuFirmwareUpload } from './CcuFirmwareUpload';
 import { DeviceFirmware } from './DeviceFirmware';
 import { AddonSelfUpdate } from './AddonSelfUpdate';
-import { isNewerVersion } from '../../utils/version';
+import { isNewerVersion } from '../../lib/version';
 import { Button } from '../../components/ui/button';
 import DownloadIcon from '~icons/lucide/circle-arrow-down';
 import type { CheckFirmwareUpdateResponse, SystemState as State } from '../../types/protocol';

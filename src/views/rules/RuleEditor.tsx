@@ -24,8 +24,7 @@ import { m } from '../../paraglide/messages';
 import type { NotificationRule, RuleCondition } from '../../types/protocol';
 import { MAX_CONDITIONS, emptyCondition, isValid, opLabel, summaryOf, type Op } from './ruleModel';
 import { errorText } from '../../lib/errors';
-
-const selectClass = 'h-9 min-w-0 max-w-full md:text-[13px]';
+import { inlineSelectClass } from '../../components/ui/select';
 
 // One condition: channel, datapoint, comparison and value, with the
 // inputs of the program editor. Reports itself in words for the summary.
@@ -103,7 +102,7 @@ const ConditionRow = ({
       </div>
       <Field label={m.PRG_COMPARE()}>
         <NativeSelect
-          className={selectClass}
+          className={inlineSelectClass}
           aria-label={m.PRG_COMPARE()}
           value={ops.includes(condition.op) ? condition.op : 'eq'}
           onChange={(e) => onChange({ ...condition, op: e.target.value as Op })}

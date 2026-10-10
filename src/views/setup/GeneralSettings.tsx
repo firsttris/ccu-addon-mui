@@ -17,7 +17,7 @@ import { errorText } from '../../lib/errors';
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 4 });
 
 // Bytes as "2,5 MB"
-export const formatBytes = (bytes: number) => {
+const formatBytes = (bytes: number) => {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   let value = bytes;
   let unit = 0;

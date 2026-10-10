@@ -19,6 +19,7 @@ import { m } from '../../paraglide/messages';
 import { Panel } from './Panel';
 import { useChannelNames } from './channelNames';
 import { errorText } from '../../lib/errors';
+import { deviceAddressOf } from '../../lib/address';
 
 // Deleting a group, through the HMServer like the WebUI's GroupListPage.ftl
 const DeleteGroup = ({ group, onClose }: { group: HeatingGroup; onClose: () => void }) => {
@@ -150,7 +151,7 @@ export const HeatingGroups = () => {
                 ) : (
                   <ul aria-label={m.HG_MEMBERS({ name: group.name })} className="flex flex-col gap-0.5 text-sm">
                     {group.members.map((member) => {
-                      const memberDevice = deviceOf(member.address.split(':')[0]);
+                      const memberDevice = deviceOf(deviceAddressOf(member.address));
                       const label = names.get(member.address) ?? member.address;
                       return (
                         <li key={member.address} className="flex flex-wrap items-baseline gap-x-2">

@@ -1,5 +1,6 @@
 import type { Channel, HmEvent } from '../types/types';
 import { controlOverrides } from '../controls/registry';
+import { deviceAddressOf } from '../lib/address';
 
 export type Value = string | number | boolean;
 
@@ -34,16 +35,14 @@ const MIRRORS: Record<string, string> = {
   ACOUSTIC_SIGNAL_TRANSMITTER: 'ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER',
 };
 
-const deviceOf = (channel: Channel) => channel.address.split(':')[0];
-
 const isMirror = (channel: Channel, shown: Set<string>) => {
   const receiverType = MIRRORS[channel.type];
-  return receiverType !== undefined && shown.has(`${deviceOf(channel)}|${receiverType}`);
+  return receiverType !== undefined && shown.has(`${deviceAddressOf(channel.address)}|${receiverType}`);
 };
 
 // Groups the visible channels by type, in the order they are shown
 export const groupChannelsByType = (channels: Channel[]): [string, Channel[]][] => {
-  const shown = new Set(channels.map((c) => `${deviceOf(c)}|${c.type}`));
+  const shown = new Set(channels.map((c) => `${deviceAddressOf(c.address)}|${c.type}`));
   // Types with a hand-made control come first, in the order of the
   // registry; all others follow alphabetically and are shown by
   // GenericControl. Read here, not at load time: the registry's controls

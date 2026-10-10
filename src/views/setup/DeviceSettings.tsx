@@ -42,9 +42,9 @@ import { Firmware } from './Firmware';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 
-import { DEVICE_TABS, type DeviceTab } from './deviceTabs';
+import type { DeviceTab } from './deviceTabs';
 import { errorText } from '../../lib/errors';
-export { DEVICE_TABS, type DeviceTab };
+import { channelNumberOf, channelOf } from '../../lib/address';
 
 const Section = (props: HTMLAttributes<HTMLElement>) => <Panel {...props} />;
 
@@ -220,7 +220,7 @@ export const DeviceSettings = () => {
         // The 8 hours are over: ask for the password, keep the changes
         setElevating(true);
       } else {
-        showToast(`${m.SAVE_FAILED()}: ${error instanceof Error ? error.message : error}`);
+        showToast(errorText(error, m.SAVE_FAILED));
       }
     } finally {
       setConfirming(false);
@@ -265,7 +265,7 @@ export const DeviceSettings = () => {
         ...[...regaOf.values()].map((c) => ({
           address: c.address,
           type: c.type,
-          index: Number(c.address.split(':')[1]),
+          index: channelNumberOf(c.address),
         })),
         // The interface's description wins: it knows every channel
         ...(device?.channels ?? []),
@@ -338,9 +338,9 @@ export const DeviceSettings = () => {
     );
   };
   const point = (channelAddress?: string) => ({
-    onPointerEnter: () => setActiveChannel(channelAddress?.split(':')[1]),
+    onPointerEnter: () => setActiveChannel(channelAddress ? channelOf(channelAddress) : undefined),
     onPointerLeave: () => setActiveChannel(undefined),
-    onFocus: () => setActiveChannel(channelAddress?.split(':')[1]),
+    onFocus: () => setActiveChannel(channelAddress ? channelOf(channelAddress) : undefined),
   });
   const card = (c: (typeof cards)[number]) => (
     <Section

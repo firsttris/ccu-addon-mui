@@ -37,6 +37,7 @@ import { linkKey, LinkList } from './LinkList';
 import { NativeSelect } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
 import { errorText } from '../../lib/errors';
+import { deviceAddressOf } from '../../lib/address';
 
 const Row = ({ children }: { children: ReactNode }) => (
   <div className="flex flex-wrap items-center gap-2">{children}</div>
@@ -157,7 +158,7 @@ export const useLinkProfiles = (interfaceName: string, link: Link, enabled = tru
   const receiver = channelInfo.get(link.receiver);
   const sender = channelInfo.get(link.sender);
   const light = receiver?.channel.type === 'UNIVERSAL_LIGHT_RECEIVER';
-  const rgbw = useParamset(interfaceName, `${link.receiver.split(':')[0]}:0`, 'MASTER', {
+  const rgbw = useParamset(interfaceName, `${deviceAddressOf(link.receiver)}:0`, 'MASTER', {
     enabled: enabled && light && receiver?.deviceType === 'HmIP-RGBW',
   });
   const dali = useParamset(interfaceName, link.receiver, 'MASTER', {
@@ -370,7 +371,7 @@ interface LinksProps {
 }
 
 // Channel and device type by channel address, to find the link profiles
-export const useLinkChannelInfo = () => {
+const useLinkChannelInfo = () => {
   const { data: devices = [] } = useDevices();
   return useMemo(
     () =>
@@ -405,7 +406,7 @@ export const AddLinkForm = ({
     [anyDevice, devices, channels],
   );
   const [own, setOwn] = useState('');
-  const deviceAddress = device ?? own.split(':')[0];
+  const deviceAddress = device ?? deviceAddressOf(own);
   const interfaceName = deviceInterface ?? devices.find((d) => d.address === deviceAddress)?.interfaceName ?? '';
   const [partner, setPartner] = useState('');
   const [linkName, setLinkName] = useState('');

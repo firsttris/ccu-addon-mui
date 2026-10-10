@@ -16,11 +16,12 @@ import { usePasswordRetry } from './usePasswordRetry';
 import { m } from '../../paraglide/messages';
 import type { LanGateway, LanGatewayState, RadioModule } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
+import { IPV4 } from '../../lib/validation';
 
 type GatewayType = LanGateway['type'];
 
 // globalLGWTypeMap in webui.js
-export const GATEWAY_TYPES: Record<GatewayType, { label: string; class: LanGateway['class'] }> = {
+const GATEWAY_TYPES: Record<GatewayType, { label: string; class: LanGateway['class'] }> = {
   HMLGW2: { label: 'HomeMatic RF-LAN Gateway', class: 'RF' },
   'Lan Interface': { label: 'HM Configuration Tool LAN', class: 'RF' },
   HMWLGW: { label: 'HomeMatic RS485 Gateway', class: 'Wired' },
@@ -29,8 +30,6 @@ export const GATEWAY_TYPES: Record<GatewayType, { label: string; class: LanGatew
 // The characters BidcosRfPage.Gateway.keyContainsNoForbiddenCharacter
 // rejects in a new key
 export const KEY_FORBIDDEN = /[<>'"&$?[\]{}#\\]/;
-
-const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
 
 // What is wrong with a gateway, as the server checks it
 export const gatewayErrors = (g: LanGateway, others: LanGateway[]) => {

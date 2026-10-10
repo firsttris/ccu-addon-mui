@@ -12,10 +12,9 @@ import { Button } from '../../../components/ui/button';
 import { NativeSelect } from '../../../components/ui/select';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { ElevateDialog } from '../../../components/ElevateDialog';
-import { getTemperatureColor } from '../../../utils/colors';
-import { getLocale } from '../../../paraglide/runtime';
+import { getTemperatureColor } from '../../../lib/colors';
 import { m } from '../../../paraglide/messages';
-import { cn, formatNumber } from '../../../lib/utils';
+import { cn } from '../../../lib/utils';
 import {
   changedValues,
   DAY_END,
@@ -32,6 +31,7 @@ import {
   splitSlot,
   type WeekProfile,
 } from './weekProfile';
+import { dayName, formatTemperature } from '../../../lib/format';
 
 interface WeekProfileSheetProps {
   open: boolean;
@@ -42,15 +42,9 @@ interface WeekProfileSheetProps {
   activeProfile?: number;
 }
 
-const formatTemperature = (value: number) => formatNumber(value, 1, 1);
-
 // Monday = 0 … Sunday = 6, like DAYS
 const todayIndex = () => (new Date().getDay() + 6) % 7;
 const nowMinutes = () => new Date().getHours() * 60 + new Date().getMinutes();
-
-const dayName = (index: number, style: 'short' | 'long') =>
-  // 2024-01-01 was a Monday
-  new Intl.DateTimeFormat(getLocale(), { weekday: style }).format(new Date(2024, 0, 1 + index));
 
 // One day as a bar from midnight to midnight, colored by temperature
 const DayBar = ({ day, now, compact }: { day: DayProfile; now?: number; compact?: boolean }) => (

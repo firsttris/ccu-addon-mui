@@ -1,5 +1,6 @@
 import { getLocale } from '../../paraglide/runtime';
 import webUILabels from './parameterLabels.json';
+import type { ParameterDescription } from '../../types/types';
 
 // Readable names and groups for the settings (MASTER parameters) devices
 // commonly have. The CCU only gives technical names; these follow the
@@ -243,3 +244,6 @@ export const GROUP_ORDER: ParameterGroup[] = [
   'schedule',
   'expert',
 ];
+
+// A value the CCU keeps as 0…1 and the WebUI shows in percent (unit "100%")
+export const isPercentUnit = (p?: Pick<ParameterDescription, 'unit'>) => p?.unit === '100%';

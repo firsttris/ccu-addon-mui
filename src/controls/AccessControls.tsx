@@ -12,9 +12,10 @@ import { m } from '../paraglide/messages';
 import { cn, formatNumber } from '../lib/utils';
 import { keyLabels } from './ButtonsControl';
 import { useValueList } from './useValueList';
+import { channelNumberOf } from '../lib/address';
 
-const index = (channel: Channel) => Number(channel.address.split(':')[1] ?? 0);
-const byIndex = (channels: Channel[]) => [...channels].sort((a, b) => index(a) - index(b));
+const byIndex = (channels: Channel[]) =>
+  [...channels].sort((a, b) => channelNumberOf(a.address) - channelNumberOf(b.address));
 // The CCU's default name is "<type> <address>"
 const isDefaultName = (channel: Channel) => channel.name.endsWith(channel.address.replace(/^[^.]*\./, ''));
 
@@ -183,7 +184,7 @@ const BusLine = ({ channel }: { channel: Channel }) => {
     <div className="flex flex-col gap-1.5 rounded-xl bg-muted/50 p-2.5">
       <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         <ZapIcon className={cn('size-3.5', low ? 'text-red-500' : 'text-amber-500')} aria-hidden />
-        {m.BUS_LINE({ n: index(channel) })}
+        {m.BUS_LINE({ n: channelNumberOf(channel.address) })}
       </span>
       <span className={cn('text-lg leading-none font-semibold tabular-nums', low && 'text-red-600 dark:text-red-400')}>
         {voltage !== undefined ? `${format(voltage, 1)} V` : '–'}

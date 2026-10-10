@@ -13,6 +13,7 @@ import { WeekProfileSheet } from './ThermostatControl/profile/WeekProfileSheet';
 import { useState } from 'react';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
+import { deviceAddressOf } from '../lib/address';
 
 type ThermostatProps = {
   channel: HeatingClimateControlTransceiverChannel | Channel;
@@ -131,7 +132,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
   // device and picture lists load, nothing for a device without one
   const { data: devices, isPending: devicesLoading } = useDevices();
   const { isPending: imagesLoading } = useDeviceImages();
-  const deviceType = devices?.find((d) => d.address === channel.address.split(':')[0])?.type;
+  const deviceType = devices?.find((d) => d.address === deviceAddressOf(channel.address))?.type;
   const loading = devicesLoading || imagesLoading;
   const hasImage = useDeviceImage(deviceType) !== undefined;
 
@@ -208,7 +209,7 @@ export const ThermostatControl: React.FC<ThermostatProps> = ({ channel }) => {
         onOpenChange={setScheduleOpen}
         interfaceName={channel.interfaceName}
         // BidCos thermostats keep it in the device's MASTER paramset
-        address={bidcos ? channel.address.split(':')[0] : channel.address}
+        address={bidcos ? deviceAddressOf(channel.address) : channel.address}
         name={channel.name}
         activeProfile={typeof datapoints.ACTIVE_PROFILE === 'number' ? datapoints.ACTIVE_PROFILE : undefined}
       />

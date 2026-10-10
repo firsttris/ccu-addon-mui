@@ -17,4 +17,7 @@ function NativeSelect({ className, ...props }: React.ComponentProps<'select'>) {
   );
 }
 
-export { NativeSelect };
+// For a select inline in a row of fields (program and rule editors)
+const inlineSelectClass = 'h-9 min-w-0 max-w-full md:text-[13px]';
+
+export { inlineSelectClass, NativeSelect };

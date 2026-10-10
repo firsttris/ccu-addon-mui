@@ -59,7 +59,7 @@ export const fromPreset = (preset: Preset): NotificationRule => {
   return { ...emptyRule(), ...rest, name: preset.label(), conditions: [{ ...emptyCondition(), ...condition }] };
 };
 
-export const isComplete = (c: RuleCondition) => c.address !== '' && c.datapoint !== '' && Number.isFinite(c.value);
+const isComplete = (c: RuleCondition) => c.address !== '' && c.datapoint !== '' && Number.isFinite(c.value);
 
 const clock = /^([01]\d|2[0-3]):[0-5]\d$/;
 
