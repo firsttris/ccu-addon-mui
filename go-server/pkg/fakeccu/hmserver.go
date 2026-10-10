@@ -88,127 +88,132 @@ func (c *CCU) handleGroups(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
 	var params map[string]any
 	_ = json.Unmarshal(body, &params)
-	session := strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@")
-	respond := func(ok bool, code, content string) {
-		_ = json.NewEncoder(w).Encode(map[string]any{"isSuccessful": ok, "errorCode": code, "content": content})
-	}
+	page := strings.TrimPrefix(r.URL.Path, "/pages/jpages/group/")
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.calls["HMServer "+strings.TrimPrefix(r.URL.Path, "/pages/jpages/group/")]++
+	c.calls["HMServer "+page]++
 	groups, err := c.readGroups()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	switch r.URL.Path {
-	case "/pages/jpages/group/suitableGroupMembers":
+	if page == "suitableGroupMembers" {
 		// No session needed, as in the HMServer
 		groupType, _ := params["groupTypeId"].(string)
-		inGroup := map[string]bool{}
-		for _, g := range groups.Groups {
-			for _, m := range g.GroupMembers {
-				inGroup[m.ID] = true
-			}
+		_ = json.NewEncoder(w).Encode(c.suitableGroupMembers(groups, groupType))
+		return
+	}
+	change, ok := groupChanges[page]
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	reply := groupReply{Content: "${sessionInvalid}", ErrorCode: "42"}
+	if strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@") {
+		reply = change(c, groups, params)
+	}
+	_ = json.NewEncoder(w).Encode(reply)
+}
+
+// The answer of the HMServer's group pages
+type groupReply struct {
+	IsSuccessful bool   `json:"isSuccessful"`
+	ErrorCode    string `json:"errorCode"`
+	Content      string `json:"content"`
+}
+
+func groupFailed(code, content string) groupReply {
+	return groupReply{ErrorCode: code, Content: content}
+}
+
+// The pages that change the groups, with the session of a login
+var groupChanges = map[string]func(c *CCU, groups groupsFile, params map[string]any) groupReply{
+	"save":   (*CCU).saveGroup,
+	"delete": (*CCU).deleteGroup,
+}
+
+// suitableGroupMembers: the channels a group of the type may have, those
+// in another group apart
+func (c *CCU) suitableGroupMembers(groups groupsFile, groupType string) map[string][]groupCandidate {
+	inGroup := map[string]bool{}
+	for _, g := range groups.Groups {
+		for _, m := range g.GroupMembers {
+			inGroup[m.ID] = true
 		}
-		type member struct {
-			ID           string `json:"id"`
-			SerialNumber string `json:"serialNumber"`
-			Type         string `json:"type"`
+	}
+	result := map[string][]groupCandidate{"assignableGroupMembers": {}, "leftoverGroupMembers": {}}
+	for _, ch := range c.groupCandidates(groupType) {
+		m := groupCandidate{ID: ch.Address, SerialNumber: ch.Address, Type: memberTypeOf(ch)}
+		if inGroup[ch.Address] {
+			result["leftoverGroupMembers"] = append(result["leftoverGroupMembers"], m)
+		} else {
+			result["assignableGroupMembers"] = append(result["assignableGroupMembers"], m)
 		}
-		result := map[string][]member{"assignableGroupMembers": {}, "leftoverGroupMembers": {}}
-		for _, ch := range c.groupCandidates(groupType) {
-			m := member{ID: ch.Address, SerialNumber: ch.Address, Type: memberTypeOf(ch)}
-			if inGroup[ch.Address] {
-				result["leftoverGroupMembers"] = append(result["leftoverGroupMembers"], m)
-			} else {
-				result["assignableGroupMembers"] = append(result["assignableGroupMembers"], m)
-			}
-		}
-		_ = json.NewEncoder(w).Encode(result)
-	case "/pages/jpages/group/save":
-		if !session {
-			respond(false, "42", "${sessionInvalid}")
-			return
-		}
-		groupType, _ := params["groupTypeId"].(string)
-		typeInfo, ok := groupTypes[groupType]
-		if !ok {
-			respond(false, "43", "unknown group type")
-			return
-		}
-		name, _ := params["groupName"].(string)
-		name = latin1Unescape(name)
-		deviceName, _ := params["groupDeviceName"].(string)
-		forbid, _ := params["forbidSingleOperation"].(bool)
-		var ids []string
-		if list, ok := params["assignedDevicesIds"].([]any); ok {
-			for _, id := range list {
-				ids = append(ids, fmt.Sprint(id))
-			}
-		}
-		members := []fakeGroupMember{}
-		for _, id := range ids {
+	}
+	return result
+}
+
+type groupCandidate struct {
+	ID           string `json:"id"`
+	SerialNumber string `json:"serialNumber"`
+	Type         string `json:"type"`
+}
+
+// saveGroup creates a group (isNewGroup) or changes one, with its device
+func (c *CCU) saveGroup(groups groupsFile, params map[string]any) groupReply {
+	groupType, _ := params["groupTypeId"].(string)
+	typeInfo, ok := groupTypes[groupType]
+	if !ok {
+		return groupFailed("43", "unknown group type")
+	}
+	name, _ := params["groupName"].(string)
+	name = latin1Unescape(name)
+	deviceName, _ := params["groupDeviceName"].(string)
+	forbid, _ := params["forbidSingleOperation"].(bool)
+	members := []fakeGroupMember{}
+	if list, ok := params["assignedDevicesIds"].([]any); ok {
+		for _, raw := range list {
+			id := fmt.Sprint(raw)
 			ch := c.channelByAddress("", id)
 			if ch == nil {
-				respond(false, "43", "unknown member "+id)
-				return
+				return groupFailed("43", "unknown member "+id)
 			}
 			members = append(members, fakeGroupMember{MemberType: map[string]string{"id": memberTypeOf(ch)}, Properties: map[string]any{}, ID: id})
 		}
-		properties := map[string]any{"NAME": name, "FORBID_SINGLE_OPERATION": forbid, "GROUP_DEVICE_NAME": deviceName}
-		id := 0
-		if isNew, _ := params["isNewGroup"].(bool); isNew {
-			for _, g := range groups.Groups {
-				if g.ID > id {
-					id = g.ID
-				}
-			}
-			id++
-			groups.Groups = append(groups.Groups, fakeGroup{ID: id, GroupMembers: members, GroupType: typeInfo, Properties: properties})
-			c.addGroupDevice(id, groupType)
-		} else {
-			groupID, _ := params["groupId"].(float64)
-			id = int(groupID)
-			found := false
-			for i := range groups.Groups {
-				if groups.Groups[i].ID == id {
-					groups.Groups[i].GroupMembers = members
-					groups.Groups[i].GroupType = typeInfo
-					groups.Groups[i].Properties = properties
-					found = true
-				}
-			}
-			if !found {
-				respond(false, "43", "unknown group")
-				return
-			}
-		}
-		if err := c.writeGroups(groups); err != nil {
-			respond(false, "500", err.Error())
-			return
-		}
-		respond(true, "", fmt.Sprint(id))
-	case "/pages/jpages/group/delete":
-		if !session {
-			respond(false, "42", "${sessionInvalid}")
-			return
-		}
-		groupID, _ := params["groupId"].(float64)
-		kept := groups.Groups[:0]
-		for _, g := range groups.Groups {
-			if g.ID != int(groupID) {
-				kept = append(kept, g)
-			}
-		}
-		groups.Groups = kept
-		if err := c.writeGroups(groups); err != nil {
-			respond(false, "500", err.Error())
-			return
-		}
-		respond(true, "", "[]")
-	default:
-		http.NotFound(w, r)
 	}
+	properties := map[string]any{"NAME": name, "FORBID_SINGLE_OPERATION": forbid, "GROUP_DEVICE_NAME": deviceName}
+	id := 0
+	if isNew, _ := params["isNewGroup"].(bool); isNew {
+		for _, g := range groups.Groups {
+			id = max(id, g.ID)
+		}
+		id++
+		groups.Groups = append(groups.Groups, fakeGroup{ID: id, GroupMembers: members, GroupType: typeInfo, Properties: properties})
+		c.addGroupDevice(id, groupType)
+	} else {
+		groupID, _ := params["groupId"].(float64)
+		id = int(groupID)
+		i := slices.IndexFunc(groups.Groups, func(g fakeGroup) bool { return g.ID == id })
+		if i < 0 {
+			return groupFailed("43", "unknown group")
+		}
+		groups.Groups[i].GroupMembers = members
+		groups.Groups[i].GroupType = typeInfo
+		groups.Groups[i].Properties = properties
+	}
+	if err := c.writeGroups(groups); err != nil {
+		return groupFailed("500", err.Error())
+	}
+	return groupReply{IsSuccessful: true, Content: fmt.Sprint(id)}
+}
+
+func (c *CCU) deleteGroup(groups groupsFile, params map[string]any) groupReply {
+	groupID, _ := params["groupId"].(float64)
+	groups.Groups = slices.DeleteFunc(groups.Groups, func(g fakeGroup) bool { return g.ID == int(groupID) })
+	if err := c.writeGroups(groups); err != nil {
+		return groupFailed("500", err.Error())
+	}
+	return groupReply{IsSuccessful: true, Content: "[]"}
 }
 
 // GroupDeviceAddress is the address of a group's virtual device
