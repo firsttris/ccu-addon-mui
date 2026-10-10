@@ -33,7 +33,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | 8 | Selbstgebaute TTL-Caches neben `cachedList[T]` | Go | M |
 | 9 | Globale Variablen, Abhängigkeit von der Aufrufreihenfolge | Go | M |
 | 10 | Handler gehen an `home.Source` vorbei direkt zur ReGa | Go | M |
-| 11 | Zu große Frontend-Dateien | Frontend | L |
+| 11 | Zu große Frontend-Dateien (bis auf `DeviceSettings.tsx` erledigt) | Frontend | L |
 | 12 | Wiederholte UI-Bausteine und Zahlenformatierung | Frontend | M |
 | 13 | Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen | Go | L |
 | 14 | `integration_test.go` wiederholt dieselben Abläufe | Go-Tests | M |
@@ -216,22 +216,29 @@ kennen gemeinsam genutzte Dateien `*rega.Client` gar nicht.
 
 ## Groß: lange Dateien und Funktionen
 
-### 11. Zu große Frontend-Dateien
+### 11. Zu große Frontend-Dateien: bis auf `DeviceSettings.tsx` erledigt
 
-| Datei | Zeilen | Nahtstellen |
+Der Code ist jeweils nur verschoben. Ein Zeilenvergleich vor und nach dem Umzug zeigt dieselben Zeilen.
+
+| Datei | Vorher | Nachher |
 |---|---|---|
-| `views/setup/DeviceSettings.tsx` ✔ | 849 | Eine einzige Komponente mit rund 750 Zeilen. Sie enthält die Dialoge zum Erhöhen und Löschen (100–117), die Überwachung der Übertragung über CONFIG_PENDING (156–193), Entwürfe und Speichern (195–270), die Suche nach dem Ziel des Wochenprogramms (272–290), den Aufbau der Karten (313–450) und fünf Tabs. → Hooks `useDeviceDrafts` und `useConfigTransfer`, dazu eine Komponente pro Tab. |
-| `views/setup/Security.tsx` | 782 | Enthält schon sechs getrennte Komponenten: `SecurityKey` (53), `SessionTimeout` (164), `SecurityLevel` (254), `Snmp` (358), `FactoryReset` (493) und `Security` (627). → Je eine Datei unter `setup/security/`. **Am leichtesten.** |
-| `queries/index.ts` ✔ | 819 | 57 Deklarationen. Die Abschnittskommentare markieren die Domänen schon: Health, Paramsets, Pairing, Firmware, Sysvars, Links, Sessions, Namen und Räume, Kanäle. → `queries/<domäne>.ts`, die `index.ts` exportiert sie weiter. |
-| `controls/generic/SettingsView.tsx` | 712 | Zahlen-Helfer (39–65) und die Eingabe-Widgets `Stepper`, `PercentSlider`, `Segmented`, `TextControl` und `DurationControl`. → Die Helfer nach `settingKinds.ts`, die Widgets nach `generic/inputs/`. |
-| `hooks/useWebsocket.tsx` | 634 | Token-Speicherung (114–165), Verteilung der Nachrichten (220–300), Anmelde-Handshake (367–460), Provider und Kontexte (561–634). → `authStorage.ts` und `WebSocketProvider.tsx`. |
-| `views/Dashboard.tsx` | 543 | `NavTabs` (40) nutzen auch `Trade`, `Room` und `Favorites`. Das Abschnittsmodell (168–298) gehört in eine eigene Datei. → `components/NavTabs.tsx` und `dashboardSections.ts`. |
+| `views/setup/Security.tsx` | 782 | 163, dazu eine Datei pro Einstellung in `views/setup/security/` |
+| `queries/index.ts` | 819 | 14 (Re-Exporte), dazu zehn Dateien nach Domäne |
+| `controls/generic/SettingsView.tsx` | 712 | 274, dazu `settingValues.ts` und `inputs/` mit fünf Widgets |
+| `hooks/useWebsocket.tsx` | 634 | 563, dazu `authStorage.ts` und `requestError.ts` |
+| `views/Dashboard.tsx` | 543 | 281, dazu `components/NavTabs.tsx`, `DashboardOverview.tsx` und `dashboardSections.tsx` |
+
+- **`useWebsocket`:** Der Hook selbst bleibt eine Funktion mit rund 375 Zeilen. Ihn zu zerlegen wäre ein
+  Umbau mit eigenem Risiko. Seine Hooks und Kontexte bleiben im Modul, weil 95 Importe und sieben Tests
+  sie von dort holen.
+- **Noch offen:** `views/setup/DeviceSettings.tsx` (849 Zeilen) ist eine einzige Komponente. Hooks und
+  eine Komponente pro Tab herauszulösen, ist ein Umbau mit Zustand. Das bekommt einen eigenen PR.
 
 ### 12. Wiederholte UI-Bausteine und Zahlenformatierung
 
 **UI-Bausteine**
 
-- `ToggleRow` gibt es zweimal: `views/setup/Security.tsx:19` und `GeneralSettings.tsx:37`.
+- ~~`ToggleRow` gibt es zweimal~~: steht jetzt in `components/ToggleRow.tsx` (mit #11).
 - `Field` gibt es dreimal: `components/Field.tsx:4`, `views/programs/ProgramInputs.tsx:14` und
   `views/setup/ChannelMeta.tsx:53`.
 - Fünf Dateien haben ein eigenes lokales `Row`, vier ein eigenes `Section`.
@@ -292,6 +299,6 @@ Jeder Schritt ist ein eigener PR:
 3. ~~`staticcheck` in der CI (#1)~~ erledigt; fürs Frontend mit Biome.
 4. ~~Mechanische Go-Modernisierung und Logger (#5)~~ erledigt.
 5. ~~Kopierte Frontend-Helfer und Reste (#4)~~ erledigt.
-6. `Security.tsx` und `queries/index.ts` aufteilen (#11), weil ihre Nahtstellen schon markiert sind.
+6. ~~Große Frontend-Dateien aufteilen (#11)~~ erledigt bis auf `DeviceSettings.tsx`.
 7. Handler vereinheitlichen (#6, #7), danach die langen Handler aufteilen (#13).
 8. Der Rest: #8, #9, #10, #12, #14, `DeviceSettings.tsx`, `fakeccu.go`.
