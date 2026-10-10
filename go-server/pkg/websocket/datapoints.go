@@ -19,12 +19,12 @@ type setDatapointResponse struct {
 
 func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 	var msg struct {
-		Type          string      `json:"type"`
-		RequestID     string      `json:"requestId"`
-		InterfaceName string      `json:"interfaceName"`
-		Address       string      `json:"address"`
-		Attribute     string      `json:"attribute"`
-		Value         interface{} `json:"value"`
+		Type          string `json:"type"`
+		RequestID     string `json:"requestId"`
+		InterfaceName string `json:"interfaceName"`
+		Address       string `json:"address"`
+		Attribute     string `json:"attribute"`
+		Value         any    `json:"value"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid setDatapoint message: "+err.Error(), "INVALID_REQUEST")
@@ -88,7 +88,7 @@ func (s *Server) handleSetDatapoint(client *Client, message []byte) {
 // formatValue converts a JSON value into the string form expected by
 // rega.SetDatapoint. fmt's %v would turn large numbers into exponent notation
 // (1e+06) and null into "<nil>".
-func formatValue(v interface{}) (string, error) {
+func formatValue(v any) (string, error) {
 	switch x := v.(type) {
 	case bool:
 		return strconv.FormatBool(x), nil

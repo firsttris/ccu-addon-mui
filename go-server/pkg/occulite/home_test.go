@@ -51,7 +51,7 @@ func TestUniqueSlug(t *testing.T) {
 func TestTypedValue(t *testing.T) {
 	cases := []struct {
 		kind, value string
-		want        interface{}
+		want        any
 	}{
 		{"BOOL", "true", true}, {"BOOL", "false", false}, {"ACTION", "1", true},
 		{"FLOAT", "21.5", 21.5}, {"INTEGER", "3", 3}, {"ENUM", "2", 2}, {"INTEGER", "4.0", 4},

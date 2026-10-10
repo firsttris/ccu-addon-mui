@@ -40,7 +40,7 @@ func Write(path string, data []byte, perm os.FileMode) error {
 }
 
 // WriteJSON writes v as indented JSON.
-func WriteJSON(path string, v interface{}, perm os.FileMode) error {
+func WriteJSON(path string, v any, perm os.FileMode) error {
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func WriteJSON(path string, v interface{}, perm os.FileMode) error {
 
 // ReadJSON reads the file into v. A missing or empty file leaves v as it
 // is and is no error: nothing stored yet.
-func ReadJSON(path string, v interface{}) error {
+func ReadJSON(path string, v any) error {
 	data, err := os.ReadFile(path)
 	if errors.Is(err, os.ErrNotExist) || (err == nil && len(data) == 0) {
 		return nil

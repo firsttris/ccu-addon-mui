@@ -50,10 +50,10 @@ func TestHandleFirmwareUpdate(t *testing.T) {
 	}
 
 	s := NewServer(nil, nil)
-	check := func(level string) map[string]interface{} {
+	check := func(level string) map[string]any {
 		client := &Client{send: make(chan []byte, 1), level: level}
 		s.handleFirmwareUpdate(client, "r")
-		var m map[string]interface{}
+		var m map[string]any
 		_ = json.Unmarshal(<-client.send, &m)
 		return m
 	}
@@ -118,11 +118,11 @@ func TestDownloadCcuFirmware(t *testing.T) {
 	s := NewServer(cfg, nil)
 	s.SetBackup(backup.New(fmt.Sprintf("http://127.0.0.1:%d", ccu.WebUIPort), filepath.Join(dir, "backups"), cfg.FirmwareUploadDir))
 	client := &Client{send: make(chan []byte, 4), level: auth.LevelAdmin, user: "Admin", elevatedUntil: time.Now().Add(time.Hour)}
-	call := func(m map[string]interface{}) map[string]interface{} {
+	call := func(m map[string]any) map[string]any {
 		t.Helper()
 		data, _ := json.Marshal(m)
 		s.handleMessage(client, data)
-		var answer map[string]interface{}
+		var answer map[string]any
 		_ = json.Unmarshal(<-client.send, &answer)
 		return answer
 	}
@@ -130,14 +130,14 @@ func TestDownloadCcuFirmware(t *testing.T) {
 	// A CCU3's whole user partition is about 2 GB, less than the WebUI's
 	// 2.8 GB hint: the free space is shown, the download not refused
 	free = 1720
-	if m := call(map[string]interface{}{"type": "checkFirmwareUpdate", "requestId": "c"}); m["latest"] != latest || m["directDownload"] != true ||
+	if m := call(map[string]any{"type": "checkFirmwareUpdate", "requestId": "c"}); m["latest"] != latest || m["directDownload"] != true ||
 		m["freeMb"] != float64(1720) {
 		t.Fatalf("unexpected check: %v", m)
 	}
-	if m := call(map[string]interface{}{"type": "downloadCcuFirmware", "requestId": "d2", "password": "falsch"}); m["code"] != "INVALID_CREDENTIALS" {
+	if m := call(map[string]any{"type": "downloadCcuFirmware", "requestId": "d2", "password": "falsch"}); m["code"] != "INVALID_CREDENTIALS" {
 		t.Fatalf("expected INVALID_CREDENTIALS, got %v", m)
 	}
-	m := call(map[string]interface{}{"type": "downloadCcuFirmware", "requestId": "d3", "password": "secret", "language": "de"})
+	m := call(map[string]any{"type": "downloadCcuFirmware", "requestId": "d3", "password": "secret", "language": "de"})
 	if m["success"] != true || m["eula"] != "Lizenzbedingungen der Fake-Firmware" {
 		t.Fatalf("download failed: %v", m)
 	}
@@ -148,11 +148,11 @@ func TestDownloadCcuFirmware(t *testing.T) {
 	// to install, not a reboot into the recovery system for nothing
 	data, _ := os.ReadFile(ccu.FirmwareDownloadFile)
 	_ = os.Remove(ccu.FirmwareDownloadFile)
-	if m := call(map[string]interface{}{"type": "installCcuFirmware", "requestId": "i0", "password": "secret"}); m["code"] != "FIRMWARE_NOT_STAGED" {
+	if m := call(map[string]any{"type": "installCcuFirmware", "requestId": "i0", "password": "secret"}); m["code"] != "FIRMWARE_NOT_STAGED" {
 		t.Fatalf("expected FIRMWARE_NOT_STAGED, got %v", m)
 	}
 	_ = os.WriteFile(ccu.FirmwareDownloadFile, data, 0o644)
-	if m := call(map[string]interface{}{"type": "installCcuFirmware", "requestId": "i", "password": "secret"}); m["success"] != true ||
+	if m := call(map[string]any{"type": "installCcuFirmware", "requestId": "i", "password": "secret"}); m["success"] != true ||
 		ccu.InstalledFirmware() != fakeccu.FakeFirmwareDownload {
 		t.Fatalf("not installed: %v %q", m, ccu.InstalledFirmware())
 	}
@@ -161,7 +161,7 @@ func TestDownloadCcuFirmware(t *testing.T) {
 	// not copied through fileupload.ccc and the RAM disk
 	upload := func(content string) string {
 		t.Helper()
-		prepared := call(map[string]interface{}{"type": "prepareCcuFirmware", "requestId": "p"})
+		prepared := call(map[string]any{"type": "prepareCcuFirmware", "requestId": "p"})
 		id, _ := prepared["id"].(string)
 		rec := httptest.NewRecorder()
 		s.backup.ServeUpload(rec, httptest.NewRequest(http.MethodPost, "/upload/"+id, strings.NewReader(content)))
@@ -171,7 +171,7 @@ func TestDownloadCcuFirmware(t *testing.T) {
 		return id
 	}
 	id := upload("zip " + fakeccu.FakeFirmware)
-	if m := call(map[string]interface{}{"type": "checkCcuFirmware", "requestId": "u1", "id": id, "password": "secret"}); m["success"] != true {
+	if m := call(map[string]any{"type": "checkCcuFirmware", "requestId": "u1", "id": id, "password": "secret"}); m["success"] != true {
 		t.Fatalf("upload check failed: %v", m)
 	}
 	if n := ccu.CallCount("WebUI upload firmware_upload"); n != 0 {
@@ -181,7 +181,7 @@ func TestDownloadCcuFirmware(t *testing.T) {
 	if err != nil || filepath.Dir(target) != cfg.FirmwareUploadDir {
 		t.Fatalf("expected the update linked in the upload directory, got %q %v", target, err)
 	}
-	if m := call(map[string]interface{}{"type": "cancelCcuFirmware", "requestId": "x", "password": "secret"}); m["success"] != true {
+	if m := call(map[string]any{"type": "cancelCcuFirmware", "requestId": "x", "password": "secret"}); m["success"] != true {
 		t.Fatalf("cancel failed: %v", m)
 	}
 	if _, err := os.Stat(target); !os.IsNotExist(err) {
@@ -189,7 +189,7 @@ func TestDownloadCcuFirmware(t *testing.T) {
 	}
 	// An invalid file is deleted by the WebUI
 	id = upload("no firmware")
-	if m := call(map[string]interface{}{"type": "checkCcuFirmware", "requestId": "u2", "id": id, "password": "secret"}); m["code"] != "INVALID_FIRMWARE" {
+	if m := call(map[string]any{"type": "checkCcuFirmware", "requestId": "u2", "id": id, "password": "secret"}); m["code"] != "INVALID_FIRMWARE" {
 		t.Fatalf("expected INVALID_FIRMWARE, got %v", m)
 	}
 	if entries, _ := os.ReadDir(cfg.FirmwareUploadDir); len(entries) != 0 {
@@ -198,7 +198,7 @@ func TestDownloadCcuFirmware(t *testing.T) {
 
 	// A file that doesn't match the checksum is removed, not installed
 	sha = strings.Repeat("0", 64)
-	if m := call(map[string]interface{}{"type": "downloadCcuFirmware", "requestId": "d4", "password": "secret"}); m["code"] != "FIRMWARE_CHECKSUM" {
+	if m := call(map[string]any{"type": "downloadCcuFirmware", "requestId": "d4", "password": "secret"}); m["code"] != "FIRMWARE_CHECKSUM" {
 		t.Fatalf("expected FIRMWARE_CHECKSUM, got %v", m)
 	}
 	if _, err := os.Stat(ccu.FirmwareDownloadFile); !os.IsNotExist(err) {
@@ -207,10 +207,10 @@ func TestDownloadCcuFirmware(t *testing.T) {
 
 	// Containers update their image
 	_ = os.WriteFile(versionFile, []byte("VERSION=3.89.10.20260901\nPRODUCT=openccu_oci_arm64\nPLATFORM=oci\n"), 0o644)
-	if m := call(map[string]interface{}{"type": "checkFirmwareUpdate", "requestId": "c2"}); m["directDownload"] != false {
+	if m := call(map[string]any{"type": "checkFirmwareUpdate", "requestId": "c2"}); m["directDownload"] != false {
 		t.Fatalf("containers can't download: %v", m)
 	}
-	if m := call(map[string]interface{}{"type": "downloadCcuFirmware", "requestId": "d5", "password": "secret"}); m["code"] != "NOT_SUPPORTED" {
+	if m := call(map[string]any{"type": "downloadCcuFirmware", "requestId": "d5", "password": "secret"}); m["code"] != "NOT_SUPPORTED" {
 		t.Fatalf("expected NOT_SUPPORTED, got %v", m)
 	}
 }

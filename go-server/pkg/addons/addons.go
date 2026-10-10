@@ -7,6 +7,7 @@ package addons
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -18,7 +19,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 )
@@ -113,7 +113,7 @@ func (s *Service) List(lang string) []Addon {
 			addons = append(addons, addon)
 		}
 	}
-	sort.Slice(addons, func(i, j int) bool { return strings.ToLower(addons[i].Name) < strings.ToLower(addons[j].Name) })
+	slices.SortFunc(addons, func(a, b Addon) int { return cmp.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)) })
 	return addons
 }
 

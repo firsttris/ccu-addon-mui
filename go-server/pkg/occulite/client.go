@@ -88,7 +88,7 @@ func (c *Client) token() string {
 
 // do sends a request with the add-on's token, or with bearer when given,
 // and decodes a JSON answer into out (when not nil)
-func (c *Client) do(ctx context.Context, method, path, bearer string, body, out interface{}) error {
+func (c *Client) do(ctx context.Context, method, path, bearer string, body, out any) error {
 	var reader io.Reader
 	if body != nil {
 		data, err := json.Marshal(body)

@@ -151,7 +151,7 @@ func (v *VAPID) header(endpoint string, now time.Time) (string, error) {
 		return "", fmt.Errorf("invalid endpoint")
 	}
 	head := base64.RawURLEncoding.EncodeToString([]byte(`{"typ":"JWT","alg":"ES256"}`))
-	claims, _ := json.Marshal(map[string]interface{}{
+	claims, _ := json.Marshal(map[string]any{
 		"aud": u.Scheme + "://" + u.Host,
 		"exp": now.Add(12 * time.Hour).Unix(),
 		"sub": v.Subject,

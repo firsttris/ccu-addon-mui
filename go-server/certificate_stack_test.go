@@ -34,7 +34,7 @@ func TestStackCertificate(t *testing.T) {
 	ccu, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 	send(t, conn, message{"type": "getCertificate", "requestId": "c1"})
-	if c := receive(t, conn, byRequestID("c1"))["certificate"].(map[string]interface{}); c["exists"] != false {
+	if c := receive(t, conn, byRequestID("c1"))["certificate"].(map[string]any); c["exists"] != false {
 		t.Fatalf("certificate: %v", c)
 	}
 	pemFile := testCertificate(t, "ccu.example.org")
@@ -54,7 +54,7 @@ func TestStackCertificate(t *testing.T) {
 		t.Fatalf("upload: %v", m)
 	}
 	send(t, conn, message{"type": "getCertificate", "requestId": "c5"})
-	if c := receive(t, conn, byRequestID("c5"))["certificate"].(map[string]interface{}); c["exists"] != true || c["subject"] != "ccu.example.org" || c["selfSigned"] != true {
+	if c := receive(t, conn, byRequestID("c5"))["certificate"].(map[string]any); c["exists"] != true || c["subject"] != "ccu.example.org" || c["selfSigned"] != true {
 		t.Fatalf("after upload: %v", c)
 	}
 	// lighttpd restarts after the answer

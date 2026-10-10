@@ -141,12 +141,12 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 	switch msgType {
 	case "setInstallMode":
 		entry.Target = msg.InterfaceName
-		entry.Value = map[string]interface{}{"on": msg.On, "seconds": msg.Seconds}
+		entry.Value = map[string]any{"on": msg.On, "seconds": msg.Seconds}
 		if msg.SGTIN != "" || msg.Key != "" {
 			// The key is never written to the audit log
-			entry.Value = map[string]interface{}{"on": msg.On, "seconds": msg.Seconds, "sgtin": msg.SGTIN}
+			entry.Value = map[string]any{"on": msg.On, "seconds": msg.Seconds, "sgtin": msg.SGTIN}
 		}
-		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+		s.configure(client, msg.RequestID, entry, func() (any, string, error) {
 			if msg.On && (msg.SGTIN != "" || msg.Key != "") {
 				if !strings.HasPrefix(msg.InterfaceName, "HmIP") {
 					return nil, "", errors.New("invalid: only HmIP pairs with SGTIN and key")
@@ -161,7 +161,7 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 		})
 	case "addDeviceBySerial":
 		entry.Target = msg.InterfaceName + "." + strings.ToUpper(msg.Address)
-		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+		s.configure(client, msg.RequestID, entry, func() (any, string, error) {
 			if msg.InterfaceName != "BidCos-RF" {
 				return nil, "", errors.New("invalid: only BidCos-RF pairs by serial number")
 			}
@@ -176,14 +176,14 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 		})
 	case "searchWiredDevices":
 		entry.Target = "BidCos-Wired"
-		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+		s.configure(client, msg.RequestID, entry, func() (any, string, error) {
 			_, err := rpc.SearchDevices("BidCos-Wired")
 			return nil, rega.SetOK, err
 		})
 	case "setTempKey":
 		// The key itself is never written to the audit log
 		entry.Target = msg.InterfaceName
-		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+		s.configure(client, msg.RequestID, entry, func() (any, string, error) {
 			if msg.InterfaceName != "BidCos-RF" || msg.Key == "" || len(msg.Key) > 64 || strings.ContainsAny(msg.Key, "\r\n") {
 				return nil, "", errors.New("invalid temporary key")
 			}
@@ -191,13 +191,13 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 		})
 	case "acceptDevice":
 		entry.Target = msg.Address
-		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+		s.configure(client, msg.RequestID, entry, func() (any, string, error) {
 			result, err := s.homeFor(client).AcceptDevice(msg.Address)
 			return nil, result, err
 		})
 	case "replaceDevice":
-		entry.Value = map[string]interface{}{"replaces": msg.OldAddress}
-		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+		entry.Value = map[string]any{"replaces": msg.OldAddress}
+		s.configure(client, msg.RequestID, entry, func() (any, string, error) {
 			if code, _ := s.systemAdminError(client); code != "" {
 				return nil, code, nil
 			}
@@ -216,8 +216,8 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 		if msg.Force {
 			flags |= ccurpc.DeleteForce
 		}
-		entry.Value = map[string]interface{}{"reset": msg.Reset, "force": msg.Force}
-		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+		entry.Value = map[string]any{"reset": msg.Reset, "force": msg.Force}
+		s.configure(client, msg.RequestID, entry, func() (any, string, error) {
 			if code, _ := s.systemAdminError(client); code != "" {
 				return nil, code, nil
 			}

@@ -20,10 +20,10 @@ type Snapshot struct {
 
 // Object is a device or a channel, keyed by ref "<interface>.<address>"
 type Object struct {
-	Name     string                 `json:"name"`
-	Enums    []string               `json:"enums,omitempty"`
-	Meta     map[string]interface{} `json:"meta,omitempty"`
-	Orphaned bool                   `json:"orphaned,omitempty"`
+	Name     string         `json:"name"`
+	Enums    []string       `json:"enums,omitempty"`
+	Meta     map[string]any `json:"meta,omitempty"`
+	Orphaned bool           `json:"orphaned,omitempty"`
 }
 
 // Enum is a taxonomy: rooms ("room"), functions ("function"), favorites
@@ -61,7 +61,7 @@ func (c *Client) Snapshot(ctx context.Context) (Snapshot, error) {
 // PatchObject changes the name, the enums or a meta namespace of a device
 // or channel; it creates the object when it is not there yet (the store
 // never invents objects, so a newly paired device has none)
-func (c *Client) PatchObject(ctx context.Context, ref string, patch map[string]interface{}) error {
+func (c *Client) PatchObject(ctx context.Context, ref string, patch map[string]any) error {
 	return c.do(ctx, http.MethodPatch, "/api/meta/v1/objects/"+url.PathEscape(ref), "", patch, nil)
 }
 
@@ -80,7 +80,7 @@ func (e Enum) Walk(enumID string, fn func(path string, node Node, depth int)) {
 
 // CreateNode adds a node to an enum (parent "" for a root node)
 func (c *Client) CreateNode(ctx context.Context, enum, parent, id, name string) error {
-	body := map[string]interface{}{"id": id, "name": name, "parent": nil}
+	body := map[string]any{"id": id, "name": name, "parent": nil}
 	if parent != "" {
 		body["parent"] = parent
 	}

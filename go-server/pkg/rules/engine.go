@@ -13,7 +13,7 @@ import (
 // Values reads the current values of a channel (XML-RPC getParamset VALUES),
 // for datapoints that sent no event since the start.
 type Values interface {
-	GetParamset(iface, address, paramsetKey string) (map[string]interface{}, error)
+	GetParamset(iface, address, paramsetKey string) (map[string]any, error)
 }
 
 // Engine evaluates the rules on every event and every tick.
@@ -83,7 +83,7 @@ func NewEngine(store *Store, values Values, notify func(Rule)) *Engine {
 }
 
 // number turns an event value into the number conditions compare
-func number(value interface{}) (float64, bool) {
+func number(value any) (float64, bool) {
 	switch v := value.(type) {
 	case bool:
 		if v {
@@ -108,7 +108,7 @@ func number(value interface{}) (float64, bool) {
 // OnEvent takes a value the CCU sent and evaluates the rules. It runs in
 // the CCU's event callback: give NewEngine a notify that doesn't block
 // (Queue).
-func (e *Engine) OnEvent(address, datapoint string, value interface{}) {
+func (e *Engine) OnEvent(address, datapoint string, value any) {
 	n, ok := number(value)
 	if !ok {
 		return

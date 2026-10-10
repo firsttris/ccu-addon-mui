@@ -31,7 +31,7 @@ func (s *Server) handleSetChannelOption(client *Client, message []byte) {
 		return
 	}
 	s.configure(client, msg.RequestID, audit.Entry{Action: "setChannelOption", Target: fmt.Sprintf("channel %d %s", msg.ID, msg.Option), Value: msg.Value},
-		func() (interface{}, string, error) {
+		func() (any, string, error) {
 			result, _, err := s.regaClient.SetChannelOption(msg.ID, msg.Option, msg.Value)
 			if msg.Option == "usable" {
 				s.readOnly.invalidate()

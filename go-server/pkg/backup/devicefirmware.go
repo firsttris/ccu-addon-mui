@@ -3,6 +3,7 @@ package backup
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"compress/gzip"
 	"errors"
 	"fmt"
@@ -12,7 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -105,7 +106,7 @@ func ListDeviceFirmware(dir string) ([]DeviceFirmware, error) {
 			Changelog:     changelogErr == nil,
 		})
 	}
-	sort.Slice(list, func(i, j int) bool { return strings.ToLower(list[i].Name) < strings.ToLower(list[j].Name) })
+	slices.SortFunc(list, func(a, b DeviceFirmware) int { return cmp.Compare(strings.ToLower(a.Name), strings.ToLower(b.Name)) })
 	return list, nil
 }
 

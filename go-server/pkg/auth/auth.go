@@ -417,7 +417,7 @@ func (a *Authenticator) recordFailure(username, source string) {
 }
 
 type rpcResponse struct {
-	Result interface{} `json:"result"`
+	Result any `json:"result"`
 	Error  *struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
@@ -447,8 +447,8 @@ func (a *Authenticator) verifyWithCCU(username, password string) (bool, error) {
 	return true, nil
 }
 
-func (a *Authenticator) call(method string, params interface{}, result *rpcResponse) error {
-	body, _ := json.Marshal(map[string]interface{}{"version": "1.1", "method": method, "params": params})
+func (a *Authenticator) call(method string, params any, result *rpcResponse) error {
+	body, _ := json.Marshal(map[string]any{"version": "1.1", "method": method, "params": params})
 	resp, err := a.httpClient.Post(a.webUIURL+"/api/homematic.cgi", "application/json", bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("CCU not reachable: %w", err)

@@ -45,7 +45,7 @@ type liteGroup struct {
 	Leftover              []liteMember `json:"leftover"`
 }
 
-func (g *Groups) call(method, path string, body, out interface{}) error {
+func (g *Groups) call(method, path string, body, out any) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	return g.client.do(ctx, method, "/api/system/v1/groups"+path, "", body, out)
@@ -109,7 +109,7 @@ func (g *Groups) SuitableMembers(groupType string) (backup.SuitableMembers, erro
 
 // Save creates or changes a group; the members as a whole
 func (g *Groups) Save(change backup.GroupChange) (int, error) {
-	body := map[string]interface{}{"name": change.Name, "members": change.Members, "forbid_single_operation": change.ForbidSingleOperation}
+	body := map[string]any{"name": change.Name, "members": change.Members, "forbid_single_operation": change.ForbidSingleOperation}
 	var saved liteGroup
 	if change.ID == 0 {
 		body["type"] = change.Type

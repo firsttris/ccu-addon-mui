@@ -38,18 +38,18 @@ func TestRecognisesAllScripts(t *testing.T) {
 }
 
 func TestXMLRPCCodecRoundTrip(t *testing.T) {
-	call := encodeCall("putParamset", "A:1", "MASTER", map[string]interface{}{
-		"NAME": "a <b>", "ON": true, "LEVEL": 0.25, "COUNT": 3, "LIST": []interface{}{"x", 1},
+	call := encodeCall("putParamset", "A:1", "MASTER", map[string]any{
+		"NAME": "a <b>", "ON": true, "LEVEL": 0.25, "COUNT": 3, "LIST": []any{"x", 1},
 	})
 	method, params, err := decodeCall(strings.NewReader(call))
 	if err != nil || method != "putParamset" || len(params) != 3 {
 		t.Fatalf("decodeCall = %q, %v, %v", method, params, err)
 	}
-	values := params[2].(map[string]interface{})
+	values := params[2].(map[string]any)
 	if values["NAME"] != "a <b>" || values["ON"] != true || values["LEVEL"] != 0.25 || values["COUNT"] != 3 {
 		t.Fatalf("unexpected values: %#v", values)
 	}
-	if list := values["LIST"].([]interface{}); len(list) != 2 || list[1] != 1 {
+	if list := values["LIST"].([]any); len(list) != 2 || list[1] != 1 {
 		t.Fatalf("unexpected list: %#v", values["LIST"])
 	}
 }

@@ -77,7 +77,7 @@ func checkOrigin(r *http.Request) bool {
 		}
 	}
 
-	logger.Error(fmt.Sprintf("❌ Rejected WebSocket connection from origin %q (host %q)", origin, r.Host))
+	logger.Errorf("❌ Rejected WebSocket connection from origin %q (host %q)", origin, r.Host)
 	return false
 }
 
@@ -154,10 +154,10 @@ type Server struct {
 // DeviceRPC is the part of ccurpc.Client the server uses.
 type DeviceRPC interface {
 	GetParamsetDescription(iface, address, paramsetKey string) (ccurpc.ParamsetDescription, error)
-	GetParamset(iface, address, paramsetKey string) (map[string]interface{}, error)
-	PutParamset(iface, address, paramsetKey string, values map[string]interface{}) error
+	GetParamset(iface, address, paramsetKey string) (map[string]any, error)
+	PutParamset(iface, address, paramsetKey string, values map[string]any) error
 	GetDeviceDescription(iface, address string) (ccurpc.DeviceDescription, error)
-	SetMetadata(iface, address, dataID string, value interface{}) error
+	SetMetadata(iface, address, dataID string, value any) error
 	ListDevices(iface string) ([]ccurpc.DeviceDescription, error)
 	InterfaceNames() []string
 	SetInstallMode(iface string, on bool, seconds int) error
@@ -171,8 +171,8 @@ type DeviceRPC interface {
 	AddLink(iface, sender, receiver, name, description string) error
 	RemoveLink(iface, sender, receiver string) error
 	GetLinkParamsetDescription(iface, address, partner string) (ccurpc.ParamsetDescription, error)
-	GetLinkParamset(iface, address, partner string) (map[string]interface{}, error)
-	PutLinkParamset(iface, address, partner string, values map[string]interface{}) error
+	GetLinkParamset(iface, address, partner string) (map[string]any, error)
+	PutLinkParamset(iface, address, partner string, values map[string]any) error
 	ListBidcosInterfaces(iface string) ([]ccurpc.RadioInterface, error)
 	SetBidcosInterface(iface, address, module string, roaming bool) error
 	SetInstallModeWithWhitelist(iface string, seconds int, sgtin, key string) error
@@ -250,7 +250,7 @@ func (s *Server) Start(ctx context.Context) error {
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
-	logger.Info(fmt.Sprintf("WebSocket Server running on %s", s.httpServer.Addr))
+	logger.Infof("WebSocket Server running on %s", s.httpServer.Addr)
 
 	if err := s.httpServer.ListenAndServe(); err != http.ErrServerClosed {
 		return err
@@ -337,7 +337,7 @@ func (s *Server) BroadcastToClients(event *types.CCUEvent) {
 		default:
 			// Without this event the app would show a stale value for good:
 			// close the connection, the app reconnects and reloads everything
-			logger.Error(fmt.Sprintf("   ⚠️ Device %s buffer full, dropping message and closing the connection", client.DeviceID()))
+			logger.Errorf("   ⚠️ Device %s buffer full, dropping message and closing the connection", client.DeviceID())
 			droppedCount++
 			client.close()
 		}
@@ -412,7 +412,7 @@ func (s *Server) readPump(client *Client) {
 func recovered(what string, f func()) {
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error(fmt.Sprintf("Panic while %s: %v\n%s", what, r, debug.Stack()))
+			logger.Errorf("Panic while %s: %v\n%s", what, r, debug.Stack())
 		}
 	}()
 	f()
@@ -459,11 +459,11 @@ func (s *Server) send(client *Client, message []byte) {
 		// Disconnected: nobody reads the answer any more
 	case client.send <- message:
 	default:
-		logger.Error(fmt.Sprintf("⚠️ Device %s buffer full, dropping response", client.DeviceID()))
+		logger.Errorf("⚠️ Device %s buffer full, dropping response", client.DeviceID())
 	}
 }
 
-func (s *Server) sendJSON(client *Client, data interface{}) {
+func (s *Server) sendJSON(client *Client, data any) {
 	message, err := json.Marshal(data)
 	if err != nil {
 		logger.Error("Failed to marshal response:", err)

@@ -6,7 +6,7 @@ import (
 )
 
 func (s *Server) handleMessage(client *Client, message []byte) {
-	var baseMsg map[string]interface{}
+	var baseMsg map[string]any
 	if err := json.Unmarshal(message, &baseMsg); err != nil {
 		s.sendRequestError(client, "", "invalid JSON: "+err.Error(), "INVALID_REQUEST")
 		return

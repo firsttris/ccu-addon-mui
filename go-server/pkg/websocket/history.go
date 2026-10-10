@@ -35,7 +35,7 @@ func (s *Server) handleHistory(client *Client, msgType string, message []byte) {
 	}
 	if msgType == "clearHistory" {
 		s.configure(client, msg.RequestID, audit.Entry{Action: "clearHistory", Target: "system protocol"},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, err := s.regaClient.ClearHistory()
 				return nil, result, err
 			})

@@ -18,12 +18,12 @@ type NamedObject struct {
 }
 
 type Channel struct {
-	ID            int64                  `json:"id"`
-	Address       string                 `json:"address"`
-	Name          string                 `json:"name"`
-	Type          string                 `json:"type"`
-	InterfaceName string                 `json:"interfaceName"`
-	Datapoints    map[string]interface{} `json:"datapoints"`
+	ID            int64          `json:"id"`
+	Address       string         `json:"address"`
+	Name          string         `json:"name"`
+	Type          string         `json:"type"`
+	InterfaceName string         `json:"interfaceName"`
+	Datapoints    map[string]any `json:"datapoints"`
 
 	// StatusAddress is the device's maintenance channel (":0"), which
 	// reports Status (LOW_BAT, UNREACH) and sends the events for it.
@@ -141,8 +141,8 @@ type DeviceHealth struct {
 // HealthValue is a value with the time it was last set (Unix seconds, 0 if
 // never)
 type HealthValue struct {
-	Value interface{} `json:"value"`
-	Time  int64       `json:"time,omitempty"`
+	Value any   `json:"value"`
+	Time  int64 `json:"time,omitempty"`
 }
 
 // VirtualKey is a virtual key of the central (a channel of its HM-RCV-50

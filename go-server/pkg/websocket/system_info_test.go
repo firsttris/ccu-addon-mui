@@ -25,10 +25,10 @@ func TestSystemInfoHelpFacts(t *testing.T) {
 	_ = os.WriteFile(filepath.Join(dir, "proc", "loadavg"), []byte("0.10 0.20 0.30 1/2 3\n"), 0o644)
 
 	s := NewServer(nil, nil)
-	get := func() map[string]interface{} {
+	get := func() map[string]any {
 		client := &Client{send: make(chan []byte, 1), level: auth.LevelAdmin}
 		s.handleSystemInfo(client, "i")
-		var m map[string]interface{}
+		var m map[string]any
 		_ = json.Unmarshal(<-client.send, &m)
 		return m
 	}
@@ -40,7 +40,7 @@ func TestSystemInfoHelpFacts(t *testing.T) {
 	firmwareVersionFile = filepath.Join(dir, "VERSION")
 	_ = os.WriteFile(firmwareVersionFile, []byte("VERSION=3.89.10.20260901\nPRODUCT=raspmatic_rpi4\nPLATFORM=rpi4\n"), 0o644)
 	m := get()
-	system, _ := m["system"].(map[string]interface{})
+	system, _ := m["system"].(map[string]any)
 	if m["product"] != "raspmatic_rpi4" || m["platform"] != "rpi4" || system == nil || system["load"] != "0.10 0.20 0.30" {
 		t.Fatalf("help facts: %v", m)
 	}

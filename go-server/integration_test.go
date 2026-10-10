@@ -191,7 +191,7 @@ func logFiles(t *testing.T) (string, string) {
 	return config, logDir
 }
 
-type message map[string]interface{}
+type message map[string]any
 
 func send(t *testing.T, conn *websocket.Conn, m message) {
 	t.Helper()
@@ -310,14 +310,14 @@ func TestStackLoginReadAndControl(t *testing.T) {
 	}
 
 	send(t, conn, message{"type": "getRooms", "deviceId": "dev-1", "requestId": "q1"})
-	rooms := receive(t, conn, byRequestID("q1"))["rooms"].([]interface{})
-	if len(rooms) != 3 || rooms[1].(map[string]interface{})["name"] != "Küche" {
+	rooms := receive(t, conn, byRequestID("q1"))["rooms"].([]any)
+	if len(rooms) != 3 || rooms[1].(map[string]any)["name"] != "Küche" {
 		t.Fatalf("unexpected rooms: %v", rooms)
 	}
 
 	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "roomId": "1", "requestId": "q2"})
-	channels := receive(t, conn, byRequestID("q2"))["channels"].([]interface{})
-	light := channels[0].(map[string]interface{})
+	channels := receive(t, conn, byRequestID("q2"))["channels"].([]any)
+	light := channels[0].(map[string]any)
 	if len(channels) != 3 || light["name"] != "Wohnzimmer Licht" || light["statusAddress"] != "LEQ0000001:0" {
 		t.Fatalf("unexpected channels: %v", channels)
 	}
@@ -329,7 +329,7 @@ func TestStackLoginReadAndControl(t *testing.T) {
 	if messages[0]["success"] != true {
 		t.Fatalf("setDatapoint failed: %v", messages[0])
 	}
-	event := messages[1]["event"].(map[string]interface{})
+	event := messages[1]["event"].(map[string]any)
 	if event["channel"] != "LEQ0000001:1" || event["datapoint"] != "STATE" || event["value"] != true {
 		t.Fatalf("unexpected event: %v", event)
 	}
@@ -338,21 +338,21 @@ func TestStackLoginReadAndControl(t *testing.T) {
 	if err := ccu.SetValue("BidCos-RF", "LEQ0000001:1", "STATE", false); err != nil {
 		t.Fatal(err)
 	}
-	event = receive(t, conn, func(m message) bool { return m["event"] != nil })["event"].(map[string]interface{})
+	event = receive(t, conn, func(m message) bool { return m["event"] != nil })["event"].(map[string]any)
 	if event["value"] != false {
 		t.Fatalf("unexpected event: %v", event)
 	}
 
 	// Paramset descriptions over XML-RPC
 	send(t, conn, message{"type": "getParamsetDescription", "requestId": "q3", "interfaceName": "HmIP-RF", "address": "0000DBE9A5C1F2:1", "paramsetKey": "VALUES"})
-	description := receive(t, conn, byRequestID("q3"))["description"].(map[string]interface{})
-	state := description["STATE"].(map[string]interface{})
-	if state["type"] != "ENUM" || len(state["valueList"].([]interface{})) != 3 {
+	description := receive(t, conn, byRequestID("q3"))["description"].(map[string]any)
+	state := description["STATE"].(map[string]any)
+	if state["type"] != "ENUM" || len(state["valueList"].([]any)) != 3 {
 		t.Fatalf("unexpected description: %v", description)
 	}
 
 	send(t, conn, message{"type": "getDeviceProblems", "requestId": "q4"})
-	problems := receive(t, conn, byRequestID("q4"))["devices"].([]interface{})
+	problems := receive(t, conn, byRequestID("q4"))["devices"].([]any)
 	if len(problems) != 2 {
 		t.Fatalf("unexpected device problems: %v", problems)
 	}
@@ -425,9 +425,9 @@ func TestStackGuestMayNotControlAndChangesAreAudited(t *testing.T) {
 		t.Fatal(err)
 	}
 	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
-	var entries []map[string]interface{}
+	var entries []map[string]any
 	for _, line := range lines {
-		var e map[string]interface{}
+		var e map[string]any
 		if err := json.Unmarshal([]byte(line), &e); err != nil {
 			t.Fatal(err)
 		}
@@ -452,10 +452,10 @@ func TestStackInputChannelMode(t *testing.T) {
 	ccu, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 
-	modeOf := func(id string) interface{} {
+	modeOf := func(id string) any {
 		send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "all": true, "requestId": id})
 		raw, _ := json.Marshal(receive(t, conn, byRequestID(id))["channels"])
-		var channels []map[string]interface{}
+		var channels []map[string]any
 		_ = json.Unmarshal(raw, &channels)
 		for _, ch := range channels {
 			if ch["address"] == "0019A0C9B3E2D1:1" {
@@ -470,7 +470,7 @@ func TestStackInputChannelMode(t *testing.T) {
 	}
 
 	send(t, conn, message{"type": "putParamset", "requestId": "q2", "interfaceName": "HmIP-RF",
-		"address": "0019A0C9B3E2D1:1", "paramsetKey": "MASTER", "values": map[string]interface{}{"CHANNEL_OPERATION_MODE": 1}})
+		"address": "0019A0C9B3E2D1:1", "paramsetKey": "MASTER", "values": map[string]any{"CHANNEL_OPERATION_MODE": 1}})
 	if m := receive(t, conn, byRequestID("q2")); m["success"] != true {
 		t.Fatalf("putParamset failed: %v", m)
 	}
@@ -483,7 +483,7 @@ func TestStackInputChannelMode(t *testing.T) {
 
 	// Other channels get no channel mode
 	send(t, conn, message{"type": "putParamset", "requestId": "q4", "interfaceName": "HmIP-RF",
-		"address": "0000DBE9A5C1F2:1", "paramsetKey": "MASTER", "values": map[string]interface{}{"EVENT_DELAY_UNIT": 1}})
+		"address": "0000DBE9A5C1F2:1", "paramsetKey": "MASTER", "values": map[string]any{"EVENT_DELAY_UNIT": 1}})
 	receive(t, conn, byRequestID("q4"))
 	if ccu.CallCount("HmIP-RF setMetadata") != 1 {
 		t.Fatalf("expected one setMetadata, got %d", ccu.CallCount("HmIP-RF setMetadata"))
@@ -494,23 +494,23 @@ func TestStackChangeDeviceSettings(t *testing.T) {
 	ccu, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 
-	put := func(id string, values map[string]interface{}) message {
+	put := func(id string, values map[string]any) message {
 		send(t, conn, message{"type": "putParamset", "requestId": id, "interfaceName": "HmIP-RF",
 			"address": "0000DBE9A5C1F2:1", "paramsetKey": "MASTER", "values": values})
 		return receive(t, conn, byRequestID(id))
 	}
 
-	if m := put("q1", map[string]interface{}{"EVENT_DELAY_UNIT": 2}); m["success"] != true {
+	if m := put("q1", map[string]any{"EVENT_DELAY_UNIT": 2}); m["success"] != true {
 		t.Fatalf("putParamset failed: %v", m)
 	}
 	send(t, conn, message{"type": "getParamset", "requestId": "q2", "interfaceName": "HmIP-RF", "address": "0000DBE9A5C1F2:1", "paramsetKey": "MASTER"})
-	values := receive(t, conn, byRequestID("q2"))["values"].(map[string]interface{})
+	values := receive(t, conn, byRequestID("q2"))["values"].(map[string]any)
 	if values["EVENT_DELAY_UNIT"] != 2.0 {
 		t.Fatalf("value not stored: %v", values)
 	}
 
 	// Outside the value list: refused before it reaches the CCU
-	if m := put("q3", map[string]interface{}{"EVENT_DELAY_UNIT": 7}); m["code"] != "INVALID_VALUE" {
+	if m := put("q3", map[string]any{"EVENT_DELAY_UNIT": 7}); m["code"] != "INVALID_VALUE" {
 		t.Fatalf("expected INVALID_VALUE, got %v", m)
 	}
 	if ccu.CallCount("HmIP-RF putParamset") != 1 {
@@ -529,10 +529,10 @@ func TestStackListDevices(t *testing.T) {
 	receive(t, conn, func(m message) bool { return m["type"] == "auth_response" })
 
 	send(t, conn, message{"type": "listDevices", "requestId": "q1"})
-	devices := receive(t, conn, byRequestID("q1"))["devices"].([]interface{})
+	devices := receive(t, conn, byRequestID("q1"))["devices"].([]any)
 	types := map[string]string{}
 	for _, raw := range devices {
-		d := raw.(map[string]interface{})
+		d := raw.(map[string]any)
 		types[d["address"].(string)] = d["interfaceName"].(string) + " " + d["type"].(string)
 	}
 	if len(types) != 8 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" ||
@@ -551,7 +551,7 @@ func TestStackAdminTokenForSettings(t *testing.T) {
 
 	put := func(c *websocket.Conn, id string) message {
 		send(t, c, message{"type": "putParamset", "requestId": id, "interfaceName": "HmIP-RF",
-			"address": "0000DBE9A5C1F2:1", "paramsetKey": "MASTER", "values": map[string]interface{}{"EVENT_DELAY_UNIT": 1}})
+			"address": "0000DBE9A5C1F2:1", "paramsetKey": "MASTER", "values": map[string]any{"EVENT_DELAY_UNIT": 1}})
 		return receive(t, c, byRequestID(id))
 	}
 
@@ -649,10 +649,10 @@ func TestStackRenameAndAssignRooms(t *testing.T) {
 	receive(t, conn, byRequestID("q5"))
 
 	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "roomId": "2", "requestId": "q6"})
-	channels := receive(t, conn, byRequestID("q6"))["channels"].([]interface{})
-	var light map[string]interface{}
+	channels := receive(t, conn, byRequestID("q6"))["channels"].([]any)
+	var light map[string]any
 	for _, raw := range channels {
-		if ch := raw.(map[string]interface{}); ch["address"] == "LEQ0000001:1" {
+		if ch := raw.(map[string]any); ch["address"] == "LEQ0000001:1" {
 			light = ch
 		}
 	}
@@ -661,8 +661,8 @@ func TestStackRenameAndAssignRooms(t *testing.T) {
 	}
 
 	send(t, conn, message{"type": "listDevices", "requestId": "q7"})
-	for _, raw := range receive(t, conn, byRequestID("q7"))["devices"].([]interface{}) {
-		if d := raw.(map[string]interface{}); d["address"] == "0000DBE9A5C1F2" && d["name"] != "Griff" {
+	for _, raw := range receive(t, conn, byRequestID("q7"))["devices"].([]any) {
+		if d := raw.(map[string]any); d["address"] == "0000DBE9A5C1F2" && d["name"] != "Griff" {
 			t.Fatalf("device not renamed: %v", d)
 		}
 	}
@@ -718,8 +718,8 @@ func TestStackPairingInboxAndDelete(t *testing.T) {
 	}
 
 	send(t, conn, message{"type": "getInbox", "requestId": "q3"})
-	inbox := receive(t, conn, byRequestID("q3"))["devices"].([]interface{})
-	if len(inbox) != 1 || inbox[0].(map[string]interface{})["type"] != "HmIP-SWDO" {
+	inbox := receive(t, conn, byRequestID("q3"))["devices"].([]any)
+	if len(inbox) != 1 || inbox[0].(map[string]any)["type"] != "HmIP-SWDO" {
 		t.Fatalf("unexpected inbox: %v", inbox)
 	}
 	send(t, conn, message{"type": "acceptDevice", "requestId": "q4", "address": "0008DA8A9F1234"})
@@ -736,8 +736,8 @@ func TestStackPairingInboxAndDelete(t *testing.T) {
 		t.Fatalf("deleteDevice failed: %v", m)
 	}
 	send(t, conn, message{"type": "listDevices", "requestId": "q7"})
-	for _, raw := range receive(t, conn, byRequestID("q7"))["devices"].([]interface{}) {
-		if raw.(map[string]interface{})["address"] == "0008DA8A9F1234" {
+	for _, raw := range receive(t, conn, byRequestID("q7"))["devices"].([]any) {
+		if raw.(map[string]any)["address"] == "0008DA8A9F1234" {
 			t.Fatal("device not deleted")
 		}
 	}
@@ -770,14 +770,14 @@ func TestStackSysvarChangesArePushed(t *testing.T) {
 		if m["type"] != "sysvars" {
 			return false
 		}
-		for _, raw := range m["sysvars"].([]interface{}) {
-			if sv := raw.(map[string]interface{}); sv["id"] == 951.0 && sv["value"] == 21.5 {
+		for _, raw := range m["sysvars"].([]any) {
+			if sv := raw.(map[string]any); sv["id"] == 951.0 && sv["value"] == 21.5 {
 				return true
 			}
 		}
 		return false
 	})
-	if len(m["sysvars"].([]interface{})) != 7 {
+	if len(m["sysvars"].([]any)) != 7 {
 		t.Fatalf("expected the whole list, got %v", m["sysvars"])
 	}
 }
@@ -787,12 +787,12 @@ func TestStackSysvarsAndPrograms(t *testing.T) {
 	loginAs(t, conn, "Admin", "secret")
 
 	send(t, conn, message{"type": "getSysvars", "requestId": "q1"})
-	sysvars := receive(t, conn, byRequestID("q1"))["sysvars"].([]interface{})
+	sysvars := receive(t, conn, byRequestID("q1"))["sysvars"].([]any)
 	if len(sysvars) != 7 {
 		t.Fatalf("unexpected sysvars: %v", sysvars)
 	}
-	mode := sysvars[2].(map[string]interface{})
-	if mode["kind"] != "enum" || mode["value"] != 1.0 || len(mode["valueList"].([]interface{})) != 3 {
+	mode := sysvars[2].(map[string]any)
+	if mode["kind"] != "enum" || mode["value"] != 1.0 || len(mode["valueList"].([]any)) != 3 {
 		t.Fatalf("unexpected mode: %v", mode)
 	}
 
@@ -805,13 +805,13 @@ func TestStackSysvarsAndPrograms(t *testing.T) {
 		t.Fatalf("expected the injection to be refused, got %v", m)
 	}
 	send(t, conn, message{"type": "getSysvars", "requestId": "q4"})
-	if v := receive(t, conn, byRequestID("q4"))["sysvars"].([]interface{})[2].(map[string]interface{})["value"]; v != 2.0 {
+	if v := receive(t, conn, byRequestID("q4"))["sysvars"].([]any)[2].(map[string]any)["value"]; v != 2.0 {
 		t.Fatalf("sysvar not set: %v", v)
 	}
 
 	send(t, conn, message{"type": "getPrograms", "requestId": "q5"})
-	programs := receive(t, conn, byRequestID("q5"))["programs"].([]interface{})
-	if len(programs) != 4 || programs[3].(map[string]interface{})["internal"] != true || programs[0].(map[string]interface{})["internal"] != nil {
+	programs := receive(t, conn, byRequestID("q5"))["programs"].([]any)
+	if len(programs) != 4 || programs[3].(map[string]any)["internal"] != true || programs[0].(map[string]any)["internal"] != nil {
 		t.Fatalf("unexpected programs: %v", programs)
 	}
 	send(t, conn, message{"type": "runProgram", "requestId": "q6", "id": 1200})
@@ -846,13 +846,13 @@ func TestStackLogOutDevices(t *testing.T) {
 	tabletToken := loginAs(t, tablet, "Admin", "secret")["token"].(string)
 
 	send(t, conn, message{"type": "listSessions", "requestId": "q1"})
-	sessions := receive(t, conn, byRequestID("q1"))["sessions"].([]interface{})
+	sessions := receive(t, conn, byRequestID("q1"))["sessions"].([]any)
 	if len(sessions) != 2 {
 		t.Fatalf("expected 2 sessions, got %v", sessions)
 	}
 	var tabletID string
 	for _, raw := range sessions {
-		s := raw.(map[string]interface{})
+		s := raw.(map[string]any)
 		if s["device"] == "iPad · Safari" {
 			tabletID = s["id"].(string)
 			if s["current"] != false {
@@ -885,7 +885,7 @@ func TestStackLogOutDevices(t *testing.T) {
 
 	// Logging out this device revokes its token too
 	send(t, conn, message{"type": "listSessions", "requestId": "q3"})
-	if n := len(receive(t, conn, byRequestID("q3"))["sessions"].([]interface{})); n != 1 {
+	if n := len(receive(t, conn, byRequestID("q3"))["sessions"].([]any)); n != 1 {
 		t.Fatalf("expected 1 session left, got %d", n)
 	}
 	send(t, conn, message{"type": "logout", "requestId": "q4"})
@@ -906,39 +906,39 @@ func TestStackDirectLinks(t *testing.T) {
 		return receive(t, conn, byRequestID(id))
 	}
 
-	links := call("q1", message{"type": "getLinks", "address": "00151BE9A1C2D3"})["links"].([]interface{})
-	if len(links) != 1 || links[0].(map[string]interface{})["sender"] != "000855699C4F38:1" {
+	links := call("q1", message{"type": "getLinks", "address": "00151BE9A1C2D3"})["links"].([]any)
+	if len(links) != 1 || links[0].(map[string]any)["sender"] != "000855699C4F38:1" {
 		t.Fatalf("unexpected links: %v", links)
 	}
 
 	if m := call("q2", message{"type": "addLink", "sender": "000855699C4F38:2", "receiver": "00151BE9A1C2D3:4", "name": "Esstisch aus"}); m["success"] != true {
 		t.Fatalf("addLink failed: %v", m)
 	}
-	if n := len(call("q3", message{"type": "getLinks", "address": "000855699C4F38"})["links"].([]interface{})); n != 2 {
+	if n := len(call("q3", message{"type": "getLinks", "address": "000855699C4F38"})["links"].([]any)); n != 2 {
 		t.Fatalf("expected 2 links of the button, got %d", n)
 	}
 
-	description := call("q4", message{"type": "getLinkParamsetDescription", "address": "00151BE9A1C2D3:4", "partner": "000855699C4F38:2"})["description"].(map[string]interface{})
+	description := call("q4", message{"type": "getLinkParamsetDescription", "address": "00151BE9A1C2D3:4", "partner": "000855699C4F38:2"})["description"].(map[string]any)
 	if description["SHORT_ON_LEVEL"] == nil {
 		t.Fatalf("unexpected description: %v", description)
 	}
 	if m := call("q5", message{"type": "putLinkParamset", "address": "00151BE9A1C2D3:4", "partner": "000855699C4F38:2",
-		"values": map[string]interface{}{"SHORT_PROFILE_ACTION_TYPE": 1, "SHORT_ON_LEVEL": 0}}); m["success"] != true {
+		"values": map[string]any{"SHORT_PROFILE_ACTION_TYPE": 1, "SHORT_ON_LEVEL": 0}}); m["success"] != true {
 		t.Fatalf("putLinkParamset failed: %v", m)
 	}
-	values := call("q6", message{"type": "getLinkParamset", "address": "00151BE9A1C2D3:4", "partner": "000855699C4F38:2"})["values"].(map[string]interface{})
+	values := call("q6", message{"type": "getLinkParamset", "address": "00151BE9A1C2D3:4", "partner": "000855699C4F38:2"})["values"].(map[string]any)
 	if values["SHORT_ON_LEVEL"] != 0.0 {
 		t.Fatalf("link parameter not stored: %v", values)
 	}
 	if m := call("q7", message{"type": "putLinkParamset", "address": "00151BE9A1C2D3:4", "partner": "000855699C4F38:2",
-		"values": map[string]interface{}{"SHORT_ON_LEVEL": 2}}); m["code"] != "INVALID_VALUE" {
+		"values": map[string]any{"SHORT_ON_LEVEL": 2}}); m["code"] != "INVALID_VALUE" {
 		t.Fatalf("expected INVALID_VALUE, got %v", m)
 	}
 
 	if m := call("q8", message{"type": "removeLink", "sender": "000855699C4F38:1", "receiver": "00151BE9A1C2D3:4"}); m["success"] != true {
 		t.Fatalf("removeLink failed: %v", m)
 	}
-	if n := len(call("q9", message{"type": "getLinks", "address": "00151BE9A1C2D3:4"})["links"].([]interface{})); n != 1 {
+	if n := len(call("q9", message{"type": "getLinks", "address": "00151BE9A1C2D3:4"})["links"].([]any)); n != 1 {
 		t.Fatalf("expected 1 link left, got %d", n)
 	}
 	if ccu.CallCount("HmIP-RF addLink") != 1 || ccu.CallCount("HmIP-RF removeLink") != 1 {
@@ -975,12 +975,12 @@ func TestStackSystemInfo(t *testing.T) {
 	loginAs(t, conn, "Admin", "secret")
 	send(t, conn, message{"type": "getSystemInfo", "requestId": "q1"})
 	info := receive(t, conn, byRequestID("q1"))
-	modules := info["radioInterfaces"].([]interface{})
+	modules := info["radioInterfaces"].([]any)
 	// The built-in modules and the LAN gateway of rfd.conf
 	if len(modules) != 3 {
 		t.Fatalf("expected the radio modules of BidCos-RF and HmIP-RF: %v", info)
 	}
-	first := modules[0].(map[string]interface{})
+	first := modules[0].(map[string]any)
 	if first["interfaceName"] != "BidCos-RF" || first["dutyCycle"] != 12.0 || first["connected"] != true {
 		t.Fatalf("unexpected module: %v", first)
 	}
@@ -1061,10 +1061,10 @@ func TestStackServiceMessages(t *testing.T) {
 	loginAs(t, conn, "Admin", "secret")
 
 	send(t, conn, message{"type": "getServiceMessages", "requestId": "q1"})
-	messages := receive(t, conn, byRequestID("q1"))["messages"].([]interface{})
+	messages := receive(t, conn, byRequestID("q1"))["messages"].([]any)
 	types := map[string]float64{}
 	for _, raw := range messages {
-		m := raw.(map[string]interface{})
+		m := raw.(map[string]any)
 		types[m["type"].(string)] = m["id"].(float64)
 	}
 	if len(messages) != 3 || types["UNREACH"] == 0 || types["LOW_BAT"] == 0 || types["STICKY_UNREACH"] == 0 {
@@ -1084,7 +1084,7 @@ func TestStackServiceMessages(t *testing.T) {
 		t.Fatalf("acknowledge failed: %v", m)
 	}
 	send(t, conn, message{"type": "getServiceMessages", "requestId": "q4"})
-	if messages := receive(t, conn, byRequestID("q4"))["messages"].([]interface{}); len(messages) != 2 {
+	if messages := receive(t, conn, byRequestID("q4"))["messages"].([]any); len(messages) != 2 {
 		t.Fatalf("sticky message not acknowledged: %v", messages)
 	}
 	send(t, conn, message{"type": "acknowledgeServiceMessage", "requestId": "q5", "id": 1})
@@ -1098,7 +1098,7 @@ func TestStackServiceMessagesFollowEvents(t *testing.T) {
 	loginAs(t, conn, "Admin", "secret")
 
 	send(t, conn, message{"type": "getServiceMessages", "requestId": "q1"})
-	if messages := receive(t, conn, byRequestID("q1"))["messages"].([]interface{}); len(messages) != 3 {
+	if messages := receive(t, conn, byRequestID("q1"))["messages"].([]any); len(messages) != 3 {
 		t.Fatalf("unexpected service messages: %v", messages)
 	}
 	// The battery runs low: the server reads the messages again after the
@@ -1107,7 +1107,7 @@ func TestStackServiceMessagesFollowEvents(t *testing.T) {
 		t.Fatal(err)
 	}
 	pushed := receive(t, conn, func(m message) bool { return m["type"] == "serviceMessages" })
-	if messages := pushed["messages"].([]interface{}); len(messages) != 4 {
+	if messages := pushed["messages"].([]any); len(messages) != 4 {
 		t.Fatalf("expected the new message, got %v", messages)
 	}
 }
@@ -1116,10 +1116,10 @@ func TestStackFirmwareUpdate(t *testing.T) {
 	ccu, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 
-	device := func(requestID string) map[string]interface{} {
+	device := func(requestID string) map[string]any {
 		send(t, conn, message{"type": "listDevices", "requestId": requestID})
-		for _, raw := range receive(t, conn, byRequestID(requestID))["devices"].([]interface{}) {
-			if d := raw.(map[string]interface{}); d["address"] == "0008DA8A9F1234" {
+		for _, raw := range receive(t, conn, byRequestID(requestID))["devices"].([]any) {
+			if d := raw.(map[string]any); d["address"] == "0008DA8A9F1234" {
 				return d
 			}
 		}
@@ -1173,8 +1173,8 @@ func TestStackFirmwareUpdate(t *testing.T) {
 		t.Fatalf("expected DEVICE_UNREACHABLE, got %v", m)
 	}
 	send(t, conn, message{"type": "listDevices", "requestId": "q7"})
-	for _, raw := range receive(t, conn, byRequestID("q7"))["devices"].([]interface{}) {
-		d := raw.(map[string]interface{})
+	for _, raw := range receive(t, conn, byRequestID("q7"))["devices"].([]any) {
+		d := raw.(map[string]any)
 		if d["address"] == "LEQ0000001" && (d["firmware"] != "2.12" || d["availableFirmware"] != nil) {
 			t.Fatalf("BidCos firmware not updated: %v", d)
 		}
@@ -1240,15 +1240,15 @@ func TestStackAlarmMessages(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 
-	alarms := func(requestID string) []interface{} {
+	alarms := func(requestID string) []any {
 		send(t, conn, message{"type": "getAlarmMessages", "requestId": requestID})
-		return receive(t, conn, byRequestID(requestID))["alarms"].([]interface{})
+		return receive(t, conn, byRequestID(requestID))["alarms"].([]any)
 	}
 	list := alarms("a1")
 	if len(list) != 1 {
 		t.Fatalf("expected the water alarm, got %v", list)
 	}
-	alarm := list[0].(map[string]interface{})
+	alarm := list[0].(map[string]any)
 	if alarm["name"] != "Wasseralarm" || alarm["active"] != true || alarm["message"] != "Wasser erkannt" || alarm["counter"] != 1.0 {
 		t.Fatalf("unexpected alarm: %v", alarm)
 	}
@@ -1264,7 +1264,7 @@ func TestStackAlarmMessages(t *testing.T) {
 	// Triggered again: back in the list, counted twice
 	send(t, conn, message{"type": "setSysvar", "requestId": "a4", "id": alarm["id"], "value": true})
 	receive(t, conn, byRequestID("a4"))
-	if list := alarms("a5"); len(list) != 1 || list[0].(map[string]interface{})["counter"] != 2.0 {
+	if list := alarms("a5"); len(list) != 1 || list[0].(map[string]any)["counter"] != 2.0 {
 		t.Fatalf("expected the alarm again, got %v", list)
 	}
 }
@@ -1273,9 +1273,9 @@ func TestStackFavorites(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 
-	favorites := func(requestID string) []interface{} {
+	favorites := func(requestID string) []any {
 		send(t, conn, message{"type": "getFavorites", "requestId": requestID})
-		return receive(t, conn, byRequestID(requestID))["favorites"].([]interface{})
+		return receive(t, conn, byRequestID(requestID))["favorites"].([]any)
 	}
 	change := func(requestID string, m message) message {
 		m["requestId"] = requestID
@@ -1286,14 +1286,14 @@ func TestStackFavorites(t *testing.T) {
 	if len(list) != 2 {
 		t.Fatalf("expected both lists of Admin, got %v", list)
 	}
-	evening := list[0].(map[string]interface{})
-	if evening["name"] != "Abends" || len(evening["items"].([]interface{})) != 6 {
+	evening := list[0].(map[string]any)
+	if evening["name"] != "Abends" || len(evening["items"].([]any)) != 6 {
 		t.Fatalf("unexpected list: %v", evening)
 	}
 
 	// Its channels, without the system variable and the program
 	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "favoriteId": "1300", "requestId": "f2"})
-	if channels := receive(t, conn, byRequestID("f2"))["channels"].([]interface{}); len(channels) != 4 {
+	if channels := receive(t, conn, byRequestID("f2"))["channels"].([]any); len(channels) != 4 {
 		t.Fatalf("expected 4 channels, got %d", len(channels))
 	}
 
@@ -1316,8 +1316,8 @@ func TestStackFavorites(t *testing.T) {
 		t.Fatalf("expected NOT_FOUND for an unknown item, got %v", r)
 	}
 	list = favorites("f6")
-	morning := list[2].(map[string]interface{})
-	if morning["name"] != "Früh" || len(morning["items"].([]interface{})) != 1 {
+	morning := list[2].(map[string]any)
+	if morning["name"] != "Früh" || len(morning["items"].([]any)) != 1 {
 		t.Fatalf("unexpected new list: %v", morning)
 	}
 	if r := change("f7", message{"type": "deleteFavorite", "id": id}); r["success"] != true {
@@ -1329,7 +1329,7 @@ func TestStackFavorites(t *testing.T) {
 
 	// The guest sees only its own list and changes nothing
 	loginAs(t, conn, "Gast", "gast")
-	if list := favorites("g1"); len(list) != 1 || list[0].(map[string]interface{})["name"] != "Gäste" {
+	if list := favorites("g1"); len(list) != 1 || list[0].(map[string]any)["name"] != "Gäste" {
 		t.Fatalf("unexpected lists of the guest: %v", list)
 	}
 	if r := change("g2", message{"type": "createFavorite", "name": "Meins"}); r["code"] != "FORBIDDEN" {
@@ -1350,8 +1350,8 @@ func TestStackChannelTile(t *testing.T) {
 	// Every channel list carries it, from mui-tiles.json
 	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "all": true, "requestId": "t2"})
 	found := false
-	for _, raw := range receive(t, conn, byRequestID("t2"))["channels"].([]interface{}) {
-		if ch := raw.(map[string]interface{}); ch["id"] == 101.0 {
+	for _, raw := range receive(t, conn, byRequestID("t2"))["channels"].([]any) {
+		if ch := raw.(map[string]any); ch["id"] == 101.0 {
 			found = true
 			if ch["tile"] != "switch" {
 				t.Fatalf("tile not stored: %v", ch)
@@ -1375,14 +1375,14 @@ func TestStackProgramEditor(t *testing.T) {
 	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
 	receive(t, conn, byRequestID("e"))
 
-	read := func(requestID string, id interface{}) map[string]interface{} {
+	read := func(requestID string, id any) map[string]any {
 		send(t, conn, message{"type": "getProgram", "requestId": requestID, "id": id})
 		m := receive(t, conn, byRequestID(requestID))
-		program, _ := m["program"].(map[string]interface{})
+		program, _ := m["program"].(map[string]any)
 		return program
 	}
 	program := read("p1", 1201)
-	if program["name"] != "Rollläden abends schließen" || len(program["rules"].([]interface{})) != 1 {
+	if program["name"] != "Rollläden abends schließen" || len(program["rules"].([]any)) != 1 {
 		t.Fatalf("unexpected program: %v", program)
 	}
 
@@ -1409,9 +1409,9 @@ func TestStackProgramEditor(t *testing.T) {
 		t.Fatalf("saveProgram failed: %v", saved)
 	}
 	back := read("p3", saved["id"])
-	rule := back["rules"].([]interface{})[0].(map[string]interface{})
-	dest := rule["destinations"].([]interface{})[0].(map[string]interface{})
-	cond := rule["groups"].([]interface{})[0].([]interface{})[0].(map[string]interface{})
+	rule := back["rules"].([]any)[0].(map[string]any)
+	dest := rule["destinations"].([]any)[0].(map[string]any)
+	cond := rule["groups"].([]any)[0].([]any)[0].(map[string]any)
 	if back["name"] != "Fenster offen" || dest["delay"] != 30.0 || dest["value"] != "WriteLine(\"zu\");" || cond["datapoint"] != "STATE" || back["else"] == nil {
 		t.Fatalf("program not stored as sent: %v", back)
 	}
@@ -1437,11 +1437,11 @@ func TestStackAllLinks(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 	send(t, conn, message{"type": "getAllLinks", "requestId": "l1"})
-	links := receive(t, conn, byRequestID("l1"))["links"].([]interface{})
+	links := receive(t, conn, byRequestID("l1"))["links"].([]any)
 	if len(links) != 1 {
 		t.Fatalf("expected the fixture's link, got %v", links)
 	}
-	link := links[0].(map[string]interface{})
+	link := links[0].(map[string]any)
 	if link["interfaceName"] != "HmIP-RF" || link["sender"] != "000855699C4F38:1" || link["name"] != "Esstisch an" {
 		t.Fatalf("unexpected link: %v", link)
 	}
@@ -1547,9 +1547,9 @@ func TestStackUsers(t *testing.T) {
 	send(t, conn, message{"type": "elevate", "password": "secret", "requestId": "e"})
 	receive(t, conn, byRequestID("e"))
 
-	list := func(id string) []interface{} {
+	list := func(id string) []any {
 		send(t, conn, message{"type": "getUsers", "requestId": id})
-		return receive(t, conn, byRequestID(id))["users"].([]interface{})
+		return receive(t, conn, byRequestID(id))["users"].([]any)
 	}
 	before := len(list("u0"))
 
@@ -1559,7 +1559,7 @@ func TestStackUsers(t *testing.T) {
 		t.Fatalf("saveUser failed: %v", created)
 	}
 	users := list("u2")
-	anna := users[len(users)-1].(map[string]interface{})
+	anna := users[len(users)-1].(map[string]any)
 	if len(users) != before+1 || anna["name"] != "AnnaMuster" || anna["firstName"] != "Anna" || anna["lastName"] != "Muster" || anna["level"] != "user" || anna["hasPassword"] != true {
 		t.Fatalf("user not created as sent: %v", anna)
 	}
@@ -1582,10 +1582,10 @@ func TestStackUsers(t *testing.T) {
 		t.Fatalf("expected INVALID_VALUE, got %v", m)
 	}
 	// The own account keeps its rights
-	var adminID interface{}
+	var adminID any
 	for _, u := range users {
-		if u.(map[string]interface{})["name"] == "Admin" {
-			adminID = u.(map[string]interface{})["id"]
+		if u.(map[string]any)["name"] == "Admin" {
+			adminID = u.(map[string]any)["id"]
 		}
 	}
 	send(t, conn, message{"type": "saveUser", "requestId": "u5", "id": adminID, "fullName": "Admin", "level": "guest"})
@@ -1643,8 +1643,8 @@ func TestStackChannelOptions(t *testing.T) {
 	send(t, conn, message{"type": "setChannelOption", "requestId": "o2", "id": 101, "option": "visible", "value": false})
 	receive(t, conn, byRequestID("o2"))
 	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "requestId": "c", "all": true})
-	for _, ch := range receive(t, conn, byRequestID("c"))["channels"].([]interface{}) {
-		if c := ch.(map[string]interface{}); c["id"] == 101.0 && (c["hidden"] != true || c["readOnly"] != true) {
+	for _, ch := range receive(t, conn, byRequestID("c"))["channels"].([]any) {
+		if c := ch.(map[string]any); c["id"] == 101.0 && (c["hidden"] != true || c["readOnly"] != true) {
 			t.Fatalf("options not listed: %v", c)
 		}
 	}
@@ -1653,8 +1653,8 @@ func TestStackChannelOptions(t *testing.T) {
 		t.Fatalf("setting AES failed: %v", m)
 	}
 	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "requestId": "c2", "all": true})
-	for _, ch := range receive(t, conn, byRequestID("c2"))["channels"].([]interface{}) {
-		if c := ch.(map[string]interface{}); c["id"] == 101.0 && c["aes"] != true {
+	for _, ch := range receive(t, conn, byRequestID("c2"))["channels"].([]any) {
+		if c := ch.(map[string]any); c["id"] == 101.0 && c["aes"] != true {
 			t.Fatalf("AES not listed: %v", c)
 		}
 	}
@@ -1674,22 +1674,22 @@ func TestStackHistory(t *testing.T) {
 	receive(t, conn, byRequestID("o"))
 	send(t, conn, message{"type": "getHistory", "requestId": "h1", "start": 0, "count": 50})
 	history := receive(t, conn, byRequestID("h1"))
-	entries := history["entries"].([]interface{})
+	entries := history["entries"].([]any)
 	if history["total"] != 1.0 || len(entries) != 1 {
 		t.Fatalf("unexpected history: %v", history)
 	}
-	if e := entries[0].(map[string]interface{}); e["name"] != "Wohnzimmer Licht" || e["datapoint"] != "STATE" || e["kind"] != "channel" {
+	if e := entries[0].(map[string]any); e["name"] != "Wohnzimmer Licht" || e["datapoint"] != "STATE" || e["kind"] != "channel" {
 		t.Fatalf("unexpected entry: %v", e)
 	}
 	send(t, conn, message{"type": "setChannelOption", "requestId": "o2", "id": 401, "option": "logged", "value": true})
 	receive(t, conn, byRequestID("o2"))
 	send(t, conn, message{"type": "getHistory", "requestId": "hc", "start": 0, "count": 500, "channel": 401})
-	byChannel := receive(t, conn, byRequestID("hc"))["entries"].([]interface{})
+	byChannel := receive(t, conn, byRequestID("hc"))["entries"].([]any)
 	if len(byChannel) != 48 {
 		t.Fatalf("expected 24 temperature and 24 humidity entries, got %d", len(byChannel))
 	}
 	for _, e := range byChannel {
-		if e.(map[string]interface{})["name"] != "Wohnzimmer Thermostat" {
+		if e.(map[string]any)["name"] != "Wohnzimmer Thermostat" {
 			t.Fatalf("entry of another channel: %v", e)
 		}
 	}
@@ -1724,11 +1724,11 @@ func TestStackAddons(t *testing.T) {
 	receive(t, conn, byRequestID("e"))
 
 	send(t, conn, message{"type": "getAddons", "requestId": "a1", "language": "de"})
-	list := receive(t, conn, byRequestID("a1"))["addons"].([]interface{})
+	list := receive(t, conn, byRequestID("a1"))["addons"].([]any)
 	if len(list) != 1 {
 		t.Fatalf("unexpected add-ons: %v", list)
 	}
-	if a := list[0].(map[string]interface{}); a["name"] != "CUxD" || a["version"] != "2.11" || a["configUrl"] != "/addons/cuxd/" {
+	if a := list[0].(map[string]any); a["name"] != "CUxD" || a["version"] != "2.11" || a["configUrl"] != "/addons/cuxd/" {
 		t.Fatalf("unexpected add-on: %v", a)
 	}
 	send(t, conn, message{"type": "addonAction", "requestId": "a2", "id": "cuxd", "operation": "restart"})
@@ -1744,7 +1744,7 @@ func TestStackAddons(t *testing.T) {
 		t.Fatalf("uninstall failed: %v", m)
 	}
 	send(t, conn, message{"type": "getAddons", "requestId": "a5"})
-	if list := receive(t, conn, byRequestID("a5"))["addons"].([]interface{}); len(list) != 0 {
+	if list := receive(t, conn, byRequestID("a5"))["addons"].([]any); len(list) != 0 {
 		t.Fatalf("add-on still listed: %v", list)
 	}
 }
@@ -1803,11 +1803,11 @@ func TestStackDevicePrograms(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Gast", "gast")
 	send(t, conn, message{"type": "getDevicePrograms", "requestId": "d1", "address": "LEQ0000002"})
-	programs := receive(t, conn, byRequestID("d1"))["programs"].([]interface{})
+	programs := receive(t, conn, byRequestID("d1"))["programs"].([]any)
 	if len(programs) != 1 {
 		t.Fatalf("unexpected programs: %v", programs)
 	}
-	if p := programs[0].(map[string]interface{}); p["id"] != 1201.0 || p["channels"].([]interface{})[0] != "LEQ0000002:1" {
+	if p := programs[0].(map[string]any); p["id"] != 1201.0 || p["channels"].([]any)[0] != "LEQ0000002:1" {
 		t.Fatalf("unexpected program: %v", p)
 	}
 	send(t, conn, message{"type": "getDevicePrograms", "requestId": "d2", "address": "x\"; system.Exec(\""})
@@ -1820,14 +1820,14 @@ func TestStackVirtualKeys(t *testing.T) {
 	ccu, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 	send(t, conn, message{"type": "getVirtualKeys", "requestId": "k1"})
-	keys := receive(t, conn, byRequestID("k1"))["keys"].([]interface{})
-	if len(keys) != 3 || keys[0].(map[string]interface{})["name"] != "Alles aus" {
+	keys := receive(t, conn, byRequestID("k1"))["keys"].([]any)
+	if len(keys) != 3 || keys[0].(map[string]any)["name"] != "Alles aus" {
 		t.Fatalf("unexpected keys: %v", keys)
 	}
 	// Not among all devices
 	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "requestId": "c", "all": true})
-	for _, ch := range receive(t, conn, byRequestID("c"))["channels"].([]interface{}) {
-		if c := ch.(map[string]interface{}); strings.HasPrefix(c["address"].(string), "BidCoS-RF:") {
+	for _, ch := range receive(t, conn, byRequestID("c"))["channels"].([]any) {
+		if c := ch.(map[string]any); strings.HasPrefix(c["address"].(string), "BidCoS-RF:") {
 			t.Fatalf("virtual key listed among all channels: %v", c)
 		}
 	}
@@ -1846,8 +1846,8 @@ func TestStackReplaceDevice(t *testing.T) {
 	receive(t, conn, byRequestID("e"))
 
 	send(t, conn, message{"type": "listReplaceableDevices", "requestId": "r1", "interfaceName": "BidCos-RF", "address": "LEQ0000099"})
-	devices := receive(t, conn, byRequestID("r1"))["devices"].([]interface{})
-	if len(devices) != 1 || devices[0].(map[string]interface{})["address"] != "LEQ0000001" {
+	devices := receive(t, conn, byRequestID("r1"))["devices"].([]any)
+	if len(devices) != 1 || devices[0].(map[string]any)["address"] != "LEQ0000001" {
 		t.Fatalf("unexpected replaceable devices: %v", devices)
 	}
 	send(t, conn, message{"type": "listReplaceableDevices", "requestId": "r2", "interfaceName": "HmIP-RF", "address": "0008DA8A9F1234"})
@@ -1861,8 +1861,8 @@ func TestStackReplaceDevice(t *testing.T) {
 	// The living room light now has the new address, in its rooms as before
 	send(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "roomId": "1", "requestId": "c"})
 	found := false
-	for _, ch := range receive(t, conn, byRequestID("c"))["channels"].([]interface{}) {
-		if c := ch.(map[string]interface{}); c["address"] == "LEQ0000099:1" && c["name"] == "Wohnzimmer Licht" {
+	for _, ch := range receive(t, conn, byRequestID("c"))["channels"].([]any) {
+		if c := ch.(map[string]any); c["address"] == "LEQ0000099:1" && c["name"] == "Wohnzimmer Licht" {
 			found = true
 		}
 	}
@@ -1870,8 +1870,8 @@ func TestStackReplaceDevice(t *testing.T) {
 		t.Fatal("the new device did not take the old one's place")
 	}
 	send(t, conn, message{"type": "getInbox", "requestId": "i"})
-	for _, d := range receive(t, conn, byRequestID("i"))["devices"].([]interface{}) {
-		if d.(map[string]interface{})["address"] == "LEQ0000099" {
+	for _, d := range receive(t, conn, byRequestID("i"))["devices"].([]any) {
+		if d.(map[string]any)["address"] == "LEQ0000099" {
 			t.Fatal("the new device is still in the inbox")
 		}
 	}
@@ -1965,10 +1965,10 @@ func TestStackLogicOptions(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 
-	program := func(id string) map[string]interface{} {
+	program := func(id string) map[string]any {
 		send(t, conn, message{"type": "getPrograms", "requestId": id})
-		for _, p := range receive(t, conn, byRequestID(id))["programs"].([]interface{}) {
-			if p := p.(map[string]interface{}); p["id"] == 1200.0 {
+		for _, p := range receive(t, conn, byRequestID(id))["programs"].([]any) {
+			if p := p.(map[string]any); p["id"] == 1200.0 {
 				return p
 			}
 		}
@@ -2014,8 +2014,8 @@ func TestStackLogicOptions(t *testing.T) {
 	send(t, conn, message{"type": "setLogicOption", "requestId": "o3", "id": 950, "option": "visible", "value": false})
 	receive(t, conn, byRequestID("o3"))
 	send(t, conn, message{"type": "getSysvars", "requestId": "s"})
-	for _, sv := range receive(t, conn, byRequestID("s"))["sysvars"].([]interface{}) {
-		if sv := sv.(map[string]interface{}); sv["id"] == 950.0 && sv["visible"] != false {
+	for _, sv := range receive(t, conn, byRequestID("s"))["sysvars"].([]any) {
+		if sv := sv.(map[string]any); sv["id"] == 950.0 && sv["visible"] != false {
 			t.Fatalf("sysvar still visible: %v", sv)
 		}
 	}
@@ -2033,10 +2033,10 @@ func TestStackEditSysvar(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 
-	sysvar := func(id float64) map[string]interface{} {
+	sysvar := func(id float64) map[string]any {
 		send(t, conn, message{"type": "getSysvars", "requestId": "g"})
-		for _, sv := range receive(t, conn, byRequestID("g"))["sysvars"].([]interface{}) {
-			if sv := sv.(map[string]interface{}); sv["id"] == id {
+		for _, sv := range receive(t, conn, byRequestID("g"))["sysvars"].([]any) {
+			if sv := sv.(map[string]any); sv["id"] == id {
 				return sv
 			}
 		}
@@ -2058,7 +2058,7 @@ func TestStackEditSysvar(t *testing.T) {
 	}
 	// A value list: a value past its end starts over
 	edit("e2", message{"id": 952, "kind": "enum", "valueList": []string{"Aus", "An"}})
-	if sv := sysvar(952); len(sv["valueList"].([]interface{})) != 2 || sv["value"] != 1.0 {
+	if sv := sysvar(952); len(sv["valueList"].([]any)) != 2 || sv["value"] != 1.0 {
 		t.Fatalf("enum not edited: %v", sv)
 	}
 	edit("e3", message{"id": 952, "kind": "enum", "valueList": []string{"Aus"}})
@@ -2110,7 +2110,7 @@ func TestStackClock(t *testing.T) {
 	if m["timeServers"] != "pool.ntp.org" || m["timeZone"] != "CET/CEST" || m["canSetClock"] != false {
 		t.Fatalf("unexpected clock settings: %v", m)
 	}
-	if zones, _ := m["timeZones"].([]interface{}); len(zones) < 28 {
+	if zones, _ := m["timeZones"].([]any); len(zones) < 28 {
 		t.Fatalf("expected the WebUI's time zones, got %v", m["timeZones"])
 	}
 
@@ -2148,15 +2148,15 @@ func TestStackHeatingGroups(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 	send(t, conn, message{"type": "getHeatingGroups", "requestId": "h"})
-	groups := receive(t, conn, byRequestID("h"))["groups"].([]interface{})
+	groups := receive(t, conn, byRequestID("h"))["groups"].([]any)
 	if len(groups) != 2 {
 		t.Fatalf("unexpected groups: %v", groups)
 	}
-	flur := groups[0].(map[string]interface{})
+	flur := groups[0].(map[string]any)
 	if flur["name"] != "Heizung Flur" || flur["deviceAddress"] != "INT0000001" || flur["type"] != "hmip.heating.group" {
 		t.Fatalf("unexpected group: %v", flur)
 	}
-	if m := flur["members"].([]interface{})[0].(map[string]interface{}); m["address"] != "000A9D89A7AF25:1" {
+	if m := flur["members"].([]any)[0].(map[string]any); m["address"] != "000A9D89A7AF25:1" {
 		t.Fatalf("unexpected member: %v", m)
 	}
 
@@ -2328,7 +2328,7 @@ func TestStackDiagrams(t *testing.T) {
 	loginAs(t, conn, "Admin", "secret")
 
 	send(t, conn, message{"type": "getDiagrams", "requestId": "d1"})
-	if m := receive(t, conn, byRequestID("d1")); len(m["diagrams"].([]interface{})) != 0 {
+	if m := receive(t, conn, byRequestID("d1")); len(m["diagrams"].([]any)) != 0 {
 		t.Fatalf("diagrams: %v", m)
 	}
 	// The thermostat's channel is logged: its system protocol fills the
@@ -2336,24 +2336,24 @@ func TestStackDiagrams(t *testing.T) {
 	send(t, conn, message{"type": "setChannelOption", "requestId": "d2", "id": 401, "option": "logged", "value": true})
 	receive(t, conn, byRequestID("d2"))
 
-	diagram := map[string]interface{}{"name": "Wohnzimmer", "period": "week", "series": []interface{}{
-		map[string]interface{}{"address": "LEQ0000004:1", "datapoint": "ACTUAL_TEMPERATURE", "color": "#ef4444", "unit": "°C"},
-		map[string]interface{}{"address": "sysvar", "datapoint": "951"},
+	diagram := map[string]any{"name": "Wohnzimmer", "period": "week", "series": []any{
+		map[string]any{"address": "LEQ0000004:1", "datapoint": "ACTUAL_TEMPERATURE", "color": "#ef4444", "unit": "°C"},
+		map[string]any{"address": "sysvar", "datapoint": "951"},
 	}}
 	send(t, conn, message{"type": "saveDiagram", "requestId": "d3", "diagram": diagram})
 	saved := receive(t, conn, byRequestID("d3"))
 	if saved["success"] != true {
 		t.Fatalf("save: %v", saved)
 	}
-	id := saved["diagram"].(map[string]interface{})["id"].(string)
+	id := saved["diagram"].(map[string]any)["id"].(string)
 
-	query := func(requestID string, from, to time.Time) []interface{} {
+	query := func(requestID string, from, to time.Time) []any {
 		send(t, conn, message{"type": "getDiagramData", "requestId": requestID, "from": from.UnixMilli(), "to": to.UnixMilli(), "buckets": 500,
-			"series": []interface{}{map[string]interface{}{"address": "LEQ0000004:1", "datapoint": "ACTUAL_TEMPERATURE"}, map[string]interface{}{"address": "sysvar", "datapoint": "951"}}})
-		return receive(t, conn, byRequestID(requestID))["series"].([]interface{})
+			"series": []any{map[string]any{"address": "LEQ0000004:1", "datapoint": "ACTUAL_TEMPERATURE"}, map[string]any{"address": "sysvar", "datapoint": "951"}}})
+		return receive(t, conn, byRequestID(requestID))["series"].([]any)
 	}
-	points := func(series interface{}) []interface{} {
-		return series.(map[string]interface{})["points"].([]interface{})
+	points := func(series any) []any {
+		return series.(map[string]any)["points"].([]any)
 	}
 	now := time.Now()
 	// The 24 hourly values of the fake system protocol (2026-10-03) and the
@@ -2363,7 +2363,7 @@ func TestStackDiagrams(t *testing.T) {
 		t.Errorf("temperature points: %d %v", n, series[0])
 	}
 	// The system variable's current value
-	if p := points(series[1]); len(p) != 1 || p[0].([]interface{})[1] != 12.5 {
+	if p := points(series[1]); len(p) != 1 || p[0].([]any)[1] != 12.5 {
 		t.Errorf("sysvar points: %v", p)
 	}
 
@@ -2374,7 +2374,7 @@ func TestStackDiagrams(t *testing.T) {
 	deadline := time.Now().Add(5 * time.Second)
 	for {
 		p := points(query("d5", now.Add(-time.Hour), time.Now().Add(time.Hour))[0])
-		if last := p[len(p)-1].([]interface{}); last[3] == 23.5 {
+		if last := p[len(p)-1].([]any); last[3] == 23.5 {
 			break
 		}
 		if time.Now().After(deadline) {
@@ -2395,11 +2395,11 @@ func TestStackDiagrams(t *testing.T) {
 		t.Errorf("guest deleted: %v", m)
 	}
 	send(t, guest, message{"type": "getDiagrams", "requestId": "g2"})
-	if m := receive(t, guest, byRequestID("g2")); len(m["diagrams"].([]interface{})) != 1 {
+	if m := receive(t, guest, byRequestID("g2")); len(m["diagrams"].([]any)) != 1 {
 		t.Errorf("guest sees: %v", m)
 	}
 
-	send(t, conn, message{"type": "saveDiagram", "requestId": "d6", "diagram": map[string]interface{}{"name": "", "series": []interface{}{}}})
+	send(t, conn, message{"type": "saveDiagram", "requestId": "d6", "diagram": map[string]any{"name": "", "series": []any{}}})
 	if m := receive(t, conn, byRequestID("d6")); m["code"] != "INVALID_VALUE" {
 		t.Errorf("invalid saved: %v", m)
 	}
@@ -2419,36 +2419,36 @@ func TestStackGeneralSettings(t *testing.T) {
 
 	send(t, conn, message{"type": "getGeneralSettings", "requestId": "g1"})
 	m := receive(t, conn, byRequestID("g1"))
-	price := m["energyPrice"].(map[string]interface{})
-	if price["currency"] != "EUR" || price["electricity"] != 0.0 || m["infoLed"].(map[string]interface{})["service"] != true ||
-		m["hideStickyUnreach"] != false || len(m["currencies"].([]interface{})) != 5 || m["storage"].(map[string]interface{})["total"].(float64) <= 0 {
+	price := m["energyPrice"].(map[string]any)
+	if price["currency"] != "EUR" || price["electricity"] != 0.0 || m["infoLed"].(map[string]any)["service"] != true ||
+		m["hideStickyUnreach"] != false || len(m["currencies"].([]any)) != 5 || m["storage"].(map[string]any)["total"].(float64) <= 0 {
 		t.Fatalf("settings: %v", m)
 	}
 
 	stickyBefore := false
 	send(t, conn, message{"type": "getServiceMessages", "requestId": "g2"})
-	for _, item := range receive(t, conn, byRequestID("g2"))["messages"].([]interface{}) {
-		stickyBefore = stickyBefore || item.(map[string]interface{})["type"] == "STICKY_UNREACH"
+	for _, item := range receive(t, conn, byRequestID("g2"))["messages"].([]any) {
+		stickyBefore = stickyBefore || item.(map[string]any)["type"] == "STICKY_UNREACH"
 	}
 
 	send(t, conn, message{"type": "setGeneralSettings", "requestId": "g3",
-		"energyPrice":       map[string]interface{}{"currency": "EUR", "electricity": 0.32, "gas": 0.11, "gasHeatingValue": 11.3, "gasConditionNumber": 0.95},
-		"infoLed":           map[string]interface{}{"service": false, "alarm": true},
+		"energyPrice":       map[string]any{"currency": "EUR", "electricity": 0.32, "gas": 0.11, "gasHeatingValue": 11.3, "gasConditionNumber": 0.95},
+		"infoLed":           map[string]any{"service": false, "alarm": true},
 		"hideStickyUnreach": true, "betaFirmware": false})
 	if m := receive(t, conn, byRequestID("g3")); m["success"] != true {
 		t.Fatalf("set: %v", m)
 	}
 	send(t, conn, message{"type": "getGeneralSettings", "requestId": "g4"})
 	m = receive(t, conn, byRequestID("g4"))
-	if m["energyPrice"].(map[string]interface{})["electricity"] != 0.32 || m["infoLed"].(map[string]interface{})["service"] != false || m["hideStickyUnreach"] != true {
+	if m["energyPrice"].(map[string]any)["electricity"] != 0.32 || m["infoLed"].(map[string]any)["service"] != false || m["hideStickyUnreach"] != true {
 		t.Errorf("after set: %v", m)
 	}
 
 	// Messages of devices that were unreachable are hidden and acknowledged
 	sticky := func(id string) bool {
 		send(t, conn, message{"type": "getServiceMessages", "requestId": id})
-		for _, item := range receive(t, conn, byRequestID(id))["messages"].([]interface{}) {
-			if item.(map[string]interface{})["type"] == "STICKY_UNREACH" {
+		for _, item := range receive(t, conn, byRequestID(id))["messages"].([]any) {
+			if item.(map[string]any)["type"] == "STICKY_UNREACH" {
 				return true
 			}
 		}
@@ -2462,8 +2462,8 @@ func TestStackGeneralSettings(t *testing.T) {
 	}
 	// Acknowledged: gone without the option too
 	send(t, conn, message{"type": "setGeneralSettings", "requestId": "g5b",
-		"energyPrice": map[string]interface{}{"currency": "EUR", "electricity": 0.32, "gas": 0.11, "gasHeatingValue": 11.3, "gasConditionNumber": 0.95},
-		"infoLed":     map[string]interface{}{"service": false, "alarm": true}, "hideStickyUnreach": false})
+		"energyPrice": map[string]any{"currency": "EUR", "electricity": 0.32, "gas": 0.11, "gasHeatingValue": 11.3, "gasConditionNumber": 0.95},
+		"infoLed":     map[string]any{"service": false, "alarm": true}, "hideStickyUnreach": false})
 	receive(t, conn, byRequestID("g5b"))
 	deadline := time.Now().Add(3 * time.Second)
 	for i := 0; sticky(fmt.Sprintf("g5c%d", i)); i++ {
@@ -2475,11 +2475,11 @@ func TestStackGeneralSettings(t *testing.T) {
 
 	// The prices come with the diagrams
 	send(t, conn, message{"type": "getDiagrams", "requestId": "g6"})
-	if m := receive(t, conn, byRequestID("g6")); m["energyPrice"].(map[string]interface{})["electricity"] != 0.32 {
+	if m := receive(t, conn, byRequestID("g6")); m["energyPrice"].(map[string]any)["electricity"] != 0.32 {
 		t.Errorf("diagrams: %v", m)
 	}
 
-	send(t, conn, message{"type": "setGeneralSettings", "requestId": "g7", "energyPrice": map[string]interface{}{"currency": "USD"}})
+	send(t, conn, message{"type": "setGeneralSettings", "requestId": "g7", "energyPrice": map[string]any{"currency": "USD"}})
 	if m := receive(t, conn, byRequestID("g7")); m["code"] != "INVALID_VALUE" {
 		t.Errorf("invalid currency: %v", m)
 	}
@@ -2490,12 +2490,12 @@ func TestStackEditHeatingGroups(t *testing.T) {
 	loginAs(t, conn, "Admin", "secret")
 
 	send(t, conn, message{"type": "getHeatingGroupMembers", "requestId": "h1", "groupType": "hmip.heating.group"})
-	members := receive(t, conn, byRequestID("h1"))["members"].(map[string]interface{})
-	if len(members["assignable"].([]interface{})) != 0 || members["leftover"].([]interface{})[0].(map[string]interface{})["id"] != "000A9D89A7AF25:1" {
+	members := receive(t, conn, byRequestID("h1"))["members"].(map[string]any)
+	if len(members["assignable"].([]any)) != 0 || members["leftover"].([]any)[0].(map[string]any)["id"] != "000A9D89A7AF25:1" {
 		t.Fatalf("members: %v", members)
 	}
 
-	group := map[string]interface{}{"id": 0, "name": "Bad & Küche", "type": "hmip.heating.group", "forbidSingleOperation": false, "members": []string{}}
+	group := map[string]any{"id": 0, "name": "Bad & Küche", "type": "hmip.heating.group", "forbidSingleOperation": false, "members": []string{}}
 	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h2", "group": group})
 	if m := receive(t, conn, byRequestID("h2")); m["code"] != "PASSWORD_REQUIRED" {
 		t.Fatalf("without password: %v", m)
@@ -2523,7 +2523,7 @@ func TestStackEditHeatingGroups(t *testing.T) {
 
 	// The session is kept: no password for the next changes. The
 	// thermostat moves from group 1 to the new one.
-	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h5", "group": map[string]interface{}{"id": 1, "name": "Heizung Flur", "type": "hmip.heating.group", "members": []string{}}})
+	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h5", "group": map[string]any{"id": 1, "name": "Heizung Flur", "type": "hmip.heating.group", "members": []string{}}})
 	if m := receive(t, conn, byRequestID("h5")); m["success"] != true {
 		t.Fatalf("change: %v", m)
 	}
@@ -2537,12 +2537,12 @@ func TestStackEditHeatingGroups(t *testing.T) {
 	waitFor("member not marked", func() bool { return ccu.InHeatingGroup()["000A9D89A7AF25"] == "true" })
 
 	send(t, conn, message{"type": "getHeatingGroups", "requestId": "h7"})
-	groups := receive(t, conn, byRequestID("h7"))["groups"].([]interface{})
+	groups := receive(t, conn, byRequestID("h7"))["groups"].([]any)
 	if len(groups) != 3 {
 		t.Fatalf("groups: %v", groups)
 	}
-	third := groups[2].(map[string]interface{})
-	if third["name"] != "Bad & Küche" || len(third["members"].([]interface{})) != 1 || len(groups[0].(map[string]interface{})["members"].([]interface{})) != 0 {
+	third := groups[2].(map[string]any)
+	if third["name"] != "Bad & Küche" || len(third["members"].([]any)) != 1 || len(groups[0].(map[string]any)["members"].([]any)) != 0 {
 		t.Errorf("after changes: %v", groups)
 	}
 
@@ -2555,7 +2555,7 @@ func TestStackEditHeatingGroups(t *testing.T) {
 	if m := receive(t, conn, byRequestID("h9")); m["code"] != "NOT_FOUND" {
 		t.Errorf("delete twice: %v", m)
 	}
-	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h10", "group": map[string]interface{}{"id": 0, "name": "", "type": "hmip.heating.group"}})
+	send(t, conn, message{"type": "saveHeatingGroup", "requestId": "h10", "group": map[string]any{"id": 0, "name": "", "type": "hmip.heating.group"}})
 	if m := receive(t, conn, byRequestID("h10")); m["code"] != "INVALID_VALUE" {
 		t.Errorf("no name: %v", m)
 	}
@@ -2637,23 +2637,23 @@ func TestStackDeviceHealth(t *testing.T) {
 	loginAs(t, conn, "Admin", "secret")
 	send(t, conn, message{"type": "getDeviceHealth", "requestId": "h1"})
 	m := receive(t, conn, byRequestID("h1"))
-	devices, _ := m["devices"].([]interface{})
-	byAddress := map[string]map[string]interface{}{}
+	devices, _ := m["devices"].([]any)
+	byAddress := map[string]map[string]any{}
 	for _, d := range devices {
-		device := d.(map[string]interface{})
+		device := d.(map[string]any)
 		byAddress[device["address"].(string)] = device
 	}
 	bath := byAddress["003660C9930AB6"]
 	if bath == nil || bath["name"] != "Fensterkontakt Bad" || bath["lowBatLimit"] != 1.1 {
 		t.Fatalf("bath contact: %v", bath)
 	}
-	values := bath["values"].(map[string]interface{})
-	if values["LOW_BAT"].(map[string]interface{})["value"] != true || values["OPERATING_VOLTAGE"].(map[string]interface{})["value"] != 1.0 {
+	values := bath["values"].(map[string]any)
+	if values["LOW_BAT"].(map[string]any)["value"] != true || values["OPERATING_VOLTAGE"].(map[string]any)["value"] != 1.0 {
 		t.Fatalf("bath values: %v", values)
 	}
 	// BidCos: LOWBAT as LOW_BAT, no limit
 	bidcos := byAddress["LEQ0000001"]
-	if bidcos == nil || bidcos["lowBatLimit"] != nil || bidcos["values"].(map[string]interface{})["LOW_BAT"] == nil {
+	if bidcos == nil || bidcos["lowBatLimit"] != nil || bidcos["values"].(map[string]any)["LOW_BAT"] == nil {
 		t.Fatalf("bidcos: %v", bidcos)
 	}
 }
@@ -2695,17 +2695,17 @@ func TestStackNetwork(t *testing.T) {
 	loginAs(t, conn, "Admin", "secret")
 	send(t, conn, message{"type": "getNetwork", "requestId": "n1"})
 	m := receive(t, conn, byRequestID("n1"))
-	config := m["config"].(map[string]interface{})
-	if config["dhcp"] != true || config["hostname"] != "homematic-ccu3" || m["tailscale"].(map[string]interface{})["available"] != false {
+	config := m["config"].(map[string]any)
+	if config["dhcp"] != true || config["hostname"] != "homematic-ccu3" || m["tailscale"].(map[string]any)["available"] != false {
 		t.Fatalf("network: %v", m)
 	}
-	manual := map[string]interface{}{"dhcp": false, "hostname": "ccu-keller", "ip": "192.168.178.30", "netmask": "255.255.255.0", "gateway": "192.168.178.1", "dns1": "192.168.178.1", "dns2": ""}
+	manual := map[string]any{"dhcp": false, "hostname": "ccu-keller", "ip": "192.168.178.30", "netmask": "255.255.255.0", "gateway": "192.168.178.1", "dns1": "192.168.178.1", "dns2": ""}
 	send(t, conn, message{"type": "setNetwork", "requestId": "n2", "config": manual})
 	if m := receive(t, conn, byRequestID("n2")); m["success"] != true {
 		t.Fatalf("set: %v", m)
 	}
 	send(t, conn, message{"type": "getNetwork", "requestId": "n3"})
-	if c := receive(t, conn, byRequestID("n3"))["config"].(map[string]interface{}); c["dhcp"] != false || c["ip"] != "192.168.178.30" || c["hostname"] != "ccu-keller" {
+	if c := receive(t, conn, byRequestID("n3"))["config"].(map[string]any); c["dhcp"] != false || c["ip"] != "192.168.178.30" || c["hostname"] != "ccu-keller" {
 		t.Errorf("after set: %v", c)
 	}
 	manual["gateway"] = "10.0.0.1"
@@ -2719,13 +2719,13 @@ func TestStackFirewall(t *testing.T) {
 	ccu, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 	send(t, conn, message{"type": "getFirewall", "requestId": "f1"})
-	fw := receive(t, conn, byRequestID("f1"))["firewall"].(map[string]interface{})
-	if fw["mode"] != "RESTRICTIVE" || len(fw["ips"].([]interface{})) != 2 || len(fw["services"].([]interface{})) != 4 {
+	fw := receive(t, conn, byRequestID("f1"))["firewall"].(map[string]any)
+	if fw["mode"] != "RESTRICTIVE" || len(fw["ips"].([]any)) != 2 || len(fw["services"].([]any)) != 4 {
 		t.Fatalf("firewall: %v", fw)
 	}
-	next := map[string]interface{}{
+	next := map[string]any{
 		"mode": "RESTRICTIVE", "ips": []string{"192.168.178.0/24"}, "userPorts": []string{"1883"},
-		"services": []map[string]interface{}{{"id": "XMLRPC", "ports": []int{}, "access": "full"}, {"id": "REGA", "ports": []int{}, "access": "restricted"}, {"id": "NEOSERVER", "ports": []int{}, "access": "none"}},
+		"services": []map[string]any{{"id": "XMLRPC", "ports": []int{}, "access": "full"}, {"id": "REGA", "ports": []int{}, "access": "restricted"}, {"id": "NEOSERVER", "ports": []int{}, "access": "none"}},
 	}
 	send(t, conn, message{"type": "setFirewall", "requestId": "f2", "firewall": next})
 	if m := receive(t, conn, byRequestID("f2")); m["code"] != "PASSWORD_REQUIRED" {
@@ -2736,12 +2736,12 @@ func TestStackFirewall(t *testing.T) {
 		t.Fatalf("set: %v", m)
 	}
 	send(t, conn, message{"type": "getFirewall", "requestId": "f4"})
-	fw = receive(t, conn, byRequestID("f4"))["firewall"].(map[string]interface{})
-	if fw["ips"].([]interface{})[0] != "192.168.178.0/24" || fw["userPorts"].([]interface{})[0] != "1883" {
+	fw = receive(t, conn, byRequestID("f4"))["firewall"].(map[string]any)
+	if fw["ips"].([]any)[0] != "192.168.178.0/24" || fw["userPorts"].([]any)[0] != "1883" {
 		t.Errorf("after set: %v", fw)
 	}
-	for _, s := range fw["services"].([]interface{}) {
-		if s := s.(map[string]interface{}); s["id"] == "XMLRPC" && s["access"] != "full" {
+	for _, s := range fw["services"].([]any) {
+		if s := s.(map[string]any); s["id"] == "XMLRPC" && s["access"] != "full" {
 			t.Errorf("xmlrpc: %v", s)
 		}
 	}
@@ -2757,14 +2757,14 @@ func TestStackLanGateways(t *testing.T) {
 	loginAs(t, conn, "Admin", "secret")
 	send(t, conn, message{"type": "getLanGateways", "requestId": "g1"})
 	m := receive(t, conn, byRequestID("g1"))
-	gateways, modules := m["gateways"].([]interface{}), m["modules"].([]interface{})
+	gateways, modules := m["gateways"].([]any), m["modules"].([]any)
 	if len(gateways) != 1 || len(modules) != 2 {
 		t.Fatalf("gateways: %v", m)
 	}
-	if g := gateways[0].(map[string]interface{}); g["serial"] != "NEQ0987654" || g["state"] != "connected" || g["name"] != "Keller" {
+	if g := gateways[0].(map[string]any); g["serial"] != "NEQ0987654" || g["state"] != "connected" || g["name"] != "Keller" {
 		t.Fatalf("gateway: %v", g)
 	}
-	next := []map[string]interface{}{
+	next := []map[string]any{
 		{"class": "RF", "type": "HMLGW2", "name": "Keller", "serial": "NEQ0987654", "key": "KellerKey1", "ip": "192.168.178.40"},
 		{"class": "Wired", "type": "HMWLGW", "name": "", "serial": "JEQ0000001", "key": "wired1", "ip": ""},
 	}
@@ -2777,8 +2777,8 @@ func TestStackLanGateways(t *testing.T) {
 		t.Fatalf("set: %v", m)
 	}
 	send(t, conn, message{"type": "getLanGateways", "requestId": "g4"})
-	gateways = receive(t, conn, byRequestID("g4"))["gateways"].([]interface{})
-	if len(gateways) != 2 || gateways[1].(map[string]interface{})["state"] != "inactive" {
+	gateways = receive(t, conn, byRequestID("g4"))["gateways"].([]any)
+	if len(gateways) != 2 || gateways[1].(map[string]any)["state"] != "inactive" {
 		t.Fatalf("after set: %v", gateways)
 	}
 	// The kept session needs no password now
@@ -2802,8 +2802,8 @@ func TestStackLanGateways(t *testing.T) {
 		t.Fatalf("unknown module: %v", m)
 	}
 	send(t, conn, message{"type": "listDevices", "requestId": "g9"})
-	for _, d := range receive(t, conn, byRequestID("g9"))["devices"].([]interface{}) {
-		if d := d.(map[string]interface{}); d["address"] == "LEQ0000001" && d["interface"] != "NEQ0987654" {
+	for _, d := range receive(t, conn, byRequestID("g9"))["devices"].([]any) {
+		if d := d.(map[string]any); d["address"] == "LEQ0000001" && d["interface"] != "NEQ0987654" {
 			t.Errorf("assigned device: %v", d)
 		}
 	}
@@ -2854,8 +2854,8 @@ func TestStackPairingWithKeyAndSerial(t *testing.T) {
 	}
 	send(t, conn, message{"type": "getInbox", "requestId": "p8"})
 	found := map[string]bool{}
-	for _, d := range receive(t, conn, byRequestID("p8"))["devices"].([]interface{}) {
-		found[d.(map[string]interface{})["address"].(string)] = true
+	for _, d := range receive(t, conn, byRequestID("p8"))["devices"].([]any) {
+		found[d.(map[string]any)["address"].(string)] = true
 	}
 	if !found["LEQ0012345"] || !found["KEQ0000001"] || !found["001F98A9B4C2D1"] {
 		t.Fatalf("inbox: %v", found)
@@ -2927,7 +2927,7 @@ func TestStackSecurityLevel(t *testing.T) {
 		t.Fatalf("after LOW: %s", got)
 	}
 	send(t, conn, message{"type": "getFirewall", "requestId": "l6"})
-	if fw := receive(t, conn, byRequestID("l6"))["firewall"].(map[string]interface{}); fw["mode"] != "MOST_OPEN" || len(fw["ips"].([]interface{})) != 2 {
+	if fw := receive(t, conn, byRequestID("l6"))["firewall"].(map[string]any); fw["mode"] != "MOST_OPEN" || len(fw["ips"].([]any)) != 2 {
 		t.Errorf("firewall: %v", fw)
 	}
 	send(t, conn, message{"type": "setSecurityLevel", "requestId": "l7", "level": "SUPER"})
@@ -2943,15 +2943,15 @@ func TestStackDeviceFirmware(t *testing.T) {
 	base := fmt.Sprintf("http://127.0.0.1:%d", wsPorts[ccu])
 
 	send(t, conn, message{"type": "getDeviceFirmware", "requestId": "d1"})
-	if files := receive(t, conn, byRequestID("d1"))["files"].([]interface{}); len(files) != 0 {
+	if files := receive(t, conn, byRequestID("d1"))["files"].([]any); len(files) != 0 {
 		t.Fatalf("unexpected firmware: %v", files)
 	}
 
 	// eQ-3's list, by device type as the CCU names it
 	send(t, conn, message{"type": "checkDeviceFirmware", "requestId": "d2"})
 	versions := map[string]string{}
-	for _, raw := range receive(t, conn, byRequestID("d2"))["versions"].([]interface{}) {
-		v := raw.(map[string]interface{})
+	for _, raw := range receive(t, conn, byRequestID("d2"))["versions"].([]any) {
+		v := raw.(map[string]any)
 		versions[v["type"].(string)] = v["version"].(string)
 	}
 	if versions["hmip-wrc2"] != "1.6.4" || versions["hmip-hap-b1"] != "2.4.0" {
@@ -2965,11 +2965,11 @@ func TestStackDeviceFirmware(t *testing.T) {
 	}
 	send(t, conn, message{"type": "downloadDeviceFirmware", "requestId": "d4", "deviceType": "HmIP-WRC2", "password": "secret"})
 	m := receive(t, conn, byRequestID("d4"))
-	files, _ := m["files"].([]interface{})
+	files, _ := m["files"].([]any)
 	if m["success"] != true || len(files) != 1 {
 		t.Fatalf("download failed: %v", m)
 	}
-	file := files[0].(map[string]interface{})
+	file := files[0].(map[string]any)
 	if file["name"] != "HmIP-WRC2" || file["version"] != "1.6.4" || file["changelog"] != true || file["minCcuVersion"] != "3.41.0" {
 		t.Fatalf("unexpected firmware: %v", file)
 	}
@@ -2979,8 +2979,8 @@ func TestStackDeviceFirmware(t *testing.T) {
 	// The interface processes read the directory again: the remote control
 	// gets the update offered
 	send(t, conn, message{"type": "listDevices", "requestId": "d5"})
-	for _, raw := range receive(t, conn, byRequestID("d5"))["devices"].([]interface{}) {
-		if d := raw.(map[string]interface{}); d["address"] == "000855699C4F38" && (d["availableFirmware"] != "1.6.4" || d["firmwareUpdateState"] != "READY_FOR_UPDATE") {
+	for _, raw := range receive(t, conn, byRequestID("d5"))["devices"].([]any) {
+		if d := raw.(map[string]any); d["address"] == "000855699C4F38" && (d["availableFirmware"] != "1.6.4" || d["firmwareUpdateState"] != "READY_FOR_UPDATE") {
 			t.Fatalf("firmware not offered: %v", d)
 		}
 	}
@@ -3010,12 +3010,12 @@ func TestStackDeviceFirmware(t *testing.T) {
 		t.Fatalf("expected INVALID_FIRMWARE, got %v", m)
 	}
 	send(t, conn, message{"type": "addDeviceFirmware", "requestId": "d9", "id": upload(fakeccu.FirmwareArchive("HmIP-SWDO", "1.4.0")), "fileName": "hmip-swdo-1.4.0.tgz"})
-	if m := receive(t, conn, byRequestID("d9")); m["success"] != true || len(m["files"].([]interface{})) != 2 {
+	if m := receive(t, conn, byRequestID("d9")); m["success"] != true || len(m["files"].([]any)) != 2 {
 		t.Fatalf("upload not added: %v", m)
 	}
 
 	send(t, conn, message{"type": "deleteDeviceFirmware", "requestId": "d10", "id": file["id"]})
-	if m := receive(t, conn, byRequestID("d10")); m["success"] != true || len(m["files"].([]interface{})) != 1 {
+	if m := receive(t, conn, byRequestID("d10")); m["success"] != true || len(m["files"].([]any)) != 1 {
 		t.Fatalf("not deleted: %v", m)
 	}
 	send(t, conn, message{"type": "deleteDeviceFirmware", "requestId": "d11", "id": "missing"})
@@ -3030,8 +3030,8 @@ func TestStackRules(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 
-	rule := map[string]interface{}{"name": "Fenster Bad offen", "enabled": true, "minutes": 15, "message": "Fenster Bad ist seit 15 Minuten offen",
-		"conditions": []interface{}{map[string]interface{}{
+	rule := map[string]any{"name": "Fenster Bad offen", "enabled": true, "minutes": 15, "message": "Fenster Bad ist seit 15 Minuten offen",
+		"conditions": []any{map[string]any{
 			"channelId": 1301, "interfaceName": "HmIP-RF", "address": "003660C9930AB6:1", "datapoint": "STATE", "op": "ne", "value": 0,
 		}}}
 	send(t, conn, message{"type": "saveRule", "requestId": "r1", "rule": rule})
@@ -3039,11 +3039,11 @@ func TestStackRules(t *testing.T) {
 	if saved["success"] != true {
 		t.Fatalf("save: %v", saved)
 	}
-	id := saved["rule"].(map[string]interface{})["id"].(string)
+	id := saved["rule"].(map[string]any)["id"].(string)
 
 	send(t, conn, message{"type": "getRules", "requestId": "r2"})
-	list := receive(t, conn, byRequestID("r2"))["rules"].([]interface{})
-	if len(list) != 1 || list[0].(map[string]interface{})["id"] != id {
+	list := receive(t, conn, byRequestID("r2"))["rules"].([]any)
+	if len(list) != 1 || list[0].(map[string]any)["id"] != id {
 		t.Fatalf("rules: %v", list)
 	}
 
@@ -3069,13 +3069,13 @@ func TestStackDeviceImages(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")
 	send(t, conn, message{"type": "getDeviceImages", "requestId": "i1"})
-	images := receive(t, conn, byRequestID("i1"))["images"].(map[string]interface{})
-	wrc2 := images["hmip-wrc2"].(map[string]interface{})
+	images := receive(t, conn, byRequestID("i1"))["images"].(map[string]any)
+	wrc2 := images["hmip-wrc2"].(map[string]any)
 	if wrc2["path"] != "250/demo-wallswitch.png" {
 		t.Fatalf("HmIP-WRC2: %v", wrc2)
 	}
-	shapes := wrc2["channels"].(map[string]interface{})["1"].([]interface{})
-	if len(shapes) != 1 || shapes[0].(map[string]interface{})["kind"] != "ellipse" {
+	shapes := wrc2["channels"].(map[string]any)["1"].([]any)
+	if len(shapes) != 1 || shapes[0].(map[string]any)["kind"] != "ellipse" {
 		t.Fatalf("channel 1: %v", shapes)
 	}
 
@@ -3129,8 +3129,8 @@ func TestStackAutoLogin(t *testing.T) {
 		t.Fatalf("saveUser failed: %v", created)
 	}
 	send(t, conn, message{"type": "getUsers", "requestId": "u2"})
-	for _, raw := range receive(t, conn, byRequestID("u2"))["users"].([]interface{}) {
-		u := raw.(map[string]interface{})
+	for _, raw := range receive(t, conn, byRequestID("u2"))["users"].([]any) {
+		u := raw.(map[string]any)
 		if (u["name"] == "Kiosk") != (u["autoLogin"] == true) {
 			t.Fatalf("autoLogin not listed: %v", u)
 		}

@@ -1,13 +1,13 @@
 package occulite
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"hash/fnv"
 	"reflect"
 	"regexp"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,8 +25,8 @@ type RPC interface {
 	InterfaceNames() []string
 	ListDevices(iface string) ([]ccurpc.DeviceDescription, error)
 	GetParamsetDescription(iface, address, paramsetKey string) (ccurpc.ParamsetDescription, error)
-	GetParamset(iface, address, paramsetKey string) (map[string]interface{}, error)
-	CallRaw(iface, method string, args ...interface{}) (interface{}, error)
+	GetParamset(iface, address, paramsetKey string) (map[string]any, error)
+	CallRaw(iface, method string, args ...any) (any, error)
 }
 
 // Home is openccu-lite's home model for the add-on: names, rooms and
@@ -51,7 +51,7 @@ type homeState struct {
 	mu sync.Mutex
 	// The last value of every datapoint by channel address, and since when
 	// it has it (Unix seconds)
-	values map[string]map[string]interface{}
+	values map[string]map[string]any
 	since  map[string]map[string]int64
 	// Channels whose values were read once (HmIP and virtual channels
 	// answer from the process's cache; BidCos would ask the device)
@@ -76,7 +76,7 @@ func NewHome(client *Client, rpc RPC, dataDir string) (*Home, error) {
 	}
 	return &Home{client: client, rpc: rpc, homeState: &homeState{
 		store:  s,
-		values: map[string]map[string]interface{}{}, since: map[string]map[string]int64{},
+		values: map[string]map[string]any{}, since: map[string]map[string]int64{},
 		read: map[string]bool{}, interfaces: map[string]string{},
 	}}, nil
 }
@@ -157,7 +157,7 @@ func (h *Home) Seed(entries []StateEntry) {
 }
 
 // OnEvent takes a reported value
-func (h *Home) OnEvent(address, datapoint string, value interface{}) {
+func (h *Home) OnEvent(address, datapoint string, value any) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	if previous, ok := h.values[address][datapoint]; ok && reflect.DeepEqual(previous, value) {
@@ -166,16 +166,16 @@ func (h *Home) OnEvent(address, datapoint string, value interface{}) {
 	h.setLocked(address, datapoint, value, time.Now())
 }
 
-func (h *Home) setLocked(address, datapoint string, value interface{}, at time.Time) {
+func (h *Home) setLocked(address, datapoint string, value any, at time.Time) {
 	if h.values[address] == nil {
-		h.values[address] = map[string]interface{}{}
+		h.values[address] = map[string]any{}
 		h.since[address] = map[string]int64{}
 	}
 	h.values[address][datapoint] = value
 	h.since[address][datapoint] = at.Unix()
 }
 
-func (h *Home) value(address, datapoint string) (interface{}, bool) {
+func (h *Home) value(address, datapoint string) (any, bool) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	v, ok := h.values[address][datapoint]
@@ -338,7 +338,7 @@ func (h *Home) SetGroupMember(groupID, channelID int64, member bool) (string, er
 	if member {
 		enums = append(enums, path)
 	}
-	patch := map[string]interface{}{"enums": enums}
+	patch := map[string]any{"enums": enums}
 	if object.Name == "" {
 		// The store never invents objects: a new one needs its name
 		patch["name"] = defaultName(snapshot, ref, ch.desc.ParentType)
@@ -446,7 +446,7 @@ func (h *Home) channel(snapshot Snapshot, ch channelInfo) (home.Channel, bool) {
 	id := ID(ref)
 	c := home.Channel{
 		ID: id, Address: d.Address, Name: name, Type: d.Type, InterfaceName: ch.iface,
-		Datapoints: map[string]interface{}{},
+		Datapoints: map[string]any{},
 	}
 	for key, parameter := range description {
 		if value, ok := h.value(d.Address, key); ok {
@@ -527,7 +527,7 @@ func (h *Home) channelsOf(snapshot Snapshot, channels []channelInfo) []home.Chan
 			list = append(list, c)
 		}
 	}
-	sort.Slice(list, func(i, j int) bool { return list[i].Name < list[j].Name })
+	slices.SortFunc(list, func(a, b home.Channel) int { return cmp.Compare(a.Name, b.Name) })
 	return list
 }
 
@@ -616,7 +616,7 @@ func (h *Home) SetName(address, name string) (string, string, error) {
 	previous := snapshot.Objects[ref].Name
 	ctx, cancel := h.context()
 	defer cancel()
-	if err := h.client.PatchObject(ctx, ref, map[string]interface{}{"name": name}); err != nil {
+	if err := h.client.PatchObject(ctx, ref, map[string]any{"name": name}); err != nil {
 		return "", "", err
 	}
 	return home.SetOK, previous, nil
@@ -649,7 +649,7 @@ func (h *Home) SetDatapoint(iface, address, attribute, value string) (string, st
 	return home.SetOK, previous, nil
 }
 
-func typedValue(kind, value string) (interface{}, error) {
+func typedValue(kind, value string) (any, error) {
 	switch kind {
 	case "BOOL", "ACTION":
 		return value == "true" || value == "1", nil
@@ -688,7 +688,7 @@ func (h *Home) GetFavorites(username string) ([]home.Favorite, error) {
 	list := []home.Favorite{}
 	h.store.read(func(data *ownData) {
 		for _, f := range data.Favorites {
-			if len(f.Users) > 0 && !contains(f.Users, username) {
+			if len(f.Users) > 0 && !slices.Contains(f.Users, username) {
 				continue
 			}
 			favorite := home.Favorite{ID: f.ID, Name: f.Name, Items: []home.FavoriteItem{}}
@@ -699,15 +699,6 @@ func (h *Home) GetFavorites(username string) ([]home.Favorite, error) {
 		}
 	})
 	return list, nil
-}
-
-func contains(list []string, s string) bool {
-	for _, x := range list {
-		if x == s {
-			return true
-		}
-	}
-	return false
 }
 
 // ChangeFavorite creates, renames or deletes a list, or adds or removes a
@@ -809,7 +800,7 @@ func (h *Home) GetInbox() ([]home.InboxDevice, error) {
 			Name: d.desc.Type + " " + d.desc.Address,
 		})
 	}
-	sort.Slice(inbox, func(i, j int) bool { return inbox[i].Address < inbox[j].Address })
+	slices.SortFunc(inbox, func(a, b home.InboxDevice) int { return cmp.Compare(a.Address, b.Address) })
 	return inbox, nil
 }
 
@@ -823,7 +814,7 @@ func (h *Home) AcceptDevice(address string) (string, error) {
 		}
 		ctx, cancel := h.context()
 		defer cancel()
-		err := h.client.PatchObject(ctx, Ref(d.iface, address), map[string]interface{}{"name": d.desc.Type + " " + address})
+		err := h.client.PatchObject(ctx, Ref(d.iface, address), map[string]any{"name": d.desc.Type + " " + address})
 		if err != nil {
 			return "", err
 		}
@@ -863,6 +854,6 @@ func (h *Home) GetVirtualKeys() ([]home.VirtualKey, error) {
 			keys = append(keys, home.VirtualKey{ID: ID(ref), Address: d.Address, InterfaceName: iface, Name: name})
 		}
 	}
-	sort.Slice(keys, func(i, j int) bool { return keys[i].Address < keys[j].Address })
+	slices.SortFunc(keys, func(a, b home.VirtualKey) int { return cmp.Compare(a.Address, b.Address) })
 	return keys, nil
 }

@@ -83,7 +83,7 @@ func (s *Server) handleUsers(client *Client, msgType string, message []byte) {
 			target = current.Name
 		}
 		s.configure(client, msg.RequestID, audit.Entry{Action: "deleteUser", Target: target},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				if own {
 					return nil, "", fmt.Errorf("invalid: you can't delete yourself")
 				}
@@ -102,7 +102,7 @@ func (s *Server) handleUsers(client *Client, msgType string, message []byte) {
 	name, _, _ := rega.UserNames(msg.FullName)
 	var createdID int64
 	s.configure(client, msg.RequestID, audit.Entry{Action: "saveUser", Target: name, Value: msg.Level},
-		func() (interface{}, string, error) {
+		func() (any, string, error) {
 			if !ok {
 				return nil, "", fmt.Errorf("invalid level")
 			}
@@ -112,7 +112,7 @@ func (s *Server) handleUsers(client *Client, msgType string, message []byte) {
 			if own && (level != current.Level || name != current.Name) {
 				return nil, "", fmt.Errorf("invalid: you can't change your own name or rights")
 			}
-			var previous interface{}
+			var previous any
 			if current != nil {
 				previous = current.Name + " (" + auth.LevelFromCCU(current.Level) + ")"
 			}

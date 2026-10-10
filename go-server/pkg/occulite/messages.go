@@ -3,7 +3,7 @@ package occulite
 import (
 	"fmt"
 	"net/http"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -15,13 +15,13 @@ import (
 // (GET /api/system/v1/service-messages): an active maintenance datapoint
 // on a device's channel 0
 type liteServiceMessage struct {
-	Interface string      `json:"interface"`
-	Address   string      `json:"address"`
-	Channel   string      `json:"channel"`
-	Key       string      `json:"key"`
-	Value     interface{} `json:"value"`
-	Since     string      `json:"since"`
-	Name      string      `json:"name"`
+	Interface string `json:"interface"`
+	Address   string `json:"address"`
+	Channel   string `json:"channel"`
+	Key       string `json:"key"`
+	Value     any    `json:"value"`
+	Since     string `json:"since"`
+	Name      string `json:"name"`
 }
 
 // roomOf is the first room of a device (its object, else its first
@@ -37,7 +37,7 @@ func roomOf(snapshot Snapshot, iface, device string) (int64, string) {
 			refs = append(refs, ref)
 		}
 	}
-	sort.Strings(refs)
+	slices.Sort(refs)
 	for _, ref := range refs {
 		for _, path := range snapshot.Objects[ref].Enums {
 			if name, ok := names[path]; ok {
@@ -119,7 +119,7 @@ func (h *Home) AcknowledgeServiceMessage(id int64) (string, string, error) {
 }
 
 // formatValue writes a value as the ReGa lists it
-func formatValue(value interface{}) string {
+func formatValue(value any) string {
 	switch v := value.(type) {
 	case nil:
 		return ""
@@ -141,10 +141,10 @@ func wallClock(rfc3339 string) string {
 }
 
 // maintenance is what a device's channel 0 reports, with since when
-func (h *Home) maintenance(device string) (map[string]interface{}, map[string]int64) {
+func (h *Home) maintenance(device string) (map[string]any, map[string]int64) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	values, since := map[string]interface{}{}, map[string]int64{}
+	values, since := map[string]any{}, map[string]int64{}
 	for key, value := range h.values[device+":0"] {
 		values[key] = value
 		since[key] = h.since[device+":0"][key]

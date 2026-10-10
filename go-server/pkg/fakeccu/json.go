@@ -5,6 +5,6 @@ import (
 	"io"
 )
 
-func jsonDecode(r io.Reader, v interface{}) error {
+func jsonDecode(r io.Reader, v any) error {
 	return json.NewDecoder(r).Decode(v)
 }

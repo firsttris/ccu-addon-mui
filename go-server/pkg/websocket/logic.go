@@ -24,10 +24,10 @@ type logicResponse struct {
 // program on or off is setup.
 func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
 	var msg struct {
-		RequestID string      `json:"requestId"`
-		ID        int64       `json:"id"`
-		Value     interface{} `json:"value"`
-		Active    bool        `json:"active"`
+		RequestID string `json:"requestId"`
+		ID        int64  `json:"id"`
+		Value     any    `json:"value"`
+		Active    bool   `json:"active"`
 		// setLogicOption: "visible" or "operate"
 		Option string `json:"option"`
 	}
@@ -64,7 +64,7 @@ func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
 			action = rega.ProgramOn
 		}
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: fmt.Sprintf("program %d", msg.ID), Value: msg.Active},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, err := s.regaClient.ProgramAction(msg.ID, action)
 				return !msg.Active, result, err
 			})
@@ -72,7 +72,7 @@ func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
 	case "setLogicOption":
 		value, isBool := msg.Value.(bool)
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: fmt.Sprintf("%d %s", msg.ID, msg.Option), Value: msg.Value},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				if !isBool {
 					return nil, "", fmt.Errorf("invalid value")
 				}
@@ -160,14 +160,14 @@ func (s *Server) handleProgramEditor(client *Client, msgType string, message []b
 		var created int64
 		target := fmt.Sprintf("program %d", msg.Program.ID)
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Program.Name},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, id, err := s.regaClient.SaveProgram(msg.Program)
 				created = id
 				return nil, result, err
 			}, &created)
 	case "deleteProgram":
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: fmt.Sprintf("program %d", msg.ID)},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, name, err := s.regaClient.DeleteProgram(msg.ID)
 				return name, result, err
 			})

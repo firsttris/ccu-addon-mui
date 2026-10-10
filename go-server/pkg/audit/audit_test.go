@@ -33,7 +33,7 @@ func TestRecordAppendsJSONLines(t *testing.T) {
 	log := New(path)
 	log.now = func() time.Time { return time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC) }
 
-	for _, value := range []interface{}{true, false} {
+	for _, value := range []any{true, false} {
 		if err := log.Record(Entry{User: "Admin", Action: "setDatapoint", Target: "HmIP-RF.A:1.STATE", Previous: "false", Value: value, Result: "OK"}); err != nil {
 			t.Fatal(err)
 		}

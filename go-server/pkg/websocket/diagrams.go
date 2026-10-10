@@ -23,7 +23,7 @@ func (s *Server) SetDiagrams(store *diagrams.Store, recorder *diagrams.Recorder)
 }
 
 // RecordEvent hands a datapoint event to the diagrams
-func (s *Server) RecordEvent(address, datapoint string, value interface{}) {
+func (s *Server) RecordEvent(address, datapoint string, value any) {
 	if s.recorder != nil {
 		s.recorder.Record(address+"."+datapoint, value, time.Now())
 	}

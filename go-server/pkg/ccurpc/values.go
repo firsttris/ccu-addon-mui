@@ -3,9 +3,10 @@ package ccurpc
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"math"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -15,17 +16,13 @@ import (
 // float64, but the CCU rejects a double for an INTEGER or ENUM parameter.
 // Unknown, read-only and out-of-range values are an error, so a broken or
 // malicious client can't send the CCU anything the WebUI wouldn't.
-func CoerceValues(description ParamsetDescription, values map[string]interface{}) (map[string]interface{}, error) {
+func CoerceValues(description ParamsetDescription, values map[string]any) (map[string]any, error) {
 	if len(values) == 0 {
 		return nil, fmt.Errorf("no values")
 	}
-	names := make([]string, 0, len(values))
-	for name := range values {
-		names = append(names, name)
-	}
-	sort.Strings(names)
+	names := slices.Sorted(maps.Keys(values))
 
-	result := make(map[string]interface{}, len(values))
+	result := make(map[string]any, len(values))
 	for _, name := range names {
 		parameter, ok := description[name]
 		if !ok {
@@ -52,7 +49,7 @@ func isSpecial(parameter ParameterDescription, value float64) bool {
 	return false
 }
 
-func toFloat(v interface{}) (float64, bool) {
+func toFloat(v any) (float64, bool) {
 	switch x := v.(type) {
 	case float64:
 		return x, true
@@ -77,7 +74,7 @@ func checkRange(parameter ParameterDescription, value float64) error {
 	return nil
 }
 
-func coerce(parameter ParameterDescription, value interface{}) (interface{}, error) {
+func coerce(parameter ParameterDescription, value any) (any, error) {
 	switch parameter.Type {
 	case "BOOL", "ACTION":
 		b, ok := value.(bool)
@@ -118,12 +115,12 @@ func coerce(parameter ParameterDescription, value interface{}) (interface{}, err
 }
 
 // PutParamset writes values (checked with CoerceValues) to a paramset.
-func (c *Client) PutParamset(iface, address, paramsetKey string, values map[string]interface{}) error {
+func (c *Client) PutParamset(iface, address, paramsetKey string, values map[string]any) error {
 	if err := validate(address, paramsetKey); err != nil {
 		return err
 	}
-	var reply interface{}
-	return c.call(iface, "putParamset", []interface{}{address, paramsetKey, values}, &reply)
+	var reply any
+	return c.call(iface, "putParamset", []any{address, paramsetKey, values}, &reply)
 }
 
 // SetInstallMode starts (or stops) pairing on an interface for seconds.
@@ -131,8 +128,8 @@ func (c *Client) SetInstallMode(iface string, on bool, seconds int) error {
 	if seconds < 0 || seconds > 300 {
 		return fmt.Errorf("invalid duration")
 	}
-	var reply interface{}
-	return c.call(iface, "setInstallMode", []interface{}{on, seconds, 1}, &reply)
+	var reply any
+	return c.call(iface, "setInstallMode", []any{on, seconds, 1}, &reply)
 }
 
 // SetInstallModeWithWhitelist starts HmIP pairing for one device with its
@@ -142,9 +139,9 @@ func (c *Client) SetInstallModeWithWhitelist(iface string, seconds int, sgtin, k
 	if seconds < 1 || seconds > 300 {
 		return fmt.Errorf("invalid duration")
 	}
-	entry := map[string]interface{}{"ADDRESS": sgtin, "KEY": key, "KEY_MODE": "LOCAL"}
-	var reply interface{}
-	return c.call(iface, "setInstallModeWithWhitelist", []interface{}{true, seconds, []interface{}{entry}}, &reply)
+	entry := map[string]any{"ADDRESS": sgtin, "KEY": key, "KEY_MODE": "LOCAL"}
+	var reply any
+	return c.call(iface, "setInstallModeWithWhitelist", []any{true, seconds, []any{entry}}, &reply)
 }
 
 // ErrKeyMismatch means the device uses another system security key
@@ -156,8 +153,8 @@ var ErrKeyMismatch = errors.New("the device has another system security key")
 // the WebUI's cp_add_device.cgi (action_wir_search) asks hs485d; found
 // devices land in the inbox. Returns how many were found.
 func (c *Client) SearchDevices(iface string) (int, error) {
-	var reply interface{}
-	if err := c.call(iface, "searchDevices", []interface{}{}, &reply); err != nil {
+	var reply any
+	if err := c.call(iface, "searchDevices", []any{}, &reply); err != nil {
 		return 0, err
 	}
 	n, _ := reply.(int64)
@@ -171,8 +168,8 @@ func (c *Client) AddDevice(iface, serial string) error {
 	if !addressRegex.MatchString(serial) || strings.Contains(serial, ":") {
 		return ErrInvalidAddress
 	}
-	var reply interface{}
-	err := c.call(iface, "addDevice", []interface{}{serial}, &reply)
+	var reply any
+	err := c.call(iface, "addDevice", []any{serial}, &reply)
 	if faultCode(err) == -7 {
 		return ErrKeyMismatch
 	}
@@ -197,8 +194,8 @@ func faultCode(err error) int {
 // KeyMismatchDevice is the device that failed to pair in install mode for
 // another security key ("" if none); reset clears it (getKeyMismatchDevice)
 func (c *Client) KeyMismatchDevice(iface string, reset bool) (string, error) {
-	var reply interface{}
-	if err := c.call(iface, "getKeyMismatchDevice", []interface{}{reset}, &reply); err != nil {
+	var reply any
+	if err := c.call(iface, "getKeyMismatchDevice", []any{reset}, &reply); err != nil {
 		return "", err
 	}
 	return asString(reply), nil
@@ -207,13 +204,13 @@ func (c *Client) KeyMismatchDevice(iface string, reset bool) (string, error) {
 // SetTempKey sets a temporary system security key for pairing a device
 // with another key (action_set_temp_key)
 func (c *Client) SetTempKey(iface, key string) error {
-	var reply interface{}
-	return c.call(iface, "setTempKey", []interface{}{key}, &reply)
+	var reply any
+	return c.call(iface, "setTempKey", []any{key}, &reply)
 }
 
 // GetInstallMode returns the seconds pairing is still on (0: off).
 func (c *Client) GetInstallMode(iface string) (int, error) {
-	var reply interface{}
+	var reply any
 	if err := c.call(iface, "getInstallMode", nil, &reply); err != nil {
 		return 0, err
 	}
@@ -231,8 +228,8 @@ func (c *Client) DeleteDevice(iface, address string, flags int) error {
 	if !addressRegex.MatchString(address) || strings.Contains(address, ":") {
 		return ErrInvalidAddress
 	}
-	var reply interface{}
-	return c.call(iface, "deleteDevice", []interface{}{address, flags}, &reply)
+	var reply any
+	return c.call(iface, "deleteDevice", []any{address, flags}, &reply)
 }
 
 // RadioInterface is a radio module of the CCU (built-in or LAN gateway).
@@ -250,13 +247,13 @@ type RadioInterface struct {
 
 // ListBidcosInterfaces returns the radio modules of an interface.
 func (c *Client) ListBidcosInterfaces(iface string) ([]RadioInterface, error) {
-	var reply []interface{}
+	var reply []any
 	if err := c.call(iface, "listBidcosInterfaces", nil, &reply); err != nil {
 		return nil, err
 	}
 	modules := []RadioInterface{}
 	for _, raw := range reply {
-		m, ok := raw.(map[string]interface{})
+		m, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -280,19 +277,19 @@ func (c *Client) SetBidcosInterface(iface, address, module string, roaming bool)
 	if !addressRegex.MatchString(address) || strings.Contains(address, ":") || !addressRegex.MatchString(module) {
 		return ErrInvalidAddress
 	}
-	var reply interface{}
-	return c.call(iface, "setBidcosInterface", []interface{}{address, module, roaming}, &reply)
+	var reply any
+	return c.call(iface, "setBidcosInterface", []any{address, module, roaming}, &reply)
 }
 
 // SetMetadata stores a value with a device or channel in the interface
 // process, as the WebUI's Interface.setMetadata_crRFD does for the channel
 // mode of HmIP input channels.
-func (c *Client) SetMetadata(iface, address, dataID string, value interface{}) error {
+func (c *Client) SetMetadata(iface, address, dataID string, value any) error {
 	if !addressRegex.MatchString(address) || !addressRegex.MatchString(dataID) {
 		return ErrInvalidAddress
 	}
-	var reply interface{}
-	return c.call(iface, "setMetadata", []interface{}{address, dataID, value}, &reply)
+	var reply any
+	return c.call(iface, "setMetadata", []any{address, dataID, value}, &reply)
 }
 
 // ListReplaceableDevices returns the devices a new device can replace
@@ -302,13 +299,13 @@ func (c *Client) ListReplaceableDevices(iface, newAddress string) ([]DeviceDescr
 	if !addressRegex.MatchString(newAddress) || strings.Contains(newAddress, ":") {
 		return nil, ErrInvalidAddress
 	}
-	var reply []interface{}
-	if err := c.call(iface, "listReplaceableDevices", []interface{}{newAddress}, &reply); err != nil {
+	var reply []any
+	if err := c.call(iface, "listReplaceableDevices", []any{newAddress}, &reply); err != nil {
 		return nil, err
 	}
 	devices := []DeviceDescription{}
 	for _, raw := range reply {
-		if m, ok := raw.(map[string]interface{}); ok {
+		if m, ok := raw.(map[string]any); ok {
 			if d := parseDeviceDescription(m); d.Parent == "" {
 				devices = append(devices, d)
 			}
@@ -325,20 +322,20 @@ func (c *Client) ReplaceDevice(iface, oldAddress, newAddress string) error {
 			return ErrInvalidAddress
 		}
 	}
-	var reply interface{}
-	return c.call(iface, "replaceDevice", []interface{}{oldAddress, newAddress}, &reply)
+	var reply any
+	return c.call(iface, "replaceDevice", []any{oldAddress, newAddress}, &reply)
 }
 
 // LogLevel is the log level of an interface process (rfd, hs485d), as
 // cp_maintenance.cgi reads it with logLevel
 func (c *Client) LogLevel(iface string) (int, error) {
 	var level int
-	err := c.call(iface, "logLevel", []interface{}{}, &level)
+	err := c.call(iface, "logLevel", []any{}, &level)
 	return level, err
 }
 
 // SetLogLevel sets the log level of an interface process (set_log_config)
 func (c *Client) SetLogLevel(iface string, level int) error {
-	var reply interface{}
-	return c.call(iface, "logLevel", []interface{}{level}, &reply)
+	var reply any
+	return c.call(iface, "logLevel", []any{level}, &reply)
 }

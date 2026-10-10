@@ -7,6 +7,7 @@ package fakeccu
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -17,7 +18,6 @@ import (
 	"os"
 	"regexp"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -89,7 +89,7 @@ type CCU struct {
 	// installModeUntil by interface
 	installModeUntil map[string]time.Time
 	// metadata set with setMetadata, by interface and "object/dataID"
-	metadata map[string]map[string]interface{}
+	metadata map[string]map[string]any
 	// Pairing by serial number: devices with a foreign security key (serial
 	// starting with "KEQ") need the temporary key set; the device that
 	// failed last (getKeyMismatchDevice)
@@ -98,7 +98,7 @@ type CCU struct {
 	autoLoginUser    int64
 	factoryResetDone bool
 	// The last HmIP whitelist (setInstallModeWithWhitelist)
-	Whitelist []map[string]interface{}
+	Whitelist []map[string]any
 	// Time modules created by save_program, for their ids
 	timeModules int
 	// The location set with set_location (system.Latitude/Longitude)
@@ -129,7 +129,7 @@ func (c *CCU) CallCount(call string) int {
 
 type callbackEvent struct {
 	url, interfaceID, address, datapoint string
-	value                                interface{}
+	value                                any
 }
 
 // script matches a ReGa script built from one of the add-on's templates
@@ -171,7 +171,7 @@ func New(fixture *Fixture) *CCU {
 		InterfacePorts:   map[string]int{},
 		calls:            map[string]int{},
 		installModeUntil: map[string]time.Time{},
-		metadata:         map[string]map[string]interface{}{},
+		metadata:         map[string]map[string]any{},
 		regaLogLevel:     2,
 	}
 }
@@ -527,7 +527,7 @@ func (c *CCU) runScript(body string) (string, error) {
 					}
 				}
 			}
-			sort.SliceStable(lines, func(i, j int) bool { return strings.Split(lines[i], "\t")[2] > strings.Split(lines[j], "\t")[2] })
+			slices.SortStableFunc(lines, func(a, b string) int { return cmp.Compare(strings.Split(b, "\t")[2], strings.Split(a, "\t")[2]) })
 			return fmt.Sprintf("N\t%d\n%s\n", n, strings.Join(lines, "\n")), nil
 		case "clear_history":
 			c.historyCleared = true
@@ -925,7 +925,7 @@ func (c *CCU) channelByAddress(iface, address string) *Channel {
 }
 
 // valueType returns the ReGa value type the add-on parses (see rega/parse.go).
-func valueType(v interface{}) string {
+func valueType(v any) string {
 	switch v.(type) {
 	case bool:
 		return "2"
@@ -935,7 +935,7 @@ func valueType(v interface{}) string {
 	return "20"
 }
 
-func formatValue(v interface{}) string {
+func formatValue(v any) string {
 	switch x := v.(type) {
 	case nil:
 		return ""
@@ -1052,7 +1052,7 @@ func (c *CCU) ProgramRuns(id int64) int {
 }
 
 // device returns the description of a device and its interface.
-func (c *CCU) device(address string) (map[string]interface{}, string) {
+func (c *CCU) device(address string) (map[string]any, string) {
 	for iface, data := range c.fixture.Interfaces {
 		for _, d := range data.Devices {
 			if d["ADDRESS"] == address {
@@ -1096,8 +1096,8 @@ func (c *CCU) addInboxDevice(iface, address, deviceType string) {
 		c.fixture.Interfaces[iface] = data
 	}
 	data.Devices = append(data.Devices,
-		map[string]interface{}{"ADDRESS": address, "TYPE": deviceType, "PARENT": "", "CHILDREN": []interface{}{address + ":1"}, "PARAMSETS": []interface{}{"MASTER"}, "VERSION": 1},
-		map[string]interface{}{"ADDRESS": address + ":1", "TYPE": "SWITCH", "PARENT": address, "PARENT_TYPE": deviceType, "INDEX": 1, "PARAMSETS": []interface{}{"MASTER", "VALUES"}, "VERSION": 1},
+		map[string]any{"ADDRESS": address, "TYPE": deviceType, "PARENT": "", "CHILDREN": []any{address + ":1"}, "PARAMSETS": []any{"MASTER"}, "VERSION": 1},
+		map[string]any{"ADDRESS": address + ":1", "TYPE": "SWITCH", "PARENT": address, "PARENT_TYPE": deviceType, "INDEX": 1, "PARAMSETS": []any{"MASTER", "VALUES"}, "VERSION": 1},
 	)
 	c.fixture.Inbox = append(c.fixture.Inbox, address)
 }
@@ -1120,14 +1120,14 @@ func (c *CCU) replaceDevice(iface, oldAddress, newAddress string) bool {
 		if d["ADDRESS"] == newAddress || d["PARENT"] == newAddress {
 			continue
 		}
-		swap := func(v interface{}) interface{} {
+		swap := func(v any) any {
 			if a, ok := v.(string); ok && (a == oldAddress || strings.HasPrefix(a, oldAddress+":")) {
 				return newAddress + strings.TrimPrefix(a, oldAddress)
 			}
 			return v
 		}
 		d["ADDRESS"], d["PARENT"] = swap(d["ADDRESS"]), swap(d["PARENT"])
-		if children, ok := d["CHILDREN"].([]interface{}); ok {
+		if children, ok := d["CHILDREN"].([]any); ok {
 			for i := range children {
 				children[i] = swap(children[i])
 			}
@@ -1269,7 +1269,7 @@ func (c *CCU) setGroupMember(groupID, channelID string, member bool) string {
 
 // parseRegaValue parses a value as the add-on writes it into a script:
 // true/false, a number or a quoted string.
-func parseRegaValue(s string) interface{} {
+func parseRegaValue(s string) any {
 	if s == "true" || s == "false" {
 		return s == "true"
 	}
@@ -1293,10 +1293,10 @@ func (c *CCU) setDatapoint(values map[string]string) string {
 }
 
 // setValue changes a datapoint and sends the event; c.mu must be held.
-func (c *CCU) setValue(ch *Channel, datapoint string, value interface{}) {
+func (c *CCU) setValue(ch *Channel, datapoint string, value any) {
 	ch.Datapoints[datapoint] = value
 	if c.Lite {
-		c.publishLite("event", map[string]interface{}{"interface": ch.Interface, "address": ch.Address, "key": datapoint, "value": value})
+		c.publishLite("event", map[string]any{"interface": ch.Interface, "address": ch.Address, "key": datapoint, "value": value})
 	}
 	for id, url := range c.callbacks[ch.Interface] {
 		c.events <- callbackEvent{url: url, interfaceID: id, address: ch.Address, datapoint: datapoint, value: value}
@@ -1305,7 +1305,7 @@ func (c *CCU) setValue(ch *Channel, datapoint string, value interface{}) {
 
 // SetValue changes a datapoint as if the device had reported it, e.g. a
 // window being opened, and sends the event.
-func (c *CCU) SetValue(iface, address, datapoint string, value interface{}) error {
+func (c *CCU) SetValue(iface, address, datapoint string, value any) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	ch := c.channelByAddress(iface, address)
@@ -1457,12 +1457,12 @@ func (c *CCU) Reset() {
 		fixture.Interfaces = map[string]*InterfaceData{}
 	}
 	c.fixture = &fixture
-	c.metadata = map[string]map[string]interface{}{}
+	c.metadata = map[string]map[string]any{}
 }
 
 // SetSysvar changes a system variable inside the CCU, as a program would
 // (no event: system variables send none). Reports whether it exists.
-func (c *CCU) SetSysvar(id int64, value interface{}) bool {
+func (c *CCU) SetSysvar(id int64, value any) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	for i := range c.fixture.Sysvars {
@@ -1475,7 +1475,7 @@ func (c *CCU) SetSysvar(id int64, value interface{}) bool {
 }
 
 // Metadata returns what setMetadata stored for an object, nil if nothing.
-func (c *CCU) Metadata(iface, objectID, dataID string) interface{} {
+func (c *CCU) Metadata(iface, objectID, dataID string) any {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.metadata[iface][objectID+"/"+dataID]
@@ -1507,10 +1507,10 @@ func (c *CCU) handleControl(w http.ResponseWriter, r *http.Request) {
 		c.Reset()
 	case "/fake/set":
 		var req struct {
-			Interface string      `json:"interface"`
-			Address   string      `json:"address"`
-			Datapoint string      `json:"datapoint"`
-			Value     interface{} `json:"value"`
+			Interface string `json:"interface"`
+			Address   string `json:"address"`
+			Datapoint string `json:"datapoint"`
+			Value     any    `json:"value"`
 		}
 		if err := jsonDecode(r.Body, &req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -1576,8 +1576,8 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req struct {
-		Method string                 `json:"method"`
-		Params map[string]interface{} `json:"params"`
+		Method string         `json:"method"`
+		Params map[string]any `json:"params"`
 	}
 	if err := jsonDecode(r.Body, &req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -1900,7 +1900,7 @@ func (c *CCU) InstalledAddons() []string {
 // InstalledFirmware returns the firmware file the CCU rebooted to install
 // SetDeviceField changes a field of a device description, e.g. the
 // AVAILABLE_FIRMWARE the CCU offers it
-func (c *CCU) SetDeviceField(iface, address, field string, value interface{}) bool {
+func (c *CCU) SetDeviceField(iface, address, field string, value any) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	data := c.fixture.Interfaces[iface]
@@ -1962,14 +1962,14 @@ func (c *CCU) handleXMLRPC(iface string, w http.ResponseWriter, r *http.Request)
 	_, _ = w.Write(toLatin1(body))
 }
 
-func paramAt(params []interface{}, i int) interface{} {
+func paramAt(params []any, i int) any {
 	if i < len(params) {
 		return params[i]
 	}
 	return nil
 }
 
-func stringParam(params []interface{}, i int) string {
+func stringParam(params []any, i int) string {
 	if i < len(params) {
 		s, _ := params[i].(string)
 		return s
@@ -1977,7 +1977,7 @@ func stringParam(params []interface{}, i int) string {
 	return ""
 }
 
-func (c *CCU) call(iface, method string, params []interface{}) (interface{}, string) {
+func (c *CCU) call(iface, method string, params []any) (any, string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.calls[iface+" "+method]++
@@ -2009,9 +2009,9 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		seconds, _ := paramAt(params, 1).(int)
 		c.installModeUntil[iface] = time.Now().Add(time.Duration(seconds) * time.Second)
 		c.Whitelist = nil
-		list, _ := paramAt(params, 2).([]interface{})
+		list, _ := paramAt(params, 2).([]any)
 		for _, item := range list {
-			if entry, ok := item.(map[string]interface{}); ok {
+			if entry, ok := item.(map[string]any); ok {
 				c.Whitelist = append(c.Whitelist, entry)
 				// The device answers at once: into the inbox, its address
 				// from the SGTIN
@@ -2033,7 +2033,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		}
 		c.addInboxDevice(iface, serial, "HM-LC-Sw1-FM")
 		c.calls["addDevice"]++
-		return map[string]interface{}{"ADDRESS": serial, "TYPE": "HM-LC-Sw1-FM"}, ""
+		return map[string]any{"ADDRESS": serial, "TYPE": "HM-LC-Sw1-FM"}, ""
 	case "getKeyMismatchDevice":
 		serial := c.keyMismatch
 		if b, _ := paramAt(params, 0).(bool); b {
@@ -2105,7 +2105,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 	case "listReplaceableDevices":
 		// Devices of the new device's type that are set up (not in the inbox)
 		newAddress := stringParam(params, 0)
-		var newType interface{}
+		var newType any
 		for _, d := range data.Devices {
 			if d["ADDRESS"] == newAddress {
 				newType = d["TYPE"]
@@ -2114,7 +2114,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		if newType == nil {
 			return nil, "Unknown instance"
 		}
-		list := []interface{}{}
+		list := []any{}
 		for _, d := range data.Devices {
 			if parent, _ := d["PARENT"].(string); parent == "" && d["TYPE"] == newType && d["ADDRESS"] != newAddress && !slices.Contains(c.fixture.Inbox, fmt.Sprint(d["ADDRESS"])) {
 				list = append(list, d)
@@ -2168,7 +2168,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		}
 		if c.Lite {
 			// The central's own virtual keys, as rfd and HMIPServer list them
-			return append(append([]map[string]interface{}{}, data.Devices...), c.virtualKeyDevices(iface)...), ""
+			return append(append([]map[string]any{}, data.Devices...), c.virtualKeyDevices(iface)...), ""
 		}
 		return data.Devices, ""
 	case "setBidcosInterface":
@@ -2186,7 +2186,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		return nil, "Unknown instance"
 	case "setMetadata":
 		if c.metadata[iface] == nil {
-			c.metadata[iface] = map[string]interface{}{}
+			c.metadata[iface] = map[string]any{}
 		}
 		c.metadata[iface][stringParam(params, 0)+"/"+stringParam(params, 1)] = paramAt(params, 2)
 		return "", ""
@@ -2220,7 +2220,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		}
 		if description == nil {
 			// Older exports wrote empty paramsets as null
-			description = map[string]interface{}{}
+			description = map[string]any{}
 		}
 		return description, ""
 	case "getParamset":
@@ -2234,9 +2234,9 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 			return values, ""
 		}
 		if description, ok := data.ParamsetDescriptions[address]["LINK"]; ok && strings.Contains(key, ":") {
-			defaults := map[string]interface{}{}
+			defaults := map[string]any{}
 			for name, raw := range description {
-				if p, ok := raw.(map[string]interface{}); ok {
+				if p, ok := raw.(map[string]any); ok {
 					defaults[name] = p["DEFAULT"]
 				}
 			}
@@ -2263,12 +2263,12 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		if data.RadioInterfaces == nil {
 			return nil, "Unknown method listBidcosInterfaces"
 		}
-		return append(append([]map[string]interface{}{}, data.RadioInterfaces...), c.lanGatewayModules(iface)...), ""
+		return append(append([]map[string]any{}, data.RadioInterfaces...), c.lanGatewayModules(iface)...), ""
 	case "getLinks":
 		address := stringParam(params, 0)
-		links := []interface{}{}
+		links := []any{}
 		for _, link := range data.Links {
-			for _, end := range []interface{}{link["SENDER"], link["RECEIVER"]} {
+			for _, end := range []any{link["SENDER"], link["RECEIVER"]} {
 				// An empty address asks for all links
 				if address == "" || end == address || deviceAddress(fmt.Sprint(end)) == address {
 					links = append(links, link)
@@ -2278,7 +2278,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		}
 		return links, ""
 	case "addLink":
-		data.Links = append(data.Links, map[string]interface{}{
+		data.Links = append(data.Links, map[string]any{
 			"SENDER": stringParam(params, 0), "RECEIVER": stringParam(params, 1),
 			"NAME": stringParam(params, 2), "DESCRIPTION": stringParam(params, 3), "FLAGS": 0,
 		})
@@ -2307,7 +2307,7 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 		return "", ""
 	case "putParamset":
 		address, key := stringParam(params, 0), stringParam(params, 1)
-		values, _ := params[len(params)-1].(map[string]interface{})
+		values, _ := params[len(params)-1].(map[string]any)
 		if key == "VALUES" {
 			ch := c.channelByAddress(iface, address)
 			if ch == nil {
@@ -2319,13 +2319,13 @@ func (c *CCU) call(iface, method string, params []interface{}) (interface{}, str
 			return "", ""
 		}
 		if data.Paramsets == nil {
-			data.Paramsets = map[string]map[string]map[string]interface{}{}
+			data.Paramsets = map[string]map[string]map[string]any{}
 		}
 		if data.Paramsets[address] == nil {
-			data.Paramsets[address] = map[string]map[string]interface{}{}
+			data.Paramsets[address] = map[string]map[string]any{}
 		}
 		if data.Paramsets[address][key] == nil {
-			data.Paramsets[address][key] = map[string]interface{}{}
+			data.Paramsets[address][key] = map[string]any{}
 		}
 		for name, v := range values {
 			data.Paramsets[address][key][name] = v
@@ -2366,10 +2366,10 @@ func (c *CCU) markConfigPending(iface, device string) {
 func (c *CCU) sendEvents() {
 	client := &http.Client{Timeout: 5 * time.Second}
 	for e := range c.events {
-		call := encodeCall("system.multicall", []interface{}{
-			map[string]interface{}{
+		call := encodeCall("system.multicall", []any{
+			map[string]any{
 				"methodName": "event",
-				"params":     []interface{}{e.interfaceID, e.address, e.datapoint, e.value},
+				"params":     []any{e.interfaceID, e.address, e.datapoint, e.value},
 			},
 		})
 		resp, err := client.Post(e.url, "text/xml", bytes.NewReader(toLatin1(call)))

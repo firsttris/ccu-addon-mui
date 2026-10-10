@@ -62,7 +62,7 @@ func (s *Server) handleSessions(client *Client, msgType string, message []byte) 
 		}
 		s.sendJSON(client, sessionsResponse{Type: "listSessions_response", RequestID: msg.RequestID, Success: true, Sessions: list})
 	case "revokeSession":
-		s.configure(client, msg.RequestID, audit.Entry{Action: "revokeSession", Target: msg.ID}, func() (interface{}, string, error) {
+		s.configure(client, msg.RequestID, audit.Entry{Action: "revokeSession", Target: msg.ID}, func() (any, string, error) {
 			if !s.auth.Revoke(msg.ID) {
 				return nil, rega.SetNotFound, nil
 			}

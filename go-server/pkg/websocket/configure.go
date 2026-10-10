@@ -20,7 +20,7 @@ type changeResponse struct {
 // previous value (for the audit log) and a ReGa result.
 // createdID, if given, is set by change to the id of a created object and
 // sent with the response.
-func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous interface{}, result string, err error), createdID ...*int64) {
+func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous any, result string, err error), createdID ...*int64) {
 	entry.User = client.user
 	finish := func(result string) { s.recordAudit(entry, result) }
 	if code, errorMsg := configureError(client); code != "" {

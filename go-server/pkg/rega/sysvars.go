@@ -25,11 +25,11 @@ type Sysvar struct {
 	// Channel is the id of the channel the variable belongs to (0: none)
 	Channel int64 `json:"channel,omitempty"`
 	// Kind is "bool", "alarm", "number", "enum" or "string"
-	Kind  string      `json:"kind"`
-	Unit  string      `json:"unit,omitempty"`
-	Min   *float64    `json:"min,omitempty"`
-	Max   *float64    `json:"max,omitempty"`
-	Value interface{} `json:"value"`
+	Kind  string   `json:"kind"`
+	Unit  string   `json:"unit,omitempty"`
+	Min   *float64 `json:"min,omitempty"`
+	Max   *float64 `json:"max,omitempty"`
+	Value any      `json:"value"`
 	// Names of false and true (bool, alarm)
 	FalseName string `json:"falseName,omitempty"`
 	TrueName  string `json:"trueName,omitempty"`

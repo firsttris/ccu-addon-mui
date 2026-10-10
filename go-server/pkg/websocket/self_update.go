@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/auth"
@@ -102,7 +101,7 @@ func (s *Server) handleInstallSelfUpdate(client *Client, requestID string) {
 		return
 	}
 	entry.Value = release.Version
-	logger.Info(fmt.Sprintf("⬆️ Add-on update to %s started by %q", release.Version, client.user))
+	logger.Infof("⬆️ Add-on update to %s started by %q", release.Version, client.user)
 	progress := func(p selfupdate.Progress) {
 		s.sendJSON(client, selfUpdateProgress{Type: "selfUpdateProgress", Phase: p.Phase, Done: p.Done, Total: p.Total})
 	}
@@ -120,7 +119,7 @@ func (s *Server) handleInstallSelfUpdate(client *Client, requestID string) {
 		fail(code, err)
 		return
 	}
-	logger.Info(fmt.Sprintf("⬆️ Add-on updated to %s, the server restarts", release.Version))
+	logger.Infof("⬆️ Add-on updated to %s, the server restarts", release.Version)
 	s.recordAudit(entry, rega.SetOK)
 	s.sendJSON(client, installSelfUpdateResponse{Type: "installSelfUpdate_response", RequestID: requestID, Success: true, Version: release.Version})
 }

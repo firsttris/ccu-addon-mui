@@ -136,7 +136,7 @@ func (h *Home) onMetaEvent(event MetaEvent) {
 		// between are gone and cannot be replayed. Layouts under old paths
 		// stay: a layout is also kept for favorite lists, which are not nodes,
 		// and a restored backup brings the old paths back with it
-		logger.Info(fmt.Sprintf("openccu-lite's metadata: %s at revision %d, layouts of rooms moved in between stay at the old place", event.Kind, event.Revision))
+		logger.Infof("openccu-lite's metadata: %s at revision %d, layouts of rooms moved in between stay at the old place", event.Kind, event.Revision)
 		h.keepRevision(event.Revision)
 	case "node.moved":
 		if event.From == event.To {

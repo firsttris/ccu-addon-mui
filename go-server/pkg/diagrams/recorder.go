@@ -2,13 +2,14 @@ package diagrams
 
 import (
 	"bufio"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"math"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -76,7 +77,7 @@ func (r *Recorder) SetWanted(keys map[string]bool) {
 
 // Record adds a value of a series; values that are no number or boolean
 // are ignored
-func (r *Recorder) Record(key string, value interface{}, at time.Time) {
+func (r *Recorder) Record(key string, value any, at time.Time) {
 	v, ok := ToFloat(value)
 	if !ok {
 		return
@@ -121,7 +122,7 @@ func mod(a, b int64) int64 {
 }
 
 // ToFloat converts a datapoint value; booleans are 0 and 1
-func ToFloat(value interface{}) (float64, bool) {
+func ToFloat(value any) (float64, bool) {
 	switch v := value.(type) {
 	case float64:
 		return v, !math.IsNaN(v) && !math.IsInf(v, 0)
@@ -300,7 +301,7 @@ func (r *Recorder) Query(key string, from, to int64, buckets int) []Point {
 // combine sorts points, merges those of the same interval and, if there are
 // more than buckets, those of the same bucket
 func combine(points []Point, from, to int64, buckets int) []Point {
-	sort.SliceStable(points, func(i, j int) bool { return points[i].T < points[j].T })
+	slices.SortStableFunc(points, func(a, b Point) int { return cmp.Compare(a.T, b.T) })
 	merged := []Point{}
 	for _, p := range points {
 		if n := len(merged); n > 0 && merged[n-1].T == p.T {
@@ -373,7 +374,7 @@ func (r *Recorder) Import(key string, samples []Sample) error {
 			}
 			p.add(s.V, 1)
 		}
-		sort.Slice(starts, func(i, j int) bool { return starts[i] < starts[j] })
+		slices.Sort(starts)
 		for _, start := range starts {
 			f := r.file(res, key, start)
 			writes[f] = append(writes[f], *byStart[start])

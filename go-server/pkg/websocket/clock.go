@@ -4,10 +4,11 @@ package websocket
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"os/exec"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -81,11 +82,7 @@ func timeZoneList() []string {
 			seen[m[1]] = true
 		}
 	}
-	list := make([]string, 0, len(seen))
-	for zone := range seen {
-		list = append(list, zone)
-	}
-	sort.Strings(list)
+	list := slices.Sorted(maps.Keys(seen))
 	return list
 }
 

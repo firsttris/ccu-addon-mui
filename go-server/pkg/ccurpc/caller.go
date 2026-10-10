@@ -22,7 +22,7 @@ func newHTTPCaller(url string, transport http.RoundTripper) *httpCaller {
 	return &httpCaller{url: url, client: &http.Client{Transport: transport}}
 }
 
-func (c *httpCaller) Call(method string, args interface{}, reply interface{}) error {
+func (c *httpCaller) Call(method string, args any, reply any) error {
 	req, err := xmlrpc.NewRequest(c.url, method, args)
 	if err != nil {
 		return err

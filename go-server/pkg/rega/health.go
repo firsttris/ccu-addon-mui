@@ -50,7 +50,7 @@ func parseDeviceHealth(output string) []DeviceHealth {
 }
 
 // healthValue: true/false, numbers, else the text; empty (never set) null
-func healthValue(raw string) interface{} {
+func healthValue(raw string) any {
 	switch raw {
 	case "":
 		return nil

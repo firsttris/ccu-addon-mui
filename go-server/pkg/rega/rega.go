@@ -2,7 +2,6 @@ package rega
 
 import (
 	"bytes"
-	"ccu-addon-mui-server/pkg/home"
 	"context"
 	"errors"
 	"fmt"
@@ -14,6 +13,7 @@ import (
 	"time"
 
 	"ccu-addon-mui-server/pkg/config"
+	"ccu-addon-mui-server/pkg/home"
 	"ccu-addon-mui-server/pkg/latin1"
 	"ccu-addon-mui-server/pkg/logger"
 )
@@ -143,7 +143,7 @@ func (c *Client) TestConnection() error {
 	result, err := c.Execute("Write(\"Hello from WebSocket Server\");")
 	if err != nil {
 		logger.Error("❌ CCU Rega connection failed:", err)
-		logger.Error(fmt.Sprintf("   Make sure %s:%d is reachable", c.cfg.CCUHost, c.cfg.RegaPort))
+		logger.Errorf("   Make sure %s:%d is reachable", c.cfg.CCUHost, c.cfg.RegaPort)
 		return err
 	}
 

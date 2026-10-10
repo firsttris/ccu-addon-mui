@@ -34,7 +34,7 @@ func (s *Service) CheckFactoryReset(username, password, key string) error {
 	if key == "" {
 		return ErrResetKeyRequired
 	}
-	valid, err := s.AdminCall(username, "", "BidCoS_RF.validateKey", map[string]interface{}{"key": key})
+	valid, err := s.AdminCall(username, "", "BidCoS_RF.validateKey", map[string]any{"key": key})
 	if err != nil {
 		return err
 	}

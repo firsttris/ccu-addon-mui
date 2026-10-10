@@ -16,9 +16,9 @@ type Entry struct {
 	User   string    `json:"user,omitempty"`
 	Action string    `json:"action"`
 	// Target, e.g. "HmIP-RF.0001D3C99C3C93:1.STATE"
-	Target   string      `json:"target"`
-	Previous interface{} `json:"previous,omitempty"`
-	Value    interface{} `json:"value"`
+	Target   string `json:"target"`
+	Previous any    `json:"previous,omitempty"`
+	Value    any    `json:"value"`
 	// Result is "OK" or why the change was not made
 	Result string `json:"result"`
 }

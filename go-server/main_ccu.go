@@ -56,7 +56,7 @@ func setupPlatform(ctx context.Context, cfg *config.Config, wsServer *websocket.
 				return auth.LevelUnknown, nil
 			}
 			if err != nil {
-				logger.Info(fmt.Sprintf("⚠️ Could not read the user level of %q: %v", username, err))
+				logger.Infof("⚠️ Could not read the user level of %q: %v", username, err)
 				return auth.LevelUnknown, err
 			}
 			return auth.LevelFromCCU(level), nil

@@ -183,8 +183,8 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 		}
 		latitude, longitude := *msg.Latitude, *msg.Longitude
 		s.configure(client, msg.RequestID, audit.Entry{Action: "setLocation", Target: "system", Value: rega.FormatCoordinate(latitude) + "," + rega.FormatCoordinate(longitude)},
-			func() (interface{}, string, error) {
-				var previous interface{}
+			func() (any, string, error) {
+				var previous any
 				if settings, err := s.regaClient.GetSystemSettings(); err == nil {
 					previous = rega.FormatCoordinate(settings.Latitude) + "," + rega.FormatCoordinate(settings.Longitude)
 				}
@@ -199,7 +199,7 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 	case "setTimeServers":
 		// cp_time.cgi action_apply_timeserver
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.Servers},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				previous, ok := readTimeServers()
 				if !ok {
 					return nil, "NOT_SUPPORTED", nil
@@ -213,7 +213,7 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 	case "setTimeZone":
 		// cp_time.cgi action_apply_position: time.conf, TZ, updateTZ.sh
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.TimeZone},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				conf := readTimeConf()
 				if conf == nil {
 					return nil, "NOT_SUPPORTED", nil
@@ -230,7 +230,7 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 	case "setClock":
 		// cp_time.cgi action_apply_time
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: "system", Value: msg.Time},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				t, err := parseClock(msg.Time)
 				if err != nil {
 					return nil, "", err
@@ -252,7 +252,7 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 			})
 	case "setRegaVersion":
 		s.configure(client, msg.RequestID, audit.Entry{Action: "setRegaVersion", Target: "system", Value: msg.Version},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				previous := regaVersion()
 				if previous == "" {
 					return nil, "NOT_SUPPORTED", nil
@@ -270,7 +270,7 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 		}
 		ran := false
 		s.configure(client, msg.RequestID, audit.Entry{Action: "powerAction", Target: "system", Value: msg.Action},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				// Only where the add-on runs on the CCU itself
 				if !powerAvailable() {
 					return nil, "NOT_SUPPORTED", nil

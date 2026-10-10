@@ -326,7 +326,7 @@ func (w *scriptWriter) check(code string) {
 	w.checks = append(w.checks, code)
 }
 
-func (w *scriptWriter) line(format string, args ...interface{}) {
+func (w *scriptWriter) line(format string, args ...any) {
 	fmt.Fprintf(&w.b, "    "+format+"\n", args...)
 }
 

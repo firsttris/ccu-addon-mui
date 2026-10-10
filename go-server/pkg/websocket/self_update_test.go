@@ -40,7 +40,7 @@ func selfUpdateRelease(t *testing.T, marker string) *httptest.Server {
 			_, _ = w.Write(data)
 			return
 		}
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]any{
 			"tag_name": "v9.9.9",
 			"assets": []map[string]string{{
 				"name": "mui-9.9.9-arm-ccu3-raspi.tar.gz", "browser_download_url": server.URL + "/archive",
@@ -67,7 +67,7 @@ func TestSelfUpdate(t *testing.T) {
 	s.SetSelfUpdate(updater)
 	// The phases the last install reported, in order
 	var phases []string
-	call := func(client *Client, msgType string) map[string]interface{} {
+	call := func(client *Client, msgType string) map[string]any {
 		if msgType == "checkSelfUpdate" {
 			s.handleCheckSelfUpdate(client, []byte(`{"type":"checkSelfUpdate","requestId":"r","force":true}`))
 		} else {
@@ -75,7 +75,7 @@ func TestSelfUpdate(t *testing.T) {
 		}
 		phases = nil
 		for {
-			var m map[string]interface{}
+			var m map[string]any
 			_ = json.Unmarshal(<-client.send, &m)
 			if m["type"] != "selfUpdateProgress" {
 				return m

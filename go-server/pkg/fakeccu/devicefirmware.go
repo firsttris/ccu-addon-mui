@@ -126,7 +126,7 @@ func (c *CCU) handleDeviceFirmware(w http.ResponseWriter, r *http.Request) {
 			content = params["deviceName"] + " deleted"
 		}
 		// isSuccessful either way, as JsonResponseFactory.getValidResponse
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{"isSuccessful": true, "errorCode": "", "content": content})
+		_ = json.NewEncoder(w).Encode(map[string]any{"isSuccessful": true, "errorCode": "", "content": content})
 	default:
 		http.NotFound(w, r)
 	}

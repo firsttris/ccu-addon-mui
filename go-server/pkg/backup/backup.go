@@ -191,7 +191,7 @@ func (s *Service) removeExpired() {
 }
 
 type rpcResponse struct {
-	Result interface{} `json:"result"`
+	Result any `json:"result"`
 	Error  *struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
@@ -220,12 +220,12 @@ func (s *Service) logout(sessionID string) {
 	_ = s.call("Session.logout", map[string]string{"_session_id_": sessionID}, &logout)
 }
 
-func (s *Service) call(method string, params interface{}, result *rpcResponse) error {
+func (s *Service) call(method string, params any, result *rpcResponse) error {
 	return s.callWith(s.httpClient, method, params, result)
 }
 
-func (s *Service) callWith(client *http.Client, method string, params interface{}, result *rpcResponse) error {
-	body, _ := json.Marshal(map[string]interface{}{"version": "1.1", "method": method, "params": params})
+func (s *Service) callWith(client *http.Client, method string, params any, result *rpcResponse) error {
+	body, _ := json.Marshal(map[string]any{"version": "1.1", "method": method, "params": params})
 	resp, err := client.Post(s.webUIURL+"/api/homematic.cgi", "application/json", bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("CCU not reachable: %w", err)

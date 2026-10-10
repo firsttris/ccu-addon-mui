@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -65,7 +64,7 @@ func (s *Server) handleAuth(client *Client, message []byte) {
 		if user := s.autoLoginUser(); user != "" {
 			session, token, err = s.auth.AutoLogin(user, client.device)
 			if err == nil {
-				logger.Info(fmt.Sprintf("🔓 User %q logged in automatically", user))
+				logger.Infof("🔓 User %q logged in automatically", user)
 			}
 		}
 	}
@@ -126,12 +125,12 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 		case auth.ErrCCUNotReady:
 			code = "CCU_NOT_READY"
 		}
-		logger.Info(fmt.Sprintf("🔒 Login failed for user %q: %v", msg.Username, err))
+		logger.Infof("🔒 Login failed for user %q: %v", msg.Username, err)
 		s.sendAuth(client, authResponse{Type: "auth_response", AuthRequired: true, Error: err.Error(), Code: code})
 		return
 	}
 
-	logger.Info(fmt.Sprintf("🔓 User %q logged in", msg.Username))
+	logger.Infof("🔓 User %q logged in", msg.Username)
 	client.setSession(session.User, session.Level)
 	client.setSessionID(session.ID)
 	// The password was just entered: administrators may set up right away
@@ -174,7 +173,7 @@ func (s *Server) handleEndElevation(client *Client, message []byte) {
 	// The WebUI session kept for heating groups, security and the like
 	s.endWebUISession(client.user)
 	s.recordAudit(audit.Entry{User: client.user, Action: "endElevation"}, rega.SetOK)
-	logger.Info(fmt.Sprintf("🔒 User %q gave up the admin rights", client.user))
+	logger.Infof("🔒 User %q gave up the admin rights", client.user)
 	s.sendJSON(client, elevateResponse{Type: "endElevation_response", RequestID: msg.RequestID, Success: true})
 }
 
@@ -219,7 +218,7 @@ func (s *Server) handleElevate(client *Client, message []byte) {
 		case auth.ErrNotAdmin:
 			code = "FORBIDDEN"
 		}
-		logger.Info(fmt.Sprintf("🔒 Elevation failed for user %q: %v", client.user, err))
+		logger.Infof("🔒 Elevation failed for user %q: %v", client.user, err)
 		s.sendRequestError(client, msg.RequestID, err.Error(), code)
 		return
 	}

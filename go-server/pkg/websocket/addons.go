@@ -72,7 +72,7 @@ func (s *Server) handleAddons(client *Client, msgType string, message []byte) {
 		later := msg.ID == s.addons.SelfID && msg.Operation == "restart"
 		ran := false
 		s.configure(client, msg.RequestID, audit.Entry{Action: "addonAction", Target: msg.ID, Value: msg.Operation},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				if later {
 					if !s.addons.Offers(msg.ID, msg.Operation) {
 						return nil, rega.SetNotFound, nil

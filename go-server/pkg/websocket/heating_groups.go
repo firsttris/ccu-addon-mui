@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -205,7 +206,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		var removed []string
 		if previous != nil {
 			for _, m := range previous.Members {
-				if !containsString(g.Members, m.Address) {
+				if !slices.Contains(g.Members, m.Address) {
 					removed = append(removed, m.Address)
 				}
 			}
@@ -305,20 +306,11 @@ func deviceAddresses(channels []string) []string {
 	var devices []string
 	for _, c := range channels {
 		device, _, _ := strings.Cut(c, ":")
-		if device != "" && !containsString(devices, device) {
+		if device != "" && !slices.Contains(devices, device) {
 			devices = append(devices, device)
 		}
 	}
 	return devices
-}
-
-func containsString(list []string, value string) bool {
-	for _, v := range list {
-		if v == value {
-			return true
-		}
-	}
-	return false
 }
 
 // groupChangeError: administrators with a recent password; on openccu-lite

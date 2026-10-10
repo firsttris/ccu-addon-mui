@@ -4,8 +4,9 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"maps"
 	"math"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -33,7 +34,7 @@ func (n *xmlNode) child(name string) *xmlNode {
 }
 
 // decodeCall parses a methodCall into its method name and parameters.
-func decodeCall(r io.Reader) (string, []interface{}, error) {
+func decodeCall(r io.Reader) (string, []any, error) {
 	body, err := io.ReadAll(r)
 	if err != nil {
 		return "", nil, err
@@ -48,7 +49,7 @@ func decodeCall(r io.Reader) (string, []interface{}, error) {
 	if call.XMLName.Local != "methodCall" || nameNode == nil {
 		return "", nil, fmt.Errorf("not a methodCall")
 	}
-	var params []interface{}
+	var params []any
 	if paramsNode := call.child("params"); paramsNode != nil {
 		for _, p := range paramsNode.Nodes {
 			if v := p.child("value"); v != nil {
@@ -59,7 +60,7 @@ func decodeCall(r io.Reader) (string, []interface{}, error) {
 	return strings.TrimSpace(nameNode.Content), params, nil
 }
 
-func decodeValue(v *xmlNode) interface{} {
+func decodeValue(v *xmlNode) any {
 	if len(v.Nodes) == 0 {
 		return v.Content // untyped: string
 	}
@@ -77,7 +78,7 @@ func decodeValue(v *xmlNode) interface{} {
 	case "boolean":
 		return text == "1"
 	case "array":
-		list := []interface{}{}
+		list := []any{}
 		if data := typed.child("data"); data != nil {
 			for i := range data.Nodes {
 				list = append(list, decodeValue(&data.Nodes[i]))
@@ -85,7 +86,7 @@ func decodeValue(v *xmlNode) interface{} {
 		}
 		return list
 	case "struct":
-		m := map[string]interface{}{}
+		m := map[string]any{}
 		for _, member := range typed.Nodes {
 			name, value := member.child("name"), member.child("value")
 			if name != nil && value != nil {
@@ -103,7 +104,7 @@ func escape(s string) string {
 	return b.String()
 }
 
-func encodeValue(v interface{}) string {
+func encodeValue(v any) string {
 	switch x := v.(type) {
 	case nil:
 		return "<value></value>"
@@ -122,7 +123,7 @@ func encodeValue(v interface{}) string {
 			return fmt.Sprintf("<value><i4>%d</i4></value>", int(x))
 		}
 		return "<value><double>" + strconv.FormatFloat(x, 'f', 6, 64) + "</double></value>"
-	case []interface{}:
+	case []any:
 		var b strings.Builder
 		b.WriteString("<value><array><data>")
 		for _, item := range x {
@@ -131,23 +132,19 @@ func encodeValue(v interface{}) string {
 		b.WriteString("</data></array></value>")
 		return b.String()
 	case []string:
-		list := make([]interface{}, len(x))
+		list := make([]any, len(x))
 		for i, s := range x {
 			list[i] = s
 		}
 		return encodeValue(list)
-	case []map[string]interface{}:
-		list := make([]interface{}, len(x))
+	case []map[string]any:
+		list := make([]any, len(x))
 		for i, m := range x {
 			list[i] = m
 		}
 		return encodeValue(list)
-	case map[string]interface{}:
-		keys := make([]string, 0, len(x))
-		for k := range x {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
+	case map[string]any:
+		keys := slices.Sorted(maps.Keys(x))
 		var b strings.Builder
 		b.WriteString("<value><struct>")
 		for _, k := range keys {
@@ -159,17 +156,17 @@ func encodeValue(v interface{}) string {
 	return "<value>" + escape(fmt.Sprint(v)) + "</value>"
 }
 
-func encodeResponse(v interface{}) string {
+func encodeResponse(v any) string {
 	return `<?xml version="1.0" encoding="iso-8859-1"?><methodResponse><params><param>` + encodeValue(v) + `</param></params></methodResponse>`
 }
 
 func encodeFault(code int, message string) string {
 	return `<?xml version="1.0" encoding="iso-8859-1"?><methodResponse><fault>` +
-		encodeValue(map[string]interface{}{"faultCode": code, "faultString": message}) +
+		encodeValue(map[string]any{"faultCode": code, "faultString": message}) +
 		`</fault></methodResponse>`
 }
 
-func encodeCall(method string, params ...interface{}) string {
+func encodeCall(method string, params ...any) string {
 	var b strings.Builder
 	b.WriteString(`<?xml version="1.0" encoding="iso-8859-1"?><methodCall><methodName>` + method + `</methodName><params>`)
 	for _, p := range params {

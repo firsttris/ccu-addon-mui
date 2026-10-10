@@ -7,14 +7,14 @@ type CCUEvent struct {
 }
 
 type Event struct {
-	Interface string      `json:"interface"`
-	Channel   string      `json:"channel"`
-	Datapoint string      `json:"datapoint"`
-	Value     interface{} `json:"value"`
-	Timestamp string      `json:"timestamp"`
+	Interface string `json:"interface"`
+	Channel   string `json:"channel"`
+	Datapoint string `json:"datapoint"`
+	Value     any    `json:"value"`
+	Timestamp string `json:"timestamp"`
 }
 
-func NewCCUEvent(interfaceName, channel, datapoint string, value interface{}) *CCUEvent {
+func NewCCUEvent(interfaceName, channel, datapoint string, value any) *CCUEvent {
 	return &CCUEvent{
 		Event: Event{
 			Interface: interfaceName,

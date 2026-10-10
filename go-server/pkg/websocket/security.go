@@ -113,7 +113,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		// or unsetSNMPUser.sh and opens or closes SNMP in the firewall. The
 		// password is never written to the audit log.
 		entry := audit.Entry{User: client.user, Action: "setSnmp", Target: "SNMP",
-			Value: map[string]interface{}{"enabled": msg.SNMP, "user": msg.SNMPUser}, Previous: s.settings.Flag(settings.SNMPEnabled)}
+			Value: map[string]any{"enabled": msg.SNMP, "user": msg.SNMPUser}, Previous: s.settings.Flag(settings.SNMPEnabled)}
 		if code, errorMsg := configureError(client); code != "" {
 			s.recordAudit(entry, code)
 			s.sendRequestError(client, msg.RequestID, errorMsg, code)
@@ -130,8 +130,8 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 			msg.SNMPUser, msg.SNMPPassword = "", ""
 		}
 		result, err := s.backup.AdminCall(client.user, msg.Password, "CCU.setSNMPEnabled",
-			map[string]interface{}{"enabled": msg.SNMP, "usr": msg.SNMPUser, "pass": msg.SNMPPassword})
-		if answer, ok := result.(map[string]interface{}); err == nil && (!ok || answer["msg"] != "noError") {
+			map[string]any{"enabled": msg.SNMP, "usr": msg.SNMPUser, "pass": msg.SNMPPassword})
+		if answer, ok := result.(map[string]any); err == nil && (!ok || answer["msg"] != "noError") {
 			err = fmt.Errorf("SNMP was not set up: %v", result)
 		}
 		if err != nil {
@@ -156,7 +156,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 			s.sendRequestError(client, msg.RequestID, "unknown security level "+msg.Level, "INVALID_VALUE")
 			return
 		}
-		result, err := s.backup.AdminCall(client.user, msg.Password, "CCU.setSecurityLevel", map[string]interface{}{"level": msg.Level})
+		result, err := s.backup.AdminCall(client.user, msg.Password, "CCU.setSecurityLevel", map[string]any{"level": msg.Level})
 		if err == nil && result != true {
 			err = errors.New("the CCU did not set the security level")
 		}
@@ -197,7 +197,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 	case "setSecurity":
 		next := msg.securitySettings
 		// The SSH password is never written to the audit log
-		entry := audit.Entry{User: client.user, Action: "setSecurity", Target: "security", Value: map[string]interface{}{
+		entry := audit.Entry{User: client.user, Action: "setSecurity", Target: "security", Value: map[string]any{
 			"ssh": next.SSH, "auth": next.Auth, "httpsRedirect": next.HTTPSRedirect, "sshPasswordChanged": msg.SSHPassword != "",
 		}, Previous: current}
 		if code, errorMsg := configureError(client); code != "" {
@@ -210,7 +210,7 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 			s.sendRequestError(client, msg.RequestID, "invalid SSH password", "INVALID_VALUE")
 			return
 		}
-		call := func(method string, params map[string]interface{}) (interface{}, error) {
+		call := func(method string, params map[string]any) (any, error) {
 			result, err := s.backup.AdminCall(client.user, msg.Password, method, params)
 			// The new session is kept: the next calls need no password
 			msg.Password = ""
@@ -218,16 +218,16 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 		}
 		err := func() error {
 			if msg.SSHPassword != "" {
-				result, err := call("CCU.setSSHPassword", map[string]interface{}{"passwd": msg.SSHPassword})
+				result, err := call("CCU.setSSHPassword", map[string]any{"passwd": msg.SSHPassword})
 				if err != nil {
 					return err
 				}
-				if answer, ok := result.(map[string]interface{}); !ok || answer["msg"] != "noError" {
+				if answer, ok := result.(map[string]any); !ok || answer["msg"] != "noError" {
 					return fmt.Errorf("the SSH password was not set: %v", result)
 				}
 			}
 			if next.SSH != current.SSH || msg.SSHPassword != "" {
-				if _, err := call("CCU.setSSH", map[string]interface{}{"mode": next.SSH}); err != nil {
+				if _, err := call("CCU.setSSH", map[string]any{"mode": next.SSH}); err != nil {
 					return err
 				}
 				if _, err := call("CCU.restartSSHDaemon", nil); err != nil {
@@ -235,12 +235,12 @@ func (s *Server) handleSecurity(client *Client, msgType string, message []byte) 
 				}
 			}
 			if next.Auth != current.Auth {
-				if _, err := call("CCU.setAuthEnabled", map[string]interface{}{"enabled": next.Auth}); err != nil {
+				if _, err := call("CCU.setAuthEnabled", map[string]any{"enabled": next.Auth}); err != nil {
 					return err
 				}
 			}
 			if next.HTTPSRedirect != current.HTTPSRedirect {
-				if _, err := call("CCU.setHttpsRedirectEnabled", map[string]interface{}{"enabled": next.HTTPSRedirect}); err != nil {
+				if _, err := call("CCU.setHttpsRedirectEnabled", map[string]any{"enabled": next.HTTPSRedirect}); err != nil {
 					return err
 				}
 			}

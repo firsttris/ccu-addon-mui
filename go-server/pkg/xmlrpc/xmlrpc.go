@@ -180,7 +180,7 @@ func (s *Server) Start(ctx context.Context) error {
 	}
 
 	logger.Info("✅ RPC Server started and listening for callbacks from CCU")
-	logger.Info(fmt.Sprintf("   CCU will send events to: %s", s.callbackURL()))
+	logger.Infof("   CCU will send events to: %s", s.callbackURL())
 
 	if err := s.httpServer.Serve(listener); err != http.ErrServerClosed {
 		return err
@@ -235,11 +235,11 @@ func (s *Server) Unregister(ctx context.Context) error {
 			defer wg.Done()
 			interfaceID := interfaceIDFor(interfaceName)
 			logger.Info("📤 Unregistering", interfaceID, "...")
-			var result interface{}
-			if err := client.Call("init", []interface{}{callbackURL, ""}, &result); err != nil {
-				logger.Error(fmt.Sprintf("❌ Failed to unregister %s:", interfaceName), err)
+			var result any
+			if err := client.Call("init", []any{callbackURL, ""}, &result); err != nil {
+				logger.Errorf("❌ Failed to unregister %s: %v", interfaceName, err)
 			} else {
-				logger.Info(fmt.Sprintf("✅ Unregistered %s", interfaceID))
+				logger.Infof("✅ Unregistered %s", interfaceID)
 			}
 		}(interfaceName, client)
 	}
@@ -293,7 +293,7 @@ func (s *Server) newCCUClient(interfaceName string, port int, path string) (*xml
 func (s *Server) startRegistration(ctx context.Context, interfaceName string, port int, path string) {
 	client, err := s.newCCUClient(interfaceName, port, path)
 	if err != nil {
-		logger.Error(fmt.Sprintf("❌ Failed to create XML-RPC client for %s:", interfaceName), err)
+		logger.Errorf("❌ Failed to create XML-RPC client for %s: %v", interfaceName, err)
 		return
 	}
 
@@ -324,7 +324,7 @@ func (s *Server) maintainRegistration(ctx context.Context, client *xmlrpc.Client
 		switch {
 		case !registered || idle >= s.reinitAfter || (!pinged.IsZero() && time.Since(pinged) >= s.pongTimeout):
 			if registered {
-				logger.Info(fmt.Sprintf("🔄 No callbacks from %s for %s, re-registering", interfaceName, idle.Round(time.Second)))
+				logger.Infof("🔄 No callbacks from %s for %s, re-registering", interfaceName, idle.Round(time.Second))
 			}
 			pinged = time.Time{}
 			if err := s.initInterface(client, interfaceName, port); err != nil {
@@ -339,8 +339,8 @@ func (s *Server) maintainRegistration(ctx context.Context, client *xmlrpc.Client
 		case pinged.IsZero() && idle >= s.pingAfter:
 			// Taken before the call: the PONG may arrive before it returns
 			sent := time.Now()
-			var result interface{}
-			if err := client.Call("ping", []interface{}{interfaceID}, &result); err != nil {
+			var result any
+			if err := client.Call("ping", []any{interfaceID}, &result); err != nil {
 				// Not reachable (e.g. restarting): register again, with backoff
 				logger.Debugf("Ping to %s failed: %v", interfaceName, err)
 				registered = false
@@ -363,14 +363,14 @@ func (s *Server) initInterface(client *xmlrpc.Client, interfaceName string, port
 
 	logger.Debugf("📞 Calling init on %s with callback URL: %s", interfaceName, callbackURL)
 
-	var result interface{}
-	if err := client.Call("init", []interface{}{callbackURL, interfaceID}, &result); err != nil {
-		logger.Error(fmt.Sprintf("❌ Failed to initialize %s:", interfaceName), err.Error())
-		logger.Error(fmt.Sprintf("   Make sure %s:%d is reachable", s.cfg.CCUHost, port))
+	var result any
+	if err := client.Call("init", []any{callbackURL, interfaceID}, &result); err != nil {
+		logger.Errorf("❌ Failed to initialize %s: %s", interfaceName, err.Error())
+		logger.Errorf("   Make sure %s:%d is reachable", s.cfg.CCUHost, port)
 		return err
 	}
 
-	logger.Info(fmt.Sprintf("✅ Connected to %s on %s:%d", interfaceName, s.cfg.CCUHost, port))
+	logger.Infof("✅ Connected to %s on %s:%d", interfaceName, s.cfg.CCUHost, port)
 	logger.Debugf("   %s will now send events to %s with ID: %s", interfaceName, callbackURL, interfaceID)
 	return nil
 }
@@ -515,7 +515,7 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 		}
 
 		var methodName string
-		var params []interface{}
+		var params []any
 		var rawParams []param
 
 		for _, m := range callValue.Struct.Member {
@@ -550,7 +550,7 @@ func (s *Server) handleSystemMulticall(call *methodCall) string {
 // handleEvent handles a direct event call, which the CCU uses instead of
 // system.multicall for single events on some interfaces.
 func (s *Server) handleEvent(call *methodCall) string {
-	params := make([]interface{}, 0, len(call.Params.Param))
+	params := make([]any, 0, len(call.Params.Param))
 	for i := range call.Params.Param {
 		params = append(params, s.extractValue(&call.Params.Param[i].Value))
 	}
@@ -560,7 +560,7 @@ func (s *Server) handleEvent(call *methodCall) string {
 
 // dispatchEvent takes the params of an event call:
 // (interfaceID, address, datapoint, value).
-func (s *Server) dispatchEvent(params []interface{}) {
+func (s *Server) dispatchEvent(params []any) {
 	if len(params) < 4 {
 		logger.Debugf("   Ignoring event with %d params", len(params))
 		return
@@ -642,7 +642,7 @@ func (s *Server) handleNewDevices(params []param) {
 	s.known.add(interfaceID, versions)
 }
 
-func (s *Server) extractValue(v *value) interface{} {
+func (s *Server) extractValue(v *value) any {
 	if v.String != nil {
 		return *v.String
 	}
@@ -713,7 +713,7 @@ func (s *Server) serializeArrayResponse(items []string) string {
 </methodResponse>`, arrayItems.String())
 }
 
-func (s *Server) handleCCUEvent(interfaceName, address, datapoint string, value interface{}) {
+func (s *Server) handleCCUEvent(interfaceName, address, datapoint string, value any) {
 	logger.Debugf("🔔 Processing CCU Event: %s | %s.%s = %v", interfaceName, address, datapoint, value)
 
 	event := types.NewCCUEvent(interfaceName, address, datapoint, value)

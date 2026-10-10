@@ -16,7 +16,7 @@ type linksResponse struct {
 	Success     bool                       `json:"success"`
 	Links       []ccurpc.Link              `json:"links,omitempty"`
 	Description ccurpc.ParamsetDescription `json:"description,omitempty"`
-	Values      map[string]interface{}     `json:"values,omitempty"`
+	Values      map[string]any             `json:"values,omitempty"`
 }
 
 // handleLinks: direct links and their parameters. Reading is for
@@ -24,14 +24,14 @@ type linksResponse struct {
 func (s *Server) handleLinks(client *Client, msgType string, message []byte) {
 	rpc := s.rpcFor(client)
 	var msg struct {
-		RequestID     string                 `json:"requestId"`
-		InterfaceName string                 `json:"interfaceName"`
-		Address       string                 `json:"address"`
-		Partner       string                 `json:"partner"`
-		Sender        string                 `json:"sender"`
-		Receiver      string                 `json:"receiver"`
-		Name          string                 `json:"name"`
-		Values        map[string]interface{} `json:"values"`
+		RequestID     string         `json:"requestId"`
+		InterfaceName string         `json:"interfaceName"`
+		Address       string         `json:"address"`
+		Partner       string         `json:"partner"`
+		Sender        string         `json:"sender"`
+		Receiver      string         `json:"receiver"`
+		Name          string         `json:"name"`
+		Values        map[string]any `json:"values"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
@@ -70,17 +70,17 @@ func (s *Server) handleLinks(client *Client, msgType string, message []byte) {
 		respond(linksResponse{Values: values}, err)
 	case "addLink":
 		entry := audit.Entry{Action: msgType, Target: msg.Sender + " > " + msg.Receiver, Value: msg.Name}
-		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+		s.configure(client, msg.RequestID, entry, func() (any, string, error) {
 			return nil, rega.SetOK, rpc.AddLink(msg.InterfaceName, msg.Sender, msg.Receiver, msg.Name, "")
 		})
 	case "removeLink":
 		entry := audit.Entry{Action: msgType, Target: msg.Sender + " > " + msg.Receiver}
-		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+		s.configure(client, msg.RequestID, entry, func() (any, string, error) {
 			return nil, rega.SetOK, rpc.RemoveLink(msg.InterfaceName, msg.Sender, msg.Receiver)
 		})
 	case "putLinkParamset":
 		entry := audit.Entry{Action: msgType, Target: msg.Address + " < " + msg.Partner}
-		s.configure(client, msg.RequestID, entry, func() (interface{}, string, error) {
+		s.configure(client, msg.RequestID, entry, func() (any, string, error) {
 			description, err := rpc.GetLinkParamsetDescription(msg.InterfaceName, msg.Address, msg.Partner)
 			if err != nil {
 				return nil, "", err
@@ -90,9 +90,9 @@ func (s *Server) handleLinks(client *Client, msgType string, message []byte) {
 				return nil, "", fmt.Errorf("invalid value: %w", err)
 			}
 			entry.Value = values
-			var previous map[string]interface{}
+			var previous map[string]any
 			if current, err := rpc.GetLinkParamset(msg.InterfaceName, msg.Address, msg.Partner); err == nil {
-				previous = map[string]interface{}{}
+				previous = map[string]any{}
 				for name := range values {
 					previous[name] = current[name]
 				}
