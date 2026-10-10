@@ -93,7 +93,7 @@ type Server struct {
 	firmwareUpdates sync.Map
 	cfg             *config.Config
 	// Channels non-administrators may not operate
-	readOnly readOnlyChannels
+	readOnly cached[map[string]bool]
 	addons   *addons.Service
 	// What only a CCU has (state_ccu.go); empty on openccu-lite
 	ccuState //lint:ignore U1000 empty on openccu-lite, filled on a CCU
@@ -132,7 +132,7 @@ type Server struct {
 	selfUpdate *selfupdate.Updater
 
 	// eQ-3's list of the newest device firmware, kept for a while
-	deviceFirmwareCatalog deviceFirmwareCatalog
+	deviceFirmwareCatalog cached[[]DeviceFirmwareVersion]
 
 	// audit records every change; nil disables it
 	audit *audit.Log

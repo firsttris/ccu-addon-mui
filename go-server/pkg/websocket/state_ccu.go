@@ -19,11 +19,12 @@ type ccuState struct {
 	sysvarsMu   sync.Mutex
 	// The CCU's users, for the automatic login: read at most once a minute,
 	// as every connection without a token asks
-	autoLoginUsers cachedList[rega.User]
+	autoLoginUsers cached[[]rega.User]
 }
 
-// forget drops the kept list: the next get reads it again
-func (c *cachedList[T]) forget() {
+// forget drops the kept value: the next get reads it again (only the CCU
+// forgets one: its users after a change, its read-only channels)
+func (c *cached[T]) forget() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.at = time.Time{}

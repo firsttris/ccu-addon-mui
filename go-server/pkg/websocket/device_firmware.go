@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -34,12 +33,6 @@ var deviceFirmwareCatalogClient = &http.Client{Timeout: 25 * time.Second}
 
 // How long eQ-3's list of device firmware is kept
 const deviceFirmwareCatalogLifetime = time.Hour
-
-type deviceFirmwareCatalog struct {
-	mu       sync.Mutex
-	versions []DeviceFirmwareVersion
-	fetched  time.Time
-}
 
 // DeviceFirmwareVersion is the newest firmware eQ-3 offers for a device
 // type; Type is the device type as the CCU names it, in lower case
@@ -87,13 +80,14 @@ var catalogRegex = regexp.MustCompile(`(?s)setDeviceFirmwareVersions\((.*)\)`)
 // fetchDeviceFirmwareCatalog asks eQ-3 for the newest device firmware, as
 // webui.js getListOfAvailableFirmware does
 func (s *Server) fetchDeviceFirmwareCatalog() ([]DeviceFirmwareVersion, error) {
-	c := &s.deviceFirmwareCatalog
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.versions != nil && time.Since(c.fetched) < deviceFirmwareCatalogLifetime {
-		return c.versions, nil
-	}
-	u := s.cfg.DeviceFirmwareServer + "/firmware/api/firmware/search/DEVICE?product=HM-CCU3&version=" +
+	return s.deviceFirmwareCatalog.get(deviceFirmwareCatalogLifetime, func() ([]DeviceFirmwareVersion, error) {
+		return readDeviceFirmwareCatalog(s.cfg.DeviceFirmwareServer)
+	})
+}
+
+// readDeviceFirmwareCatalog reads eQ-3's list from server
+func readDeviceFirmwareCatalog(server string) ([]DeviceFirmwareVersion, error) {
+	u := server + "/firmware/api/firmware/search/DEVICE?product=HM-CCU3&version=" +
 		url.QueryEscape(firmwareVersion())
 	resp, err := deviceFirmwareCatalogClient.Get(u)
 	if err != nil {
@@ -127,7 +121,6 @@ func (s *Server) fetchDeviceFirmwareCatalog() ([]DeviceFirmwareVersion, error) {
 			versions = append(versions, DeviceFirmwareVersion{Type: t, Version: e.Version})
 		}
 	}
-	c.versions, c.fetched = versions, time.Now()
 	return versions, nil
 }
 

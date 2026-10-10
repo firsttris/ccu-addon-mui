@@ -51,33 +51,9 @@ type serviceMessagesMessage struct {
 	Messages []rega.ServiceMessage `json:"messages"`
 }
 
-// cachedList keeps the last answer of a ReGa script. Callers wait for a
-// read already running instead of starting their own.
-type cachedList[T any] struct {
-	mu    sync.Mutex
-	at    time.Time
-	value []T
-}
-
-// get returns the list if it is younger than maxAge, else reads it (maxAge
-// 0: always).
-func (c *cachedList[T]) get(maxAge time.Duration, read func() ([]T, error)) ([]T, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if maxAge > 0 && !c.at.IsZero() && time.Since(c.at) < maxAge {
-		return c.value, nil
-	}
-	value, err := read()
-	if err != nil {
-		return nil, err
-	}
-	c.value, c.at = value, time.Now()
-	return value, nil
-}
-
 type messageWatch struct {
-	alarms  cachedList[rega.AlarmMessage]
-	service cachedList[rega.ServiceMessage]
+	alarms  cached[[]rega.AlarmMessage]
+	service cached[[]rega.ServiceMessage]
 
 	mu          sync.Mutex
 	lastAlarms  []byte
