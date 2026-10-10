@@ -145,8 +145,8 @@ docs/                diese Dokumentation
    in `rpcMethods` (`rpcmethods.go`).
 5. **App**: Schreib in `src/queries/index.ts` eine Query oder Mutation, die `request('meinTyp', …)` aufruft.
    Die Typen kommen aus dem Schema.
-6. **Tests**: Ein Go-Integrationstest in `go-server/integration_test.go` prüft die Antwort automatisch gegen
-   das Schema. Ist es eine sichtbare Funktion, gehört noch ein Stack-Test in `e2e-stack/stack.spec.ts` dazu.
+6. **Tests**: Ein Go-Integrationstest prüft die Antwort automatisch gegen das Schema. Er gehört in die
+   passende `go-server/stack_*_test.go` und fragt mit `call(t, conn, message{…})` aus `stack_helpers_test.go`. Ist es eine sichtbare Funktion, gehört noch ein Stack-Test in `e2e-stack/stack.spec.ts` dazu.
 
 ## Eine Kachel für ein neues Gerät
 

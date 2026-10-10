@@ -36,7 +36,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | 11 | Zu große Frontend-Dateien (bis auf `DeviceSettings.tsx` erledigt) | Frontend | L |
 | 12 | Wiederholte UI-Bausteine und Zahlenformatierung (erledigt) | Frontend | M |
 | 13 | Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen (größtenteils erledigt) | Go | L |
-| 14 | `integration_test.go` wiederholt dieselben Abläufe | Go-Tests | M |
+| 14 | `integration_test.go` wiederholt dieselben Abläufe (erledigt) | Go-Tests | M |
 
 ## Klein, mit großer Wirkung
 
@@ -327,7 +327,7 @@ Die 72 Bildschirmfotos von `visual.spec.ts` sind pixelgleich mit `main`.
   - `handlePairing`: Es hat zwei `switch` hintereinander.
   - `main.run` (140 Zeilen), `rega.parseProgram` (103) und `occulite/home.go` (868 Zeilen).
 
-### 14. `integration_test.go` wiederholt dieselben Abläufe
+### 14. `integration_test.go` wiederholt dieselben Abläufe: erledigt
 
 - **Wiederholte Abläufe.** 3154 Zeilen und 65 Tests, darin 298 Aufrufe von `send(t, conn, …)` und 286
   von `receive(…byRequestID…)`. Der Lite-Test hat dafür schon einen Helfer `liteCall`
@@ -338,6 +338,24 @@ Die 72 Bildschirmfotos von `visual.spec.ts` sind pixelgleich mit `main`.
 
 **Vorschlag:** Einen gemeinsamen Helfer `call()` und einen Port-Helfer in eine gemeinsame Testdatei legen
 und die Tests nach Domänen aufteilen.
+
+**Erledigt:**
+
+- **Gemeinsame Testdatei:** `stack_helpers_test.go` nutzen beide Builds. Darin stehen:
+  - `freePort`, der sich vergebene Ports merkt (`litePort` entfällt)
+  - das Senden, Lesen und Prüfen gegen `protocol/schema.json`
+  - `call(t, conn, request)`: Er sendet eine Anfrage und gibt ihre Antwort zurück, bei `auth` und
+    `login` die `auth_response`.
+- **`call` statt Paaren:** 297 Paare aus `send` und `receive(byRequestID(…))` sowie 10 Anmeldungen sind
+  jetzt Aufrufe von `call`. Es bleiben nur die Stellen, die mehrere Nachrichten zugleich erwarten, etwa die
+  Antwort und das Event eines Schaltbefehls.
+- **Lite-Test:** `liteCall` vergibt nur noch die `requestId` und ruft `call`. Damit prüft jetzt auch der
+  Lite-Test jede Antwort gegen das Protokoll-Schema.
+- **Aufteilung nach Domänen:** `integration_test.go` (vorher 3154 Zeilen) enthält nur noch den Aufbau des
+  Stacks und zwei Grundtests. Die übrigen Tests stehen in diesen Dateien:
+  - `stack_devices_test.go`: Geräte, Räume, Verknüpfungen, Anlernen, Kacheln, Heizgruppen
+  - `stack_logic_test.go`: Programme, Systemvariablen, Alarme, Skripte, Regeln, Diagramme
+  - `stack_system_test.go`: Einstellungen, Benutzer, Backups, Firmware, Add-ons
 
 ## Vorgeschlagene Reihenfolge
 
@@ -352,4 +370,5 @@ Jeder Schritt ist ein eigener PR:
 7. ~~Handler vereinheitlichen (#6, #7)~~ erledigt; ~~die langen Handler aufteilen (#13)~~ größtenteils erledigt.
 8. ~~Caches, Globale, ReGa-Aufrufe (#8, #9, #10)~~ erledigt.
 9. ~~UI-Bausteine und Zahlenformatierung (#12)~~ erledigt.
-10. Der Rest: #14, `DeviceSettings.tsx`, der Rest von #13.
+10. ~~Integrationstests (#14)~~ erledigt.
+11. Der Rest: `DeviceSettings.tsx`, der Rest von #13.
