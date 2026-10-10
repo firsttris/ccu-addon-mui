@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"strings"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -29,8 +28,7 @@ func (s *Server) handleHistory(client *Client, msgType string, message []byte) {
 		// Only the entries of this channel
 		Channel int64 `json:"channel"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if msgType == "clearHistory" {
@@ -70,8 +68,7 @@ func (s *Server) handleDevicePrograms(client *Client, message []byte) {
 		RequestID string `json:"requestId"`
 		Address   string `json:"address"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	programs, err := s.regaClient.GetDevicePrograms(msg.Address)
@@ -104,8 +101,7 @@ func (s *Server) handleComTest(client *Client, msgType string, message []byte) {
 		Address   string `json:"address"`
 		Started   string `json:"started"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {

@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"slices"
@@ -116,8 +115,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		ID       int    `json:"id"`
 		Password string `json:"password"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {
@@ -193,7 +191,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 			id, err = s.backup.SaveHeatingGroup(client.user, msg.Password, change)
 		}
 		if err != nil {
-			s.groupChangeFailed(client, msg.RequestID, entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 		if previous != nil {
@@ -240,7 +238,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		if s.groups != nil {
 			err := s.groupsFor(client).Delete(msg.ID)
 			if err != nil {
-				s.groupChangeFailed(client, msg.RequestID, entry, err)
+				s.failChange(client, msg.RequestID, entry, err)
 				return
 			}
 			s.recordAudit(entry, rega.SetOK)
@@ -248,7 +246,7 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 			return
 		}
 		if err := s.backup.DeleteHeatingGroup(client.user, msg.Password, msg.ID); err != nil {
-			s.groupChangeFailed(client, msg.RequestID, entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 		s.recordAudit(entry, rega.SetOK)
@@ -264,18 +262,6 @@ func (s *Server) handleHeatingGroupChange(client *Client, msgType string, messag
 		}()
 		s.sendJSON(client, changeResponse{Type: "deleteHeatingGroup_response", RequestID: msg.RequestID, Success: true})
 	}
-}
-
-func (s *Server) groupChangeFailed(client *Client, requestID string, entry audit.Entry, err error) {
-	code := "CCU_ERROR"
-	switch {
-	case errors.Is(err, backup.ErrSessionRequired):
-		code = "PASSWORD_REQUIRED"
-	case errors.Is(err, backup.ErrInvalidCredentials):
-		code = "INVALID_CREDENTIALS"
-	}
-	s.recordAudit(entry, code)
-	s.sendRequestError(client, requestID, entry.Action+" failed: "+err.Error(), code)
 }
 
 // setupGroupDevice names the group's virtual device and marks the members'

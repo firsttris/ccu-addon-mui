@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -18,8 +17,7 @@ func (s *Server) handleSetChannelTile(client *Client, message []byte) {
 		ID        int64  `json:"id"`
 		Tile      string `json:"tile"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	s.configure(client, msg.RequestID, audit.Entry{Action: "setChannelTile", Target: fmt.Sprintf("channel %d", msg.ID), Value: msg.Tile},

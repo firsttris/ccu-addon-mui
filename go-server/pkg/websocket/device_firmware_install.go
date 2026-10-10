@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"errors"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -19,8 +18,7 @@ func (s *Server) handleInstallFirmware(client *Client, message []byte) {
 		InterfaceName string `json:"interfaceName"`
 		Address       string `json:"address"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if s.rpc == nil {

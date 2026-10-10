@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -83,8 +82,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 		Roaming   bool                  `json:"roaming"`
 		Password  string                `json:"password"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {
@@ -132,9 +130,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 	case "setBidcosInterface":
 		entry = audit.Entry{User: client.user, Action: "setBidcosInterface", Target: msg.Address, Value: map[string]any{"module": msg.Module, "roaming": msg.Roaming}}
 	}
-	if code, errorMsg := configureError(client); code != "" {
-		s.recordAudit(entry, code)
-		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+	if !s.mayConfigure(client, msg.RequestID, entry) {
 		return
 	}
 	invalid := func(text string) {
@@ -167,7 +163,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 				err = errors.New("the CCU did not write the configuration")
 			}
 			if err != nil {
-				s.securityFailed(client, msg.RequestID, entry, err)
+				s.failChange(client, msg.RequestID, entry, err)
 				return
 			}
 			// The password opened the session; the second call uses it
@@ -195,7 +191,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 			err = errors.New("the CCU did not take the key")
 		}
 		if err != nil {
-			s.securityFailed(client, msg.RequestID, entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 	case "setBidcosInterface":
@@ -208,12 +204,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 			return
 		}
 		if err := rpc.SetBidcosInterface(bidcosRF, msg.Address, msg.Module, msg.Roaming); err != nil {
-			code := "CCU_ERROR"
-			if errors.Is(err, ccurpc.ErrInvalidAddress) {
-				code = "INVALID_VALUE"
-			}
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, "setBidcosInterface failed: "+err.Error(), code)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 	}

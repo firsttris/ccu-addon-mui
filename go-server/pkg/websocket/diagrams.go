@@ -2,8 +2,6 @@ package websocket
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -111,8 +109,7 @@ func (s *Server) handleDiagrams(client *Client, msgType string, message []byte) 
 		To        int64             `json:"to"`
 		Buckets   int               `json:"buckets"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if s.diagrams == nil || s.recorder == nil {
@@ -150,12 +147,12 @@ func (s *Server) handleDiagrams(client *Client, msgType string, message []byte) 
 		s.saveDiagram(client, msg.RequestID, msg.Diagram)
 	case "deleteDiagram":
 		entry := audit.Entry{User: client.user, Action: "deleteDiagram", Target: msg.ID}
-		if !s.diagramAllowed(client, msg.RequestID, &entry) {
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		previous, err := s.diagrams.Delete(msg.ID)
 		if err != nil {
-			s.diagramFailed(client, msg.RequestID, &entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 		entry.Previous = previous
@@ -164,27 +161,6 @@ func (s *Server) handleDiagrams(client *Client, msgType string, message []byte) 
 		s.recorder.SetWanted(s.diagrams.Keys())
 		s.sendJSON(client, changeResponse{Type: "deleteDiagram_response", RequestID: msg.RequestID, Success: true})
 	}
-}
-
-func (s *Server) diagramAllowed(client *Client, requestID string, entry *audit.Entry) bool {
-	if code, errorMsg := configureError(client); code != "" {
-		s.recordAudit(*entry, code)
-		s.sendRequestError(client, requestID, errorMsg, code)
-		return false
-	}
-	return true
-}
-
-func (s *Server) diagramFailed(client *Client, requestID string, entry *audit.Entry, err error) {
-	code := "CCU_ERROR"
-	switch {
-	case errors.Is(err, diagrams.ErrInvalid):
-		code = "INVALID_VALUE"
-	case errors.Is(err, diagrams.ErrNotFound):
-		code = "NOT_FOUND"
-	}
-	s.recordAudit(*entry, code)
-	s.sendRequestError(client, requestID, entry.Action+" failed: "+err.Error(), code)
 }
 
 func (s *Server) recordAudit(entry audit.Entry, result string) {
@@ -196,13 +172,13 @@ func (s *Server) recordAudit(entry audit.Entry, result string) {
 
 func (s *Server) saveDiagram(client *Client, requestID string, d diagrams.Diagram) {
 	entry := audit.Entry{User: client.user, Action: "saveDiagram", Target: d.Name, Value: d}
-	if !s.diagramAllowed(client, requestID, &entry) {
+	if !s.mayConfigure(client, requestID, entry) {
 		return
 	}
 	before := s.diagrams.Keys()
 	saved, previous, err := s.diagrams.Save(d)
 	if err != nil {
-		s.diagramFailed(client, requestID, &entry, err)
+		s.failChange(client, requestID, entry, err)
 		return
 	}
 	if previous != nil {

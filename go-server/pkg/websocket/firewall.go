@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"errors"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -31,8 +30,7 @@ func (s *Server) handleFirewall(client *Client, msgType string, message []byte) 
 		Firewall  settings.Firewall `json:"firewall"`
 		Password  string            `json:"password"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {
@@ -58,9 +56,7 @@ func (s *Server) handleFirewall(client *Client, msgType string, message []byte) 
 	case "setFirewall":
 		next := msg.Firewall
 		entry := audit.Entry{User: client.user, Action: "setFirewall", Target: "firewall", Value: next, Previous: current}
-		if code, errorMsg := configureError(client); code != "" {
-			s.recordAudit(entry, code)
-			s.sendRequestError(client, msg.RequestID, errorMsg, code)
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		if err := next.Validate(); err != nil {
@@ -88,7 +84,7 @@ func (s *Server) handleFirewall(client *Client, msgType string, message []byte) 
 		if _, err := s.backup.AdminCall(client.user, msg.Password, "Firewall.setConfiguration", map[string]any{
 			"services": services, "ips": ips, "userports": ports, "mode": next.Mode,
 		}); err != nil {
-			s.securityFailed(client, msg.RequestID, entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 		s.recordAudit(entry, rega.SetOK)

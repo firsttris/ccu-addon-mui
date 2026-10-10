@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"regexp"
 
 	"ccu-addon-mui-server/pkg/logger"
@@ -13,8 +12,7 @@ var deviceIDRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 
 func (s *Server) handleSubscribe(client *Client, message []byte) {
 	var msg types.SubscribeMessage
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid subscribe message: "+err.Error(), "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 
@@ -61,16 +59,15 @@ type request struct {
 // back in the response.
 func (s *Server) parseRequest(client *Client, message []byte) (request, bool) {
 	var msg request
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message: "+err.Error(), "")
+	if !s.decode(client, message, &msg) {
 		return msg, false
 	}
 	if msg.DeviceID == "" {
-		s.sendRequestError(client, msg.RequestID, "deviceId is required", "")
+		s.sendRequestError(client, msg.RequestID, "deviceId is required", "INVALID_REQUEST")
 		return msg, false
 	}
 	if !deviceIDRegex.MatchString(msg.DeviceID) {
-		s.sendRequestError(client, msg.RequestID, "invalid deviceId", "")
+		s.sendRequestError(client, msg.RequestID, "invalid deviceId", "INVALID_REQUEST")
 		return msg, false
 	}
 	return msg, true

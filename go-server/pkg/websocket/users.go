@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -42,8 +41,7 @@ func (s *Server) handleUsers(client *Client, msgType string, message []byte) {
 		Password  *string `json:"password"`
 		AutoLogin bool    `json:"autoLogin"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if msgType == "getUsers" {

@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -62,8 +61,7 @@ func (s *Server) handlePairing(client *Client, msgType string, message []byte) {
 		SGTIN string `json:"sgtin"`
 		Key   string `json:"key"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if s.rpc == nil {

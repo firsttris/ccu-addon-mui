@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"strings"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -21,8 +20,7 @@ func (s *Server) handleChangePassword(client *Client, message []byte) {
 		CurrentPassword string `json:"currentPassword"`
 		NewPassword     string `json:"newPassword"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	entry := audit.Entry{User: client.user, Action: "changePassword", Target: client.user}

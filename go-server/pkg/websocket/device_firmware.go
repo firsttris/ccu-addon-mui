@@ -189,8 +189,7 @@ func (s *Server) handleDeviceFirmware(client *Client, msgType string, message []
 		FileName   string `json:"fileName"`
 		Password   string `json:"password"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {
@@ -236,9 +235,7 @@ func (s *Server) handleDeviceFirmware(client *Client, msgType string, message []
 	if msgType != "downloadDeviceFirmware" {
 		entry.Target = msg.ID
 	}
-	if code, errorMsg := configureError(client); code != "" {
-		s.recordAudit(entry, code)
-		s.sendRequestError(client, msg.RequestID, errorMsg, code)
+	if !s.mayConfigure(client, msg.RequestID, entry) {
 		return
 	}
 	if s.backup == nil {
@@ -297,21 +294,7 @@ func (s *Server) handleDeviceFirmware(client *Client, msgType string, message []
 		err = s.backup.DeleteDeviceFirmware(username, msg.Password, msg.ID, name)
 	}
 	if err != nil {
-		code := "CCU_ERROR"
-		switch {
-		case errors.Is(err, backup.ErrSessionRequired):
-			code = "PASSWORD_REQUIRED"
-		case errors.Is(err, backup.ErrInvalidCredentials):
-			code = "INVALID_CREDENTIALS"
-		case errors.Is(err, backup.ErrInvalidDeviceFirmware):
-			code = "INVALID_FIRMWARE"
-		case errors.Is(err, backup.ErrDeviceFirmwareNeedsNewerCCU):
-			code = "FIRMWARE_NEEDS_NEWER_CCU"
-		case errors.Is(err, backup.ErrUploadNotFound):
-			code = rega.SetNotFound
-		}
-		s.recordAudit(entry, code)
-		s.sendRequestError(client, msg.RequestID, msgType+" failed: "+err.Error(), code)
+		s.failChange(client, msg.RequestID, entry, err)
 		return
 	}
 	s.recordAudit(entry, rega.SetOK)

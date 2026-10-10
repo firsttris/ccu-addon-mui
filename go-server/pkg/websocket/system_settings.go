@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -148,8 +147,7 @@ func (s *Server) handleSystemSettings(client *Client, msgType string, message []
 		// setRegaVersion
 		Version string `json:"version"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	switch msgType {

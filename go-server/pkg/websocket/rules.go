@@ -1,9 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
-	"errors"
-
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/rules"
@@ -37,8 +34,7 @@ func (s *Server) handleRules(client *Client, msgType string, message []byte) {
 		Rule      rules.Rule `json:"rule"`
 		ID        string     `json:"id"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if s.rules == nil {
@@ -50,12 +46,12 @@ func (s *Server) handleRules(client *Client, msgType string, message []byte) {
 		s.sendJSON(client, rulesResponse{Type: "getRules_response", RequestID: msg.RequestID, Rules: s.rules.List()})
 	case "saveRule":
 		entry := audit.Entry{User: client.user, Action: "saveRule", Target: msg.Rule.Name, Value: msg.Rule}
-		if !s.diagramAllowed(client, msg.RequestID, &entry) {
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		saved, previous, err := s.rules.Save(msg.Rule)
 		if err != nil {
-			s.ruleFailed(client, msg.RequestID, &entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 		if previous != nil {
@@ -67,12 +63,12 @@ func (s *Server) handleRules(client *Client, msgType string, message []byte) {
 		s.sendJSON(client, ruleResponse{Type: "saveRule_response", RequestID: msg.RequestID, Success: true, Rule: saved})
 	case "deleteRule":
 		entry := audit.Entry{User: client.user, Action: "deleteRule", Target: msg.ID}
-		if !s.diagramAllowed(client, msg.RequestID, &entry) {
+		if !s.mayConfigure(client, msg.RequestID, entry) {
 			return
 		}
 		previous, err := s.rules.Delete(msg.ID)
 		if err != nil {
-			s.ruleFailed(client, msg.RequestID, &entry, err)
+			s.failChange(client, msg.RequestID, entry, err)
 			return
 		}
 		entry.Previous = previous
@@ -90,16 +86,4 @@ func (s *Server) ruleChanged(id string) {
 		s.ruleRun.Reset(id)
 		go s.ruleRun.Evaluate()
 	}
-}
-
-func (s *Server) ruleFailed(client *Client, requestID string, entry *audit.Entry, err error) {
-	code := "CCU_ERROR"
-	switch {
-	case errors.Is(err, rules.ErrInvalid):
-		code = "INVALID_VALUE"
-	case errors.Is(err, rules.ErrNotFound):
-		code = "NOT_FOUND"
-	}
-	s.recordAudit(*entry, code)
-	s.sendRequestError(client, requestID, entry.Action+" failed: "+err.Error(), code)
 }

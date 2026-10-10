@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -31,8 +30,7 @@ func (s *Server) handleLogic(client *Client, msgType string, message []byte) {
 		// setLogicOption: "visible" or "operate"
 		Option string `json:"option"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	respond := func(r logicResponse) {
@@ -140,8 +138,7 @@ func (s *Server) handleProgramEditor(client *Client, msgType string, message []b
 		ID        int64                  `json:"id"`
 		Program   rega.ProgramDefinition `json:"program"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	switch msgType {

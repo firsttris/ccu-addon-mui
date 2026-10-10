@@ -15,6 +15,18 @@ type changeResponse struct {
 	ID int64 `json:"id,omitempty"`
 }
 
+// mayConfigure says whether client may change settings now; if not, the
+// refusal is recorded with entry and answered
+func (s *Server) mayConfigure(client *Client, requestID string, entry audit.Entry) bool {
+	code, errorMsg := configureError(client)
+	if code == "" {
+		return true
+	}
+	s.recordAudit(entry, code)
+	s.sendRequestError(client, requestID, errorMsg, code)
+	return false
+}
+
 // configure runs a change of the setup area for client: checks that it may
 // change settings, runs change and records the outcome. change returns the
 // previous value (for the audit log) and a ReGa result.
@@ -23,9 +35,7 @@ type changeResponse struct {
 func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous any, result string, err error), createdID ...*int64) {
 	entry.User = client.user
 	finish := func(result string) { s.recordAudit(entry, result) }
-	if code, errorMsg := configureError(client); code != "" {
-		finish(code)
-		s.sendRequestError(client, requestID, errorMsg, code)
+	if !s.mayConfigure(client, requestID, entry) {
 		return
 	}
 	previous, result, err := change()

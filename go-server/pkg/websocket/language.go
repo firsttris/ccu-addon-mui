@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -70,8 +69,7 @@ func (s *Server) handleUserLanguage(client *Client, msgType string, message []by
 		RequestID string `json:"requestId"`
 		Language  *int   `json:"language"`
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	dir := s.profilesDir()

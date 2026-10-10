@@ -3,7 +3,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"os"
 	"os/exec"
 
@@ -63,8 +62,7 @@ func (s *Server) handleLogging(client *Client, msgType string, message []byte) {
 		RequestID string `json:"requestId"`
 		loggingSettings
 	}
-	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
+	if !s.decode(client, message, &msg) {
 		return
 	}
 	if client.level != auth.LevelAdmin {

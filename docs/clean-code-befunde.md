@@ -28,8 +28,8 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | 3 | Uneinheitliche Fehlercodes, `requestId` geht verloren (erledigt) | Go | S |
 | 4 | Kopierte Helfer und Reste im Frontend (erledigt) | Frontend | S–M |
 | 5 | Veraltete Go-Idiome, Logger ohne `Errorf` (erledigt) | Go | S |
-| 6 | Gleicher Anfang in jedem Handler, Antwort-Structs | Go | M |
-| 7 | Fehlerbehandlung bei Änderungen mehrfach kopiert | Go | S |
+| 6 | Gleicher Anfang in jedem Handler, Antwort-Structs (erledigt) | Go | M |
+| 7 | Fehlerbehandlung bei Änderungen mehrfach kopiert (erledigt) | Go | S |
 | 8 | Selbstgebaute TTL-Caches neben `cachedList[T]` | Go | M |
 | 9 | Globale Variablen, Abhängigkeit von der Aufrufreihenfolge | Go | M |
 | 10 | Handler gehen an `home.Source` vorbei direkt zur ReGa | Go | M |
@@ -149,32 +149,27 @@ sind nur über `dispatch_ccu.go` erreichbar. Eine Aufteilung würde diesen Teil 
 
 ## Mittel: Wiederholungen im Go-Server
 
-### 6. Gleicher Anfang in jedem Handler, Antwort-Structs
+### 6. Gleicher Anfang in jedem Handler, Antwort-Structs: erledigt, bis auf zwei bewusste Ausnahmen
 
-- **Gleicher Anfang.** Fast jeder Handler beginnt mit `json.Unmarshal(message, &msg)`, gefolgt von
-  `sendRequestError(…, "invalid message", …)`. Das steht 48-mal da, davon 37-mal mit „invalid message“.
-- **Drei Signaturen.** 21 Handler nehmen `(client, message)`, 29 nehmen `(client, msgType, message)`
-  und 10 nehmen `(client, requestID)`.
-- **Antwort-Structs.** 102 Structs schreiben `Type` und `RequestID` je selbst aus, 19 zusätzlich
-  `Success`. Gemeinsam genutzt wird nur `changeResponse` (`configure.go:10`).
+- **Nachricht lesen.** `decode(client, message, &msg)` ersetzt in 43 Handlern die vier Zeilen aus
+  `json.Unmarshal`, Fehlerantwort und `return`. Eine Nachricht, die sich nicht lesen lässt, kommt überall
+  mit `INVALID_REQUEST` und ihrer `requestId` zurück. `decode` liest die `requestId` selbst aus der
+  Nachricht.
+- **Bewusst nicht gemacht:**
+  - **Eine Signatur für alle Handler:** Sie hätte 57 direkte Aufrufe in den Tests geändert. Der
+    `switch` in `dispatch` ist so lesbar.
+  - **`responseHeader` einbetten:** Die Struct-Literale würden länger, nicht kürzer, weil
+    `responseHeader: responseHeader{…}` mehr Text ist als `Type:` und `RequestID:`.
 
-**Vorschlag:** Einen generischen Helfer `decode[T](s, client, requestID, message) (T, bool)` und eine
-einheitliche Signatur `(client, msgType, requestID, message)` einführen. In die Antworten wird ein
-`responseHeader{Type, RequestID}` eingebettet.
+### 7. Fehlerbehandlung bei Änderungen mehrfach kopiert: erledigt
 
-### 7. Fehlerbehandlung bei Änderungen mehrfach kopiert
-
-- **Identische Funktionen.** `diagramFailed` (`diagrams.go:178`) und `ruleFailed` (`rules.go:95`)
-  unterscheiden sich nur im Paketnamen.
-- **Dreimal dieselbe Zuordnung.** Die `backup.Err*`-Fehler werden dreimal gleich auf Fehlercodes
-  abgebildet: in `groupChangeFailed` (`heating_groups.go:268`), `securityFailed` (`security.go:321`) und
-  direkt im Code in `device_firmware.go:302`.
-- **`configure()` wird umgangen.** 20 Handler wiederholen von Hand die Folge `configureError` →
-  `recordAudit` → `sendRequestError`, die `configure()` schon kapselt. `security.go` allein tut das
-  sechsmal.
-
-**Vorschlag:** Eine Funktion `failChange(client, requestID, entry, err)` mit einer gemeinsamen Tabelle
-für die `backup`-Fehler. Handler, die es können, laufen über `configure()`.
+- **Tabelle.** `errorcodes.go` enthält eine Tabelle `serviceErrorCodes` (Sentinel-Fehler → Code) und
+  `codeOf(err, own...)`. Damit bekommt derselbe Fehler überall denselben Code.
+- **`failChange`** ersetzt `diagramFailed`, `ruleFailed`, `groupChangeFailed` und `securityFailed`.
+- **`mayConfigure(client, requestID, entry)`** ersetzt in 15 Handlern die Folge `configureError` →
+  `recordAudit` → `sendRequestError`.
+- **Bleibt, wie es ist:** Die Prüfungen auf ReGa-Fehlertexte („invalid …“) bilden je nach Handler bewusst
+  auf `INVALID_VALUE` oder `INVALID_REQUEST` ab.
 
 ### 8. Selbstgebaute TTL-Caches neben `cachedList[T]`
 
@@ -300,5 +295,5 @@ Jeder Schritt ist ein eigener PR:
 4. ~~Mechanische Go-Modernisierung und Logger (#5)~~ erledigt.
 5. ~~Kopierte Frontend-Helfer und Reste (#4)~~ erledigt.
 6. ~~Große Frontend-Dateien aufteilen (#11)~~ erledigt bis auf `DeviceSettings.tsx`.
-7. Handler vereinheitlichen (#6, #7), danach die langen Handler aufteilen (#13).
+7. ~~Handler vereinheitlichen (#6, #7)~~ erledigt; danach die langen Handler aufteilen (#13).
 8. Der Rest: #8, #9, #10, #12, #14, `DeviceSettings.tsx`, `fakeccu.go`.
