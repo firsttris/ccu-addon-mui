@@ -109,8 +109,9 @@ docs/                diese Dokumentation
   Commit-Nachricht, zum Beispiel „wie in der WebUI `door_opener.fn`“. So kann später jeder nachvollziehen,
   warum etwas so ist.
 - **Formatierung und Lint-Regeln** setzt [Biome](https://biomejs.dev) durch (`biome.json`), die CI prüft
-  beides. Lass vor dem Commit `npm run lint:fix` laufen; die Erweiterung `biomejs.biome` für VS Code
-  formatiert beim Speichern.
+  beides, auch Warnungen. Lass vor dem Commit `npm run lint:fix` laufen; die Erweiterung `biomejs.biome`
+  für VS Code formatiert beim Speichern. Schlägt eine Regel an, obwohl der Code stimmt, nimm die Stelle
+  mit `// biome-ignore <regel>: <Grund>` aus, statt die Regel abzuschalten.
 - **Texte** der Oberfläche gibt es auf Deutsch und Englisch. Halte sie kurz und vermeide Fachjargon, wo es
   geht.
 - **Ein Feature, ein Pull Request.** Kleine PRs lassen sich leichter prüfen. Gemergt wird, wenn die CI grün

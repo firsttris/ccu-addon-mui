@@ -20,7 +20,7 @@
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "typecheck": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy preferredLanguage baseLocale --emit-ts-declarations --silent && tsc --noEmit -p .",
-    "lint": "biome check .",
+    "lint": "biome check --error-on-warnings .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "generate:protocol": "json2ts -i protocol/schema.json -o src/types/protocol.ts --unreachableDefinitions --bannerComment \"/* Generated from protocol/schema.json by npm run generate:protocol. Do not edit. */\"",

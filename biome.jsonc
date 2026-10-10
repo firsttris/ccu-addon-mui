@@ -34,29 +34,12 @@
     "enabled": true,
     "rules": {
       "preset": "recommended",
-      // These still have findings that need a look one by one (a button inside
-      // a form, a dependency left out on purpose): they warn until they are
-      // worked off (docs/clean-code-befunde.md), then they go back to errors
       "a11y": {
-        "noAutofocus": "warn",
         "noLabelWithoutControl": {
-          "level": "warn",
+          "level": "error",
           // The inputs of components/ui render a native input, select or switch
           "options": { "inputComponents": ["Input", "NativeSelect", "Switch", "TimePicker"] }
-        },
-        "noNoninteractiveElementToInteractiveRole": "warn",
-        "noSvgWithoutTitle": "warn",
-        "useAriaPropsSupportedByRole": "warn",
-        "useButtonType": "warn",
-        "useFocusableInteractive": "warn",
-        "useKeyWithClickEvents": "warn",
-        "useSemanticElements": "warn"
-      },
-      "correctness": {
-        "useExhaustiveDependencies": "warn"
-      },
-      "suspicious": {
-        "noArrayIndexKey": "warn"
+        }
       }
     }
   },

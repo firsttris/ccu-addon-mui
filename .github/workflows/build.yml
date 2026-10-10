@@ -49,9 +49,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Formatting and lint rules (biome.json); warnings are shown, errors fail
+      # Formatting and lint rules (biome.jsonc); a warning fails too, so none
+      # piles up. Intended exceptions carry a biome-ignore with their reason.
       - name: Biome
-        run: npx biome ci .
+        run: npx biome ci --error-on-warnings .
 
       - name: Protocol types up to date
         run: npm run generate:protocol && git diff --exit-code src/types/protocol.ts

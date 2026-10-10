@@ -42,25 +42,30 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 
 ### 1. Kein Linter oder Formatter erzwingt den Stil
 
-**Frontend: erledigt mit Biome.** `biome.jsonc` legt Formatierung und Lint-Regeln fest,
-`npm run lint` prüft sie, und der Build-Workflow führt `biome ci` aus. Der Code ist einmal
-durchformatiert, die Fehler des empfohlenen Presets sind behoben. Die früheren `eslint-disable` sind
-jetzt `biome-ignore` mit Begründung.
+**Frontend: erledigt mit Biome.** `biome.jsonc` legt Formatierung und Lint-Regeln fest (das empfohlene
+Preset), `npm run lint` prüft sie, und der Build-Workflow führt `biome ci --error-on-warnings` aus: Auch
+eine Warnung lässt ihn scheitern, damit sich keine ansammeln. Der Code ist einmal durchformatiert, und
+Biome meldet nichts mehr.
 
-Noch offen sind 165 Warnungen. Die Regeln dahinter stehen vorerst auf `warn`, weil jede Stelle einzeln
-geprüft werden muss. Danach sollen sie wieder Fehler werden.
+Wo der Code richtig ist und die Regel trotzdem anschlägt, steht ein `biome-ignore` mit dem Grund. Das
+sind 100 Stellen, vor allem:
 
-| Regel | Anzahl | Was zu prüfen ist |
+| Regel | Stellen | Warum Absicht |
 |---|---|---|
-| `style/noNonNullAssertion` | 37 | `!` durch Eingrenzen des Typs ersetzen |
-| `suspicious/noArrayIndexKey` | 36 | stabiler `key` statt Index, wo sich Listen ändern |
-| `a11y/useSemanticElements` | 29 | `role="…"` auf `div` durch das passende Element ersetzen |
-| `a11y/useButtonType` | 23 | `type="button"`; in Formularen vorher prüfen, ob die Schaltfläche absenden soll |
-| `correctness/useExhaustiveDependencies` | 13 | fehlende Abhängigkeiten ergänzen oder bewusst mit Begründung ausnehmen |
-| `a11y/useAriaPropsSupportedByRole` | 10 | ARIA-Attribute, die die Rolle nicht kennt |
-| `a11y/noSvgWithoutTitle` | 8 | `aria-hidden` oder `<title>` für SVGs |
-| `a11y/noLabelWithoutControl` | 5 | Label ohne Eingabefeld |
-| übrige `a11y` | 4 | je einzeln |
+| `suspicious/noArrayIndexKey` | 36 | feste Listen, Optionen, deren Wert der Index ist, und bearbeitbare Listen ohne IDs mit kontrollierten Zeilen |
+| `a11y/useSemanticElements` | 28 | Segment-Schalter mit `role="radio"`, `role="group"` statt `fieldset`, selbst gezeichnete Anzeigen, ausdrückliche Listen-Rollen für Safari |
+| `correctness/useExhaustiveDependencies` | 18 | Abhängigkeiten, die nur auslösen, und Aufräumen nur beim Unmount |
+| `style/noNonNullAssertion` | 6 | Refs in Zeiger-Handlern, Werte, die die Bedingung davor garantiert |
+
+In Tests ist `noNonNullAssertion` aus.
+
+Behoben statt ausgenommen:
+
+- 23 Schaltflächen bekamen `type="button"`.
+- 12 `!` im App-Code sind durch Eingrenzen des Typs ersetzt.
+- `aria-label` stand auf Elementen ohne Rolle; diese Elemente haben jetzt eine Rolle.
+- Zier-SVGs sind `aria-hidden`.
+- Der Drehregler des Thermostats lässt sich mit der Tastatur bedienen.
 
 Ebenfalls noch offen:
 
@@ -76,9 +81,8 @@ Ebenfalls noch offen:
 - `golangci-lint` lässt sich derzeit nicht nutzen: Die verfügbare Version ist mit Go 1.25 gebaut, das
   Projekt verlangt Go 1.27.1.
 
-**Vorschlag:** Die Warnungen abarbeiten, eine Regel nach der anderen, und sie danach wieder zu Fehlern
-machen. `staticcheck` in `go-unit-tests.yml` aufnehmen und dabei mit `GOTOOLCHAIN=go1.27.1` bauen.
-`utils/` in `lib/` aufgehen lassen.
+**Vorschlag:** `staticcheck` in `go-unit-tests.yml` aufnehmen und dabei mit `GOTOOLCHAIN=go1.27.1`
+bauen. `utils/` in `lib/` aufgehen lassen.
 
 ### 2. Code, den nur die CCU braucht, steckt auch im Lite-Binary ✔
 
@@ -320,7 +324,7 @@ Jeder Schritt ist ein eigener PR:
 
 1. Build-Tags (#2). Damit wird das Lite-Binary sofort schlanker.
 2. Fehlercodes vereinheitlichen (#3).
-3. `staticcheck` in der CI (#1); fürs Frontend ist das mit Biome erledigt, dort bleiben die Warnungen.
+3. `staticcheck` in der CI (#1); fürs Frontend ist das mit Biome erledigt.
 4. Mechanische Go-Modernisierung und Logger (#5).
 5. Kopierte Frontend-Helfer und Reste (#4).
 6. `Security.tsx` und `queries/index.ts` aufteilen (#11), weil ihre Nahtstellen schon markiert sind.
