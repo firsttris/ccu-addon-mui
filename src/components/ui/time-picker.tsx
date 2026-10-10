@@ -19,6 +19,7 @@ const Column = ({
   onSelect: (value: number) => void;
 }) => {
   const ref = useRef<HTMLDivElement>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scrolls to the new selection when it changes
   useEffect(() => {
     const active = ref.current?.querySelector<HTMLElement>('[aria-selected="true"]');
     if (active && ref.current) {

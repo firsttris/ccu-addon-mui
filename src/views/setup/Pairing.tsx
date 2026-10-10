@@ -159,6 +159,7 @@ export const Pairing = () => {
   // The CCU reports such a device once (getKeyMismatchDevice resets it).
   // A failed addDevice reports it there too: then it stays a retry by
   // serial number instead of turning into install mode.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: dataUpdatedAt: the same device reported again opens the dialog again
   useEffect(() => {
     if (keyMismatch)
       setMismatch((prev) =>

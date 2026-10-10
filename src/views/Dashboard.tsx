@@ -52,6 +52,7 @@ export const NavTabs = ({ label, items, activeId, to }: NavTabsProps) => {
   const listRef = useRef<HTMLDivElement>(null);
   const [marker, setMarker] = useState<{ left: number; width: number } | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: measures again when the active tab or the tabs change
   useLayoutEffect(() => {
     const update = () => {
       const active = listRef.current?.querySelector<HTMLElement>('[aria-current="page"]');

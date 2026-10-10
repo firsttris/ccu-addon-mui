@@ -56,6 +56,7 @@ const Key = ({ channel, label }: { channel: Channel; label: string }) => {
     start.current = null;
     setHeld(0);
   };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: cleanup on unmount only; clear reads refs
   useEffect(() => clear, []);
 
   const down = () => {

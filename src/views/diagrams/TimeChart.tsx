@@ -219,6 +219,7 @@ export const TimeChart = ({
 
   // The paths and the typical spacing of the points change with the data
   // and the size, not while the pointer moves over the chart
+  // biome-ignore lint/correctness/useExhaustiveDependencies: linePaths reads only these, through x, y and baseline
   const lineSeries = useMemo(() => {
     const result = new Map<
       string,
@@ -233,7 +234,6 @@ export const TimeChart = ({
       });
     }
     return result;
-    // linePaths reads only these, through x, y and baseline
   }, [drawn, scales, width, height, from, to]);
   const steps = useMemo(() => new Map(series.map((s) => [s.key, typicalStep(s.points)])), [series]);
 

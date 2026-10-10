@@ -40,6 +40,12 @@ interface DeviceGroup {
 
 const deviceOf = (channel: Channel) => channel.address.split(':')[0];
 
+// The channel type in words; types without a translation made readable
+const typeLabel = (type: string) => {
+  const label = channelTypeName(type);
+  return label === type ? humanize(type) : label;
+};
+
 // Choosing channels in a dialog: the devices with their pictures (the
 // channel pointed at marked), sorted by device type, a search over name,
 // device, type, room and address, and check boxes to take several at once,
@@ -55,11 +61,6 @@ export const ChannelPicker = ({
   single = false,
   includeHidden = false,
 }: ChannelPickerProps) => {
-  // The channel type in words; types without a translation made readable
-  const typeLabel = (type: string) => {
-    const label = channelTypeName(type);
-    return label === type ? humanize(type) : label;
-  };
   const { data: devices = [] } = useDevices();
   const { data: rooms = [] } = useRooms();
   const [query, setQuery] = useState('');

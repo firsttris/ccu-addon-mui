@@ -80,6 +80,7 @@ export const GridDashboard = ({
   // A tile stretched to its row keeps that height when measured; so after
   // anything that can make tiles lower (width, arrangement), all are
   // measured again from low cells
+  // biome-ignore lint/correctness/useExhaustiveDependencies: width and draft are the triggers, see above
   useEffect(() => setHeights({}), [width, draft]);
   const layouts = useMemo(
     () => responsiveLayouts(tiles, draft, heights, width, equalRows),

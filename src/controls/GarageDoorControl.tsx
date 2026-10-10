@@ -41,6 +41,7 @@ export const GarageDoorControl = ({ channel }: { channel: Channel }) => {
     },
     [],
   );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: another door (name) drops the drawn target
   useEffect(() => setTarget(null), [name]);
 
   const send = (commandName: string, drawTo: number | null) => {

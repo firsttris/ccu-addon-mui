@@ -64,6 +64,7 @@ export const useThermostatState = ({
 
   // Send a pending change right away when the control goes away (e.g. the
   // user navigates to another room) instead of dropping it.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: on unmount only; flushCommit reads refs
   useEffect(() => flushCommit, []);
 
   const decreaseTemperature = () => {

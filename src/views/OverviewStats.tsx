@@ -228,6 +228,7 @@ const Running = ({ text, className }: { text: string; className?: string }) => {
   const box = useRef<HTMLDivElement>(null);
   const inner = useRef<HTMLSpanElement>(null);
   const [shift, setShift] = useState(0);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: measures again when the text changes
   useLayoutEffect(() => {
     const measure = () => {
       if (box.current && inner.current) setShift(Math.max(0, inner.current.scrollWidth - box.current.clientWidth));

@@ -41,6 +41,7 @@ export const HoldButton = ({
     start.current = null;
     setProgress(0);
   };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: cleanup on unmount only; stop reads refs
   useEffect(() => stop, []);
 
   const begin = () => {

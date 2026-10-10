@@ -413,6 +413,7 @@ export const useWebsocket = () => {
   };
 
   // Authenticate first on every (re)connect; the server rejects everything else
+  // biome-ignore lint/correctness/useExhaustiveDependencies: authAttempt: a retry sends auth again
   useEffect(() => {
     if (readyState === ReadyState.OPEN) {
       // Without a token the answer will be "log in"; don't flash the app meanwhile
