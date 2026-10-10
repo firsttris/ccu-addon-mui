@@ -122,6 +122,7 @@ export const AlarmButton = ({ onClick }: { onClick: () => void }) => {
   if (alarms.length === 0) return null;
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-label={`${m.ALARMS()}: ${alarms.length}`}
       className={cn(

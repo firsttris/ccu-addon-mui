@@ -15,6 +15,7 @@ const stepButton =
 export const ControlButtons: React.FC<ControlButtonsProps> = ({ onDecrease, onIncrease, onSchedule }) => (
   <div className={`grid w-full gap-2 ${onSchedule ? 'grid-cols-[1fr_auto_1fr]' : 'grid-cols-2'}`}>
     <button
+      type="button"
       className={stepButton}
       onClick={onDecrease}
       title={m.DECREASE_TEMPERATURE()}
@@ -24,6 +25,7 @@ export const ControlButtons: React.FC<ControlButtonsProps> = ({ onDecrease, onIn
     </button>
     {onSchedule && (
       <button
+        type="button"
         className={`${stepButton} w-12`}
         onClick={onSchedule}
         title={m.WEEK_PROFILE()}
@@ -33,6 +35,7 @@ export const ControlButtons: React.FC<ControlButtonsProps> = ({ onDecrease, onIn
       </button>
     )}
     <button
+      type="button"
       className={stepButton}
       onClick={onIncrease}
       title={m.INCREASE_TEMPERATURE()}

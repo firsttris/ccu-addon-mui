@@ -338,6 +338,7 @@ export const WeekProfileSheet = ({
                 >
                   {Array.from({ length: profiles }, (_, i) => i + 1).map((n) => (
                     <button
+                      type="button"
                       key={n}
                       role="tab"
                       aria-selected={profile === n}
@@ -394,6 +395,7 @@ export const WeekProfileSheet = ({
                 <section aria-label={m.WEEK_PROFILE()} className="flex flex-col gap-1.5">
                   {DAYS.map((d, index) => (
                     <button
+                      type="button"
                       key={d}
                       aria-pressed={index === selectedDay}
                       aria-label={dayName(index, 'long')}

@@ -75,6 +75,7 @@ const NavLink = ({
   children: React.ReactNode;
 }) => (
   <button
+    type="button"
     onClick={onClick}
     className="flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-accent [&_svg]:size-[18px] [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
   >
@@ -246,6 +247,7 @@ const NavMenu = ({
                 >
                   {effectLevels.map(({ level, label }) => (
                     <button
+                      type="button"
                       key={level}
                       role="radio"
                       aria-checked={effects.level === level}
@@ -321,6 +323,7 @@ const StartPageChoice = () => {
       >
         {options.map(({ value, label }) => (
           <button
+            type="button"
             key={value}
             role="radio"
             aria-checked={page === value}
@@ -424,6 +427,7 @@ export const Header: React.FC = () => {
         )}
         {problemCount > 0 && !arrange?.editing && (
           <button
+            type="button"
             onClick={() => setProblemsOpen(true)}
             aria-label={`${m.NOTICES()}: ${problemCount}`}
             className="press flex h-11 items-center gap-2.5 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 text-[15px] font-medium text-amber-700 sm:px-4 dark:text-amber-300"

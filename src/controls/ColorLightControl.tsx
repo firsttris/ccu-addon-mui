@@ -127,6 +127,7 @@ export const ColorLightControl = ({ channel }: { channel: Channel }) => {
       style={litTileStyle(level / 100, color, effects.on, effects.k)}
     >
       <button
+        type="button"
         onClick={toggle}
         aria-pressed={on}
         aria-label={`${channel.name}: ${state}`}

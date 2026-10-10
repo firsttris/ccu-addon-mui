@@ -140,6 +140,7 @@ export const SwitchControl = ({ channel }: ControlProps) => {
         }
       >
         <button
+          type="button"
           onClick={toggle}
           aria-pressed={on}
           aria-label={`${name}: ${state}`}
@@ -188,6 +189,7 @@ export const SwitchControl = ({ channel }: ControlProps) => {
       style={litTileStyle(on ? 1 : 0, WARM, effects.on, effects.k)}
     >
       <button
+        type="button"
         onClick={toggle}
         aria-pressed={on}
         aria-label={`${name}: ${state}`}

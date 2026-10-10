@@ -69,6 +69,7 @@ export const LanguageChoice = () => {
       >
         {choices.map(({ value, label }) => (
           <button
+            type="button"
             key={value}
             role="radio"
             aria-checked={appliedLanguage === value}

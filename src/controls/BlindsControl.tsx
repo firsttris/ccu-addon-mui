@@ -198,10 +198,17 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <button className={button} onClick={() => send(100)} aria-label={m.BLIND_UP()} title={m.BLIND_UP()}>
+            <button
+              type="button"
+              className={button}
+              onClick={() => send(100)}
+              aria-label={m.BLIND_UP()}
+              title={m.BLIND_UP()}
+            >
               <ChevronUpIcon />
             </button>
             <button
+              type="button"
               className={button}
               onClick={() => setDataPoint(interfaceName, address, 'STOP', true)}
               aria-label={m.BLIND_STOP()}
@@ -209,7 +216,13 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             >
               <SquareIcon className="!size-4 fill-current" />
             </button>
-            <button className={button} onClick={() => send(0)} aria-label={m.BLIND_DOWN()} title={m.BLIND_DOWN()}>
+            <button
+              type="button"
+              className={button}
+              onClick={() => send(0)}
+              aria-label={m.BLIND_DOWN()}
+              title={m.BLIND_DOWN()}
+            >
               <ChevronDownIcon />
             </button>
           </div>
