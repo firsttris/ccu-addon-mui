@@ -5,7 +5,7 @@ import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
 import { useChannelNames } from './channelNames';
-import { AddLinkForm } from './Links';
+import { AddLinkForm } from './AddLinkForm';
 import { LinkList } from './LinkList';
 import { m } from '../../paraglide/messages';
 
