@@ -45,53 +45,101 @@ func (c *CCU) handleControl(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
-	if strings.HasPrefix(r.URL.Path, "/fake/") {
-		c.handleControl(w, r)
-		return
-	}
-	if c.Lite {
+	if c.Lite && !strings.HasPrefix(r.URL.Path, "/fake/") {
 		c.handleOcculited(w, r)
 		return
 	}
-	if strings.HasPrefix(r.URL.Path, "/pages/jpages/group/") && r.Method == http.MethodPost {
-		c.handleGroups(w, r)
-		return
-	}
-	if strings.HasPrefix(r.URL.Path, "/pages/jpages/system/DeviceFirmware/") && r.Method == http.MethodPost {
-		c.handleDeviceFirmware(w, r)
-		return
-	}
-	if strings.HasPrefix(r.URL.Path, "/firmware/") {
-		c.handleUpdateServer(w, r)
-		return
-	}
-	if r.URL.Path == "/config/cp_security.cgi" {
-		c.handleBackup(w, r)
-		return
-	}
-	if r.URL.Path == "/config/fileupload.ccc" {
-		c.handleFileUpload(w, r)
-		return
-	}
-	if r.URL.Path == "/config/cp_software.cgi" && r.Method == http.MethodPost {
-		c.handleSoftware(w, r)
-		return
-	}
-	if r.URL.Path == "/config/cp_maintenance.cgi" {
-		c.handleMaintenance(w, r)
-		return
-	}
-	if r.URL.Path == "/EULA.de" || r.URL.Path == "/EULA.en" {
-		c.mu.Lock()
-		staged := c.stagedFirmware
-		c.mu.Unlock()
-		if !strings.Contains(staged, FakeFirmwareEula) {
-			http.NotFound(w, r)
+	for _, route := range webUIRoutes {
+		if route.matches(r) {
+			route.handle(c, w, r)
 			return
 		}
-		_, _ = io.WriteString(w, "Lizenzbedingungen der Fake-Firmware")
+	}
+	c.handleJSONRPC(w, r)
+}
+
+// A page or API the fake answers: which requests, and how
+type route struct {
+	matches func(r *http.Request) bool
+	handle  func(c *CCU, w http.ResponseWriter, r *http.Request)
+}
+
+// The WebUI's pages and CGIs the fake answers, before its JSON-RPC API
+var webUIRoutes = []route{
+	{pathPrefix("/fake/", ""), (*CCU).handleControl},
+	{pathPrefix("/pages/jpages/group/", http.MethodPost), (*CCU).handleGroups},
+	{pathPrefix("/pages/jpages/system/DeviceFirmware/", http.MethodPost), (*CCU).handleDeviceFirmware},
+	{pathPrefix("/firmware/", ""), (*CCU).handleUpdateServer},
+	{path("/config/cp_security.cgi", ""), (*CCU).handleBackup},
+	{path("/config/fileupload.ccc", ""), (*CCU).handleFileUpload},
+	{path("/config/cp_software.cgi", http.MethodPost), (*CCU).handleSoftware},
+	{path("/config/cp_maintenance.cgi", ""), (*CCU).handleMaintenance},
+	{path("/EULA.de", ""), (*CCU).handleEula},
+	{path("/EULA.en", ""), (*CCU).handleEula},
+}
+
+// path matches one path, with method if it is not ""
+func path(p, method string) func(r *http.Request) bool {
+	return func(r *http.Request) bool { return r.URL.Path == p && (method == "" || r.Method == method) }
+}
+
+func pathPrefix(prefix, method string) func(r *http.Request) bool {
+	return func(r *http.Request) bool {
+		return strings.HasPrefix(r.URL.Path, prefix) && (method == "" || r.Method == method)
+	}
+}
+
+// The licence of a staged firmware that has one
+func (c *CCU) handleEula(w http.ResponseWriter, r *http.Request) {
+	c.mu.Lock()
+	staged := c.stagedFirmware
+	c.mu.Unlock()
+	if !strings.Contains(staged, FakeFirmwareEula) {
+		http.NotFound(w, r)
 		return
 	}
+	_, _ = io.WriteString(w, "Lizenzbedingungen der Fake-Firmware")
+}
+
+const (
+	jsonRPCAccessDenied  = `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`
+	jsonRPCUnknownMethod = `{"version":"1.1","result":null,"error":{"code":404,"message":"unknown method"}}`
+)
+
+// The JSON-RPC methods that need the session of a login, and what they
+// answer
+var sessionMethods = map[string]func(c *CCU, method string, params map[string]any) string{
+	"CCU.setSecurityLevel": func(c *CCU, _ string, params map[string]any) string {
+		return c.setSecurityLevel(fmt.Sprint(params["level"]))
+	},
+	// OpenCCU's downloadFirmware.tcl: wget of the newest release to
+	// /usr/local/tmp/firmwareUpdateFile
+	"CCU.downloadFirmware": func(c *CCU, _ string, _ map[string]any) string {
+		c.mu.Lock()
+		c.calls["JSON-RPC CCU.downloadFirmware"]++
+		c.mu.Unlock()
+		ok := c.FirmwareDownloadFile != "" && os.WriteFile(c.FirmwareDownloadFile, []byte(FakeFirmwareDownload), 0o644) == nil
+		return fmt.Sprintf(`{"version":"1.1","result":%t,"error":null}`, ok)
+	},
+	"Firewall.setConfiguration": func(c *CCU, _ string, params map[string]any) string { return c.setFirewall(params) },
+}
+
+func init() {
+	for _, method := range []string{
+		"CCU.setSSH", "CCU.setSSHPassword", "CCU.setSNMPEnabled", "CCU.restartSSHDaemon", "CCU.setAuthEnabled",
+		"CCU.setHttpsRedirectEnabled", "User.restartLighttpd", "User.existsCertificate", "BidCoS_RF.isKeySet",
+		"BidCoS_RF.validateKey",
+	} {
+		sessionMethods[method] = (*CCU).securityMethod
+	}
+	for _, method := range []string{"BidCoS_RF.setConfigurationRF", "BidCoS_Wired.setConfigurationWired", "BidCoS.changeLanGatewayKey"} {
+		sessionMethods[method] = (*CCU).lanGatewayMethod
+	}
+}
+
+// handleJSONRPC answers the WebUI's JSON-RPC API: login, logout and the
+// methods behind a session
+func (c *CCU) handleJSONRPC(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Method string         `json:"method"`
 		Params map[string]any `json:"params"`
@@ -103,56 +151,32 @@ func (c *CCU) handleWebUI(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	switch req.Method {
 	case "Session.login":
-		c.mu.Lock()
-		defer c.mu.Unlock()
-		for _, user := range c.fixture.Users {
-			if user.Name == fmt.Sprint(req.Params["username"]) && user.Password == fmt.Sprint(req.Params["password"]) {
-				_, _ = io.WriteString(w, `{"version":"1.1","result":"fakeSession1","error":null}`)
-				return
-			}
-		}
-		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":501,"message":"invalid credentials"}}`)
+		_, _ = io.WriteString(w, c.login(fmt.Sprint(req.Params["username"]), fmt.Sprint(req.Params["password"])))
 	case "Session.logout":
 		_, _ = io.WriteString(w, `{"version":"1.1","result":true,"error":null}`)
-	case "CCU.setSSH", "CCU.setSSHPassword", "CCU.setSNMPEnabled", "CCU.restartSSHDaemon", "CCU.setAuthEnabled", "CCU.setHttpsRedirectEnabled", "User.restartLighttpd", "User.existsCertificate", "BidCoS_RF.isKeySet", "BidCoS_RF.validateKey":
-		if req.Params["_session_id_"] != "fakeSession1" {
-			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
-			return
-		}
-		_, _ = io.WriteString(w, c.securityMethod(req.Method, req.Params))
-	case "CCU.setSecurityLevel":
-		if req.Params["_session_id_"] != "fakeSession1" {
-			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
-			return
-		}
-		_, _ = io.WriteString(w, c.setSecurityLevel(fmt.Sprint(req.Params["level"])))
-	case "CCU.downloadFirmware":
-		// OpenCCU's downloadFirmware.tcl: wget of the newest release to
-		// /usr/local/tmp/firmwareUpdateFile
-		if req.Params["_session_id_"] != "fakeSession1" {
-			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
-			return
-		}
-		c.mu.Lock()
-		c.calls["JSON-RPC CCU.downloadFirmware"]++
-		c.mu.Unlock()
-		ok := c.FirmwareDownloadFile != "" && os.WriteFile(c.FirmwareDownloadFile, []byte(FakeFirmwareDownload), 0o644) == nil
-		_, _ = fmt.Fprintf(w, `{"version":"1.1","result":%t,"error":null}`, ok)
-	case "Firewall.setConfiguration":
-		if req.Params["_session_id_"] != "fakeSession1" {
-			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
-			return
-		}
-		_, _ = io.WriteString(w, c.setFirewall(req.Params))
-	case "BidCoS_RF.setConfigurationRF", "BidCoS_Wired.setConfigurationWired", "BidCoS.changeLanGatewayKey":
-		if req.Params["_session_id_"] != "fakeSession1" {
-			_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":400,"message":"access denied"}}`)
-			return
-		}
-		_, _ = io.WriteString(w, c.lanGatewayMethod(req.Method, req.Params))
 	default:
-		_, _ = io.WriteString(w, `{"version":"1.1","result":null,"error":{"code":404,"message":"unknown method"}}`)
+		method, ok := sessionMethods[req.Method]
+		switch {
+		case !ok:
+			_, _ = io.WriteString(w, jsonRPCUnknownMethod)
+		case req.Params["_session_id_"] != "fakeSession1":
+			_, _ = io.WriteString(w, jsonRPCAccessDenied)
+		default:
+			_, _ = io.WriteString(w, method(c, req.Method, req.Params))
+		}
 	}
+}
+
+// login answers Session.login: the one session for a user of the fixture
+func (c *CCU) login(username, password string) string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, user := range c.fixture.Users {
+		if user.Name == username && user.Password == password {
+			return `{"version":"1.1","result":"fakeSession1","error":null}`
+		}
+	}
+	return `{"version":"1.1","result":null,"error":{"name":"JSONRPCError","code":501,"message":"invalid credentials"}}`
 }
 
 // FakeBackup is the content of every backup the fake CCU creates
