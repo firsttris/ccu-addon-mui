@@ -30,74 +30,91 @@ var levelToCCU = map[string]int{auth.LevelAdmin: 8, auth.LevelUser: 2, auth.Leve
 // whoever gets a new password, other rights or is deleted is logged out on
 // every device.
 func (s *Server) handleUsers(client *Client, msgType string, message []byte) {
-	var msg struct {
-		RequestID string  `json:"requestId"`
-		ID        int64   `json:"id"`
-		FullName  string  `json:"fullName"`
-		Level     string  `json:"level"`
-		ShowLogin bool    `json:"showLogin"`
-		Mail      string  `json:"mail"`
-		Phone     string  `json:"phone"`
-		Password  *string `json:"password"`
-		AutoLogin bool    `json:"autoLogin"`
-	}
+	var msg userRequest
 	if !s.decode(client, message, &msg) {
 		return
 	}
-	if msgType == "getUsers" {
-		if client.level != auth.LevelAdmin {
-			s.sendRequestError(client, msg.RequestID, "only administrators may see the users", "FORBIDDEN")
-			return
-		}
-		users, err := s.regaClient.GetUsers()
-		if err != nil {
-			s.sendRequestError(client, msg.RequestID, "getUsers failed: "+err.Error(), "CCU_ERROR")
-			return
-		}
-		response := usersResponse{Type: "getUsers_response", RequestID: msg.RequestID, Users: []userEntry{}}
-		for _, u := range users {
-			response.Users = append(response.Users, userEntry{User: u, Level: auth.LevelFromCCU(u.Level)})
-		}
-		s.sendJSON(client, response)
+	switch msgType {
+	case "getUsers":
+		s.listUsers(client, msg)
+	case "deleteUser":
+		s.deleteUser(client, msg, s.userByID(msg.ID))
+	case "saveUser":
+		s.saveUser(client, msg, s.userByID(msg.ID))
+	}
+}
+
+type userRequest struct {
+	RequestID string  `json:"requestId"`
+	ID        int64   `json:"id"`
+	FullName  string  `json:"fullName"`
+	Level     string  `json:"level"`
+	ShowLogin bool    `json:"showLogin"`
+	Mail      string  `json:"mail"`
+	Phone     string  `json:"phone"`
+	Password  *string `json:"password"`
+	AutoLogin bool    `json:"autoLogin"`
+}
+
+func (s *Server) listUsers(client *Client, msg userRequest) {
+	if client.level != auth.LevelAdmin {
+		s.sendRequestError(client, msg.RequestID, "only administrators may see the users", "FORBIDDEN")
 		return
 	}
+	users, err := s.regaClient.GetUsers()
+	if err != nil {
+		s.sendRequestError(client, msg.RequestID, "getUsers failed: "+err.Error(), "CCU_ERROR")
+		return
+	}
+	response := usersResponse{Type: "getUsers_response", RequestID: msg.RequestID, Users: []userEntry{}}
+	for _, u := range users {
+		response.Users = append(response.Users, userEntry{User: u, Level: auth.LevelFromCCU(u.Level)})
+	}
+	s.sendJSON(client, response)
+}
 
-	// The user as it is now, to keep the own account and log out
-	var current *rega.User
-	if msg.ID != 0 {
-		if users, err := s.regaClient.GetUsers(); err == nil {
-			for i := range users {
-				if users[i].ID == msg.ID {
-					current = &users[i]
-				}
-			}
+// userByID is the user as it is now, to keep the own account and log out;
+// nil for a new one or an unknown id
+func (s *Server) userByID(id int64) *rega.User {
+	if id == 0 {
+		return nil
+	}
+	users, err := s.regaClient.GetUsers()
+	if err != nil {
+		return nil
+	}
+	for i := range users {
+		if users[i].ID == id {
+			return &users[i]
 		}
+	}
+	return nil
+}
+
+func (s *Server) deleteUser(client *Client, msg userRequest, current *rega.User) {
+	target := fmt.Sprintf("user %d", msg.ID)
+	if current != nil {
+		target = current.Name
 	}
 	own := current != nil && current.Name == client.user
+	s.configure(client, msg.RequestID, audit.Entry{Action: "deleteUser", Target: target},
+		func() (any, string, error) {
+			if own {
+				return nil, "", fmt.Errorf("invalid: you can't delete yourself")
+			}
+			result, name, err := s.regaClient.DeleteUser(msg.ID)
+			if err == nil && result == rega.SetOK {
+				s.logOutUser(name)
+				s.autoLoginUsers.forget()
+			}
+			return nil, result, err
+		})
+}
 
-	if msgType == "deleteUser" {
-		target := fmt.Sprintf("user %d", msg.ID)
-		if current != nil {
-			target = current.Name
-		}
-		s.configure(client, msg.RequestID, audit.Entry{Action: "deleteUser", Target: target},
-			func() (any, string, error) {
-				if own {
-					return nil, "", fmt.Errorf("invalid: you can't delete yourself")
-				}
-				result, name, err := s.regaClient.DeleteUser(msg.ID)
-				if err == nil && result == rega.SetOK {
-					s.logOutUser(name)
-					s.autoLoginUsers.forget()
-				}
-				return nil, result, err
-			})
-		return
-	}
-
-	// saveUser
+func (s *Server) saveUser(client *Client, msg userRequest, current *rega.User) {
 	level, ok := levelToCCU[msg.Level]
 	name, _, _ := rega.UserNames(msg.FullName)
+	own := current != nil && current.Name == client.user
 	var createdID int64
 	s.configure(client, msg.RequestID, audit.Entry{Action: "saveUser", Target: name, Value: msg.Level},
 		func() (any, string, error) {
@@ -119,15 +136,15 @@ func (s *Server) handleUsers(client *Client, msgType string, message []byte) {
 				Mail: msg.Mail, Phone: msg.Phone, Password: msg.Password, AutoLogin: msg.AutoLogin,
 			})
 			createdID = id
-			if err == nil && result == rega.SetOK {
-				// The automatic login may have changed
-				s.autoLoginUsers.forget()
+			if err != nil || result != rega.SetOK {
+				return previous, result, err
 			}
-			if err == nil && result == rega.SetOK && current != nil && !own &&
-				(msg.Password != nil || level != current.Level || name != current.Name) {
+			// The automatic login may have changed
+			s.autoLoginUsers.forget()
+			if current != nil && !own && (msg.Password != nil || level != current.Level || name != current.Name) {
 				s.logOutUser(current.Name)
 			}
-			return previous, result, err
+			return previous, result, nil
 		}, &createdID)
 }
 

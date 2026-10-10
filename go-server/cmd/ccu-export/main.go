@@ -56,86 +56,9 @@ func export(cfg *config.Config, withRPC bool) (*fakeccu.Fixture, error) {
 		DeviceNames: map[string]string{},
 		Interfaces:  map[string]*fakeccu.InterfaceData{},
 	}
-
-	channels := map[string]*fakeccu.Channel{}
-	var order []string
-	add := func(ch rega.Channel) {
-		if _, ok := channels[ch.Address]; !ok {
-			channels[ch.Address] = &fakeccu.Channel{
-				ID: ch.ID, Address: ch.Address, Type: ch.Type, Interface: ch.InterfaceName,
-				Name: ch.Name, Datapoints: ch.Datapoints, Mode: ch.Mode,
-			}
-			order = append(order, ch.Address)
-		}
-		// ReGa only reports the maintenance channel as status of the others
-		if ch.StatusAddress != "" {
-			if _, ok := channels[ch.StatusAddress]; !ok {
-				datapoints := map[string]any{}
-				for k, v := range ch.Status {
-					datapoints[k] = v
-				}
-				channels[ch.StatusAddress] = &fakeccu.Channel{
-					ID: int64(1_000_000 + len(order)), Address: ch.StatusAddress, Type: "MAINTENANCE",
-					Interface: ch.InterfaceName, Name: ch.StatusAddress, Datapoints: datapoints,
-				}
-				order = append(order, ch.StatusAddress)
-			}
-		}
+	if err := exportChannels(regaClient, fixture); err != nil {
+		return nil, err
 	}
-
-	groups := func(objects []rega.NamedObject) ([]fakeccu.Group, error) {
-		var result []fakeccu.Group
-		for _, object := range objects {
-			members, err := regaClient.GetChannels(strconv.FormatInt(object.ID, 10))
-			if err != nil {
-				return nil, err
-			}
-			group := fakeccu.Group{ID: object.ID, Name: object.Name, Channels: []int64{}}
-			for _, ch := range members {
-				add(ch)
-				group.Channels = append(group.Channels, ch.ID)
-			}
-			result = append(result, group)
-		}
-		return result, nil
-	}
-
-	rooms, err := regaClient.GetRooms()
-	if err != nil {
-		return nil, fmt.Errorf("rooms: %w", err)
-	}
-	if fixture.Rooms, err = groups(rooms); err != nil {
-		return nil, fmt.Errorf("room channels: %w", err)
-	}
-	trades, err := regaClient.GetTrades()
-	if err != nil {
-		return nil, fmt.Errorf("trades: %w", err)
-	}
-	if fixture.Trades, err = groups(trades); err != nil {
-		return nil, fmt.Errorf("trade channels: %w", err)
-	}
-	all, err := regaClient.GetAllChannels()
-	if err != nil {
-		return nil, fmt.Errorf("all channels: %w", err)
-	}
-	for _, ch := range all {
-		add(ch)
-	}
-	// The CCU's own virtual keys, which the channel list leaves out
-	keys, err := regaClient.GetVirtualKeys()
-	if err != nil {
-		return nil, fmt.Errorf("virtual keys: %w", err)
-	}
-	for _, key := range keys {
-		add(rega.Channel{
-			ID: key.ID, Address: key.Address, Type: "VIRTUAL_KEY", InterfaceName: key.InterfaceName, Name: key.Name,
-			Datapoints: map[string]any{"PRESS_SHORT": false, "PRESS_LONG": false},
-		})
-	}
-	for _, address := range order {
-		fixture.Channels = append(fixture.Channels, *channels[address])
-	}
-
 	problems, err := regaClient.GetDeviceProblems()
 	if err != nil {
 		return nil, fmt.Errorf("device problems: %w", err)
@@ -143,7 +66,6 @@ func export(cfg *config.Config, withRPC bool) (*fakeccu.Fixture, error) {
 	for _, p := range problems {
 		fixture.DeviceNames[p.Address] = p.Name
 	}
-
 	if withRPC {
 		rpc := ccurpc.New(cfg)
 		for _, iface := range ccurpc.Interfaces(cfg) {
@@ -156,6 +78,103 @@ func export(cfg *config.Config, withRPC bool) (*fakeccu.Fixture, error) {
 		}
 	}
 	return fixture, nil
+}
+
+// channelSet collects the channels once each, in the order met
+type channelSet struct {
+	byAddress map[string]*fakeccu.Channel
+	order     []string
+}
+
+func (set *channelSet) add(ch rega.Channel) {
+	if _, ok := set.byAddress[ch.Address]; !ok {
+		set.byAddress[ch.Address] = &fakeccu.Channel{
+			ID: ch.ID, Address: ch.Address, Type: ch.Type, Interface: ch.InterfaceName,
+			Name: ch.Name, Datapoints: ch.Datapoints, Mode: ch.Mode,
+		}
+		set.order = append(set.order, ch.Address)
+	}
+	// ReGa only reports the maintenance channel as status of the others
+	if ch.StatusAddress == "" {
+		return
+	}
+	if _, ok := set.byAddress[ch.StatusAddress]; !ok {
+		datapoints := map[string]any{}
+		for k, v := range ch.Status {
+			datapoints[k] = v
+		}
+		set.byAddress[ch.StatusAddress] = &fakeccu.Channel{
+			ID: int64(1_000_000 + len(set.order)), Address: ch.StatusAddress, Type: "MAINTENANCE",
+			Interface: ch.InterfaceName, Name: ch.StatusAddress, Datapoints: datapoints,
+		}
+		set.order = append(set.order, ch.StatusAddress)
+	}
+}
+
+func (set *channelSet) channels() []fakeccu.Channel {
+	var result []fakeccu.Channel
+	for _, address := range set.order {
+		result = append(result, *set.byAddress[address])
+	}
+	return result
+}
+
+// exportChannels reads the rooms and trades with their channels, then all
+// other channels and the CCU's virtual keys
+func exportChannels(regaClient *rega.Client, fixture *fakeccu.Fixture) error {
+	set := &channelSet{byAddress: map[string]*fakeccu.Channel{}}
+	rooms, err := regaClient.GetRooms()
+	if err != nil {
+		return fmt.Errorf("rooms: %w", err)
+	}
+	if fixture.Rooms, err = exportGroups(regaClient, rooms, set); err != nil {
+		return fmt.Errorf("room channels: %w", err)
+	}
+	trades, err := regaClient.GetTrades()
+	if err != nil {
+		return fmt.Errorf("trades: %w", err)
+	}
+	if fixture.Trades, err = exportGroups(regaClient, trades, set); err != nil {
+		return fmt.Errorf("trade channels: %w", err)
+	}
+	all, err := regaClient.GetAllChannels()
+	if err != nil {
+		return fmt.Errorf("all channels: %w", err)
+	}
+	for _, ch := range all {
+		set.add(ch)
+	}
+	// The CCU's own virtual keys, which the channel list leaves out
+	keys, err := regaClient.GetVirtualKeys()
+	if err != nil {
+		return fmt.Errorf("virtual keys: %w", err)
+	}
+	for _, key := range keys {
+		set.add(rega.Channel{
+			ID: key.ID, Address: key.Address, Type: "VIRTUAL_KEY", InterfaceName: key.InterfaceName, Name: key.Name,
+			Datapoints: map[string]any{"PRESS_SHORT": false, "PRESS_LONG": false},
+		})
+	}
+	fixture.Channels = set.channels()
+	return nil
+}
+
+// exportGroups reads the channels of rooms or trades into set
+func exportGroups(regaClient *rega.Client, objects []rega.NamedObject, set *channelSet) ([]fakeccu.Group, error) {
+	var result []fakeccu.Group
+	for _, object := range objects {
+		members, err := regaClient.GetChannels(strconv.FormatInt(object.ID, 10))
+		if err != nil {
+			return nil, err
+		}
+		group := fakeccu.Group{ID: object.ID, Name: object.Name, Channels: []int64{}}
+		for _, ch := range members {
+			set.add(ch)
+			group.Channels = append(group.Channels, ch.ID)
+		}
+		result = append(result, group)
+	}
+	return result, nil
 }
 
 func exportInterface(rpc *ccurpc.Client, iface string) (*fakeccu.InterfaceData, error) {

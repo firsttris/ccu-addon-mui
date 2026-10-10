@@ -391,6 +391,27 @@ und die Tests nach Domänen aufteilen.
   - `stack_logic_test.go`: Programme, Systemvariablen, Alarme, Skripte, Regeln, Diagramme
   - `stack_system_test.go`: Einstellungen, Benutzer, Backups, Firmware, Add-ons
 
+## Zweite Runde
+
+Nach der ersten Runde habe ich noch einmal nachgemessen: die größten Dateien und die Funktionen über
+90 Zeilen. Diese Stellen lagen in der ersten Runde unter der Schwelle oder sind Test-Code.
+
+| # | Stelle | Bereich | Stand |
+|---|---|---|---|
+| 15 | `handleUsers` (101 Zeilen) | Go | erledigt |
+| 16 | `rega.parseChannels` (95 Zeilen) | Go | erledigt |
+| 17 | `ccu-export` `export` (108 Zeilen) | Go | erledigt |
+| 18 | `Diagrams.tsx` (647), `TimeChart.tsx` (620), `WeekProgramSheet.tsx` (558), `Links.tsx` (540) | Frontend | offen |
+| 19 | Fake-CCU: `fakeccu.go` (1648 Zeilen), Handler mit 100–126 Zeilen | Go-Tests | offen |
+
+- **#15 `handleUsers`:** Es gibt jetzt eine Methode pro Nachricht: `listUsers`, `deleteUser` und
+  `saveUser`. `userByID` sucht den Benutzer, wie er gerade ist.
+- **#16 `parseChannels`:** Die Tabelle `channelLines` hat pro Zeilenart die Mindestzahl der Felder und
+  eine Funktion, wie `programLines` bei `parseProgram`. Dazu kommen `channelOf` für die „C“-Zeile und
+  `withStatus` für Batterie und Erreichbarkeit.
+- **#17 `export`:** `channelSet` sammelt die Kanäle einmal in der Reihenfolge, in der sie auftauchen.
+  `exportChannels` und `exportGroups` lesen sie.
+
 ## Vorgeschlagene Reihenfolge
 
 Jeder Schritt ist ein eigener PR:
