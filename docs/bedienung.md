@@ -246,7 +246,8 @@ Administratoren können sie umbenennen.
 
 - **Dunkles Design**: folgt der Systemeinstellung, bis du es im Menü umstellst. Gilt pro Gerät.
 - **Effekte**: Leuchten und Animationen (z. B. die leuchtende Lampe, die Radarwellen des Bewegungsmelders)
-  in drei Stufen. *Aus* schont schwache Tablets.
+  in drei Stufen. *Aus* schont schwache Tablets. Auch die Anmeldeseite folgt der Stufe: Dort funkt die CCU
+  im Haus unter der Karte und schaltet Licht und Rollladen, bei *Aus* steht das Haus still.
 - **Sprache**: *Automatisch* (nach der Sprache des Browsers), Deutsch oder Englisch. Mit Anmeldung gilt die Wahl für
   den CCU-Benutzer auf allen Geräten und auch in der alten WebUI (wie dort unter *Benutzerverwaltung*), ohne
   Anmeldung für dieses Gerät.
