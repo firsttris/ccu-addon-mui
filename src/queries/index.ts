@@ -5,13 +5,7 @@ import { AlarmMessage, ServiceMessage, ProgramDefinition } from '../types/protoc
 import { applyEvent, groupChannelsByType, shareGroups, Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { m } from '../paraglide/messages';
-import {
-  Channel,
-  DatapointValue,
-  HmEvent,
-  Program,
-  Sysvar,
-} from '../types/types';
+import { Channel, DatapointValue, HmEvent, Program, Sysvar } from '../types/types';
 
 // Server data loaded through TanStack Query. The queryFn sends its request
 // over the WebSocket (request() in useWebsocket); after a reconnect all
@@ -72,8 +66,7 @@ export const useParamsetDescription = (
     queryKey: ['paramsetDescription', interfaceName, address, paramsetKey],
     enabled,
     queryFn: async () =>
-      ((await request({ type: 'getParamsetDescription', interfaceName, address, paramsetKey }))
-        .description ?? {}),
+      (await request({ type: 'getParamsetDescription', interfaceName, address, paramsetKey })).description ?? {},
     staleTime: Infinity,
     // Not every interface has descriptions (e.g. CUxD); show the raw values
     retry: false,
@@ -191,7 +184,9 @@ export const usePairingAction = () => {
     },
     onSettled: () =>
       Promise.all(
-        ['installMode', 'inbox', 'devices', 'channels'].map((key) => queryClient.invalidateQueries({ queryKey: [key] })),
+        ['installMode', 'inbox', 'devices', 'channels'].map((key) =>
+          queryClient.invalidateQueries({ queryKey: [key] }),
+        ),
       ),
   });
 };
@@ -313,7 +308,8 @@ export const useLogicAction = () => {
       }
     },
     onSettled: async (_, __, action) => {
-      if (action.type === 'setSysvar' || action.type === 'setLogicOption') await queryClient.invalidateQueries({ queryKey: ['sysvars'] });
+      if (action.type === 'setSysvar' || action.type === 'setLogicOption')
+        await queryClient.invalidateQueries({ queryKey: ['sysvars'] });
       if (action.type !== 'setSysvar') await queryClient.invalidateQueries({ queryKey: ['programs'] });
     },
   });
@@ -357,8 +353,8 @@ export const useLinkParamset = (interfaceName: string, receiver: string, sender:
   const description = useQuery({
     queryKey: ['linkParamsetDescription', interfaceName, receiver, sender],
     queryFn: async () =>
-      ((await request({ type: 'getLinkParamsetDescription', interfaceName, address: receiver, partner: sender }))
-        .description ?? {}),
+      (await request({ type: 'getLinkParamsetDescription', interfaceName, address: receiver, partner: sender }))
+        .description ?? {},
     staleTime: Infinity,
     retry: false,
     enabled,
@@ -452,7 +448,9 @@ export const useConfigChange = () => {
     onMutate: (change) => {
       if (change.type === 'setChannelOption') {
         queryClient.setQueriesData<Channel[]>({ queryKey: ['channels'] }, (channels) =>
-          channels?.map((channel) => (channel.id === change.id ? { ...channel, ...optionFields[change.option](change.value) } : channel)),
+          channels?.map((channel) =>
+            channel.id === change.id ? { ...channel, ...optionFields[change.option](change.value) } : channel,
+          ),
         );
         return;
       }
@@ -536,11 +534,7 @@ export const useChannels = (channelsRequest: ChannelsRequest) => {
   return { ...query, channelsByType };
 };
 
-const applyToChannels = (
-  queryClient: QueryClient,
-  event: HmEvent,
-  onlyIfCurrent?: { value: Value },
-) =>
+const applyToChannels = (queryClient: QueryClient, event: HmEvent, onlyIfCurrent?: { value: Value }) =>
   queryClient.setQueriesData<Channel[]>({ queryKey: ['channels'] }, (channels) =>
     channels ? applyEvent(channels, event, onlyIfCurrent) : channels,
   );
@@ -596,11 +590,7 @@ export const useSetDataPoint = () => {
     onError: (error, { address, attribute, value }, context) => {
       if (context?.previous !== undefined) {
         // Not if an event has brought in another value since
-        applyToChannels(
-          queryClient,
-          { channel: address, datapoint: attribute, value: context.previous },
-          { value },
-        );
+        applyToChannels(queryClient, { channel: address, datapoint: attribute, value: context.previous }, { value });
       }
       const code = error instanceof RequestError ? error.code : undefined;
       showToast((setErrorMessages[code ?? ''] ?? m.SET_FAILED)());
@@ -721,7 +711,9 @@ export const useAcknowledgeServiceMessage = () => {
   return useMutation({
     mutationFn: async (id: number) => request({ type: 'acknowledgeServiceMessage', id }, { queue: false }),
     onMutate: (id) =>
-      queryClient.setQueryData<ServiceMessage[]>(['serviceMessages'], (messages) => messages?.filter((m) => m.id !== id)),
+      queryClient.setQueryData<ServiceMessage[]>(['serviceMessages'], (messages) =>
+        messages?.filter((m) => m.id !== id),
+      ),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['serviceMessages'] });
       queryClient.invalidateQueries({ queryKey: ['deviceProblems'] });
@@ -787,8 +779,9 @@ export const useProgramChange = () => {
   const { request } = useWebSocketActions();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (change: { type: 'saveProgram'; program: ProgramDefinition } | { type: 'deleteProgram'; id: number }) =>
-      request(change, { queue: false }),
+    mutationFn: async (
+      change: { type: 'saveProgram'; program: ProgramDefinition } | { type: 'deleteProgram'; id: number },
+    ) => request(change, { queue: false }),
     onSettled: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['programs'] }),
@@ -812,7 +805,8 @@ export const useSetLayout = () => {
   const { request } = useWebSocketActions();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, layout }: { id: number; layout: string }) => request({ type: 'setLayout', id, layout }, { queue: false }),
+    mutationFn: async ({ id, layout }: { id: number; layout: string }) =>
+      request({ type: 'setLayout', id, layout }, { queue: false }),
     onMutate: ({ id, layout }) => queryClient.setQueryData(['layout', id], layout),
     onSettled: (_, __, { id }) => queryClient.invalidateQueries({ queryKey: ['layout', id] }),
   });

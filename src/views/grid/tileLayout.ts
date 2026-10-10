@@ -77,7 +77,14 @@ export const parseLayout = (json: string | undefined): SavedLayout | null => {
   if (!json) return null;
   try {
     const parsed = JSON.parse(json);
-    if (!parsed || parsed.v !== 3 || !Array.isArray(parsed.order) || !parsed.sections || typeof parsed.sections !== 'object') return null;
+    if (
+      !parsed ||
+      parsed.v !== 3 ||
+      !Array.isArray(parsed.order) ||
+      !parsed.sections ||
+      typeof parsed.sections !== 'object'
+    )
+      return null;
     return parsed as SavedLayout;
   } catch {
     return null;

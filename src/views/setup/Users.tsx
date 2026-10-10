@@ -229,7 +229,12 @@ const UserDialog = ({ user, onDone }: { user: CcuUser | null; onDone: () => void
       >
         <label className={field}>
           <span className={label}>{m.USERS_NAME()}</span>
-          <Input aria-label={m.USERS_NAME()} value={fullName} autoFocus={!user} onChange={(e) => setFullName(e.target.value)} />
+          <Input
+            aria-label={m.USERS_NAME()}
+            value={fullName}
+            autoFocus={!user}
+            onChange={(e) => setFullName(e.target.value)}
+          />
           <span className="text-xs text-muted-foreground">
             {m.USERS_LOGIN_NAME({ name: fullName.replace(/\s/g, '') || '–' })}
           </span>

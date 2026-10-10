@@ -111,12 +111,10 @@ export const DeviceImage = ({ type, size, channel, className, fallback }: Device
             </svg>
           )}
         </>
+      ) : fallback === undefined ? (
+        <CpuIcon className="text-muted-foreground" style={{ width: size * 0.45, height: size * 0.45 }} />
       ) : (
-        (fallback === undefined ? (
-          <CpuIcon className="text-muted-foreground" style={{ width: size * 0.45, height: size * 0.45 }} />
-        ) : (
-          fallback
-        ))
+        fallback
       )}
     </span>
   );

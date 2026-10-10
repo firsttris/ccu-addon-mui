@@ -16,7 +16,8 @@ interface ControlProps {
 
 const STEP = 5;
 
-const button = 'press flex h-11 items-center justify-center rounded-xl border bg-background/60 hover:bg-accent [&_svg]:size-5';
+const button =
+  'press flex h-11 items-center justify-center rounded-xl border bg-background/60 hover:bg-accent [&_svg]:size-5';
 
 // The window is a vertical slider: tap or drag anywhere in it to set the
 // height. The shutter follows the pointer; the new level is sent once on
@@ -34,9 +35,12 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const windowRef = useRef<HTMLDivElement>(null);
   const keyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => () => {
-    if (keyTimer.current) clearTimeout(keyTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (keyTimer.current) clearTimeout(keyTimer.current);
+    },
+    [],
+  );
 
   const send = (percent: number) => setDataPoint(interfaceName, address, 'LEVEL', percent / 100);
 
@@ -104,9 +108,11 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   // Slats of venetian blinds: HmIP LEVEL_2, BidCos JALOUSIE LEVEL_SLATS.
   // Roller shutters report LEVEL_2 empty (null), they get no slats.
   const dp = datapoints as unknown as Record<string, unknown>;
-  const slatsKey = typeof dp.LEVEL_SLATS === 'number' ? 'LEVEL_SLATS' : typeof dp.LEVEL_2 === 'number' ? 'LEVEL_2' : null;
+  const slatsKey =
+    typeof dp.LEVEL_SLATS === 'number' ? 'LEVEL_SLATS' : typeof dp.LEVEL_2 === 'number' ? 'LEVEL_2' : null;
   const slats = slatsKey ? Math.round(Math.min(1, Math.max(0, Number(dp[slatsKey]))) * 100) : null;
-  const status = shown === 0 ? m.BLIND_CLOSED() : shown === 100 ? m.BLIND_FULLY_OPEN() : m.BLIND_PERCENT_OPEN({ percent: shown });
+  const status =
+    shown === 0 ? m.BLIND_CLOSED() : shown === 100 ? m.BLIND_FULLY_OPEN() : m.BLIND_PERCENT_OPEN({ percent: shown });
   const a = (alpha: number) => Math.min(1, alpha * effects.k);
 
   return (

@@ -6,10 +6,30 @@ import { cn } from '../../lib/utils';
 export type HeroTone = 'sky' | 'green' | 'amber' | 'red';
 
 const tones: Record<HeroTone, { from: string; to: string; text: string; disc: string }> = {
-  sky: { from: '#38bdf8', to: '#8b5cf6', text: 'text-sky-600 dark:text-sky-300', disc: 'from-sky-500/20 to-violet-500/10' },
-  green: { from: '#4ade80', to: '#10b981', text: 'text-green-600 dark:text-green-300', disc: 'from-green-500/25 to-emerald-500/10' },
-  amber: { from: '#fbbf24', to: '#f97316', text: 'text-amber-600 dark:text-amber-300', disc: 'from-amber-500/25 to-orange-500/10' },
-  red: { from: '#f87171', to: '#e11d48', text: 'text-red-600 dark:text-red-400', disc: 'from-red-500/20 to-rose-500/10' },
+  sky: {
+    from: '#38bdf8',
+    to: '#8b5cf6',
+    text: 'text-sky-600 dark:text-sky-300',
+    disc: 'from-sky-500/20 to-violet-500/10',
+  },
+  green: {
+    from: '#4ade80',
+    to: '#10b981',
+    text: 'text-green-600 dark:text-green-300',
+    disc: 'from-green-500/25 to-emerald-500/10',
+  },
+  amber: {
+    from: '#fbbf24',
+    to: '#f97316',
+    text: 'text-amber-600 dark:text-amber-300',
+    disc: 'from-amber-500/25 to-orange-500/10',
+  },
+  red: {
+    from: '#f87171',
+    to: '#e11d48',
+    text: 'text-red-600 dark:text-red-400',
+    disc: 'from-red-500/20 to-rose-500/10',
+  },
 };
 
 // Bits of confetti flying out of the ring once the update is done
@@ -64,8 +84,13 @@ export const UpdateHero = ({
     <div aria-hidden className="relative mx-auto flex size-32 shrink-0 items-center justify-center">
       {effects.on && (
         <div
-          className={cn('absolute -inset-4 rounded-full blur-2xl transition-[background] duration-700', running && 'fx-breathe')}
-          style={{ background: `radial-gradient(circle, ${colors.from}${effects.k > 1 ? '59' : '38'}, transparent 70%)` }}
+          className={cn(
+            'absolute -inset-4 rounded-full blur-2xl transition-[background] duration-700',
+            running && 'fx-breathe',
+          )}
+          style={{
+            background: `radial-gradient(circle, ${colors.from}${effects.k > 1 ? '59' : '38'}, transparent 70%)`,
+          }}
         />
       )}
       {effects.on &&
@@ -77,7 +102,13 @@ export const UpdateHero = ({
             style={{ borderColor: `${colors.from}66`, animationDelay: `${delay}s` }}
           />
         ))}
-      <svg viewBox="0 0 120 120" className={cn('absolute inset-0 size-full -rotate-90', progress === undefined && effects.on && 'animate-spin [animation-duration:1.4s]')}>
+      <svg
+        viewBox="0 0 120 120"
+        className={cn(
+          'absolute inset-0 size-full -rotate-90',
+          progress === undefined && effects.on && 'animate-spin [animation-duration:1.4s]',
+        )}
+      >
         <defs>
           <linearGradient id={gradient} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor={colors.from} />
@@ -130,7 +161,8 @@ export const UpdateHero = ({
 };
 
 // The button that starts the update, in the colors of the ring
-export const updateButton = 'press bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md shadow-sky-500/25 hover:opacity-95';
+export const updateButton =
+  'press bg-gradient-to-r from-sky-500 to-violet-500 text-white shadow-md shadow-sky-500/25 hover:opacity-95';
 
 // "1.0.0 → 1.0.1": the version installed and the new one
 export const VersionJump = ({ from, to }: { from: string; to: string }) => {

@@ -31,7 +31,7 @@ describe('AddonSelfUpdate', () => {
     elevated = true;
   });
 
-  it('asks GitHub now, not the server\'s last check', async () => {
+  it("asks GitHub now, not the server's last check", async () => {
     request.mockResolvedValueOnce({ current: '1.0.4', latest: '1.0.4', installable: true });
     renderWithTheme(<AddonSelfUpdate current="1.0.4" />);
     check();
@@ -54,7 +54,14 @@ describe('AddonSelfUpdate', () => {
     expect(request).toHaveBeenLastCalledWith({ type: 'installSelfUpdate' }, expect.objectContaining({ queue: false }));
 
     // The download as the server reports it, with its bytes
-    act(() => emitSelfUpdateProgress({ type: 'selfUpdateProgress', phase: 'download', done: 2.5 * 1024 * 1024, total: 5 * 1024 * 1024 }));
+    act(() =>
+      emitSelfUpdateProgress({
+        type: 'selfUpdateProgress',
+        phase: 'download',
+        done: 2.5 * 1024 * 1024,
+        total: 5 * 1024 * 1024,
+      }),
+    );
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('50');
     act(() => emitSelfUpdateProgress({ type: 'selfUpdateProgress', phase: 'unpack' }));
     expect(activeStep()).toMatch(/Unpack|Entpacken/);

@@ -21,7 +21,15 @@ export const Field = ({ label, children }: { label: string; children: ReactNode 
 const selectClass = 'h-9 min-w-0 max-w-full md:text-[13px]';
 
 // A channel of any device, chosen in the channel dialog (pictures, search)
-export const ChannelSelect = ({ value, onChange, label }: { value: number; onChange: (id: number) => void; label: string }) => {
+export const ChannelSelect = ({
+  value,
+  onChange,
+  label,
+}: {
+  value: number;
+  onChange: (id: number) => void;
+  label: string;
+}) => {
   const { data: channels = [] } = useChannelList();
   return (
     <div className="flex min-w-0 flex-col gap-1 text-xs">
@@ -46,7 +54,10 @@ export const useDatapoints = (channelId: number, need: 'read' | 'write') => {
     const mask = need === 'read' ? Operation.READ | Operation.EVENT : Operation.WRITE;
     return Object.fromEntries(
       Object.entries(description).filter(
-        ([, p]) => (p.operations & mask) !== 0 && (p.flags & ParameterFlag.VISIBLE) !== 0 && (p.flags & ParameterFlag.INTERNAL) === 0,
+        ([, p]) =>
+          (p.operations & mask) !== 0 &&
+          (p.flags & ParameterFlag.VISIBLE) !== 0 &&
+          (p.flags & ParameterFlag.INTERNAL) === 0,
       ),
     ) as ParamsetDescription;
   }, [channel, description, need]);
@@ -65,7 +76,12 @@ export const DatapointSelect = ({
   const names = Object.keys(datapoints).sort();
   return (
     <Field label={m.PRG_DATAPOINT()}>
-      <NativeSelect className={selectClass} aria-label={m.PRG_DATAPOINT()} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+      <NativeSelect
+        className={selectClass}
+        aria-label={m.PRG_DATAPOINT()}
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+      >
         <option value="">{m.PRG_CHOOSE()}</option>
         {names.map((name) => (
           <option key={name} value={name}>
@@ -170,7 +186,11 @@ export const ValueSelect = ({
 // The discrete choices of a datapoint, or undefined for numbers and texts
 export const discreteOptions = (p?: ParameterDescription) => {
   if (!p) return undefined;
-  if (p.type === 'BOOL') return [{ value: '1', label: m.BOOL_TRUE() }, { value: '0', label: m.BOOL_FALSE() }];
+  if (p.type === 'BOOL')
+    return [
+      { value: '1', label: m.BOOL_TRUE() },
+      { value: '0', label: m.BOOL_FALSE() },
+    ];
   if (p.type === 'ACTION') return [{ value: '1', label: m.KEY_PRESS() }];
   if (p.type === 'ENUM') return (p.valueList ?? []).map((label, index) => ({ value: String(index), label }));
   return undefined;

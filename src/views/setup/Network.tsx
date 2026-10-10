@@ -179,7 +179,11 @@ export const Network = () => {
           <Switch id="net-tailscale" checked={tailscale} disabled={disabled} onCheckedChange={setTailscale} />
         </div>
       )}
-      {saved && <p role="status" className="text-xs">{m.NET_RESTART_HINT()}</p>}
+      {saved && (
+        <p role="status" className="text-xs">
+          {m.NET_RESTART_HINT()}
+        </p>
+      )}
       <div className="flex justify-end">
         <Button type="button" disabled={disabled || !valid || !changed} onClick={save}>
           {m.SAVE()}

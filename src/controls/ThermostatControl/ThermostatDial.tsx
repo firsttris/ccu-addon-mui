@@ -89,7 +89,13 @@ export const ThermostatDial: React.FC<ThermostatDialProps> = ({
             />
           </g>
         )}
-        <path d={currentPath} className="fill-none [stroke-linecap:round]" stroke={currentColor} strokeWidth={5} opacity={0.5} />
+        <path
+          d={currentPath}
+          className="fill-none [stroke-linecap:round]"
+          stroke={currentColor}
+          strokeWidth={5}
+          opacity={0.5}
+        />
         <path
           d={targetPathSolid}
           className="fill-none [stroke-linecap:round] transition-[stroke,stroke-width] duration-300"

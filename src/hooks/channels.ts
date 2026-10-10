@@ -98,7 +98,8 @@ export const applyEvent = (channels: Channel[], event: HmEvent, onlyIfCurrent?: 
 };
 
 // Whether two lists hold the same items in the same order
-export const sameItems = <T>(a: readonly T[], b: readonly T[]) => a.length === b.length && a.every((item, i) => item === b[i]);
+export const sameItems = <T>(a: readonly T[], b: readonly T[]) =>
+  a.length === b.length && a.every((item, i) => item === b[i]);
 
 // The grouping of the new channels, reusing the groups of the previous one
 // that didn't change: an event changes one channel, so only its type gets a

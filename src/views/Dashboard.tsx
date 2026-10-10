@@ -1,6 +1,16 @@
 import { PlaceDiagrams } from './diagrams/Diagrams';
 import { LightsStat, TemperatureStat, WindowsStat } from './OverviewStats';
-import { ComponentType, Fragment as ReactFragment, memo, ReactNode, Suspense, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  ComponentType,
+  Fragment as ReactFragment,
+  memo,
+  ReactNode,
+  Suspense,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { Link } from '@tanstack/react-router';
 import { Channel } from '../types/types';
 import { sameItems } from '../hooks/channels';
@@ -247,7 +257,13 @@ const sectionGrids: Record<SectionId | 'generic', string> = {
 // A control for all channels of a device: rendered again only when one of
 // them changed (the list itself is new whenever its section is rebuilt)
 const DeviceTile = memo(
-  function DeviceTile({ component: Component, channels }: { component: ComponentType<{ channels: Channel[] }>; channels: Channel[] }) {
+  function DeviceTile({
+    component: Component,
+    channels,
+  }: {
+    component: ComponentType<{ channels: Channel[] }>;
+    channels: Channel[];
+  }) {
     return (
       <Suspense fallback={<TileSkeleton />}>
         <Component channels={channels} />
@@ -409,7 +425,17 @@ interface DashboardProps {
   freeOrder?: number[];
 }
 
-export const Dashboard = ({ tabs, layoutId, channelsByType, isLoading, error, onRetry, extra, empty, freeOrder }: DashboardProps) => {
+export const Dashboard = ({
+  tabs,
+  layoutId,
+  channelsByType,
+  isLoading,
+  error,
+  onRetry,
+  extra,
+  empty,
+  freeOrder,
+}: DashboardProps) => {
   const { userLevel } = useWebSocketContext();
   const { data: layoutJson } = useLayout(layoutId);
   const setLayout = useSetLayout();

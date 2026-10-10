@@ -42,14 +42,37 @@ export const gatewayErrors = (g: LanGateway, others: LanGateway[]) => {
   return errors;
 };
 
-const stripState = ({ class: cls, type, name, serial, key, ip }: LanGatewayState | LanGateway): LanGateway => ({ class: cls, type, name, serial, key, ip });
+const stripState = ({ class: cls, type, name, serial, key, ip }: LanGatewayState | LanGateway): LanGateway => ({
+  class: cls,
+  type,
+  name,
+  serial,
+  key,
+  ip,
+});
 
-const GatewayDialog = ({ initial, others, wiredExists, onDone, onCancel }: { initial?: LanGateway; others: LanGateway[]; wiredExists: boolean; onDone: (g: LanGateway) => void; onCancel: () => void }) => {
-  const [g, setG] = useState<LanGateway>(initial ?? { class: 'RF', type: 'HMLGW2', name: '', serial: '', key: '', ip: '' });
+const GatewayDialog = ({
+  initial,
+  others,
+  wiredExists,
+  onDone,
+  onCancel,
+}: {
+  initial?: LanGateway;
+  others: LanGateway[];
+  wiredExists: boolean;
+  onDone: (g: LanGateway) => void;
+  onCancel: () => void;
+}) => {
+  const [g, setG] = useState<LanGateway>(
+    initial ?? { class: 'RF', type: 'HMLGW2', name: '', serial: '', key: '', ip: '' },
+  );
   const errors = gatewayErrors(g, others);
   const valid = Object.keys(errors).length === 0;
   const passphrase = g.type !== 'Lan Interface';
-  const types = (Object.keys(GATEWAY_TYPES) as GatewayType[]).filter((t) => t !== 'HMWLGW' || !wiredExists || initial?.type === 'HMWLGW');
+  const types = (Object.keys(GATEWAY_TYPES) as GatewayType[]).filter(
+    (t) => t !== 'HMWLGW' || !wiredExists || initial?.type === 'HMWLGW',
+  );
   const field = (key: 'name' | 'serial' | 'key' | 'ip', label: string, mono = false) => (
     <label className="flex flex-col gap-1">
       <span className="text-xs text-muted-foreground">{label}</span>
@@ -58,16 +81,38 @@ const GatewayDialog = ({ initial, others, wiredExists, onDone, onCancel }: { ini
         value={g[key]}
         aria-invalid={g[key] !== '' && !!errors[key]}
         // Serial numbers and access codes are upper case (AddGatewayDialog)
-        onChange={(e) => setG({ ...g, [key]: key === 'serial' || (key === 'key' && !passphrase) ? e.target.value.toUpperCase().trim() : e.target.value })}
+        onChange={(e) =>
+          setG({
+            ...g,
+            [key]:
+              key === 'serial' || (key === 'key' && !passphrase) ? e.target.value.toUpperCase().trim() : e.target.value,
+          })
+        }
       />
     </label>
   );
   return (
-    <ConfirmDialog title={initial ? m.LGW_EDIT() : m.LGW_ADD()} confirmLabel={m.LGW_OK()} busy={!valid} onConfirm={() => onDone(g)} onCancel={onCancel}>
+    <ConfirmDialog
+      title={initial ? m.LGW_EDIT() : m.LGW_ADD()}
+      confirmLabel={m.LGW_OK()}
+      busy={!valid}
+      onConfirm={() => onDone(g)}
+      onCancel={onCancel}
+    >
       <div className="flex flex-col gap-3">
         <label className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">{m.LGW_TYPE()}</span>
-          <NativeSelect value={g.type} disabled={!!initial} onChange={(e) => setG({ ...g, type: e.target.value as GatewayType, class: GATEWAY_TYPES[e.target.value as GatewayType].class })}>
+          <NativeSelect
+            value={g.type}
+            disabled={!!initial}
+            onChange={(e) =>
+              setG({
+                ...g,
+                type: e.target.value as GatewayType,
+                class: GATEWAY_TYPES[e.target.value as GatewayType].class,
+              })
+            }
+          >
             {types.map((t) => (
               <option key={t} value={t}>
                 {GATEWAY_TYPES[t].class === 'RF' ? 'Funk' : 'Wired'}: {GATEWAY_TYPES[t].label}
@@ -97,7 +142,10 @@ const ChangeKeyDialog = ({ gateway, onClose }: { gateway: LanGateway; onClose: (
       async (pw) => {
         setBusy(true);
         try {
-          await request({ type: 'changeLanGatewayKey', serial: gateway.serial, key, ...(pw !== undefined ? { password: pw } : {}) }, { queue: false, timeoutMs: 60000 });
+          await request(
+            { type: 'changeLanGatewayKey', serial: gateway.serial, key, ...(pw !== undefined ? { password: pw } : {}) },
+            { queue: false, timeoutMs: 60000 },
+          );
           showToast(m.LGW_SAVED_RESTART(), 'info');
           onClose();
         } finally {
@@ -107,15 +155,33 @@ const ChangeKeyDialog = ({ gateway, onClose }: { gateway: LanGateway; onClose: (
       (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
   return (
-    <ConfirmDialog title={`${m.LGW_CHANGE_KEY()}: ${gateway.name || gateway.serial}`} confirmLabel={m.LGW_CHANGE_KEY()} busy={busy || !valid || password.blocked} onConfirm={change} onCancel={onClose}>
+    <ConfirmDialog
+      title={`${m.LGW_CHANGE_KEY()}: ${gateway.name || gateway.serial}`}
+      confirmLabel={m.LGW_CHANGE_KEY()}
+      busy={busy || !valid || password.blocked}
+      onConfirm={change}
+      onCancel={onClose}
+    >
       <div className="flex flex-col gap-3">
         <label className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">{m.LGW_NEW_KEY()}</span>
-          <Input type="password" autoComplete="new-password" value={key} onChange={(e) => setKey(e.target.value)} aria-invalid={KEY_FORBIDDEN.test(key)} />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            aria-invalid={KEY_FORBIDDEN.test(key)}
+          />
         </label>
         <label className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">{m.LGW_NEW_KEY_REPEAT()}</span>
-          <Input type="password" autoComplete="new-password" value={repeat} onChange={(e) => setRepeat(e.target.value)} aria-invalid={repeat !== '' && repeat !== key} />
+          <Input
+            type="password"
+            autoComplete="new-password"
+            value={repeat}
+            onChange={(e) => setRepeat(e.target.value)}
+            aria-invalid={repeat !== '' && repeat !== key}
+          />
         </label>
         {KEY_FORBIDDEN.test(key) && <p className="text-xs text-destructive">{m.LGW_KEY_FORBIDDEN()}</p>}
         {password.field}
@@ -124,7 +190,10 @@ const ChangeKeyDialog = ({ gateway, onClose }: { gateway: LanGateway; onClose: (
   );
 };
 
-const STATE_BADGE: Record<LanGatewayState['state'], { label: () => string; variant: 'success' | 'destructive' | 'warning' | 'secondary' }> = {
+const STATE_BADGE: Record<
+  LanGatewayState['state'],
+  { label: () => string; variant: 'success' | 'destructive' | 'warning' | 'secondary' }
+> = {
   connected: { label: () => m.CONNECTED(), variant: 'success' },
   disconnected: { label: () => m.DISCONNECTED(), variant: 'destructive' },
   wrongKey: { label: () => m.LGW_WRONG_KEY(), variant: 'warning' },
@@ -134,7 +203,15 @@ const STATE_BADGE: Record<LanGatewayState['state'], { label: () => string; varia
 // The assignment of the BidCos-RF devices to the radio modules
 // (BidcosRfPage: Interface-Zuordnung, EditAssignmentDialog): a fixed
 // module, or roaming between them
-const Assignment = ({ modules, gateways, disabled }: { modules: RadioModule[]; gateways: LanGatewayState[]; disabled: boolean }) => {
+const Assignment = ({
+  modules,
+  gateways,
+  disabled,
+}: {
+  modules: RadioModule[];
+  gateways: LanGatewayState[];
+  disabled: boolean;
+}) => {
   const { request } = useWebSocketActions();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -165,12 +242,24 @@ const Assignment = ({ modules, gateways, disabled }: { modules: RadioModule[]; g
           const label = device.name || device.address;
           const current = device.interface ?? modules.find((mod) => mod.default)?.address ?? '';
           return (
-            <li key={device.address} aria-label={label} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 text-sm">
+            <li
+              key={device.address}
+              aria-label={label}
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 text-sm"
+            >
               <span className="min-w-[200px] flex-1">
                 <span className="font-medium">{label}</span>{' '}
-                {!label.includes(device.address) && <span className="font-mono text-xs text-muted-foreground">{device.address}</span>}
+                {!label.includes(device.address) && (
+                  <span className="font-mono text-xs text-muted-foreground">{device.address}</span>
+                )}
               </span>
-              <NativeSelect className="w-60" aria-label={m.LGW_MODULE_OF({ name: label })} disabled={disabled} value={current} onChange={(e) => assign(device.address, e.target.value, !!device.roaming)}>
+              <NativeSelect
+                className="w-60"
+                aria-label={m.LGW_MODULE_OF({ name: label })}
+                disabled={disabled}
+                value={current}
+                onChange={(e) => assign(device.address, e.target.value, !!device.roaming)}
+              >
                 {modules.map((mod) => (
                   <option key={mod.address} value={mod.address}>
                     {moduleName(mod.address)}
@@ -178,7 +267,13 @@ const Assignment = ({ modules, gateways, disabled }: { modules: RadioModule[]; g
                 ))}
               </NativeSelect>
               <label className="flex items-center gap-2 text-xs">
-                <input type="checkbox" className="size-4 accent-primary" checked={!!device.roaming} disabled={disabled} onChange={(e) => assign(device.address, current, e.target.checked)} />
+                <input
+                  type="checkbox"
+                  className="size-4 accent-primary"
+                  checked={!!device.roaming}
+                  disabled={disabled}
+                  onChange={(e) => assign(device.address, current, e.target.checked)}
+                />
                 {m.LGW_ROAMING()}
               </label>
             </li>
@@ -256,7 +351,10 @@ export const LanGateways = () => {
       async (pw) => {
         setBusy(true);
         try {
-          await request({ type: 'setLanGateways', gateways: list, ...(pw !== undefined ? { password: pw } : {}) }, { queue: false, timeoutMs: 60000 });
+          await request(
+            { type: 'setLanGateways', gateways: list, ...(pw !== undefined ? { password: pw } : {}) },
+            { queue: false, timeoutMs: 60000 },
+          );
           showToast(m.LGW_SAVED_RESTART(), 'info');
           await queryClient.invalidateQueries({ queryKey: ['lanGateways'] });
           setList(null);
@@ -278,10 +376,15 @@ export const LanGateways = () => {
               const state = stateOf(g.serial);
               const badge = STATE_BADGE[state?.state ?? 'inactive'];
               return (
-                <li key={g.serial} aria-label={g.name || g.serial} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 text-sm">
+                <li
+                  key={g.serial}
+                  aria-label={g.name || g.serial}
+                  className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 text-sm"
+                >
                   <span className="flex min-w-[220px] flex-1 flex-col">
                     <span className="font-medium">
-                      {g.name || g.serial} {g.name && <span className="font-mono text-xs text-muted-foreground">{g.serial}</span>}
+                      {g.name || g.serial}{' '}
+                      {g.name && <span className="font-mono text-xs text-muted-foreground">{g.serial}</span>}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {GATEWAY_TYPES[g.type].label}
@@ -294,15 +397,33 @@ export const LanGateways = () => {
                   </span>
                   {elevated && (
                     <span className="ml-auto flex flex-wrap gap-1">
-                      <Button type="button" size="sm" variant="outline" disabled={disabled} onClick={() => setEditing(g)}>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={disabled}
+                        onClick={() => setEditing(g)}
+                      >
                         {m.EDIT()}
                       </Button>
                       {(g.type === 'HMLGW2' || g.type === 'HMWLGW') && state && (
-                        <Button type="button" size="sm" variant="outline" disabled={disabled} onClick={() => setChangingKey(g)}>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={disabled}
+                          onClick={() => setChangingKey(g)}
+                        >
                           {m.LGW_CHANGE_KEY()}
                         </Button>
                       )}
-                      <Button type="button" size="sm" variant="outline" disabled={disabled} onClick={() => setRemoving(g)}>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={disabled}
+                        onClick={() => setRemoving(g)}
+                      >
                         {m.LGW_REMOVE()}
                       </Button>
                     </span>

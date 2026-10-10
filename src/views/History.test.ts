@@ -3,7 +3,14 @@ import { datapointLabel, formatEntryValue } from './History';
 import type { HistoryEntry } from '../types/protocol';
 import { m } from '../paraglide/messages';
 
-const entry = (e: Partial<HistoryEntry>): HistoryEntry => ({ group: 1, time: '2026-10-03 21:00:00', kind: 'channel', name: 'x', value: '', ...e });
+const entry = (e: Partial<HistoryEntry>): HistoryEntry => ({
+  group: 1,
+  time: '2026-10-03 21:00:00',
+  kind: 'channel',
+  name: 'x',
+  value: '',
+  ...e,
+});
 
 describe('History', () => {
   it('makes values readable', () => {

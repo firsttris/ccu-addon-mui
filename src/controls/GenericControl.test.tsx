@@ -18,8 +18,12 @@ describe('GenericControl', () => {
     renderWithTheme(<GenericControl channel={channel} />);
 
     const list = screen.getByLabelText('Fenstergriff');
-    const terms = within(list).getAllByRole('term').map((el) => el.textContent);
-    const values = within(list).getAllByRole('definition').map((el) => el.textContent);
+    const terms = within(list)
+      .getAllByRole('term')
+      .map((el) => el.textContent);
+    const values = within(list)
+      .getAllByRole('definition')
+      .map((el) => el.textContent);
     expect(terms).toEqual(['ERROR', 'SABOTAGE', 'STATE', 'TEMPERATURE', 'TEXT']);
     expect(values[0]).toBe('–');
     expect(values[1]).toMatch(/^(No|Nein)$/);

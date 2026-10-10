@@ -58,13 +58,7 @@ export const useThermostatState = ({
     if (commitTimeoutRef.current) {
       clearTimeout(commitTimeoutRef.current);
     }
-    pendingCommitRef.current = () =>
-      setDataPoint(
-        channel.interfaceName,
-        channel.address,
-        datapoint,
-        temp
-      );
+    pendingCommitRef.current = () => setDataPoint(channel.interfaceName, channel.address, datapoint, temp);
     commitTimeoutRef.current = setTimeout(flushCommit, 500);
   };
 

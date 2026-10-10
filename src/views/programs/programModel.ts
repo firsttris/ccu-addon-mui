@@ -15,7 +15,15 @@ import { ParameterDescription, Sysvar } from '../../types/types';
 export const ID_ERROR = 65535;
 
 // ConditionType (sico.inc): how a value is compared
-export const COMPARE = { EQUAL: 1, NUMBER_EQUAL: 5, RANGE: 6, GREATER: 8, GREATER_EQUAL: 9, LESS: 10, LESS_EQUAL: 11 } as const;
+export const COMPARE = {
+  EQUAL: 1,
+  NUMBER_EQUAL: 5,
+  RANGE: 6,
+  GREATER: 8,
+  GREATER_EQUAL: 9,
+  LESS: 10,
+  LESS_EQUAL: 11,
+} as const;
 // ConditionType2: when the condition triggers the program
 export const TRIGGER = { CHANGE: 4, UPDATE: 13, CHECK: 15 } as const;
 // TimerType of a time module (timemodule.htm)
@@ -251,9 +259,7 @@ export const describeTimeModule = (tm: TimeModule, x: TimeTexts) => {
       break;
     case TIMER.PERIODIC: {
       const p = tm.period;
-      pattern = x.t.every(
-        p % 3600 === 0 ? x.t.hours(p / 3600) : p % 60 === 0 ? x.t.minutes(p / 60) : x.t.seconds(p),
-      );
+      pattern = x.t.every(p % 3600 === 0 ? x.t.hours(p / 3600) : p % 60 === 0 ? x.t.minutes(p / 60) : x.t.seconds(p));
       break;
     }
     case TIMER.DAILY:

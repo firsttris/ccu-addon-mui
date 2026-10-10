@@ -45,7 +45,19 @@ const SERVICES: { id: string; label: () => string; hint: () => string }[] = [
   { id: 'NEOSERVER', label: () => m.FW_MEDIOLA(), hint: () => m.FW_MEDIOLA_HINT() },
 ];
 
-const Segmented = <T extends string>({ label, value, options, disabled, onChange }: { label: string; value: T; options: { value: T; label: string }[]; disabled: boolean; onChange: (value: T) => void }) => (
+const Segmented = <T extends string>({
+  label,
+  value,
+  options,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  disabled: boolean;
+  onChange: (value: T) => void;
+}) => (
   <div role="radiogroup" aria-label={label} className="inline-flex w-fit rounded-lg bg-muted p-0.5">
     {options.map((option) => (
       <button
@@ -55,7 +67,11 @@ const Segmented = <T extends string>({ label, value, options, disabled, onChange
         aria-checked={value === option.value}
         disabled={disabled}
         onClick={() => onChange(option.value)}
-        className={value === option.value ? 'h-8 rounded-md bg-background px-3 text-sm font-medium shadow-xs' : 'h-8 rounded-md px-3 text-sm text-muted-foreground'}
+        className={
+          value === option.value
+            ? 'h-8 rounded-md bg-background px-3 text-sm font-medium shadow-xs'
+            : 'h-8 rounded-md px-3 text-sm text-muted-foreground'
+        }
       >
         {option.label}
       </button>
@@ -125,7 +141,11 @@ export const Firewall = () => {
         setBusy(true);
         try {
           await request(
-            { type: 'setFirewall', firewall: { mode, services, ips: ipList, userPorts: portList }, ...(pw !== undefined ? { password: pw } : {}) },
+            {
+              type: 'setFirewall',
+              firewall: { mode, services, ips: ipList, userPorts: portList },
+              ...(pw !== undefined ? { password: pw } : {}),
+            },
             { queue: false, timeoutMs: 60000 },
           );
           showToast(m.SAVED(), 'info');
@@ -158,7 +178,9 @@ export const Firewall = () => {
             { value: 'MOST_OPEN', label: m.FW_PORTS_OPEN() },
           ]}
         />
-        <span className="text-xs text-muted-foreground">{mode === 'RESTRICTIVE' ? m.FW_POLICY_RESTRICTIVE_HINT() : m.FW_POLICY_OPEN_HINT()}</span>
+        <span className="text-xs text-muted-foreground">
+          {mode === 'RESTRICTIVE' ? m.FW_POLICY_RESTRICTIVE_HINT() : m.FW_POLICY_OPEN_HINT()}
+        </span>
       </div>
       <div className="flex flex-col gap-3">
         {SERVICES.filter((service) => fw.services.some((s) => s.id === service.id)).map((service) => (
@@ -167,23 +189,47 @@ export const Firewall = () => {
               {service.label()}
               <span className="text-xs text-muted-foreground">{service.hint()}</span>
             </div>
-            <Segmented label={service.label()} value={access[service.id] ?? 'none'} options={accessOptions} disabled={disabled} onChange={(value) => setAccess({ ...access, [service.id]: value })} />
+            <Segmented
+              label={service.label()}
+              value={access[service.id] ?? 'none'}
+              options={accessOptions}
+              disabled={disabled}
+              onChange={(value) => setAccess({ ...access, [service.id]: value })}
+            />
           </div>
         ))}
         <p className="text-xs text-muted-foreground">{m.FW_ACCESS_HINT()}</p>
       </div>
       <label className="flex flex-col gap-1">
         <span className="text-sm">{m.FW_IPS()}</span>
-        <Input className="font-mono" disabled={disabled} value={ips} placeholder="192.168.0.0/16; fc00::/7" aria-invalid={badIps.length > 0} onChange={(e) => setIps(e.target.value)} />
+        <Input
+          className="font-mono"
+          disabled={disabled}
+          value={ips}
+          placeholder="192.168.0.0/16; fc00::/7"
+          aria-invalid={badIps.length > 0}
+          onChange={(e) => setIps(e.target.value)}
+        />
         <span className="text-xs text-muted-foreground">{m.FW_IPS_HINT()}</span>
       </label>
-      {badIps.length > 0 && <p className="text-xs text-destructive">{m.FW_IPS_INVALID({ entries: badIps.join(', ') })}</p>}
+      {badIps.length > 0 && (
+        <p className="text-xs text-destructive">{m.FW_IPS_INVALID({ entries: badIps.join(', ') })}</p>
+      )}
       <label className="flex flex-col gap-1">
         <span className="text-sm">{m.FW_PORTS()}</span>
-        <Input className="font-mono" disabled={disabled} value={ports} placeholder="8080; 1883" aria-invalid={badPorts.length > 0} onChange={(e) => setPorts(e.target.value)} />
+        <Input
+          className="font-mono"
+          disabled={disabled}
+          value={ports}
+          placeholder="8080; 1883"
+          aria-invalid={badPorts.length > 0}
+          onChange={(e) => setPorts(e.target.value)}
+        />
         <span className="text-xs text-muted-foreground">{m.FW_PORTS_HINT()}</span>
       </label>
-      {badPorts.length > 0 && <p className="text-xs text-destructive">{m.FW_PORTS_INVALID({ entries: badPorts.join(', ') })}</p>}
+      {badPorts.length > 0 && (
+        <p className="text-xs text-destructive">{m.FW_PORTS_INVALID({ entries: badPorts.join(', ') })}</p>
+      )}
       {password.field}
       <div className="flex justify-end">
         <Button type="button" disabled={disabled || !changed || !valid || password.blocked} onClick={save}>

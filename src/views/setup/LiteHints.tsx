@@ -11,7 +11,11 @@ import { Button } from '../../components/ui/button';
 // open in the whole window
 const SystemLink = ({ href, children }: { href: string; children: ReactNode }) => (
   <li>
-    <a href={href} target="_top" className="inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4">
+    <a
+      href={href}
+      target="_top"
+      className="inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4"
+    >
       {children}
       <ExternalLinkIcon className="size-3.5" aria-hidden />
     </a>
@@ -41,7 +45,10 @@ export const LiteSystemLinks = () => (
 // the gate in front of /addons/ would send a reload there.
 export const SessionExpired = () => (
   <div className="flex min-h-screen items-center justify-center p-4">
-    <div role="alert" className="tile-edge flex w-full max-w-sm flex-col gap-5 rounded-2xl border bg-card p-6 text-center shadow-sm">
+    <div
+      role="alert"
+      className="tile-edge flex w-full max-w-sm flex-col gap-5 rounded-2xl border bg-card p-6 text-center shadow-sm"
+    >
       <h1 className="text-2xl font-semibold tracking-tight">{m.LITE_SESSION_EXPIRED()}</h1>
       <p className="text-sm text-muted-foreground">{m.LITE_SESSION_EXPIRED_HINT()}</p>
       <Button asChild size="lg">

@@ -35,9 +35,12 @@ export const GarageDoorControl = ({ channel }: { channel: Channel }) => {
   // While a command runs the door is drawn moving towards its target
   const [target, setTarget] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
   useEffect(() => setTarget(null), [name]);
 
   const send = (commandName: string, drawTo: number | null) => {
@@ -98,7 +101,11 @@ export const GarageDoorControl = ({ channel }: { channel: Channel }) => {
             role="status"
             className={cn(
               'text-[13px] font-medium',
-              target !== null || name === 'OPEN' ? 'text-amber-700 dark:text-amber-300' : name === 'CLOSED' ? 'text-green-700 dark:text-green-300' : 'text-muted-foreground',
+              target !== null || name === 'OPEN'
+                ? 'text-amber-700 dark:text-amber-300'
+                : name === 'CLOSED'
+                  ? 'text-green-700 dark:text-green-300'
+                  : 'text-muted-foreground',
             )}
           >
             {status}
@@ -107,7 +114,12 @@ export const GarageDoorControl = ({ channel }: { channel: Channel }) => {
       </div>
       <div className="flex flex-col gap-2 px-4 pb-4">
         {name !== 'OPEN' && (
-          <HoldButton label={m.GARAGE_OPEN_ACTION()} hint={m.HOLD_TO_CONFIRM()} icon={<ArrowUpIcon />} onConfirm={() => send('OPEN', 1)} />
+          <HoldButton
+            label={m.GARAGE_OPEN_ACTION()}
+            hint={m.HOLD_TO_CONFIRM()}
+            icon={<ArrowUpIcon />}
+            onConfirm={() => send('OPEN', 1)}
+          />
         )}
         <div className="flex gap-2">
           <button type="button" className={button} onClick={() => send('CLOSE', 0)}>
@@ -118,7 +130,13 @@ export const GarageDoorControl = ({ channel }: { channel: Channel }) => {
             <WindIcon />
             {m.GARAGE_VENTILATE()}
           </button>
-          <button type="button" className={cn(button, 'max-w-12')} aria-label={m.BLIND_STOP()} title={m.BLIND_STOP()} onClick={() => send('STOP', null)}>
+          <button
+            type="button"
+            className={cn(button, 'max-w-12')}
+            aria-label={m.BLIND_STOP()}
+            title={m.BLIND_STOP()}
+            onClick={() => send('STOP', null)}
+          >
             <SquareIcon className="fill-current !size-3.5" />
           </button>
         </div>

@@ -41,26 +41,32 @@ test('sendet setDatapoint und verarbeitet Event-Updates', async ({ page }) => {
   await expect(channelCard).toBeVisible();
   await channelCard.click();
 
-  await expect.poll(async () => {
-    return page.evaluate(() => {
-      const mock = (window as Window & {
-        __wsMock?: { sentMessages: () => Array<{ type: string }> };
-      }).__wsMock;
+  await expect
+    .poll(async () => {
+      return page.evaluate(() => {
+        const mock = (
+          window as Window & {
+            __wsMock?: { sentMessages: () => Array<{ type: string }> };
+          }
+        ).__wsMock;
 
-      if (!mock) {
-        return 0;
-      }
+        if (!mock) {
+          return 0;
+        }
 
-      return mock.sentMessages().filter((message) => message.type === 'setDatapoint').length;
-    });
-  }).toBeGreaterThan(0);
+        return mock.sentMessages().filter((message) => message.type === 'setDatapoint').length;
+      });
+    })
+    .toBeGreaterThan(0);
 
   await page.evaluate(() => {
-    const mock = (window as Window & {
-      __wsMock?: {
-        emitEvent: (event: { channel: string; datapoint: string; value: boolean }) => void;
-      };
-    }).__wsMock;
+    const mock = (
+      window as Window & {
+        __wsMock?: {
+          emitEvent: (event: { channel: string; datapoint: string; value: boolean }) => void;
+        };
+      }
+    ).__wsMock;
 
     mock?.emitEvent({
       channel: 'BidCos-RF.LEQ0000001:1',
@@ -69,15 +75,19 @@ test('sendet setDatapoint und verarbeitet Event-Updates', async ({ page }) => {
     });
   });
 
-  await expect.poll(async () => {
-    return page.evaluate(() => {
-      const mock = (window as Window & {
-        __wsMock?: { subscriptions: () => string[] };
-      }).__wsMock;
+  await expect
+    .poll(async () => {
+      return page.evaluate(() => {
+        const mock = (
+          window as Window & {
+            __wsMock?: { subscriptions: () => string[] };
+          }
+        ).__wsMock;
 
-      return mock?.subscriptions().length ?? 0;
-    });
-  }).toBeGreaterThan(0);
+        return mock?.subscriptions().length ?? 0;
+      });
+    })
+    .toBeGreaterThan(0);
 });
 
 test('verarbeitet mehrere direkt aufeinanderfolgende Events', async ({ page }) => {
@@ -88,11 +98,13 @@ test('verarbeitet mehrere direkt aufeinanderfolgende Events', async ({ page }) =
   // Both events are dispatched in the same task, like a multicall from the
   // CCU. Neither may get lost.
   await page.evaluate(() => {
-    const mock = (window as Window & {
-      __wsMock?: {
-        emitEvent: (event: { channel: string; datapoint: string; value: number }) => void;
-      };
-    }).__wsMock;
+    const mock = (
+      window as Window & {
+        __wsMock?: {
+          emitEvent: (event: { channel: string; datapoint: string; value: number }) => void;
+        };
+      }
+    ).__wsMock;
 
     mock?.emitEvent({ channel: 'BidCos-RF.LEQ0000002:1', datapoint: 'LEVEL', value: 0.29 });
     mock?.emitEvent({ channel: 'BidCos-RF.LEQ0000005:1', datapoint: 'LEVEL', value: 0.75 });
@@ -107,24 +119,32 @@ test('zeigt schwache Batterie und nicht erreichbare Geräte an', async ({ page }
   await page.goto('/room/1');
 
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: /Battery low|Batterie schwach|Not reachable|Nicht erreichbar/ })).toHaveCount(0);
+  await expect(
+    page.getByRole('status').filter({ hasText: /Battery low|Batterie schwach|Not reachable|Nicht erreichbar/ }),
+  ).toHaveCount(0);
 
   // The maintenance channel must be subscribed to receive status events
-  await expect.poll(async () => {
-    return page.evaluate(() => {
-      const mock = (window as Window & {
-        __wsMock?: { subscriptions: () => string[] };
-      }).__wsMock;
-      return mock?.subscriptions() ?? [];
-    });
-  }).toContain('BidCos-RF.LEQ0000001:0');
+  await expect
+    .poll(async () => {
+      return page.evaluate(() => {
+        const mock = (
+          window as Window & {
+            __wsMock?: { subscriptions: () => string[] };
+          }
+        ).__wsMock;
+        return mock?.subscriptions() ?? [];
+      });
+    })
+    .toContain('BidCos-RF.LEQ0000001:0');
 
   await page.evaluate(() => {
-    const mock = (window as Window & {
-      __wsMock?: {
-        emitEvent: (event: { channel: string; datapoint: string; value: boolean }) => void;
-      };
-    }).__wsMock;
+    const mock = (
+      window as Window & {
+        __wsMock?: {
+          emitEvent: (event: { channel: string; datapoint: string; value: boolean }) => void;
+        };
+      }
+    ).__wsMock;
 
     // BidCos devices report LOWBAT instead of LOW_BAT
     mock?.emitEvent({ channel: 'BidCos-RF.LEQ0000001:0', datapoint: 'LOWBAT', value: true });
@@ -135,11 +155,13 @@ test('zeigt schwache Batterie und nicht erreichbare Geräte an', async ({ page }
   await expect(page.getByRole('status').filter({ hasText: /Not reachable|Nicht erreichbar/ })).toBeVisible();
 
   await page.evaluate(() => {
-    const mock = (window as Window & {
-      __wsMock?: {
-        emitEvent: (event: { channel: string; datapoint: string; value: boolean }) => void;
-      };
-    }).__wsMock;
+    const mock = (
+      window as Window & {
+        __wsMock?: {
+          emitEvent: (event: { channel: string; datapoint: string; value: boolean }) => void;
+        };
+      }
+    ).__wsMock;
 
     mock?.emitEvent({ channel: 'BidCos-RF.LEQ0000001:0', datapoint: 'UNREACH', value: false });
   });
@@ -156,9 +178,7 @@ type MockWindow = Window & {
 };
 
 const sentSetDatapoints = (page: Page) =>
-  page.evaluate(() =>
-    ((window as MockWindow).__wsMock?.sentMessages() ?? []).filter((m) => m.type === 'setDatapoint'),
-  );
+  page.evaluate(() => ((window as MockWindow).__wsMock?.sentMessages() ?? []).filter((m) => m.type === 'setDatapoint'));
 
 test('meldet einen fehlgeschlagenen Befehl und nimmt die Änderung zurück', async ({ page }) => {
   await page.goto('/room/1');
@@ -219,7 +239,9 @@ test('öffnet die Tür nur mit bewussten Gesten', async ({ page }) => {
   expect(await sentSetDatapoints(page)).toHaveLength(0);
   await unlock.hover();
   await page.mouse.down();
-  await expect.poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value])).toEqual([['STATE', true]]);
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
+    .toEqual([['STATE', true]]);
   await page.mouse.up();
 
   // Opening: the knob has to reach the end of its track
@@ -248,7 +270,9 @@ test('zeigt Fenster offen, gekippt und geschlossen', async ({ page }) => {
   await page.goto('/room/1');
   const handle = page.getByRole('group', { name: 'Fenstergriff Wohnzimmer' });
   await expect(handle.getByRole('status')).toHaveText(/^(Offen|Open)$/);
-  await expect(page.getByRole('group', { name: 'Terrassentür' }).getByRole('status')).toHaveText(/^(Geschlossen|Closed)$/);
+  await expect(page.getByRole('group', { name: 'Terrassentür' }).getByRole('status')).toHaveText(
+    /^(Geschlossen|Closed)$/,
+  );
   await expect(page.getByText(/Fenster offen|Windows open/).locator('..')).toContainText('Fenstergriff Wohnzimmer');
 
   await page.evaluate(() => {
@@ -261,7 +285,9 @@ test('zeigt Fenster offen, gekippt und geschlossen', async ({ page }) => {
   await expect(handle.getByRole('status')).toHaveText(/^(Gekippt|Tilted)$/);
 
   await page.goto('/room/2');
-  await expect(page.getByRole('group', { name: 'Fenstergriff Küche' }).getByRole('status')).toHaveText(/^(Gekippt|Tilted)$/);
+  await expect(page.getByRole('group', { name: 'Fenstergriff Küche' }).getByRole('status')).toHaveText(
+    /^(Gekippt|Tilted)$/,
+  );
 });
 
 test('dimmt, färbt Licht und drückt Taster', async ({ page }) => {
@@ -308,10 +334,12 @@ test('bedient Bewässerung und Fensterantriebe', async ({ page }) => {
   await expect.poll(last).toMatchObject({ attribute: 'STATE', value: true });
   await expect(water.getByRole('status')).toHaveText(/Wasser läuft|Water running/);
   await water.getByRole('button', { name: /(Für 10 min öffnen|Open for 10 min)/ }).click();
-  await expect.poll(async () => (await sentSetDatapoints(page)).slice(-2)).toMatchObject([
-    { attribute: 'ON_TIME', value: 600 },
-    { attribute: 'STATE', value: true },
-  ]);
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).slice(-2))
+    .toMatchObject([
+      { attribute: 'ON_TIME', value: 600 },
+      { attribute: 'STATE', value: true },
+    ]);
 
   // The water meter with the device's units
   const meter = page.getByRole('group', { name: 'Wasserzähler Beet' });
@@ -359,7 +387,9 @@ test('zeigt Nebenkanäle von Fußbodenheizung, Türschloss und LEDs', async ({ p
   await expect.poll(last).toMatchObject({ attribute: 'PERMISSION_STATE', value: true });
 
   // Lock sensor and status LED (color, behaviour)
-  await expect(page.getByRole('group', { name: 'Riegelkontakt Keller' }).getByRole('status')).toHaveText(/Gesperrt|Locked/);
+  await expect(page.getByRole('group', { name: 'Riegelkontakt Keller' }).getByRole('status')).toHaveText(
+    /Gesperrt|Locked/,
+  );
   await page.getByLabel(/(Verhalten|Behaviour): Status-LED Flur/).selectOption('5');
   await expect.poll(last).toMatchObject({ attribute: 'COLOR_BEHAVIOUR', value: 5 });
 });
@@ -369,7 +399,9 @@ test('stellt Servos und schaltet den Alarmausgang', async ({ page }) => {
   const last = async () => (await sentSetDatapoints(page)).at(-1);
 
   // The transmitter reports where the servo stands
-  await expect(page.getByRole('group', { name: 'Lüftungsklappe Ist' }).getByRole('status')).toHaveText(/(Links|Left) · 25 %/);
+  await expect(page.getByRole('group', { name: 'Lüftungsklappe Ist' }).getByRole('status')).toHaveText(
+    /(Links|Left) · 25 %/,
+  );
 
   // Ramp first, then the position (one step right of 25 %)
   const servo = page.getByRole('group', { name: 'Lüftungsklappe', exact: true });
@@ -379,13 +411,18 @@ test('stellt Servos und schaltet den Alarmausgang', async ({ page }) => {
   await expect(servo).toContainText('1 s');
   await servo.getByRole('slider', { name: /Position/ }).focus();
   await page.keyboard.press('ArrowRight');
-  await expect.poll(async () => (await sentSetDatapoints(page)).slice(-2)).toMatchObject([
-    { attribute: 'RAMP_TIME', value: 1 },
-    { attribute: 'LEVEL', value: 0.255 },
-  ]);
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).slice(-2))
+    .toMatchObject([
+      { attribute: 'RAMP_TIME', value: 1 },
+      { attribute: 'LEVEL', value: 0.255 },
+    ]);
 
   // Alarm output of the water safety system
-  await page.getByRole('button', { name: /Alarmausgang Wasser/ }).first().click();
+  await page
+    .getByRole('button', { name: /Alarmausgang Wasser/ })
+    .first()
+    .click();
   await expect.poll(last).toMatchObject({ attribute: 'STATE', value: true });
 });
 
@@ -444,11 +481,13 @@ test('beschreibt die Displays von HmIP-WRCD und HM-RC-19', async ({ page }) => {
   await remote.getByLabel(/^(Text): Fernbedienung Display$/).fill('21.5');
   await remote.getByRole('button', { name: /Glocke|Bell/ }).click();
   await remote.getByRole('button', { name: /^(Senden|Send)$/ }).click();
-  await expect.poll(async () => (await sentSetDatapoints(page)).slice(-3)).toMatchObject([
-    { attribute: 'BACKLIGHT', value: 0 },
-    { attribute: 'BELL', value: true },
-    { attribute: 'SUBMIT', value: true },
-  ]);
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).slice(-3))
+    .toMatchObject([
+      { attribute: 'BACKLIGHT', value: 0 },
+      { attribute: 'BELL', value: true },
+      { attribute: 'SUBMIT', value: true },
+    ]);
   expect((await sentSetDatapoints(page)).find((s) => s.attribute === 'TEXT')).toMatchObject({ value: '21.5' });
 });
 
@@ -471,8 +510,12 @@ test('zeigt Sensoren mit eigenen Kacheln', async ({ page }) => {
   await emit('00199D89A1B2C5:1', 'CONCENTRATION', 1450);
   await expect(co2.getByRole('status')).toHaveText(/Lüften empfohlen|Time to air the room/);
 
-  await expect(page.getByRole('group', { name: 'Feinstaub Wohnzimmer' }).getByRole('status')).toHaveText(/^(Gut|Good)$/);
-  await expect(page.getByRole('group', { name: 'Beet Bodenfeuchte' }).getByRole('status')).toHaveText(/^(Trocken|Dry)$/);
+  await expect(page.getByRole('group', { name: 'Feinstaub Wohnzimmer' }).getByRole('status')).toHaveText(
+    /^(Gut|Good)$/,
+  );
+  await expect(page.getByRole('group', { name: 'Beet Bodenfeuchte' }).getByRole('status')).toHaveText(
+    /^(Trocken|Dry)$/,
+  );
 
   // Tilt sensor set up for vibration (CHANNEL_OPERATION_MODE 1)
   const tilt = page.getByRole('group', { name: 'Neigungssensor Garage' });
@@ -524,7 +567,9 @@ test('bedient Melder und Garagentor', async ({ page }) => {
   expect(await sentSetDatapoints(page)).toHaveLength(0);
   await test.hover();
   await page.mouse.down();
-  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'SMOKE_DETECTOR_COMMAND', value: 3 });
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).at(-1))
+    .toMatchObject({ attribute: 'SMOKE_DETECTOR_COMMAND', value: 3 });
   await page.mouse.up();
 
   // Smoke reported: the tile turns to alarm
@@ -541,13 +586,17 @@ test('bedient Melder und Garagentor', async ({ page }) => {
   const motion = page.getByRole('group', { name: 'Bewegungsmelder Eingang' });
   await expect(motion.getByRole('status')).toHaveText(/^(Bewegung|Motion)$/);
   await motion.getByRole('switch').click();
-  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'MOTION_DETECTION_ACTIVE', value: false });
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).at(-1))
+    .toMatchObject({ attribute: 'MOTION_DETECTION_ACTIVE', value: false });
 
   // Garage door: closing is a tap (command 3, as in the WebUI)
   const garage = page.getByRole('group', { name: 'Garagentor' });
   await expect(garage.getByRole('status')).toHaveText(/Geschlossen|Closed/);
   await garage.getByRole('button', { name: /^(Lüften|Ventilate)$/ }).click();
-  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'DOOR_COMMAND', value: 4 });
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).at(-1))
+    .toMatchObject({ attribute: 'DOOR_COMMAND', value: 4 });
   await expect(garage.getByRole('status')).toHaveText(/Öffnet|Opening/);
 
   // Water detector
@@ -579,7 +628,9 @@ test('zeigt Zutritte und sperrt Benutzer', async ({ page }) => {
   await expect(access.getByRole('status')).toHaveText(/(Zutritt gewährt|Access granted) · (Benutzer|User) 1/);
 
   await access.getByRole('switch', { name: /(Berechtigt|Authorised): (Benutzer|User) 1/ }).click();
-  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'STATE', value: false });
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).at(-1))
+    .toMatchObject({ attribute: 'STATE', value: false });
 
   // Bus voltages of the wired access point
   await expect(page.getByRole('group', { name: 'HmIPW-DRAP' })).toContainText(/24[.,]4 V/);
@@ -592,7 +643,9 @@ test('bedient BidCos-Thermostat, Lamellen und zeigt die Sirene', async ({ page }
   const radiator = page.getByRole('group', { name: 'Heizkörper Gästezimmer' });
   await expect(radiator).toContainText(/(Ventil|Valve) 34 %/);
   await radiator.getByRole('button', { name: /(Temperatur erhöhen|Increase temperature)/i }).click();
-  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'SET_TEMPERATURE', value: 21.5 });
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).at(-1))
+    .toMatchObject({ attribute: 'SET_TEMPERATURE', value: 21.5 });
   await radiator.getByRole('button', { name: /^(Automatisch|Automatic)$/ }).click();
   await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)?.attribute).toBe('MANU_MODE');
 
@@ -600,7 +653,9 @@ test('bedient BidCos-Thermostat, Lamellen und zeigt die Sirene', async ({ page }
   await page.getByText(/(Lamellen|Slats) · 50 %/).click();
   const slats = page.getByRole('slider', { name: /(Lamellen|Slats) Raffstore Büro/ });
   await slats.press('ArrowRight');
-  await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)).toMatchObject({ attribute: 'LEVEL_2', value: 0.55 });
+  await expect
+    .poll(async () => (await sentSetDatapoints(page)).at(-1))
+    .toMatchObject({ attribute: 'LEVEL_2', value: 0.55 });
   // Roller shutters (LEVEL_2 empty) have no slats
   await expect(page.getByText(/(Lamellen|Slats) ·/)).toHaveCount(1);
 
@@ -639,7 +694,10 @@ test('zeigt Favoritenlisten und bearbeitet sie', async ({ page }) => {
   await expect(page).toHaveURL(/\/favorite\/1400/);
   await expect(page.getByRole('heading', { name: /^(Liste bearbeiten|Edit list)$/ })).toBeVisible();
   await page.getByRole('button', { name: /^(Urlaub löschen|Delete Urlaub)$/ }).click();
-  await page.getByRole('dialog', { name: /Urlaub/ }).getByRole('button', { name: /^(Löschen|Delete)$/ }).click();
+  await page
+    .getByRole('dialog', { name: /Urlaub/ })
+    .getByRole('button', { name: /^(Löschen|Delete)$/ })
+    .click();
   await expect(page).toHaveURL(/\/favorite\/1300$/);
 
   const sent = await page.evaluate(() =>
@@ -657,7 +715,10 @@ test('zeigt Änderungen an Systemvariablen, die der Server meldet', async ({ pag
 
   // A program in the CCU changes it: no reload, the server sends the list
   await page.evaluate(() =>
-    (window as Window & { __wsMock?: { setSysvar: (id: number, value: unknown) => void } }).__wsMock?.setSysvar(950, false),
+    (window as Window & { __wsMock?: { setSysvar: (id: number, value: unknown) => void } }).__wsMock?.setSysvar(
+      950,
+      false,
+    ),
   );
   await expect(logic).toContainText(/abwesend/);
 });
@@ -676,7 +737,10 @@ test('öffnet als Startseite die zuletzt gezeigte Ansicht oder die Favoriten', a
   // Chosen in the menu: always the favorites
   await page.goto('/room/1');
   await page.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
-  await page.getByRole('radiogroup', { name: /^(Startseite|Start page)$/ }).getByRole('radio', { name: /^(Favoriten|Favorites)$/ }).click();
+  await page
+    .getByRole('radiogroup', { name: /^(Startseite|Start page)$/ })
+    .getByRole('radio', { name: /^(Favoriten|Favorites)$/ })
+    .click();
   await page.keyboard.press('Escape');
   await page.goto('/');
   await expect(page).toHaveURL(/\/favorite\/1301$/);
@@ -706,14 +770,19 @@ test('ordnet die Kacheln eines Raums per Drag & Drop an', async ({ page }) => {
   await page.mouse.move(box.x + 300, box.y + 30, { steps: 10 });
   await page.mouse.move(box.x + 420, box.y + 30, { steps: 10 });
   await page.mouse.up();
-  await expect.poll(async () => (await page.locator(`[data-tile-key="${key}"]`).boundingBox())!.x).toBeGreaterThan(box.x + 100);
+  await expect
+    .poll(async () => (await page.locator(`[data-tile-key="${key}"]`).boundingBox())!.x)
+    .toBeGreaterThan(box.x + 100);
   // Once moved, the automatic arrangement is offered before anything is saved
   await expect(page.getByRole('button', { name: /^(Automatisch anordnen|Arrange automatically)$/ })).toBeVisible();
 
   await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
   const stored = await page.evaluate(() =>
-    ((window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string; id?: number; layout?: string }> } }).__wsMock?.sentMessages() ?? [])
-      .filter((m) => m.type === 'setLayout'),
+    (
+      (
+        window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string; id?: number; layout?: string }> } }
+      ).__wsMock?.sentMessages() ?? []
+    ).filter((m) => m.type === 'setLayout'),
   );
   expect(stored).toHaveLength(1);
   expect(stored[0].id).toBe(1);
@@ -741,8 +810,26 @@ test('zeigt Alarme und bestätigt sie', async ({ page }) => {
     // Before the app asks for them
     const set = () =>
       (window as Window & { __wsMock?: { setAlarms: (a: unknown[]) => void } }).__wsMock?.setAlarms([
-        { id: 958, name: 'Wasseralarm', active: true, counter: 1, firstTime: '2026-01-15 09:12:00', lastTime: '2026-01-15 09:12:00', channel: 'Wassermelder Keller', roomName: 'Keller', message: 'Wasser erkannt' },
-        { id: 954, name: 'Alarmzone 1', active: false, counter: 2, firstTime: '2026-01-14 22:00:00', lastTime: '2026-01-14 22:05:00', message: 'nicht ausgelöst' },
+        {
+          id: 958,
+          name: 'Wasseralarm',
+          active: true,
+          counter: 1,
+          firstTime: '2026-01-15 09:12:00',
+          lastTime: '2026-01-15 09:12:00',
+          channel: 'Wassermelder Keller',
+          roomName: 'Keller',
+          message: 'Wasser erkannt',
+        },
+        {
+          id: 954,
+          name: 'Alarmzone 1',
+          active: false,
+          counter: 2,
+          firstTime: '2026-01-14 22:00:00',
+          lastTime: '2026-01-14 22:05:00',
+          message: 'nicht ausgelöst',
+        },
       ]);
     window.addEventListener('DOMContentLoaded', set);
   });
@@ -755,9 +842,19 @@ test('zeigt Alarme und bestätigt sie', async ({ page }) => {
   await expect(page.getByRole('button', { name: /(Alarme|Alarms): 2/ })).toBeVisible();
 
   await banner.getByRole('button', { name: /^(Bestätigen|Acknowledge)$/ }).click();
-  await expect.poll(() => page.evaluate(() =>
-    ((window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string; id?: number }> } }).__wsMock?.sentMessages() ?? [])
-      .filter((m) => m.type === 'acknowledgeAlarmMessage').map((m) => m.id))).toEqual([958]);
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (
+          (
+            window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string; id?: number }> } }
+          ).__wsMock?.sentMessages() ?? []
+        )
+          .filter((m) => m.type === 'acknowledgeAlarmMessage')
+          .map((m) => m.id),
+      ),
+    )
+    .toEqual([958]);
 
   // The other one is over but not acknowledged yet
   await expect(banner).toContainText('Alarmzone 1');
@@ -802,9 +899,11 @@ test('listet unter „Alle Geräte“ auch Geräte ohne Raum', async ({ page }) 
   await expect
     .poll(() =>
       page.evaluate(() => {
-        const mock = (window as Window & {
-          __wsMock?: { sentMessages: () => Array<{ type: string; all?: boolean }> };
-        }).__wsMock;
+        const mock = (
+          window as Window & {
+            __wsMock?: { sentMessages: () => Array<{ type: string; all?: boolean }> };
+          }
+        ).__wsMock;
         return mock?.sentMessages().some((m) => m.type === 'getChannels' && m.all === true);
       }),
     )
@@ -842,12 +941,16 @@ test('zeigt die Geräte-Gesundheit nach Dringlichkeit', async ({ page }) => {
   const devices = page.getByRole('list', { name: 'Devices' });
   await expect(devices.getByRole('listitem')).toHaveCount(3);
   await expect(devices.getByRole('listitem').first()).toHaveAccessibleName('Wandthermostat Flur');
-  await expect(devices.getByRole('listitem', { name: 'Fensterkontakt Bad' }).getByLabel('Battery: Battery empty, 1.00 V')).toBeVisible();
+  await expect(
+    devices.getByRole('listitem', { name: 'Fensterkontakt Bad' }).getByLabel('Battery: Battery empty, 1.00 V'),
+  ).toBeVisible();
   await expect(devices.getByText('Configuration pending')).toBeVisible();
 
   await page.getByRole('button', { name: 'All (5)' }).click();
   await expect(devices.getByRole('listitem')).toHaveCount(5);
-  await expect(devices.getByRole('listitem', { name: 'Taster Esszimmer' }).getByText('Last seen 2 days ago')).toBeVisible();
+  await expect(
+    devices.getByRole('listitem', { name: 'Taster Esszimmer' }).getByText('Last seen 2 days ago'),
+  ).toBeVisible();
 });
 
 test('zeigt Benachrichtigungsregeln und schaltet sie aus', async ({ page }) => {
@@ -867,9 +970,11 @@ test('zeigt Benachrichtigungsregeln und schaltet sie aus', async ({ page }) => {
   await expect
     .poll(() =>
       page.evaluate(() => {
-        const mock = (window as Window & {
-          __wsMock?: { sentMessages: () => Array<{ type: string; rule?: { enabled: boolean } }> };
-        }).__wsMock;
+        const mock = (
+          window as Window & {
+            __wsMock?: { sentMessages: () => Array<{ type: string; rule?: { enabled: boolean } }> };
+          }
+        ).__wsMock;
         return mock?.sentMessages().find((m) => m.type === 'saveRule')?.rule?.enabled;
       }),
     )
@@ -893,7 +998,11 @@ test('verschiebt beim Anordnen ganze Bereiche, die Kacheln bleiben in ihrem Bere
   await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
 
   const stored = await page.evaluate(() =>
-    ((window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string; layout?: string }> } }).__wsMock?.sentMessages() ?? [])
+    (
+      (
+        window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string; layout?: string }> } }
+      ).__wsMock?.sentMessages() ?? []
+    )
       .filter((m) => m.type === 'setLayout')
       .map((m) => JSON.parse(m.layout!)),
   );
@@ -913,7 +1022,10 @@ test('bietet das Anordnen auf dem Handy im Menü an', async ({ page }) => {
   // The header has no room for it on phones
   await expect(page.getByRole('button', { name: /^(Anordnen|Arrange)$/ })).toHaveCount(0);
   await page.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
-  await page.getByRole('dialog').getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Anordnen|Arrange)$/ })
+    .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('button', { name: /^(Fertig|Done)$/ })).toBeVisible();
 });
@@ -928,10 +1040,12 @@ test('bedient die Farb- und Weißkanäle der BidCos-LED-Controller', async ({ pa
 
   await expect
     .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
-    .toEqual(expect.arrayContaining([
-      ['COLOR', 200],
-      ['PROGRAM', 4],
-    ]));
+    .toEqual(
+      expect.arrayContaining([
+        ['COLOR', 200],
+        ['PROGRAM', 4],
+      ]),
+    );
 });
 
 test('spielt Töne auf MP3-Gong und Funkgong', async ({ page }) => {
@@ -945,9 +1059,11 @@ test('spielt Töne auf MP3-Gong und Funkgong', async ({ page }) => {
 
   await expect
     .poll(async () => (await sentSetDatapoints(page)).map((m) => [m.attribute, m.value]))
-    .toEqual(expect.arrayContaining([
-      ['SOUNDFILE', 3],
-      ['LEVEL', 1],
-      ['STATE', true],
-    ]));
+    .toEqual(
+      expect.arrayContaining([
+        ['SOUNDFILE', 3],
+        ['LEVEL', 1],
+        ['STATE', true],
+      ]),
+    );
 });

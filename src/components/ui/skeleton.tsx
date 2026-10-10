@@ -20,7 +20,12 @@ export const TableSkeletonRows = ({ columns, rows = 5 }: { columns: number; rows
       <TableRow key={row} aria-hidden className="hover:bg-transparent" data-skeleton>
         {Array.from({ length: columns }, (_, column) => (
           <TableCell key={column} className="py-3.5">
-            <Skeleton className={cn('h-4', column === 0 ? widths[row % widths.length] : widths[(row + column + 2) % widths.length])} />
+            <Skeleton
+              className={cn(
+                'h-4',
+                column === 0 ? widths[row % widths.length] : widths[(row + column + 2) % widths.length],
+              )}
+            />
           </TableCell>
         ))}
       </TableRow>

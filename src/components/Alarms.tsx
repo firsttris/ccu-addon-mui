@@ -23,7 +23,10 @@ export const formatAlarmTime = (time?: string) => {
   const date = new Date(time.replace(' ', 'T'));
   if (Number.isNaN(date.getTime())) return time;
   const today = new Date().toDateString() === date.toDateString();
-  return new Intl.DateTimeFormat(getLocale(), today ? { hour: '2-digit', minute: '2-digit' } : { dateStyle: 'short', timeStyle: 'short' }).format(date);
+  return new Intl.DateTimeFormat(
+    getLocale(),
+    today ? { hour: '2-digit', minute: '2-digit' } : { dateStyle: 'short', timeStyle: 'short' },
+  ).format(date);
 };
 
 const useAcknowledge = () => {
@@ -43,7 +46,12 @@ const useAcknowledge = () => {
 };
 
 const detailOf = (alarm: AlarmMessage) =>
-  [alarm.channel, alarm.roomName, formatAlarmTime(alarm.lastTime || alarm.firstTime), alarm.counter > 1 ? m.ALARM_TIMES({ count: alarm.counter }) : '']
+  [
+    alarm.channel,
+    alarm.roomName,
+    formatAlarmTime(alarm.lastTime || alarm.firstTime),
+    alarm.counter > 1 ? m.ALARM_TIMES({ count: alarm.counter }) : '',
+  ]
     .filter(Boolean)
     .join(' · ');
 
@@ -51,12 +59,19 @@ const AlarmCard = ({ alarm }: { alarm: AlarmMessage }) => {
   const acknowledge = useAcknowledge();
   return (
     <li className="flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3">
-      <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-full [&_svg]:size-5', alarm.active ? 'bg-red-500 text-white' : 'bg-red-500/20 text-red-600 dark:text-red-300')}>
+      <span
+        className={cn(
+          'flex size-10 shrink-0 items-center justify-center rounded-full [&_svg]:size-5',
+          alarm.active ? 'bg-red-500 text-white' : 'bg-red-500/20 text-red-600 dark:text-red-300',
+        )}
+      >
         <SirenIcon />
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="truncate font-medium">{alarm.name}</span>
-        <span className="text-[13px] text-red-700 dark:text-red-300">{alarm.active ? alarm.message || m.ALARM_ACTIVE() : m.ALARM_OVER()}</span>
+        <span className="text-[13px] text-red-700 dark:text-red-300">
+          {alarm.active ? alarm.message || m.ALARM_ACTIVE() : m.ALARM_OVER()}
+        </span>
         <span className="truncate text-xs text-muted-foreground">{detailOf(alarm)}</span>
       </span>
       {acknowledge.allowed && (
@@ -115,7 +130,9 @@ export const AlarmButton = ({ onClick }: { onClick: () => void }) => {
       )}
     >
       <SirenIcon />
-      <span className="hidden sm:inline">{alarms.length === 1 ? m.ALARM_ONE() : m.ALARMS_MANY({ count: alarms.length })}</span>
+      <span className="hidden sm:inline">
+        {alarms.length === 1 ? m.ALARM_ONE() : m.ALARMS_MANY({ count: alarms.length })}
+      </span>
       <span className="sm:hidden">{alarms.length}</span>
     </button>
   );
@@ -132,7 +149,10 @@ export const AlarmBanner = ({ onShowAll }: { onShowAll: () => void }) => {
     <section
       role="alert"
       aria-label={m.ALARMS()}
-      className={cn('flex flex-wrap items-center gap-3 rounded-2xl bg-red-600 p-4 text-white', effects.on && 'fx-alarm')}
+      className={cn(
+        'flex flex-wrap items-center gap-3 rounded-2xl bg-red-600 p-4 text-white',
+        effects.on && 'fx-alarm',
+      )}
     >
       <span className="relative flex size-11 shrink-0 items-center justify-center rounded-full bg-white/15 [&_svg]:size-6">
         {effects.on && <span className="absolute inset-0 animate-ping rounded-full bg-white/25" />}
@@ -143,7 +163,9 @@ export const AlarmBanner = ({ onShowAll }: { onShowAll: () => void }) => {
           {alarm.name}
           {alarm.active && alarm.message ? `: ${alarm.message}` : ''}
         </span>
-        <span className="truncate text-sm text-white/80">{alarm.active ? detailOf(alarm) : `${m.ALARM_OVER()} · ${detailOf(alarm)}`}</span>
+        <span className="truncate text-sm text-white/80">
+          {alarm.active ? detailOf(alarm) : `${m.ALARM_OVER()} · ${detailOf(alarm)}`}
+        </span>
       </span>
       <span className="flex w-full justify-end gap-2 sm:w-auto">
         {alarms.length > 1 && (
@@ -152,7 +174,11 @@ export const AlarmBanner = ({ onShowAll }: { onShowAll: () => void }) => {
           </Button>
         )}
         {acknowledge.allowed && (
-          <Button className="bg-white text-red-700 hover:bg-white/90" disabled={acknowledge.pending} onClick={() => acknowledge.run(alarm)}>
+          <Button
+            className="bg-white text-red-700 hover:bg-white/90"
+            disabled={acknowledge.pending}
+            onClick={() => acknowledge.run(alarm)}
+          >
             <CheckIcon />
             {m.ACKNOWLEDGE()}
           </Button>

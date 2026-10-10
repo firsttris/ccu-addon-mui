@@ -9,7 +9,9 @@ const LIGHT_NAME = /licht|lampe|leuchte|leuchter|beleuchtung|strahler|spot|light
 const LIGHT_TRADE = /licht|light|beleuchtung|lighting/i;
 
 export const isLight = (channel: Channel, lightTradeIds: Set<number>) =>
-  channel.tile ? channel.tile === 'light' : LIGHT_NAME.test(channel.name) || (channel.trades ?? []).some((id) => lightTradeIds.has(id));
+  channel.tile
+    ? channel.tile === 'light'
+    : LIGHT_NAME.test(channel.name) || (channel.trades ?? []).some((id) => lightTradeIds.has(id));
 
 export const useLightTradeIds = () => {
   const { data: trades = [] } = useTrades();

@@ -22,12 +22,14 @@ import { errorText } from '../lib/errors';
 
 type Children = { children: ReactNode };
 
-const Container = ({ children }: Children) => (
-  <div className="flex max-w-3xl flex-col gap-4">{children}</div>
-);
+const Container = ({ children }: Children) => <div className="flex max-w-3xl flex-col gap-4">{children}</div>;
 
 export const List = ({ children, loading, ...props }: HTMLAttributes<HTMLUListElement> & { loading?: boolean }) => (
-  <ul className="tile-edge flex flex-col divide-y overflow-hidden rounded-2xl border bg-card" aria-busy={loading} {...props}>
+  <ul
+    className="tile-edge flex flex-col divide-y overflow-hidden rounded-2xl border bg-card"
+    aria-busy={loading}
+    {...props}
+  >
     {loading ? <ListSkeletonItems /> : children}
     <li className="hidden px-4 py-8 text-center text-sm text-muted-foreground only:block">{m.EMPTY_LIST()}</li>
   </ul>
@@ -41,9 +43,15 @@ export const Name = ({ children }: Children) => (
   <span className="flex min-w-40 flex-1 flex-wrap items-center gap-2 font-medium wrap-anywhere">{children}</span>
 );
 
-export const Controls = ({ children }: Children) => <span className="flex flex-wrap items-center justify-end gap-2">{children}</span>;
+export const Controls = ({ children }: Children) => (
+  <span className="flex flex-wrap items-center justify-end gap-2">{children}</span>
+);
 
-const Toggle = ({ on, alarm, ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { on: boolean; alarm?: boolean }) => (
+const Toggle = ({
+  on,
+  alarm,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & { on: boolean; alarm?: boolean }) => (
   <button
     className={cn(
       'press h-10 min-w-16 rounded-full px-4 text-sm font-medium',
@@ -94,7 +102,13 @@ const DraftInput = ({
   );
 };
 
-export const SysvarControl = ({ sysvar, onSet }: { sysvar: Sysvar; onSet: (value: string | number | boolean) => void }) => {
+export const SysvarControl = ({
+  sysvar,
+  onSet,
+}: {
+  sysvar: Sysvar;
+  onSet: (value: string | number | boolean) => void;
+}) => {
   switch (sysvar.kind) {
     case 'bool':
     case 'alarm': {
@@ -153,9 +167,24 @@ export const SysvarControl = ({ sysvar, onSet }: { sysvar: Sysvar; onSet: (value
 
 // A checkbox of a program or system variable as the WebUI's lists have
 // them: aktiv, bedienbar, sichtbar
-const OptionCheckbox = ({ label, name, checked, onChange }: { label: string; name: string; checked: boolean; onChange: (checked: boolean) => void }) => (
+const OptionCheckbox = ({
+  label,
+  name,
+  checked,
+  onChange,
+}: {
+  label: string;
+  name: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) => (
   <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
-    <input type="checkbox" checked={checked} aria-label={`${label} ${name}`} onChange={(event) => onChange(event.target.checked)} />
+    <input
+      type="checkbox"
+      checked={checked}
+      aria-label={`${label} ${name}`}
+      onChange={(event) => onChange(event.target.checked)}
+    />
     {label}
   </label>
 );
@@ -209,7 +238,9 @@ export const Sysvars = () => {
                   )}
                   {!sysvar.visible && <Badge>{m.LOGIC_HIDDEN()}</Badge>}
                 </span>
-                {sysvar.description && <span className="text-xs whitespace-pre-line text-muted-foreground">{sysvar.description}</span>}
+                {sysvar.description && (
+                  <span className="text-xs whitespace-pre-line text-muted-foreground">{sysvar.description}</span>
+                )}
               </div>
               <Controls>
                 {canConfigure && (
@@ -259,7 +290,9 @@ export const Sysvars = () => {
           destructive
           busy={change.isPending}
           onCancel={() => setDeleting(null)}
-          onConfirm={() => runChange({ type: 'deleteSysvar', id: deleting.id }, m.DELETED_OBJECT(), () => setDeleting(null))}
+          onConfirm={() =>
+            runChange({ type: 'deleteSysvar', id: deleting.id }, m.DELETED_OBJECT(), () => setDeleting(null))
+          }
         >
           <p>{m.DELETE_SYSVAR_CONFIRM({ name: deleting.name })}</p>
         </ConfirmDialog>
@@ -321,7 +354,8 @@ export const Programs = () => {
                 >
                   {program.name}
                 </Link>{' '}
-                {!program.active && <Badge>{m.INACTIVE()}</Badge>} {!program.visible && <Badge>{m.LOGIC_HIDDEN()}</Badge>}
+                {!program.active && <Badge>{m.INACTIVE()}</Badge>}{' '}
+                {!program.visible && <Badge>{m.LOGIC_HIDDEN()}</Badge>}
               </Name>
               <Controls>
                 {canConfigure && (

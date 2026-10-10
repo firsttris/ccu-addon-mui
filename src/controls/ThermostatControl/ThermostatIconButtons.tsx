@@ -48,18 +48,31 @@ export const ThermostatIconButtons: React.FC<ThermostatIconButtonsProps> = ({
         {manualMode ? <HandIcon /> : <CalendarIcon />}
       </button>
       {onComfort && (
-        <button className={iconButton} onClick={onComfort} title={m.COMFORT_TEMPERATURE()} aria-label={m.COMFORT_TEMPERATURE()}>
+        <button
+          className={iconButton}
+          onClick={onComfort}
+          title={m.COMFORT_TEMPERATURE()}
+          aria-label={m.COMFORT_TEMPERATURE()}
+        >
           <SunIcon />
         </button>
       )}
       {onLowering && (
-        <button className={iconButton} onClick={onLowering} title={m.LOWERING_TEMPERATURE()} aria-label={m.LOWERING_TEMPERATURE()}>
+        <button
+          className={iconButton}
+          onClick={onLowering}
+          title={m.LOWERING_TEMPERATURE()}
+          aria-label={m.LOWERING_TEMPERATURE()}
+        >
           <MoonIcon />
         </button>
       )}
       {canBoost && (
         <button
-          className={cn(iconButton, boostMode && 'bg-orange-500/15 text-orange-600 hover:text-orange-600 dark:text-orange-300')}
+          className={cn(
+            iconButton,
+            boostMode && 'bg-orange-500/15 text-orange-600 hover:text-orange-600 dark:text-orange-300',
+          )}
           onClick={onToggleBoost}
           title={m.BOOST()}
           aria-label={m.BOOST()}

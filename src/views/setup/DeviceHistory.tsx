@@ -11,7 +11,12 @@ import type { HistoryEntry } from '../../types/protocol';
 const SCAN = 500;
 
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 1 });
-const timeFormat = new Intl.DateTimeFormat(defaultLang, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const timeFormat = new Intl.DateTimeFormat(defaultLang, {
+  day: '2-digit',
+  month: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
 export interface Point {
   t: number;
@@ -59,8 +64,21 @@ const Chart = ({ label, points, unit }: { label: string; points: Point[]; unit: 
           {unit}
         </span>
       </figcaption>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-24 w-full rounded-md bg-muted/40" preserveAspectRatio="none" role="img" aria-label={label}>
-        <path d={linePath(points)} fill="none" stroke="currentColor" strokeWidth="1.5" className="text-primary" vectorEffect="non-scaling-stroke" />
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="h-24 w-full rounded-md bg-muted/40"
+        preserveAspectRatio="none"
+        role="img"
+        aria-label={label}
+      >
+        <path
+          d={linePath(points)}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          className="text-primary"
+          vectorEffect="non-scaling-stroke"
+        />
       </svg>
       <div className="flex justify-between text-[11px] text-muted-foreground tabular-nums">
         <span>{timeFormat.format(points[0].t)}</span>
@@ -75,7 +93,13 @@ const Chart = ({ label, points, unit }: { label: string; points: Point[]; unit: 
 };
 
 const unitOf = (datapoint: string) =>
-  datapoint.includes('TEMPERATURE') ? ' °C' : datapoint === 'HUMIDITY' ? ' %' : datapoint.startsWith('LEVEL') ? ' %' : '';
+  datapoint.includes('TEMPERATURE')
+    ? ' °C'
+    : datapoint === 'HUMIDITY'
+      ? ' %'
+      : datapoint.startsWith('LEVEL')
+        ? ' %'
+        : '';
 
 // The history of the device's logged channels from the system protocol: a
 // chart per numeric datapoint, the last changes of the others. A light

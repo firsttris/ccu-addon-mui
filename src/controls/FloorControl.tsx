@@ -94,7 +94,11 @@ const FloorPicture = ({ value, label }: { value: number; label: string }) => {
             key={left}
             viewBox="0 0 8 24"
             className="fx-heat absolute bottom-0 h-6 w-2"
-            style={{ left: `${left}%`, animationDelay: `${i * 0.8}s`, animationDuration: `${(3.2 - 1.2 * open).toFixed(2)}s` }}
+            style={{
+              left: `${left}%`,
+              animationDelay: `${i * 0.8}s`,
+              animationDuration: `${(3.2 - 1.2 * open).toFixed(2)}s`,
+            }}
           >
             <path
               d="M4 23 C0 19 8 15 4 11 S0 3 4 1"
@@ -123,7 +127,12 @@ export const FloorControl = ({ channel }: FloorControlProps) => {
           <span className="line-clamp-2 text-[15px] leading-snug font-medium" title={channel.name}>
             {channel.name}
           </span>
-          <span className={cn('text-[13px] font-medium tabular-nums', value === 0 ? 'text-muted-foreground' : 'text-foreground/80')}>
+          <span
+            className={cn(
+              'text-[13px] font-medium tabular-nums',
+              value === 0 ? 'text-muted-foreground' : 'text-foreground/80',
+            )}
+          >
             {status}
           </span>
         </div>

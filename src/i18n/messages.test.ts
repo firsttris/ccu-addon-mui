@@ -8,7 +8,10 @@ import deText from '../../messages/de.json?raw';
 // a missing translation fail instead.
 describe('messages', () => {
   it('has the same texts in every language', () => {
-    const keys = (messages: Record<string, string>) => Object.keys(messages).filter((k) => k !== '$schema').sort();
+    const keys = (messages: Record<string, string>) =>
+      Object.keys(messages)
+        .filter((k) => k !== '$schema')
+        .sort();
     expect(keys(de)).toEqual(keys(en));
   });
 
@@ -24,7 +27,10 @@ describe('messages', () => {
   it('has every key once', () => {
     for (const [lang, text] of Object.entries({ de: deText, en: enText })) {
       const keys = [...text.matchAll(/^\s*"([^"]+)":/gm)].map((match) => match[1]);
-      expect(keys.filter((key, i) => keys.indexOf(key) !== i), lang).toEqual([]);
+      expect(
+        keys.filter((key, i) => keys.indexOf(key) !== i),
+        lang,
+      ).toEqual([]);
     }
   });
 });

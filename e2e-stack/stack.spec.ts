@@ -28,10 +28,9 @@ test('meldet sich mit einem CCU-Benutzer an und lehnt ein falsches Passwort ab',
 test('schaltet ein Licht und zeigt Änderungen vom Gerät live an', async ({ page }) => {
   await login(page);
   // The start page is the first room
-  await expect(page.getByRole('navigation', { name: 'Räume' }).getByRole('link', { name: 'Wohnzimmer' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(
+    page.getByRole('navigation', { name: 'Räume' }).getByRole('link', { name: 'Wohnzimmer' }),
+  ).toHaveAttribute('aria-current', 'page');
 
   const light = page.getByRole('button', { name: /^Wohnzimmer Licht:/ });
   await expect(light).toHaveAttribute('aria-pressed', 'false');
@@ -134,7 +133,9 @@ test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ pag
   // Stored in the (fake) CCU
   await page.reload();
   await expect(
-    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'Entprellzeit (Einheit)' }),
+    page
+      .getByRole('region', { name: 'Fenstergriff Wohnzimmer' })
+      .getByRole('combobox', { name: 'Entprellzeit (Einheit)' }),
   ).toHaveValue('2');
 });
 
@@ -179,7 +180,9 @@ test('verlangt nach Ablauf des Admin-Tokens das Passwort erneut', async ({ page 
   // Kept across a reload
   await page.reload();
   await expect(
-    page.getByRole('region', { name: 'Fenstergriff Wohnzimmer' }).getByRole('combobox', { name: 'Entprellzeit (Einheit)' }),
+    page
+      .getByRole('region', { name: 'Fenstergriff Wohnzimmer' })
+      .getByRole('combobox', { name: 'Entprellzeit (Einheit)' }),
   ).toBeVisible();
 });
 
@@ -324,7 +327,10 @@ test('meldet ein anderes Gerät ab', async ({ page, browser }) => {
   const rows = await sessions.getByRole('row').count();
 
   // Most recently used first: this device, then the tablet
-  await sessions.getByRole('button', { name: /^Abmelden / }).first().click();
+  await sessions
+    .getByRole('button', { name: /^Abmelden / })
+    .first()
+    .click();
   await expect(page.getByText('Gerät abgemeldet')).toBeVisible();
   await expect(sessions.getByRole('row')).toHaveCount(rows - 1);
 
@@ -336,7 +342,9 @@ test('meldet ein anderes Gerät ab', async ({ page, browser }) => {
 test('stellt eine Direktverknüpfung über eine Vorlage der WebUI ein', async ({ page }) => {
   await login(page);
   await page.goto('/device/HmIP-RF/000855699C4F38?tab=links');
-  const list = page.getByRole('region', { name: 'Direktverknüpfungen' }).getByRole('list', { name: 'Direktverknüpfungen' });
+  const list = page
+    .getByRole('region', { name: 'Direktverknüpfungen' })
+    .getByRole('list', { name: 'Direktverknüpfungen' });
   const item = list.getByRole('listitem').filter({ hasText: 'Esstisch an' });
   await item.getByRole('button', { name: 'Verhalten einstellen' }).click();
 
@@ -416,15 +424,24 @@ test('zeigt Versionen und Duty Cycle der Funkmodule', async ({ page }) => {
   await page.goto('/setup/system');
   const system = page.getByRole('region', { name: 'System' });
   await expect(system).toContainText('Add-on-Version');
-  await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF', exact: true })).toHaveAttribute('aria-valuenow', '12');
+  await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF', exact: true })).toHaveAttribute(
+    'aria-valuenow',
+    '12',
+  );
   await expect(system.getByRole('meter', { name: 'Duty Cycle HmIP-RF' })).toHaveAttribute('aria-valuenow', '3');
   // The LAN gateway as a radio module of its own
-  await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF NEQ0987654' })).toHaveAttribute('aria-valuenow', '2');
+  await expect(system.getByRole('meter', { name: 'Duty Cycle BidCos-RF NEQ0987654' })).toHaveAttribute(
+    'aria-valuenow',
+    '2',
+  );
   // The ReGaHss version as on the WebUI's help page (dom.BuildLabel())
   await expect(system).toContainText('R1.00.0388.0235');
   // Help and licences (help.cgi)
   const help = page.getByRole('region', { name: 'Hilfe und Lizenzen' });
-  await expect(help.getByRole('link', { name: /Lizenzinformationen der CCU-Software/ })).toHaveAttribute('href', /licenseinfo\.htm$/);
+  await expect(help.getByRole('link', { name: /Lizenzinformationen der CCU-Software/ })).toHaveAttribute(
+    'href',
+    /licenseinfo\.htm$/,
+  );
   await expect(help.getByRole('link', { name: /Lizenz des Add-ons/ })).toBeVisible();
 });
 
@@ -524,7 +541,10 @@ test('installiert ein bereitliegendes Firmware-Update', async ({ page }) => {
   const firmware = page.getByRole('region', { name: 'Firmware' });
   await expect(firmware.getByRole('status')).toHaveText(/Firmware 1\.2\.6 liegt auf dem Gerät bereit/);
   await firmware.getByRole('button', { name: 'Update installieren' }).click();
-  await page.getByRole('dialog', { name: 'Firmware-Update' }).getByRole('button', { name: 'Update installieren' }).click();
+  await page
+    .getByRole('dialog', { name: 'Firmware-Update' })
+    .getByRole('button', { name: 'Update installieren' })
+    .click();
   await expect(page.getByText('Update gestartet')).toBeVisible();
 
   await expect(firmware.getByRole('status')).toHaveText('Die Firmware ist aktuell.');
@@ -540,14 +560,20 @@ test('aktualisiert BidCos-Geräte mit updateFirmware', async ({ page }) => {
   const firmware = page.getByRole('region', { name: 'Firmware' });
   await expect(firmware.getByRole('status')).toHaveText(/Firmware 1\.5 liegt auf der CCU bereit/);
   await firmware.getByRole('button', { name: 'Update installieren' }).click();
-  await page.getByRole('dialog', { name: 'Firmware-Update' }).getByRole('button', { name: 'Update installieren' }).click();
+  await page
+    .getByRole('dialog', { name: 'Firmware-Update' })
+    .getByRole('button', { name: 'Update installieren' })
+    .click();
   await expect(page.getByText(/Das Gerät ist nicht erreichbar/)).toBeVisible();
   await expect(firmware.getByRole('definition').first()).toHaveText('1.4');
 
   await page.goto('/device/BidCos-RF/LEQ0000001?tab=maintenance');
   await expect(firmware.getByRole('status')).toHaveText(/Firmware 2\.11 liegt auf der CCU bereit/);
   await firmware.getByRole('button', { name: 'Update installieren' }).click();
-  await page.getByRole('dialog', { name: 'Firmware-Update' }).getByRole('button', { name: 'Update installieren' }).click();
+  await page
+    .getByRole('dialog', { name: 'Firmware-Update' })
+    .getByRole('button', { name: 'Update installieren' })
+    .click();
   await expect(page.getByText('Update gestartet')).toBeVisible();
   await expect(firmware.getByRole('status')).toHaveText('Die CCU hat keine neuere Firmware für dieses Gerät.');
   await expect(firmware.getByRole('definition').first()).toHaveText('2.11');
@@ -616,7 +642,10 @@ test('bearbeitet das Wochenprogramm eines Schaltaktors', async ({ page }) => {
   // Stored in the (fake) CCU
   await page.reload();
   await page.getByRole('button', { name: 'Wochenprogramm bearbeiten' }).click();
-  const stored = page.getByRole('dialog', { name: 'Zeitplan' }).getByRole('list', { name: 'Zeitplan' }).getByRole('listitem');
+  const stored = page
+    .getByRole('dialog', { name: 'Zeitplan' })
+    .getByRole('list', { name: 'Zeitplan' })
+    .getByRole('listitem');
   await expect(stored).toHaveCount(3);
   await expect(stored.filter({ hasText: 'Sonnenaufgang +30 min' })).toContainText('Wochenende');
   await expect(stored.filter({ hasText: '21:30' })).toContainText('Aus');
@@ -641,7 +670,9 @@ test('zeigt die Favoriten des Benutzers und ändert sie in der CCU', async ({ pa
   await page.goto('/favorites');
   await expect(page).toHaveURL(/\/favorite\/1300$/);
   await expect(page.getByTitle('Küche Rollo')).toBeVisible();
-  await expect(page.getByRole('list', { name: 'Systemvariablen & Programme' })).toContainText('Rollläden abends schließen');
+  await expect(page.getByRole('list', { name: 'Systemvariablen & Programme' })).toContainText(
+    'Rollläden abends schließen',
+  );
 
   await page.getByRole('button', { name: 'Bearbeiten' }).click();
   await page.getByRole('searchbox', { name: 'Gerät, Variable oder Programm suchen' }).fill('Zirkulation');
@@ -781,7 +812,9 @@ test('stellt den Standort der CCU ein', async ({ page }) => {
   await expect(panel.getByLabel('Längengrad')).toHaveValue('11.576124');
 
   // The fake CCU is no CCU: no restart from here
-  await expect(page.getByRole('region', { name: 'Neustart' })).toContainText('nur, wenn das Add-on auf der CCU selbst läuft');
+  await expect(page.getByRole('region', { name: 'Neustart' })).toContainText(
+    'nur, wenn das Add-on auf der CCU selbst läuft',
+  );
 });
 
 test('legt CCU-Benutzer an, ändert ihre Rechte und löscht sie', async ({ page }) => {
@@ -1165,13 +1198,17 @@ test('spielt ein Backup mit Sicherheitsschlüssel ein', async ({ page }) => {
   await panel.getByRole('button', { name: 'Backup einspielen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Backup einspielen' });
 
-  await dialog.getByLabel('Backup-Datei (.sbk)').setInputFiles({ name: 'urlaub.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('holiday photos') });
+  await dialog
+    .getByLabel('Backup-Datei (.sbk)')
+    .setInputFiles({ name: 'urlaub.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('holiday photos') });
   await dialog.getByLabel('Passwort').fill('secret');
   await dialog.getByRole('button', { name: 'Prüfen' }).click();
   await expect(dialog.getByRole('alert')).toContainText('kein Systembackup');
 
   const backup = 'fake CCU backup (usr_local.tar.gz, signature, key_index, firmware_version) signed with a user key';
-  await dialog.getByLabel('Backup-Datei (.sbk)').setInputFiles({ name: 'ccu3.sbk', mimeType: 'application/octet-stream', buffer: Buffer.from(backup) });
+  await dialog
+    .getByLabel('Backup-Datei (.sbk)')
+    .setInputFiles({ name: 'ccu3.sbk', mimeType: 'application/octet-stream', buffer: Buffer.from(backup) });
   await dialog.getByRole('button', { name: 'Prüfen' }).click();
   await expect(dialog).toContainText('Das Backup „ccu3.sbk“ ist gültig');
   await dialog.getByLabel('System-Sicherheitsschlüssel des Backups').fill('falsch');
@@ -1188,14 +1225,22 @@ test('spielt eine CCU-Firmware mit Lizenzbedingungen ein', async ({ page }) => {
   await page.getByRole('region', { name: 'System' }).getByRole('button', { name: 'Firmware einspielen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Firmware einspielen' });
 
-  await dialog.getByLabel('Firmware-Datei').setInputFiles({ name: 'urlaub.zip', mimeType: 'application/zip', buffer: Buffer.from('holiday photos') });
+  await dialog
+    .getByLabel('Firmware-Datei')
+    .setInputFiles({ name: 'urlaub.zip', mimeType: 'application/zip', buffer: Buffer.from('holiday photos') });
   await dialog.getByLabel('Passwort').fill('secret');
   await dialog.getByRole('button', { name: 'Hochladen und prüfen' }).click();
   await expect(dialog.getByRole('alert')).toContainText('keine Firmware');
 
-  await dialog.getByLabel('Firmware-Datei').setInputFiles({ name: 'openccu.zip', mimeType: 'application/zip', buffer: Buffer.from('fake CCU firmware update with EULA') });
+  await dialog.getByLabel('Firmware-Datei').setInputFiles({
+    name: 'openccu.zip',
+    mimeType: 'application/zip',
+    buffer: Buffer.from('fake CCU firmware update with EULA'),
+  });
   await dialog.getByRole('button', { name: 'Hochladen und prüfen' }).click();
-  await expect(dialog.getByLabel('Lizenzbedingungen', { exact: true })).toContainText('Lizenzbedingungen der Fake-Firmware');
+  await expect(dialog.getByLabel('Lizenzbedingungen', { exact: true })).toContainText(
+    'Lizenzbedingungen der Fake-Firmware',
+  );
   const install = dialog.getByRole('button', { name: 'Installieren und neu starten' });
   await expect(install).toBeDisabled();
   await dialog.getByLabel('Ich akzeptiere die Lizenzbedingungen').check();
@@ -1210,14 +1255,23 @@ test('spielt eine CCU-Firmware mit Lizenzbedingungen ein', async ({ page }) => {
 test('installiert eine Zusatzsoftware aus einer Datei', async ({ page }) => {
   await login(page);
   await page.goto('/setup/system');
-  await page.getByRole('region', { name: 'Zusatzsoftware' }).getByRole('button', { name: 'Zusatzsoftware installieren' }).click();
+  await page
+    .getByRole('region', { name: 'Zusatzsoftware' })
+    .getByRole('button', { name: 'Zusatzsoftware installieren' })
+    .click();
   const dialog = page.getByRole('dialog', { name: 'Zusatzsoftware installieren' });
-  await dialog.getByLabel('Datei (.tar.gz)').setInputFiles({ name: 'kaputt.tar.gz', mimeType: 'application/gzip', buffer: Buffer.from('broken') });
+  await dialog
+    .getByLabel('Datei (.tar.gz)')
+    .setInputFiles({ name: 'kaputt.tar.gz', mimeType: 'application/gzip', buffer: Buffer.from('broken') });
   await dialog.getByLabel('Passwort').fill('secret');
   await dialog.getByRole('button', { name: 'Installieren' }).click();
   await expect(dialog.getByRole('alert')).toContainText('Error (2)');
 
-  await dialog.getByLabel('Datei (.tar.gz)').setInputFiles({ name: 'cuxd.tar.gz', mimeType: 'application/gzip', buffer: Buffer.from('fake CCU add-on needs a reboot') });
+  await dialog.getByLabel('Datei (.tar.gz)').setInputFiles({
+    name: 'cuxd.tar.gz',
+    mimeType: 'application/gzip',
+    buffer: Buffer.from('fake CCU add-on needs a reboot'),
+  });
   await dialog.getByRole('button', { name: 'Installieren' }).click();
   await expect(dialog.getByRole('status')).toContainText('startet zum Abschluss neu');
 });
@@ -1342,7 +1396,9 @@ test('legt ein Diagramm an, zeigt die aufgezeichneten Werte und löscht es', asy
   // The current values are recorded right away
   const card = page.getByRole('region', { name: 'Klima' });
   await expect(card.getByRole('img', { name: 'Klima' })).toBeVisible();
-  await expect(card.getByRole('button', { name: 'Wohnzimmer Thermostat · Temperatur ein- oder ausblenden' })).toContainText('21,5 °C');
+  await expect(
+    card.getByRole('button', { name: 'Wohnzimmer Thermostat · Temperatur ein- oder ausblenden' }),
+  ).toContainText('21,5 °C');
   await expect(card.getByRole('button', { name: 'Draußen ein- oder ausblenden' })).toContainText('12,5 °C');
   await expect(card.getByRole('button', { name: 'Woche' })).toHaveAttribute('aria-pressed', 'true');
   await expect(card.locator('[data-kind="area"]')).toHaveCount(1);
@@ -1358,7 +1414,10 @@ test('legt ein Diagramm an, zeigt die aufgezeichneten Werte und löscht es', asy
 
   // Hiding a series and choosing another period
   await card.getByRole('button', { name: 'Draußen ein- oder ausblenden' }).click();
-  await expect(card.getByRole('button', { name: 'Draußen ein- oder ausblenden' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(card.getByRole('button', { name: 'Draußen ein- oder ausblenden' })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
   await card.getByRole('button', { name: '24 h' }).click();
   await expect(card.getByRole('button', { name: '24 h' })).toHaveAttribute('aria-pressed', 'true');
   await card.getByRole('button', { name: 'Früher' }).click();
@@ -1406,7 +1465,10 @@ test('legt Heizgruppen an, verschiebt ein Thermostat und löscht sie wieder', as
   await page.goto('/setup/heating-groups');
   const list = page.getByRole('list', { name: 'Heizgruppen' });
   const editGroup = async (name: string) => {
-    await list.getByRole('listitem', { name }).getByRole('button', { name: `Heizgruppe „${name}“ bearbeiten` }).click();
+    await list
+      .getByRole('listitem', { name })
+      .getByRole('button', { name: `Heizgruppe „${name}“ bearbeiten` })
+      .click();
     return page.getByRole('dialog', { name: `Heizgruppe „${name}“ bearbeiten` });
   };
 
@@ -1448,8 +1510,14 @@ test('legt Heizgruppen an, verschiebt ein Thermostat und löscht sie wieder', as
   // Back as before, for a second run
   const back = await editGroup('Heizung Flur');
   await back.getByRole('button', { name: 'Kanäle hinzufügen' }).click();
-  await page.getByRole('dialog', { name: 'Kanäle hinzufügen' }).getByRole('checkbox', { name: /^Wandthermostat Flur/ }).check();
-  await page.getByRole('dialog', { name: 'Kanäle hinzufügen' }).getByRole('button', { name: 'Kanäle hinzufügen' }).click();
+  await page
+    .getByRole('dialog', { name: 'Kanäle hinzufügen' })
+    .getByRole('checkbox', { name: /^Wandthermostat Flur/ })
+    .check();
+  await page
+    .getByRole('dialog', { name: 'Kanäle hinzufügen' })
+    .getByRole('button', { name: 'Kanäle hinzufügen' })
+    .click();
   await back.getByRole('button', { name: 'Speichern' }).click();
   await expect(list.getByRole('list', { name: 'Mitglieder von Heizung Flur' })).toContainText('Wandthermostat Flur');
 });
@@ -1459,7 +1527,11 @@ test('schaltet SSH ein und setzt den Sicherheitsschlüssel', async ({ page }) =>
   await page.goto('/setup/system');
   const panel = page.getByRole('region', { name: 'Sicherheit' });
   // The WebUI session may be kept from before: then no password is asked
-  const saveWithSession = async (button: ReturnType<typeof page.getByRole>, scope: ReturnType<typeof page.getByRole>, done: ReturnType<typeof page.getByText>) => {
+  const saveWithSession = async (
+    button: ReturnType<typeof page.getByRole>,
+    scope: ReturnType<typeof page.getByRole>,
+    done: ReturnType<typeof page.getByText>,
+  ) => {
     await button.click();
     const passwordField = scope.getByLabel('Passwort', { exact: true });
     await expect(done.or(passwordField)).toBeVisible();
@@ -1476,7 +1548,11 @@ test('schaltet SSH ein und setzt den Sicherheitsschlüssel', async ({ page }) =>
   await panel.getByLabel('Passwort wiederholen').fill('geheim12');
   await expect(panel.getByRole('button', { name: 'Speichern', exact: true })).toBeDisabled();
   await panel.getByLabel('Passwort wiederholen').fill('geheim123');
-  await saveWithSession(panel.getByRole('button', { name: 'Speichern', exact: true }), panel, page.getByText('Einstellungen gespeichert'));
+  await saveWithSession(
+    panel.getByRole('button', { name: 'Speichern', exact: true }),
+    panel,
+    page.getByText('Einstellungen gespeichert'),
+  );
   await page.reload();
   const reloaded = page.getByRole('region', { name: 'Sicherheit' });
   await expect(reloaded.getByLabel('SSH-Zugang')).toBeChecked();
@@ -1491,7 +1567,11 @@ test('schaltet SSH ein und setzt den Sicherheitsschlüssel', async ({ page }) =>
   await reloaded.getByRole('button', { name: 'Schlüssel setzen' }).click();
   const dialog = page.getByRole('dialog', { name: 'Sicherheitsschlüssel (HomeMatic)' });
   await expect(dialog).toContainText('Notieren Sie den Schlüssel');
-  await saveWithSession(dialog.getByRole('button', { name: 'Schlüssel setzen' }), dialog, page.getByText('Sicherheitsschlüssel gesetzt'));
+  await saveWithSession(
+    dialog.getByRole('button', { name: 'Schlüssel setzen' }),
+    dialog,
+    page.getByText('Sicherheitsschlüssel gesetzt'),
+  );
 });
 
 test('richtet SNMP ein und schaltet es wieder aus', async ({ page }) => {
@@ -1607,12 +1687,21 @@ test('gibt die Script-API frei und schränkt sie wieder ein', async ({ page }) =
 
   await page.reload();
   const reloaded = page.getByRole('region', { name: 'Firewall' });
-  await expect(reloaded.getByRole('radiogroup', { name: 'Remote Homematic-Script API' }).getByRole('radio', { name: 'Vollzugriff' })).toHaveAttribute('aria-checked', 'true');
-  await expect(reloaded.getByLabel('IP-Adressen für den eingeschränkten Zugriff')).toHaveValue('192.168.0.0/16; 10.0.0.0/8');
+  await expect(
+    reloaded
+      .getByRole('radiogroup', { name: 'Remote Homematic-Script API' })
+      .getByRole('radio', { name: 'Vollzugriff' }),
+  ).toHaveAttribute('aria-checked', 'true');
+  await expect(reloaded.getByLabel('IP-Adressen für den eingeschränkten Zugriff')).toHaveValue(
+    '192.168.0.0/16; 10.0.0.0/8',
+  );
   await expect(reloaded.getByLabel('Port-Freigabe')).toHaveValue('8080; 1883');
 
   // Back as before, for a second run (the session is kept now)
-  await reloaded.getByRole('radiogroup', { name: 'Remote Homematic-Script API' }).getByRole('radio', { name: 'Eingeschränkt' }).click();
+  await reloaded
+    .getByRole('radiogroup', { name: 'Remote Homematic-Script API' })
+    .getByRole('radio', { name: 'Eingeschränkt' })
+    .click();
   await reloaded.getByLabel('IP-Adressen für den eingeschränkten Zugriff').fill('192.168.0.0/16; fc00::/7');
   await reloaded.getByLabel('Port-Freigabe').fill('');
   await reloaded.getByRole('button', { name: 'Speichern' }).click();
@@ -1656,7 +1745,10 @@ test('richtet ein LAN-Gateway ein und ordnet ein Gerät zu', async ({ page }) =>
   await expect(page.getByRole('listitem', { name: 'JEQ0000001' })).toHaveCount(0);
 
   // A new key for the gateway: checked as the WebUI does
-  await page.getByRole('listitem', { name: 'Keller' }).getByRole('button', { name: 'Sicherheitsschlüssel ändern' }).click();
+  await page
+    .getByRole('listitem', { name: 'Keller' })
+    .getByRole('button', { name: 'Sicherheitsschlüssel ändern' })
+    .click();
   const keyDialog = page.getByRole('dialog', { name: 'Sicherheitsschlüssel ändern: Keller' });
   await keyDialog.getByLabel('Neuer Sicherheitsschlüssel', { exact: true }).fill('neu#1');
   await expect(keyDialog).toContainText('Nicht erlaubt');
@@ -1672,9 +1764,17 @@ test('richtet ein LAN-Gateway ein und ordnet ein Gerät zu', async ({ page }) =>
   await select.selectOption({ label: 'Keller' });
   await expect(select.locator('option').first()).toHaveText('Zentrale NEQ1234567 (Standard)');
   await page.reload();
-  await expect(page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first()).toHaveValue('NEQ0987654');
-  await page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first().selectOption('NEQ1234567');
-  await expect(page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first()).toHaveValue('NEQ1234567');
+  await expect(page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first()).toHaveValue(
+    'NEQ0987654',
+  );
+  await page
+    .getByRole('region', { name: 'Interface-Zuordnung' })
+    .getByRole('combobox')
+    .first()
+    .selectOption('NEQ1234567');
+  await expect(page.getByRole('region', { name: 'Interface-Zuordnung' }).getByRole('combobox').first()).toHaveValue(
+    'NEQ1234567',
+  );
 });
 
 test('sucht Wired-Geräte am RS485-Bus', async ({ page }) => {
@@ -1761,7 +1861,9 @@ test('stellt Geräteeinstellungen mit passenden Bedienelementen ein und übertr�
   await minutes.getByRole('option', { name: '30' }).click();
   await expect(decalcification).toHaveText('03:30');
   await expect(device.getByRole('combobox', { name: 'Entkalkung: Wochentag' })).toHaveValue('6');
-  await expect(device.getByRole('combobox', { name: 'Vorrang des Manuell-Modus' }).locator('option:checked')).toHaveText('Von allen');
+  await expect(
+    device.getByRole('combobox', { name: 'Vorrang des Manuell-Modus' }).locator('option:checked'),
+  ).toHaveText('Von allen');
 
   // Back to the default with one click
   await device.getByRole('button', { name: 'Komforttemperatur auf Standard zurücksetzen' }).click();
@@ -1776,8 +1878,14 @@ test('stellt Geräteeinstellungen mit passenden Bedienelementen ein und übertr�
   await expect(bar).toContainText('Gespeichert');
 
   await page.reload();
-  await expect(page.getByRole('region', { name: 'Gerät', exact: true }).getByRole('slider', { name: 'Ventilöffnung bei Boost' })).toHaveValue('81');
-  await expect(page.getByRole('region', { name: 'Gerät', exact: true }).getByRole('button', { name: 'Entkalkung: Uhrzeit', exact: true })).toHaveText('03:30');
+  await expect(
+    page.getByRole('region', { name: 'Gerät', exact: true }).getByRole('slider', { name: 'Ventilöffnung bei Boost' }),
+  ).toHaveValue('81');
+  await expect(
+    page
+      .getByRole('region', { name: 'Gerät', exact: true })
+      .getByRole('button', { name: 'Entkalkung: Uhrzeit', exact: true }),
+  ).toHaveText('03:30');
   // Both back to their defaults (as in the fixture), for a second run
   const reloaded = page.getByRole('region', { name: 'Gerät', exact: true });
   await reloaded.getByRole('button', { name: 'Ventilöffnung bei Boost auf Standard zurücksetzen' }).click();
@@ -1790,7 +1898,9 @@ test('stellt Geräteeinstellungen mit passenden Bedienelementen ein und übertr�
   await page.goto('/device/HmIP-RF/0000DBE9A5C1F2');
   const handle = page.getByRole('region', { name: 'Gerät', exact: true });
   await handle.getByRole('switch', { name: 'Werksreset am Gerät sperren' }).click();
-  await expect(handle.getByRole('combobox', { name: 'Sommerzeit Beginn: Monat' }).locator('option:checked')).toHaveText('März');
+  await expect(handle.getByRole('combobox', { name: 'Sommerzeit Beginn: Monat' }).locator('option:checked')).toHaveText(
+    'März',
+  );
   await bar.getByRole('button', { name: 'Speichern und übertragen (1)' }).click();
   await page.getByRole('dialog', { name: 'Änderungen speichern?' }).getByRole('button', { name: 'Speichern' }).click();
   await expect(bar).toContainText('Übernahme ausstehend');
@@ -1805,18 +1915,26 @@ test('stellt Geräteeinstellungen mit passenden Bedienelementen ein und übertr�
 
 test('lädt ein eigenes HTTPS-Zertifikat hoch und löscht es wieder', async ({ page }) => {
   // Certificate and key, made for the test (nothing secret in the repository)
-  const pem = execSync('openssl req -x509 -newkey rsa:2048 -nodes -keyout - -subj /CN=ccu.example.org -days 30 2>/dev/null').toString();
+  const pem = execSync(
+    'openssl req -x509 -newkey rsa:2048 -nodes -keyout - -subj /CN=ccu.example.org -days 30 2>/dev/null',
+  ).toString();
   await login(page);
   await page.goto('/setup/system');
   const panel = page.getByRole('region', { name: 'HTTPS-Zertifikat' });
   await expect(panel).toContainText('automatisch erzeugtes Zertifikat');
 
   // Only the certificate, no key: refused before upload
-  await panel.getByLabel('Zertifikatsdatei (PEM)').setInputFiles({ name: 'nur-zertifikat.pem', mimeType: 'application/x-pem-file', buffer: Buffer.from(pem.slice(pem.indexOf('-----BEGIN CERTIFICATE-----'))) });
+  await panel.getByLabel('Zertifikatsdatei (PEM)').setInputFiles({
+    name: 'nur-zertifikat.pem',
+    mimeType: 'application/x-pem-file',
+    buffer: Buffer.from(pem.slice(pem.indexOf('-----BEGIN CERTIFICATE-----'))),
+  });
   await expect(panel.getByRole('alert')).toContainText('privaten Schlüssel');
   await expect(panel.getByRole('button', { name: 'Hochladen' })).toBeDisabled();
 
-  await panel.getByLabel('Zertifikatsdatei (PEM)').setInputFiles({ name: 'server.pem', mimeType: 'application/x-pem-file', buffer: Buffer.from(pem) });
+  await panel
+    .getByLabel('Zertifikatsdatei (PEM)')
+    .setInputFiles({ name: 'server.pem', mimeType: 'application/x-pem-file', buffer: Buffer.from(pem) });
   const done = page.getByText('Zertifikat gespeichert');
   await panel.getByRole('button', { name: 'Hochladen' }).click();
   // The WebUI session may be kept from before: then no password is asked
@@ -1831,7 +1949,10 @@ test('lädt ein eigenes HTTPS-Zertifikat hoch und löscht es wieder', async ({ p
   await expect(panel).toContainText('selbst signiert');
 
   await panel.getByRole('button', { name: 'Eigenes Zertifikat löschen' }).click();
-  await page.getByRole('dialog', { name: 'Eigenes Zertifikat löschen' }).getByRole('button', { name: 'Eigenes Zertifikat löschen' }).click();
+  await page
+    .getByRole('dialog', { name: 'Eigenes Zertifikat löschen' })
+    .getByRole('button', { name: 'Eigenes Zertifikat löschen' })
+    .click();
   await expect(page.getByText('Zertifikat gelöscht')).toBeVisible();
   await expect(panel).toContainText('automatisch erzeugtes Zertifikat');
 });
@@ -1913,12 +2034,20 @@ test('setzt die Sicherheitsstufe wie der Sicherheitsassistent', async ({ page })
   // The firewall follows: every service closed
   const firewall = page.getByRole('region', { name: 'Firewall' });
   for (const service of ['Homematic XML-RPC API', 'Remote Homematic-Script API', 'Mediola-Zugriff']) {
-    await expect(firewall.getByRole('radiogroup', { name: service }).getByRole('radio', { name: 'Kein Zugriff' })).toHaveAttribute('aria-checked', 'true');
+    await expect(
+      firewall.getByRole('radiogroup', { name: service }).getByRole('radio', { name: 'Kein Zugriff' }),
+    ).toHaveAttribute('aria-checked', 'true');
   }
 
   // Back to the fixture's settings, for the other tests and a second run
-  await firewall.getByRole('radiogroup', { name: 'Homematic XML-RPC API' }).getByRole('radio', { name: 'Eingeschränkt' }).click();
-  await firewall.getByRole('radiogroup', { name: 'Remote Homematic-Script API' }).getByRole('radio', { name: 'Eingeschränkt' }).click();
+  await firewall
+    .getByRole('radiogroup', { name: 'Homematic XML-RPC API' })
+    .getByRole('radio', { name: 'Eingeschränkt' })
+    .click();
+  await firewall
+    .getByRole('radiogroup', { name: 'Remote Homematic-Script API' })
+    .getByRole('radio', { name: 'Eingeschränkt' })
+    .click();
   await firewall.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Einstellungen gespeichert').first()).toBeVisible();
   await panel.getByLabel('Authentifizierung der Fernzugriffs-Schnittstellen').click();
@@ -1943,8 +2072,12 @@ test('lädt Geräte-Firmware direkt von eQ-3 auf die CCU', async ({ page }) => {
   const remote = updates.getByRole('listitem').filter({ hasText: 'HmIP-WRC2' });
   await expect(remote).toContainText('1 Gerät(e), installiert 1.6.2');
   await expect(remote).toContainText('1.6.4');
-  await expect(updates.getByRole('listitem').filter({ hasText: 'HM-TC-IT-WM-W-EU' })).toContainText('liegt auf der CCU');
-  await expect(panel.getByRole('list', { name: 'Firmware auf der CCU' })).toContainText('Auf der CCU liegt keine Geräte-Firmware.');
+  await expect(updates.getByRole('listitem').filter({ hasText: 'HM-TC-IT-WM-W-EU' })).toContainText(
+    'liegt auf der CCU',
+  );
+  await expect(panel.getByRole('list', { name: 'Firmware auf der CCU' })).toContainText(
+    'Auf der CCU liegt keine Geräte-Firmware.',
+  );
 
   // The HMServer needs a WebUI session: the password once, if none is kept
   const download = panel.getByRole('button', { name: 'Auf die CCU laden HmIP-WRC2' });
@@ -1971,7 +2104,9 @@ test('lädt Geräte-Firmware direkt von eQ-3 auf die CCU', async ({ page }) => {
 
   // The remote control's page offers the update now
   await page.goto('/device/HmIP-RF/000855699C4F38?tab=maintenance');
-  await expect(page.getByRole('region', { name: 'Firmware' }).getByRole('status')).toHaveText(/Firmware 1\.6\.4 liegt auf dem Gerät bereit/);
+  await expect(page.getByRole('region', { name: 'Firmware' }).getByRole('status')).toHaveText(
+    /Firmware 1\.6\.4 liegt auf dem Gerät bereit/,
+  );
 
   await page.goto('/setup/system');
   await files.getByRole('button', { name: 'Entfernen HmIP-WRC2' }).click();
@@ -2012,7 +2147,10 @@ test('legt eine Benachrichtigungsregel aus einer Vorlage an', async ({ page }) =
   await conditions.getByRole('button', { name: 'Kanal' }).click();
   const picker = page.getByRole('dialog', { name: 'Kanal' });
   await picker.getByLabel('Suchen: Name, Gerät, Typ, Raum, Adresse').fill('fensterkontakt bad');
-  await picker.getByRole('button', { name: /^Fensterkontakt Bad/ }).first().click();
+  await picker
+    .getByRole('button', { name: /^Fensterkontakt Bad/ })
+    .first()
+    .click();
   await expect(picker).toHaveCount(0);
   await expect(conditions.getByRole('button', { name: 'Kanal' })).toContainText('Fensterkontakt Bad');
   await expect(conditions.getByLabel('Datenpunkt')).toHaveValue('STATE');
@@ -2023,7 +2161,9 @@ test('legt eine Benachrichtigungsregel aus einer Vorlage an', async ({ page }) =
   await dialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Regel gespeichert')).toBeVisible();
 
-  const rule = page.getByRole('list', { name: 'Benachrichtigungsregeln' }).getByRole('listitem', { name: 'Fenster lange offen' });
+  const rule = page
+    .getByRole('list', { name: 'Benachrichtigungsregeln' })
+    .getByRole('listitem', { name: 'Fenster lange offen' });
   await expect(rule).toContainText('seit 15 Minuten');
 
   await rule.getByRole('button', { name: 'Regel „Fenster lange offen“ löschen' }).click();
@@ -2054,5 +2194,7 @@ test('zeigt Gerätebilder der WebUI mit markiertem Kanal', async ({ page }) => {
 
   // Types without a picture get a symbol
   await page.goto('/setup');
-  await expect(page.getByRole('row', { name: /Kontakt-Schnittstelle Gartentor/ }).locator('[data-device-image="none"]')).toBeVisible();
+  await expect(
+    page.getByRole('row', { name: /Kontakt-Schnittstelle Gartentor/ }).locator('[data-device-image="none"]'),
+  ).toBeVisible();
 });

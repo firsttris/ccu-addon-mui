@@ -111,13 +111,26 @@ const RuleEditor = ({
                 {c > 0 && <Joiner>{inner}</Joiner>}
                 <ConditionRow
                   condition={condition}
-                  onChange={(next) => setGroup(g, group.map((x, i) => (i === c ? next : x)))}
-                  onRemove={() => setGroup(g, group.filter((_, i) => i !== c))}
+                  onChange={(next) =>
+                    setGroup(
+                      g,
+                      group.map((x, i) => (i === c ? next : x)),
+                    )
+                  }
+                  onRemove={() =>
+                    setGroup(
+                      g,
+                      group.filter((_, i) => i !== c),
+                    )
+                  }
                 />
               </div>
             ))}
             <div>
-              <AddButton label={`${m.ADD_CONDITION()} (${inner})`} onClick={() => setGroup(g, [...group, newCondition('device')])} />
+              <AddButton
+                label={`${m.ADD_CONDITION()} (${inner})`}
+                onClick={() => setGroup(g, [...group, newCondition('device')])}
+              />
             </div>
           </div>
         </div>
@@ -182,7 +195,8 @@ export const ProgramEditor = () => {
     return null;
   }
   const problems = programProblems(draft);
-  const setRule = (i: number, rule: ProgramRule) => setDraft({ ...draft, rules: draft.rules.map((r, j) => (j === i ? rule : r)) });
+  const setRule = (i: number, rule: ProgramRule) =>
+    setDraft({ ...draft, rules: draft.rules.map((r, j) => (j === i ? rule : r)) });
 
   const save = () =>
     change.mutate(
@@ -194,7 +208,8 @@ export const ProgramEditor = () => {
           // Saved: the program reloaded now may replace the draft again
           setBase(draft);
           const savedId = 'id' in response ? response.id : undefined;
-          if (isNew && savedId) navigate({ to: '/program/$programId', params: { programId: String(savedId) }, replace: true });
+          if (isNew && savedId)
+            navigate({ to: '/program/$programId', params: { programId: String(savedId) }, replace: true });
         },
         onError: (error) => {
           setConfirm(null);
@@ -231,7 +246,11 @@ export const ProgramEditor = () => {
           />
         </label>
         <label className="flex h-9 items-center gap-2 text-sm">
-          <Switch aria-label={m.ACTIVE()} checked={draft.active} onCheckedChange={(active) => setDraft({ ...draft, active })} />
+          <Switch
+            aria-label={m.ACTIVE()}
+            checked={draft.active}
+            onCheckedChange={(active) => setDraft({ ...draft, active })}
+          />
           {m.ACTIVE()}
         </label>
       </div>
@@ -292,7 +311,12 @@ export const ProgramEditor = () => {
             <Link to="/programs">{m.CANCEL()}</Link>
           </Button>
           {!isNew && (
-            <Button type="button" variant="outline" disabled={problems.length > 0 || change.isPending} onClick={saveAsNew}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={problems.length > 0 || change.isPending}
+              onClick={saveAsNew}
+            >
               <CopyIcon />
               {m.PRG_SAVE_AS_NEW()}
             </Button>

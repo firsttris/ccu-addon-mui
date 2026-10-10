@@ -15,7 +15,8 @@ export const hsvToRgb = (hue: number, saturation: number): RGB => {
   const h = (((hue % 360) + 360) % 360) / 60;
   const c = saturation;
   const x = c * (1 - Math.abs((h % 2) - 1));
-  const [r, g, b] = h < 1 ? [c, x, 0] : h < 2 ? [x, c, 0] : h < 3 ? [0, c, x] : h < 4 ? [0, x, c] : h < 5 ? [x, 0, c] : [c, 0, x];
+  const [r, g, b] =
+    h < 1 ? [c, x, 0] : h < 2 ? [x, c, 0] : h < 3 ? [0, c, x] : h < 4 ? [0, x, c] : h < 5 ? [x, 0, c] : [c, 0, x];
   const m0 = 1 - c;
   return [r, g, b].map((v) => Math.round((v + m0) * 255)) as RGB;
 };
@@ -94,8 +95,10 @@ export const ColorLightControl = ({ channel }: { channel: Channel }) => {
   const hue = Number(dp.HUE ?? 0);
   const saturation = Number(dp.SATURATION ?? 1);
   const kelvin = Number(dp.COLOR_TEMPERATURE ?? 2700);
-  const color: RGB = hasHue && saturation > 0.05 ? hsvToRgb(hue, saturation) : hasWhite ? kelvinToRgb(kelvin) : [251, 191, 36];
-  const set = (datapoint: string, value: number) => setDataPoint(channel.interfaceName, channel.address, datapoint, value);
+  const color: RGB =
+    hasHue && saturation > 0.05 ? hsvToRgb(hue, saturation) : hasWhite ? kelvinToRgb(kelvin) : [251, 191, 36];
+  const set = (datapoint: string, value: number) =>
+    setDataPoint(channel.interfaceName, channel.address, datapoint, value);
   const lastLevel = useRef(level || 100);
   if (level > 0) lastLevel.current = level;
 
@@ -117,7 +120,12 @@ export const ColorLightControl = ({ channel }: { channel: Channel }) => {
   const state = on ? m.DIMMED_TO({ percent: level }) : m.OFF();
   const swatch = 'press size-6 rounded-full border border-black/10 ring-offset-2 ring-offset-card dark:border-white/15';
   return (
-    <Tile status={channel.status} lit={on} className="col-span-2" style={litTileStyle(level / 100, color, effects.on, effects.k)}>
+    <Tile
+      status={channel.status}
+      lit={on}
+      className="col-span-2"
+      style={litTileStyle(level / 100, color, effects.on, effects.k)}
+    >
       <button
         onClick={toggle}
         aria-pressed={on}
@@ -133,7 +141,12 @@ export const ColorLightControl = ({ channel }: { channel: Channel }) => {
         </span>
       </button>
       <div className="flex flex-col gap-3 px-3.5 pb-3.5">
-        <LevelBar label={m.BRIGHTNESS_OF({ name: channel.name })} value={level} color={color} onChange={(v) => set('LEVEL', v / 100)} />
+        <LevelBar
+          label={m.BRIGHTNESS_OF({ name: channel.name })}
+          value={level}
+          color={color}
+          onChange={(v) => set('LEVEL', v / 100)}
+        />
         {hasHue && <HueBar label={m.COLOR_OF({ name: channel.name })} hue={hue} onChange={pickColor} />}
         <div className="flex flex-wrap justify-between gap-1.5" role="group" aria-label={m.QUICK_COLORS()}>
           {(hasWhite || hasHue) &&
@@ -144,7 +157,13 @@ export const ColorLightControl = ({ channel }: { channel: Channel }) => {
                 aria-label={`${k} K`}
                 title={`${k} K`}
                 onClick={() => pickWhite(k)}
-                className={cn(swatch, hasWhite && Math.abs(kelvin - k) < 300 && (!hasHue || saturation < 0.05) && 'ring-2 ring-foreground/70')}
+                className={cn(
+                  swatch,
+                  hasWhite &&
+                    Math.abs(kelvin - k) < 300 &&
+                    (!hasHue || saturation < 0.05) &&
+                    'ring-2 ring-foreground/70',
+                )}
                 style={{ background: `rgb(${kelvinToRgb(k).join(',')})` }}
               />
             ))}

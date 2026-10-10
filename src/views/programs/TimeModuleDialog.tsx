@@ -1,6 +1,13 @@
 import { ReactNode, useState } from 'react';
 import { TimeModule } from '../../types/protocol';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
@@ -35,7 +42,8 @@ export const useTimeTexts = (): TimeTexts => {
   return {
     locale,
     // 2024-01-01 was a Monday
-    weekday: (i, style) => new Intl.DateTimeFormat(locale, { weekday: style }).format(new Date(2024, 0, 1 + Math.max(0, i))),
+    weekday: (i, style) =>
+      new Intl.DateTimeFormat(locale, { weekday: style }).format(new Date(2024, 0, 1 + Math.max(0, i))),
     month: (i) => new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2024, Math.max(0, i), 1)),
     t: {
       at: (clock) => m.PRG_TM_S_AT({ clock }),
@@ -76,7 +84,17 @@ const Labeled = ({ label, children }: { label: string; children: ReactNode }) =>
   </label>
 );
 
-const Choice = ({ name, checked, onChange, label }: { name: string; checked: boolean; onChange: () => void; label: string }) => (
+const Choice = ({
+  name,
+  checked,
+  onChange,
+  label,
+}: {
+  name: string;
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+}) => (
   <label className="flex items-center gap-2 text-sm">
     <input type="radio" name={name} checked={checked} onChange={onChange} />
     {label}
@@ -86,7 +104,15 @@ const Choice = ({ name, checked, onChange, label }: { name: string; checked: boo
 const numberClass = 'h-9 w-20 text-right tabular-nums md:text-[13px]';
 const num = (value: string, min = 1) => Math.max(min, Number.parseInt(value, 10) || min);
 
-const WeekdayButtons = ({ mask, onChange, label }: { mask: number; onChange: (mask: number) => void; label: string }) => {
+const WeekdayButtons = ({
+  mask,
+  onChange,
+  label,
+}: {
+  mask: number;
+  onChange: (mask: number) => void;
+  label: string;
+}) => {
   const x = useTimeTexts();
   return (
     <div role="group" aria-label={label} className="flex flex-wrap gap-1">
@@ -139,10 +165,18 @@ export const TimeModuleDialog = ({
     if (timerType === TIMER.PERIODIC) defaults.period = 3600;
     if (timerType === TIMER.WEEKLY) defaults.weekdays = WORKDAY_BITS;
     if (timerType === TIMER.MONTHLY) Object.assign(defaults, { period: now.getDate(), repetitionValue: 1 });
-    if (timerType === TIMER.YEARLY) Object.assign(defaults, { period: now.getDate(), repetitionValue: now.getMonth() + 1 });
+    if (timerType === TIMER.YEARLY)
+      Object.assign(defaults, { period: now.getDate(), repetitionValue: now.getMonth() + 1 });
     set(defaults);
   };
-  const dailyMode = t.weekdays === WORKDAY_BITS ? 'workdays' : t.weekdays === WEEKEND_BITS ? 'weekend' : t.repetitionValue > 1 ? 'n' : 'every';
+  const dailyMode =
+    t.weekdays === WORKDAY_BITS
+      ? 'workdays'
+      : t.weekdays === WEEKEND_BITS
+        ? 'weekend'
+        : t.repetitionValue > 1
+          ? 'n'
+          : 'every';
   const periodUnit = t.period % 3600 === 0 ? 3600 : t.period % 60 === 0 ? 60 : 1;
   const endMode = t.repetitionCount > 0 ? 'after' : dateOf(t.end) ? 'on' : 'none';
 
@@ -198,9 +232,24 @@ export const TimeModuleDialog = ({
               </span>
             )}
           </div>
-          <Choice name="mode" checked={mode === 'allDay'} onChange={() => setMode('allDay')} label={m.PRG_TM_ALL_DAY()} />
-          <Choice name="mode" checked={mode === 'daytime'} onChange={() => setMode('daytime')} label={m.PRG_TM_DAYTIME()} />
-          <Choice name="mode" checked={mode === 'nighttime'} onChange={() => setMode('nighttime')} label={m.PRG_TM_NIGHTTIME()} />
+          <Choice
+            name="mode"
+            checked={mode === 'allDay'}
+            onChange={() => setMode('allDay')}
+            label={m.PRG_TM_ALL_DAY()}
+          />
+          <Choice
+            name="mode"
+            checked={mode === 'daytime'}
+            onChange={() => setMode('daytime')}
+            label={m.PRG_TM_DAYTIME()}
+          />
+          <Choice
+            name="mode"
+            checked={mode === 'nighttime'}
+            onChange={() => setMode('nighttime')}
+            label={m.PRG_TM_NIGHTTIME()}
+          />
           {(mode === 'daytime' || mode === 'nighttime') && (
             <p className="text-xs text-muted-foreground">{m.PRG_TM_ASTRO_HINT()}</p>
           )}
@@ -257,9 +306,19 @@ export const TimeModuleDialog = ({
 
           {t.timerType === TIMER.DAILY && (
             <div className="flex flex-col gap-2">
-              <Choice name="daily" checked={dailyMode === 'every'} onChange={() => set({ weekdays: 0, repetitionValue: 0 })} label={m.PRG_TM_EVERY_DAY()} />
+              <Choice
+                name="daily"
+                checked={dailyMode === 'every'}
+                onChange={() => set({ weekdays: 0, repetitionValue: 0 })}
+                label={m.PRG_TM_EVERY_DAY()}
+              />
               <div className="flex flex-wrap items-center gap-2">
-                <Choice name="daily" checked={dailyMode === 'n'} onChange={() => set({ weekdays: 0, repetitionValue: 2 })} label={m.PRG_TM_EVERY_N_DAYS()} />
+                <Choice
+                  name="daily"
+                  checked={dailyMode === 'n'}
+                  onChange={() => set({ weekdays: 0, repetitionValue: 2 })}
+                  label={m.PRG_TM_EVERY_N_DAYS()}
+                />
                 {dailyMode === 'n' && (
                   <Input
                     aria-label={m.PRG_TM_EVERY_N_DAYS()}
@@ -270,8 +329,18 @@ export const TimeModuleDialog = ({
                   />
                 )}
               </div>
-              <Choice name="daily" checked={dailyMode === 'workdays'} onChange={() => set({ weekdays: WORKDAY_BITS, repetitionValue: 0 })} label={m.PRG_TM_WORKDAYS()} />
-              <Choice name="daily" checked={dailyMode === 'weekend'} onChange={() => set({ weekdays: WEEKEND_BITS, repetitionValue: 0 })} label={m.PRG_TM_WEEKEND()} />
+              <Choice
+                name="daily"
+                checked={dailyMode === 'workdays'}
+                onChange={() => set({ weekdays: WORKDAY_BITS, repetitionValue: 0 })}
+                label={m.PRG_TM_WORKDAYS()}
+              />
+              <Choice
+                name="daily"
+                checked={dailyMode === 'weekend'}
+                onChange={() => set({ weekdays: WEEKEND_BITS, repetitionValue: 0 })}
+                label={m.PRG_TM_WEEKEND()}
+              />
             </div>
           )}
 
@@ -293,7 +362,12 @@ export const TimeModuleDialog = ({
           {(t.timerType === TIMER.MONTHLY || t.timerType === TIMER.YEARLY) && (
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap items-center gap-2">
-                <Choice name="monthly" checked={t.weekdays === 0} onChange={() => set({ weekdays: 0, period: Math.min(31, Math.max(1, t.period)) })} label={m.PRG_TM_ON_DAY()} />
+                <Choice
+                  name="monthly"
+                  checked={t.weekdays === 0}
+                  onChange={() => set({ weekdays: 0, period: Math.min(31, Math.max(1, t.period)) })}
+                  label={m.PRG_TM_ON_DAY()}
+                />
                 {t.weekdays === 0 && (
                   <Input
                     aria-label={m.PRG_TM_DAY_OF_MONTH()}
@@ -305,7 +379,12 @@ export const TimeModuleDialog = ({
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Choice name="monthly" checked={t.weekdays > 0} onChange={() => set({ weekdays: 1, period: 1 })} label={m.PRG_TM_ON_NTH()} />
+                <Choice
+                  name="monthly"
+                  checked={t.weekdays > 0}
+                  onChange={() => set({ weekdays: 1, period: 1 })}
+                  label={m.PRG_TM_ON_NTH()}
+                />
                 {t.weekdays > 0 && (
                   <>
                     <NativeSelect
@@ -376,9 +455,19 @@ export const TimeModuleDialog = ({
                 onChange={(e) => e.target.value && set({ begin: e.target.value })}
               />
             </Labeled>
-            <Choice name="end" checked={endMode === 'none'} onChange={() => set({ end: '0', repetitionCount: 0 })} label={m.PRG_TM_NO_END()} />
+            <Choice
+              name="end"
+              checked={endMode === 'none'}
+              onChange={() => set({ end: '0', repetitionCount: 0 })}
+              label={m.PRG_TM_NO_END()}
+            />
             <div className="flex flex-wrap items-center gap-2">
-              <Choice name="end" checked={endMode === 'after'} onChange={() => set({ end: '0', repetitionCount: 10 })} label={m.PRG_TM_END_AFTER()} />
+              <Choice
+                name="end"
+                checked={endMode === 'after'}
+                onChange={() => set({ end: '0', repetitionCount: 10 })}
+                label={m.PRG_TM_END_AFTER()}
+              />
               {endMode === 'after' && (
                 <Input
                   aria-label={m.PRG_TM_END_AFTER()}

@@ -29,7 +29,11 @@ export const VirtualKeys = () => {
   const setDataPoint = useSetDataPoint();
   const change = useConfigChange();
   const [all, setAll] = useState(false);
-  const { data: keys = [], isPending, refetch } = useQuery({
+  const {
+    data: keys = [],
+    isPending,
+    refetch,
+  } = useQuery({
     queryKey: ['virtualKeys'],
     queryFn: async () => (await request({ type: 'getVirtualKeys' })).keys,
   });
@@ -85,10 +89,22 @@ export const VirtualKeys = () => {
             </div>
             {canPress && (
               <Controls>
-                <Button type="button" variant="outline" size="sm" aria-label={`${m.VKEYS_SHORT()} ${key.name}`} onClick={() => press(key, false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  aria-label={`${m.VKEYS_SHORT()} ${key.name}`}
+                  onClick={() => press(key, false)}
+                >
                   {m.VKEYS_SHORT()}
                 </Button>
-                <Button type="button" variant="outline" size="sm" aria-label={`${m.VKEYS_LONG()} ${key.name}`} onClick={() => press(key, true)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  aria-label={`${m.VKEYS_LONG()} ${key.name}`}
+                  onClick={() => press(key, true)}
+                >
                   {m.VKEYS_LONG()}
                 </Button>
               </Controls>

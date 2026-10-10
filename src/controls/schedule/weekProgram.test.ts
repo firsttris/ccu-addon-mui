@@ -10,7 +10,16 @@ import {
   Values,
 } from './weekProgram';
 
-const fields = ['WEEKDAY', 'CONDITION', 'FIXED_HOUR', 'FIXED_MINUTE', 'ASTRO_TYPE', 'ASTRO_OFFSET', 'TARGET_CHANNELS', 'LEVEL'];
+const fields = [
+  'WEEKDAY',
+  'CONDITION',
+  'FIXED_HOUR',
+  'FIXED_MINUTE',
+  'ASTRO_TYPE',
+  'ASTRO_OFFSET',
+  'TARGET_CHANNELS',
+  'LEVEL',
+];
 const description = Object.fromEntries(
   ['01', '02', '03'].flatMap((n) =>
     fields.map((f) => [`${n}_WP_${f}`, { type: 'INTEGER', operations: 7, flags: 1, tabOrder: 0 }]),
@@ -52,7 +61,11 @@ describe('weekProgram', () => {
     const [first] = parseWeekProgram(description, values);
     const next = entryValues(description, { ...first, hour: 7, level2: 0.5 });
     expect(next).not.toHaveProperty('02_WP_LEVEL_2');
-    expect(changedValues(values, next)).toEqual({ '02_WP_FIXED_HOUR': 7, '02_WP_ASTRO_TYPE': 0, '02_WP_ASTRO_OFFSET': 0 });
+    expect(changedValues(values, next)).toEqual({
+      '02_WP_FIXED_HOUR': 7,
+      '02_WP_ASTRO_TYPE': 0,
+      '02_WP_ASTRO_OFFSET': 0,
+    });
   });
 
   it('splits the target mask into channel indexes', () => {

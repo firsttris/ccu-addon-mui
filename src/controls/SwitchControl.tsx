@@ -44,12 +44,23 @@ const Socket = ({ on }: { on: boolean }) => {
   return (
     <svg aria-hidden viewBox="0 0 48 48" className="size-12 shrink-0 overflow-visible">
       {/* Cover plate and the round recess */}
-      <rect x="2" y="2" width="40" height="40" rx="9" className="fill-white stroke-zinc-300 dark:fill-zinc-200 dark:stroke-zinc-500" strokeWidth="1.5" />
+      <rect
+        x="2"
+        y="2"
+        width="40"
+        height="40"
+        rx="9"
+        className="fill-white stroke-zinc-300 dark:fill-zinc-200 dark:stroke-zinc-500"
+        strokeWidth="1.5"
+      />
       <circle
         cx="22"
         cy="22"
         r="14"
-        className={cn('transition-[fill] duration-500', on ? 'fill-emerald-100 dark:fill-emerald-200' : 'fill-zinc-100 dark:fill-zinc-300')}
+        className={cn(
+          'transition-[fill] duration-500',
+          on ? 'fill-emerald-100 dark:fill-emerald-200' : 'fill-zinc-100 dark:fill-zinc-300',
+        )}
         stroke="currentColor"
         strokeOpacity="0.15"
         style={on && effects.on ? { filter: `drop-shadow(0 0 ${5 * effects.k}px rgba(16,185,129,0.7))` } : undefined}
@@ -60,7 +71,13 @@ const Socket = ({ on }: { on: boolean }) => {
       {on ? (
         <g>
           {/* The cable down to the device, current running through it */}
-          <path d="M22 30 V50" fill="none" strokeWidth="5" strokeLinecap="round" className="stroke-zinc-600 dark:stroke-zinc-400" />
+          <path
+            d="M22 30 V50"
+            fill="none"
+            strokeWidth="5"
+            strokeLinecap="round"
+            className="stroke-zinc-600 dark:stroke-zinc-400"
+          />
           <path
             d="M22 30 V50"
             fill="none"
@@ -73,7 +90,14 @@ const Socket = ({ on }: { on: boolean }) => {
           />
           {/* The plug: its body with the grip */}
           <circle cx="22" cy="22" r="11.5" className="fill-zinc-700 dark:fill-zinc-500" />
-          <circle cx="22" cy="22" r="8" fill="none" strokeWidth="1.5" className="stroke-zinc-500 dark:stroke-zinc-300" />
+          <circle
+            cx="22"
+            cy="22"
+            r="8"
+            fill="none"
+            strokeWidth="1.5"
+            className="stroke-zinc-500 dark:stroke-zinc-300"
+          />
           <rect x="16" y="20.8" width="12" height="2.4" rx="1.2" className="fill-zinc-500 dark:fill-zinc-300" />
         </g>
       ) : (
@@ -145,7 +169,9 @@ export const SwitchControl = ({ channel }: ControlProps) => {
             <span className="line-clamp-2 text-[15px] leading-snug font-medium [overflow-wrap:anywhere]" title={name}>
               {name}
             </span>
-            <span className={cn('text-[13px]', on ? 'text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground')}>
+            <span
+              className={cn('text-[13px]', on ? 'text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground')}
+            >
               {external ? m.AT_DEVICE({ state }) : state}
             </span>
           </span>

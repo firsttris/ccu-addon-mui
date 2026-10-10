@@ -19,9 +19,12 @@ export const LevelBar = ({ label, value, onChange, color = WARM }: LevelBarProps
   const bar = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<number | null>(null);
   const keyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (keyTimer.current) clearTimeout(keyTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (keyTimer.current) clearTimeout(keyTimer.current);
+    },
+    [],
+  );
   const shown = drag ?? value;
 
   const at = (clientX: number) => {
@@ -54,7 +57,12 @@ export const LevelBar = ({ label, value, onChange, color = WARM }: LevelBarProps
       onPointerCancel={() => setDrag(null)}
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => {
-        const delta = event.key === 'ArrowRight' || event.key === 'ArrowUp' ? STEP : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -STEP : 0;
+        const delta =
+          event.key === 'ArrowRight' || event.key === 'ArrowUp'
+            ? STEP
+            : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+              ? -STEP
+              : 0;
         if (!delta) return;
         event.preventDefault();
         const next = Math.max(0, Math.min(100, shown + delta));

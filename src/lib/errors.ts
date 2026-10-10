@@ -28,4 +28,5 @@ export const errorText = (error: unknown, failed: Text, own: Record<string, Text
 
 // Logging in or entering the password again: a known code, else wrong
 // credentials
-export const loginErrorText = (code: string | null | undefined) => (passwordErrors[code ?? ''] ?? m.INVALID_CREDENTIALS)();
+export const loginErrorText = (code: string | null | undefined) =>
+  (passwordErrors[code ?? ''] ?? m.INVALID_CREDENTIALS)();

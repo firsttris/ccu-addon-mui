@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { isDefaultName } from './VirtualKeys';
 
-const key = (name: string, address = 'BidCoS-RF:2') => ({ id: 1, address, interfaceName: 'BidCos-RF', name, programs: 0 });
+const key = (name: string, address = 'BidCoS-RF:2') => ({
+  id: 1,
+  address,
+  interfaceName: 'BidCos-RF',
+  name,
+  programs: 0,
+});
 
 describe('VirtualKeys', () => {
   it('tells the names the CCU gave', () => {

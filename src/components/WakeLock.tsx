@@ -6,7 +6,8 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 // (a wall tablet usually is) it starts on, in a browser tab off.
 export const wakeLockAvailable = () => typeof navigator !== 'undefined' && 'wakeLock' in navigator;
 
-const installed = () => typeof window !== 'undefined' && window.matchMedia?.('(display-mode: standalone)').matches === true;
+const installed = () =>
+  typeof window !== 'undefined' && window.matchMedia?.('(display-mode: standalone)').matches === true;
 
 export const useWakeLockSetting = () => useLocalStorage<boolean>('keep-screen-on', installed());
 

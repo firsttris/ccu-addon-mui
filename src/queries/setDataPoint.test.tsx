@@ -14,7 +14,14 @@ vi.mock('../hooks/useWebsocket', async (importOriginal) => ({
 const { useSetDataPoint } = await import('./index');
 const { RequestError } = await import('../hooks/useWebsocket');
 
-const light = { id: 1, name: 'Licht', address: 'A:1', interfaceName: 'HmIP-RF', type: 'SWITCH_VIRTUAL_RECEIVER', datapoints: { STATE: false, LEVEL: 0.2 } } as Channel;
+const light = {
+  id: 1,
+  name: 'Licht',
+  address: 'A:1',
+  interfaceName: 'HmIP-RF',
+  type: 'SWITCH_VIRTUAL_RECEIVER',
+  datapoints: { STATE: false, LEVEL: 0.2 },
+} as Channel;
 
 const setup = () => {
   const queryClient = new QueryClient();

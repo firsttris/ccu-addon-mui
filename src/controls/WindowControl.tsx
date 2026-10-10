@@ -49,7 +49,9 @@ const WindowPicture = ({ state, handle }: { state: WindowState; handle: boolean 
       className="relative h-[84px] w-[66px] shrink-0 rounded-[6px] border-[3px] border-zinc-400 bg-[linear-gradient(180deg,#bfe3fb,#86c3ee)] [perspective:260px] dark:border-zinc-600 dark:bg-[linear-gradient(180deg,#2a4a6b,#142a40)]"
       style={
         effects.on && (open || tilted)
-          ? { boxShadow: `0 0 ${20 * effects.k}px -2px rgba(${open ? '125,211,252' : '251,191,36'},${a(open ? 0.5 : 0.35)})` }
+          ? {
+              boxShadow: `0 0 ${20 * effects.k}px -2px rgba(${open ? '125,211,252' : '251,191,36'},${a(open ? 0.5 : 0.35)})`,
+            }
           : undefined
       }
     >

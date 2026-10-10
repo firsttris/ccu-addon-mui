@@ -15,7 +15,14 @@ import { FavoriteEditor } from './FavoriteEditor';
 import { DialogButton } from '../components/ConfirmDialog';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import { m } from '../paraglide/messages';
 import { rememberView } from '../lib/startPage';
 import { errorText } from '../lib/errors';

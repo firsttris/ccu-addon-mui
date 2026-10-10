@@ -71,7 +71,8 @@ const isSpecial = (level: number) => level > 1;
 const levelText = (kind: WeekProgramKind, level: number) => {
   if (isSpecial(level)) return level < 1.008 ? m.WP_OLD_LEVEL() : m.WP_UNCHANGED();
   if (kind === 'switch') return level > 0 ? m.ON() : m.OFF();
-  if (kind === 'blind') return level === 0 ? m.BLIND_CLOSED() : m.BLIND_PERCENT_OPEN({ percent: Math.round(level * 100) });
+  if (kind === 'blind')
+    return level === 0 ? m.BLIND_CLOSED() : m.BLIND_PERCENT_OPEN({ percent: Math.round(level * 100) });
   return level === 0 ? m.OFF() : m.DIMMED_TO({ percent: Math.round(level * 100) });
 };
 
@@ -110,7 +111,14 @@ const EntryDialog = ({
 }) => {
   const [draft, setDraft] = useState(entry);
   const set = (patch: Partial<WeekProgramEntry>) => setDraft((d) => ({ ...d, ...patch }));
-  const mode = draft.condition === 1 ? (draft.astroType === 0 ? 'sunrise' : 'sunset') : draft.condition === 0 ? 'fixed' : 'combined';
+  const mode =
+    draft.condition === 1
+      ? draft.astroType === 0
+        ? 'sunrise'
+        : 'sunset'
+      : draft.condition === 0
+        ? 'fixed'
+        : 'combined';
   const minutes = useMemo(() => {
     const steps = Array.from({ length: 12 }, (_, i) => i * 5);
     return steps.includes(draft.minute) ? steps : [...steps, draft.minute].sort((a, b) => a - b);
@@ -152,7 +160,13 @@ const EntryDialog = ({
                 [WORKDAYS, m.WORKDAYS()],
                 [WEEKEND, m.WEEKEND()],
               ].map(([mask, label]) => (
-                <Button key={label} type="button" size="sm" variant="outline" onClick={() => set({ weekdays: mask as number })}>
+                <Button
+                  key={label}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => set({ weekdays: mask as number })}
+                >
                   {label}
                 </Button>
               ))}
@@ -175,7 +189,10 @@ const EntryDialog = ({
                   role="radio"
                   aria-checked={mode === key}
                   onClick={() => set(patch)}
-                  className={cn(segment, mode === key ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+                  className={cn(
+                    segment,
+                    mode === key ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground',
+                  )}
                 >
                   {label}
                 </button>
@@ -184,7 +201,12 @@ const EntryDialog = ({
             {mode === 'combined' && <p className="text-xs text-muted-foreground">{m.WP_COMBINED_HINT()}</p>}
             {(mode === 'fixed' || mode === 'combined') && (
               <div className="flex items-center gap-2">
-                <NativeSelect aria-label={m.HOUR()} value={draft.hour} onChange={(e) => set({ hour: Number(e.target.value) })} className="w-20">
+                <NativeSelect
+                  aria-label={m.HOUR()}
+                  value={draft.hour}
+                  onChange={(e) => set({ hour: Number(e.target.value) })}
+                  className="w-20"
+                >
                   {Array.from({ length: 24 }, (_, h) => (
                     <option key={h} value={h}>
                       {String(h).padStart(2, '0')}
@@ -192,7 +214,12 @@ const EntryDialog = ({
                   ))}
                 </NativeSelect>
                 <span className="text-lg font-semibold">:</span>
-                <NativeSelect aria-label={m.MINUTE()} value={draft.minute} onChange={(e) => set({ minute: Number(e.target.value) })} className="w-20">
+                <NativeSelect
+                  aria-label={m.MINUTE()}
+                  value={draft.minute}
+                  onChange={(e) => set({ minute: Number(e.target.value) })}
+                  className="w-20"
+                >
                   {minutes.map((min) => (
                     <option key={min} value={min}>
                       {String(min).padStart(2, '0')}
@@ -204,7 +231,11 @@ const EntryDialog = ({
             {mode !== 'fixed' && (
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 {m.OFFSET()}
-                <NativeSelect value={draft.astroOffset} onChange={(e) => set({ astroOffset: Number(e.target.value) })} className="w-32">
+                <NativeSelect
+                  value={draft.astroOffset}
+                  onChange={(e) => set({ astroOffset: Number(e.target.value) })}
+                  className="w-32"
+                >
                   {Array.from({ length: 17 }, (_, i) => (i - 8) * 15)
                     .concat(draft.astroOffset % 15 ? [draft.astroOffset] : [])
                     .sort((a, b) => a - b)
@@ -235,7 +266,10 @@ const EntryDialog = ({
                     role="radio"
                     aria-checked={draft.level === level}
                     onClick={() => set({ level })}
-                    className={cn(segment, draft.level === level ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground')}
+                    className={cn(
+                      segment,
+                      draft.level === level ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground',
+                    )}
                   >
                     {label}
                   </button>
@@ -243,7 +277,9 @@ const EntryDialog = ({
               </div>
             ) : (
               <>
-                {isSpecial(draft.level) && <p className="text-sm text-muted-foreground">{levelText(kind, draft.level)}</p>}
+                {isSpecial(draft.level) && (
+                  <p className="text-sm text-muted-foreground">{levelText(kind, draft.level)}</p>
+                )}
                 <LevelBar
                   label={kind === 'blind' ? m.BLIND_POSITION({ name: '' }).trim() : m.BRIGHTNESS()}
                   value={isSpecial(draft.level) ? 100 : Math.round(draft.level * 100)}
@@ -280,7 +316,12 @@ const EntryDialog = ({
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-4">
-            <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={onDelete}>
+            <Button
+              type="button"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={onDelete}
+            >
               <TrashIcon />
               {m.DELETE()}
             </Button>
@@ -303,7 +344,15 @@ const EntryDialog = ({
 
 // The switching times of an HmIP actuator's own week program, as cards;
 // changes are collected and saved together after a confirmation.
-export const WeekProgramSheet = ({ open, onOpenChange, interfaceName, address, name, kind, targets }: WeekProgramSheetProps) => {
+export const WeekProgramSheet = ({
+  open,
+  onOpenChange,
+  interfaceName,
+  address,
+  name,
+  kind,
+  targets,
+}: WeekProgramSheetProps) => {
   const { userLevel, elevated } = useWebSocketContext();
   const { showToast } = useToast();
   const canEdit = userLevel === 'admin' && elevated;
@@ -320,7 +369,10 @@ export const WeekProgramSheet = ({ open, onOpenChange, interfaceName, address, n
     if (open) setDrafts({});
   }, [open]);
 
-  const stored = useMemo(() => (description && values ? parseWeekProgram(description, values as Values) : []), [description, values]);
+  const stored = useMemo(
+    () => (description && values ? parseWeekProgram(description, values as Values) : []),
+    [description, values],
+  );
   const entries = useMemo(() => {
     const byNumber = new Map(stored.map((e) => [e.number, e]));
     for (const [number, entry] of Object.entries(drafts)) {
@@ -414,7 +466,9 @@ export const WeekProgramSheet = ({ open, onOpenChange, interfaceName, address, n
             </div>
           )}
           {!isPending && description && entries.length === 0 && (
-            <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">{m.WP_EMPTY()}</p>
+            <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+              {m.WP_EMPTY()}
+            </p>
           )}
           <ul className="flex flex-col gap-2" aria-label={m.SCHEDULE()}>
             {entries.map((entry) => (
@@ -441,7 +495,9 @@ export const WeekProgramSheet = ({ open, onOpenChange, interfaceName, address, n
                   <span
                     className={cn(
                       'shrink-0 rounded-full px-2.5 py-1 text-xs font-medium',
-                      entry.level > 0 ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300' : 'bg-muted text-muted-foreground',
+                      entry.level > 0
+                        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                        : 'bg-muted text-muted-foreground',
                     )}
                   >
                     {levelText(kind, entry.level)}

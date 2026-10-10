@@ -1,11 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  DatapointValue,
-  Operation,
-  ParameterDescription,
-  ParameterFlag,
-  ParamsetDescription,
-} from '../../types/types';
+import { DatapointValue, Operation, ParameterDescription, ParameterFlag, ParamsetDescription } from '../../types/types';
 import { defaultLang, TranslationKey, useTranslations } from '../../i18n/utils';
 import { m } from '../../paraglide/messages';
 import { Switch } from '../../components/ui/switch';
@@ -24,7 +18,7 @@ const isPercent = (p: ParameterDescription) => p.unit === '100%';
 
 const toDisplay = (p: ParameterDescription, value: number) => (isPercent(p) ? value * 100 : value);
 const fromDisplay = (p: ParameterDescription, value: number) => (isPercent(p) ? value / 100 : value);
-const unitOf = (p: ParameterDescription) => (isPercent(p) ? '%' : p.unit ?? '');
+const unitOf = (p: ParameterDescription) => (isPercent(p) ? '%' : (p.unit ?? ''));
 
 // Parameters worth showing: visible, not internal, and either readable or
 // an action. Write-only modifiers (ON_TIME, RAMP_TIME) are left out.
@@ -41,10 +35,7 @@ export const shownParameters = (description: ParamsetDescription) =>
     .sort(([a, pa], [b, pb]) => pa.tabOrder - pb.tabOrder || a.localeCompare(b));
 
 // A value as text, e.g. for the list of changes before saving
-export const formatParameterValue = (
-  parameter: ParameterDescription,
-  value: DatapointValue | undefined,
-): string => {
+export const formatParameterValue = (parameter: ParameterDescription, value: DatapointValue | undefined): string => {
   if (value === null || value === undefined || value === '') {
     return '–';
   }
@@ -57,7 +48,7 @@ export const formatParameterValue = (
     case 'ACTION':
       return value ? m.YES() : m.NO();
     case 'ENUM':
-      return typeof value === 'number' ? parameter.valueList?.[value] ?? String(value) : String(value);
+      return typeof value === 'number' ? (parameter.valueList?.[value] ?? String(value)) : String(value);
     case 'FLOAT':
     case 'INTEGER':
       return typeof value === 'number'

@@ -25,7 +25,17 @@ describe('DeviceHistory', () => {
 
   it('draws the series across the box', () => {
     expect(linePath([])).toBe('');
-    expect(linePath([{ t: 0, v: 1 }, { t: 10, v: 3 }])).toBe('M4.0,92.0 L316.0,4.0');
-    expect(linePath([{ t: 0, v: 2 }, { t: 10, v: 2 }])).toBe('M4.0,48.0 L316.0,48.0');
+    expect(
+      linePath([
+        { t: 0, v: 1 },
+        { t: 10, v: 3 },
+      ]),
+    ).toBe('M4.0,92.0 L316.0,4.0');
+    expect(
+      linePath([
+        { t: 0, v: 2 },
+        { t: 10, v: 2 },
+      ]),
+    ).toBe('M4.0,48.0 L316.0,48.0');
   });
 });

@@ -50,7 +50,10 @@ const Stat = ({
   const effects = useEffects();
   return (
     <div
-      className={cn('tile-edge relative flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border bg-card p-4', effects.on && 'fx-stat-in')}
+      className={cn(
+        'tile-edge relative flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border bg-card p-4',
+        effects.on && 'fx-stat-in',
+      )}
       style={{ animationDelay: `${index * 70}ms` }}
     >
       {picture}
@@ -62,10 +65,21 @@ const Stat = ({
   );
 };
 
-const PictureBox = ({ background, className, children }: { background?: string; className?: string; children: ReactNode }) => (
+const PictureBox = ({
+  background,
+  className,
+  children,
+}: {
+  background?: string;
+  className?: string;
+  children: ReactNode;
+}) => (
   <div
     aria-hidden
-    className={cn('relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl transition-[background] duration-700', className)}
+    className={cn(
+      'relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl transition-[background] duration-700',
+      className,
+    )}
     style={background ? { background } : undefined}
   >
     {children}
@@ -110,16 +124,28 @@ export const TemperatureStat = ({ index, average }: { index: number; average: nu
               className="transition-[y,height] duration-700 ease-out"
             />
             <circle cx="12" cy="17.5" r="3.2" fill="#ef4444" />
-            {effects.on && <circle cx="12" cy="17.5" r="3.2" fill="#ef4444" className="fx-breathe" style={{ filter: 'blur(2.5px)' }} />}
+            {effects.on && (
+              <circle
+                cx="12"
+                cy="17.5"
+                r="3.2"
+                fill="#ef4444"
+                className="fx-breathe"
+                style={{ filter: 'blur(2.5px)' }}
+              />
+            )}
             {/* The glass */}
-            <path d="M14 14.76V3.5a2 2 0 0 0-4 0v11.26a4.5 4.5 0 1 0 4 0Z" stroke="currentColor" strokeWidth="1.8" className="text-foreground/70" />
+            <path
+              d="M14 14.76V3.5a2 2 0 0 0-4 0v11.26a4.5 4.5 0 1 0 4 0Z"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              className="text-foreground/70"
+            />
           </svg>
         </PictureBox>
       }
     >
-      <div className="truncate text-xl font-semibold tabular-nums">
-        {formatNumber(shown, 1, 1)} °C
-      </div>
+      <div className="truncate text-xl font-semibold tabular-nums">{formatNumber(shown, 1, 1)} °C</div>
     </Stat>
   );
 };
@@ -142,7 +168,9 @@ export const LightsStat = ({ index, on, total }: { index: number; on: number; to
       index={index}
       label={m.LIGHTS_ON()}
       picture={
-        <PictureBox className={cn('text-amber-600 dark:text-amber-300', on > 0 ? 'bg-amber-400/20' : 'bg-amber-500/10')}>
+        <PictureBox
+          className={cn('text-amber-600 dark:text-amber-300', on > 0 ? 'bg-amber-400/20' : 'bg-amber-500/10')}
+        >
           {effects.on && on > 0 && (
             <div
               className="absolute inset-0 transition-opacity duration-700"
@@ -154,7 +182,10 @@ export const LightsStat = ({ index, on, total }: { index: number; on: number; to
           )}
           <span key={flicker} className={cn('relative flex', effects.on && flicker > 0 && 'fx-flicker')}>
             <LightbulbIcon
-              className={cn('size-5 transition-[fill] duration-500', on > 0 ? 'fill-amber-300/70 dark:fill-amber-300/40' : 'fill-transparent')}
+              className={cn(
+                'size-5 transition-[fill] duration-500',
+                on > 0 ? 'fill-amber-300/70 dark:fill-amber-300/40' : 'fill-transparent',
+              )}
             />
           </span>
         </PictureBox>
@@ -179,7 +210,10 @@ export const LightsStat = ({ index, on, total }: { index: number; on: number; to
         </div>
       ) : (
         <div aria-hidden className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
-          <div className="h-full rounded-full bg-amber-400 transition-[width] duration-700 ease-out" style={{ width: `${share * 100}%` }} />
+          <div
+            className="h-full rounded-full bg-amber-400 transition-[width] duration-700 ease-out"
+            style={{ width: `${share * 100}%` }}
+          />
         </div>
       )}
     </Stat>
@@ -209,13 +243,19 @@ const Running = ({ text, className }: { text: string; className?: string }) => {
     <div
       ref={box}
       className={cn('overflow-hidden whitespace-nowrap', !moving && 'truncate', className)}
-      style={moving ? { maskImage: 'linear-gradient(90deg, transparent, black 6px, black calc(100% - 10px), transparent)' } : undefined}
+      style={
+        moving
+          ? { maskImage: 'linear-gradient(90deg, transparent, black 6px, black calc(100% - 10px), transparent)' }
+          : undefined
+      }
       title={text}
     >
       <span
         ref={inner}
         className={cn('inline-block', moving && 'fx-marquee')}
-        style={moving ? ({ '--shift': `-${shift}px`, animationDuration: `${4 + shift / 25}s` } as CSSProperties) : undefined}
+        style={
+          moving ? ({ '--shift': `-${shift}px`, animationDuration: `${4 + shift / 25}s` } as CSSProperties) : undefined
+        }
       >
         {text}
       </span>
@@ -235,7 +275,9 @@ export const WindowsStat = ({ index, open }: { index: number; open: string[] }) 
         <PictureBox
           className={cn(
             '[perspective:60px]',
-            anyOpen ? 'bg-blue-500/15 text-blue-600 dark:text-blue-300' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
+            anyOpen
+              ? 'bg-blue-500/15 text-blue-600 dark:text-blue-300'
+              : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
           )}
         >
           {/* Frame */}
@@ -251,7 +293,14 @@ export const WindowsStat = ({ index, open }: { index: number; open: string[] }) 
             stroke="currentColor"
             strokeWidth="1.6"
           >
-            <rect x="7" y="6.5" width="10" height="11" rx="1" className={cn(anyOpen ? 'fill-blue-400/25' : 'fill-emerald-400/15')} />
+            <rect
+              x="7"
+              y="6.5"
+              width="10"
+              height="11"
+              rx="1"
+              className={cn(anyOpen ? 'fill-blue-400/25' : 'fill-emerald-400/15')}
+            />
             <path d="M14.5 12h1.5" strokeLinecap="round" />
           </svg>
           {/* Air coming in */}
@@ -264,7 +313,9 @@ export const WindowsStat = ({ index, open }: { index: number; open: string[] }) 
                 style={{ top, animationDelay: `${i * 1.1}s` }}
               />
             ))}
-          {anyOpen && effects.on && <span className="fx-wave absolute inset-0 rounded-xl border-2 border-blue-500/30" />}
+          {anyOpen && effects.on && (
+            <span className="fx-wave absolute inset-0 rounded-xl border-2 border-blue-500/30" />
+          )}
         </PictureBox>
       }
     >

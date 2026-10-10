@@ -14,7 +14,13 @@ export const PushSettings = ({ onOpenRules }: { onOpenRules?: () => void }) => {
   const { request } = useWebSocketActions();
   const { showToast } = useToast();
   const support = pushSupport();
-  const [state, setState] = useState<{ endpoint?: string; alarms: boolean; service: boolean; rules: boolean; key?: string } | null>(null);
+  const [state, setState] = useState<{
+    endpoint?: string;
+    alarms: boolean;
+    service: boolean;
+    rules: boolean;
+    key?: string;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -77,8 +83,18 @@ export const PushSettings = ({ onOpenRules }: { onOpenRules?: () => void }) => {
   return (
     <div className="flex flex-col gap-1 px-3 pt-1">
       {[
-        { id: 'push-alarms', label: m.PUSH_ALARMS(), checked: !!state?.alarms, set: (v: boolean) => update({ alarms: v }) },
-        { id: 'push-service', label: m.PUSH_SERVICE(), checked: !!state?.service, set: (v: boolean) => update({ service: v }) },
+        {
+          id: 'push-alarms',
+          label: m.PUSH_ALARMS(),
+          checked: !!state?.alarms,
+          set: (v: boolean) => update({ alarms: v }),
+        },
+        {
+          id: 'push-service',
+          label: m.PUSH_SERVICE(),
+          checked: !!state?.service,
+          set: (v: boolean) => update({ service: v }),
+        },
         { id: 'push-rules', label: m.PUSH_RULES(), checked: !!state?.rules, set: (v: boolean) => update({ rules: v }) },
       ].map((row) => (
         <div key={row.id} className="flex h-11 items-center justify-between">
@@ -90,7 +106,11 @@ export const PushSettings = ({ onOpenRules }: { onOpenRules?: () => void }) => {
       ))}
       <span className="text-xs text-muted-foreground">{hint}</span>
       {onOpenRules && (
-        <button type="button" className="self-start text-xs text-primary underline-offset-2 hover:underline" onClick={onOpenRules}>
+        <button
+          type="button"
+          className="self-start text-xs text-primary underline-offset-2 hover:underline"
+          onClick={onOpenRules}
+        >
           {m.PUSH_RULES_OPEN()}
         </button>
       )}

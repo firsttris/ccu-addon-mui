@@ -61,7 +61,13 @@ export const AddonSelfUpdate = ({ current }: { current: string }) => {
           {m.CCUFW_GITHUB()}
         </a>
       )}
-      {installing && <UpdateWizard version={result.latest} current={result.current || current} onClose={() => setInstalling(false)} />}
+      {installing && (
+        <UpdateWizard
+          version={result.latest}
+          current={result.current || current}
+          onClose={() => setInstalling(false)}
+        />
+      )}
     </>
   );
 };

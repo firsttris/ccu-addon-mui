@@ -110,7 +110,10 @@ const Key = ({ channel, label }: { channel: Channel; label: string }) => {
         <span
           key={effects.on ? flash : 0}
           aria-hidden
-          className={cn('pointer-events-none absolute inset-0 rounded-xl bg-sky-400/25', effects.on ? 'fx-flash' : 'opacity-0')}
+          className={cn(
+            'pointer-events-none absolute inset-0 rounded-xl bg-sky-400/25',
+            effects.on ? 'fx-flash' : 'opacity-0',
+          )}
         />
       )}
       {/* Fills while held, towards the long press */}
@@ -119,7 +122,10 @@ const Key = ({ channel, label }: { channel: Channel; label: string }) => {
         className="pointer-events-none absolute inset-x-0 bottom-0 bg-sky-500/20"
         style={{ height: `${held * 100}%` }}
       />
-      <span className="mb-1 h-1 w-6 rounded-full bg-muted-foreground/30 transition-colors group-active:bg-sky-500" aria-hidden />
+      <span
+        className="mb-1 h-1 w-6 rounded-full bg-muted-foreground/30 transition-colors group-active:bg-sky-500"
+        aria-hidden
+      />
       <span className="relative line-clamp-2 text-[13px] leading-tight font-medium">{label}</span>
     </button>
   );

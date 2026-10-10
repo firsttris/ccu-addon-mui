@@ -32,7 +32,10 @@ const DeleteGroup = ({ group, onClose }: { group: HeatingGroup; onClose: () => v
       async (pw) => {
         setBusy(true);
         try {
-          await request({ type: 'deleteHeatingGroup', id: group.id, ...(pw !== undefined ? { password: pw } : {}) }, { queue: false, timeoutMs: 30000 });
+          await request(
+            { type: 'deleteHeatingGroup', id: group.id, ...(pw !== undefined ? { password: pw } : {}) },
+            { queue: false, timeoutMs: 30000 },
+          );
           showToast(m.HG_DELETED(), 'info');
           await queryClient.invalidateQueries({ queryKey: ['heatingGroups'] });
           onClose();
@@ -43,7 +46,14 @@ const DeleteGroup = ({ group, onClose }: { group: HeatingGroup; onClose: () => v
       (error) => showToast(errorText(error, m.CHANGE_FAILED)),
     );
   return (
-    <ConfirmDialog title={m.HG_DELETE()} confirmLabel={m.DELETE()} destructive busy={busy || password.blocked} onConfirm={remove} onCancel={onClose}>
+    <ConfirmDialog
+      title={m.HG_DELETE()}
+      confirmLabel={m.DELETE()}
+      destructive
+      busy={busy || password.blocked}
+      onConfirm={remove}
+      onCancel={onClose}
+    >
       <div className="flex flex-col gap-4">
         <p>{m.HG_DELETE_QUESTION({ name: group.name })}</p>
         {password.field}
@@ -98,10 +108,24 @@ export const HeatingGroups = () => {
                   {group.forbidSingleOperation && <Badge variant="outline">{m.HG_FORBID_SINGLE()}</Badge>}
                   {elevated && (
                     <span className="ml-auto flex gap-1">
-                      <Button type="button" variant="ghost" size="icon" className="size-8" aria-label={m.HG_EDIT({ name: group.name })} onClick={() => setEditing(group)}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        aria-label={m.HG_EDIT({ name: group.name })}
+                        onClick={() => setEditing(group)}
+                      >
                         <PencilIcon />
                       </Button>
-                      <Button type="button" variant="ghost" size="icon" className="size-8" aria-label={m.HG_DELETE()} onClick={() => setDeleting(group)}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        aria-label={m.HG_DELETE()}
+                        onClick={() => setDeleting(group)}
+                      >
                         <TrashIcon />
                       </Button>
                     </span>
@@ -150,10 +174,14 @@ export const HeatingGroups = () => {
               </li>
             );
           })}
-          {!isPending && groups?.length === 0 && <li className="px-3 py-6 text-center text-sm text-muted-foreground">{m.HG_NONE()}</li>}
+          {!isPending && groups?.length === 0 && (
+            <li className="px-3 py-6 text-center text-sm text-muted-foreground">{m.HG_NONE()}</li>
+          )}
         </ul>
       </Panel>
-      {editing && <HeatingGroupEditor group={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />}
+      {editing && (
+        <HeatingGroupEditor group={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />
+      )}
       {deleting && <DeleteGroup group={deleting} onClose={() => setDeleting(null)} />}
     </>
   );

@@ -34,7 +34,21 @@ const parseNumber = (text: string) => {
   return text.trim() !== '' && Number.isFinite(value) && value >= 0 ? value : null;
 };
 
-const ToggleRow = ({ id, label, hint, checked, disabled, onChange }: { id: string; label: string; hint: string; checked: boolean; disabled: boolean; onChange: (on: boolean) => void }) => (
+const ToggleRow = ({
+  id,
+  label,
+  hint,
+  checked,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  checked: boolean;
+  disabled: boolean;
+  onChange: (on: boolean) => void;
+}) => (
   <div className="flex items-start justify-between gap-4">
     <label htmlFor={id} className="flex flex-col gap-0.5 text-sm">
       {label}
@@ -73,7 +87,12 @@ export const GeneralSettings = () => {
     const p = data.energyPrice;
     setCurrency(p.currency);
     const text = (v: number) => (v ? numberFormat.format(v) : '');
-    setPrices({ electricity: text(p.electricity), gas: text(p.gas), gasHeatingValue: text(p.gasHeatingValue), gasConditionNumber: text(p.gasConditionNumber) });
+    setPrices({
+      electricity: text(p.electricity),
+      gas: text(p.gas),
+      gasHeatingValue: text(p.gasHeatingValue),
+      gasConditionNumber: text(p.gasConditionNumber),
+    });
     setLed(data.infoLed);
     setHideSticky(data.hideStickyUnreach);
     setBeta(data.betaFirmware);
@@ -102,7 +121,10 @@ export const GeneralSettings = () => {
     setBusy(true);
     try {
       const energyPrice = { currency, ...(parsed as Omit<EnergyPrice, 'currency'>) };
-      await request({ type: 'setGeneralSettings', energyPrice, infoLed: led, hideStickyUnreach: hideSticky, betaFirmware: beta }, { queue: false });
+      await request(
+        { type: 'setGeneralSettings', energyPrice, infoLed: led, hideStickyUnreach: hideSticky, betaFirmware: beta },
+        { queue: false },
+      );
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['generalSettings'] }),
         queryClient.invalidateQueries({ queryKey: ['diagrams'] }),
@@ -146,7 +168,13 @@ export const GeneralSettings = () => {
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">{m.GEN_CURRENCY()}</span>
-          <NativeSelect className="w-24" aria-label={m.GEN_CURRENCY()} disabled={disabled} value={currency} onChange={(e) => setCurrency(e.target.value)}>
+          <NativeSelect
+            className="w-24"
+            aria-label={m.GEN_CURRENCY()}
+            disabled={disabled}
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+          >
             {data.currencies.map((c) => (
               <option key={c} value={c}>
                 {c}
@@ -163,10 +191,38 @@ export const GeneralSettings = () => {
 
       <h3 className="mt-2 text-sm font-medium">{m.GEN_DISPLAY()}</h3>
       <div className="flex flex-col gap-3">
-        <ToggleRow id="led-service" label={m.GEN_LED_SERVICE()} hint={m.GEN_LED_HINT()} checked={led.service} disabled={disabled} onChange={(on) => setLed({ ...led, service: on })} />
-        <ToggleRow id="led-alarm" label={m.GEN_LED_ALARM()} hint={m.GEN_LED_HINT()} checked={led.alarm} disabled={disabled} onChange={(on) => setLed({ ...led, alarm: on })} />
-        <ToggleRow id="hide-sticky" label={m.GEN_HIDE_STICKY()} hint={m.GEN_HIDE_STICKY_HINT()} checked={hideSticky} disabled={disabled} onChange={setHideSticky} />
-        <ToggleRow id="beta-firmware" label={m.GEN_BETA()} hint={m.GEN_BETA_HINT()} checked={beta} disabled={disabled} onChange={setBeta} />
+        <ToggleRow
+          id="led-service"
+          label={m.GEN_LED_SERVICE()}
+          hint={m.GEN_LED_HINT()}
+          checked={led.service}
+          disabled={disabled}
+          onChange={(on) => setLed({ ...led, service: on })}
+        />
+        <ToggleRow
+          id="led-alarm"
+          label={m.GEN_LED_ALARM()}
+          hint={m.GEN_LED_HINT()}
+          checked={led.alarm}
+          disabled={disabled}
+          onChange={(on) => setLed({ ...led, alarm: on })}
+        />
+        <ToggleRow
+          id="hide-sticky"
+          label={m.GEN_HIDE_STICKY()}
+          hint={m.GEN_HIDE_STICKY_HINT()}
+          checked={hideSticky}
+          disabled={disabled}
+          onChange={setHideSticky}
+        />
+        <ToggleRow
+          id="beta-firmware"
+          label={m.GEN_BETA()}
+          hint={m.GEN_BETA_HINT()}
+          checked={beta}
+          disabled={disabled}
+          onChange={setBeta}
+        />
       </div>
 
       <div className="flex justify-end">
@@ -188,7 +244,8 @@ export const GeneralSettings = () => {
           <div className="h-full rounded-full bg-primary" style={{ width: `${usedShare}%` }} />
         </div>
         <span className="text-xs text-muted-foreground tabular-nums">
-          {m.GEN_STORAGE_FREE({ free: formatBytes(storage.free), total: formatBytes(storage.total) })} · {m.GEN_STORAGE_DIAGRAMS({ used: formatBytes(storage.used) })}
+          {m.GEN_STORAGE_FREE({ free: formatBytes(storage.free), total: formatBytes(storage.total) })} ·{' '}
+          {m.GEN_STORAGE_DIAGRAMS({ used: formatBytes(storage.used) })}
         </span>
       </div>
     </Panel>

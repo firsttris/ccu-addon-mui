@@ -33,8 +33,13 @@ export const ScriptResult = ({ result }: { result: Result | null }) => {
   if (!result) return null;
   if ('syntaxError' in result || 'failed' in result) {
     return (
-      <pre role="alert" className="max-h-60 overflow-auto rounded-md bg-destructive/10 p-2 font-mono text-xs whitespace-pre-wrap text-destructive">
-        {'syntaxError' in result ? `${m.SCRIPT_SYNTAX_ERROR()}: ${result.syntaxError}` : `${m.CHANGE_FAILED()}: ${result.failed}`}
+      <pre
+        role="alert"
+        className="max-h-60 overflow-auto rounded-md bg-destructive/10 p-2 font-mono text-xs whitespace-pre-wrap text-destructive"
+      >
+        {'syntaxError' in result
+          ? `${m.SCRIPT_SYNTAX_ERROR()}: ${result.syntaxError}`
+          : `${m.CHANGE_FAILED()}: ${result.failed}`}
       </pre>
     );
   }
@@ -56,7 +61,12 @@ export const ScriptTestButton = ({ script }: { script: string }) => {
   return (
     <div className="flex w-full flex-col gap-2">
       <div>
-        <DialogButton type="button" className="h-8" disabled={!elevated || busy || script.trim() === ''} onClick={() => run(script)}>
+        <DialogButton
+          type="button"
+          className="h-8"
+          disabled={!elevated || busy || script.trim() === ''}
+          onClick={() => run(script)}
+        >
           <PlayIcon />
           {m.SCRIPT_TEST()}
         </DialogButton>

@@ -20,7 +20,8 @@ export const MAX_SERIES = 12;
 export const SYSVAR = 'sysvar';
 
 // Datapoints that are no measured value
-const skipped = /^(PRESS_|INSTALL_TEST|ON_TIME|RAMP_TIME|INHIBIT|WORKING|PROCESS|SECTION|COMBINED_PARAMETER|OPERATING_VOLTAGE_STATUS|CONFIG_PENDING|UPDATE_PENDING|ERROR_CODE)/;
+const skipped =
+  /^(PRESS_|INSTALL_TEST|ON_TIME|RAMP_TIME|INHIBIT|WORKING|PROCESS|SECTION|COMBINED_PARAMETER|OPERATING_VOLTAGE_STATUS|CONFIG_PENDING|UPDATE_PENDING|ERROR_CODE)/;
 
 // The unit of a datapoint, guessed from its name
 export const guessUnit = (datapoint: string) => {
@@ -41,10 +42,15 @@ export const guessUnit = (datapoint: string) => {
 
 // Counters are shown as consumption per interval, switches and contacts as
 // a band of their states
-const isCounter = (datapoint: string) => /(ENERGY_COUNTER|GAS_VOLUME|RAIN_COUNTER|WATER_VOLUME|_COUNTER)$/.test(datapoint);
+const isCounter = (datapoint: string) =>
+  /(ENERGY_COUNTER|GAS_VOLUME|RAIN_COUNTER|WATER_VOLUME|_COUNTER)$/.test(datapoint);
 
 export const defaultsFor = (datapoint: string, value: unknown): Partial<DiagramSeries> =>
-  isCounter(datapoint) ? { chart: 'bar', aggregate: 'delta' } : typeof value === 'boolean' || datapoint === 'STATE' ? { chart: 'state' } : {};
+  isCounter(datapoint)
+    ? { chart: 'bar', aggregate: 'delta' }
+    : typeof value === 'boolean' || datapoint === 'STATE'
+      ? { chart: 'state' }
+      : {};
 
 export interface Candidate {
   series: DiagramSeries;
@@ -63,7 +69,12 @@ export const useCandidates = () => {
       for (const [datapoint, value] of Object.entries(channel.datapoints ?? {})) {
         if ((typeof value === 'number' || typeof value === 'boolean') && !skipped.test(datapoint)) {
           list.push({
-            series: { address: channel.address, datapoint, unit: guessUnit(datapoint), ...defaultsFor(datapoint, value) },
+            series: {
+              address: channel.address,
+              datapoint,
+              unit: guessUnit(datapoint),
+              ...defaultsFor(datapoint, value),
+            },
             name: `${channel.name} · ${datapointLabel(datapoint)}`,
             detail: `${channel.address} ${datapoint}`,
           });
@@ -112,11 +123,14 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
     { label: m.FAVORITES(), items: favorites },
   ].filter((g) => g.items.length > 0);
 
-  const nameOf = (s: DiagramSeries) => candidates.find((c) => seriesKey(c.series) === seriesKey(s))?.name ?? `${s.address} ${s.datapoint}`;
+  const nameOf = (s: DiagramSeries) =>
+    candidates.find((c) => seriesKey(c.series) === seriesKey(s))?.name ?? `${s.address} ${s.datapoint}`;
   const used = new Set(series.map(seriesKey));
   const needle = query.trim().toLowerCase();
   const matches = needle
-    ? candidates.filter((c) => !used.has(seriesKey(c.series)) && `${c.name} ${c.detail}`.toLowerCase().includes(needle)).slice(0, 30)
+    ? candidates
+        .filter((c) => !used.has(seriesKey(c.series)) && `${c.name} ${c.detail}`.toLowerCase().includes(needle))
+        .slice(0, 30)
     : [];
 
   const save = useMutation({
@@ -139,7 +153,8 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
   const valid = name.trim() !== '' && series.length > 0;
   const update = (index: number, change: Partial<DiagramSeries>) =>
     setSeries((list) => list.map((s, i) => (i === index ? { ...s, ...change } : s)));
-  const freeColor = () => palette.find((c) => !series.some((s) => s.color === c)) ?? palette[series.length % palette.length];
+  const freeColor = () =>
+    palette.find((c) => !series.some((s) => s.color === c)) ?? palette[series.length % palette.length];
 
   return (
     <ConfirmDialog
@@ -174,7 +189,12 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1.5 text-sm text-muted-foreground">{m.DIAG_PLACES()}</legend>
             {placeGroups.map((group) => (
-              <div key={group.label} className="flex flex-wrap items-center gap-1.5" role="group" aria-label={group.label}>
+              <div
+                key={group.label}
+                className="flex flex-wrap items-center gap-1.5"
+                role="group"
+                aria-label={group.label}
+              >
                 <span className="w-full text-xs text-muted-foreground">{group.label}</span>
                 {group.items.map((item) => {
                   const on = places.includes(item.id);
@@ -256,9 +276,15 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
                       onChange={(e) => update(i, { axis: e.target.value as DiagramSeries['axis'] })}
                       className="h-8 text-xs"
                     >
-                      <option value="">{m.DIAG_AXIS()}: {m.DIAG_AXIS_AUTO()}</option>
-                      <option value="left">{m.DIAG_AXIS()}: {m.DIAG_AXIS_LEFT()}</option>
-                      <option value="right">{m.DIAG_AXIS()}: {m.DIAG_AXIS_RIGHT()}</option>
+                      <option value="">
+                        {m.DIAG_AXIS()}: {m.DIAG_AXIS_AUTO()}
+                      </option>
+                      <option value="left">
+                        {m.DIAG_AXIS()}: {m.DIAG_AXIS_LEFT()}
+                      </option>
+                      <option value="right">
+                        {m.DIAG_AXIS()}: {m.DIAG_AXIS_RIGHT()}
+                      </option>
                     </NativeSelect>
                   </div>
                   <div className="grid grid-cols-[1fr_5.5rem] gap-2">
@@ -293,7 +319,10 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
                 onChange={(e) => setQuery(e.target.value)}
               />
               {matches.length > 0 && (
-                <ul className="flex max-h-56 flex-col overflow-y-auto rounded-lg border" aria-label={m.DIAG_ADD_SERIES()}>
+                <ul
+                  className="flex max-h-56 flex-col overflow-y-auto rounded-lg border"
+                  aria-label={m.DIAG_ADD_SERIES()}
+                >
                   {matches.map((c) => (
                     <li key={seriesKey(c.series)}>
                       <button

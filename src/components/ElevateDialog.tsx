@@ -5,7 +5,6 @@ import { useWebSocketActions } from '../hooks/useWebsocket';
 import { m } from '../paraglide/messages';
 import { errorCode, loginErrorText } from '../lib/errors';
 
-
 // Asks for the password again before settings may be changed
 export const ElevateDialog = ({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) => {
   const { elevate } = useWebSocketActions();
@@ -27,7 +26,13 @@ export const ElevateDialog = ({ onDone, onCancel }: { onDone: () => void; onCanc
   };
 
   return (
-    <ConfirmDialog title={m.ELEVATE()} confirmLabel={m.CONFIRM()} busy={busy || password === ''} onConfirm={submit} onCancel={onCancel}>
+    <ConfirmDialog
+      title={m.ELEVATE()}
+      confirmLabel={m.CONFIRM()}
+      busy={busy || password === ''}
+      onConfirm={submit}
+      onCancel={onCancel}
+    >
       <form
         onSubmit={(event) => {
           event.preventDefault();

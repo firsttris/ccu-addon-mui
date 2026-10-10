@@ -59,7 +59,19 @@ const readTexts = (lang) => {
   return texts;
 };
 
-const entities = { auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß', amp: '&', nbsp: ' ', quot: '"', deg: '°' };
+const entities = {
+  auml: 'ä',
+  ouml: 'ö',
+  uuml: 'ü',
+  Auml: 'Ä',
+  Ouml: 'Ö',
+  Uuml: 'Ü',
+  szlig: 'ß',
+  amp: '&',
+  nbsp: ' ',
+  quot: '"',
+  deg: '°',
+};
 const plain = (html) =>
   html
     .replace(/\\"/g, '"')
@@ -100,4 +112,6 @@ for (const [key, value] of Object.entries(table).sort(([a], [b]) => a.localeComp
 
 const out = 'src/controls/generic/parameterLabels.json';
 fs.writeFileSync(out, JSON.stringify(labels, null, 1) + '\n');
-console.log(`${Object.keys(labels.de).length} names (de), ${Object.keys(labels.en).length} (en), ${unresolved} without a text -> ${out}`);
+console.log(
+  `${Object.keys(labels.de).length} names (de), ${Object.keys(labels.en).length} (en), ${unresolved} without a text -> ${out}`,
+);

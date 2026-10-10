@@ -12,7 +12,11 @@ vi.mock('../queries', async (importOriginal) => ({
   useDevices: () => ({ data: undefined }),
 }));
 vi.mock('./ThermostatControl/profile/WeekProfileSheet', () => ({ WeekProfileSheet: () => null }));
-vi.mock('../components/DeviceImage', () => ({ DeviceImage: () => null, useDeviceImage: () => undefined, useDeviceImages: () => ({ isPending: false }) }));
+vi.mock('../components/DeviceImage', () => ({
+  DeviceImage: () => null,
+  useDeviceImage: () => undefined,
+  useDeviceImages: () => ({ isPending: false }),
+}));
 
 const { ThermostatControl } = await import('./ThermostatControl');
 
@@ -72,7 +76,11 @@ describe('ThermostatControl', () => {
   it('shows no boost where the device has none', () => {
     renderWithTheme(
       <ThermostatControl
-        channel={channel('HEATING_CLIMATECONTROL_TRANSCEIVER', 'HmIP-RF', { SET_POINT_TEMPERATURE: 21, ACTUAL_TEMPERATURE: 20, SET_POINT_MODE: 0 })}
+        channel={channel('HEATING_CLIMATECONTROL_TRANSCEIVER', 'HmIP-RF', {
+          SET_POINT_TEMPERATURE: 21,
+          ACTUAL_TEMPERATURE: 20,
+          SET_POINT_MODE: 0,
+        })}
       />,
     );
     expect(screen.queryByRole('button', { name: boost })).toBeNull();

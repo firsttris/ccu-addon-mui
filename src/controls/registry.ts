@@ -112,7 +112,10 @@ const channelControl = <T extends Channel>(
   wide,
 });
 
-const deviceControl = <T extends Channel>(section: SectionId, component: ComponentType<{ channels: T[] }>): ControlOverride => ({
+const deviceControl = <T extends Channel>(
+  section: SectionId,
+  component: ComponentType<{ channels: T[] }>,
+): ControlOverride => ({
   per: 'device',
   section,
   component: component as ComponentType<{ channels: Channel[] }>,

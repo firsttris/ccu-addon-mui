@@ -51,7 +51,9 @@ const ActuatorTile = ({
         aria-hidden
         className={cn(
           'flex size-11 shrink-0 items-center justify-center rounded-full border [&_svg]:size-5',
-          active ? 'border-sky-500/40 bg-sky-500/15 text-sky-600 dark:text-sky-300' : 'bg-muted/50 text-muted-foreground',
+          active
+            ? 'border-sky-500/40 bg-sky-500/15 text-sky-600 dark:text-sky-300'
+            : 'bg-muted/50 text-muted-foreground',
         )}
       >
         {icon}
@@ -60,7 +62,10 @@ const ActuatorTile = ({
         <span className="line-clamp-2 text-[15px] leading-snug font-medium" title={channel.name}>
           {channel.name}
         </span>
-        <span role="status" className={cn('text-[13px] font-medium', active ? 'text-sky-700 dark:text-sky-300' : 'text-muted-foreground')}>
+        <span
+          role="status"
+          className={cn('text-[13px] font-medium', active ? 'text-sky-700 dark:text-sky-300' : 'text-muted-foreground')}
+        >
           {status}
         </span>
       </div>
@@ -135,10 +140,32 @@ export const FlowMeterControl = ({ channel }: { channel: Channel }) => {
   const total = number(dp.WATER_VOLUME);
   const extras: ReactNode[] = [];
   if (sinceOpen !== undefined)
-    extras.push(<Extra key="open" icon={<TimerIcon />} label={m.WATER_VOLUME_SINCE_OPEN()} value={`${format(sinceOpen)} ${volumeUnit}`} />);
-  if (total !== undefined) extras.push(<Extra key="total" icon={<SigmaIcon />} label={m.WATER_VOLUME_TOTAL()} value={`${format(total)} ${volumeUnit}`} />);
+    extras.push(
+      <Extra
+        key="open"
+        icon={<TimerIcon />}
+        label={m.WATER_VOLUME_SINCE_OPEN()}
+        value={`${format(sinceOpen)} ${volumeUnit}`}
+      />,
+    );
+  if (total !== undefined)
+    extras.push(
+      <Extra
+        key="total"
+        icon={<SigmaIcon />}
+        label={m.WATER_VOLUME_TOTAL()}
+        value={`${format(total)} ${volumeUnit}`}
+      />,
+    );
   return (
-    <MeasureTile channel={channel} label={m.WATER_FLOW()} caption={m.WATER_FLOW()} value={flow !== undefined ? format(flow) : '–'} unit={flowUnit} extras={extras} />
+    <MeasureTile
+      channel={channel}
+      label={m.WATER_FLOW()}
+      caption={m.WATER_FLOW()}
+      value={flow !== undefined ? format(flow) : '–'}
+      unit={flowUnit}
+      extras={extras}
+    />
   );
 };
 
@@ -147,7 +174,15 @@ export const FlowMeterControl = ({ channel }: { channel: Channel }) => {
 export const WaterFlowControl = ({ channel }: { channel: Channel }) => {
   const unit = useUnit(channel, 'WATER_FLOW', 'l/min');
   const flow = measured(datapoints(channel), 'WATER_FLOW');
-  return <MeasureTile channel={channel} label={m.WATER_FLOW()} caption={m.WATER_FLOW()} value={flow !== undefined ? format(flow) : '–'} unit={unit} />;
+  return (
+    <MeasureTile
+      channel={channel}
+      label={m.WATER_FLOW()}
+      caption={m.WATER_FLOW()}
+      value={flow !== undefined ? format(flow) : '–'}
+      unit={unit}
+    />
+  );
 };
 
 export const WaterPressureControl = ({ channel }: { channel: Channel }) => {
@@ -171,7 +206,13 @@ export const ValveControl = ({ channel }: { channel: Channel }) => {
   const level = number(datapoints(channel).LEVEL);
   const open = level !== undefined && level > 0;
   const status =
-    level === undefined ? m.WINDOW_UNKNOWN() : level >= 1 ? m.VALVE_OPEN() : level <= 0 ? m.VALVE_CLOSED() : m.VALVE_PARTLY({ percent: String(percentOpen(level)) });
+    level === undefined
+      ? m.WINDOW_UNKNOWN()
+      : level >= 1
+        ? m.VALVE_OPEN()
+        : level <= 0
+          ? m.VALVE_CLOSED()
+          : m.VALVE_PARTLY({ percent: String(percentOpen(level)) });
   const set = (value: number) => setDataPoint(channel.interfaceName, channel.address, 'LEVEL', value);
   return (
     <ActuatorTile channel={channel} status={status} active={open} icon={<WavesIcon />}>
@@ -198,15 +239,32 @@ export const WindowDriveControl = ({ channel }: { channel: Channel }) => {
   const level = measured(datapoints(channel), 'LEVEL');
   const open = level !== undefined && level > 0;
   const status =
-    level === undefined ? m.WINDOW_UNKNOWN() : level >= 1 ? m.DRIVE_OPEN() : level <= 0 ? m.DRIVE_CLOSED() : m.DRIVE_PARTLY({ percent: String(percentOpen(level)) });
+    level === undefined
+      ? m.WINDOW_UNKNOWN()
+      : level >= 1
+        ? m.DRIVE_OPEN()
+        : level <= 0
+          ? m.DRIVE_CLOSED()
+          : m.DRIVE_PARTLY({ percent: String(percentOpen(level)) });
   return (
     <ActuatorTile channel={channel} status={status} active={open} icon={<GaugeIcon />}>
-      <DriveButtons channel={channel} onLevel={(value) => setDataPoint(channel.interfaceName, channel.address, 'LEVEL', value)} />
+      <DriveButtons
+        channel={channel}
+        onLevel={(value) => setDataPoint(channel.interfaceName, channel.address, 'LEVEL', value)}
+      />
     </ActuatorTile>
   );
 };
 
-const DriveButtons = ({ channel, onLevel, onLock }: { channel: Channel; onLevel: (level: number) => void; onLock?: () => void }) => {
+const DriveButtons = ({
+  channel,
+  onLevel,
+  onLock,
+}: {
+  channel: Channel;
+  onLevel: (level: number) => void;
+  onLock?: () => void;
+}) => {
   const setDataPoint = useSetDataPoint();
   // Two rows: the window sections are narrow
   return (
@@ -228,7 +286,11 @@ const DriveButtons = ({ channel, onLevel, onLock }: { channel: Channel; onLevel:
             {m.DRIVE_LOCK()}
           </button>
         )}
-        <button type="button" className={button} onClick={() => setDataPoint(channel.interfaceName, channel.address, 'STOP', true)}>
+        <button
+          type="button"
+          className={button}
+          onClick={() => setDataPoint(channel.interfaceName, channel.address, 'STOP', true)}
+        >
           <SquareIcon className="fill-current !size-3.5" />
           {m.BLIND_STOP()}
         </button>
@@ -267,7 +329,12 @@ export const WinmaticControl = ({ channel }: { channel: Channel }) => {
   if (error === 'MOTOR_TILT_ERROR') status = m.DRIVE_ERROR_MOTOR_TILT_ERROR();
   const setLevel = (value: number) => setDataPoint(channel.interfaceName, channel.address, 'LEVEL', value);
   return (
-    <ActuatorTile channel={channel} status={status} active={state === 'open' || state === 'partly'} icon={state === 'locked' ? <LockIcon /> : <GaugeIcon />}>
+    <ActuatorTile
+      channel={channel}
+      status={status}
+      active={state === 'open' || state === 'partly'}
+      icon={state === 'locked' ? <LockIcon /> : <GaugeIcon />}
+    >
       <DriveButtons channel={channel} onLevel={setLevel} onLock={() => setLevel(WINMATIC_LOCKED)} />
     </ActuatorTile>
   );

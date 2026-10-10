@@ -86,7 +86,8 @@ export default defineConfig(({ command, mode, isPreview }) => ({
       manifest: {
         name: 'MUI · Moderne WebUI für Homematic CCU3 und OpenCCU',
         short_name: 'MUI',
-        description: 'MUI: die komplette WebUI für Homematic CCU3 und OpenCCU, neu gebaut. Live per WebSocket, als App installierbar.',
+        description:
+          'MUI: die komplette WebUI für Homematic CCU3 und OpenCCU, neu gebaut. Live per WebSocket, als App installierbar.',
         lang: 'de',
         display: 'standalone',
         // Dark like the app's dark theme, so the splash screen does not flash white

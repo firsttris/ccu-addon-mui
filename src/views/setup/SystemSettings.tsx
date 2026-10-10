@@ -179,7 +179,8 @@ export const Clock = () => {
           className={row}
           onSubmit={(event) => {
             event.preventDefault();
-            if (clock) save({ type: 'setClock', time: `${clock.replace('T', ' ')}:00`.slice(0, 19) }, m.SYS_CLOCK_SET());
+            if (clock)
+              save({ type: 'setClock', time: `${clock.replace('T', ' ')}:00`.slice(0, 19) }, m.SYS_CLOCK_SET());
           }}
         >
           <label className={label}>

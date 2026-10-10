@@ -38,7 +38,17 @@ const tones = {
 
 // The door as a picture: the leaf swings open on "open", warm light falls
 // through the gap, the bolt shows whether it is locked.
-const DoorPicture = ({ state, open, busy, error }: { state: LockState; open: boolean; busy?: boolean; error?: boolean }) => {
+const DoorPicture = ({
+  state,
+  open,
+  busy,
+  error,
+}: {
+  state: LockState;
+  open: boolean;
+  busy?: boolean;
+  error?: boolean;
+}) => {
   const effects = useEffects();
   const a = (alpha: number) => Math.min(1, alpha * effects.k);
   const tone = tones[state];
@@ -84,7 +94,11 @@ const DoorPicture = ({ state, open, busy, error }: { state: LockState; open: boo
             tone.text,
             busy && effects.on && 'fx-pulse',
           )}
-          style={effects.on && state !== 'unknown' ? { boxShadow: `0 0 ${10 * effects.k}px 1px rgba(${tone.glow},${a(0.55)})` } : undefined}
+          style={
+            effects.on && state !== 'unknown'
+              ? { boxShadow: `0 0 ${10 * effects.k}px 1px rgba(${tone.glow},${a(0.55)})` }
+              : undefined
+          }
         >
           <div className="h-2 w-0.5 rounded-full bg-current" />
         </div>
@@ -100,7 +114,11 @@ const DoorPicture = ({ state, open, busy, error }: { state: LockState; open: boo
           'absolute top-[103px] -right-[5px] h-2 rounded-l-sm transition-[width,background-color] duration-500',
           state === 'locked' && !open ? 'w-[13px] bg-green-500' : 'w-[3px] bg-zinc-500',
         )}
-        style={effects.on && state === 'locked' && !open ? { boxShadow: `0 0 ${8 * effects.k}px rgba(34,197,94,${a(0.6)})` } : undefined}
+        style={
+          effects.on && state === 'locked' && !open
+            ? { boxShadow: `0 0 ${8 * effects.k}px rgba(34,197,94,${a(0.6)})` }
+            : undefined
+        }
       />
       {/* Threshold */}
       <div className="absolute -inset-x-[3px] -bottom-1 h-1 rounded-full bg-zinc-400 dark:bg-zinc-600" />
@@ -113,9 +131,12 @@ const DoorPicture = ({ state, open, busy, error }: { state: LockState; open: boo
 export const DoorView = ({ channel, state, busy, error, onLock, onUnlock, onOpen }: DoorViewProps) => {
   const [open, setOpen] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   const tone = tones[state];
   const status = error

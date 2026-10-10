@@ -64,7 +64,10 @@ export const Backup = () => {
     setBusy(true);
     setError(null);
     try {
-      const response = await request({ type: 'createBackup', password }, { queue: false, timeoutMs: BACKUP_TIMEOUT_MS });
+      const response = await request(
+        { type: 'createBackup', password },
+        { queue: false, timeoutMs: BACKUP_TIMEOUT_MS },
+      );
       download(response.url, response.fileName);
       setLast({ fileName: response.fileName, size: response.size });
       setAsking(false);

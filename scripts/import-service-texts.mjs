@@ -37,7 +37,19 @@ const readTexts = (lang) => {
   return texts;
 };
 
-const entities = { auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß', amp: '&', nbsp: ' ', quot: '"', deg: '°' };
+const entities = {
+  auml: 'ä',
+  ouml: 'ö',
+  uuml: 'ü',
+  Auml: 'Ä',
+  Ouml: 'Ö',
+  Uuml: 'Ü',
+  szlig: 'ß',
+  amp: '&',
+  nbsp: ' ',
+  quot: '"',
+  deg: '°',
+};
 const plain = (html) =>
   html
     .replace(/\\"/g, '"')

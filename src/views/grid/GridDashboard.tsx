@@ -4,7 +4,18 @@ import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import { cn } from '../../lib/utils';
-import { BREAKPOINTS, BreakpointName, COLS, flowCompactor, MARGIN, responsiveLayouts, ROW_HEIGHT, SectionLayout, TileSpec, toSaved } from './tileLayout';
+import {
+  BREAKPOINTS,
+  BreakpointName,
+  COLS,
+  flowCompactor,
+  MARGIN,
+  responsiveLayouts,
+  ROW_HEIGHT,
+  SectionLayout,
+  TileSpec,
+  toSaved,
+} from './tileLayout';
 
 export interface GridTile extends TileSpec {
   element: ReactNode;
@@ -15,7 +26,15 @@ export interface GridTile extends TileSpec {
 // Measures a tile's natural height, which sets its height in the grid. The
 // tile is at least as tall as its cell (as the others of its row) and grows
 // with its content; measured while the cells are low (see reset below).
-const Measured = ({ id, onHeight, children }: { id: string; onHeight: (id: string, h: number) => void; children: ReactNode }) => {
+const Measured = ({
+  id,
+  onHeight,
+  children,
+}: {
+  id: string;
+  onHeight: (id: string, h: number) => void;
+  children: ReactNode;
+}) => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -75,7 +94,10 @@ export const GridDashboard = ({
   };
 
   return (
-    <div ref={containerRef} className={cn('-mx-3', editing && 'rounded-2xl outline-2 outline-dashed outline-primary/30')}>
+    <div
+      ref={containerRef}
+      className={cn('-mx-3', editing && 'rounded-2xl outline-2 outline-dashed outline-primary/30')}
+    >
       {mounted && (
         <ResponsiveGridLayout<BreakpointName>
           width={width}

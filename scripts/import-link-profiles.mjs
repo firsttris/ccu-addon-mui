@@ -58,7 +58,8 @@ const wwwList = (rel) => {
   const files = new Set();
   const dirs = new Set();
   if (fs.existsSync(dir)) {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) (entry.isDirectory() ? dirs : files).add(entry.name);
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true }))
+      (entry.isDirectory() ? dirs : files).add(entry.name);
   }
   for (const key of overlay.keys()) {
     if (!key.startsWith(rel + '/')) continue;
@@ -158,7 +159,10 @@ const parseFile = (receiver, rel) => {
     if (!m) return;
     const [, n, param, raw] = m;
     if (param === 'UI_WHITELIST' || param === 'UI_BLACKLIST') {
-      (lists[n] ??= {})[param === 'UI_WHITELIST' ? 'whitelist' : 'blacklist'] = raw.replace(/[{}]/g, '').trim().split(/\s+/);
+      (lists[n] ??= {})[param === 'UI_WHITELIST' ? 'whitelist' : 'blacklist'] = raw
+        .replace(/[{}]/g, '')
+        .trim()
+        .split(/\s+/);
       return;
     }
     if (param.startsWith('UI_')) return;
@@ -175,7 +179,9 @@ const parseFile = (receiver, rel) => {
     const add = (field) => {
       if (!shown.some((f) => f.params.join() === field.params.join())) shown.push(field);
     };
-    for (const m of block.matchAll(/getTimeSelector\s+(\w+)\s+ps\s+PROFILE_\$prn\s+(\w+)\s+\$prn\s+\$special_input_id\s+(\w+)/g)) {
+    for (const m of block.matchAll(
+      /getTimeSelector\s+(\w+)\s+ps\s+PROFILE_\$prn\s+(\w+)\s+\$prn\s+\$special_input_id\s+(\w+)/g,
+    )) {
       add({ kind: 'time', params: [m[3]], label: m[1] });
     }
     for (const m of block.matchAll(/get_ComboBox options (\$param|[\w|]+)/g)) {
@@ -187,7 +193,9 @@ const parseFile = (receiver, rel) => {
       const label = [...before.matchAll(/<td>\\?\$\{(\w+)\}<\/td>/g)].pop()?.[1];
       // Its choices: set since the last array_clear options
       const since = before.slice(before.lastIndexOf('array_clear options'));
-      const options = Object.fromEntries([...since.matchAll(/set options\((\d+)\)\s+"\\?\$\{(\w+)\}"/g)].map((o) => [o[1], o[2]]));
+      const options = Object.fromEntries(
+        [...since.matchAll(/set options\((\d+)\)\s+"\\?\$\{(\w+)\}"/g)].map((o) => [o[1], o[2]]),
+      );
       add({
         kind: 'value',
         params: params.split('|'),

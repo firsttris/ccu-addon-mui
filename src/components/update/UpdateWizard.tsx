@@ -65,7 +65,10 @@ const StepRow = ({ step, status, last }: { step: Step; status: StepStatus; last:
   const effects = useEffects();
   const { icon, motion } = stepIcon[step];
   return (
-    <li className="relative flex items-center gap-3 pb-2.5 last:pb-0" aria-current={status === 'active' ? 'step' : undefined}>
+    <li
+      className="relative flex items-center gap-3 pb-2.5 last:pb-0"
+      aria-current={status === 'active' ? 'step' : undefined}
+    >
       {!last && (
         <span aria-hidden className="absolute top-7 bottom-0 left-[13px] w-0.5 overflow-hidden rounded-full bg-border">
           <span
@@ -85,7 +88,9 @@ const StepRow = ({ step, status, last }: { step: Step; status: StepStatus; last:
           status === 'failed' && 'border-transparent bg-red-500 text-white',
         )}
       >
-        {status === 'active' && effects.on && <span aria-hidden className="fx-wave absolute inset-0 rounded-full border-2 border-sky-500/40" />}
+        {status === 'active' && effects.on && (
+          <span aria-hidden className="fx-wave absolute inset-0 rounded-full border-2 border-sky-500/40" />
+        )}
         {status === 'done' ? (
           <CheckIcon className={cn('[stroke-width:3]', effects.on && 'fx-bloom')} />
         ) : status === 'failed' ? (
@@ -114,7 +119,15 @@ const StepRow = ({ step, status, last }: { step: Step; status: StepStatus; last:
 // the new version and brings this tab to the new app (takeOverNewApp):
 // after the reload UpdateDone says it is done. Started from the update
 // notice and from the system page.
-export const UpdateWizard = ({ version, current, onClose }: { version: string; current?: string; onClose: () => void }) => {
+export const UpdateWizard = ({
+  version,
+  current,
+  onClose,
+}: {
+  version: string;
+  current?: string;
+  onClose: () => void;
+}) => {
   const effects = useEffects();
   const { request } = useWebSocketActions();
   const { elevated, connectionStatus } = useWebSocketContext();
@@ -270,11 +283,15 @@ export const UpdateWizard = ({ version, current, onClose }: { version: string; c
                     )}
                     style={percent !== undefined ? { width: `${percent}%` } : undefined}
                   >
-                    {effects.on && <span className="fx-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent" />}
+                    {effects.on && (
+                      <span className="fx-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+                    )}
                   </div>
                 </div>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  {percent !== undefined ? `${megabytes(bytes.done)} / ${megabytes(bytes.total)} MB · ${percent} %` : '\u00a0'}
+                  {percent !== undefined
+                    ? `${megabytes(bytes.done)} / ${megabytes(bytes.total)} MB · ${percent} %`
+                    : '\u00a0'}
                 </span>
               </div>
             ) : (
@@ -294,17 +311,26 @@ export const UpdateWizard = ({ version, current, onClose }: { version: string; c
         )}
 
         {state === 'otherTabs' && (
-          <p role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+          <p
+            role="status"
+            className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200"
+          >
             {m.UPDATE_OTHER_TABS()}
           </p>
         )}
         {state === 'appFailed' && (
-          <p role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+          <p
+            role="status"
+            className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200"
+          >
             {m.UPDATE_APP_FAILED()}
           </p>
         )}
         {state === 'error' && error && (
-          <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300">
+          <p
+            role="alert"
+            className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-300"
+          >
             {error}
           </p>
         )}

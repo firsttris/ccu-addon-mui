@@ -14,7 +14,12 @@ export const useHasWebUI = () => usePlatform() !== 'lite';
 export const WebUILink = () => {
   if (!useHasWebUI()) return null;
   return (
-    <a className="text-[12px] text-muted-foreground whitespace-nowrap" href={WEBUI_URL} target="_blank" rel="noopener noreferrer">
+    <a
+      className="text-[12px] text-muted-foreground whitespace-nowrap"
+      href={WEBUI_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
       {m.OPEN_IN_WEBUI()} ↗
     </a>
   );

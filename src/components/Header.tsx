@@ -65,7 +65,15 @@ const Clock = () => {
   );
 };
 
-const NavLink = ({ onClick, icon, children }: { onClick: () => void; icon: React.ReactNode; children: React.ReactNode }) => (
+const NavLink = ({
+  onClick,
+  icon,
+  children,
+}: {
+  onClick: () => void;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) => (
   <button
     onClick={onClick}
     className="flex h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-accent [&_svg]:size-[18px] [&_svg]:shrink-0 [&_svg]:text-muted-foreground"
@@ -129,167 +137,167 @@ const NavMenu = ({
 
   return (
     <>
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-80 gap-0 overflow-y-auto">
-        <SheetHeader className="pb-2">
-          <SheetTitle>{m.NAVIGATION()}</SheetTitle>
-          <SheetDescription className="sr-only">{m.MENU()}</SheetDescription>
-        </SheetHeader>
-        <nav className="flex flex-col gap-5 px-2 pb-4">
-          {/* The way back to openccu-lite on every page: it shows the app
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="left" className="w-80 gap-0 overflow-y-auto">
+          <SheetHeader className="pb-2">
+            <SheetTitle>{m.NAVIGATION()}</SheetTitle>
+            <SheetDescription className="sr-only">{m.MENU()}</SheetDescription>
+          </SheetHeader>
+          <nav className="flex flex-col gap-5 px-2 pb-4">
+            {/* The way back to openccu-lite on every page: it shows the app
               without its own top bar when the user chooses so (the
               manifest's ui.fullscreen, occulited docs/manifest-format.md) */}
-          {platform === 'lite' && (
-            <NavSection title="openccu-lite">
-              <NavAnchor href="/" icon={<ArrowLeftIcon />}>
-                {m.LITE_BACK()}
-              </NavAnchor>
-              <NavAnchor href="/addons" icon={<PuzzleIcon />}>
-                {m.ADDONS()}
-              </NavAnchor>
-            </NavSection>
-          )}
-          {/* On phones the header has no room for it */}
-          {arrange && !arrange.editing && (
-            <div className="sm:hidden">
-              <NavLink icon={<LayoutGridIcon />} onClick={() => go(arrange.start)}>
-                {m.LAYOUT_ARRANGE()}
-              </NavLink>
-            </div>
-          )}
-          <NavSection title={m.ROOMS()}>
-            {rooms.map((room) => (
-              <NavLink
-                key={room.id}
-                icon={<HomeIcon />}
-                onClick={() => go(() => navigate({ to: '/room/$roomId', params: { roomId: String(room.id) } }))}
-              >
-                {room.name}
-              </NavLink>
-            ))}
-          </NavSection>
-          <NavSection title={m.TRADES()}>
-            {trades.map((trade) => (
-              <NavLink
-                key={trade.id}
-                icon={<TagIcon />}
-                onClick={() => go(() => navigate({ to: '/trade/$tradeId', params: { tradeId: String(trade.id) } }))}
-              >
-                {trade.name}
-              </NavLink>
-            ))}
-          </NavSection>
-          <NavSection title={m.VIEWS()}>
-            <NavLink icon={<StarIcon />} onClick={() => go(() => navigate({ to: '/favorites' }))}>
-              {m.FAVORITES()}
-            </NavLink>
-            <NavLink icon={<ListIcon />} onClick={() => go(() => navigate({ to: '/devices' }))}>
-              {m.ALL_DEVICES()}
-            </NavLink>
-            {capabilities.sysvars && (
-              <NavLink icon={<BracesIcon />} onClick={() => go(() => navigate({ to: '/sysvars' }))}>
-                {m.SYSVARS()}
-              </NavLink>
+            {platform === 'lite' && (
+              <NavSection title="openccu-lite">
+                <NavAnchor href="/" icon={<ArrowLeftIcon />}>
+                  {m.LITE_BACK()}
+                </NavAnchor>
+                <NavAnchor href="/addons" icon={<PuzzleIcon />}>
+                  {m.ADDONS()}
+                </NavAnchor>
+              </NavSection>
             )}
-            {capabilities.programs && (
-              <NavLink icon={<PlayIcon />} onClick={() => go(() => navigate({ to: '/programs' }))}>
-                {m.PROGRAMS()}
-              </NavLink>
-            )}
-            <NavLink icon={<ChartIcon />} onClick={() => go(() => navigate({ to: '/diagrams' }))}>
-              {m.DIAGRAMS()}
-            </NavLink>
-            <NavLink icon={<HeartPulseIcon />} onClick={() => go(() => navigate({ to: '/health' }))}>
-              {m.HEALTH()}
-            </NavLink>
-            {userLevel === 'admin' && (
-              <NavLink icon={<SlidersIcon />} onClick={() => go(() => navigate({ to: '/setup' }))}>
-                {m.SETUP()}
-              </NavLink>
-            )}
-          </NavSection>
-          <Separator />
-          <NavSection title={m.APPEARANCE()}>
-            <div className="flex h-11 items-center justify-between px-3">
-              <Label htmlFor="dark-mode" className="text-[15px] font-normal">
-                {m.DARK_MODE()}
-              </Label>
-              <Switch id="dark-mode" checked={theme.mode === 'dark'} onCheckedChange={toggleTheme} />
-            </div>
-            {wakeLockAvailable() && (
-              <div className="flex flex-col px-3 pb-1">
-                <div className="flex h-11 items-center justify-between">
-                  <Label htmlFor="keep-screen-on" className="text-[15px] font-normal">
-                    {m.KEEP_SCREEN_ON()}
-                  </Label>
-                  <Switch id="keep-screen-on" checked={keepScreenOn} onCheckedChange={setKeepScreenOn} />
-                </div>
-                <span className="text-xs text-muted-foreground">{m.KEEP_SCREEN_ON_HINT()}</span>
+            {/* On phones the header has no room for it */}
+            {arrange && !arrange.editing && (
+              <div className="sm:hidden">
+                <NavLink icon={<LayoutGridIcon />} onClick={() => go(arrange.start)}>
+                  {m.LAYOUT_ARRANGE()}
+                </NavLink>
               </div>
             )}
-            <div className="flex flex-col gap-2 px-3 pt-1">
-              <span id="effects-label" className="text-[15px]">
-                {m.EFFECTS()}
-              </span>
-              <div
-                role="radiogroup"
-                aria-labelledby="effects-label"
-                className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1"
-              >
-                {effectLevels.map(({ level, label }) => (
-                  <button
-                    key={level}
-                    role="radio"
-                    aria-checked={effects.level === level}
-                    onClick={() => effects.setLevel(level)}
-                    className={cn(
-                      'h-9 rounded-md text-sm font-medium transition-colors',
-                      effects.level === level
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    {label()}
-                  </button>
-                ))}
-              </div>
-              <span className="text-xs text-muted-foreground">{m.EFFECTS_HINT()}</span>
-            </div>
-            <LanguageChoice />
-            <StartPageChoice />
-          </NavSection>
-          <NavSection title={m.PUSH_TITLE()}>
-            <PushSettings onOpenRules={() => go(() => navigate({ to: '/rules' }))} />
-          </NavSection>
-          {authRequired && (
-            <>
-              <Separator />
-              {(userLevel === 'admin' || userLevel === 'user') && (
+            <NavSection title={m.ROOMS()}>
+              {rooms.map((room) => (
                 <NavLink
-                  icon={<KeyIcon />}
-                  onClick={() => {
-                    onOpenChange(false);
-                    setChangingPassword(true);
-                  }}
+                  key={room.id}
+                  icon={<HomeIcon />}
+                  onClick={() => go(() => navigate({ to: '/room/$roomId', params: { roomId: String(room.id) } }))}
                 >
-                  {m.PW_CHANGE()}
+                  {room.name}
+                </NavLink>
+              ))}
+            </NavSection>
+            <NavSection title={m.TRADES()}>
+              {trades.map((trade) => (
+                <NavLink
+                  key={trade.id}
+                  icon={<TagIcon />}
+                  onClick={() => go(() => navigate({ to: '/trade/$tradeId', params: { tradeId: String(trade.id) } }))}
+                >
+                  {trade.name}
+                </NavLink>
+              ))}
+            </NavSection>
+            <NavSection title={m.VIEWS()}>
+              <NavLink icon={<StarIcon />} onClick={() => go(() => navigate({ to: '/favorites' }))}>
+                {m.FAVORITES()}
+              </NavLink>
+              <NavLink icon={<ListIcon />} onClick={() => go(() => navigate({ to: '/devices' }))}>
+                {m.ALL_DEVICES()}
+              </NavLink>
+              {capabilities.sysvars && (
+                <NavLink icon={<BracesIcon />} onClick={() => go(() => navigate({ to: '/sysvars' }))}>
+                  {m.SYSVARS()}
                 </NavLink>
               )}
-              <NavLink
-                icon={<LogOutIcon />}
-                onClick={() => {
-                  onOpenChange(false);
-                  logout();
-                }}
-              >
-                {m.LOGOUT()}
+              {capabilities.programs && (
+                <NavLink icon={<PlayIcon />} onClick={() => go(() => navigate({ to: '/programs' }))}>
+                  {m.PROGRAMS()}
+                </NavLink>
+              )}
+              <NavLink icon={<ChartIcon />} onClick={() => go(() => navigate({ to: '/diagrams' }))}>
+                {m.DIAGRAMS()}
               </NavLink>
-            </>
-          )}
-        </nav>
-      </SheetContent>
-    </Sheet>
-    {changingPassword && <ChangePasswordDialog onDone={() => setChangingPassword(false)} />}
+              <NavLink icon={<HeartPulseIcon />} onClick={() => go(() => navigate({ to: '/health' }))}>
+                {m.HEALTH()}
+              </NavLink>
+              {userLevel === 'admin' && (
+                <NavLink icon={<SlidersIcon />} onClick={() => go(() => navigate({ to: '/setup' }))}>
+                  {m.SETUP()}
+                </NavLink>
+              )}
+            </NavSection>
+            <Separator />
+            <NavSection title={m.APPEARANCE()}>
+              <div className="flex h-11 items-center justify-between px-3">
+                <Label htmlFor="dark-mode" className="text-[15px] font-normal">
+                  {m.DARK_MODE()}
+                </Label>
+                <Switch id="dark-mode" checked={theme.mode === 'dark'} onCheckedChange={toggleTheme} />
+              </div>
+              {wakeLockAvailable() && (
+                <div className="flex flex-col px-3 pb-1">
+                  <div className="flex h-11 items-center justify-between">
+                    <Label htmlFor="keep-screen-on" className="text-[15px] font-normal">
+                      {m.KEEP_SCREEN_ON()}
+                    </Label>
+                    <Switch id="keep-screen-on" checked={keepScreenOn} onCheckedChange={setKeepScreenOn} />
+                  </div>
+                  <span className="text-xs text-muted-foreground">{m.KEEP_SCREEN_ON_HINT()}</span>
+                </div>
+              )}
+              <div className="flex flex-col gap-2 px-3 pt-1">
+                <span id="effects-label" className="text-[15px]">
+                  {m.EFFECTS()}
+                </span>
+                <div
+                  role="radiogroup"
+                  aria-labelledby="effects-label"
+                  className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1"
+                >
+                  {effectLevels.map(({ level, label }) => (
+                    <button
+                      key={level}
+                      role="radio"
+                      aria-checked={effects.level === level}
+                      onClick={() => effects.setLevel(level)}
+                      className={cn(
+                        'h-9 rounded-md text-sm font-medium transition-colors',
+                        effects.level === level
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      {label()}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-xs text-muted-foreground">{m.EFFECTS_HINT()}</span>
+              </div>
+              <LanguageChoice />
+              <StartPageChoice />
+            </NavSection>
+            <NavSection title={m.PUSH_TITLE()}>
+              <PushSettings onOpenRules={() => go(() => navigate({ to: '/rules' }))} />
+            </NavSection>
+            {authRequired && (
+              <>
+                <Separator />
+                {(userLevel === 'admin' || userLevel === 'user') && (
+                  <NavLink
+                    icon={<KeyIcon />}
+                    onClick={() => {
+                      onOpenChange(false);
+                      setChangingPassword(true);
+                    }}
+                  >
+                    {m.PW_CHANGE()}
+                  </NavLink>
+                )}
+                <NavLink
+                  icon={<LogOutIcon />}
+                  onClick={() => {
+                    onOpenChange(false);
+                    logout();
+                  }}
+                >
+                  {m.LOGOUT()}
+                </NavLink>
+              </>
+            )}
+          </nav>
+        </SheetContent>
+      </Sheet>
+      {changingPassword && <ChangePasswordDialog onDone={() => setChangingPassword(false)} />}
     </>
   );
 };
@@ -306,7 +314,11 @@ const StartPageChoice = () => {
       <span id="start-page-label" className="text-[15px]">
         {m.START_PAGE()}
       </span>
-      <div role="radiogroup" aria-labelledby="start-page-label" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+      <div
+        role="radiogroup"
+        aria-labelledby="start-page-label"
+        className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
+      >
         {options.map(({ value, label }) => (
           <button
             key={value}
@@ -318,7 +330,9 @@ const StartPageChoice = () => {
             }}
             className={cn(
               'h-9 rounded-md text-sm font-medium transition-colors',
-              page === value ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+              page === value
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {label()}
@@ -414,7 +428,9 @@ export const Header: React.FC = () => {
             aria-label={`${m.NOTICES()}: ${problemCount}`}
             className="press flex h-11 items-center gap-2.5 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 text-[15px] font-medium text-amber-700 sm:px-4 dark:text-amber-300"
             style={
-              effects.on ? { boxShadow: `0 0 ${20 * effects.k}px -4px rgba(251,191,36,${Math.min(1, 0.4 * effects.k)})` } : undefined
+              effects.on
+                ? { boxShadow: `0 0 ${20 * effects.k}px -4px rgba(251,191,36,${Math.min(1, 0.4 * effects.k)})` }
+                : undefined
             }
           >
             <span className="relative block size-2">
@@ -441,7 +457,12 @@ export const Header: React.FC = () => {
           {m.CONNECTION_LOST()}
         </div>
       )}
-      <NavMenu open={menuOpen} onOpenChange={setMenuOpen} keepScreenOn={keepScreenOn} setKeepScreenOn={setKeepScreenOn} />
+      <NavMenu
+        open={menuOpen}
+        onOpenChange={setMenuOpen}
+        keepScreenOn={keepScreenOn}
+        setKeepScreenOn={setKeepScreenOn}
+      />
       <ServiceMessagesSheet open={problemsOpen} onOpenChange={setProblemsOpen} />
       <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
     </header>

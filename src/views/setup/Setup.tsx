@@ -85,8 +85,7 @@ export const Setup = () => {
   const problemCount = rows.filter((r) => r.unreach || r.lowBat).length;
   const updateCount = rows.filter((r) => r.availableFirmware).length;
   const shownRows = useMemo(
-    () =>
-      rows.filter((r) => (!onlyProblems || r.unreach || r.lowBat) && (!onlyUpdates || r.availableFirmware !== '')),
+    () => rows.filter((r) => (!onlyProblems || r.unreach || r.lowBat) && (!onlyUpdates || r.availableFirmware !== '')),
     [rows, onlyProblems, onlyUpdates],
   );
 
@@ -234,7 +233,9 @@ export const Setup = () => {
           </TableBody>
         </Table>
       </div>
-      <p className={cn('text-sm text-muted-foreground', devicesLoading && 'invisible')}>{m.DEVICE_COUNT({ count: table.getRowModel().rows.length })}</p>
+      <p className={cn('text-sm text-muted-foreground', devicesLoading && 'invisible')}>
+        {m.DEVICE_COUNT({ count: table.getRowModel().rows.length })}
+      </p>
     </>
   );
 };

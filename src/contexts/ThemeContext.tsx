@@ -42,7 +42,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
     follow(new URLSearchParams(window.location.search).get('theme'));
     const onMessage = (event: MessageEvent) => {
-      if (event.origin === window.location.origin && event.data?.type === 'openccu-lite:theme') follow(event.data.theme);
+      if (event.origin === window.location.origin && event.data?.type === 'openccu-lite:theme')
+        follow(event.data.theme);
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);

@@ -41,11 +41,17 @@ const Emblem = ({ tone, waves, children }: { tone: Tone; waves: boolean; childre
           />
         ))}
       <div
-        className={cn('relative flex size-12 items-center justify-center rounded-full border [&_svg]:size-6', toneText[tone])}
+        className={cn(
+          'relative flex size-12 items-center justify-center rounded-full border [&_svg]:size-6',
+          toneText[tone],
+        )}
         style={{
           background: `rgba(${rgb},0.12)`,
           borderColor: `rgba(${rgb},0.35)`,
-          boxShadow: effects.on && tone !== 'calm' ? `0 0 ${18 * effects.k}px rgba(${rgb},${Math.min(1, 0.45 * effects.k)})` : undefined,
+          boxShadow:
+            effects.on && tone !== 'calm'
+              ? `0 0 ${18 * effects.k}px rgba(${rgb},${Math.min(1, 0.45 * effects.k)})`
+              : undefined,
         }}
       >
         {children}
@@ -72,7 +78,11 @@ const SmokeDetectorPicture = ({ alarm }: { alarm: boolean }) => {
         ))}
       <div
         className="relative size-[52px] rounded-full border border-zinc-300 bg-[radial-gradient(circle_at_35%_30%,#ffffff,#e4e4e7)] shadow-[0_2px_6px_rgba(0,0,0,0.15)] dark:border-zinc-500 dark:bg-[radial-gradient(circle_at_35%_30%,#e4e4e7,#a1a1aa)]"
-        style={alarm && effects.on ? { boxShadow: `0 0 ${18 * effects.k}px rgba(${toneRgb.alarm},${Math.min(1, 0.5 * effects.k)})` } : undefined}
+        style={
+          alarm && effects.on
+            ? { boxShadow: `0 0 ${18 * effects.k}px rgba(${toneRgb.alarm},${Math.min(1, 0.5 * effects.k)})` }
+            : undefined
+        }
       >
         {/* The vents */}
         <div className="absolute inset-[5px] rounded-full bg-[repeating-conic-gradient(rgba(113,113,122,0.45)_0_7deg,transparent_7deg_20deg)] [mask:radial-gradient(circle,transparent_58%,black_60%,black_92%,transparent_94%)]" />
@@ -82,7 +92,9 @@ const SmokeDetectorPicture = ({ alarm }: { alarm: boolean }) => {
         <span
           className={cn(
             'absolute top-[11px] right-[13px] size-[5px] rounded-full',
-            alarm ? 'bg-red-500 shadow-[0_0_6px_2px_rgba(239,68,68,0.8)]' : 'bg-green-500 shadow-[0_0_5px_1px_rgba(34,197,94,0.8)]',
+            alarm
+              ? 'bg-red-500 shadow-[0_0_6px_2px_rgba(239,68,68,0.8)]'
+              : 'bg-green-500 shadow-[0_0_5px_1px_rgba(34,197,94,0.8)]',
             effects.on ? (alarm ? 'fx-led-alarm' : 'fx-led') : alarm ? '' : 'opacity-0',
           )}
         />
@@ -136,7 +148,9 @@ export const DetectorTile = ({
       className={cn(alarm && 'border-red-500/50', alarm && effects.on && 'fx-alarm')}
       style={
         tone !== 'calm' && effects.on
-          ? { background: `radial-gradient(80% 90% at 0% 30%, rgba(${toneRgb[tone]},${Math.min(1, (alarm ? 0.2 : 0.1) * effects.k)}), transparent 70%), var(--card)` }
+          ? {
+              background: `radial-gradient(80% 90% at 0% 30%, rgba(${toneRgb[tone]},${Math.min(1, (alarm ? 0.2 : 0.1) * effects.k)}), transparent 70%), var(--card)`,
+            }
           : undefined
       }
     >
@@ -151,7 +165,13 @@ export const DetectorTile = ({
             <span className="line-clamp-2 text-[15px] leading-snug font-medium" title={channel.name}>
               {channel.name}
             </span>
-            <span role="status" className={cn('text-[13px] font-medium', alarm ? toneText.alarm : tone === 'active' ? toneText.active : 'text-muted-foreground')}>
+            <span
+              role="status"
+              className={cn(
+                'text-[13px] font-medium',
+                alarm ? toneText.alarm : tone === 'active' ? toneText.active : 'text-muted-foreground',
+              )}
+            >
               {status}
             </span>
             {detail && <span className="text-xs text-muted-foreground">{detail}</span>}
@@ -167,7 +187,14 @@ export const DetectorTile = ({
 
 const ALARM_STATUS = ['IDLE_OFF', 'PRIMARY_ALARM', 'INTRUSION_ALARM', 'SECONDARY_ALARM'];
 const TEST_RESULT = ['NONE', 'SMOKE_TEST_OK', 'SMOKE_TEST_FAILED', 'COMMUNICATION_TEST_SENT', 'COMMUNICATION_TEST_OK'];
-const COMMANDS = ['RESERVED_ALARM_OFF', 'INTRUSION_ALARM_OFF', 'INTRUSION_ALARM', 'SMOKE_TEST', 'COMMUNICATION_TEST', 'COMMUNICATION_TEST_REPEATED'];
+const COMMANDS = [
+  'RESERVED_ALARM_OFF',
+  'INTRUSION_ALARM_OFF',
+  'INTRUSION_ALARM',
+  'SMOKE_TEST',
+  'COMMUNICATION_TEST',
+  'COMMUNICATION_TEST_REPEATED',
+];
 
 // HmIP-SWSD (SMOKE_DETECTOR_ALARM_STATUS) and BidCos smoke detectors
 // (STATE): calm green, red and pulsing on alarm. The smoke test sounds the
@@ -247,9 +274,22 @@ export const MotionDetectorControl = ({ channel }: { channel: Channel }) => {
     return () => clearInterval(timer);
   }, [last]);
 
-  const status = active === false ? m.DETECTION_OFF() : detected ? (presence ? m.PRESENCE_NOW() : m.MOTION_NOW()) : presence ? m.NO_PRESENCE() : m.NO_MOTION();
+  const status =
+    active === false
+      ? m.DETECTION_OFF()
+      : detected
+        ? presence
+          ? m.PRESENCE_NOW()
+          : m.MOTION_NOW()
+        : presence
+          ? m.NO_PRESENCE()
+          : m.NO_MOTION();
   const detail =
-    !detected && last !== null ? (minutesAgo(last) === 0 ? m.MOTION_JUST_NOW() : m.MOTION_MINUTES_AGO({ minutes: minutesAgo(last) })) : undefined;
+    !detected && last !== null
+      ? minutesAgo(last) === 0
+        ? m.MOTION_JUST_NOW()
+        : m.MOTION_MINUTES_AGO({ minutes: minutesAgo(last) })
+      : undefined;
   return (
     <DetectorTile
       channel={channel}
@@ -292,7 +332,8 @@ export const MotionDetectorControl = ({ channel }: { channel: Channel }) => {
 // STATE 0 dry, 1 wet, 2 water)
 export const WaterDetectorControl = ({ channel }: { channel: Channel }) => {
   const dp = channel.datapoints as Record<string, DatapointValue>;
-  const water = dp.WATERLEVEL_DETECTED === true || dp.STATE === 2 || (dp.ALARMSTATE === true && !('MOISTURE_DETECTED' in dp));
+  const water =
+    dp.WATERLEVEL_DETECTED === true || dp.STATE === 2 || (dp.ALARMSTATE === true && !('MOISTURE_DETECTED' in dp));
   const wet = !water && (dp.MOISTURE_DETECTED === true || dp.STATE === 1);
   return (
     <DetectorTile

@@ -12,7 +12,15 @@ export const usePasswordRetry = () => {
   const field = needed ? (
     <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
       <label htmlFor={id}>{m.HG_PASSWORD()}</label>
-      <Input id={id} type="password" autoComplete="current-password" autoFocus aria-describedby={`${id}-hint`} value={password} onChange={(e) => setPassword(e.target.value)} />
+      <Input
+        id={id}
+        type="password"
+        autoComplete="current-password"
+        autoFocus
+        aria-describedby={`${id}-hint`}
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
       <span id={`${id}-hint`} className="text-xs">
         {m.HG_PASSWORD_HINT()}
       </span>
@@ -37,4 +45,3 @@ export const usePasswordRetry = () => {
   };
   return { field, run, blocked: needed && password === '' };
 };
-
