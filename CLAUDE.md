@@ -40,12 +40,11 @@ kinds there; name the source file where it settles a detail.
 
 ## Pull requests
 
-One feature per PR, and each PR carries only its own commits: after a PR is
-merged, reset the working branch to the current `origin/main`
-(`git fetch origin main && git checkout -B <branch> origin/main`, then
-`git push --force-with-lease -u origin <branch>`) before starting the next
-change. Never merge `main` into the branch, so earlier, already merged
-commits don't show up again in the next PR.
+One feature per PR, and each PR carries only its own commits: every change
+gets a new branch, fresh from the current `main`
+(`git fetch origin main && git checkout -b claude/<topic> origin/main`),
+and the PR is opened from it. Don't reuse a branch whose PR is merged, and
+never merge `main` into a branch; if `main` moves on, rebase onto it.
 
 ## Language
 

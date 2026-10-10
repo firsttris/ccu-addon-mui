@@ -198,8 +198,7 @@ Wiederherstellen ersetzt `/usr/local` und startet das System neu; dass es die Da
 Sache des Systems, dass sie im Backup sind, unsere. Die Dauer jedes Schritts steht in der Zusammenfassung
 des Workflows, Serial-Log, Journal, Antworten und die Dateiliste des Backups im Artefakt `lite-vm-logs`.
 
-Die VM hat kein Funkmodul: Funkgeräte, Anlernen und Werte über Funk bleiben ein Test auf echter Hardware
-(Checkliste in [plan-openccu-lite.md](plan-openccu-lite.md), Abschnitt *Tests*).
+Die VM hat kein Funkmodul: Funkgeräte, Anlernen und Werte über Funk bleiben ein Test auf echter Hardware.
 
 ## Screenshot-Vergleich
 
