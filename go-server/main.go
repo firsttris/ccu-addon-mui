@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"ccu-addon-mui-server/pkg/audit"
+	"ccu-addon-mui-server/pkg/ccurpc"
 	"ccu-addon-mui-server/pkg/config"
 	"ccu-addon-mui-server/pkg/diagrams"
 	"ccu-addon-mui-server/pkg/logger"
@@ -71,57 +72,12 @@ func run(ctx context.Context, cfg *config.Config) error {
 		return err
 	}
 
-	// Push notifications about new alarms and service messages
-	var ruleEngine *rules.Engine
-	if store, err := push.OpenStore(cfg.PushFile); err != nil {
-		logger.Error("Push notifications disabled:", err)
-	} else if vapid, err := store.VAPID(cfg.PushSubject); err != nil {
-		logger.Error("Push notifications disabled:", err)
-	} else {
-		// The alarms and service messages the apps' watch read anyway
-		notifier := push.NewNotifier(store, vapid, wsServer.MessageSource(15*time.Second))
-		wsServer.SetPush(store, notifier)
-		go notifier.Run(ctx, 30*time.Second)
-
-		// Notification rules: states of devices, checked on every event
-		if ruleStore, err := rules.OpenStore(cfg.RulesFile); err != nil {
-			logger.Error("Notification rules disabled:", err)
-		} else {
-			// Queued: OnEvent runs in the CCU's event callback
-			ruleEngine = rules.NewEngine(ruleStore, deviceRPC, rules.Queue(ctx, func(r rules.Rule) {
-				logger.Info("🔔 Rule \"" + r.Name + "\" notifies")
-				notifier.NotifyRule(r.ID, r.Name, r.Text())
-			}))
-			if err := ruleEngine.KeepState(strings.TrimSuffix(cfg.RulesFile, ".json") + "-state.json"); err != nil {
-				logger.Error("Rules: reading the state failed:", err)
-			}
-			wsServer.SetRules(ruleStore, ruleEngine)
-			go ruleEngine.Run(ctx, 30*time.Second)
-		}
-	}
-
-	// Diagrams record the values of their datapoints
-	if store, err := diagrams.OpenStore(cfg.DiagramsFile); err != nil {
-		logger.Error("Diagrams disabled:", err)
-	} else {
-		recorder := diagrams.NewRecorder(cfg.DiagramsDir)
-		wsServer.SetDiagrams(store, recorder)
-		go recorder.Run(ctx, 5*time.Minute, func(err error) { logger.Error("Failed to write diagram values:", err) })
-		platform.diagramsRecording(ctx)
-	}
-
+	ruleEngine := setupPush(ctx, cfg, wsServer, deviceRPC)
+	setupDiagrams(ctx, cfg, wsServer, platform)
 	// Alarms and service messages send no events either
 	go wsServer.RunMessageWatch(ctx)
 
-	handleEvent := func(event *types.CCUEvent) {
-		platform.onEvent(event)
-		wsServer.RecordEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
-		wsServer.ServiceEvent(event.Event.Datapoint)
-		if ruleEngine != nil {
-			ruleEngine.OnEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
-		}
-		wsServer.BroadcastToClients(event)
-	}
+	handleEvent := eventHandler(platform, wsServer, ruleEngine)
 	// Descriptions change with new firmware or re-pairing
 	deviceChanged := func(interfaceName, address string) {
 		deviceAddress, _, _ := strings.Cut(address, ":")
@@ -156,6 +112,76 @@ func run(ctx context.Context, cfg *config.Config) error {
 	platform.started()
 
 	<-ctx.Done()
+	shutdown(wsServer, rpcServer, platform)
+	return nil
+}
+
+// setupPush sends push notifications about new alarms and service
+// messages, and those of the notification rules; their engine, nil without
+func setupPush(ctx context.Context, cfg *config.Config, wsServer *websocket.Server, deviceRPC *ccurpc.Client) *rules.Engine {
+	store, err := push.OpenStore(cfg.PushFile)
+	if err != nil {
+		logger.Error("Push notifications disabled:", err)
+		return nil
+	}
+	vapid, err := store.VAPID(cfg.PushSubject)
+	if err != nil {
+		logger.Error("Push notifications disabled:", err)
+		return nil
+	}
+	// The alarms and service messages the apps' watch read anyway
+	notifier := push.NewNotifier(store, vapid, wsServer.MessageSource(15*time.Second))
+	wsServer.SetPush(store, notifier)
+	go notifier.Run(ctx, 30*time.Second)
+
+	// Notification rules: states of devices, checked on every event
+	ruleStore, err := rules.OpenStore(cfg.RulesFile)
+	if err != nil {
+		logger.Error("Notification rules disabled:", err)
+		return nil
+	}
+	// Queued: OnEvent runs in the CCU's event callback
+	ruleEngine := rules.NewEngine(ruleStore, deviceRPC, rules.Queue(ctx, func(r rules.Rule) {
+		logger.Info("🔔 Rule \"" + r.Name + "\" notifies")
+		notifier.NotifyRule(r.ID, r.Name, r.Text())
+	}))
+	if err := ruleEngine.KeepState(strings.TrimSuffix(cfg.RulesFile, ".json") + "-state.json"); err != nil {
+		logger.Error("Rules: reading the state failed:", err)
+	}
+	wsServer.SetRules(ruleStore, ruleEngine)
+	go ruleEngine.Run(ctx, 30*time.Second)
+	return ruleEngine
+}
+
+// setupDiagrams records the values of the diagrams' datapoints
+func setupDiagrams(ctx context.Context, cfg *config.Config, wsServer *websocket.Server, platform platformHooks) {
+	store, err := diagrams.OpenStore(cfg.DiagramsFile)
+	if err != nil {
+		logger.Error("Diagrams disabled:", err)
+		return
+	}
+	recorder := diagrams.NewRecorder(cfg.DiagramsDir)
+	wsServer.SetDiagrams(store, recorder)
+	go recorder.Run(ctx, 5*time.Minute, func(err error) { logger.Error("Failed to write diagram values:", err) })
+	platform.diagramsRecording(ctx)
+}
+
+// eventHandler passes an event of the CCU to all that follow events: the
+// platform, the diagrams, the service messages, the rules and the apps
+func eventHandler(platform platformHooks, wsServer *websocket.Server, ruleEngine *rules.Engine) func(*types.CCUEvent) {
+	return func(event *types.CCUEvent) {
+		platform.onEvent(event)
+		wsServer.RecordEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
+		wsServer.ServiceEvent(event.Event.Datapoint)
+		if ruleEngine != nil {
+			ruleEngine.OnEvent(event.Event.Channel, event.Event.Datapoint, event.Event.Value)
+		}
+		wsServer.BroadcastToClients(event)
+	}
+}
+
+// shutdown stops the servers within 5 seconds, then the platform
+func shutdown(wsServer *websocket.Server, rpcServer *xmlrpc.Server, platform platformHooks) {
 	logger.Info("🛑 Shutting down...")
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -184,7 +210,6 @@ func run(ctx context.Context, cfg *config.Config) error {
 	}
 
 	logger.Info("✅ Shutdown complete")
-	return nil
 }
 
 // platformHooks are what a platform (main_ccu.go, main_lite.go) adds to the

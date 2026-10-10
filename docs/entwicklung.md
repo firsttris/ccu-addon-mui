@@ -132,7 +132,8 @@ docs/                diese Dokumentation
    (Programme und Systemvariablen) oder `favorites.go`; `websocket.go` selbst enthält nur den Server und die
    Verbindungen, `client.go` die einzelne Verbindung. Für Einstellungen gibt es `configure(...)` in
    `configure.go`: Es prüft die Rechte, führt die Aktion aus, schreibt ins Audit-Log und antwortet. Für das
-   Bedienen von Geräten nimmst du `canOperate`.
+   Bedienen gibt es `operate(...)` mit denselben Schritten: Gäste dürfen nicht. Handler mit eigenen Prüfungen
+   zwischen Recht und Aktion (Datenpunkte, Favoriten, Layouts) nehmen `canOperate` selbst.
    Räume, Gewerke, Kanäle, Namen, Favoriten und Servicemeldungen liest und ändert der Handler über `s.home`
    (die Schnittstelle `home.Source` in `go-server/pkg/home`), nicht direkt über die ReGa: Auf der CCU steckt
    die ReGa dahinter, auf openccu-lite dessen APIs. Nur was es ausschließlich auf der CCU gibt, etwa

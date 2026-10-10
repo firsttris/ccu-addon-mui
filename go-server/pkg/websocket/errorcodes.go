@@ -60,9 +60,9 @@ func codeOf(err error, own ...errorCode) string {
 }
 
 // failChange answers a change that failed with err and records it in the
-// audit log with its code
-func (s *Server) failChange(client *Client, requestID string, entry audit.Entry, err error) {
-	code := codeOf(err)
+// audit log with its code (codeOf, with the handler's own codes first)
+func (s *Server) failChange(client *Client, requestID string, entry audit.Entry, err error, own ...errorCode) {
+	code := codeOf(err, own...)
 	s.recordAudit(entry, code)
 	s.sendRequestError(client, requestID, entry.Action+" failed: "+err.Error(), code)
 }

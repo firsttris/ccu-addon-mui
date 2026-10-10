@@ -1,11 +1,16 @@
 package websocket
 
 import (
+	"errors"
 	"strings"
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/rega"
 )
+
+// A change or action the user may not make, answered with FORBIDDEN (an
+// error that wraps it says why)
+var errForbidden = errors.New("forbidden")
 
 type changeResponse struct {
 	Type      string `json:"type"`
@@ -34,26 +39,49 @@ func (s *Server) mayConfigure(client *Client, requestID string, entry audit.Entr
 // sent with the response.
 func (s *Server) configure(client *Client, requestID string, entry audit.Entry, change func() (previous any, result string, err error), createdID ...*int64) {
 	entry.User = client.user
-	finish := func(result string) { s.recordAudit(entry, result) }
 	if !s.mayConfigure(client, requestID, entry) {
 		return
 	}
+	s.finishChange(client, requestID, entry, change, createdID...)
+}
+
+// operate runs an operating action for client (running a program, setting
+// a variable, acknowledging a message), as configure runs a change: guests
+// may not, the outcome goes to the audit log
+func (s *Server) operate(client *Client, requestID string, entry audit.Entry, action func() (previous any, result string, err error)) {
+	entry.User = client.user
+	if !canOperate(client.level) {
+		s.recordAudit(entry, "FORBIDDEN")
+		s.sendRequestError(client, requestID, "guests may not "+entry.Action, "FORBIDDEN")
+		return
+	}
+	s.finishChange(client, requestID, entry, action)
+}
+
+// finishChange runs change and answers with its outcome, recorded with
+// entry: its error, its ReGa result other than OK, or success
+func (s *Server) finishChange(client *Client, requestID string, entry audit.Entry, change func() (previous any, result string, err error), createdID ...*int64) {
+	finish := func(result string) { s.recordAudit(entry, result) }
 	previous, result, err := change()
 	if err != nil {
 		code := "CCU_ERROR"
-		if strings.HasPrefix(err.Error(), "invalid") {
+		switch {
+		case errors.Is(err, errForbidden):
+			code = "FORBIDDEN"
+		case strings.HasPrefix(err.Error(), "invalid"):
 			code = "INVALID_VALUE"
 		}
 		finish(code)
 		s.sendRequestError(client, requestID, entry.Action+" failed: "+err.Error(), code)
 		return
 	}
+	// The previous value also for a refused change, as ReGa told it
+	entry.Previous = previous
 	if result != rega.SetOK {
 		finish(result)
 		s.sendRequestError(client, requestID, entry.Action+": "+result, result)
 		return
 	}
-	entry.Previous = previous
 	finish(rega.SetOK)
 	response := changeResponse{Type: entry.Action + "_response", RequestID: requestID, Success: true}
 	if len(createdID) > 0 && createdID[0] != nil {

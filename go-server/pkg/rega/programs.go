@@ -143,108 +143,132 @@ func delaySeconds(s string) int {
 	return atoi(s[11:13])*3600 + atoi(s[14:16])*60 + atoi(s[17:19])
 }
 
-func parseProgram(output string) (*ProgramDefinition, error) {
-	names := map[string]string{}
-	typeName := func(raw string) string {
-		if name, ok := names[strings.TrimSpace(raw)]; ok {
-			return name
-		}
-		return "N:" + strings.TrimSpace(raw)
+// programParser is what parseProgram has read so far: the type names of
+// the constants ("K" lines), the program, and the rule and branch the next
+// lines belong to
+type programParser struct {
+	names   map[string]string
+	program *ProgramDefinition
+	rule    *ProgramRule
+	branch  *ProgramBranch
+}
+
+func (p *programParser) typeName(raw string) string {
+	if name, ok := p.names[strings.TrimSpace(raw)]; ok {
+		return name
 	}
-	var program *ProgramDefinition
-	// The branch the next destinations belong to
-	var branch *ProgramBranch
-	var rule *ProgramRule
-	for _, line := range strings.Split(strings.ReplaceAll(output, "\r\n", "\n"), "\n") {
-		fields := strings.Split(line, "\t")
-		switch fields[0] {
-		case "K":
-			if len(fields) == 3 {
-				names[fields[2]] = fields[1]
-			}
-		case "P":
-			if len(fields) < 5 {
-				continue
-			}
-			program = &ProgramDefinition{
+	return "N:" + strings.TrimSpace(raw)
+}
+
+// The lines of getProgramScript by their first field; a line too short or
+// out of place is skipped
+var programLines = map[string]func(p *programParser, fields []string){
+	// A constant's value and name
+	"K": func(p *programParser, fields []string) {
+		if len(fields) == 3 {
+			p.names[fields[2]] = fields[1]
+		}
+	},
+	"P": func(p *programParser, fields []string) {
+		if len(fields) >= 5 {
+			p.program = &ProgramDefinition{
 				ID: atoi64(fields[1]), Active: fields[2] == "true", Name: rejoin(fields, 4), Rules: []ProgramRule{},
 			}
-		case "I":
-			if program != nil {
-				program.Description = decodeText(rejoin(fields, 1))
-			}
-		case "R":
-			if program == nil || len(fields) < 3 {
-				continue
-			}
-			if fields[1] == "true" {
-				program.Rules = append(program.Rules, ProgramRule{
-					GroupOperator: "or", Groups: [][]ProgramCondition{},
-					ProgramBranch: ProgramBranch{BreakOnRestart: fields[2] == "true", Destinations: []ProgramDestination{}},
-				})
-				rule = &program.Rules[len(program.Rules)-1]
-				branch = &rule.ProgramBranch
-			} else {
-				program.Else = &ProgramBranch{BreakOnRestart: fields[2] == "true", Destinations: []ProgramDestination{}}
-				rule = nil
-				branch = program.Else
-			}
-		case "G":
-			if rule == nil || len(fields) < 2 {
-				continue
-			}
-			// The operator to the next group, set on every group
-			if len(rule.Groups) == 0 && atoi(fields[1]) == 1 {
-				rule.GroupOperator = "and"
-			}
-			rule.Groups = append(rule.Groups, []ProgramCondition{})
-		case "S":
-			if rule == nil || len(rule.Groups) == 0 || len(fields) < 12 {
-				continue
-			}
-			g := len(rule.Groups) - 1
-			rule.Groups[g] = append(rule.Groups[g], ProgramCondition{
-				LeftType: typeName(fields[2]), LeftValue: atoi64(fields[3]), Channel: atoi64(fields[4]), Datapoint: fields[5],
-				Compare: atoi(fields[6]), Trigger: atoi(fields[7]),
-				Value1Type: typeName(fields[8]), Value2Type: typeName(fields[9]),
-				Value1: decodeText(fields[10]), Value2: decodeText(fields[11]),
-			})
-		case "T":
-			if rule == nil || len(rule.Groups) == 0 || len(fields) < 13 {
-				continue
-			}
-			group := rule.Groups[len(rule.Groups)-1]
-			if len(group) == 0 {
-				continue
-			}
-			group[len(group)-1].Time = &TimeModule{
-				ID: atoi64(fields[1]), TimerType: atoi(fields[2]), Time: fields[3], Duration: atoi(fields[4]),
-				SunOffset: atoi(fields[5]), Period: atoi(fields[6]), Weekdays: atoi(fields[7]),
-				RepetitionValue: atoi(fields[8]), Begin: fields[9], End: fields[10],
-				RepetitionCount: atoi(fields[11]), RepeatTime: fields[12],
-			}
-		case "D":
-			if branch == nil || len(fields) < 9 {
-				continue
-			}
-			delay := 0
-			if typeName(fields[6]) == "ivtDelay" {
-				delay = delaySeconds(fields[7])
-			}
-			branch.Destinations = append(branch.Destinations, ProgramDestination{
-				Param: typeName(fields[1]), Channel: atoi64(fields[2]), DatapointID: atoi64(fields[3]), Datapoint: fields[4],
-				ValueType: typeName(fields[5]), Delay: delay, Value: decodeText(rejoin(fields, 8)),
-			})
+		}
+	},
+	// The description
+	"I": func(p *programParser, fields []string) {
+		if p.program != nil {
+			p.program.Description = decodeText(rejoin(fields, 1))
+		}
+	},
+	// A rule ("true") or the else branch
+	"R": func(p *programParser, fields []string) {
+		if p.program == nil || len(fields) < 3 {
+			return
+		}
+		branch := ProgramBranch{BreakOnRestart: fields[2] == "true", Destinations: []ProgramDestination{}}
+		if fields[1] != "true" {
+			p.program.Else = &branch
+			p.rule, p.branch = nil, p.program.Else
+			return
+		}
+		p.program.Rules = append(p.program.Rules, ProgramRule{GroupOperator: "or", Groups: [][]ProgramCondition{}, ProgramBranch: branch})
+		p.rule = &p.program.Rules[len(p.program.Rules)-1]
+		p.branch = &p.rule.ProgramBranch
+	},
+	// A group of conditions
+	"G": func(p *programParser, fields []string) {
+		if p.rule == nil || len(fields) < 2 {
+			return
+		}
+		// The operator to the next group, set on every group
+		if len(p.rule.Groups) == 0 && atoi(fields[1]) == 1 {
+			p.rule.GroupOperator = "and"
+		}
+		p.rule.Groups = append(p.rule.Groups, []ProgramCondition{})
+	},
+	// A condition of the last group
+	"S": func(p *programParser, fields []string) {
+		if p.rule == nil || len(p.rule.Groups) == 0 || len(fields) < 12 {
+			return
+		}
+		g := len(p.rule.Groups) - 1
+		p.rule.Groups[g] = append(p.rule.Groups[g], ProgramCondition{
+			LeftType: p.typeName(fields[2]), LeftValue: atoi64(fields[3]), Channel: atoi64(fields[4]), Datapoint: fields[5],
+			Compare: atoi(fields[6]), Trigger: atoi(fields[7]),
+			Value1Type: p.typeName(fields[8]), Value2Type: p.typeName(fields[9]),
+			Value1: decodeText(fields[10]), Value2: decodeText(fields[11]),
+		})
+	},
+	// The time module of the last condition
+	"T": func(p *programParser, fields []string) {
+		if p.rule == nil || len(p.rule.Groups) == 0 || len(fields) < 13 {
+			return
+		}
+		group := p.rule.Groups[len(p.rule.Groups)-1]
+		if len(group) == 0 {
+			return
+		}
+		group[len(group)-1].Time = &TimeModule{
+			ID: atoi64(fields[1]), TimerType: atoi(fields[2]), Time: fields[3], Duration: atoi(fields[4]),
+			SunOffset: atoi(fields[5]), Period: atoi(fields[6]), Weekdays: atoi(fields[7]),
+			RepetitionValue: atoi(fields[8]), Begin: fields[9], End: fields[10],
+			RepetitionCount: atoi(fields[11]), RepeatTime: fields[12],
+		}
+	},
+	// A destination of the current branch
+	"D": func(p *programParser, fields []string) {
+		if p.branch == nil || len(fields) < 9 {
+			return
+		}
+		delay := 0
+		if p.typeName(fields[6]) == "ivtDelay" {
+			delay = delaySeconds(fields[7])
+		}
+		p.branch.Destinations = append(p.branch.Destinations, ProgramDestination{
+			Param: p.typeName(fields[1]), Channel: atoi64(fields[2]), DatapointID: atoi64(fields[3]), Datapoint: fields[4],
+			ValueType: p.typeName(fields[5]), Delay: delay, Value: decodeText(rejoin(fields, 8)),
+		})
+	},
+}
+
+func parseProgram(output string) (*ProgramDefinition, error) {
+	p := &programParser{names: map[string]string{}}
+	for _, line := range strings.Split(strings.ReplaceAll(output, "\r\n", "\n"), "\n") {
+		fields := strings.Split(line, "\t")
+		if parse, ok := programLines[fields[0]]; ok {
+			parse(p, fields)
 		}
 	}
-	if program == nil {
+	if p.program == nil {
 		// The constants come first, then NOT_FOUND
 		if strings.HasSuffix(strings.TrimSpace(output), SetNotFound) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("unexpected response from ReGa: %q", output)
 	}
-	return program, nil
+	return p.program, nil
 }
 
 // GetProgram returns a program with its rules, or nil if there is none.
