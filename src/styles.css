@@ -101,6 +101,7 @@ html body[data-scroll-locked] {
     @apply border-border outline-ring/50;
     /* Thin scrollbars in the theme's colors instead of the wide grey ones
        Windows and Linux draw; scrollbar-color is inherited from :root.
+       Thin also narrows the gutter html keeps (15 → 10 px in Chromium).
        Here in the base layer, so [scrollbar-width:none] still hides one */
     scrollbar-width: thin;
   }
