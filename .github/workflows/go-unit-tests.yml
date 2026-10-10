@@ -51,6 +51,13 @@ jobs:
       - name: Vet and format
         run: go vet ./... && go vet -tags lite ./... && test -z "$(gofmt -l .)"
 
+      # Both builds: what only a CCU needs shows up as unused in the lite
+      # build when it lacks its //go:build !lite (docs/entwicklung.md)
+      - name: staticcheck
+        run: |
+          go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...
+          go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 -tags lite ./...
+
       # -race: several handlers run in their own goroutines
       - name: Run unit tests with coverage
         run: go test -race ./... -covermode=atomic -coverprofile=coverage.out

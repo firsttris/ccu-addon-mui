@@ -93,10 +93,13 @@ func verifyJWT(t *testing.T, header, publicKey, audience string) {
 		t.Fatalf("claims: %+v", c)
 	}
 	keyBytes, _ := base64.RawURLEncoding.DecodeString(publicKey)
-	x, y := elliptic.Unmarshal(elliptic.P256(), keyBytes) //nolint:staticcheck
+	pub, err := ecdsa.ParseUncompressedPublicKey(elliptic.P256(), keyBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
 	sig, _ := base64.RawURLEncoding.DecodeString(jwt[2])
 	digest := sha256.Sum256([]byte(jwt[0] + "." + jwt[1]))
-	if !ecdsa.Verify(&ecdsa.PublicKey{Curve: elliptic.P256(), X: x, Y: y}, digest[:], new(big.Int).SetBytes(sig[:32]), new(big.Int).SetBytes(sig[32:])) {
+	if !ecdsa.Verify(pub, digest[:], new(big.Int).SetBytes(sig[:32]), new(big.Int).SetBytes(sig[32:])) {
 		t.Fatal("invalid signature")
 	}
 }
@@ -144,5 +147,22 @@ func TestSendReportsGoneSubscriptions(t *testing.T) {
 	vapid, _ := NewVAPID("", "mailto:test@example.com")
 	if err := vapid.Send(server.Client(), newBrowser(t).subscription(server.URL), []byte("x")); err != ErrGone {
 		t.Fatalf("expected ErrGone, got %v", err)
+	}
+}
+
+// A key stored before the switch to ecdsa's byte encodings (Go 1.25) loads
+// with the same public key: the browsers' subscriptions stay valid
+func TestStoredVAPIDKeyKeepsItsPublicKey(t *testing.T) {
+	const private = "Fm5ItffQ4iyTM-m-p0mNHMcY-7BxOJE3xIHAoW8XdqY"
+	const public = "BGPEJzW80QL8nPvy2c-kjo3psugAH2UtQJAycDHiFRqfY5Xr04iOhlwEHiJd3eh217Ijj9z3BqGiaaTHSNjyleY"
+	v, err := NewVAPID(private, "mailto:a@b")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v.PublicKey() != public || encodeKey(v.privateBytes()) != private {
+		t.Fatalf("public %s, private %s", v.PublicKey(), encodeKey(v.privateBytes()))
+	}
+	if _, err := NewVAPID("AAAA", "mailto:a@b"); err == nil {
+		t.Fatal("a short key must be refused")
 	}
 }

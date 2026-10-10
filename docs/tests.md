@@ -239,7 +239,7 @@ der Workflow dafür eine eigene Auswahl `tiles`.
 | Workflow | Auslöser | Schritte |
 |---|---|---|
 | `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Unit-Tests, Build mit Typprüfung (`vite build && tsc`), Go-Build für ARM und x86 und für openccu-lite (aarch64, x86_64), die `tar.gz`-Archive mit `.sha256` als Artefakt `addon` |
-| `go-unit-tests.yml` | Push und Pull Request auf `main` | `go vet` und `go test ./...` mit Coverage-Bericht als Artefakt, dasselbe mit `-tags lite` für openccu-lite |
+| `go-unit-tests.yml` | Push und Pull Request auf `main` | `go vet`, `gofmt`, `staticcheck` und `go test ./...` mit Coverage-Bericht als Artefakt, dasselbe mit `-tags lite` für openccu-lite |
 | `playwright-e2e.yml` | Push und Pull Request auf `main` | Im Docker-Image `mcr.microsoft.com/playwright` (Version aus der `package-lock.json`, kein Browser-Download): E2E mit Mock inkl. Anmeldung (4 Worker, mit Frontend-Coverage), Screenshot-Vergleich und E2E gegen den Stack auf zwei Runnern (`--shard`), Berichte als Artefakte |
 | `lite-vm.yml` | Pull Request, der den Lite-Teil ändert; montags gegen das neueste openccu-lite; von Hand (mit wählbarem openccu-lite-Release); vor jeder Release | Paket bauen, openccu-lite-Image laden (zwischengespeichert je Release), in QEMU mit KVM booten, installieren, `scripts/lite-vm-test.sh`; Dauer je Schritt in der Zusammenfassung, Logs als Artefakt |
 | `release.yml` | Tag `vX.Y.Z` | Die vier Workflows oben, dann die Release mit den Archiven und erzeugten Notizen |

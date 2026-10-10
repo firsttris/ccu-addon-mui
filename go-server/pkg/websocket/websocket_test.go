@@ -718,8 +718,7 @@ func TestRecoveredPanic(t *testing.T) {
 	ran := false
 	recovered("testing", func() {
 		ran = true
-		var m map[string]int
-		m["x"] = 1
+		panic("a bug in a handler")
 	})
 	if !ran {
 		t.Fatal("not run")
