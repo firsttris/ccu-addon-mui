@@ -60,8 +60,7 @@ Update what the change affects, in the same PR, and only that:
 - the tests: unit, Go, E2E or stack tests for what changed, the fake CCU
   (`go-server/pkg/fakeccu`, `fixtures/`) when the server talks to the CCU
   in a new way;
-- the docs in `docs/` that describe it (e.g. `entwicklung.md`,
-  `architektur.md`, `protokoll.md`, `tests.md`, `vergleich-ccu3.md`);
+- the docs in `docs/` that describe it;
 - the README (`README.md` and `README.en.md`) when a feature a user sees
   is added, changed or removed.
 
