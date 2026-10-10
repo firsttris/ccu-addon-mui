@@ -12,13 +12,13 @@ import { m } from '../paraglide/messages';
 import { DetectorTile } from './DetectorControls';
 import { Extra, format, number } from './ClimateSensorControl';
 import { MeasureTile, measured } from './SensorControls';
+import { channelNumberOf } from '../lib/address';
 
 // Sensors that measure or count: the distance sensor ELV-SH-DUSI, the
 // passage detector HmIP-SPDR, the capacitive filling level sensor
 // HM-Sen-Wa-Od and the meter sensor HM-ES-TX-WM with an IEC or gas sensor.
 
 const datapoints = (channel: Channel) => channel.datapoints as Record<string, DatapointValue>;
-const channelIndex = (channel: Channel) => Number(channel.address.split(':')[1] ?? 0);
 
 // The unit the device states for a value, else a fallback
 const useUnits = (channel: Channel) => {
@@ -74,9 +74,9 @@ export const passageDirection = (rightToLeft: boolean, leftToRight: boolean) =>
   leftToRight ? m.PASSAGE_LEFT_TO_RIGHT() : rightToLeft ? m.PASSAGE_RIGHT_TO_LEFT() : m.PASSAGE_UNKNOWN();
 
 export const PassageDetectorControl = ({ channels }: { channels: Channel[] }) => {
-  const sorted = [...channels].sort((a, b) => channelIndex(a) - channelIndex(b));
-  const rl = datapoints(sorted.find((c) => channelIndex(c) === 2) ?? sorted[0]);
-  const lr = datapoints(sorted.find((c) => channelIndex(c) === 3) ?? sorted[sorted.length - 1]);
+  const sorted = [...channels].sort((a, b) => channelNumberOf(a.address) - channelNumberOf(b.address));
+  const rl = datapoints(sorted.find((c) => channelNumberOf(c.address) === 2) ?? sorted[0]);
+  const lr = datapoints(sorted.find((c) => channelNumberOf(c.address) === 3) ?? sorted[sorted.length - 1]);
   const current = rl.CURRENT_PASSAGE_DIRECTION === true || lr.CURRENT_PASSAGE_DIRECTION === true;
   const count = (dp: Record<string, DatapointValue>) => {
     const value = number(dp.PASSAGE_COUNTER_VALUE);

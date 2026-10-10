@@ -1,4 +1,5 @@
 import type { DatapointValue, ParamsetDescription } from '../../../types/types';
+import { MAX_TEMP, MIN_TEMP } from '../constants';
 
 // The week profiles of a HomeMatic IP thermostat or heating group live in
 // the MASTER paramset of its climate channel, as pairs per day and slot:
@@ -19,8 +20,6 @@ export type Day = (typeof DAYS)[number];
 
 export const DAY_END = 24 * 60;
 export const SLOT_STEP = 15;
-export const MIN_TEMPERATURE = 5;
-export const MAX_TEMPERATURE = 30;
 
 export interface Slot {
   // Minutes since midnight at which this slot ends
@@ -136,9 +135,7 @@ export const setSlotEnd = (day: DayProfile, index: number, end: number): DayProf
 
 export const setSlotTemperature = (day: DayProfile, index: number, temperature: number): DayProfile =>
   day.map((slot, i) =>
-    i === index
-      ? { ...slot, temperature: clamp(Math.round(temperature * 2) / 2, MIN_TEMPERATURE, MAX_TEMPERATURE) }
-      : slot,
+    i === index ? { ...slot, temperature: clamp(Math.round(temperature * 2) / 2, MIN_TEMP, MAX_TEMP) } : slot,
   );
 
 // Splits a slot in the middle (if there is room and a slot to spare)

@@ -23,7 +23,7 @@ const useMinuteTick = () => {
 
 // Admin rights to end: an administrator who entered the password, with
 // authentication on (without it there is nothing to end)
-export const useAdminLock = () => {
+const useAdminLock = () => {
   const { userLevel, elevated, elevatedUntil, endElevation } = useWebSocketContext();
   const { showToast } = useToast();
   const [busy, setBusy] = useState(false);

@@ -6,6 +6,7 @@ import { cn } from '../lib/utils';
 import { m } from '../paraglide/messages';
 import { ChannelPicker } from './ChannelPicker';
 import { DeviceImage } from './DeviceImage';
+import { channelOf, deviceAddressOf } from '../lib/address';
 
 interface ChannelFieldProps {
   label: string;
@@ -33,7 +34,7 @@ export const ChannelField = ({
   const { data: devices = [] } = useDevices();
   const { data: rooms = [] } = useRooms();
   const channel = value ? channels.find((c) => c.id === value) : undefined;
-  const device = channel ? devices.find((d) => d.address === channel.address.split(':')[0]) : undefined;
+  const device = channel ? devices.find((d) => d.address === deviceAddressOf(channel.address)) : undefined;
   const room = channel?.rooms
     ?.map((id) => rooms.find((r) => r.id === id)?.name)
     .filter(Boolean)
@@ -57,7 +58,7 @@ export const ChannelField = ({
             <DeviceImage
               type={device?.type}
               size={28}
-              channel={channel.address.split(':')[1]}
+              channel={channelOf(channel.address)}
               className="shrink-0 rounded"
             />
             <span className="flex min-w-0 flex-1 flex-col leading-tight">

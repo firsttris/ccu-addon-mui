@@ -32,7 +32,8 @@ import { GridDashboard, type GridTile } from './grid/GridDashboard';
 import { moveSection, orderSections, parseLayout, type SavedLayout, type SectionLayout } from './grid/tileLayout';
 import ChevronUpIcon from '~icons/lucide/chevron-up';
 import ChevronDownIcon from '~icons/lucide/chevron-down';
-import { isLight as isLightTile, useLightTradeIds } from '../controls/light/isLight';
+import { isLight, useLightTradeIds } from '../controls/light/isLight';
+import { deviceAddressOf } from '../lib/address';
 
 // --- Tabs of rooms, trades or favorite lists, with a marker that glides
 // to the active one
@@ -134,13 +135,13 @@ const isOpenWindow = (channel: Channel) =>
 // Dimmers of the "lights" section, and the switches among them that drive
 // a lamp as their tile shows it (isLight: pumps and heaters don't count);
 // on when STATE or LEVEL say so
-const isLight = (channel: Channel, lightTradeIds: Set<number>) => {
+const countsAsLight = (channel: Channel, lightTradeIds: Set<number>) => {
   if (controlOverrides[channel.type]?.section !== 'lights') return false;
   const dp = channel.datapoints as Record<string, unknown>;
-  return 'LEVEL' in dp || isLightTile(channel, lightTradeIds);
+  return 'LEVEL' in dp || isLight(channel, lightTradeIds);
 };
 const isLightOn = (channel: Channel, lightTradeIds: Set<number>) => {
-  if (!isLight(channel, lightTradeIds)) return false;
+  if (!countsAsLight(channel, lightTradeIds)) return false;
   const dp = channel.datapoints as Record<string, unknown>;
   return dp.STATE === true || (typeof dp.LEVEL === 'number' && dp.LEVEL > 0) || Number(dp.LEVEL) > 0;
 };
@@ -152,7 +153,7 @@ const Overview = ({ channels }: { channels: Channel[] }) => {
     .map((c) => (c.datapoints as Record<string, unknown>).ACTUAL_TEMPERATURE)
     .filter((t): t is number => typeof t === 'number');
   const lightTradeIds = useLightTradeIds();
-  const switches = channels.filter((c) => isLight(c, lightTradeIds));
+  const switches = channels.filter((c) => countsAsLight(c, lightTradeIds));
   const switchedOn = switches.filter((c) => isLightOn(c, lightTradeIds)).length;
   const windowChannels = channels.filter((c) => windowTypes.has(c.type));
   const openWindows = windowChannels.filter(isOpenWindow);
@@ -278,7 +279,7 @@ const DeviceTile = memo(
 const groupByDevice = (channels: Channel[]) => {
   const devices = new Map<string, Channel[]>();
   for (const channel of channels) {
-    const deviceAddress = channel.address.split(':')[0];
+    const deviceAddress = deviceAddressOf(channel.address);
     devices.set(deviceAddress, [...(devices.get(deviceAddress) ?? []), channel]);
   }
   return Array.from(devices);
@@ -294,7 +295,7 @@ interface SectionGroup {
 
 // Sections in the order of SectionId (sectionTitles), then the types
 // without a control in the order they came
-export const groupIntoSections = (channelsByType: [string, Channel[]][]): SectionGroup[] => {
+const groupIntoSections = (channelsByType: [string, Channel[]][]): SectionGroup[] => {
   const groups = new Map<string, SectionGroup>();
   for (const [type, channels] of channelsByType) {
     const section = controlOverrides[type]?.section;

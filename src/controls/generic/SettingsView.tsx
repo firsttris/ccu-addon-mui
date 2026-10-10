@@ -20,7 +20,7 @@ import {
   enumLabel,
   formatDuration,
   formatTimeOfDay,
-  isPercent,
+  isPercentSetting,
   monthName,
   type Setting,
   stepOf,
@@ -53,7 +53,7 @@ const clamp = (p: ParameterDescription, value: number) => {
 
 const rangeHint = (name: string, p: ParameterDescription) => {
   if (typeof p.min !== 'number' || typeof p.max !== 'number') return undefined;
-  if (isPercent(name, p)) return undefined;
+  if (isPercentSetting(name, p)) return undefined;
   const unit = p.unit && p.unit !== '100%' ? ` ${p.unit}` : '';
   return `${number(p.min)} – ${number(p.max)}${unit}`;
 };
@@ -382,7 +382,7 @@ export const readableValue = (
       const option = parameter.valueList?.[value];
       return option ? enumLabel(option) : String(value);
     }
-    if (isPercent(name, parameter))
+    if (isPercentSetting(name, parameter))
       return `${Math.round(value * (parameter.type === 'FLOAT' || parameter.unit === '100%' ? 100 : 1))} %`;
     const step = timeOfDayStep(name, parameter);
     if (step) return formatTimeOfDay(step === 30 ? value * 30 : value);

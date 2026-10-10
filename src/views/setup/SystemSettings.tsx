@@ -17,6 +17,7 @@ import { Panel } from './Panel';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 import { errorText } from '../../lib/errors';
+import { pad2 } from '../../lib/format';
 
 const useSystemSettings = () => {
   const { request } = useWebSocketActions();
@@ -76,8 +77,7 @@ export const SystemSettings = () => {
 
 // "2026-10-04 12:30:00" for the CCU from a date (local time)
 export const formatClock = (date: Date) => {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`;
 };
 
 // Time zone, time servers and setting the clock by hand, as the WebUI's

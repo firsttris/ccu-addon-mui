@@ -10,7 +10,7 @@ import type { DeviceImage as Image } from '../types/protocol';
 // and screened in the dark one. The server says where they are served: by
 // itself at /ws/mui/img/ on a CCU, by openccu-lite at /config/img/devices/
 
-export const DEVICE_IMAGE_PATH = '/ws/mui/img/';
+const DEVICE_IMAGE_PATH = '/ws/mui/img/';
 
 export const useDeviceImages = () => {
   const { request } = useWebSocketActions();

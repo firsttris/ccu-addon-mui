@@ -14,7 +14,7 @@ const number = (device: DeviceHealth, name: string) => {
 
 // Within this share above the device's LOW_BAT limit the battery is
 // "soon empty": on a 2.2 V limit from 2.42 V
-export const LOW_MARGIN = 0.1;
+const LOW_MARGIN = 0.1;
 
 export const battery = (device: DeviceHealth): { state: BatteryState; voltage?: number; limit?: number } => {
   const voltage = number(device, 'OPERATING_VOLTAGE');

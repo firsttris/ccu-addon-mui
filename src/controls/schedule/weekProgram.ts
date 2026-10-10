@@ -1,4 +1,5 @@
 import type { DatapointValue, ParamsetDescription } from '../../types/types';
+import { pad2 } from '../../lib/format';
 
 // The week program of HmIP actuators (SWITCH_/BLIND_/DIMMER_WEEK_PROFILE
 // channel), as the WebUI's HmIPWeeklyProgram.js (OpenCCU-Base) reads and
@@ -40,12 +41,11 @@ export const ALL_DAYS = 127;
 export const WORKDAYS = 2 | 4 | 8 | 16 | 32;
 export const WEEKEND = 64 | 1;
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const num = (value: DatapointValue | undefined, fallback = 0) =>
   typeof value === 'number' ? value : Number(value ?? fallback) || fallback;
 
 // Entry numbers the device has, from its description (75 for most)
-export const entryNumbers = (description: ParamsetDescription) =>
+const entryNumbers = (description: ParamsetDescription) =>
   Object.keys(description)
     .map((name) => /^(\d+)_WP_WEEKDAY$/.exec(name)?.[1])
     .filter((n): n is string => n !== undefined)
@@ -111,7 +111,7 @@ export const deletedValues = (description: ParamsetDescription, number: string):
 export const changedValues = (current: Values, next: Values): Values =>
   Object.fromEntries(Object.entries(next).filter(([name, value]) => current[name] !== value));
 
-export const formatTime = (hour: number, minute: number) => `${pad(hour)}:${pad(minute)}`;
+export const formatTime = (hour: number, minute: number) => `${pad2(hour)}:${pad2(minute)}`;
 
 // Bits of the target channel mask that are set, as 0-based indexes
 export const targetIndexes = (mask: number) =>

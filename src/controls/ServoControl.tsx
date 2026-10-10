@@ -4,6 +4,7 @@ import type { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { m } from '../paraglide/messages';
 import { DetectorTile } from './DetectorControls';
+import { channelNumberOf } from '../lib/address';
 
 // Servo controllers HmIP-WSC / ELV-SH-WSC, as the WebUI's servo.fn and
 // iseHmIPServo: the virtual receivers (channels 4–6, 8–10) set the position
@@ -14,7 +15,6 @@ import { DetectorTile } from './DetectorControls';
 // STATE elsewhere. The transmitters (3, 7) report the actual position.
 
 const datapoints = (channel: Channel) => channel.datapoints as Record<string, DatapointValue>;
-const channelIndex = (channel: Channel) => Number(channel.address.split(':')[1] ?? 0);
 const percent = (level: DatapointValue) => (typeof level === 'number' ? Math.round(level * 1000) / 10 : undefined);
 
 // LEVEL_STATUS of the transmitter (servo.fn: 2 and 3 not shown)
@@ -68,7 +68,7 @@ export const ServoControl = ({ channel }: { channel: Channel }) => {
   const value = percent(dp.LEVEL);
   const transmitter = channel.type === 'SERVO_TRANSMITTER';
   const [ramp, setRamp] = useState(0);
-  const hasRamp = !transmitter && (channelIndex(channel) === 4 || channelIndex(channel) === 8);
+  const hasRamp = !transmitter && (channelNumberOf(channel.address) === 4 || channelNumberOf(channel.address) === 8);
   const problem = transmitter
     ? dp.ERROR_RESTART_NEEDED === true
       ? m.SERVO_RESTART_NEEDED()

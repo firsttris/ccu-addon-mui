@@ -26,7 +26,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | 1 | Kein Linter oder Formatter erzwingt den Stil (erledigt: Biome, staticcheck) | beide | M |
 | 2 | Code, den nur die CCU braucht, ohne Build-Tag (erledigt) | Go | S |
 | 3 | Uneinheitliche Fehlercodes, `requestId` geht verloren (erledigt) | Go | S |
-| 4 | Kopierte Helfer und Reste im Frontend | Frontend | S–M |
+| 4 | Kopierte Helfer und Reste im Frontend (erledigt) | Frontend | S–M |
 | 5 | Veraltete Go-Idiome, Logger ohne `Errorf` (erledigt) | Go | S |
 | 6 | Gleicher Anfang in jedem Handler, Antwort-Structs | Go | M |
 | 7 | Fehlerbehandlung bei Änderungen mehrfach kopiert | Go | S |
@@ -67,13 +67,8 @@ Behoben statt ausgenommen:
 - Zier-SVGs sind `aria-hidden`.
 - Der Drehregler des Thermostats lässt sich mit der Tastatur bedienen.
 
-Ebenfalls noch offen:
-
-- Es gibt sowohl `lib/` als auch `utils/`. ✔
-- `utils/colors.ts` hat als einzige Datei deutsche JSDoc-Kommentare.
-- Hooks ohne JSX liegen in `.tsx`-Dateien, etwa `useUniqueDeviceID.tsx` und `useLocalStorage.tsx`.
-- Die Importe sind nicht sortiert. Biomes `organizeImports` ist abgeschaltet, weil es fast jede Datei
-  geändert hätte.
+Noch offen: Die Importe sind nicht sortiert. Biomes `organizeImports` ist abgeschaltet, weil es fast
+jede Datei geändert hätte.
 
 **Go: erledigt.** Die CI führt `staticcheck` (fest auf v0.8.1) für beide Builds aus, mit und ohne
 `-tags lite`. Dafür ist der Push-Code auf die Byte-Kodierungen von `crypto/ecdsa` aus Go 1.25 umgestellt
@@ -82,7 +77,7 @@ Der Panic-Test löst sein `panic` jetzt ausdrücklich aus statt über eine nil-M
 `golangci-lint` lässt sich derzeit nicht nutzen: Die verfügbare Version ist mit Go 1.25 gebaut, das
 Projekt verlangt Go 1.27.1.
 
-**Noch offen:** `utils/` in `lib/` aufgehen lassen (siehe #4).
+
 
 ### 2. Code, den nur die CCU braucht, steht in Dateien ohne Build-Tag: erledigt
 
@@ -114,43 +109,28 @@ sind nur über `dispatch_ccu.go` erreichbar. Eine Aufteilung würde diesen Teil 
 - `sendError` und `sendErrorCode` sind entfallen. Fehler gehen nur noch über `sendRequestError`.
 - Die `requestId` aus `dispatch` an alle Handler weiterzureichen, gehört zu #6, einheitliche Signaturen.
 
-### 4. Kopierte Helfer und Reste im Frontend
+### 4. Kopierte Helfer und Reste im Frontend: erledigt
 
-**Kopierte Helfer**
-
-| Helfer | Stellen |
-|---|---|
-| `IPV4`-Regex ✔ | `views/setup/Network.tsx:14`, `Firewall.tsx:16`, `LanGateways.tsx:33` |
-| `selectClass` | `views/programs/ProgramRows.tsx:38`, `ProgramInputs.tsx:21`, `views/rules/RuleEditor.tsx:28` |
-| `dayName` | `controls/schedule/WeekProgramSheet.tsx:56`, `ThermostatControl/profile/WeekProfileSheet.tsx:51` |
-| `formatTemperature` | `WeekProfileSheet.tsx:45`, `TemperatureDisplay.tsx:15` |
-| `pad` | `components/ui/time-picker.tsx:7`, `controls/schedule/weekProgram.ts:43` |
-| `deviceOf` | `components/ChannelPicker.tsx:41`, `hooks/channels.ts:37` |
-| `channelIndex` | `controls/ServoControl.tsx:17`, `MeterSensorControls.tsx:21` |
-
-**Doppelte oder irreführende Namen**
-
-- `address.split(':')` steht 20-mal von Hand im Code.
-- Es gibt drei `isPercent` mit unterschiedlicher Bedeutung: `ProgramInputs.tsx:106`,
-  `ParamsetView.tsx:23`, `settingKinds.ts:163`.
-- Die Temperaturgrenzen sind zweimal definiert: `MIN_TEMP`/`MAX_TEMP` in
-  `ThermostatControl/constants.ts:7` und `MIN_TEMPERATURE`/`MAX_TEMPERATURE` in
-  `profile/weekProfile.ts:22`.
-- Ein lokales `isLight` in `views/Dashboard.tsx:126` verdeckt `controls/light/isLight.ts:11`, das etwas
-  anderes bedeutet.
-
-**Reste**
-
-- `getPercentageGradient` (`utils/colors.ts:35`) wird nirgends genutzt. ✔
-- Zwei `console.log` in `hooks/useLocalStorage.tsx:9` und `:19`. ✔
-- Rund 40 Exporte werden nur in ihrer eigenen Datei verwendet, zum Beispiel `SNMP_USER_PATTERN` und
-  `RESET_WORD` (`Security.tsx`), `useAdminLock`, `formatBytes`, `storedLanguage` und `SOUND_FILES`.
-- `DeviceSettings.tsx:264` baut seine Fehlermeldung selbst. Überall sonst übernimmt das `errorText`
-  aus `lib/errors.ts` (61 Aufrufe).
-
-**Vorschlag:** Die Helfer nach `lib/` verschieben, zum Beispiel nach `lib/address.ts`, `lib/format.ts`
-und `lib/validation.ts`. Ungenutztes löschen und Exporte, die nur in ihrer Datei gebraucht werden, nicht
-mehr exportieren.
+- **Gemeinsame Helfer statt Kopien**, als reine Funktionen in `lib/`:
+  - `lib/address.ts`: `deviceAddressOf`, `channelOf`, `channelNumberOf`. Sie ersetzen sieben lokale
+    Kopien (`deviceOf`, `channelIndex` …) und die von Hand geschriebenen `address.split(':')`.
+  - `lib/format.ts`: `pad2`, `dayName`, `formatTemperature`.
+  - `lib/validation.ts`: `IPV4`.
+  - `inlineSelectClass` in `components/ui/select.tsx`.
+- **Doppelte Namen aufgelöst:**
+  - Die Temperaturgrenzen gibt es nur noch als `MIN_TEMP`/`MAX_TEMP`.
+  - `isPercentUnit` (`controls/generic/parameters.ts`) ersetzt zwei gleiche `isPercent`. Das breitere in
+    `settingKinds` heißt jetzt `isPercentSetting`.
+  - Das lokale `isLight` im Dashboard heißt jetzt `countsAsLight`.
+- **Reste:**
+  - `getPercentageGradient` und `getPercentageColor` sind gelöscht, ebenso ein ungenutztes `pad2` in
+    `programModel` und der Re-Export von `DEVICE_TABS`.
+  - `useLocalStorage` schreibt nichts mehr per `console.log`.
+  - `DeviceSettings` nutzt `errorText`.
+  - `utils/` ist in `lib/` aufgegangen, `colors.ts` hat englische Kommentare.
+  - Hooks ohne JSX sind `.ts`-Dateien.
+  - 32 Exporte, die nur in ihrer eigenen Datei gebraucht werden, sind nicht mehr exportiert. Ermittelt
+    mit `knip`. Die Bausteine in `components/ui` bleiben als Bibliothek exportiert.
 
 ### 5. Veraltete Go-Idiome, Logger ohne `Errorf`: erledigt
 
@@ -311,7 +291,7 @@ Jeder Schritt ist ein eigener PR:
 2. ~~Fehlercodes vereinheitlichen (#3)~~ erledigt.
 3. ~~`staticcheck` in der CI (#1)~~ erledigt; fürs Frontend mit Biome.
 4. ~~Mechanische Go-Modernisierung und Logger (#5)~~ erledigt.
-5. Kopierte Frontend-Helfer und Reste (#4).
+5. ~~Kopierte Frontend-Helfer und Reste (#4)~~ erledigt.
 6. `Security.tsx` und `queries/index.ts` aufteilen (#11), weil ihre Nahtstellen schon markiert sind.
 7. Handler vereinheitlichen (#6, #7), danach die langen Handler aufteilen (#13).
 8. Der Rest: #8, #9, #10, #12, #14, `DeviceSettings.tsx`, `fakeccu.go`.

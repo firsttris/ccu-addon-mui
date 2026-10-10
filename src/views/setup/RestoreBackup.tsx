@@ -13,7 +13,7 @@ const RESTORE_TIMEOUT_MS = 10 * 60 * 1000;
 
 type Step = 'choose' | 'confirm' | 'done';
 
-export const restoreErrorMessage = (error: unknown) =>
+const restoreErrorMessage = (error: unknown) =>
   errorText(error, m.RESTORE_FAILED, {
     INVALID_BACKUP: m.RESTORE_INVALID,
     WRONG_KEY: m.RESTORE_WRONG_KEY,

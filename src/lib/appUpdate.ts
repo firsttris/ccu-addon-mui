@@ -37,7 +37,7 @@ export const answerTabQuestions = () => {
 };
 
 // Whether the app is open in another tab of this browser
-export const otherAppTabs = (waitMs = 300): Promise<boolean> =>
+const otherAppTabs = (waitMs = 300): Promise<boolean> =>
   new Promise((resolve) => {
     if (typeof BroadcastChannel === 'undefined') {
       resolve(false);

@@ -16,7 +16,7 @@ import type { Diagram, DiagramSeries } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
 import { Field } from '../../components/Field';
 
-export const MAX_SERIES = 12;
+const MAX_SERIES = 12;
 export const SYSVAR = 'sysvar';
 
 // Datapoints that are no measured value
@@ -24,7 +24,7 @@ const skipped =
   /^(PRESS_|INSTALL_TEST|ON_TIME|RAMP_TIME|INHIBIT|WORKING|PROCESS|SECTION|COMBINED_PARAMETER|OPERATING_VOLTAGE_STATUS|CONFIG_PENDING|UPDATE_PENDING|ERROR_CODE)/;
 
 // The unit of a datapoint, guessed from its name
-export const guessUnit = (datapoint: string) => {
+const guessUnit = (datapoint: string) => {
   if (datapoint.includes('TEMPERATURE')) return '°C';
   if (datapoint === 'HUMIDITY' || datapoint.startsWith('LEVEL') || datapoint === 'VALVE_STATE') return '%';
   if (datapoint === 'POWER' || datapoint.endsWith('_POWER')) return 'W';
@@ -45,7 +45,7 @@ export const guessUnit = (datapoint: string) => {
 const isCounter = (datapoint: string) =>
   /(ENERGY_COUNTER|GAS_VOLUME|RAIN_COUNTER|WATER_VOLUME|_COUNTER)$/.test(datapoint);
 
-export const defaultsFor = (datapoint: string, value: unknown): Partial<DiagramSeries> =>
+const defaultsFor = (datapoint: string, value: unknown): Partial<DiagramSeries> =>
   isCounter(datapoint)
     ? { chart: 'bar', aggregate: 'delta' }
     : typeof value === 'boolean' || datapoint === 'STATE'

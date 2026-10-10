@@ -13,8 +13,7 @@ import { useChannelNames } from './channelNames';
 import { LinkParameters, useLinkProfiles } from './Links';
 import { m } from '../../paraglide/messages';
 import { errorText } from '../../lib/errors';
-
-const deviceAddressOf = (address: string) => address.split(':')[0];
+import { channelOf, deviceAddressOf } from '../../lib/address';
 
 // Identifies a link in the list
 export const linkKey = (link: Pick<InterfaceLink, 'interfaceName' | 'sender' | 'receiver'>) =>
@@ -73,7 +72,7 @@ const EndpointView = ({ endpoint, interfaceName }: { endpoint: Endpoint; interfa
     <DeviceImage
       type={endpoint.deviceType}
       size={48}
-      channel={endpoint.address.split(':')[1]}
+      channel={channelOf(endpoint.address)}
       className="shrink-0 rounded-lg"
     />
     <div className="flex min-w-0 flex-col">

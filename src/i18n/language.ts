@@ -10,7 +10,7 @@ export type LanguageChoice = 0 | 1 | 2;
 const KEY = 'mui-language';
 const locales = { 1: 'de', 2: 'en' } as const;
 
-export const storedLanguage = (): LanguageChoice => {
+const storedLanguage = (): LanguageChoice => {
   try {
     const value = localStorage.getItem(KEY);
     return value === '1' ? 1 : value === '2' ? 2 : 0;

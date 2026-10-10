@@ -6,6 +6,7 @@ import FlameIcon from '~icons/lucide/flame';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
+import { channelNumberOf } from '../lib/address';
 
 // All channels of one HmIP-ESI: channel 1 has the current power or gas flow,
 // channels 2-4 the meter readings. Which values are set depends on the
@@ -193,12 +194,10 @@ const GasMeter = ({ flow, volume }: { flow: number; volume: number }) => {
   );
 };
 
-const channelNumber = (address: string) => Number(address.split(':')[1] ?? 0);
-
 const isSet = (value: number | undefined): value is number => typeof value === 'number' && value > 0;
 
 export const EnergyMeterControl = ({ channels }: EnergyMeterControlProps) => {
-  const sorted = [...channels].sort((a, b) => channelNumber(a.address) - channelNumber(b.address));
+  const sorted = [...channels].sort((a, b) => channelNumberOf(a.address) - channelNumberOf(b.address));
 
   const power = sorted.find((c) => c.datapoints.POWER !== undefined)?.datapoints.POWER;
   const gasFlow = sorted.find((c) => c.datapoints.GAS_FLOW !== undefined)?.datapoints.GAS_FLOW;
@@ -227,7 +226,7 @@ export const EnergyMeterControl = ({ channels }: EnergyMeterControlProps) => {
 
   const registers: Register[] = readings.map((channel, index) => ({
     key: channel.address,
-    label: index > 0 ? `${m.METER_READING()} (${m.CHANNEL()} ${channelNumber(channel.address)})` : m.METER_READING(),
+    label: index > 0 ? `${m.METER_READING()} (${m.CHANNEL()} ${channelNumberOf(channel.address)})` : m.METER_READING(),
     value: (channel.datapoints.ENERGY_COUNTER ?? 0) / 1000,
   }));
   if (feedIn !== undefined) registers.push({ key: 'feed-in', label: m.FEED_IN(), value: feedIn / 1000 });

@@ -11,7 +11,7 @@ export const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as co
 // five side by side need a multiple of five (12 columns only fit 4 or 6)
 export const COLS = { lg: 60, md: 50, sm: 30, xs: 20, xxs: 10 } as const;
 export type BreakpointName = keyof typeof BREAKPOINTS;
-export const BREAKPOINT_NAMES = Object.keys(BREAKPOINTS) as BreakpointName[];
+const BREAKPOINT_NAMES = Object.keys(BREAKPOINTS) as BreakpointName[];
 
 export const ROW_HEIGHT = 8;
 export const MARGIN = 12;

@@ -14,7 +14,7 @@ const UNITS = [
   { seconds: 3600, label: 'h' },
 ];
 
-export const formatSeconds = (seconds: number) => {
+const formatSeconds = (seconds: number) => {
   if (seconds === PERMANENT) return m.TIME_PERMANENT();
   if (seconds === 0) return m.TIME_NOT_ACTIVE();
   const unit = [...UNITS].reverse().find((u) => seconds >= u.seconds && seconds % u.seconds === 0) ?? UNITS[0];

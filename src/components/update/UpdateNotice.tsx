@@ -7,7 +7,7 @@ import ExternalIcon from '~icons/lucide/external-link';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { useCapabilities, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
-import { isNewerVersion } from '../../utils/version';
+import { isNewerVersion } from '../../lib/version';
 import { takeOverNow, UPDATED_TO_KEY } from '../../lib/appUpdate';
 import { useEffects } from '../../contexts/EffectsContext';
 import { cn } from '../../lib/utils';

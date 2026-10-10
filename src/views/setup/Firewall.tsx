@@ -10,10 +10,10 @@ import { usePasswordRetry } from './usePasswordRetry';
 import { m } from '../../paraglide/messages';
 import type { Firewall as FirewallConfig, FirewallService } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
+import { IPV4 } from '../../lib/validation';
 
 type Access = FirewallService['access'];
 
-const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
 const IPV6 = /^[0-9a-fA-F:]*:[0-9a-fA-F:.]*$/;
 
 // An address or network as FirewallConfigDialog takes it: "1.2.3.4",

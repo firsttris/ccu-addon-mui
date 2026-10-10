@@ -13,6 +13,7 @@ import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
 import { Button } from '../../components/ui/button';
 import { parameterLabel } from './parameters';
+import { isPercentUnit } from './parameters';
 
 // Renders a channel's parameters from its paramset description: the element
 // follows the parameter's type, writable parameters get inputs.
@@ -20,11 +21,9 @@ import { parameterLabel } from './parameters';
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 2 });
 
 // HomeMatic gives levels as 0..1 with the unit "100%"
-const isPercent = (p: ParameterDescription) => p.unit === '100%';
-
-const toDisplay = (p: ParameterDescription, value: number) => (isPercent(p) ? value * 100 : value);
-const fromDisplay = (p: ParameterDescription, value: number) => (isPercent(p) ? value / 100 : value);
-const unitOf = (p: ParameterDescription) => (isPercent(p) ? '%' : (p.unit ?? ''));
+const toDisplay = (p: ParameterDescription, value: number) => (isPercentUnit(p) ? value * 100 : value);
+const fromDisplay = (p: ParameterDescription, value: number) => (isPercentUnit(p) ? value / 100 : value);
+const unitOf = (p: ParameterDescription) => (isPercentUnit(p) ? '%' : (p.unit ?? ''));
 
 // Parameters worth showing: visible, not internal, and either readable or
 // an action. Write-only modifiers (ON_TIME, RAMP_TIME) are left out.

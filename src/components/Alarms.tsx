@@ -18,7 +18,7 @@ import { errorText } from '../lib/errors';
 // "Alarmmeldungen" (rega/pages/tabs/statusviews/alarmMessages.htm).
 
 // ReGa writes "2026-01-15 09:12:00"
-export const formatAlarmTime = (time?: string) => {
+const formatAlarmTime = (time?: string) => {
   if (!time) return '';
   const date = new Date(time.replace(' ', 'T'));
   if (Number.isNaN(date.getTime())) return time;

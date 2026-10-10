@@ -3,8 +3,7 @@ import { Popover } from 'radix-ui';
 import ClockIcon from '~icons/lucide/clock';
 import { cn } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
-
-const pad = (n: number) => String(n).padStart(2, '0');
+import { pad2 } from '../../lib/format';
 
 // One column of the picker; the chosen entry scrolled into the middle
 const Column = ({
@@ -45,7 +44,7 @@ const Column = ({
             value === selected ? 'bg-primary font-semibold text-primary-foreground' : 'hover:bg-accent',
           )}
         >
-          {pad(value)}
+          {pad2(value)}
         </button>
       ))}
     </div>
@@ -93,7 +92,7 @@ export const TimePicker = ({
             className,
           )}
         >
-          <span>{hour === undefined || minute === undefined ? '--:--' : `${pad(hour)}:${pad(minute)}`}</span>
+          <span>{hour === undefined || minute === undefined ? '--:--' : `${pad2(hour)}:${pad2(minute)}`}</span>
           <ClockIcon className="size-4 text-muted-foreground" />
         </button>
       </Popover.Trigger>

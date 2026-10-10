@@ -14,6 +14,7 @@ import { DeviceImage } from './DeviceImage';
 import { isHiddenChannel } from '../hooks/channels';
 import { humanize } from '../controls/generic/parameters';
 import { matchScore } from './channelSearch';
+import { channelOf, deviceAddressOf } from '../lib/address';
 
 interface ChannelPickerProps {
   title: string;
@@ -37,8 +38,6 @@ interface DeviceGroup {
   type: string;
   channels: Channel[];
 }
-
-const deviceOf = (channel: Channel) => channel.address.split(':')[0];
 
 // The channel type in words; types without a translation made readable
 const typeLabel = (type: string) => {
@@ -74,7 +73,7 @@ export const ChannelPicker = ({
     for (const channel of channels) {
       if (!includeHidden && isHiddenChannel(channel)) continue;
       if (onlyUnassigned && unassigned && !unassigned.test(channel) && !chosen.has(channel.id)) continue;
-      const address = deviceOf(channel);
+      const address = deviceAddressOf(channel.address);
       const device = deviceInfo.get(address);
       const score = matchScore(query, [
         channel.name,
@@ -169,7 +168,7 @@ export const ChannelPicker = ({
                   <DeviceImage
                     type={group.type}
                     size={56}
-                    channel={pointed?.startsWith(`${group.address}:`) ? pointed.split(':')[1] : undefined}
+                    channel={pointed?.startsWith(`${group.address}:`) ? channelOf(pointed) : undefined}
                   />
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     {/* biome-ignore lint/a11y/noLabelWithoutControl: holds the "all" checkbox when the device has several channels */}
@@ -227,7 +226,7 @@ export const ChannelPicker = ({
                                   {typeLabel(channel.type)}
                                 </span>
                                 <span className="hidden shrink-0 font-mono text-xs text-muted-foreground sm:inline">
-                                  :{channel.address.split(':')[1]}
+                                  :{channelOf(channel.address)}
                                 </span>
                               </button>
                             </li>
@@ -251,7 +250,7 @@ export const ChannelPicker = ({
                               <span className="min-w-0 flex-1 truncate">{channel.name}</span>
                               <span className="shrink-0 text-xs text-muted-foreground">{typeLabel(channel.type)}</span>
                               <span className="hidden shrink-0 font-mono text-xs text-muted-foreground sm:inline">
-                                :{channel.address.split(':')[1]}
+                                :{channelOf(channel.address)}
                               </span>
                             </label>
                           </li>

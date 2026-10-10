@@ -6,7 +6,7 @@ import {
   controlOf,
   enumLabel,
   formatDuration,
-  isPercent,
+  isPercentSetting,
   stepOf,
   timeOfDayStep,
   unitLabel,
@@ -71,7 +71,7 @@ describe('device settings', () => {
     expect(controlOf('DST_START_MONTH', p({ min: 1, max: 12 }), true)).toBe('month');
     expect(controlOf('TEMPERATURE_COMFORT', p({ type: 'FLOAT', min: 15, max: 30, unit: '°C' }), true)).toBe('stepper');
     expect(controlOf('CYCLIC_INFO_MSG_OVERDUE_THRESHOLD', p({ min: 0, max: 2147483647 }), true)).toBe('number');
-    expect(isPercent('LATITUDE', p({ type: 'FLOAT', min: -90, max: 90 }))).toBe(false);
+    expect(isPercentSetting('LATITUDE', p({ type: 'FLOAT', min: -90, max: 90 }))).toBe(false);
     expect(timeOfDayStep('BOOST_TIME_PERIOD', p({ min: 0, max: 30 }))).toBeUndefined();
   });
   it('steps temperatures in half degrees', () => {

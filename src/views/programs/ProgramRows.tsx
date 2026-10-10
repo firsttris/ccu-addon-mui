@@ -34,8 +34,7 @@ import {
   TRIGGER,
   valueTypeOf,
 } from './programModel';
-
-const selectClass = 'h-9 min-w-0 max-w-full md:text-[13px]';
+import { inlineSelectClass } from '../../components/ui/select';
 
 const RemoveButton = ({ label, onClick }: { label: string; onClick: () => void }) => (
   <Button type="button" size="icon" variant="ghost" aria-label={label} onClick={onClick} className="shrink-0 self-end">
@@ -74,7 +73,7 @@ const NumberCondition = ({
     <>
       <Field label={m.PRG_COMPARE()}>
         <NativeSelect
-          className={selectClass}
+          className={inlineSelectClass}
           aria-label={m.PRG_COMPARE()}
           value={compare}
           onChange={(e) => onChange({ ...condition, compare: Number(e.target.value) })}
@@ -183,7 +182,7 @@ export const ConditionRow = ({
     <Row>
       <Field label={m.PRG_KIND()}>
         <NativeSelect
-          className={selectClass}
+          className={inlineSelectClass}
           aria-label={m.PRG_KIND()}
           value={kind}
           disabled={kind === 'other'}
@@ -268,7 +267,7 @@ export const ConditionRow = ({
       {kind !== 'other' && parameter?.type !== 'ACTION' && (
         <Field label={m.PRG_TRIGGER()}>
           <NativeSelect
-            className={selectClass}
+            className={inlineSelectClass}
             aria-label={m.PRG_TRIGGER()}
             value={condition.trigger}
             onChange={(e) => onChange({ ...condition, trigger: Number(e.target.value) })}
@@ -295,7 +294,7 @@ const DelayInput = ({ delay, onChange }: { delay: number; onChange: (seconds: nu
     <>
       <Field label={m.PRG_DELAY()}>
         <NativeSelect
-          className={selectClass}
+          className={inlineSelectClass}
           aria-label={m.PRG_DELAY()}
           value={delay > 0 ? 'delay' : 'now'}
           onChange={(e) => onChange(e.target.value === 'delay' ? 10 : 0)}
@@ -371,7 +370,7 @@ export const DestinationRow = ({
     <Row className={kind === 'script' ? 'items-start' : undefined}>
       <Field label={m.PRG_KIND()}>
         <NativeSelect
-          className={selectClass}
+          className={inlineSelectClass}
           aria-label={m.PRG_KIND()}
           value={kind}
           disabled={kind === 'other'}
@@ -427,7 +426,7 @@ export const DestinationRow = ({
       {canTakeValue && (
         <Field label={m.PRG_VALUE_FROM()}>
           <NativeSelect
-            className={selectClass}
+            className={inlineSelectClass}
             aria-label={m.PRG_VALUE_FROM()}
             value={fromSysvar ? 'sysvar' : 'fixed'}
             onChange={(e) =>

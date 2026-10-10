@@ -10,7 +10,7 @@ type Result = { output: string } | { syntaxError: string } | { failed: string };
 // syntax check first, then the script itself (webui.js HMScriptExecutor,
 // editScript.htm). For elevated administrators: a script can change
 // anything on the CCU.
-export const useScriptTest = () => {
+const useScriptTest = () => {
   const { request } = useWebSocketActions();
   const [result, setResult] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
@@ -29,7 +29,7 @@ export const useScriptTest = () => {
   return { run, result, busy };
 };
 
-export const ScriptResult = ({ result }: { result: Result | null }) => {
+const ScriptResult = ({ result }: { result: Result | null }) => {
   if (!result) return null;
   if ('syntaxError' in result || 'failed' in result) {
     return (

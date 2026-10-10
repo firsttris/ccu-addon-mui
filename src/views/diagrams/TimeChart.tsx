@@ -43,7 +43,7 @@ const typicalStep = (points: ChartPoint[]) => {
   return deltas[deltas.length >> 1];
 };
 
-export const isBinaryValues = (s: RenderSeries) => s.kind !== 'bar' && isBinary(s.points);
+const isBinaryValues = (s: RenderSeries) => s.kind !== 'bar' && isBinary(s.points);
 
 // The scale a series uses: the side chosen, else one per unit; switches
 // drawn as steps get one of their own from 0 to 1

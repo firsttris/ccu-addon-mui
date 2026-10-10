@@ -1,3 +1,5 @@
+import { pad2 } from '../../lib/format';
+
 // Helpers of the diagrams: scales, axis ticks and the CSV export
 
 // [time (ms), average, minimum, maximum]
@@ -129,10 +131,9 @@ export const toCSV = (series: ChartSeries[], decimalComma: boolean): string => {
     const text = String(Math.round(v * 1000) / 1000);
     return decimalComma ? text.replace('.', ',') : text;
   };
-  const pad = (n: number) => String(n).padStart(2, '0');
   const time = (t: number) => {
     const d = new Date(t);
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   };
   const header = ['time', ...series.map((s) => (s.unit ? `${s.label} (${s.unit})` : s.label))].map(csvField).join(';');
   const rows = times.map((t) => [time(t), ...byTime.map((m) => number(m.get(t)))].join(';'));
@@ -186,7 +187,7 @@ export const intervalStart = (t: number, interval: Interval) => {
   return d.getTime();
 };
 
-export const nextInterval = (t: number, interval: Interval) => {
+const nextInterval = (t: number, interval: Interval) => {
   const d = new Date(t);
   if (interval === 'hour') d.setHours(d.getHours() + 1);
   else if (interval === 'day') d.setDate(d.getDate() + 1);

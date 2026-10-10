@@ -20,7 +20,7 @@ import { RuleEditor } from './RuleEditor';
 import { durationText, emptyRule, fromPreset, presets } from './ruleModel';
 import { errorText } from '../../lib/errors';
 
-export const useRules = () => {
+const useRules = () => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['rules'],
