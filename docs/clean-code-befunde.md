@@ -24,7 +24,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | # | Befund | Bereich | Größe |
 |---|---|---|---|
 | 1 | Kein Linter oder Formatter erzwingt den Stil (Frontend: erledigt mit Biome) | beide | M |
-| 2 | Code, den nur die CCU braucht, steckt auch im Lite-Binary | Go | S |
+| 2 | Code, den nur die CCU braucht, ohne Build-Tag (erledigt) | Go | S |
 | 3 | Uneinheitliche Fehlercodes, `requestId` geht verloren | Go | S |
 | 4 | Kopierte Helfer und Reste im Frontend | Frontend | S–M |
 | 5 | Veraltete Go-Idiome, Logger ohne `Errorf` | Go | S |
@@ -84,29 +84,25 @@ Ebenfalls noch offen:
 **Vorschlag:** `staticcheck` in `go-unit-tests.yml` aufnehmen und dabei mit `GOTOOLCHAIN=go1.27.1`
 bauen. `utils/` in `lib/` aufgehen lassen.
 
-### 2. Code, den nur die CCU braucht, steckt auch im Lite-Binary ✔
+### 2. Code, den nur die CCU braucht, steht in Dateien ohne Build-Tag: erledigt
 
-`staticcheck -tags lite ./...` meldet ihn als ungenutzt (U1000):
+`staticcheck -tags lite ./...` meldete Code als ungenutzt, den nur die CCU braucht. Er steht jetzt hinter
+`//go:build !lite`, und `staticcheck` meldet in beiden Builds nichts mehr:
 
-| Datei | Im Lite-Build ungenutzt |
+| Was | Wohin |
 |---|---|
-| `pkg/websocket/logic.go` | die ganze Datei: `handleLogic`, `handleProgramEditor`, `programOperable` |
-| `pkg/websocket/backup.go` | `handleCreateBackup`, `backupResponse` |
-| `pkg/websocket/channel_options.go` | `handleSetChannelOption`, `readOnlyChannels.invalidate` |
-| `pkg/websocket/system.go:130–390` | `handleSystemSettings`, `powerCommands`, `regaVersion` und weitere |
-| `pkg/websocket/clock.go:151–200` | `runClock`, `parseClock`, `rfdAddress` und weitere |
-| `pkg/websocket/websocket.go` | die Felder `logs`, `lastSysvars`, `autoLoginUsers`, `sysvarsMu` |
+| `logic.go`, `backup.go`, `clock.go` (mit Test) | die Dateien tragen das Tag |
+| die Systemeinstellungen aus `system.go` (Ort, Zeit, Neustart, ReGa-Version) | `system_settings.go` (mit Test) |
+| `handleSetChannelOption` und `readOnlyChannels.invalidate` | `channel_options_ccu.go` |
+| die Server-Felder `logs`, `lastSysvars`, `sysvarsMu`, `autoLoginUsers` | `ccuState` in `state_ccu.go`; im Lite-Build eine leere Struktur (`state_lite.go`) |
 
-Hinzu kommen Teile, die in gemeinsam genutzten Dateien stecken, aber direkt die ReGa ansprechen:
+Die Binaries sind dadurch nicht kleiner geworden, weder das Lite-Binary noch das für die CCU (gemessen
+für arm64). Der Linker hatte das Ungenutzte schon vorher entfernt. Der Gewinn ist die Übersicht: Was nur
+die CCU kann, steht jetzt sichtbar beisammen.
 
-- die Fälle für Systemvariablen in `objects.go:55–85`
-- das Bestätigen von Alarmen in `messages.go:68`
-
-Laut `docs/entwicklung.md` tragen Handler-Dateien für die CCU `//go:build !lite`.
-
-**Vorschlag:** `logic.go`, `backup.go` und `channel_options.go` mit `//go:build !lite` versehen. Die
-CCU-Teile von `system.go`, `clock.go`, `objects.go` und `messages.go` in eigene `*_ccu.go`-Dateien
-verschieben.
+Bewusst gemischt bleiben `handleObjects` (Systemvariablen) und `handleServiceMessages` (Alarme
+bestätigen). Ihre CCU-Fälle teilen sich Parsing, Audit und Rechteprüfung mit den gemeinsamen Fällen und
+sind nur über `dispatch_ccu.go` erreichbar. Eine Aufteilung würde diesen Teil verdoppeln.
 
 ### 3. Uneinheitliche Fehlercodes, `requestId` geht verloren ✔
 
@@ -322,7 +318,7 @@ und die Tests nach Domänen aufteilen.
 
 Jeder Schritt ist ein eigener PR:
 
-1. Build-Tags (#2). Damit wird das Lite-Binary sofort schlanker.
+1. ~~Build-Tags (#2)~~ erledigt.
 2. Fehlercodes vereinheitlichen (#3).
 3. `staticcheck` in der CI (#1); fürs Frontend ist das mit Biome erledigt.
 4. Mechanische Go-Modernisierung und Logger (#5).

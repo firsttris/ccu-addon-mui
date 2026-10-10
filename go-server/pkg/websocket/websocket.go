@@ -22,7 +22,6 @@ import (
 	"ccu-addon-mui-server/pkg/diagrams"
 	"ccu-addon-mui-server/pkg/home"
 	"ccu-addon-mui-server/pkg/logger"
-	"ccu-addon-mui-server/pkg/logs"
 	"ccu-addon-mui-server/pkg/push"
 	"ccu-addon-mui-server/pkg/rega"
 	"ccu-addon-mui-server/pkg/rules"
@@ -96,7 +95,8 @@ type Server struct {
 	// Channels non-administrators may not operate
 	readOnly readOnlyChannels
 	addons   *addons.Service
-	logs     *logs.Service
+	// What only a CCU has (state_ccu.go); empty on openccu-lite
+	ccuState //lint:ignore U1000 empty on openccu-lite, filled on a CCU
 	// The diagrams and the recorder of their values
 	diagrams *diagrams.Store
 	recorder *diagrams.Recorder
@@ -108,16 +108,10 @@ type Server struct {
 	regaClient  *rega.Client
 	// The home model: rooms, trades, channels, names, favorites, service
 	// messages (the ReGa on a CCU)
-	home      home.Source
-	clients   map[*Client]bool
-	clientsMu sync.RWMutex
-	// The system variables last sent to the connections (sysvars.go)
-	lastSysvars []byte
-	messages    messageWatch
-	// The CCU's users, for the automatic login: read at most once a minute,
-	// as every connection without a token asks
-	autoLoginUsers  cachedList[rega.User]
-	sysvarsMu       sync.Mutex
+	home            home.Source
+	clients         map[*Client]bool
+	clientsMu       sync.RWMutex
+	messages        messageWatch
 	subscriptionMgr *subscriptions.Manager
 	httpServer      *http.Server
 	// Push notifications, if enabled
