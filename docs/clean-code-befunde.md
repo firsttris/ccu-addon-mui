@@ -35,7 +35,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | 10 | Handler gehen an `home.Source` vorbei direkt zur ReGa | Go | M |
 | 11 | Zu große Frontend-Dateien (bis auf `DeviceSettings.tsx` erledigt) | Frontend | L |
 | 12 | Wiederholte UI-Bausteine und Zahlenformatierung | Frontend | M |
-| 13 | Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen | Go | L |
+| 13 | Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen (größtenteils erledigt) | Go | L |
 | 14 | `integration_test.go` wiederholt dieselben Abläufe | Go-Tests | M |
 
 ## Klein, mit großer Wirkung
@@ -251,27 +251,19 @@ Der Code ist jeweils nur verschoben. Ein Zeilenvergleich vor und nach dem Umzug 
 **Vorschlag:** Je ein gemeinsames `ToggleRow` und `Field`, einen Hook
 `useSliderDrag(ref, axis, step)`, überall `formatNumber` und dazu ein `formatDate` mit Cache.
 
-### 13. Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen
+### 13. Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen: zum größten Teil erledigt
 
-| Funktion | Zeilen | Vorschlag |
-|---|---|---|
-| `fakeccu.go:254` `runScript` | 412 (52 Fälle) | Tabelle `map[string]func(…)`, eine Datei pro Bereich |
-| `fakeccu.go:1980` `call` | 360 (29 XML-RPC-Methoden) | Tabelle mit einem Handler pro Methode, Pairing, Links und Paramsets in eigenen Dateien |
-| `websocket/security.go:63` | 257 | eine Funktion pro Nachrichtentyp |
-| `websocket/pairing.go:46` | 186 | ebenso |
-| `websocket/heating_groups.go:104` | 163 | ebenso |
-| `websocket/system.go:238` | 153 | ebenso |
-| `websocket/gateways.go:74` | 149 | ebenso |
-| `websocket/device_firmware.go:184` | 140 | ebenso |
-| `websocket/restore.go:48` | 129 | ebenso |
-| `websocket/logic.go:23` | 103 | ebenso |
-| `websocket/users.go:33` | 102 | ebenso |
-| `main.go:49` `run` | 140 | Verdrahtung in Hilfsfunktionen aufteilen |
-| `rega/programs.go:146` `parseProgram` | 103 | eine Funktion pro Satztyp (`P`, `I`, `R`, …) |
-
-`occulite/home.go` (868 Zeilen, 46 Funktionen) lässt sich in Gruppen, Kanäle, Favoriten und Posteingang
-aufteilen. Bei `xmlrpc.go` und `ccurpc.go` ist keine Funktion länger als 60 Zeilen, dort ist nichts zu
-tun.
+- **Fake-CCU.** `runScript` (412 Zeilen, 52 Fälle) und `call` (360 Zeilen, 29 XML-RPC-Methoden) sind
+  jetzt Tabellen von Funktionen: `scriptHandlers` in `scripthandlers.go` und `rpcMethods` in
+  `rpcmethods.go`. `fakeccu.go` ist von 2380 auf 1648 Zeilen geschrumpft.
+- **Eine Funktion pro Nachrichtentyp** bei `handleSecurity` (257 Zeilen), `handleHeatingGroupChange` (163)
+  und `handleSystemSettings` (153). Der Nachrichten-Struct hat einen Namen, der Handler prüft und
+  verteilt.
+- **Noch offen, weil es dort ein Umbau wäre und kein Verschieben:**
+  - `handleRestore`, `handleDeviceFirmware`, `handleLogic` und `handleLanGateways`: Nach dem `switch`
+    baut gemeinsamer Code die Antwort.
+  - `handlePairing`: Es hat zwei `switch` hintereinander.
+  - `main.run` (140 Zeilen), `rega.parseProgram` (103) und `occulite/home.go` (868 Zeilen).
 
 ### 14. `integration_test.go` wiederholt dieselben Abläufe
 
@@ -295,5 +287,5 @@ Jeder Schritt ist ein eigener PR:
 4. ~~Mechanische Go-Modernisierung und Logger (#5)~~ erledigt.
 5. ~~Kopierte Frontend-Helfer und Reste (#4)~~ erledigt.
 6. ~~Große Frontend-Dateien aufteilen (#11)~~ erledigt bis auf `DeviceSettings.tsx`.
-7. ~~Handler vereinheitlichen (#6, #7)~~ erledigt; danach die langen Handler aufteilen (#13).
+7. ~~Handler vereinheitlichen (#6, #7)~~ erledigt; ~~die langen Handler aufteilen (#13)~~ größtenteils erledigt.
 8. Der Rest: #8, #9, #10, #12, #14, `DeviceSettings.tsx`, `fakeccu.go`.
