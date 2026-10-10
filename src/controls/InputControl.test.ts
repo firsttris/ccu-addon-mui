@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 // The registry first, as in the app (queries import it them)
 import { controlOverrides } from './registry';
 import { contactOpen, inputMode } from './InputControl';

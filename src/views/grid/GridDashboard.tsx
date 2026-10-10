@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import GripIcon from '~icons/lucide/grip';
 import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
@@ -6,14 +6,14 @@ import 'react-grid-layout/css/styles.css';
 import { cn } from '../../lib/utils';
 import {
   BREAKPOINTS,
-  BreakpointName,
+  type BreakpointName,
   COLS,
   flowCompactor,
   MARGIN,
   responsiveLayouts,
   ROW_HEIGHT,
-  SectionLayout,
-  TileSpec,
+  type SectionLayout,
+  type TileSpec,
   toSaved,
 } from './tileLayout';
 

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 // A form field with its label above it
 export const Field = ({ label, children }: { label: string; children: ReactNode }) => (

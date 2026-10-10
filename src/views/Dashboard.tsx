@@ -1,10 +1,10 @@
 import { PlaceDiagrams } from './diagrams/Diagrams';
 import { LightsStat, TemperatureStat, WindowsStat } from './OverviewStats';
 import {
-  ComponentType,
+  type ComponentType,
   Fragment as ReactFragment,
   memo,
-  ReactNode,
+  type ReactNode,
   Suspense,
   useLayoutEffect,
   useMemo,
@@ -12,9 +12,9 @@ import {
   useState,
 } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 import { sameItems } from '../hooks/channels';
-import { controlOverrides, SectionId } from '../controls/registry';
+import { controlOverrides, type SectionId } from '../controls/registry';
 import { ControlComponent } from '../components/ControlComponent';
 import { AlarmBanner, AlarmsSheet } from '../components/Alarms';
 import { windowState } from '../controls/WindowControl';
@@ -28,8 +28,8 @@ import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
 import { usePageArrange } from '../contexts/PageTitleContext';
 import { Button } from '../components/ui/button';
-import { GridDashboard, GridTile } from './grid/GridDashboard';
-import { moveSection, orderSections, parseLayout, SavedLayout, SectionLayout } from './grid/tileLayout';
+import { GridDashboard, type GridTile } from './grid/GridDashboard';
+import { moveSection, orderSections, parseLayout, type SavedLayout, type SectionLayout } from './grid/tileLayout';
 import ChevronUpIcon from '~icons/lucide/chevron-up';
 import ChevronDownIcon from '~icons/lucide/chevron-down';
 import { isLight as isLightTile, useLightTradeIds } from '../controls/light/isLight';

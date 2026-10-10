@@ -1,4 +1,4 @@
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';

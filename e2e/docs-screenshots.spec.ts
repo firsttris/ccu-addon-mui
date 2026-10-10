@@ -1,4 +1,4 @@
-import { Browser, expect, Page, test } from '@playwright/test';
+import { type Browser, expect, type Page, test } from '@playwright/test';
 import { installWebSocketMock } from './helpers/websocketMock';
 
 // The pictures of the documentation (docs/screenshot-*.png) that show the

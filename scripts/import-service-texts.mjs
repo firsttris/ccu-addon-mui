@@ -86,7 +86,7 @@ for (const line of table.split('\n')) {
 }
 
 const sorted = Object.fromEntries(Object.entries(result).sort(([a], [b]) => a.localeCompare(b)));
-const json = JSON.stringify(sorted, null, 1) + '\n';
+const json = `${JSON.stringify(sorted, null, 1)}\n`;
 for (const out of ['src/components/serviceMessages/texts.json', 'go-server/pkg/push/servicetexts.json']) {
   fs.writeFileSync(out, json);
 }

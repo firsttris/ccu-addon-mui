@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
-import fs from 'fs';
+import fs from 'node:fs';
 import Icons from 'unplugin-icons/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import tailwindcss from '@tailwindcss/vite';

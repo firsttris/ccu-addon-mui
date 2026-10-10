@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import CpuIcon from '~icons/lucide/cpu';
 import BracesIcon from '~icons/lucide/braces';
@@ -8,7 +8,7 @@ import XIcon from '~icons/lucide/x';
 import SearchIcon from '~icons/lucide/search';
 import { useChannelList, useFavoriteChange, usePrograms, useRooms, useSysvars } from '../queries';
 import { useToast } from '../contexts/ToastContext';
-import { Favorite, FavoriteItem } from '../types/protocol';
+import type { Favorite, FavoriteItem } from '../types/protocol';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../components/ui/sheet';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';

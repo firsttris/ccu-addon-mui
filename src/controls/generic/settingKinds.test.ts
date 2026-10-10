@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getLocale, overwriteGetLocale } from '../../paraglide/runtime';
-import { ParameterDescription } from '../../types/types';
+import type { ParameterDescription } from '../../types/types';
 import {
   combineSettings,
   controlOf,

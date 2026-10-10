@@ -1,12 +1,12 @@
 import { useRef } from 'react';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { useStateChanges } from './SwitchControl';
-import { litTileStyle, PendantLamp, RGB, WARM } from './light/PendantLamp';
+import { litTileStyle, PendantLamp, type RGB, WARM } from './light/PendantLamp';
 import { LevelBar } from './light/LevelBar';
 
 // Backlight colors of HmIP-BSL switches (COLOR datapoint)

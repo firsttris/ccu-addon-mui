@@ -109,7 +109,7 @@ for (const dark of [false, true]) {
         });
       }
 
-      test('login', async ({ page, context }) => {
+      test('login', async ({ context }) => {
         // A fresh page that has to log in
         await context.clearCookies();
         const loginPage = await context.newPage();

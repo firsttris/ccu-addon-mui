@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ParamsetDescription } from '../../types/types';
+import type { ParamsetDescription } from '../../types/types';
 import {
   decodeHmipTime,
   detectProfile,
   encodeHmipTime,
-  LinkProfile,
+  type LinkProfile,
   linkParameterNames,
   PERMANENT,
   profilesFor,

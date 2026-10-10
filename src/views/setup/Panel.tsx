@@ -1,4 +1,4 @@
-import { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
 import { cn } from '../../lib/utils';
 import { WebUILink } from '../../components/WebUILink';
 import { m } from '../../paraglide/messages';

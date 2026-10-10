@@ -1,9 +1,9 @@
-import { ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useChannelList, useDevices, useLinkAction, useLinkParamset, useLinks, useParamset } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
-import { TranslationKey, useTranslations } from '../../i18n/utils';
-import { Channel, DatapointValue, DeviceChannel, Link, ParamsetDescription } from '../../types/types';
+import { type TranslationKey, useTranslations } from '../../i18n/utils';
+import type { Channel, DatapointValue, DeviceChannel, Link, ParamsetDescription } from '../../types/types';
 import { ChannelField } from '../../components/ChannelField';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';
 import {
@@ -17,11 +17,11 @@ import {
   decodeHmipTime,
   detectProfile,
   encodeHmipTime,
-  LinkProfile,
+  type LinkProfile,
   linkParameterNames,
   loadProfileTable,
   PERMANENT,
-  ProfileField,
+  type ProfileField,
   profilesFor,
   receiverKey,
   senderKey,
@@ -395,7 +395,6 @@ export const AddLinkForm = ({
   const { data: devices = [] } = useDevices();
   const names = useChannelNames();
   const action = useLinkAction();
-  const label = (address: string) => `${names.get(address) ?? address} (${address})`;
   const anyDevice = device === undefined;
   const linkable = useMemo(
     () =>

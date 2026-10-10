@@ -1,4 +1,4 @@
-import { Channel, HmEvent } from '../types/types';
+import type { Channel, HmEvent } from '../types/types';
 import { controlOverrides } from '../controls/registry';
 
 export type Value = string | number | boolean;

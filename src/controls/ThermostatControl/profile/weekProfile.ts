@@ -1,4 +1,4 @@
-import { DatapointValue, ParamsetDescription } from '../../../types/types';
+import type { DatapointValue, ParamsetDescription } from '../../../types/types';
 
 // The week profiles of a HomeMatic IP thermostat or heating group live in
 // the MASTER paramset of its climate channel, as pairs per day and slot:

@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import { GenericControl } from '../controls/GenericControl';
 import { controlOverrides } from '../controls/registry';
-import { Channel, GenericChannel } from '../types/types';
+import type { Channel, GenericChannel } from '../types/types';
 import { TileSkeleton } from './ui/skeleton';
 
 interface ControlComponentProps {

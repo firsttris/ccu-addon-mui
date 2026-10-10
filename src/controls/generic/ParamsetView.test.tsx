@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ParamsetView, shownParameters } from './ParamsetView';
 import { renderWithTheme } from '../../test/render';
-import { DatapointValue, ParameterDescription, ParamsetDescription } from '../../types/types';
+import type { DatapointValue, ParameterDescription, ParamsetDescription } from '../../types/types';
 
 // Raw XML-RPC description (as in the fixtures) → the JSON the server sends
 const fromRaw = (raw: Record<string, Record<string, unknown>> | null): ParamsetDescription =>

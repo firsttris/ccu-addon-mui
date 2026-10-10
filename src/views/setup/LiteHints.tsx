@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import ExternalLinkIcon from '~icons/lucide/external-link';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
@@ -84,5 +84,5 @@ const LiteAutomation = () => {
 // where automations go there
 export const LogicPage = ({ children }: { children: ReactNode }) => {
   const { capabilities } = useWebSocketContext();
-  return capabilities.programs ? <>{children}</> : <LiteAutomation />;
+  return capabilities.programs ? children : <LiteAutomation />;
 };

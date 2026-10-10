@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import CalendarDaysIcon from '~icons/lucide/calendar-days';
 import ChevronRightIcon from '~icons/lucide/chevron-right';
-import { DatapointValue, ParamsetDescription } from '../../types/types';
+import type { DatapointValue, ParamsetDescription } from '../../types/types';
 import { shownParameters } from '../../controls/generic/ParamsetView';
 import { SettingsView } from '../../controls/generic/SettingsView';
-import { GROUP_ORDER, ParameterGroup, parameterGroup } from '../../controls/generic/parameters';
+import { GROUP_ORDER, type ParameterGroup, parameterGroup } from '../../controls/generic/parameters';
 import { Button } from '../../components/ui/button';
 import { m } from '../../paraglide/messages';
 

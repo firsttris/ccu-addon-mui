@@ -934,7 +934,7 @@ test('zeigt beim Laden Platzhalter statt einer leeren Tabelle', async ({ page })
   await expect(page.getByText('Nichts gefunden.')).toHaveCount(0);
 
   hold = false;
-  held.forEach((send) => send());
+  for (const send of held) send();
   held = [];
   await expect(table.locator('[data-skeleton]')).toHaveCount(0);
   await expect(table.getByRole('row', { name: /LEQ0000001/ })).toBeVisible();

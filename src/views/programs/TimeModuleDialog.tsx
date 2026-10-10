@@ -1,5 +1,5 @@
-import { ReactNode, useState } from 'react';
-import { TimeModule } from '../../types/protocol';
+import { type ReactNode, useState } from 'react';
+import type { TimeModule } from '../../types/protocol';
 import {
   Dialog,
   DialogContent,
@@ -22,10 +22,10 @@ import {
   secondsOfClock,
   SUN,
   TIMER,
-  TimeMode,
+  type TimeMode,
   timeModeOf,
   timeOfClock,
-  TimeTexts,
+  type TimeTexts,
   today,
   WEEKDAYS,
   WEEKEND_BITS,

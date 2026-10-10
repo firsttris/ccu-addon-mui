@@ -7,7 +7,7 @@ import { useDownloadDeviceFirmware } from './DeviceFirmware';
 import { useToast } from '../../contexts/ToastContext';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { Button } from '../../components/ui/button';
-import { Device } from '../../types/types';
+import type { Device } from '../../types/types';
 import { m } from '../../paraglide/messages';
 import { errorText } from '../../lib/errors';
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import FingerprintIcon from '~icons/lucide/fingerprint';
 import UserIcon from '~icons/lucide/user-round';
 import ZapIcon from '~icons/lucide/zap';
-import { Channel, DatapointValue, Operation } from '../types/types';
+import { type Channel, type DatapointValue, Operation } from '../types/types';
 import { useParamsetDescription, useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { Switch } from '../components/ui/switch';

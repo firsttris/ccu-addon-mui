@@ -1,4 +1,4 @@
-import { Device } from '../../types/types';
+import type { Device } from '../../types/types';
 import type { DeviceFirmwareVersion } from '../../types/protocol';
 import { isNewerVersion } from '../../utils/version';
 

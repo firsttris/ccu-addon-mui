@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { DEFAULT_RANGE, MAX_ANGLE, STEP, TemperatureRange } from '../constants';
+import { DEFAULT_RANGE, MAX_ANGLE, STEP, type TemperatureRange } from '../constants';
 
 export const useTemperatureConversion = ({ min, max }: TemperatureRange = DEFAULT_RANGE) => {
   // Convert temperature to angle (0-270 degrees)

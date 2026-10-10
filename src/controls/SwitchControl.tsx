@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { SwitchVirtualReceiverChannel } from '../types/types';
+import type { SwitchVirtualReceiverChannel } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';

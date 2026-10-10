@@ -62,7 +62,7 @@ const wwwList = (rel) => {
       (entry.isDirectory() ? dirs : files).add(entry.name);
   }
   for (const key of overlay.keys()) {
-    if (!key.startsWith(rel + '/')) continue;
+    if (!key.startsWith(`${rel}/`)) continue;
     const [first, ...rest] = key.slice(rel.length + 1).split('/');
     (rest.length ? dirs : files).add(first);
   }
@@ -159,16 +159,15 @@ const parseFile = (receiver, rel) => {
     if (!m) return;
     const [, n, param, raw] = m;
     if (param === 'UI_WHITELIST' || param === 'UI_BLACKLIST') {
-      (lists[n] ??= {})[param === 'UI_WHITELIST' ? 'whitelist' : 'blacklist'] = raw
-        .replace(/[{}]/g, '')
-        .trim()
-        .split(/\s+/);
+      lists[n] ??= {};
+      lists[n][param === 'UI_WHITELIST' ? 'whitelist' : 'blacklist'] = raw.replace(/[{}]/g, '').trim().split(/\s+/);
       return;
     }
     if (param.startsWith('UI_')) return;
     const value = parseValue(raw, vars);
     if (value === undefined) throw new Error(`${rel}:${i + 1}: can't read the value of PROFILE_${n}(${param}): ${raw}`);
-    (values[n] ??= {})[param] = value;
+    values[n] ??= {};
+    values[n][param] = value;
   });
   // Settings shown per profile
   const fields = {};
@@ -264,7 +263,7 @@ fs.mkdirSync(outDir, { recursive: true });
 let total = 0;
 for (const [receiver, senders] of Object.entries(result)) {
   const file = path.join(outDir, `${receiver}.json`);
-  fs.writeFileSync(file, JSON.stringify(senders) + '\n');
+  fs.writeFileSync(file, `${JSON.stringify(senders)}\n`);
   total += fs.statSync(file).size;
   console.log(receiver, Object.keys(senders).length, 'senders');
 }

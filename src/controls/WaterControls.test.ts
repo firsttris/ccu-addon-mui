@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { controlOverrides } from './registry';
 import { WINMATIC_LOCKED, winmaticState } from './WaterControls';
 import { groupChannelsByType } from '../hooks/channels';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 
 describe('water and window drive tiles', () => {
   it('are registered for their channel types', () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { screen } from '@testing-library/react';
 import { renderWithTheme } from '../test/render';
 import { EnergyMeterControl } from './EnergyMeterControl';
-import { EnergyMeterChannel } from '../types/types';
+import type { EnergyMeterChannel } from '../types/types';
 
 const meter = (address: string, datapoints: EnergyMeterChannel['datapoints']) =>
   ({

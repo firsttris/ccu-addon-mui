@@ -238,7 +238,7 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
         s.kind === 'bar' || s.aggregate === 'delta' ? s.bars.map((b) => [b.t0, b.v, b.v, b.v] as ChartPoint) : s.points,
     }));
     const csv = toCSV(table, defaultLang.startsWith('de'));
-    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+    const url = URL.createObjectURL(new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = `${diagram.name.replace(/[^\p{L}\p{N}_-]+/gu, '_')}.csv`;

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { GenericControlView as GenericControl } from './GenericControl';
 import { renderWithTheme } from '../test/render';
-import { GenericChannel } from '../types/types';
+import type { GenericChannel } from '../types/types';
 
 const channel: GenericChannel = {
   id: 1,

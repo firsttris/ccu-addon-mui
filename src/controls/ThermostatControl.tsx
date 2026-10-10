@@ -1,4 +1,4 @@
-import { Channel, DatapointValue, HeatingClimateControlTransceiverChannel } from '../types/types';
+import type { Channel, DatapointValue, HeatingClimateControlTransceiverChannel } from '../types/types';
 import { useDevices, useParamset, useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { useEffects, rgba } from '../contexts/EffectsContext';

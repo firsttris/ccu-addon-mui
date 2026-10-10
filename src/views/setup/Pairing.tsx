@@ -1,6 +1,6 @@
 import { DeviceImage } from '../../components/DeviceImage';
 import { Panel } from './Panel';
-import { ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { useInbox, useInstallMode, useInterfaces, usePairingAction } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';

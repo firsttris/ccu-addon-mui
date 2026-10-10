@@ -1,4 +1,4 @@
-import { CSSProperties, ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import LightbulbIcon from '~icons/lucide/lightbulb';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
@@ -24,7 +24,7 @@ const useRunning = (value: number, ms = 700) => {
     let frame = 0;
     const step = (now: number) => {
       const t = Math.min(1, (now - start) / ms);
-      const eased = 1 - Math.pow(1 - t, 3);
+      const eased = 1 - (1 - t) ** 3;
       const current = begin + (value - begin) * eased;
       from.current = current;
       setShown(current);

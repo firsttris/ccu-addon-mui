@@ -1,4 +1,4 @@
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { NativeSelect } from '../components/ui/select';
@@ -6,7 +6,7 @@ import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { HueBar, hsvToRgb } from './ColorLightControl';
 import { LevelBar } from './light/LevelBar';
-import { RGB } from './light/PendantLamp';
+import type { RGB } from './light/PendantLamp';
 
 // The color and white channels of the BidCos LED controllers, as the
 // WebUI's rgbw.fn and dual_white_controller.fn show them. Their brightness

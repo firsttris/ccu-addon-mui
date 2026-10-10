@@ -1,4 +1,4 @@
-import { CSSProperties, ReactNode, useEffect, useId, useState } from 'react';
+import { type CSSProperties, type ReactNode, useEffect, useId, useState } from 'react';
 import ArrowRightIcon from '~icons/lucide/arrow-right';
 import { useEffects } from '../../contexts/EffectsContext';
 import { cn } from '../../lib/utils';

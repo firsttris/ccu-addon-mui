@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
-import { DatapointValue, Operation, ParameterDescription, ParameterFlag, ParamsetDescription } from '../../types/types';
-import { defaultLang, TranslationKey, useTranslations } from '../../i18n/utils';
+import {
+  type DatapointValue,
+  Operation,
+  type ParameterDescription,
+  ParameterFlag,
+  type ParamsetDescription,
+} from '../../types/types';
+import { defaultLang, type TranslationKey, useTranslations } from '../../i18n/utils';
 import { m } from '../../paraglide/messages';
 import { Switch } from '../../components/ui/switch';
 import { Input } from '../../components/ui/input';

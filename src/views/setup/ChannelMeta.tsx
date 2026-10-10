@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import XIcon from '~icons/lucide/x';
 import { useConfigChange, useRooms, useTrades } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';

@@ -1,8 +1,15 @@
-import { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode, useEffect, useState } from 'react';
+import {
+  type ButtonHTMLAttributes,
+  type HTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  useEffect,
+  useState,
+} from 'react';
 import { useLogicAction, useObjectChange, usePrograms, useSysvars } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
-import { Sysvar } from '../types/types';
+import type { Sysvar } from '../types/types';
 import { ConfirmDialog, DialogButton } from '../components/ConfirmDialog';
 import { EditableName } from '../components/EditableName';
 import { Button } from '../components/ui/button';

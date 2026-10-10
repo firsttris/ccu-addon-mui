@@ -2,8 +2,8 @@ import { ScriptTestButton } from './ScriptTest';
 import { useState } from 'react';
 import XIcon from '~icons/lucide/x';
 import { TimeModuleDialog, useTimeTexts } from './TimeModuleDialog';
-import { ProgramCondition, ProgramDestination, TimeModule } from '../../types/protocol';
-import { ParameterDescription } from '../../types/types';
+import type { ProgramCondition, ProgramDestination, TimeModule } from '../../types/protocol';
+import type { ParameterDescription } from '../../types/types';
 import { useSysvars } from '../../queries';
 import { Button } from '../../components/ui/button';
 import { NativeSelect } from '../../components/ui/select';
@@ -24,10 +24,10 @@ import {
 import {
   COMPARE,
   conditionKind,
-  ConditionKind,
+  type ConditionKind,
   describeTimeModule,
   destinationKind,
-  DestinationKind,
+  type DestinationKind,
   newCondition,
   newDestination,
   sysvarValueType,

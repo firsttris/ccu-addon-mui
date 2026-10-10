@@ -5,9 +5,9 @@ import DoorOpenIcon from '~icons/lucide/door-open';
 import DoorClosedIcon from '~icons/lucide/door-closed';
 import GaugeIcon from '~icons/lucide/gauge';
 import CircleOffIcon from '~icons/lucide/circle-off';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { m } from '../paraglide/messages';
-import { DetectorTile, Tone } from './DetectorControls';
+import { DetectorTile, type Tone } from './DetectorControls';
 
 // What an input is wired to, the WebUI's metadata "channelMode"
 // (translate.lang.channelDescription.js, chType_MULTI_MODE_INPUT_TRANSMITTER_*)

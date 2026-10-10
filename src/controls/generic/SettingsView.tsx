@@ -1,8 +1,8 @@
-import { ReactNode, useEffect, useId, useState } from 'react';
+import { type ReactNode, useEffect, useId, useState } from 'react';
 import MinusIcon from '~icons/lucide/minus';
 import PlusIcon from '~icons/lucide/plus';
 import UndoIcon from '~icons/lucide/rotate-ccw';
-import { DatapointValue, Operation, ParameterDescription, ParamsetDescription } from '../../types/types';
+import { type DatapointValue, Operation, type ParameterDescription, type ParamsetDescription } from '../../types/types';
 import { getLocale } from '../../paraglide/runtime';
 import { m } from '../../paraglide/messages';
 import { Switch } from '../../components/ui/switch';
@@ -22,7 +22,7 @@ import {
   formatTimeOfDay,
   isPercent,
   monthName,
-  Setting,
+  type Setting,
   stepOf,
   timeOfDayStep,
   unitLabel,

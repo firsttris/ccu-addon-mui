@@ -1,4 +1,4 @@
-import { ComponentType, SVGProps, useState } from 'react';
+import { type ComponentType, type SVGProps, useState } from 'react';
 import MonitorIcon from '~icons/lucide/monitor';
 import SendIcon from '~icons/lucide/send';
 import LightbulbOffIcon from '~icons/lucide/lightbulb-off';
@@ -32,7 +32,7 @@ import ShieldHalfIcon from '~icons/lucide/shield-half';
 import ShieldIcon from '~icons/lucide/shield';
 import BellIcon from '~icons/lucide/bell';
 import ClockIcon from '~icons/lucide/clock';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';

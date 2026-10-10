@@ -1,4 +1,4 @@
-import { Page, expect } from '@playwright/test';
+import { type Page, expect } from '@playwright/test';
 import { FAKE_CCU_URL } from '../playwright.stack.config';
 
 // Back to the fixture, so every test starts from the same state

@@ -92,6 +92,7 @@ html {
   scrollbar-gutter: stable;
 }
 html body[data-scroll-locked] {
+  /* biome-ignore lint/complexity/noImportantStyles: overrides the margin Radix sets inline */
   margin-right: 0 !important;
 }
 
@@ -691,7 +692,9 @@ html body[data-scroll-locked] {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion wins over every component */
     animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: as above */
     transition: none !important;
   }
 }

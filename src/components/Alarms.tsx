@@ -1,6 +1,6 @@
 import SirenIcon from '~icons/lucide/siren';
 import CheckIcon from '~icons/lucide/check';
-import { AlarmMessage } from '../types/protocol';
+import type { AlarmMessage } from '../types/protocol';
 import { useAcknowledgeAlarmMessage, useAlarmMessages } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';

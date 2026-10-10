@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RequestError, useCapabilities, useWebSocketActions } from '../hooks/useWebsocket';
-import { AlarmMessage, ServiceMessage, ProgramDefinition } from '../types/protocol';
-import { applyEvent, groupChannelsByType, shareGroups, Value } from '../hooks/channels';
+import type { AlarmMessage, ServiceMessage, ProgramDefinition } from '../types/protocol';
+import { applyEvent, groupChannelsByType, shareGroups, type Value } from '../hooks/channels';
 import { useToast } from '../contexts/ToastContext';
 import { m } from '../paraglide/messages';
-import { Channel, DatapointValue, HmEvent, Program, Sysvar } from '../types/types';
+import type { Channel, DatapointValue, HmEvent, Program, Sysvar } from '../types/types';
 
 // Server data loaded through TanStack Query. The queryFn sends its request
 // over the WebSocket (request() in useWebsocket); after a reconnect all

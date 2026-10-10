@@ -1,5 +1,5 @@
 import { useTrades } from '../../queries';
-import { Channel } from '../../types/types';
+import type { Channel } from '../../types/types';
 
 // Switch actuators drive lamps as well as pumps, valves or heaters; the
 // channel type doesn't tell. The tile chosen in the setup area decides;

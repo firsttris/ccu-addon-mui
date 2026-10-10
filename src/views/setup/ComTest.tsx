@@ -23,7 +23,12 @@ export const ComTest = ({ address }: { address: string }) => {
   const { request } = useWebSocketActions();
   const [state, setState] = useState<State>({ kind: 'idle' });
   const cancelled = useRef(false);
-  useEffect(() => () => void (cancelled.current = true), []);
+  useEffect(
+    () => () => {
+      cancelled.current = true;
+    },
+    [],
+  );
 
   const run = async () => {
     setState({ kind: 'running' });

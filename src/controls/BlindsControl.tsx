@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BlindVirtualReceiverChannel } from '../types/types';
+import type { BlindVirtualReceiverChannel } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import ChevronUpIcon from '~icons/lucide/chevron-up';
 import ChevronDownIcon from '~icons/lucide/chevron-down';

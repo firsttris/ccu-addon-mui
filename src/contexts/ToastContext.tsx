@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import type React from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 type ToastKind = 'error' | 'info';
 

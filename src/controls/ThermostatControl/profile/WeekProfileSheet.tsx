@@ -20,8 +20,8 @@ import {
   changedValues,
   DAY_END,
   DAYS,
-  Day,
-  DayProfile,
+  type Day,
+  type DayProfile,
   formatMinutes,
   profileLayout,
   readWeek,
@@ -30,7 +30,7 @@ import {
   setSlotTemperature,
   SLOT_STEP,
   splitSlot,
-  WeekProfile,
+  type WeekProfile,
 } from './weekProfile';
 
 interface WeekProfileSheetProps {

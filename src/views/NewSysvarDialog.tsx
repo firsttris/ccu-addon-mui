@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useChannelList, useObjectChange } from '../queries';
 import { useToast } from '../contexts/ToastContext';
-import { Sysvar } from '../types/types';
+import type { Sysvar } from '../types/types';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Input } from '../components/ui/input';
 import { NativeSelect } from '../components/ui/select';

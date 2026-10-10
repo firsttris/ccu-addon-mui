@@ -1,4 +1,4 @@
-import * as React from 'react';
+import type * as React from 'react';
 import { Slot } from 'radix-ui';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';

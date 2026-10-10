@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSetDataPoint } from '../../../queries';
-import { DEFAULT_RANGE, STEP, TemperatureRange } from '../constants';
-import { Channel } from '../../../types/types';
+import { DEFAULT_RANGE, STEP, type TemperatureRange } from '../constants';
+import type { Channel } from '../../../types/types';
 
 interface UseThermostatStateProps {
   targetTemperature: number;

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import DropletIcon from '~icons/lucide/droplet';
 import DropletOffIcon from '~icons/lucide/droplet-off';
 import ArrowUpIcon from '~icons/lucide/arrow-up-to-line';
@@ -10,7 +10,7 @@ import GaugeIcon from '~icons/lucide/gauge';
 import WavesIcon from '~icons/lucide/waves';
 import SigmaIcon from '~icons/lucide/sigma';
 import BatteryIcon from '~icons/lucide/battery-medium';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { Tile } from '../components/Tile';
 import { useParamsetDescription, useSetDataPoint } from '../queries';
 import { m } from '../paraglide/messages';

@@ -1,11 +1,11 @@
-import { ComponentType, lazy } from 'react';
-import { Channel, ChannelType } from '../types/types';
+import { type ComponentType, lazy } from 'react';
+import { type Channel, ChannelType } from '../types/types';
 
 // The tiles are loaded when a page shows one, not with the app: they are
 // most of its code, and a room with lights only needs the light tiles.
 // Each module is loaded once, by whichever of its tiles comes first.
 // The props differ per tile; channelControl and deviceControl say which
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: the props differ per tile, see above
 type AnyTile = ComponentType<any>;
 // tileName: which tile it is, for tests and debugging
 const tile = (load: () => Promise<Record<string, unknown>>, name: string): AnyTile & { tileName: string } =>

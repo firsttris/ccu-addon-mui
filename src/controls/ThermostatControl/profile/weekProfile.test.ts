@@ -12,7 +12,7 @@ import {
   temperatureAt,
   writeDay,
 } from './weekProfile';
-import { ParamsetDescription } from '../../../types/types';
+import type { ParamsetDescription } from '../../../types/types';
 
 const description = Object.fromEntries(
   [1, 2].flatMap((p) =>

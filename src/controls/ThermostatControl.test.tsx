@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen } from '@testing-library/react';
 import { renderWithTheme } from '../test/render';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 
 const setDataPoint = vi.fn();
 vi.mock('../queries', async (importOriginal) => ({

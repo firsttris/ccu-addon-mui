@@ -136,7 +136,7 @@ export const toCSV = (series: ChartSeries[], decimalComma: boolean): string => {
   };
   const header = ['time', ...series.map((s) => (s.unit ? `${s.label} (${s.unit})` : s.label))].map(csvField).join(';');
   const rows = times.map((t) => [time(t), ...byTime.map((m) => number(m.get(t)))].join(';'));
-  return [header, ...rows].join('\n') + '\n';
+  return `${[header, ...rows].join('\n')}\n`;
 };
 
 export type ChartKind = 'line' | 'area' | 'bar' | 'step' | 'state';

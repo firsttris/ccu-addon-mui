@@ -1,5 +1,5 @@
-import { ReactNode, useEffect, useRef } from 'react';
-import { EnergyMeterChannel } from '../types/types';
+import { type ReactNode, useEffect, useRef } from 'react';
+import type { EnergyMeterChannel } from '../types/types';
 import { cn, formatNumber } from '../lib/utils';
 import ZapIcon from '~icons/lucide/zap';
 import FlameIcon from '~icons/lucide/flame';

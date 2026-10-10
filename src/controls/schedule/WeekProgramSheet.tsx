@@ -27,9 +27,9 @@ import {
   freeNumber,
   parseWeekProgram,
   targetIndexes,
-  Values,
+  type Values,
   WEEKEND,
-  WeekProgramEntry,
+  type WeekProgramEntry,
   WORKDAYS,
 } from './weekProgram';
 

@@ -1,3 +1,4 @@
+// biome-ignore-all lint/correctness/useJsxKeyInIterable: the icons sit in lookup tuples, not in rendered lists
 import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import RadioIcon from '~icons/lucide/radio-tower';
@@ -10,7 +11,7 @@ import CheckIcon from '~icons/lucide/check-check';
 import { useAcknowledgeServiceMessage, useServiceMessages } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
-import { ServiceMessage } from '../types/protocol';
+import type { ServiceMessage } from '../types/protocol';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';

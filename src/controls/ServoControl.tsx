@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import GaugeIcon from '~icons/lucide/gauge';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { m } from '../paraglide/messages';
 import { DetectorTile } from './DetectorControls';

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { RequestError, useWebSocketActions, useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
-import { appliedLanguage, applyLanguage, LanguageChoice as Choice } from '../i18n/language';
+import { appliedLanguage, applyLanguage, type LanguageChoice as Choice } from '../i18n/language';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { errorText } from '../lib/errors';

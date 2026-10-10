@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { CENTER_X, CENTER_Y, ROTATE_ANGLE, MAX_ANGLE, TemperatureRange } from '../constants';
+import { CENTER_X, CENTER_Y, ROTATE_ANGLE, MAX_ANGLE, type TemperatureRange } from '../constants';
 import { useTemperatureConversion } from './useTemperatureConversion';
 
 interface UseDragInteractionProps {

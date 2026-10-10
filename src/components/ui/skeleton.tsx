@@ -1,4 +1,4 @@
-import { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
 import { TableCell, TableRow } from './table';
 import { cn } from '../../lib/utils';
 import { m } from '../../paraglide/messages';

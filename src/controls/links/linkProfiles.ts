@@ -1,4 +1,4 @@
-import { DatapointValue, ParamsetDescription } from '../../types/types';
+import type { DatapointValue, ParamsetDescription } from '../../types/types';
 import { parameterLabel } from '../generic/parameters';
 import { enumLabel } from '../generic/settingKinds';
 

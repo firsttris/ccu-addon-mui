@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { firmwareStatus, updateAction } from './Firmware';
-import { Device } from '../../types/types';
+import type { Device } from '../../types/types';
 
 const device = (fields: Partial<Device>): Device => ({
   interfaceName: 'HmIP-RF',

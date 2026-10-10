@@ -1,4 +1,4 @@
-import {
+import type {
   ProgramBranch,
   ProgramCondition,
   ProgramDefinition,
@@ -6,7 +6,7 @@ import {
   ProgramRule,
   TimeModule,
 } from '../../types/protocol';
-import { ParameterDescription, Sysvar } from '../../types/types';
+import type { ParameterDescription, Sysvar } from '../../types/types';
 
 // Helpers for the program editor. The model is the one the server reads and
 // writes (rega/programs.go), close to ReGa's: condition kinds and value
@@ -232,7 +232,7 @@ export interface TimeTexts {
 }
 
 // The weekday index (Monday 0) of a single-bit mask
-const bitIndex = (mask: number) => WEEKDAYS.findIndex((bit) => bit === mask);
+const bitIndex = (mask: number) => WEEKDAYS.indexOf(mask);
 
 // A time module in words, e.g. "täglich, um 19:30" or "tagsüber, werktags"
 export const describeTimeModule = (tm: TimeModule, x: TimeTexts) => {

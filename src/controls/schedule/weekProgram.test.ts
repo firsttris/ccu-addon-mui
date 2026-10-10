@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ParamsetDescription } from '../../types/types';
+import type { ParamsetDescription } from '../../types/types';
 import {
   changedValues,
   deletedValues,
@@ -7,7 +7,7 @@ import {
   freeNumber,
   parseWeekProgram,
   targetIndexes,
-  Values,
+  type Values,
 } from './weekProgram';
 
 const fields = [

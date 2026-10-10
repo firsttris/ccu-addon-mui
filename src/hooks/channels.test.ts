@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 import { applyEvent, groupChannelsByType, isHiddenChannel, shareGroups } from './channels';
 
 const channel = (type: string, address: string, datapoints: Record<string, unknown> = { STATE: false }) =>

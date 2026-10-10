@@ -3,7 +3,7 @@ import ArrowUpIcon from '~icons/lucide/arrow-up-to-line';
 import ArrowDownIcon from '~icons/lucide/arrow-down-to-line';
 import WindIcon from '~icons/lucide/wind';
 import SquareIcon from '~icons/lucide/square';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { HoldButton } from '../components/Gestures';

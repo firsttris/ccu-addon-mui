@@ -1,11 +1,11 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import DropletIcon from '~icons/lucide/droplet';
 import FlaskIcon from '~icons/lucide/flask-conical';
 import SunDimIcon from '~icons/lucide/sun-dim';
 import RadarIcon from '~icons/lucide/radar';
 import SirenIcon from '~icons/lucide/siren';
 import PersonIcon from '~icons/lucide/person-standing';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { HoldButton } from '../components/Gestures';

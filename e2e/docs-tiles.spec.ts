@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { expect, Page, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
 import { installWebSocketMock } from './helpers/websocketMock';
 
 // The moving pictures of the tiles in docs/geraete.md (docs/kacheln/*.webp):
@@ -351,11 +351,11 @@ const record = async (page: Page, scene: Scene) => {
   await cdp.send('Page.stopScreencast');
   await cdp.detach();
   await tile.evaluate((el) => el.removeAttribute('data-docs-tile'));
-  await page.evaluate(() =>
-    document
-      .querySelectorAll('style')
-      .forEach((style) => style.textContent?.includes('data-docs-tile') && style.remove()),
-  );
+  await page.evaluate(() => {
+    for (const style of document.querySelectorAll('style')) {
+      if (style.textContent?.includes('data-docs-tile')) style.remove();
+    }
+  });
   if (frames.length === 0) throw new Error(`no frames for ${scene.tile}`);
 
   // Each frame as long as it was on screen (the last one until the end)

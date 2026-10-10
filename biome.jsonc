@@ -39,7 +39,11 @@
       // worked off (docs/clean-code-befunde.md), then they go back to errors
       "a11y": {
         "noAutofocus": "warn",
-        "noLabelWithoutControl": "warn",
+        "noLabelWithoutControl": {
+          "level": "warn",
+          // The inputs of components/ui render a native input, select or switch
+          "options": { "inputComponents": ["Input", "NativeSelect", "Switch", "TimePicker"] }
+        },
         "noNoninteractiveElementToInteractiveRole": "warn",
         "noSvgWithoutTitle": "warn",
         "useAriaPropsSupportedByRole": "warn",

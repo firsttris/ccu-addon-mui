@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import CloudRainIcon from '~icons/lucide/cloud-rain';
 import CloudIcon from '~icons/lucide/cloud';
 import ThermometerIcon from '~icons/lucide/thermometer';
@@ -12,12 +12,12 @@ import PlugZapIcon from '~icons/lucide/plug-zap';
 import UnplugIcon from '~icons/lucide/unplug';
 import VibrateIcon from '~icons/lucide/vibrate';
 import RotateIcon from '~icons/lucide/rotate-3d';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { Tile } from '../components/Tile';
 import { useParamset } from '../queries';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
-import { DetectorTile, Tone } from './DetectorControls';
+import { DetectorTile, type Tone } from './DetectorControls';
 import { Extra, format, number } from './ClimateSensorControl';
 import { useValueList } from './useValueList';
 

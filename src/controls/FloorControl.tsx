@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { FloorClimateControlTransceiverChannel } from '../types/types';
+import type { FloorClimateControlTransceiverChannel } from '../types/types';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';

@@ -1,4 +1,4 @@
-import { HTMLAttributes, useCallback, useEffect, useMemo, useState } from 'react';
+import { type HTMLAttributes, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { DeviceImage } from '../../components/DeviceImage';
 import { useQueries } from '@tanstack/react-query';
@@ -6,8 +6,8 @@ import { useDevices, usePairingAction, useParamset, usePutParamset } from '../..
 import { RequestError, useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { ElevateDialog } from '../../components/ElevateDialog';
 import { useToast } from '../../contexts/ToastContext';
-import { TranslationKey, useTranslations } from '../../i18n/utils';
-import { DatapointValue, ParamsetDescription } from '../../types/types';
+import { type TranslationKey, useTranslations } from '../../i18n/utils';
+import type { DatapointValue, ParamsetDescription } from '../../types/types';
 import { shownParameters } from '../../controls/generic/ParamsetView';
 import { readableValue } from '../../controls/generic/SettingsView';
 import CheckIcon from '~icons/lucide/check-circle-2';
@@ -31,7 +31,7 @@ import InfoIcon from '~icons/lucide/info';
 import ChevronRightIcon from '~icons/lucide/chevron-right';
 import { GroupedSettings } from './GroupedSettings';
 import { WeekProfileSheet } from '../../controls/ThermostatControl/profile/WeekProfileSheet';
-import { WeekProgramSheet, WeekProgramKind } from '../../controls/schedule/WeekProgramSheet';
+import { WeekProgramSheet, type WeekProgramKind } from '../../controls/schedule/WeekProgramSheet';
 import { parameterLabel } from '../../controls/generic/parameters';
 import { Links } from './Links';
 import { DevicePrograms } from './DevicePrograms';

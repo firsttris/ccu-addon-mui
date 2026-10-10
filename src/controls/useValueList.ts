@@ -1,5 +1,5 @@
 import { useParamsetDescription } from '../queries';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 
 // Names of an enum datapoint's values from the channel's paramset
 // description. `fallback` is the usual order, for showing a state while the

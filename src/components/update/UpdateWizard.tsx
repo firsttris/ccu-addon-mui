@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import DownloadIcon from '~icons/lucide/arrow-down-to-line';
 import ShieldCheckIcon from '~icons/lucide/shield-check';
 import PackageOpenIcon from '~icons/lucide/package-open';
@@ -17,7 +17,7 @@ import { errorText } from '../../lib/errors';
 import { useEffects } from '../../contexts/EffectsContext';
 import { cn } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
-import { HeroTone, updateButton, UpdateHero, VersionJump } from './UpdateHero';
+import { type HeroTone, updateButton, UpdateHero, VersionJump } from './UpdateHero';
 
 // Download, check and the update script take seconds, on a slow line minutes
 const INSTALL_TIMEOUT_MS = 5 * 60 * 1000;

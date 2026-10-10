@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { ToastProvider } from '../contexts/ToastContext';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 
 const request = vi.fn();
 vi.mock('../hooks/useWebsocket', async (importOriginal) => ({

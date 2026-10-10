@@ -1,4 +1,4 @@
-import { DatapointValue, GenericChannel, ParamsetDescription } from '../types/types';
+import type { DatapointValue, GenericChannel, ParamsetDescription } from '../types/types';
 import { useParamsetDescription, useSetDataPoint } from '../queries';
 import { ParamsetView, shownParameters } from './generic/ParamsetView';
 import { defaultLang } from '../i18n/locale';

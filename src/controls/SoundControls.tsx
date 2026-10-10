@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import MusicIcon from '~icons/lucide/music';
 import BellIcon from '~icons/lucide/bell-ring';
 import LightbulbIcon from '~icons/lucide/lightbulb';
-import { Channel, DatapointValue } from '../types/types';
+import type { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { Button } from '../components/ui/button';

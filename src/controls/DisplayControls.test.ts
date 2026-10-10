@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { controlOverrides } from './registry';
 import { isHiddenChannel } from '../hooks/channels';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 import { displayConfigString, emptyLine, encodeDisplayText, rc19Writes } from './DisplayControls';
 
 const noSound = { selection: -1, repetitions: 0, interval: 5 };

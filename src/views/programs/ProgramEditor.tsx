@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import PlusIcon from '~icons/lucide/plus';
 import CopyIcon from '~icons/lucide/copy';
@@ -7,7 +7,7 @@ import { useProgram, useProgramChange } from '../../queries';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { useToast } from '../../contexts/ToastContext';
 import { usePageTitle } from '../../contexts/PageTitleContext';
-import { ProgramBranch, ProgramDefinition, ProgramRule } from '../../types/protocol';
+import type { ProgramBranch, ProgramDefinition, ProgramRule } from '../../types/protocol';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Switch } from '../../components/ui/switch';
@@ -179,13 +179,12 @@ export const ProgramEditor = () => {
   // reconnect, or from the cache first) only replaces an untouched draft:
   // unsaved changes stay. Another program (saved as new) always does.
   const [base, setBase] = useState<ProgramDefinition>();
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only when a program was loaded, not on every edit
   useEffect(() => {
     if (loaded && (draft === base || base?.id !== loaded.id)) {
       setDraft(loaded);
       setBase(loaded);
     }
-    // Only when a program was loaded, not on every edit
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
 
   if (isError) {

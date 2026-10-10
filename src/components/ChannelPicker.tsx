@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import SearchIcon from '~icons/lucide/search';
 import { useDevices, useRooms } from '../queries';
-import { Channel } from '../types/types';
+import type { Channel } from '../types/types';
 import { channelTypeName } from '../i18n/channelTypeNames';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';

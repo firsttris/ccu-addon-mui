@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { RADIUS, CENTER_X, CENTER_Y, ROTATE_ANGLE, DEFAULT_RANGE, TemperatureRange } from './constants';
+import { RADIUS, CENTER_X, CENTER_Y, ROTATE_ANGLE, DEFAULT_RANGE, type TemperatureRange } from './constants';
 import { createArcPath, polarToCartesian } from './utils';
 import { useTemperatureConversion } from './hooks/useTemperatureConversion';
 import { useDragInteraction } from './hooks/useDragInteraction';

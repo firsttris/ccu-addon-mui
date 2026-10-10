@@ -3,7 +3,7 @@ import LockIcon from '~icons/lucide/lock';
 import LockOpenIcon from '~icons/lucide/lock-open';
 import DoorOpenIcon from '~icons/lucide/door-open';
 import TriangleAlertIcon from '~icons/lucide/triangle-alert';
-import { Channel, DatapointValue, KeymaticChannel } from '../types/types';
+import type { Channel, DatapointValue, KeymaticChannel } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { HoldButton, SlideToConfirm } from '../components/Gestures';

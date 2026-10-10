@@ -1,16 +1,16 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import DoorClosedIcon from '~icons/lucide/door-closed';
 import DoorOpenIcon from '~icons/lucide/door-open';
 import LockIcon from '~icons/lucide/lock';
 import LockOpenIcon from '~icons/lucide/lock-open';
 import RotateCcwIcon from '~icons/lucide/rotate-ccw';
 import WavesIcon from '~icons/lucide/waves';
-import { Channel, DatapointValue, Operation } from '../types/types';
+import { type Channel, type DatapointValue, Operation } from '../types/types';
 import { useParamsetDescription, useSetDataPoint } from '../queries';
 import { Switch } from '../components/ui/switch';
 import { Button } from '../components/ui/button';
 import { m } from '../paraglide/messages';
-import { DetectorTile, Tone } from './DetectorControls';
+import { DetectorTile, type Tone } from './DetectorControls';
 
 // Side channels of devices whose main channel has its own tile: the pump
 // and direct outputs of floor heating controllers, and the door state,

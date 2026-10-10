@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { TimeModule } from '../../types/protocol';
+import type { TimeModule } from '../../types/protocol';
 import {
   clockOf,
   dateOf,
   describeTimeModule,
   SUN,
   timeModeOf,
-  TimeTexts,
+  type TimeTexts,
   today,
   WORKDAY_BITS,
   clockOfSeconds,

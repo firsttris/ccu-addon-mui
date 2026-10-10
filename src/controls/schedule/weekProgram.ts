@@ -1,4 +1,4 @@
-import { DatapointValue, ParamsetDescription } from '../../types/types';
+import type { DatapointValue, ParamsetDescription } from '../../types/types';
 
 // The week program of HmIP actuators (SWITCH_/BLIND_/DIMMER_WEEK_PROFILE
 // channel), as the WebUI's HmIPWeeklyProgram.js (OpenCCU-Base) reads and

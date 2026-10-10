@@ -1,13 +1,14 @@
-import React, { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import type React from 'react';
+import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useQueryClient } from '@tanstack/react-query';
-import { Channel, HmEvent, UserLevel } from './../types/types';
+import type { Channel, HmEvent, UserLevel } from './../types/types';
 import { useUniqueDeviceID } from './useUniqueDeviceID';
 import { useToast } from '../contexts/ToastContext';
 import { applyEvent } from './channels';
 import { RecentUpdates } from './recentUpdates';
 import type { Protocol } from '../types/protocol';
-import { Capabilities, CCU_CAPABILITIES, Platform } from './capabilities';
+import { type Capabilities, CCU_CAPABILITIES, type Platform } from './capabilities';
 import { m } from '../paraglide/messages';
 import { emitSelfUpdateProgress } from '../lib/selfUpdateProgress';
 import type { SelfUpdateProgressMessage } from '../types/protocol';
