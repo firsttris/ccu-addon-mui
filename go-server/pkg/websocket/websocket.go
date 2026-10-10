@@ -472,14 +472,6 @@ func (s *Server) sendJSON(client *Client, data interface{}) {
 	s.send(client, message)
 }
 
-func (s *Server) sendError(client *Client, errorMsg string) {
-	s.sendErrorCode(client, errorMsg, "")
-}
-
-func (s *Server) sendErrorCode(client *Client, errorMsg, code string) {
-	s.sendRequestError(client, "", errorMsg, code)
-}
-
 func (s *Server) sendRequestError(client *Client, requestID, errorMsg, code string) {
 	response := types.ErrorResponse{
 		Type:      "error",

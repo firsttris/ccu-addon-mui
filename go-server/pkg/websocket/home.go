@@ -14,7 +14,7 @@ var deviceIDRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 func (s *Server) handleSubscribe(client *Client, message []byte) {
 	var msg types.SubscribeMessage
 	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendError(client, "invalid subscribe message: "+err.Error())
+		s.sendRequestError(client, msg.RequestID, "invalid subscribe message: "+err.Error(), "INVALID_REQUEST")
 		return
 	}
 

@@ -98,7 +98,7 @@ func (s *Server) handleLogin(client *Client, message []byte) {
 		Password string `json:"password"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendErrorCode(client, "invalid login message", "INVALID_MESSAGE")
+		s.sendRequestError(client, "", "invalid login message", "INVALID_REQUEST")
 		return
 	}
 
@@ -186,7 +186,7 @@ func (s *Server) handleElevate(client *Client, message []byte) {
 		Password  string `json:"password"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_MESSAGE")
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
 		return
 	}
 	if s.gate != nil {

@@ -42,7 +42,7 @@ func (s *Server) handleCreateBackup(client *Client, message []byte) {
 		Password  string `json:"password"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
-		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_MESSAGE")
+		s.sendRequestError(client, msg.RequestID, "invalid message", "INVALID_REQUEST")
 		return
 	}
 	if s.backup == nil {

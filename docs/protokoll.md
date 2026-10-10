@@ -269,7 +269,7 @@ dürfen.
 | `FORBIDDEN` | Stufe reicht nicht (Gast schaltet, Nicht-Admin richtet ein) |
 | `ELEVATION_REQUIRED` | Admin-Token fehlt oder ist abgelaufen |
 | `PASSWORD_REQUIRED` | die Aktion braucht eine WebUI-Sitzung, Passwort nötig |
-| `INVALID_MESSAGE`, `INVALID_REQUEST`, `INVALID_VALUE` | Nachricht kaputt, Feld fehlt, Wert außerhalb der Beschreibung |
+| `INVALID_REQUEST`, `INVALID_VALUE` | Nachricht kaputt oder Feld fehlt (mit der `requestId`, wenn die Nachricht eine hat), Wert außerhalb der Beschreibung |
 | `NOT_FOUND` | Objekt unbekannt |
 | `NOT_AVAILABLE`, `NOT_SUPPORTED`, `UNAVAILABLE` | Funktion abgeschaltet, nicht möglich (z. B. Gerätetausch bei HmIP), Push nicht verfügbar |
 | `CCU_ERROR` | die CCU hat einen Fehler gemeldet |
