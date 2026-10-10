@@ -10,12 +10,12 @@ import (
 // scriptedCaller answers calls with fixed values or XML-RPC faults and
 // records them.
 type scriptedCaller struct {
-	replies map[string]interface{}
+	replies map[string]any
 	faults  map[string]int
 	calls   []string
 }
 
-func (s *scriptedCaller) Call(method string, args interface{}, reply interface{}) error {
+func (s *scriptedCaller) Call(method string, args any, reply any) error {
 	s.calls = append(s.calls, method)
 	if code, ok := s.faults[method]; ok {
 		return fmt.Errorf("Fault(%d): failed", code)
@@ -28,24 +28,24 @@ func (s *scriptedCaller) Call(method string, args interface{}, reply interface{}
 	return nil
 }
 
-func deviceReply(deviceType string) map[string]interface{} {
-	return map[string]interface{}{"ADDRESS": "X", "TYPE": deviceType}
+func deviceReply(deviceType string) map[string]any {
+	return map[string]any{"ADDRESS": "X", "TYPE": deviceType}
 }
 
-func radioModules(dutyCycle int) []interface{} {
-	return []interface{}{
-		map[string]interface{}{"ADDRESS": "GW1", "TYPE": "HMLGW2", "DUTY_CYCLE": 95},
-		map[string]interface{}{"ADDRESS": "NEQ1", "TYPE": "CCU2", "DUTY_CYCLE": dutyCycle},
+func radioModules(dutyCycle int) []any {
+	return []any{
+		map[string]any{"ADDRESS": "GW1", "TYPE": "HMLGW2", "DUTY_CYCLE": 95},
+		map[string]any{"ADDRESS": "NEQ1", "TYPE": "CCU2", "DUTY_CYCLE": dutyCycle},
 	}
 }
 
 func TestInstallFirmwareMethodPerInterface(t *testing.T) {
-	bidcos := &scriptedCaller{replies: map[string]interface{}{
+	bidcos := &scriptedCaller{replies: map[string]any{
 		"getDeviceDescription": deviceReply("HM-LC-Sw1-FM"),
 		"listBidcosInterfaces": radioModules(12),
-		"updateFirmware":       []interface{}{true},
+		"updateFirmware":       []any{true},
 	}}
-	hmip := &scriptedCaller{replies: map[string]interface{}{
+	hmip := &scriptedCaller{replies: map[string]any{
 		"getDeviceDescription": deviceReply("HmIP-SWDO"),
 		"installFirmware":      true,
 	}}
@@ -68,14 +68,14 @@ func TestInstallFirmwareMethodPerInterface(t *testing.T) {
 
 func TestInstallFirmwareRefused(t *testing.T) {
 	bidcos := &scriptedCaller{
-		replies: map[string]interface{}{"listBidcosInterfaces": radioModules(85)},
+		replies: map[string]any{"listBidcosInterfaces": radioModules(85)},
 	}
-	wired := &scriptedCaller{replies: map[string]interface{}{
+	wired := &scriptedCaller{replies: map[string]any{
 		"getDeviceDescription": deviceReply("HmIPW-DRAP"),
 		"installFirmware":      false,
 	}}
 	hmip := &scriptedCaller{
-		replies: map[string]interface{}{"getDeviceDescription": deviceReply("HmIP-SWSD")},
+		replies: map[string]any{"getDeviceDescription": deviceReply("HmIP-SWSD")},
 		faults:  map[string]int{"installFirmware": -1},
 	}
 	client := newClient(map[string]caller{"BidCos-RF": bidcos, "HmIP-Wired": wired, "HmIP-RF": hmip})
@@ -103,7 +103,7 @@ func TestInstallFirmwareRefused(t *testing.T) {
 
 func TestDutyCycleWithoutBidCos(t *testing.T) {
 	// OpenCCU without BidCos-RF: the HmIP module's duty cycle counts
-	hmip := &scriptedCaller{replies: map[string]interface{}{
+	hmip := &scriptedCaller{replies: map[string]any{
 		"getDeviceDescription": deviceReply("HmIP-SWDO"),
 		"listBidcosInterfaces": radioModules(90),
 	}}

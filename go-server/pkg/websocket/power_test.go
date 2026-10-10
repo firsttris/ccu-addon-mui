@@ -40,10 +40,10 @@ func TestPowerActionSafeMode(t *testing.T) {
 
 	s := NewServer(nil, rega.NewClient(&config.Config{CCUHost: host, RegaPort: portNum}))
 	client := &Client{send: make(chan []byte, 1), level: auth.LevelAdmin, user: "Admin", elevatedUntil: time.Now().Add(time.Hour)}
-	call := func(action string) map[string]interface{} {
+	call := func(action string) map[string]any {
 		data, _ := json.Marshal(map[string]string{"type": "powerAction", "requestId": "p", "action": action})
 		s.handleMessage(client, data)
-		var answer map[string]interface{}
+		var answer map[string]any
 		_ = json.Unmarshal(<-client.send, &answer)
 		return answer
 	}
@@ -79,10 +79,10 @@ func TestRegaVersion(t *testing.T) {
 
 	s := NewServer(nil, nil)
 	client := &Client{send: make(chan []byte, 1), level: auth.LevelAdmin, user: "Admin", elevatedUntil: time.Now().Add(time.Hour)}
-	set := func(version string) map[string]interface{} {
+	set := func(version string) map[string]any {
 		data, _ := json.Marshal(map[string]string{"type": "setRegaVersion", "requestId": "r", "version": version})
 		s.handleMessage(client, data)
-		var answer map[string]interface{}
+		var answer map[string]any
 		_ = json.Unmarshal(<-client.send, &answer)
 		return answer
 	}

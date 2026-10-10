@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-type fakeValues map[string]map[string]interface{}
+type fakeValues map[string]map[string]any
 
-func (f fakeValues) GetParamset(iface, address, key string) (map[string]interface{}, error) {
+func (f fakeValues) GetParamset(iface, address, key string) (map[string]any, error) {
 	if v, ok := f[address]; ok {
 		return v, nil
 	}

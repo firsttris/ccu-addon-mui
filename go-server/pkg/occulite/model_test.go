@@ -15,7 +15,7 @@ import (
 // fakeRPC answers the home model's calls from fixed lists and counts them
 type fakeRPC struct {
 	devices    map[string][]ccurpc.DeviceDescription
-	values     map[string]map[string]interface{}
+	values     map[string]map[string]any
 	paramCalls atomic.Int32
 }
 
@@ -26,17 +26,17 @@ func (f *fakeRPC) ListDevices(iface string) ([]ccurpc.DeviceDescription, error) 
 func (f *fakeRPC) GetParamsetDescription(string, string, string) (ccurpc.ParamsetDescription, error) {
 	return ccurpc.ParamsetDescription{}, nil
 }
-func (f *fakeRPC) GetParamset(iface, address, key string) (map[string]interface{}, error) {
+func (f *fakeRPC) GetParamset(iface, address, key string) (map[string]any, error) {
 	f.paramCalls.Add(1)
 	return f.values[address], nil
 }
-func (f *fakeRPC) CallRaw(string, string, ...interface{}) (interface{}, error) { return nil, nil }
+func (f *fakeRPC) CallRaw(string, string, ...any) (any, error) { return nil, nil }
 
 // The state store keeps only the datapoints occulited's cards draw: an
 // HmIP channel's other values are read once from the process, without
 // replacing what the store had
 func TestReadValuesFillsWhatTheStateStoreLacks(t *testing.T) {
-	rpc := &fakeRPC{values: map[string]map[string]interface{}{
+	rpc := &fakeRPC{values: map[string]map[string]any{
 		"000A:3": {"STATE": false, "SECTION": 2, "PROCESS": 0},
 	}}
 	h, _ := NewHome(New("http://127.0.0.1:1", ""), rpc, "")

@@ -27,7 +27,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | 2 | Code, den nur die CCU braucht, ohne Build-Tag (erledigt) | Go | S |
 | 3 | Uneinheitliche Fehlercodes, `requestId` geht verloren (erledigt) | Go | S |
 | 4 | Kopierte Helfer und Reste im Frontend | Frontend | S–M |
-| 5 | Veraltete Go-Idiome, Logger ohne `Errorf` | Go | S |
+| 5 | Veraltete Go-Idiome, Logger ohne `Errorf` (erledigt) | Go | S |
 | 6 | Gleicher Anfang in jedem Handler, Antwort-Structs | Go | M |
 | 7 | Fehlerbehandlung bei Änderungen mehrfach kopiert | Go | S |
 | 8 | Selbstgebaute TTL-Caches neben `cachedList[T]` | Go | M |
@@ -152,23 +152,20 @@ sind nur über `dispatch_ccu.go` erreichbar. Eine Aufteilung würde diesen Teil 
 und `lib/validation.ts`. Ungenutztes löschen und Exporte, die nur in ihrer Datei gebraucht werden, nicht
 mehr exportieren.
 
-### 5. Veraltete Go-Idiome, Logger ohne `Errorf`
+### 5. Veraltete Go-Idiome, Logger ohne `Errorf`: erledigt
 
-- **`interface{}` statt `any`.** Außerhalb der Tests 394-mal ✔ und `any` nur 22-mal. Am häufigsten in
-  `fakeccu.go` (45), `ccurpc/values.go` (38) und `occulited.go` (33).
-  `gofmt -r 'interface{} -> any' -w .` erledigt das in einem Schritt.
-- **Eigene Helfer statt `slices.Contains`** ✔: `contains` (`occulite/home.go:704`), `containsString`
-  (`websocket/heating_groups.go:315`) und `containsInt` (`settings/firewall.go:128`).
-- **Altes Sortieren.** 20-mal `sort.Slice`, `sort.Strings` oder `sort.Ints` statt `slices.Sort` und
-  `slices.SortFunc`. Neunmal werden die Schlüssel einer Map von Hand gesammelt, wo
-  `slices.Sorted(maps.Keys(m))` reicht.
+- **`any` statt `interface{}`** im ganzen Server (`gofmt -r 'interface{} -> any'`).
+- **`slices.Contains`** statt der eigenen Helfer `contains`, `containsString` und `containsInt`.
+- **Sortieren mit `slices`.** `slices.Sort`, `slices.SortFunc` und `slices.SortStableFunc` mit
+  `cmp.Compare` bzw. `time.Time.Compare` ersetzen `sort.*`. Die Schlüssel einer Map, von Hand
+  gesammelt und sortiert, sind jetzt `slices.Sorted(maps.Keys(m))`.
+  - Ausnahme ist `ccurpc.InterfaceNames`: Bei einer leeren Map liefert `slices.Sorted` `nil`, und die
+    Liste geht als JSON an die App, wo aus `[]` sonst `null` würde.
 - **Logger.**
-  - 31-mal steht `logger.X(fmt.Sprintf(…))` im Code ✔, weil es kein `Errorf` und kein `Infof` gibt.
-  - `Info` und `Error` sind identisch und schreiben kein Level ✔ (`pkg/logger/logger.go:16–22`).
-  - `logger` importiert `config` nur für `LogStartupInfo`.
-
-**Vorschlag:** Den Logger um `Errorf`, `Infof` und ein Level-Präfix ergänzen. `LogStartupInfo` nach
-`main` verschieben. Der Rest ist mechanisch.
+  - `Infof` und `Errorf` ersetzen die 31 `logger.X(fmt.Sprintf(…))`. Die Ausgabe bleibt dieselbe.
+  - `LogStartupInfo` steht als `logStartup` in `main.go`. `logger` braucht `config` nicht mehr.
+- **Bewusst nicht:** Ein Level-Präfix für `Info` und `Error` hätte jede Zeile der Logdatei verändert,
+  die Nutzer kennen. Die Fehlerzeilen sind schon an ihren Emojis und Texten zu erkennen.
 
 ## Mittel: Wiederholungen im Go-Server
 
@@ -313,7 +310,7 @@ Jeder Schritt ist ein eigener PR:
 1. ~~Build-Tags (#2)~~ erledigt.
 2. ~~Fehlercodes vereinheitlichen (#3)~~ erledigt.
 3. ~~`staticcheck` in der CI (#1)~~ erledigt; fürs Frontend mit Biome.
-4. Mechanische Go-Modernisierung und Logger (#5).
+4. ~~Mechanische Go-Modernisierung und Logger (#5)~~ erledigt.
 5. Kopierte Frontend-Helfer und Reste (#4).
 6. `Security.tsx` und `queries/index.ts` aufteilen (#11), weil ihre Nahtstellen schon markiert sind.
 7. Handler vereinheitlichen (#6, #7), danach die langen Handler aufteilen (#13).

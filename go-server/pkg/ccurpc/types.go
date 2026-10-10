@@ -55,8 +55,8 @@ const (
 // SpecialValue is a value with its own meaning outside min/max, such as
 // "not used" or "unlimited".
 type SpecialValue struct {
-	ID    string      `json:"id"`
-	Value interface{} `json:"value"`
+	ID    string `json:"id"`
+	Value any    `json:"value"`
 }
 
 // ParameterDescription describes one parameter of a paramset, see the
@@ -66,9 +66,9 @@ type ParameterDescription struct {
 	Type       string         `json:"type"`
 	Operations int            `json:"operations"`
 	Flags      int            `json:"flags"`
-	Default    interface{}    `json:"default,omitempty"`
-	Min        interface{}    `json:"min,omitempty"`
-	Max        interface{}    `json:"max,omitempty"`
+	Default    any            `json:"default,omitempty"`
+	Min        any            `json:"min,omitempty"`
+	Max        any            `json:"max,omitempty"`
 	Unit       string         `json:"unit,omitempty"`
 	TabOrder   int            `json:"tabOrder"`
 	Control    string         `json:"control,omitempty"`
@@ -79,12 +79,12 @@ type ParameterDescription struct {
 // ParamsetDescription maps parameter names to their descriptions.
 type ParamsetDescription map[string]ParameterDescription
 
-func asString(v interface{}) string {
+func asString(v any) string {
 	s, _ := v.(string)
 	return s
 }
 
-func asInt(v interface{}) int {
+func asInt(v any) int {
 	switch x := v.(type) {
 	case int:
 		return x
@@ -100,8 +100,8 @@ func asInt(v interface{}) int {
 	return 0
 }
 
-func asStrings(v interface{}) []string {
-	list, _ := v.([]interface{})
+func asStrings(v any) []string {
+	list, _ := v.([]any)
 	result := make([]string, 0, len(list))
 	for _, item := range list {
 		if s, ok := item.(string); ok {
@@ -112,11 +112,11 @@ func asStrings(v interface{}) []string {
 }
 
 // roles splits LINK_SOURCE_ROLES/LINK_TARGET_ROLES, a space separated string.
-func roles(v interface{}) []string {
+func roles(v any) []string {
 	return strings.Fields(asString(v))
 }
 
-func parseDeviceDescription(m map[string]interface{}) DeviceDescription {
+func parseDeviceDescription(m map[string]any) DeviceDescription {
 	return DeviceDescription{
 		Type:                asString(m["TYPE"]),
 		Address:             asString(m["ADDRESS"]),
@@ -140,7 +140,7 @@ func parseDeviceDescription(m map[string]interface{}) DeviceDescription {
 }
 
 // availableFirmware is the newer firmware the CCU knows for a device, or ""
-func availableFirmware(m map[string]interface{}) string {
+func availableFirmware(m map[string]any) string {
 	available := asString(m["AVAILABLE_FIRMWARE"])
 	if available == "0.0.0" || available == asString(m["FIRMWARE"]) {
 		return ""
@@ -152,7 +152,7 @@ func availableFirmware(m map[string]interface{}) string {
 // INTEGER parameter numbers when they came as text: hmipserver sends those
 // of its virtual devices untyped (<value>4.5</value>, read as a string),
 // seen on openccu-lite's heating groups, and the app only uses numbers
-func number(kind string, v interface{}) interface{} {
+func number(kind string, v any) any {
 	s, ok := v.(string)
 	if !ok || (kind != "FLOAT" && kind != "INTEGER") {
 		return v
@@ -167,10 +167,10 @@ func number(kind string, v interface{}) interface{} {
 	return f
 }
 
-func parseParamsetDescription(m map[string]interface{}) ParamsetDescription {
+func parseParamsetDescription(m map[string]any) ParamsetDescription {
 	description := ParamsetDescription{}
 	for name, raw := range m {
-		p, ok := raw.(map[string]interface{})
+		p, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -187,9 +187,9 @@ func parseParamsetDescription(m map[string]interface{}) ParamsetDescription {
 			Control:    asString(p["CONTROL"]),
 			ValueList:  asStrings(p["VALUE_LIST"]),
 		}
-		if specials, ok := p["SPECIAL"].([]interface{}); ok {
+		if specials, ok := p["SPECIAL"].([]any); ok {
 			for _, s := range specials {
-				if sm, ok := s.(map[string]interface{}); ok {
+				if sm, ok := s.(map[string]any); ok {
 					parameter.Special = append(parameter.Special, SpecialValue{ID: asString(sm["ID"]), Value: number(kind, sm["VALUE"])})
 				}
 			}

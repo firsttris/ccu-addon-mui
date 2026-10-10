@@ -12,7 +12,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -48,7 +48,7 @@ var (
 
 // caller makes an XML-RPC call (httpCaller), replaceable in tests.
 type caller interface {
-	Call(method string, args interface{}, reply interface{}) error
+	Call(method string, args any, reply any) error
 }
 
 type Client struct {
@@ -129,7 +129,7 @@ func New(cfg *config.Config) *Client {
 const firmwareUpdateTimeout = 20 * time.Minute
 
 // callSlow is call without the answer timeout (see Client.slow)
-func (c *Client) callSlow(iface, method string, args []interface{}, reply interface{}) error {
+func (c *Client) callSlow(iface, method string, args []any, reply any) error {
 	rpc, ok := c.slow[iface]
 	if !ok {
 		return c.call(iface, method, args, reply)
@@ -146,7 +146,7 @@ func (c *Client) InterfaceNames() []string {
 	for name := range c.interfaces {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 	return names
 }
 
@@ -160,7 +160,7 @@ func newClient(callers map[string]caller) *Client {
 	}
 }
 
-func (c *Client) call(iface, method string, args []interface{}, reply interface{}) error {
+func (c *Client) call(iface, method string, args []any, reply any) error {
 	rpc, ok := c.interfaces[iface]
 	if !ok {
 		return ErrUnknownInterface
@@ -221,13 +221,13 @@ func (c *Client) InstallFirmware(iface, address string) error {
 	if !strings.HasPrefix(device.Type, "HmIPW-") && c.dutyCycleHigh() {
 		return ErrDutyCycleHigh
 	}
-	var reply interface{}
+	var reply any
 	if isHmIPInterface(iface) {
 		// Starts the update and answers at once
-		err = c.call(iface, "installFirmware", []interface{}{address}, &reply)
+		err = c.call(iface, "installFirmware", []any{address}, &reply)
 	} else {
 		// Transfers and flashes before it answers
-		err = c.callSlow(iface, "updateFirmware", []interface{}{address}, &reply)
+		err = c.callSlow(iface, "updateFirmware", []any{address}, &reply)
 	}
 	switch faultCode(err) {
 	case -1, -9, -10:
@@ -248,11 +248,11 @@ func (c *Client) InstallFirmware(iface, address string) error {
 }
 
 // replyOK: installFirmware answers a bool, updateFirmware one per device
-func replyOK(reply interface{}) bool {
+func replyOK(reply any) bool {
 	switch v := reply.(type) {
 	case bool:
 		return v
-	case []interface{}:
+	case []any:
 		for _, item := range v {
 			if ok, isBool := item.(bool); isBool && !ok {
 				return false
@@ -285,14 +285,14 @@ func (c *Client) dutyCycleHigh() bool {
 // device firmware under /etc/config/firmware again, as the WebUI's device
 // firmware page does after adding or deleting one (AvailableFirmware.ftl)
 func (c *Client) RefreshDeployedDeviceFirmwareList(iface string) error {
-	var reply interface{}
+	var reply any
 	return c.call(iface, "refreshDeployedDeviceFirmwareList", nil, &reply)
 }
 
 // CallRaw calls a method and returns the decoded reply as is, e.g. for
 // exporting fixtures.
-func (c *Client) CallRaw(iface, method string, args ...interface{}) (interface{}, error) {
-	var reply interface{}
+func (c *Client) CallRaw(iface, method string, args ...any) (any, error) {
+	var reply any
 	err := c.call(iface, method, args, &reply)
 	return reply, err
 }
@@ -300,7 +300,7 @@ func (c *Client) CallRaw(iface, method string, args ...interface{}) (interface{}
 // ListDevices returns the descriptions of all devices and channels of an
 // interface.
 func (c *Client) ListDevices(iface string) ([]DeviceDescription, error) {
-	var reply []interface{}
+	var reply []any
 	if err := c.call(iface, "listDevices", nil, &reply); err != nil {
 		return nil, err
 	}
@@ -308,7 +308,7 @@ func (c *Client) ListDevices(iface string) ([]DeviceDescription, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	for _, raw := range reply {
-		if m, ok := raw.(map[string]interface{}); ok {
+		if m, ok := raw.(map[string]any); ok {
 			device := parseDeviceDescription(m)
 			devices = append(devices, device)
 			c.devices[iface+"|"+device.Address] = device
@@ -330,8 +330,8 @@ func (c *Client) GetDeviceDescription(iface, address string) (DeviceDescription,
 		return device, nil
 	}
 
-	var reply map[string]interface{}
-	if err := c.call(iface, "getDeviceDescription", []interface{}{address}, &reply); err != nil {
+	var reply map[string]any
+	if err := c.call(iface, "getDeviceDescription", []any{address}, &reply); err != nil {
 		return DeviceDescription{}, err
 	}
 	device = parseDeviceDescription(reply)
@@ -391,8 +391,8 @@ func (c *Client) GetParamsetDescription(iface, address, paramsetKey string) (Par
 		return description, nil
 	}
 
-	var reply map[string]interface{}
-	if err := c.call(iface, "getParamsetDescription", []interface{}{address, paramsetKey}, &reply); err != nil {
+	var reply map[string]any
+	if err := c.call(iface, "getParamsetDescription", []any{address, paramsetKey}, &reply); err != nil {
 		return nil, err
 	}
 	description = parseParamsetDescription(reply)
@@ -403,16 +403,16 @@ func (c *Client) GetParamsetDescription(iface, address, paramsetKey string) (Par
 }
 
 // GetParamset returns the current values of a paramset.
-func (c *Client) GetParamset(iface, address, paramsetKey string) (map[string]interface{}, error) {
+func (c *Client) GetParamset(iface, address, paramsetKey string) (map[string]any, error) {
 	if err := validate(address, paramsetKey); err != nil {
 		return nil, err
 	}
-	var reply map[string]interface{}
-	if err := c.call(iface, "getParamset", []interface{}{address, paramsetKey}, &reply); err != nil {
+	var reply map[string]any
+	if err := c.call(iface, "getParamset", []any{address, paramsetKey}, &reply); err != nil {
 		return nil, err
 	}
 	if reply == nil {
-		reply = map[string]interface{}{}
+		reply = map[string]any{}
 	}
 	c.typeValues(iface, address, paramsetKey, reply)
 	return reply, nil
@@ -423,7 +423,7 @@ func (c *Client) GetParamset(iface, address, paramsetKey string) (map[string]int
 // group's settings on openccu-lite: "17.0" for a FLOAT), and the app and
 // putParamset take numbers and booleans only. The description is only asked
 // for when there is text, and comes from the cache.
-func (c *Client) typeValues(iface, address, paramsetKey string, values map[string]interface{}) {
+func (c *Client) typeValues(iface, address, paramsetKey string, values map[string]any) {
 	text := false
 	for _, v := range values {
 		if _, ok := v.(string); ok {

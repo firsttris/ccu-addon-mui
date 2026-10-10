@@ -34,20 +34,20 @@ func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 	switch msgType {
 	case "createGroup":
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: msg.List, Value: msg.Name},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, id, err := s.homeFor(client).CreateGroup(msg.List, msg.Name)
 				created = id
 				return nil, result, err
 			}, &created)
 	case "renameGroup":
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Name},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, previous, err := s.homeFor(client).RenameGroup(msg.List, msg.ID, msg.Name)
 				return previous, result, err
 			})
 	case "deleteGroup":
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, previous, err := s.homeFor(client).DeleteGroup(msg.List, msg.ID)
 				return previous, result, err
 			})
@@ -56,7 +56,7 @@ func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 		sysvar := msg.NewSysvar
 		sysvar.Name = msg.Name
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: msg.Kind, Value: msg.Name},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, id, err := s.regaClient.CreateSysvar(sysvar)
 				created = id
 				return nil, result, err
@@ -64,19 +64,19 @@ func (s *Server) handleObjects(client *Client, msgType string, message []byte) {
 	case "editSysvar":
 		sysvar := msg.NewSysvar
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: sysvar},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, err := s.regaClient.EditSysvar(msg.ID, sysvar, msg.Description, msg.Channel)
 				return nil, result, err
 			})
 	case "renameSysvar":
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target, Value: msg.Name},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, previous, err := s.regaClient.RenameSysvar(msg.ID, msg.Name)
 				return previous, result, err
 			})
 	case "deleteSysvar":
 		s.configure(client, msg.RequestID, audit.Entry{Action: msgType, Target: target},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				result, previous, err := s.regaClient.DeleteSysvar(msg.ID)
 				return previous, result, err
 			})
@@ -95,7 +95,7 @@ func (s *Server) handleRename(client *Client, message []byte) {
 		return
 	}
 	s.configure(client, msg.RequestID, audit.Entry{Action: "rename", Target: msg.Address, Value: msg.Name},
-		func() (interface{}, string, error) {
+		func() (any, string, error) {
 			result, previous, err := s.homeFor(client).SetName(msg.Address, msg.Name)
 			return previous, result, err
 		})
@@ -115,7 +115,7 @@ func (s *Server) handleSetGroupMember(client *Client, message []byte) {
 	}
 	target := fmt.Sprintf("group %d channel %d", msg.GroupID, msg.ChannelID)
 	s.configure(client, msg.RequestID, audit.Entry{Action: "setGroupMember", Target: target, Value: msg.Member},
-		func() (interface{}, string, error) {
+		func() (any, string, error) {
 			result, err := s.homeFor(client).SetGroupMember(msg.GroupID, msg.ChannelID, msg.Member)
 			return !msg.Member, result, err
 		})

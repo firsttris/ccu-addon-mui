@@ -25,7 +25,7 @@ func main() {
 	if cfg.LogFile != "" {
 		logger.RotateAt(cfg.LogFile, cfg.LogMaxBytes)
 	}
-	logger.LogStartupInfo(cfg)
+	logStartup(cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -217,5 +217,22 @@ func (p platformHooks) onEvent(event *types.CCUEvent) {
 func (p platformHooks) started() {
 	if p.start != nil {
 		p.start()
+	}
+}
+
+func logStartup(cfg *config.Config) {
+	logger.SetDebugMode(cfg.Debug)
+
+	logger.Info("🚀 WebSocket Server starting...")
+	logger.Infof("   CCU Host: %s", cfg.CCUHost)
+	logger.Infof("   Callback Host: %s", cfg.CallbackHost)
+	logger.Infof("   Rega Port: %d", cfg.RegaPort)
+	if cfg.Debug {
+		logger.Info("   Debug Mode: ON")
+	} else {
+		logger.Info("   Debug Mode: OFF")
+	}
+	if cfg.CCUUser != "" {
+		logger.Info("   Auth: enabled")
 	}
 }

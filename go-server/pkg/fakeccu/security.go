@@ -12,7 +12,7 @@ import (
 // securityMethod is the WebUI's JSON-RPC methods of cp_security.cgi
 // (ccu/setssh.tcl, setsshpassword.tcl, setauthenabled.tcl, ...): flag files
 // in ConfigDir
-func (c *CCU) securityMethod(method string, params map[string]interface{}) string {
+func (c *CCU) securityMethod(method string, params map[string]any) string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.calls["JSON "+method]++
@@ -82,7 +82,7 @@ func (c *CCU) changeKey(w http.ResponseWriter, key1, key2 string) {
 
 // setFirewall is Firewall.setConfiguration: writes firewall.conf as
 // Firewall_saveConfiguration (simplified; the ports as defined)
-func (c *CCU) setFirewall(params map[string]interface{}) string {
+func (c *CCU) setFirewall(params map[string]any) string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.calls["JSON Firewall.setConfiguration"]++
@@ -91,7 +91,7 @@ func (c *CCU) setFirewall(params map[string]interface{}) string {
 	}
 	list := func(key string) string {
 		var parts []string
-		if items, ok := params[key].([]interface{}); ok {
+		if items, ok := params[key].([]any); ok {
 			for _, item := range items {
 				parts = append(parts, fmt.Sprint(item))
 			}
@@ -114,9 +114,9 @@ func (c *CCU) setFirewall(params map[string]interface{}) string {
 			}
 		}
 	}
-	if services, ok := params["services"].([]interface{}); ok {
+	if services, ok := params["services"].([]any); ok {
 		for _, item := range services {
-			if s, ok := item.(map[string]interface{}); ok {
+			if s, ok := item.(map[string]any); ok {
 				access[fmt.Sprint(s["name"])] = fmt.Sprint(s["access"])
 			}
 		}
@@ -136,7 +136,7 @@ func (c *CCU) setFirewall(params map[string]interface{}) string {
 // lanGatewayMethod writes the LAN gateways as the WebUI's
 // setconfiguration-rf.tcl and setconfiguration-wired.tcl do (the header up
 // to the first gateway kept), and a key change as changeLanGatewayKey.tcl
-func (c *CCU) lanGatewayMethod(method string, params map[string]interface{}) string {
+func (c *CCU) lanGatewayMethod(method string, params map[string]any) string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.calls["JSON "+method]++
@@ -164,9 +164,9 @@ func (c *CCU) lanGatewayMethod(method string, params map[string]interface{}) str
 	}
 	var b strings.Builder
 	b.WriteString(header)
-	if items, ok := params["interfaces"].([]interface{}); ok {
+	if items, ok := params["interfaces"].([]any); ok {
 		for i, item := range items {
-			g, _ := item.(map[string]interface{})
+			g, _ := item.(map[string]any)
 			fmt.Fprintf(&b, "[Interface %d]\nType = %v\nName = %v\nSerial Number = %v\nEncryption Key = %v\n", first+i, g["type"], g["userName"], g["serialNumber"], g["encryptionKey"])
 			if ip := fmt.Sprint(g["ipAddress"]); ip != "" && g["ipAddress"] != nil {
 				fmt.Fprintf(&b, "IP Address = %s\n", ip)
@@ -180,7 +180,7 @@ func (c *CCU) lanGatewayMethod(method string, params map[string]interface{}) str
 
 // lanGatewayModules are the RF gateways of rfd.conf as radio modules of
 // BidCos-RF (the real rfd takes them on its next start)
-func (c *CCU) lanGatewayModules(iface string) []map[string]interface{} {
+func (c *CCU) lanGatewayModules(iface string) []map[string]any {
 	if iface != "BidCos-RF" || c.ConfigDir == "" {
 		return nil
 	}
@@ -188,7 +188,7 @@ func (c *CCU) lanGatewayModules(iface string) []map[string]interface{} {
 	if err != nil {
 		return nil
 	}
-	modules := []map[string]interface{}{}
+	modules := []map[string]any{}
 	gateway := false
 	for _, line := range strings.Split(string(data), "\n") {
 		key, value, _ := strings.Cut(line, "=")
@@ -197,7 +197,7 @@ func (c *CCU) lanGatewayModules(iface string) []map[string]interface{} {
 			gateway = value != "CCU2"
 		}
 		if key == "Serial Number" && gateway {
-			modules = append(modules, map[string]interface{}{
+			modules = append(modules, map[string]any{
 				"ADDRESS": value, "DESCRIPTION": "", "CONNECTED": true, "DEFAULT": false, "DUTY_CYCLE": 2,
 				"TYPE": "HMLGW2", "FIRMWARE_VERSION": "1.1.5",
 			})
@@ -244,7 +244,7 @@ func (c *CCU) setSecurityLevel(level string) string {
 		return `{"version":"1.1","result":false,"error":null}`
 	}
 	// The addresses and ports stay as they are
-	ips, ports := []interface{}{}, []interface{}{}
+	ips, ports := []any{}, []any{}
 	if data, err := os.ReadFile(filepath.Join(c.ConfigDir, "firewall.conf")); err == nil && c.ConfigDir != "" {
 		for _, line := range strings.Split(string(data), "\n") {
 			key, value, _ := strings.Cut(line, "=")
@@ -258,12 +258,12 @@ func (c *CCU) setSecurityLevel(level string) string {
 			}
 		}
 	}
-	c.setFirewall(map[string]interface{}{
+	c.setFirewall(map[string]any{
 		"mode": l.mode, "ips": ips, "userports": ports,
-		"services": []interface{}{
-			map[string]interface{}{"name": "XMLRPC", "access": l.xmlrpc},
-			map[string]interface{}{"name": "REGA", "access": l.rega},
-			map[string]interface{}{"name": "NEOSERVER", "access": l.neo},
+		"services": []any{
+			map[string]any{"name": "XMLRPC", "access": l.xmlrpc},
+			map[string]any{"name": "REGA", "access": l.rega},
+			map[string]any{"name": "NEOSERVER", "access": l.neo},
 		},
 	})
 	c.mu.Lock()

@@ -2,12 +2,13 @@ package settings
 
 import (
 	"bufio"
+	"cmp"
 	"errors"
 	"fmt"
 	"net"
 	"os"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -106,7 +107,7 @@ func (s *Service) Firewall() (Firewall, error) {
 			if current != nil {
 				// The ports in the file and those defined since (migration)
 				for _, p := range strings.Fields(value) {
-					if n, err := strconv.Atoi(p); err == nil && !containsInt(current.Ports, n) {
+					if n, err := strconv.Atoi(p); err == nil && !slices.Contains(current.Ports, n) {
 						current.Ports = append(current.Ports, n)
 					}
 				}
@@ -118,20 +119,11 @@ func (s *Service) Firewall() (Firewall, error) {
 		}
 	}
 	for _, service := range services {
-		sort.Ints(service.Ports)
+		slices.Sort(service.Ports)
 		fw.Services = append(fw.Services, *service)
 	}
-	sort.Slice(fw.Services, func(i, j int) bool { return fw.Services[i].ID < fw.Services[j].ID })
+	slices.SortFunc(fw.Services, func(a, b FirewallService) int { return cmp.Compare(a.ID, b.ID) })
 	return fw, scanner.Err()
-}
-
-func containsInt(list []int, v int) bool {
-	for _, x := range list {
-		if x == v {
-			return true
-		}
-	}
-	return false
 }
 
 // ValidFirewallAddress is an IP address or network (FirewallConfigDialog:

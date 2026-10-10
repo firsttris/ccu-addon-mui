@@ -148,7 +148,7 @@ func TestUnregisterKeepsToTheContext(t *testing.T) {
 }
 
 func TestMulticallDeliversEventsInOrder(t *testing.T) {
-	var got []interface{}
+	var got []any
 	s := NewServer(&config.Config{}, func(e *types.CCUEvent) {
 		got = append(got, e.Event.Value)
 	})
@@ -290,7 +290,7 @@ func TestRegistrationKeptWhenPingIsAnswered(t *testing.T) {
 	s.pingAfter = 30 * time.Millisecond
 	s.pongTimeout = 40 * time.Millisecond
 	s.reinitAfter = time.Hour
-	ccu.onPing = func(id string) { s.dispatchEvent([]interface{}{id, "CENTRAL", "PONG", id}) }
+	ccu.onPing = func(id string) { s.dispatchEvent([]any{id, "CENTRAL", "PONG", id}) }
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -317,7 +317,7 @@ func TestRegistrationStaysQuietWhileEventsArrive(t *testing.T) {
 	waitFor(t, "init", func() bool { return ccu.count("init") == 1 })
 
 	for i := 0; i < 30; i++ {
-		s.dispatchEvent([]interface{}{"websocket-server-HmIP-RF", "000A:1", "STATE", true})
+		s.dispatchEvent([]any{"websocket-server-HmIP-RF", "000A:1", "STATE", true})
 		time.Sleep(10 * time.Millisecond)
 	}
 
@@ -442,7 +442,7 @@ func TestListDevicesAnswersWithReportedDevices(t *testing.T) {
 	}
 	listed := func(id string) map[string]int {
 		t.Helper()
-		var reply []map[string]interface{}
+		var reply []map[string]any
 		if err := xmlrpc.Response(call(`<?xml version="1.0"?><methodCall><methodName>listDevices</methodName><params>
 <param><value>` + id + `</value></param></params></methodCall>`)).Unmarshal(&reply); err != nil {
 			t.Fatal(err)

@@ -108,7 +108,7 @@ func parseChannels(output string) []Channel {
 				Type:          fields[3],
 				InterfaceName: fields[4],
 				Name:          rejoin(fields, 5),
-				Datapoints:    map[string]interface{}{},
+				Datapoints:    map[string]any{},
 			})
 		case "A":
 			if len(fields) < 2 || len(channels) == 0 {
@@ -213,7 +213,7 @@ func parseDeviceProblems(output string) []DeviceProblem {
 
 // parseValue converts a datapoint value as written by ReGa into its JSON
 // type. An empty value (datapoint never set) becomes null.
-func parseValue(valueType, value string) interface{} {
+func parseValue(valueType, value string) any {
 	if value == "" {
 		return nil
 	}

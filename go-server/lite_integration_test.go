@@ -124,7 +124,7 @@ func (s *liteStack) dial(session string) (*websocket.Conn, error) {
 }
 
 // call sends a request and returns the answer with its requestId
-func liteCall(t *testing.T, conn *websocket.Conn, request map[string]interface{}) map[string]interface{} {
+func liteCall(t *testing.T, conn *websocket.Conn, request map[string]any) map[string]any {
 	t.Helper()
 	request["requestId"] = fmt.Sprint(time.Now().UnixNano())
 	request["deviceId"] = "test"
@@ -133,7 +133,7 @@ func liteCall(t *testing.T, conn *websocket.Conn, request map[string]interface{}
 	}
 	_ = conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	for {
-		var answer map[string]interface{}
+		var answer map[string]any
 		if err := conn.ReadJSON(&answer); err != nil {
 			t.Fatalf("%v: %v", request["type"], err)
 		}
@@ -151,13 +151,13 @@ func TestLiteLoginThroughTheGate(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer admin.Close()
-	m := liteCall(t, admin, map[string]interface{}{"type": "auth"})
-	capabilities, _ := m["capabilities"].(map[string]interface{})
+	m := liteCall(t, admin, map[string]any{"type": "auth"})
+	capabilities, _ := m["capabilities"].(map[string]any)
 	if m["success"] != true || m["user"] != "Admin" || m["level"] != "admin" || m["platform"] != "lite" || capabilities["programs"] != false {
 		t.Fatalf("admin: %v", m)
 	}
 	// What only a CCU has is not there
-	if m := liteCall(t, admin, map[string]interface{}{"type": "getSysvars"}); m["type"] != "error" {
+	if m := liteCall(t, admin, map[string]any{"type": "getSysvars"}); m["type"] != "error" {
 		t.Fatalf("getSysvars on openccu-lite: %v", m)
 	}
 
@@ -166,7 +166,7 @@ func TestLiteLoginThroughTheGate(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer guest.Close()
-	if m := liteCall(t, guest, map[string]interface{}{"type": "auth"}); m["level"] != "guest" {
+	if m := liteCall(t, guest, map[string]any{"type": "auth"}); m["level"] != "guest" {
 		t.Fatalf("guest: %v", m)
 	}
 
@@ -176,7 +176,7 @@ func TestLiteLoginThroughTheGate(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if m := liteCall(t, conn, map[string]interface{}{"type": "auth"}); m["success"] != false {
+		if m := liteCall(t, conn, map[string]any{"type": "auth"}); m["success"] != false {
 			t.Fatalf("%q: %v", session, m)
 		}
 		conn.Close()
@@ -191,12 +191,12 @@ func TestLiteDeviceNames(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer conn.Close()
-	liteCall(t, conn, map[string]interface{}{"type": "auth"})
-	m := liteCall(t, conn, map[string]interface{}{"type": "listDevices"})
-	devices, _ := m["devices"].([]interface{})
+	liteCall(t, conn, map[string]any{"type": "auth"})
+	m := liteCall(t, conn, map[string]any{"type": "listDevices"})
+	devices, _ := m["devices"].([]any)
 	names := map[string]string{}
 	for _, d := range devices {
-		device := d.(map[string]interface{})
+		device := d.(map[string]any)
 		name, _ := device["name"].(string)
 		names[device["address"].(string)] = name
 	}
@@ -214,15 +214,15 @@ func (s *liteStack) adminConn(t *testing.T) *websocket.Conn {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { conn.Close() })
-	liteCall(t, conn, map[string]interface{}{"type": "auth"})
+	liteCall(t, conn, map[string]any{"type": "auth"})
 	return conn
 }
 
-func findByName(t *testing.T, list interface{}, name string) map[string]interface{} {
+func findByName(t *testing.T, list any, name string) map[string]any {
 	t.Helper()
-	items, _ := list.([]interface{})
+	items, _ := list.([]any)
 	for _, item := range items {
-		if m := item.(map[string]interface{}); m["name"] == name {
+		if m := item.(map[string]any); m["name"] == name {
 			return m
 		}
 	}
@@ -237,16 +237,16 @@ func TestLiteRoomsAndChannels(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
 
-	m := liteCall(t, conn, map[string]interface{}{"type": "getRooms"})
+	m := liteCall(t, conn, map[string]any{"type": "getRooms"})
 	room := findByName(t, m["rooms"], "Wohnzimmer")
-	findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getTrades"})["trades"], "Licht")
+	findByName(t, liteCall(t, conn, map[string]any{"type": "getTrades"})["trades"], "Licht")
 
-	m = liteCall(t, conn, map[string]interface{}{"type": "getChannels", "roomId": fmt.Sprint(int64(room["id"].(float64)))})
-	channels, _ := m["channels"].([]interface{})
-	var light map[string]interface{}
+	m = liteCall(t, conn, map[string]any{"type": "getChannels", "roomId": fmt.Sprint(int64(room["id"].(float64)))})
+	channels, _ := m["channels"].([]any)
+	var light map[string]any
 	for _, c := range channels {
-		if c.(map[string]interface{})["address"] == "LEQ0000001:1" {
-			light = c.(map[string]interface{})
+		if c.(map[string]any)["address"] == "LEQ0000001:1" {
+			light = c.(map[string]any)
 		}
 	}
 	if light == nil {
@@ -255,7 +255,7 @@ func TestLiteRoomsAndChannels(t *testing.T) {
 	if light["interfaceName"] != "BidCos-RF" || light["statusAddress"] != "LEQ0000001:0" {
 		t.Fatalf("channel: %v", light)
 	}
-	if _, ok := light["datapoints"].(map[string]interface{})["STATE"]; !ok {
+	if _, ok := light["datapoints"].(map[string]any)["STATE"]; !ok {
 		t.Fatalf("no STATE: %v", light)
 	}
 }
@@ -265,17 +265,17 @@ func TestLiteRoomsAndChannels(t *testing.T) {
 func TestLiteSwitchAndEvent(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
-	if err := conn.WriteJSON(map[string]interface{}{"type": "subscribe", "deviceId": "test", "channels": []string{"LEQ0000001:1"}}); err != nil {
+	if err := conn.WriteJSON(map[string]any{"type": "subscribe", "deviceId": "test", "channels": []string{"LEQ0000001:1"}}); err != nil {
 		t.Fatal(err)
 	}
-	if err := conn.WriteJSON(map[string]interface{}{"type": "setDatapoint", "requestId": "set", "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true}); err != nil {
+	if err := conn.WriteJSON(map[string]any{"type": "setDatapoint", "requestId": "set", "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true}); err != nil {
 		t.Fatal(err)
 	}
 	// The event may come before the answer
 	answered, evented := false, false
 	deadline := time.Now().Add(10 * time.Second)
 	for !(answered && evented) {
-		var message map[string]interface{}
+		var message map[string]any
 		_ = conn.SetReadDeadline(deadline)
 		if err := conn.ReadJSON(&message); err != nil {
 			t.Fatalf("answered %v, event %v: %v", answered, evented, err)
@@ -286,7 +286,7 @@ func TestLiteSwitchAndEvent(t *testing.T) {
 			}
 			answered = true
 		}
-		if event, ok := message["event"].(map[string]interface{}); ok && event["channel"] == "LEQ0000001:1" && event["datapoint"] == "STATE" && event["value"] == true {
+		if event, ok := message["event"].(map[string]any); ok && event["channel"] == "LEQ0000001:1" && event["datapoint"] == "STATE" && event["value"] == true {
 			evented = true
 		}
 	}
@@ -298,56 +298,56 @@ func TestLiteChanges(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
 
-	if m := liteCall(t, conn, map[string]interface{}{"type": "createGroup", "list": "rooms", "name": "Gäste-WC"}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "createGroup", "list": "rooms", "name": "Gäste-WC"}); m["success"] != true {
 		t.Fatalf("createGroup: %v", m)
 	}
-	room := findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getRooms"})["rooms"], "Gäste-WC")
+	room := findByName(t, liteCall(t, conn, map[string]any{"type": "getRooms"})["rooms"], "Gäste-WC")
 	roomID := int64(room["id"].(float64))
 
-	channel := map[string]interface{}{}
-	for _, c := range liteCall(t, conn, map[string]interface{}{"type": "getChannels", "all": true})["channels"].([]interface{}) {
-		if c.(map[string]interface{})["address"] == "LEQ0000001:1" {
-			channel = c.(map[string]interface{})
+	channel := map[string]any{}
+	for _, c := range liteCall(t, conn, map[string]any{"type": "getChannels", "all": true})["channels"].([]any) {
+		if c.(map[string]any)["address"] == "LEQ0000001:1" {
+			channel = c.(map[string]any)
 		}
 	}
 	channelID := int64(channel["id"].(float64))
-	if m := liteCall(t, conn, map[string]interface{}{"type": "setGroupMember", "groupId": roomID, "channelId": channelID, "member": true}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "setGroupMember", "groupId": roomID, "channelId": channelID, "member": true}); m["success"] != true {
 		t.Fatalf("setGroupMember: %v", m)
 	}
-	m := liteCall(t, conn, map[string]interface{}{"type": "getChannels", "roomId": fmt.Sprint(roomID)})
-	if channels, _ := m["channels"].([]interface{}); len(channels) != 1 {
+	m := liteCall(t, conn, map[string]any{"type": "getChannels", "roomId": fmt.Sprint(roomID)})
+	if channels, _ := m["channels"].([]any); len(channels) != 1 {
 		t.Fatalf("room's channels: %v", m)
 	}
 
-	if m := liteCall(t, conn, map[string]interface{}{"type": "rename", "address": "LEQ0000001:1", "name": "Deckenlicht"}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "rename", "address": "LEQ0000001:1", "name": "Deckenlicht"}); m["success"] != true {
 		t.Fatalf("rename: %v", m)
 	}
-	m = liteCall(t, conn, map[string]interface{}{"type": "getChannels", "roomId": fmt.Sprint(roomID)})
-	if m["channels"].([]interface{})[0].(map[string]interface{})["name"] != "Deckenlicht" {
+	m = liteCall(t, conn, map[string]any{"type": "getChannels", "roomId": fmt.Sprint(roomID)})
+	if m["channels"].([]any)[0].(map[string]any)["name"] != "Deckenlicht" {
 		t.Fatalf("not renamed: %v", m)
 	}
 
-	if m := liteCall(t, conn, map[string]interface{}{"type": "setLayout", "id": roomID, "layout": `{"v":2}`}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "setLayout", "id": roomID, "layout": `{"v":2}`}); m["success"] != true {
 		t.Fatalf("setLayout: %v", m)
 	}
-	if m := liteCall(t, conn, map[string]interface{}{"type": "getLayout", "id": roomID}); m["layout"] != `{"v":2}` {
+	if m := liteCall(t, conn, map[string]any{"type": "getLayout", "id": roomID}); m["layout"] != `{"v":2}` {
 		t.Fatalf("getLayout: %v", m)
 	}
 
-	m = liteCall(t, conn, map[string]interface{}{"type": "createFavorite", "name": "Abends"})
+	m = liteCall(t, conn, map[string]any{"type": "createFavorite", "name": "Abends"})
 	if m["success"] != true {
 		t.Fatalf("createFavorite: %v", m)
 	}
-	favorite := findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getFavorites"})["favorites"], "Abends")
-	if m := liteCall(t, conn, map[string]interface{}{"type": "addFavoriteItem", "id": favorite["id"], "itemId": channelID}); m["success"] != true {
+	favorite := findByName(t, liteCall(t, conn, map[string]any{"type": "getFavorites"})["favorites"], "Abends")
+	if m := liteCall(t, conn, map[string]any{"type": "addFavoriteItem", "id": favorite["id"], "itemId": channelID}); m["success"] != true {
 		t.Fatalf("addFavoriteItem: %v", m)
 	}
-	m = liteCall(t, conn, map[string]interface{}{"type": "getChannels", "favoriteId": fmt.Sprint(int64(favorite["id"].(float64)))})
-	if channels, _ := m["channels"].([]interface{}); len(channels) != 1 {
+	m = liteCall(t, conn, map[string]any{"type": "getChannels", "favoriteId": fmt.Sprint(int64(favorite["id"].(float64)))})
+	if channels, _ := m["channels"].([]any); len(channels) != 1 {
 		t.Fatalf("favorite's channels: %v", m)
 	}
 
-	if m := liteCall(t, conn, map[string]interface{}{"type": "deleteGroup", "list": "rooms", "id": roomID}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "deleteGroup", "list": "rooms", "id": roomID}); m["success"] != true {
 		t.Fatalf("deleteGroup: %v", m)
 	}
 }
@@ -357,23 +357,23 @@ func TestLiteChanges(t *testing.T) {
 func TestLiteInbox(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
-	m := liteCall(t, conn, map[string]interface{}{"type": "getInbox"})
-	devices, _ := m["devices"].([]interface{})
+	m := liteCall(t, conn, map[string]any{"type": "getInbox"})
+	devices, _ := m["devices"].([]any)
 	if len(devices) == 0 {
 		t.Fatalf("inbox empty: %v", m)
 	}
-	first := devices[0].(map[string]interface{})
+	first := devices[0].(map[string]any)
 	address := first["address"].(string)
 	for _, d := range devices {
-		if d.(map[string]interface{})["address"] == "000855699C4F38" {
+		if d.(map[string]any)["address"] == "000855699C4F38" {
 			t.Fatalf("a named device in the inbox: %v", m)
 		}
 	}
-	if m := liteCall(t, conn, map[string]interface{}{"type": "acceptDevice", "address": address}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "acceptDevice", "address": address}); m["success"] != true {
 		t.Fatalf("acceptDevice: %v", m)
 	}
-	for _, d := range liteCall(t, conn, map[string]interface{}{"type": "getInbox"})["devices"].([]interface{}) {
-		if d.(map[string]interface{})["address"] == address {
+	for _, d := range liteCall(t, conn, map[string]any{"type": "getInbox"})["devices"].([]any) {
+		if d.(map[string]any)["address"] == address {
 			t.Fatalf("%s still in the inbox", address)
 		}
 	}
@@ -384,26 +384,26 @@ func TestLiteInbox(t *testing.T) {
 func TestLiteHeatingGroups(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
-	m := liteCall(t, conn, map[string]interface{}{"type": "getHeatingGroupMembers", "groupType": "hmip.heating.group"})
-	members := m["members"].(map[string]interface{})["assignable"].([]interface{})
-	if len(members) != 1 || members[0].(map[string]interface{})["id"] != "000A9D89A7AF25:1" {
+	m := liteCall(t, conn, map[string]any{"type": "getHeatingGroupMembers", "groupType": "hmip.heating.group"})
+	members := m["members"].(map[string]any)["assignable"].([]any)
+	if len(members) != 1 || members[0].(map[string]any)["id"] != "000A9D89A7AF25:1" {
 		t.Fatalf("members: %v", m)
 	}
-	m = liteCall(t, conn, map[string]interface{}{"type": "saveHeatingGroup", "group": map[string]interface{}{
+	m = liteCall(t, conn, map[string]any{"type": "saveHeatingGroup", "group": map[string]any{
 		"id": 0, "name": "Erdgeschoss", "type": "hmip.heating.group", "members": []string{"000A9D89A7AF25:1"},
 	}})
 	if m["success"] != true || m["id"] != 1.0 {
 		t.Fatalf("saveHeatingGroup: %v", m)
 	}
-	m = liteCall(t, conn, map[string]interface{}{"type": "getHeatingGroups"})
+	m = liteCall(t, conn, map[string]any{"type": "getHeatingGroups"})
 	group := findByName(t, m["groups"], "Erdgeschoss")
-	if group["deviceAddress"] != "INT0000001" || len(group["members"].([]interface{})) != 1 {
+	if group["deviceAddress"] != "INT0000001" || len(group["members"].([]any)) != 1 {
 		t.Fatalf("group: %v", group)
 	}
-	if m := liteCall(t, conn, map[string]interface{}{"type": "deleteHeatingGroup", "id": 1}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "deleteHeatingGroup", "id": 1}); m["success"] != true {
 		t.Fatalf("deleteHeatingGroup: %v", m)
 	}
-	if groups := liteCall(t, conn, map[string]interface{}{"type": "getHeatingGroups"})["groups"].([]interface{}); len(groups) != 0 {
+	if groups := liteCall(t, conn, map[string]any{"type": "getHeatingGroups"})["groups"].([]any); len(groups) != 0 {
 		t.Fatalf("not deleted: %v", groups)
 	}
 }
@@ -413,33 +413,33 @@ func TestLiteHeatingGroups(t *testing.T) {
 func TestLiteServiceMessagesAndHealth(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
-	m := liteCall(t, conn, map[string]interface{}{"type": "getServiceMessages"})
-	var sticky map[string]interface{}
-	for _, item := range m["messages"].([]interface{}) {
-		if message := item.(map[string]interface{}); message["type"] == "STICKY_UNREACH" && message["address"] == "0000DBE9A5C1F2" {
+	m := liteCall(t, conn, map[string]any{"type": "getServiceMessages"})
+	var sticky map[string]any
+	for _, item := range m["messages"].([]any) {
+		if message := item.(map[string]any); message["type"] == "STICKY_UNREACH" && message["address"] == "0000DBE9A5C1F2" {
 			sticky = message
 		}
 	}
 	if sticky == nil {
 		t.Fatalf("no STICKY_UNREACH: %v", m)
 	}
-	if m := liteCall(t, conn, map[string]interface{}{"type": "acknowledgeServiceMessage", "id": sticky["id"]}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "acknowledgeServiceMessage", "id": sticky["id"]}); m["success"] != true {
 		t.Fatalf("acknowledge: %v", m)
 	}
-	for _, item := range liteCall(t, conn, map[string]interface{}{"type": "getServiceMessages"})["messages"].([]interface{}) {
-		if message := item.(map[string]interface{}); message["type"] == "STICKY_UNREACH" && message["address"] == "0000DBE9A5C1F2" {
+	for _, item := range liteCall(t, conn, map[string]any{"type": "getServiceMessages"})["messages"].([]any) {
+		if message := item.(map[string]any); message["type"] == "STICKY_UNREACH" && message["address"] == "0000DBE9A5C1F2" {
 			t.Fatalf("still there: %v", message)
 		}
 	}
 
-	m = liteCall(t, conn, map[string]interface{}{"type": "getDeviceHealth"})
-	for _, item := range m["devices"].([]interface{}) {
-		device := item.(map[string]interface{})
+	m = liteCall(t, conn, map[string]any{"type": "getDeviceHealth"})
+	for _, item := range m["devices"].([]any) {
+		device := item.(map[string]any)
 		if device["address"] != "0000DBE9A5C1F2" {
 			continue
 		}
-		values := device["values"].(map[string]interface{})
-		if values["RSSI_DEVICE"].(map[string]interface{})["value"] != -62.0 {
+		values := device["values"].(map[string]any)
+		if values["RSSI_DEVICE"].(map[string]any)["value"] != -62.0 {
 			t.Fatalf("health: %v", device)
 		}
 		return
@@ -452,17 +452,17 @@ func TestLiteServiceMessagesAndHealth(t *testing.T) {
 func TestLiteRulesAndPush(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
-	rule := map[string]interface{}{"name": "Licht an", "enabled": true, "minutes": 0, "message": "Licht ist an",
-		"conditions": []interface{}{map[string]interface{}{
+	rule := map[string]any{"name": "Licht an", "enabled": true, "minutes": 0, "message": "Licht ist an",
+		"conditions": []any{map[string]any{
 			"channelId": 1, "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "datapoint": "STATE", "op": "eq", "value": 1,
 		}}}
-	if m := liteCall(t, conn, map[string]interface{}{"type": "saveRule", "rule": rule}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "saveRule", "rule": rule}); m["success"] != true {
 		t.Fatalf("saveRule: %v", m)
 	}
-	if rules, _ := liteCall(t, conn, map[string]interface{}{"type": "getRules"})["rules"].([]interface{}); len(rules) != 1 {
+	if rules, _ := liteCall(t, conn, map[string]any{"type": "getRules"})["rules"].([]any); len(rules) != 1 {
 		t.Fatalf("getRules: %v", rules)
 	}
-	if m := liteCall(t, conn, map[string]interface{}{"type": "getPush"}); m["type"] == "error" {
+	if m := liteCall(t, conn, map[string]any{"type": "getPush"}); m["type"] == "error" {
 		t.Fatalf("getPush: %v", m)
 	}
 }
@@ -472,18 +472,18 @@ func TestLiteRulesAndPush(t *testing.T) {
 func TestLiteVirtualKeys(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
-	m := liteCall(t, conn, map[string]interface{}{"type": "getVirtualKeys"})
+	m := liteCall(t, conn, map[string]any{"type": "getVirtualKeys"})
 	key := findByName(t, m["keys"], "Alles aus")
 	if key["address"] != "BidCoS-RF:1" || key["interfaceName"] != "BidCos-RF" {
 		t.Fatalf("key: %v", key)
 	}
 	findByName(t, m["keys"], "Gute Nacht")
-	if m := liteCall(t, conn, map[string]interface{}{"type": "setDatapoint", "interfaceName": "BidCos-RF", "address": "BidCoS-RF:1", "attribute": "PRESS_SHORT", "value": true}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "setDatapoint", "interfaceName": "BidCos-RF", "address": "BidCoS-RF:1", "attribute": "PRESS_SHORT", "value": true}); m["success"] != true {
 		t.Fatalf("press: %v", m)
 	}
 	// Not tiles of the home
-	for _, c := range liteCall(t, conn, map[string]interface{}{"type": "getChannels", "all": true})["channels"].([]interface{}) {
-		if c.(map[string]interface{})["address"] == "BidCoS-RF:1" {
+	for _, c := range liteCall(t, conn, map[string]any{"type": "getChannels", "all": true})["channels"].([]any) {
+		if c.(map[string]any)["address"] == "BidCoS-RF:1" {
 			t.Fatal("virtual key among the channels")
 		}
 	}
@@ -491,7 +491,7 @@ func TestLiteVirtualKeys(t *testing.T) {
 
 // patchObject changes an object in the fake's metadata store, as
 // openccu-lite's own pages would
-func (s *liteStack) patchObject(t *testing.T, ref string, patch map[string]interface{}) {
+func (s *liteStack) patchObject(t *testing.T, ref string, patch map[string]any) {
 	t.Helper()
 	body, _ := json.Marshal(patch)
 	req, _ := http.NewRequest(http.MethodPatch, fmt.Sprintf("http://127.0.0.1:%d/api/meta/v1/objects/%s", s.ccu.WebUIPort, ref), bytes.NewReader(body))
@@ -513,31 +513,31 @@ func TestLiteChannelRooms(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
 	roomOf := func(name string) int64 {
-		if m := liteCall(t, conn, map[string]interface{}{"type": "createGroup", "list": "rooms", "name": name}); m["success"] != true {
+		if m := liteCall(t, conn, map[string]any{"type": "createGroup", "list": "rooms", "name": name}); m["success"] != true {
 			t.Fatalf("createGroup: %v", m)
 		}
-		return int64(findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getRooms"})["rooms"], name)["id"].(float64))
+		return int64(findByName(t, liteCall(t, conn, map[string]any{"type": "getRooms"})["rooms"], name)["id"].(float64))
 	}
 	keller, flur := roomOf("Keller"), roomOf("Flur")
-	stack.patchObject(t, "BidCos-RF.LEQ0000001", map[string]interface{}{"name": "Licht Wohnzimmer", "enums": []string{"room/keller"}})
-	stack.patchObject(t, "BidCos-RF.LEQ0000001:1", map[string]interface{}{"enums": []string{}})
+	stack.patchObject(t, "BidCos-RF.LEQ0000001", map[string]any{"name": "Licht Wohnzimmer", "enums": []string{"room/keller"}})
+	stack.patchObject(t, "BidCos-RF.LEQ0000001:1", map[string]any{"enums": []string{}})
 
 	var channelID int64
-	for _, c := range liteCall(t, conn, map[string]interface{}{"type": "getChannels", "all": true})["channels"].([]interface{}) {
-		if c := c.(map[string]interface{}); c["address"] == "LEQ0000001:1" {
+	for _, c := range liteCall(t, conn, map[string]any{"type": "getChannels", "all": true})["channels"].([]any) {
+		if c := c.(map[string]any); c["address"] == "LEQ0000001:1" {
 			channelID = int64(c["id"].(float64))
 		}
 	}
 	in := func(room int64) bool {
-		for _, c := range liteCall(t, conn, map[string]interface{}{"type": "getChannels", "roomId": fmt.Sprint(room)})["channels"].([]interface{}) {
-			if c.(map[string]interface{})["address"] == "LEQ0000001:1" {
+		for _, c := range liteCall(t, conn, map[string]any{"type": "getChannels", "roomId": fmt.Sprint(room)})["channels"].([]any) {
+			if c.(map[string]any)["address"] == "LEQ0000001:1" {
 				return true
 			}
 		}
 		return false
 	}
 	member := func(room int64, on bool) {
-		if m := liteCall(t, conn, map[string]interface{}{"type": "setGroupMember", "groupId": room, "channelId": channelID, "member": on}); m["success"] != true {
+		if m := liteCall(t, conn, map[string]any{"type": "setGroupMember", "groupId": room, "channelId": channelID, "member": on}); m["success"] != true {
 			t.Fatalf("setGroupMember: %v", m)
 		}
 	}
@@ -561,15 +561,15 @@ func TestLiteLimits(t *testing.T) {
 
 	// A diagram with a new series: the current value instead of the ReGa's
 	// system protocol
-	m := liteCall(t, conn, map[string]interface{}{"type": "saveDiagram", "diagram": map[string]interface{}{
-		"name": "Licht", "series": []map[string]interface{}{{"address": "LEQ0000001:1", "datapoint": "STATE"}},
+	m := liteCall(t, conn, map[string]any{"type": "saveDiagram", "diagram": map[string]any{
+		"name": "Licht", "series": []map[string]any{{"address": "LEQ0000001:1", "datapoint": "STATE"}},
 	}})
 	if m["success"] != true {
 		t.Fatalf("saveDiagram: %v", m)
 	}
 
 	// The language is the add-on's own data
-	if m := liteCall(t, conn, map[string]interface{}{"type": "setUserLanguage", "language": 1}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "setUserLanguage", "language": 1}); m["success"] != true {
 		t.Fatalf("setUserLanguage: %v", m)
 	}
 	if data, err := os.ReadFile(filepath.Join(stack.data, "userprofiles", "Admin.lang")); err != nil || strings.TrimSpace(string(data)) != "1" {
@@ -578,9 +578,9 @@ func TestLiteLimits(t *testing.T) {
 
 	// Only sticky service messages end by acknowledging
 	other := false
-	for _, item := range liteCall(t, conn, map[string]interface{}{"type": "getServiceMessages"})["messages"].([]interface{}) {
-		if message := item.(map[string]interface{}); !strings.HasPrefix(message["type"].(string), "STICKY_") {
-			if m := liteCall(t, conn, map[string]interface{}{"type": "acknowledgeServiceMessage", "id": message["id"]}); m["code"] != "NOT_SUPPORTED" {
+	for _, item := range liteCall(t, conn, map[string]any{"type": "getServiceMessages"})["messages"].([]any) {
+		if message := item.(map[string]any); !strings.HasPrefix(message["type"].(string), "STICKY_") {
+			if m := liteCall(t, conn, map[string]any{"type": "acknowledgeServiceMessage", "id": message["id"]}); m["code"] != "NOT_SUPPORTED" {
 				t.Fatalf("acknowledge %v: %v", message["type"], m)
 			}
 			other = true
@@ -592,13 +592,13 @@ func TestLiteLimits(t *testing.T) {
 	}
 
 	// HmIP pairing says the system's key mode, so the dialog offers what works
-	m = liteCall(t, conn, map[string]interface{}{"type": "getInstallMode", "interfaceName": "HmIP-RF"})
-	if hmip, _ := m["hmip"].(map[string]interface{}); hmip["keyserverMode"] != "LOCAL" || hmip["offlinePairing"] != false || hmip["deviceKeys"] != 2.0 {
+	m = liteCall(t, conn, map[string]any{"type": "getInstallMode", "interfaceName": "HmIP-RF"})
+	if hmip, _ := m["hmip"].(map[string]any); hmip["keyserverMode"] != "LOCAL" || hmip["offlinePairing"] != false || hmip["deviceKeys"] != 2.0 {
 		t.Fatalf("getInstallMode HmIP-RF: %v", m)
 	}
 
 	// Elevating: administrators are, nobody else
-	if m := liteCall(t, conn, map[string]interface{}{"type": "elevate", "password": ""}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "elevate", "password": ""}); m["success"] != true {
 		t.Fatalf("admin elevate: %v", m)
 	}
 	user, err := stack.dial(fakeccu.LiteSession("Gast"))
@@ -606,8 +606,8 @@ func TestLiteLimits(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer user.Close()
-	liteCall(t, user, map[string]interface{}{"type": "auth"})
-	if m := liteCall(t, user, map[string]interface{}{"type": "elevate", "password": ""}); m["success"] == true {
+	liteCall(t, user, map[string]any{"type": "auth"})
+	if m := liteCall(t, user, map[string]any{"type": "elevate", "password": ""}); m["success"] == true {
 		t.Fatalf("guest elevated: %v", m)
 	}
 }
@@ -618,10 +618,10 @@ func TestLiteLimits(t *testing.T) {
 func TestLiteCallsWithTheUsersSession(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
-	if m := liteCall(t, conn, map[string]interface{}{"type": "setDatapoint", "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "setDatapoint", "interfaceName": "BidCos-RF", "address": "LEQ0000001:1", "attribute": "STATE", "value": true}); m["success"] != true {
 		t.Fatalf("setDatapoint: %v", m)
 	}
-	if m := liteCall(t, conn, map[string]interface{}{"type": "rename", "address": "LEQ0000001:1", "name": "Deckenlicht"}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "rename", "address": "LEQ0000001:1", "name": "Deckenlicht"}); m["success"] != true {
 		t.Fatalf("rename: %v", m)
 	}
 	if n := stack.ccu.CallCount("lite-rpc Admin setValue"); n != 1 {
@@ -640,7 +640,7 @@ func TestLiteCallsWithTheUsersSession(t *testing.T) {
 
 // occulite changes something as a user of openccu-lite's own pages would:
 // with the admin's session on its API
-func (s *liteStack) occulite(t *testing.T, method, path string, body interface{}) {
+func (s *liteStack) occulite(t *testing.T, method, path string, body any) {
 	t.Helper()
 	data, _ := json.Marshal(body)
 	req, _ := http.NewRequest(method, fmt.Sprintf("http://127.0.0.1:%d%s", s.ccu.WebUIPort, path), bytes.NewReader(data))
@@ -673,34 +673,34 @@ func eventually(t *testing.T, what string, check func() bool) {
 func TestLiteLayoutsFollowRoomsMovedInOpenccuLite(t *testing.T) {
 	stack := startLiteStack(t)
 	conn := stack.adminConn(t)
-	if m := liteCall(t, conn, map[string]interface{}{"type": "createGroup", "list": "rooms", "name": "Etage"}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "createGroup", "list": "rooms", "name": "Etage"}); m["success"] != true {
 		t.Fatalf("createGroup: %v", m)
 	}
-	room := findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getRooms"})["rooms"], "Wohnzimmer")
+	room := findByName(t, liteCall(t, conn, map[string]any{"type": "getRooms"})["rooms"], "Wohnzimmer")
 	oldID := int64(room["id"].(float64))
 	if oldID != occulite.ID("room/wohnzimmer") {
 		t.Fatalf("Wohnzimmer is not room/wohnzimmer: %v", room)
 	}
-	if m := liteCall(t, conn, map[string]interface{}{"type": "setLayout", "id": oldID, "layout": `{"v":7}`}); m["success"] != true {
+	if m := liteCall(t, conn, map[string]any{"type": "setLayout", "id": oldID, "layout": `{"v":7}`}); m["success"] != true {
 		t.Fatalf("setLayout: %v", m)
 	}
 
-	stack.occulite(t, http.MethodPatch, "/api/meta/v1/enums/room/nodes/wohnzimmer", map[string]interface{}{"parent": "room/etage"})
+	stack.occulite(t, http.MethodPatch, "/api/meta/v1/enums/room/nodes/wohnzimmer", map[string]any{"parent": "room/etage"})
 	newID := occulite.ID("room/etage/wohnzimmer")
 	eventually(t, "the moved room's layout did not follow", func() bool {
-		return liteCall(t, conn, map[string]interface{}{"type": "getLayout", "id": newID})["layout"] == `{"v":7}`
+		return liteCall(t, conn, map[string]any{"type": "getLayout", "id": newID})["layout"] == `{"v":7}`
 	})
 	// The rooms say where it is now: the snapshot kept before the move went
-	if room := findByName(t, liteCall(t, conn, map[string]interface{}{"type": "getRooms"})["rooms"], "Wohnzimmer"); int64(room["id"].(float64)) != newID {
+	if room := findByName(t, liteCall(t, conn, map[string]any{"type": "getRooms"})["rooms"], "Wohnzimmer"); int64(room["id"].(float64)) != newID {
 		t.Fatalf("rooms after the move: %v", room)
 	}
-	if layout := liteCall(t, conn, map[string]interface{}{"type": "getLayout", "id": oldID})["layout"]; layout != "" && layout != nil {
+	if layout := liteCall(t, conn, map[string]any{"type": "getLayout", "id": oldID})["layout"]; layout != "" && layout != nil {
 		t.Fatalf("layout left at the old place: %v", layout)
 	}
 
 	stack.occulite(t, http.MethodDelete, "/api/meta/v1/enums/room/nodes/etage?members=detach", nil)
 	eventually(t, "the layout of the room below the deleted one stayed", func() bool {
-		layout := liteCall(t, conn, map[string]interface{}{"type": "getLayout", "id": newID})["layout"]
+		layout := liteCall(t, conn, map[string]any{"type": "getLayout", "id": newID})["layout"]
 		return layout == "" || layout == nil
 	})
 }
@@ -721,7 +721,7 @@ func TestLiteResync(t *testing.T) {
 		return false
 	})
 
-	if err := conn.WriteJSON(map[string]interface{}{"type": "subscribe", "deviceId": "test", "channels": []string{"LEQ0000001:1"}}); err != nil {
+	if err := conn.WriteJSON(map[string]any{"type": "subscribe", "deviceId": "test", "channels": []string{"LEQ0000001:1"}}); err != nil {
 		t.Fatal(err)
 	}
 	// The stream is open again: a value changed on the device arrives. The
@@ -744,11 +744,11 @@ func TestLiteResync(t *testing.T) {
 	}()
 	_ = conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	for {
-		var message map[string]interface{}
+		var message map[string]any
 		if err := conn.ReadJSON(&message); err != nil {
 			t.Fatalf("no event after resync: %v", err)
 		}
-		if event, ok := message["event"].(map[string]interface{}); ok && event["channel"] == "LEQ0000001:1" && event["datapoint"] == "STATE" {
+		if event, ok := message["event"].(map[string]any); ok && event["channel"] == "LEQ0000001:1" && event["datapoint"] == "STATE" {
 			return
 		}
 	}

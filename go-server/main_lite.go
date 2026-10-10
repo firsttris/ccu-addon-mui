@@ -115,7 +115,7 @@ func follow(ctx context.Context, client *occulite.Client, homeModel *occulite.Ho
 			cancel()
 			if err == nil {
 				homeModel.Seed(entries)
-				logger.Info(fmt.Sprintf("🪶 %d values from openccu-lite's state store", len(entries)))
+				logger.Infof("🪶 %d values from openccu-lite's state store", len(entries))
 				return eventID
 			}
 			logger.Error("Reading openccu-lite's state store failed:", err)

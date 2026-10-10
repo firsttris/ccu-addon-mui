@@ -130,7 +130,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 	case "changeLanGatewayKey":
 		entry = audit.Entry{User: client.user, Action: "changeLanGatewayKey", Target: msg.Serial}
 	case "setBidcosInterface":
-		entry = audit.Entry{User: client.user, Action: "setBidcosInterface", Target: msg.Address, Value: map[string]interface{}{"module": msg.Module, "roaming": msg.Roaming}}
+		entry = audit.Entry{User: client.user, Action: "setBidcosInterface", Target: msg.Address, Value: map[string]any{"module": msg.Module, "roaming": msg.Roaming}}
 	}
 	if code, errorMsg := configureError(client); code != "" {
 		s.recordAudit(entry, code)
@@ -162,7 +162,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 			method string
 			items  []map[string]string
 		}{{"BidCoS_RF.setConfigurationRF", rf}, {"BidCoS_Wired.setConfigurationWired", wired}} {
-			result, err := s.backup.AdminCall(client.user, msg.Password, call.method, map[string]interface{}{"interfaces": call.items})
+			result, err := s.backup.AdminCall(client.user, msg.Password, call.method, map[string]any{"interfaces": call.items})
 			if err == nil && result == false {
 				err = errors.New("the CCU did not write the configuration")
 			}
@@ -188,7 +188,7 @@ func (s *Server) handleLanGateways(client *Client, msgType string, message []byt
 			invalid("the key must not be empty nor contain " + settings.KeyForbidden)
 			return
 		}
-		result, err := s.backup.AdminCall(client.user, msg.Password, "BidCoS.changeLanGatewayKey", map[string]interface{}{
+		result, err := s.backup.AdminCall(client.user, msg.Password, "BidCoS.changeLanGatewayKey", map[string]any{
 			"lgwclass": gateway.Class, "lgwserial": gateway.Serial, "lgwip": gateway.IP, "newkey": msg.Key, "curkey": gateway.Key,
 		})
 		if err == nil && result == false {

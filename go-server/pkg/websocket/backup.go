@@ -5,7 +5,6 @@ package websocket
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/backup"
@@ -76,12 +75,12 @@ func (s *Server) handleCreateBackup(client *Client, message []byte) {
 				s.auth.RecordFailure(username, client.source)
 			}
 		}
-		logger.Info(fmt.Sprintf("💾 Backup failed for user %q: %v", username, err))
+		logger.Infof("💾 Backup failed for user %q: %v", username, err)
 		finish(code)
 		s.sendRequestError(client, msg.RequestID, "createBackup failed: "+err.Error(), code)
 		return
 	}
-	logger.Info(fmt.Sprintf("💾 Backup %s created (%d bytes)", created.FileName, created.Size))
+	logger.Infof("💾 Backup %s created (%d bytes)", created.FileName, created.Size)
 	finish(rega.SetOK)
 	s.sendJSON(client, backupResponse{
 		Type: "createBackup_response", RequestID: msg.RequestID, Success: true,

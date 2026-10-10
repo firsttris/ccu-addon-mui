@@ -183,7 +183,7 @@ func TestRun(t *testing.T) {
 
 func TestToFloat(t *testing.T) {
 	for _, c := range []struct {
-		in   interface{}
+		in   any
 		want float64
 		ok   bool
 	}{{1.5, 1.5, true}, {3, 3, true}, {int64(4), 4, true}, {true, 1, true}, {false, 0, true}, {"2.5", 2.5, true}, {"true", 1, true}, {"x", 0, false}, {nil, 0, false}} {

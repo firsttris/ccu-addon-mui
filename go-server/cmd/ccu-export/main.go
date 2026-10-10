@@ -12,8 +12,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"maps"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -69,7 +70,7 @@ func export(cfg *config.Config, withRPC bool) (*fakeccu.Fixture, error) {
 		// ReGa only reports the maintenance channel as status of the others
 		if ch.StatusAddress != "" {
 			if _, ok := channels[ch.StatusAddress]; !ok {
-				datapoints := map[string]interface{}{}
+				datapoints := map[string]any{}
 				for k, v := range ch.Status {
 					datapoints[k] = v
 				}
@@ -128,7 +129,7 @@ func export(cfg *config.Config, withRPC bool) (*fakeccu.Fixture, error) {
 	for _, key := range keys {
 		add(rega.Channel{
 			ID: key.ID, Address: key.Address, Type: "VIRTUAL_KEY", InterfaceName: key.InterfaceName, Name: key.Name,
-			Datapoints: map[string]interface{}{"PRESS_SHORT": false, "PRESS_LONG": false},
+			Datapoints: map[string]any{"PRESS_SHORT": false, "PRESS_LONG": false},
 		})
 	}
 	for _, address := range order {
@@ -162,19 +163,19 @@ func exportInterface(rpc *ccurpc.Client, iface string) (*fakeccu.InterfaceData, 
 	if err != nil {
 		return nil, err
 	}
-	list, _ := reply.([]interface{})
+	list, _ := reply.([]any)
 	data := &fakeccu.InterfaceData{
-		ParamsetDescriptions: map[string]map[string]map[string]interface{}{},
-		Paramsets:            map[string]map[string]map[string]interface{}{},
+		ParamsetDescriptions: map[string]map[string]map[string]any{},
+		Paramsets:            map[string]map[string]map[string]any{},
 	}
 	for _, raw := range list {
-		device, ok := raw.(map[string]interface{})
+		device, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
 		data.Devices = append(data.Devices, device)
 		address, _ := device["ADDRESS"].(string)
-		paramsets, _ := device["PARAMSETS"].([]interface{})
+		paramsets, _ := device["PARAMSETS"].([]any)
 		for _, p := range paramsets {
 			key, _ := p.(string)
 			if key != ccurpc.ParamsetValues && key != ccurpc.ParamsetMaster {
@@ -185,23 +186,23 @@ func exportInterface(rpc *ccurpc.Client, iface string) (*fakeccu.InterfaceData, 
 				log.Printf("%s %s %s: %v", iface, address, key, err)
 				continue
 			}
-			if m, ok := description.(map[string]interface{}); ok {
+			if m, ok := description.(map[string]any); ok {
 				// The CCU sends an empty paramset as empty struct, which
 				// decodes to nil; keep it as {} instead of null
 				if m == nil {
-					m = map[string]interface{}{}
+					m = map[string]any{}
 				}
 				if data.ParamsetDescriptions[address] == nil {
-					data.ParamsetDescriptions[address] = map[string]map[string]interface{}{}
+					data.ParamsetDescriptions[address] = map[string]map[string]any{}
 				}
 				data.ParamsetDescriptions[address][key] = m
 			}
 			// VALUES come from ReGa; MASTER (the settings) only from here
 			if key == ccurpc.ParamsetMaster {
 				values, err := rpc.CallRaw(iface, "getParamset", address, key)
-				if m, ok := values.(map[string]interface{}); ok && err == nil {
+				if m, ok := values.(map[string]any); ok && err == nil {
 					if data.Paramsets[address] == nil {
-						data.Paramsets[address] = map[string]map[string]interface{}{}
+						data.Paramsets[address] = map[string]map[string]any{}
 					}
 					data.Paramsets[address][key] = m
 				}
@@ -227,11 +228,7 @@ func anonymizeNames(fixture *fakeccu.Fixture) {
 		counts[ch.Type]++
 		ch.Name = fmt.Sprintf("%s %d", strings.ReplaceAll(strings.ToLower(ch.Type), "_", " "), counts[ch.Type])
 	}
-	devices := make([]string, 0, len(fixture.DeviceNames))
-	for address := range fixture.DeviceNames {
-		devices = append(devices, address)
-	}
-	sort.Strings(devices)
+	devices := slices.Sorted(maps.Keys(fixture.DeviceNames))
 	for i, address := range devices {
 		fixture.DeviceNames[address] = fmt.Sprintf("Gerät %d", i+1)
 	}

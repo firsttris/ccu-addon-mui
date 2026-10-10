@@ -47,12 +47,12 @@ func TestCheckSession(t *testing.T) {
 		}
 		switch r.Header.Get("Authorization") {
 		case "Bearer SESSIONAAAAAAAAAAAAAAAAAAAA":
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{"authenticated": true, "sid": "SESSIONAAAAAAAAAAAAAAAAAAAA", "user": "anna", "level": "configure"})
+			_ = json.NewEncoder(w).Encode(map[string]any{"authenticated": true, "sid": "SESSIONAAAAAAAAAAAAAAAAAAAA", "user": "anna", "level": "configure"})
 		case "Bearer olt_token":
 			// An API token at the gate: no sid
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{"authenticated": true, "user": "token:tablet"})
+			_ = json.NewEncoder(w).Encode(map[string]any{"authenticated": true, "user": "token:tablet"})
 		default:
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{"authenticated": false})
+			_ = json.NewEncoder(w).Encode(map[string]any{"authenticated": false})
 		}
 	}))
 	defer server.Close()

@@ -78,7 +78,7 @@ func (s *Server) handleGeneralSettings(client *Client, msgType string, message [
 	case "setGeneralSettings":
 		next := msg.generalSettings
 		s.configure(client, msg.RequestID, audit.Entry{Action: "setGeneralSettings", Target: "general settings", Value: next},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				old, _ := s.readGeneralSettings()
 				if err := s.settings.SetEnergyPrice(next.EnergyPrice); err != nil {
 					if errors.Is(err, settings.ErrInvalid) {

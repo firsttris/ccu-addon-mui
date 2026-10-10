@@ -242,7 +242,7 @@ func TestCallsUseLatin1(t *testing.T) {
 	}
 
 	var reply string
-	if err := c.call("HmIP-RF", "getMetadata", []interface{}{"0001D3C99C3C93:1", "name"}, &reply); err != nil || reply != "Büro" {
+	if err := c.call("HmIP-RF", "getMetadata", []any{"0001D3C99C3C93:1", "name"}, &reply); err != nil || reply != "Büro" {
 		t.Fatalf("getMetadata = %q, %v", reply, err)
 	}
 
@@ -334,11 +334,11 @@ func TestParamsetDescriptionAfterFirmwareUpdate(t *testing.T) {
 // hmipserver sends MIN, MAX and DEFAULT of its virtual devices untyped, read
 // as text (openccu-lite's heating groups): numbers for FLOAT and INTEGER
 func TestParamsetDescriptionNumbersFromText(t *testing.T) {
-	description := parseParamsetDescription(map[string]interface{}{
-		"SET_TEMPERATURE": map[string]interface{}{"TYPE": "FLOAT", "MIN": "4.5", "MAX": "30.5", "DEFAULT": "20.0",
-			"SPECIAL": []interface{}{map[string]interface{}{"ID": "OFF", "VALUE": "4.5"}}},
-		"BOOST_TIME": map[string]interface{}{"TYPE": "INTEGER", "MIN": "0", "MAX": "30", "DEFAULT": 5},
-		"NAME":       map[string]interface{}{"TYPE": "STRING", "DEFAULT": "12"},
+	description := parseParamsetDescription(map[string]any{
+		"SET_TEMPERATURE": map[string]any{"TYPE": "FLOAT", "MIN": "4.5", "MAX": "30.5", "DEFAULT": "20.0",
+			"SPECIAL": []any{map[string]any{"ID": "OFF", "VALUE": "4.5"}}},
+		"BOOST_TIME": map[string]any{"TYPE": "INTEGER", "MIN": "0", "MAX": "30", "DEFAULT": 5},
+		"NAME":       map[string]any{"TYPE": "STRING", "DEFAULT": "12"},
 	})
 	temperature := description["SET_TEMPERATURE"]
 	if temperature.Min != 4.5 || temperature.Max != 30.5 || temperature.Default != 20.0 || temperature.Special[0].Value != 4.5 {

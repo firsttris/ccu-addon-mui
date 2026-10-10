@@ -16,10 +16,10 @@ import (
 // StateEntry is a datapoint's last value in openccu-lite's state store
 // (GET /api/rpc/v1/state, occulited docs/system-api.md "lite-rpc")
 type StateEntry struct {
-	Interface string      `json:"interface"`
-	Address   string      `json:"address"`
-	Datapoint string      `json:"datapoint"`
-	Value     interface{} `json:"value"`
+	Interface string `json:"interface"`
+	Address   string `json:"address"`
+	Datapoint string `json:"datapoint"`
+	Value     any    `json:"value"`
 	// When the value last changed (RFC 3339)
 	LC string `json:"lc"`
 	// false for a value restored after a restart and not reported since
@@ -68,14 +68,14 @@ type StreamMessage struct {
 
 // StreamData is the payload of a stream message
 type StreamData struct {
-	Interface string      `json:"interface"`
-	Address   string      `json:"address"`
-	Key       string      `json:"key"`
-	Datapoint string      `json:"datapoint"`
-	Value     interface{} `json:"value"`
-	Addresses []string    `json:"addresses"`
-	Reason    string      `json:"reason"`
-	State     string      `json:"state"`
+	Interface string   `json:"interface"`
+	Address   string   `json:"address"`
+	Key       string   `json:"key"`
+	Datapoint string   `json:"datapoint"`
+	Value     any      `json:"value"`
+	Addresses []string `json:"addresses"`
+	Reason    string   `json:"reason"`
+	State     string   `json:"state"`
 }
 
 // Stream follows lite-rpc's event stream (GET /api/rpc/v1/events, SSE)

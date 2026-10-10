@@ -27,14 +27,14 @@ func (c *Client) GetLinks(iface, address string) ([]Link, error) {
 	if !strings.Contains(address, ":") {
 		flags = linkFlagGroup
 	}
-	var reply []interface{}
-	if err := c.call(iface, "getLinks", []interface{}{address, flags}, &reply); err != nil {
+	var reply []any
+	if err := c.call(iface, "getLinks", []any{address, flags}, &reply); err != nil {
 		return nil, err
 	}
 	links := []Link{}
 	seen := map[string]bool{}
 	for _, raw := range reply {
-		m, ok := raw.(map[string]interface{})
+		m, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -53,8 +53,8 @@ func (c *Client) AddLink(iface, sender, receiver, name, description string) erro
 	if !isChannel(sender) || !isChannel(receiver) {
 		return ErrInvalidAddress
 	}
-	var reply interface{}
-	return c.call(iface, "addLink", []interface{}{sender, receiver, name, description}, &reply)
+	var reply any
+	return c.call(iface, "addLink", []any{sender, receiver, name, description}, &reply)
 }
 
 // RemoveLink deletes a link.
@@ -62,8 +62,8 @@ func (c *Client) RemoveLink(iface, sender, receiver string) error {
 	if !isChannel(sender) || !isChannel(receiver) {
 		return ErrInvalidAddress
 	}
-	var reply interface{}
-	return c.call(iface, "removeLink", []interface{}{sender, receiver}, &reply)
+	var reply any
+	return c.call(iface, "removeLink", []any{sender, receiver}, &reply)
 }
 
 // GetLinkParamsetDescription describes the parameters of a link on the
@@ -75,10 +75,10 @@ func (c *Client) GetLinkParamsetDescription(iface, address, partner string) (Par
 	// With the partner as key, as the WebUI's ic_deviceparameters.cgi asks;
 	// interfaces that refuse it describe every link alike under "LINK"
 	// (ic_setprofiles.cgi)
-	var reply map[string]interface{}
-	if err := c.call(iface, "getParamsetDescription", []interface{}{address, partner}, &reply); err != nil {
+	var reply map[string]any
+	if err := c.call(iface, "getParamsetDescription", []any{address, partner}, &reply); err != nil {
 		reply = nil
-		if errLink := c.call(iface, "getParamsetDescription", []interface{}{address, "LINK"}, &reply); errLink != nil {
+		if errLink := c.call(iface, "getParamsetDescription", []any{address, "LINK"}, &reply); errLink != nil {
 			return nil, err
 		}
 	}
@@ -86,39 +86,39 @@ func (c *Client) GetLinkParamsetDescription(iface, address, partner string) (Par
 }
 
 // GetLinkParamset returns the parameters of a link on the side of address.
-func (c *Client) GetLinkParamset(iface, address, partner string) (map[string]interface{}, error) {
+func (c *Client) GetLinkParamset(iface, address, partner string) (map[string]any, error) {
 	if !isChannel(address) || !isChannel(partner) {
 		return nil, ErrInvalidAddress
 	}
-	var reply map[string]interface{}
-	if err := c.call(iface, "getParamset", []interface{}{address, partner}, &reply); err != nil {
+	var reply map[string]any
+	if err := c.call(iface, "getParamset", []any{address, partner}, &reply); err != nil {
 		return nil, err
 	}
 	if reply == nil {
-		reply = map[string]interface{}{}
+		reply = map[string]any{}
 	}
 	return reply, nil
 }
 
 // PutLinkParamset writes link parameters (checked with CoerceValues).
-func (c *Client) PutLinkParamset(iface, address, partner string, values map[string]interface{}) error {
+func (c *Client) PutLinkParamset(iface, address, partner string, values map[string]any) error {
 	if !isChannel(address) || !isChannel(partner) {
 		return ErrInvalidAddress
 	}
-	var reply interface{}
-	return c.call(iface, "putParamset", []interface{}{address, partner, values}, &reply)
+	var reply any
+	return c.call(iface, "putParamset", []any{address, partner, values}, &reply)
 }
 
 // GetAllLinks returns every link of an interface, as the WebUI's list of
 // direct links asks for them (ic_common.tcl: getLinks "" with flags).
 func (c *Client) GetAllLinks(iface string) ([]Link, error) {
-	var reply []interface{}
-	if err := c.call(iface, "getLinks", []interface{}{"", 0}, &reply); err != nil {
+	var reply []any
+	if err := c.call(iface, "getLinks", []any{"", 0}, &reply); err != nil {
 		return nil, err
 	}
 	links := []Link{}
 	for _, raw := range reply {
-		if m, ok := raw.(map[string]interface{}); ok {
+		if m, ok := raw.(map[string]any); ok {
 			links = append(links, Link{Sender: asString(m["SENDER"]), Receiver: asString(m["RECEIVER"]), Name: asString(m["NAME"]), Description: asString(m["DESCRIPTION"])})
 		}
 	}

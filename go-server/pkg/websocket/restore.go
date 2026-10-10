@@ -5,7 +5,6 @@ package websocket
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -165,11 +164,11 @@ func (s *Server) handleRestore(client *Client, msgType string, message []byte) {
 	}
 	switch msgType {
 	case "restoreBackup":
-		logger.Info(fmt.Sprintf("💾 Backup restored by %q, the CCU reboots", username))
+		logger.Infof("💾 Backup restored by %q, the CCU reboots", username)
 	case "installCcuFirmware":
-		logger.Info(fmt.Sprintf("⬆️ Firmware update started by %q, the CCU reboots", username))
+		logger.Infof("⬆️ Firmware update started by %q, the CCU reboots", username)
 	case "installAddon":
-		logger.Info(fmt.Sprintf("📦 Add-on installed by %q (reboot: %t)", username, response.Reboot))
+		logger.Infof("📦 Add-on installed by %q (reboot: %t)", username, response.Reboot)
 	}
 	finish(rega.SetOK)
 	s.sendJSON(client, response)

@@ -309,7 +309,7 @@ func TestRequestIDIsEchoedInResponsesAndErrors(t *testing.T) {
 
 func TestFormatValue(t *testing.T) {
 	tests := []struct {
-		input   interface{}
+		input   any
 		want    string
 		wantErr bool
 	}{
@@ -318,7 +318,7 @@ func TestFormatValue(t *testing.T) {
 		{input: float64(1000000), want: "1000000"},
 		{input: "on", want: "on"},
 		{input: nil, wantErr: true},
-		{input: map[string]interface{}{}, wantErr: true},
+		{input: map[string]any{}, wantErr: true},
 	}
 
 	for _, tt := range tests {
@@ -546,9 +546,9 @@ func (f *fakeDeviceRPC) GetParamsetDescription(iface, address, key string) (ccur
 	return ccurpc.ParamsetDescription{"STATE": {Type: "BOOL", Operations: 7}}, nil
 }
 
-func (f *fakeDeviceRPC) GetParamset(iface, address, key string) (map[string]interface{}, error) {
+func (f *fakeDeviceRPC) GetParamset(iface, address, key string) (map[string]any, error) {
 	f.calls = append(f.calls, "values "+iface+" "+address+" "+key)
-	return map[string]interface{}{"STATE": true}, nil
+	return map[string]any{"STATE": true}, nil
 }
 
 func (f *fakeDeviceRPC) ListDevices(iface string) ([]ccurpc.DeviceDescription, error) {
@@ -561,7 +561,7 @@ func (f *fakeDeviceRPC) GetDeviceDescription(iface, address string) (ccurpc.Devi
 	return ccurpc.DeviceDescription{Address: address}, nil
 }
 
-func (f *fakeDeviceRPC) SetMetadata(iface, address, dataID string, value interface{}) error {
+func (f *fakeDeviceRPC) SetMetadata(iface, address, dataID string, value any) error {
 	f.calls = append(f.calls, fmt.Sprintf("metadata %s %s %s %v", iface, address, dataID, value))
 	return nil
 }
@@ -609,15 +609,15 @@ func (f *fakeDeviceRPC) GetLinkParamsetDescription(iface, address, partner strin
 	return nil, nil
 }
 
-func (f *fakeDeviceRPC) GetLinkParamset(iface, address, partner string) (map[string]interface{}, error) {
+func (f *fakeDeviceRPC) GetLinkParamset(iface, address, partner string) (map[string]any, error) {
 	return nil, nil
 }
 
-func (f *fakeDeviceRPC) PutLinkParamset(iface, address, partner string, values map[string]interface{}) error {
+func (f *fakeDeviceRPC) PutLinkParamset(iface, address, partner string, values map[string]any) error {
 	return nil
 }
 
-func (f *fakeDeviceRPC) PutParamset(iface, address, key string, values map[string]interface{}) error {
+func (f *fakeDeviceRPC) PutParamset(iface, address, key string, values map[string]any) error {
 	f.calls = append(f.calls, fmt.Sprintf("put %s %s %s %v", iface, address, key, values))
 	return nil
 }
@@ -650,8 +650,8 @@ func TestParamsetRequests(t *testing.T) {
 	s.handleMessage(client, []byte(`{"type":"getParamset","requestId":"q2","interfaceName":"HmIP-RF","address":"A:1","paramsetKey":"VALUES"}`))
 	var values struct {
 		Type      string
-		RequestID string                 `json:"requestId"`
-		Values    map[string]interface{} `json:"values"`
+		RequestID string         `json:"requestId"`
+		Values    map[string]any `json:"values"`
 	}
 	if err := json.Unmarshal(<-client.send, &values); err != nil || values.Type != "paramset" || values.Values["STATE"] != true {
 		t.Fatalf("unexpected response: %+v, %v", values, err)
@@ -760,7 +760,7 @@ func TestSlowReadsDoNotHoldUpOtherRequests(t *testing.T) {
 	}
 	// The reads hang on the CCU; a request in order is answered anyway
 	s.handleMessage(client, []byte(`{"type":"setDatapoint","requestId":"w"}`))
-	var first map[string]interface{}
+	var first map[string]any
 	select {
 	case data := <-client.send:
 		_ = json.Unmarshal(data, &first)
@@ -790,7 +790,7 @@ func TestSlowReadsDoNotHoldUpOtherRequests(t *testing.T) {
 		if len(seen) < maxParallelReads {
 			release <- struct{}{}
 		}
-		var m map[string]interface{}
+		var m map[string]any
 		_ = json.Unmarshal(<-client.send, &m)
 		seen[m["requestId"].(string)] = true
 	}

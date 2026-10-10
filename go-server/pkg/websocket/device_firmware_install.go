@@ -43,7 +43,7 @@ func (s *Server) installFirmware(client *Client, requestID, iface, address strin
 	key := iface + " " + address
 	defer s.firmwareUpdates.Delete(key)
 	s.configure(client, requestID, audit.Entry{Action: "installFirmware", Target: key},
-		func() (interface{}, string, error) {
+		func() (any, string, error) {
 			if code, _ := s.systemAdminError(client); code != "" {
 				return nil, code, nil
 			}

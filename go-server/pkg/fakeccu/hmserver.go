@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -21,20 +22,20 @@ type groupsFile struct {
 }
 
 type fakeGroup struct {
-	ID           int                    `json:"id"`
-	GroupMembers []fakeGroupMember      `json:"groupMembers"`
-	GroupType    map[string]interface{} `json:"groupType"`
-	Properties   map[string]interface{} `json:"groupProperties"`
+	ID           int               `json:"id"`
+	GroupMembers []fakeGroupMember `json:"groupMembers"`
+	GroupType    map[string]any    `json:"groupType"`
+	Properties   map[string]any    `json:"groupProperties"`
 }
 
 type fakeGroupMember struct {
-	MemberType map[string]string      `json:"memberType"`
-	Properties map[string]interface{} `json:"properties"`
-	ID         string                 `json:"id"`
+	MemberType map[string]string `json:"memberType"`
+	Properties map[string]any    `json:"properties"`
+	ID         string            `json:"id"`
 }
 
 // groupTypes as the HMServer and the HmIP server define them
-var groupTypes = map[string]map[string]interface{}{
+var groupTypes = map[string]map[string]any{
 	"hmip.heating.group": {"id": "hmip.heating.group", "label": "HmIP-Heizungssteuerung", "version": 131072},
 	"HomeMatic.heating":  {"id": "HomeMatic.heating", "label": "Heating_Control", "version": 3},
 }
@@ -85,11 +86,11 @@ func memberTypeOf(ch *Channel) string {
 
 func (c *CCU) handleGroups(w http.ResponseWriter, r *http.Request) {
 	body, _ := io.ReadAll(r.Body)
-	var params map[string]interface{}
+	var params map[string]any
 	_ = json.Unmarshal(body, &params)
 	session := strings.Contains(r.URL.RawQuery, "sid=@fakeSession1@")
 	respond := func(ok bool, code, content string) {
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{"isSuccessful": ok, "errorCode": code, "content": content})
+		_ = json.NewEncoder(w).Encode(map[string]any{"isSuccessful": ok, "errorCode": code, "content": content})
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -140,7 +141,7 @@ func (c *CCU) handleGroups(w http.ResponseWriter, r *http.Request) {
 		deviceName, _ := params["groupDeviceName"].(string)
 		forbid, _ := params["forbidSingleOperation"].(bool)
 		var ids []string
-		if list, ok := params["assignedDevicesIds"].([]interface{}); ok {
+		if list, ok := params["assignedDevicesIds"].([]any); ok {
 			for _, id := range list {
 				ids = append(ids, fmt.Sprint(id))
 			}
@@ -152,9 +153,9 @@ func (c *CCU) handleGroups(w http.ResponseWriter, r *http.Request) {
 				respond(false, "43", "unknown member "+id)
 				return
 			}
-			members = append(members, fakeGroupMember{MemberType: map[string]string{"id": memberTypeOf(ch)}, Properties: map[string]interface{}{}, ID: id})
+			members = append(members, fakeGroupMember{MemberType: map[string]string{"id": memberTypeOf(ch)}, Properties: map[string]any{}, ID: id})
 		}
-		properties := map[string]interface{}{"NAME": name, "FORBID_SINGLE_OPERATION": forbid, "GROUP_DEVICE_NAME": deviceName}
+		properties := map[string]any{"NAME": name, "FORBID_SINGLE_OPERATION": forbid, "GROUP_DEVICE_NAME": deviceName}
 		id := 0
 		if isNew, _ := params["isNewGroup"].(bool); isNew {
 			for _, g := range groups.Groups {
@@ -234,7 +235,7 @@ func (c *CCU) addGroupDevice(id int, groupType string) {
 		maxID++
 		c.fixture.Channels = append(c.fixture.Channels, Channel{
 			ID: maxID, Address: fmt.Sprintf("%s:%d", address, i), Type: "HEATING_CLIMATECONTROL_TRANSCEIVER",
-			Interface: "VirtualDevices", Name: fmt.Sprintf("HmIP-HEATING %s:%d", address, i), Datapoints: map[string]interface{}{},
+			Interface: "VirtualDevices", Name: fmt.Sprintf("HmIP-HEATING %s:%d", address, i), Datapoints: map[string]any{},
 		})
 	}
 	if c.fixture.DeviceNames == nil {
@@ -283,11 +284,7 @@ func (c *CCU) InHeatingGroup() map[string]string {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	result := map[string]string{}
-	keys := make([]string, 0, len(c.groupMetadata))
-	for k := range c.groupMetadata {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := slices.Sorted(maps.Keys(c.groupMetadata))
 	for _, k := range keys {
 		result[k] = c.groupMetadata[k]
 	}

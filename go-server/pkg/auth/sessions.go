@@ -1,11 +1,12 @@
 package auth
 
 import (
-	"ccu-addon-mui-server/pkg/atomicfile"
 	"crypto/rand"
 	"encoding/hex"
-	"sort"
+	"slices"
 	"time"
+
+	"ccu-addon-mui-server/pkg/atomicfile"
 )
 
 // SessionInfo is a logged-in device: every token belongs to one, so a
@@ -69,7 +70,7 @@ func (s *sessionStore) save() error {
 	for _, session := range s.sessions {
 		list = append(list, session)
 	}
-	sort.Slice(list, func(i, j int) bool { return list[i].Created.Before(list[j].Created) })
+	slices.SortFunc(list, func(a, b *SessionInfo) int { return a.Created.Compare(b.Created) })
 	return atomicfile.WriteJSON(s.path, list, 0o600)
 }
 
@@ -161,7 +162,7 @@ func (a *Authenticator) Sessions() []SessionInfo {
 		info.AdminNotBefore = nil
 		list = append(list, info)
 	}
-	sort.Slice(list, func(i, j int) bool { return list[i].LastUsed.After(list[j].LastUsed) })
+	slices.SortFunc(list, func(a, b SessionInfo) int { return b.LastUsed.Compare(a.LastUsed) })
 	return list
 }
 

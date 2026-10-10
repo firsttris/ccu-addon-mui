@@ -92,7 +92,7 @@ func (s *Server) handleLogging(client *Client, msgType string, message []byte) {
 	case "setLogging":
 		next := msg.loggingSettings
 		s.configure(client, msg.RequestID, audit.Entry{Action: "setLogging", Target: "logging", Value: next},
-			func() (interface{}, string, error) {
+			func() (any, string, error) {
 				old := s.logs.Read()
 				settings := logs.Settings{Host: next.Host, RFD: next.RFD, HS485D: old.HS485D, Rega: next.Rega, HmIP: next.HmIP}
 				if err := s.logs.Write(settings); err != nil {

@@ -8,9 +8,10 @@ package heatinggroups
 import (
 	"encoding/json"
 	"errors"
+	"maps"
 	"os"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -51,7 +52,7 @@ type rawGroup struct {
 		ID    string `json:"id"`
 		Label string `json:"label"`
 	} `json:"groupType"`
-	GroupProperties map[string]interface{} `json:"groupProperties"`
+	GroupProperties map[string]any `json:"groupProperties"`
 }
 
 // GROUP_DEVICE_NAME ends with the device's address ("IP-Gruppe-1 INT0000001")
@@ -72,11 +73,7 @@ func Read(path string) ([]Group, error) {
 	if err := json.Unmarshal(data, &top); err != nil {
 		return nil, err
 	}
-	keys := make([]string, 0, len(top))
-	for key := range top {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
+	keys := slices.Sorted(maps.Keys(top))
 	groups := []Group{}
 	for _, key := range keys {
 		var list []rawGroup

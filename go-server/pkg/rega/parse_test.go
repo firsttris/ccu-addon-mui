@@ -50,7 +50,7 @@ func TestParseChannels(t *testing.T) {
 		{
 			ID: 7047, Address: "INT0000001:1", Type: "HEATING_CLIMATECONTROL_TRANSCEIVER",
 			InterfaceName: "VirtualDevices", Name: `Bad "EG"`,
-			Datapoints: map[string]interface{}{
+			Datapoints: map[string]any{
 				"ACTUAL_TEMPERATURE": 21.2,
 				"BOOST_MODE":         false,
 				"CONTROL_MODE":       nil,
@@ -61,7 +61,7 @@ func TestParseChannels(t *testing.T) {
 		{
 			ID: 4253, Address: "002C9D899A7CE7:3", Type: "SWITCH_VIRTUAL_RECEIVER",
 			InterfaceName: "HmIP-RF", Name: "Tab\tim Namen",
-			Datapoints: map[string]interface{}{"TEXT": "Zeile 1\nZeile 2"},
+			Datapoints: map[string]any{"TEXT": "Zeile 1\nZeile 2"},
 		},
 	}
 	if !reflect.DeepEqual(got, want) {

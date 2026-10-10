@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -20,10 +20,10 @@ import (
 // side, the XML-RPC ports, stays the same as on a CCU.
 
 type liteObject struct {
-	Name     string                 `json:"name"`
-	Enums    []string               `json:"enums,omitempty"`
-	Meta     map[string]interface{} `json:"meta,omitempty"`
-	Orphaned bool                   `json:"orphaned,omitempty"`
+	Name     string         `json:"name"`
+	Enums    []string       `json:"enums,omitempty"`
+	Meta     map[string]any `json:"meta,omitempty"`
+	Orphaned bool           `json:"orphaned,omitempty"`
 }
 
 type liteNode struct {
@@ -116,7 +116,7 @@ func (c *CCU) store() *liteStore {
 	return store
 }
 
-func writeJSON(w http.ResponseWriter, status int, value interface{}) {
+func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(value)
@@ -150,20 +150,20 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 	c.mu.Unlock()
 	switch {
 	case r.URL.Path == "/api/meta/v1/version":
-		writeJSON(w, http.StatusOK, map[string]interface{}{
+		writeJSON(w, http.StatusOK, map[string]any{
 			"api": "meta", "version": 1, "format": 1, "implementation": "fakeccu",
-			"capabilities": map[string]interface{}{"state": true, "history": true, "apis": map[string]int{"meta": 1, "rpc": 1, "system": 1, "auth": 1}},
+			"capabilities": map[string]any{"state": true, "history": true, "apis": map[string]int{"meta": 1, "rpc": 1, "system": 1, "auth": 1}},
 			// The local key mode: new HmIP devices pair with their label only
-			"hmip": map[string]interface{}{"keyserver_mode": "LOCAL", "device_keys": 2, "offline_pairing": false},
+			"hmip": map[string]any{"keyserver_mode": "LOCAL", "device_keys": 2, "offline_pairing": false},
 		})
 		return
 	case r.URL.Path == "/api/auth/v1/state":
 		user, level, sid, ok := c.liteSession(r)
 		if !ok {
-			writeJSON(w, http.StatusOK, map[string]interface{}{"authenticated": false})
+			writeJSON(w, http.StatusOK, map[string]any{"authenticated": false})
 			return
 		}
-		answer := map[string]interface{}{"authenticated": true, "user": user}
+		answer := map[string]any{"authenticated": true, "user": user}
 		if sid != "" {
 			answer["sid"], answer["level"] = sid, level
 			answer["role"] = map[bool]string{true: "admin", false: "user"}[level == "administer"]
@@ -194,9 +194,9 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var patch struct {
-			Name  *string                `json:"name"`
-			Enums *[]string              `json:"enums"`
-			Meta  map[string]interface{} `json:"meta"`
+			Name  *string        `json:"name"`
+			Enums *[]string      `json:"enums"`
+			Meta  map[string]any `json:"meta"`
 		}
 		body, _ := io.ReadAll(r.Body)
 		if err := json.Unmarshal(body, &patch); err != nil {
@@ -220,11 +220,11 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 		}
 		if patch.Enums != nil {
 			object.Enums = append([]string{}, (*patch.Enums)...)
-			sort.Strings(object.Enums)
+			slices.Sort(object.Enums)
 		}
 		for namespace, value := range patch.Meta {
 			if object.Meta == nil {
-				object.Meta = map[string]interface{}{}
+				object.Meta = map[string]any{}
 			}
 			if value == nil {
 				delete(object.Meta, namespace)
@@ -233,7 +233,7 @@ func (c *CCU) handleOcculited(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		store.Revision++
-		c.publishMeta(map[string]interface{}{"kind": "object.updated", "ref": ref, "value": object})
+		c.publishMeta(map[string]any{"kind": "object.updated", "ref": ref, "value": object})
 		w.Header().Set("ETag", fmt.Sprint(store.Revision))
 		writeJSON(w, http.StatusOK, object)
 	case strings.HasPrefix(r.URL.Path, "/api/rpc/v1/xmlrpc/") && r.Method == http.MethodPost:
@@ -262,7 +262,7 @@ type liteEvent struct {
 }
 
 // publishLite adds a message to the event stream; c.mu is held
-func (c *CCU) publishLite(kind string, data interface{}) {
+func (c *CCU) publishLite(kind string, data any) {
 	encoded, _ := json.Marshal(data)
 	event := liteEvent{id: len(c.liteEvents) + 1, kind: kind, data: encoded}
 	c.liteEvents = append(c.liteEvents, event)
@@ -278,16 +278,16 @@ func (c *CCU) publishLite(kind string, data interface{}) {
 func (c *CCU) handleLiteState(w http.ResponseWriter) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	entries := []map[string]interface{}{}
+	entries := []map[string]any{}
 	for _, ch := range c.fixture.Channels {
 		for key, value := range ch.Datapoints {
-			entries = append(entries, map[string]interface{}{
+			entries = append(entries, map[string]any{
 				"interface": ch.Interface, "address": ch.Address, "datapoint": key, "value": value,
 				"lc": c.Started.Format(time.RFC3339), "confirmed": true, "source": "event",
 			})
 		}
 	}
-	writeJSON(w, http.StatusOK, map[string]interface{}{
+	writeJSON(w, http.StatusOK, map[string]any{
 		"entries": entries, "total": len(entries), "unconfirmed": 0,
 		"event_id": fmt.Sprintf("fake-%d", len(c.liteEvents)),
 	})
@@ -401,7 +401,7 @@ func (c *CCU) handleLiteNodes(w http.ResponseWriter, r *http.Request) {
 			path = parentPath + "/" + body.ID
 		}
 		store.Revision++
-		c.publishMeta(map[string]interface{}{"kind": "node.created", "enum": enumID, "path": path})
+		c.publishMeta(map[string]any{"kind": "node.created", "enum": enumID, "path": path})
 		writeJSON(w, http.StatusCreated, map[string]string{"path": path})
 	case http.MethodPatch:
 		siblings, index := findLiteNode(enum, nodePath)
@@ -413,7 +413,7 @@ func (c *CCU) handleLiteNodes(w http.ResponseWriter, r *http.Request) {
 		if body.Name != "" {
 			(*siblings)[index].Name = body.Name
 			store.Revision++
-			c.publishMeta(map[string]interface{}{"kind": "node.updated", "enum": enumID, "path": from})
+			c.publishMeta(map[string]any{"kind": "node.updated", "enum": enumID, "path": from})
 		}
 		if parentPath, move := parent(); move {
 			if parentPath == from || strings.HasPrefix(parentPath, from+"/") {
@@ -441,7 +441,7 @@ func (c *CCU) handleLiteNodes(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			store.Revision++
-			c.publishMeta(map[string]interface{}{"kind": "node.moved", "enum": enumID, "from": from, "to": to})
+			c.publishMeta(map[string]any{"kind": "node.moved", "enum": enumID, "from": from, "to": to})
 		}
 		writeJSON(w, http.StatusOK, map[string]string{"path": nodePath})
 	case http.MethodDelete:
@@ -463,7 +463,7 @@ func (c *CCU) handleLiteNodes(w http.ResponseWriter, r *http.Request) {
 		}
 		store.Revision++
 		// One event for the whole subtree
-		c.publishMeta(map[string]interface{}{"kind": "node.deleted", "enum": enumID, "path": path})
+		c.publishMeta(map[string]any{"kind": "node.deleted", "enum": enumID, "path": path})
 		w.WriteHeader(http.StatusNoContent)
 	default:
 		apiError(w, http.StatusMethodNotAllowed, "method", r.Method)
@@ -500,7 +500,7 @@ type metaEvent struct {
 
 // publishMeta adds an event to the change stream at the store's revision;
 // c.mu is held
-func (c *CCU) publishMeta(event map[string]interface{}) {
+func (c *CCU) publishMeta(event map[string]any) {
 	event["revision"] = c.store().Revision
 	data, _ := json.Marshal(event)
 	e := metaEvent{revision: c.store().Revision, data: data}
@@ -659,9 +659,9 @@ func (c *CCU) handleLiteGroups(w http.ResponseWriter, r *http.Request) {
 	}
 	switch {
 	case rest == "" && r.Method == http.MethodGet:
-		writeJSON(w, http.StatusOK, map[string]interface{}{"groups": c.liteGroups, "devices_to_configure": []liteMember{}})
+		writeJSON(w, http.StatusOK, map[string]any{"groups": c.liteGroups, "devices_to_configure": []liteMember{}})
 	case rest == "types" && r.Method == http.MethodGet:
-		writeJSON(w, http.StatusOK, map[string]interface{}{"types": []map[string]interface{}{
+		writeJSON(w, http.StatusOK, map[string]any{"types": []map[string]any{
 			{"id": "hmip.heating.group", "label": "HmIP-Heizungssteuerung", "assignable": assignable(), "leftover": []liteMember{}},
 		}})
 	case rest == "" && r.Method == http.MethodPost:
@@ -693,7 +693,7 @@ func (c *CCU) handleLiteGroups(w http.ResponseWriter, r *http.Request) {
 		for i, g := range c.liteGroups {
 			if strconv.Itoa(g.ID) == rest {
 				c.liteGroups = append(c.liteGroups[:i], c.liteGroups[i+1:]...)
-				writeJSON(w, http.StatusOK, map[string]interface{}{"deleted": g.ID, "former_members": g.Members})
+				writeJSON(w, http.StatusOK, map[string]any{"deleted": g.ID, "former_members": g.Members})
 				return
 			}
 		}
@@ -708,27 +708,27 @@ func (c *CCU) handleLiteGroups(w http.ResponseWriter, r *http.Request) {
 func (c *CCU) handleLiteServiceMessages(w http.ResponseWriter) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	messages := []map[string]interface{}{}
+	messages := []map[string]any{}
 	for _, m := range c.serviceMessages() {
 		device := deviceAddress(m.channel.Address)
-		messages = append(messages, map[string]interface{}{
+		messages = append(messages, map[string]any{
 			"interface": m.channel.Interface, "address": device, "channel": m.channel.Address, "key": m.datapoint,
 			"value": m.channel.Datapoints[m.datapoint], "since": "2026-01-15T09:00:00Z", "seen": "2026-01-15T09:00:00Z",
 		})
 	}
-	writeJSON(w, http.StatusOK, map[string]interface{}{"count": len(messages), "messages": messages, "swept": true, "errors": []string{}})
+	writeJSON(w, http.StatusOK, map[string]any{"count": len(messages), "messages": messages, "swept": true, "errors": []string{}})
 }
 
 // virtualKeyValues: a virtual key's VALUES (PRESS_SHORT, PRESS_LONG)
-var virtualKeyValues = map[string]interface{}{
-	"PRESS_SHORT": map[string]interface{}{"TYPE": "ACTION", "OPERATIONS": 6, "FLAGS": 1, "DEFAULT": false},
-	"PRESS_LONG":  map[string]interface{}{"TYPE": "ACTION", "OPERATIONS": 6, "FLAGS": 1, "DEFAULT": false},
+var virtualKeyValues = map[string]any{
+	"PRESS_SHORT": map[string]any{"TYPE": "ACTION", "OPERATIONS": 6, "FLAGS": 1, "DEFAULT": false},
+	"PRESS_LONG":  map[string]any{"TYPE": "ACTION", "OPERATIONS": 6, "FLAGS": 1, "DEFAULT": false},
 }
 
 // virtualKeyDevices are the central's HM-RCV-50 and HmIP-RCV-50 with the
 // fixture's virtual keys as their channels; c.mu is held
-func (c *CCU) virtualKeyDevices(iface string) []map[string]interface{} {
-	var devices []map[string]interface{}
+func (c *CCU) virtualKeyDevices(iface string) []map[string]any {
+	var devices []map[string]any
 	byParent := map[string][]string{}
 	for _, ch := range c.fixture.Channels {
 		if ch.Interface == iface && isVirtualKey(ch.Address) {
@@ -741,13 +741,13 @@ func (c *CCU) virtualKeyDevices(iface string) []map[string]interface{} {
 		if parent == "HmIP-RCV-1" {
 			kind = "HmIP-RCV-50"
 		}
-		devices = append(devices, map[string]interface{}{"ADDRESS": parent, "TYPE": kind, "CHILDREN": children, "PARAMSETS": []interface{}{"MASTER"}, "FLAGS": 1, "VERSION": 1})
+		devices = append(devices, map[string]any{"ADDRESS": parent, "TYPE": kind, "CHILDREN": children, "PARAMSETS": []any{"MASTER"}, "FLAGS": 1, "VERSION": 1})
 		for _, address := range children {
 			_, index, _ := strings.Cut(address, ":")
 			n, _ := strconv.Atoi(index)
-			devices = append(devices, map[string]interface{}{
+			devices = append(devices, map[string]any{
 				"ADDRESS": address, "TYPE": "VIRTUAL_KEY", "PARENT": parent, "PARENT_TYPE": kind,
-				"INDEX": n, "FLAGS": 1, "VERSION": 1, "PARAMSETS": []interface{}{"MASTER", "VALUES", "LINK"},
+				"INDEX": n, "FLAGS": 1, "VERSION": 1, "PARAMSETS": []any{"MASTER", "VALUES", "LINK"},
 			})
 		}
 	}

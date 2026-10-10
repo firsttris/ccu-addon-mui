@@ -27,12 +27,12 @@ var keyRegex = regexp.MustCompile(`^[0-9a-zA-Z_]{5,}$`)
 // (a new one with the password, else the kept one). A kept session the CCU
 // no longer accepts is forgotten and the password asked for
 // (ErrSessionRequired); other errors of the method are passed on.
-func (s *Service) AdminCall(username, password, method string, params map[string]interface{}) (interface{}, error) {
+func (s *Service) AdminCall(username, password, method string, params map[string]any) (any, error) {
 	sessionID, err := s.groupSession(username, password)
 	if err != nil {
 		return nil, err
 	}
-	args := map[string]interface{}{"_session_id_": sessionID}
+	args := map[string]any{"_session_id_": sessionID}
 	for k, v := range params {
 		args[k] = v
 	}

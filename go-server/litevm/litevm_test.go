@@ -55,7 +55,7 @@ const ciRoom = "CI-Raum Küche Öfen Maß"
 // A layout as the app saves it (src/views/grid/tileLayout.ts), without tiles
 const ciLayout = `{"v":3,"order":[],"sections":{}}`
 
-type message = map[string]interface{}
+type message = map[string]any
 
 type vm struct {
 	base   string
@@ -106,7 +106,7 @@ func loginAs(t *testing.T, user, password string) *vm {
 // api calls occulited directly with the session as a bearer: lite-rpc takes
 // a browser's session only that way, not with the cookie alone (occulited
 // answers 403 forbidden)
-func (v *vm) api(t *testing.T, method, path string, body interface{}) (int, []byte) {
+func (v *vm) api(t *testing.T, method, path string, body any) (int, []byte) {
 	t.Helper()
 	var reader io.Reader
 	if body != nil {
@@ -208,9 +208,9 @@ func refused(t *testing.T, answer message) {
 
 func roomID(t *testing.T, conn *websocket.Conn) (int64, bool) {
 	t.Helper()
-	rooms, _ := ok(t, call(t, conn, message{"type": "getRooms"}))["rooms"].([]interface{})
+	rooms, _ := ok(t, call(t, conn, message{"type": "getRooms"}))["rooms"].([]any)
 	for _, r := range rooms {
-		if room := r.(map[string]interface{}); room["name"] == ciRoom {
+		if room := r.(map[string]any); room["name"] == ciRoom {
 			return int64(room["id"].(float64)), true
 		}
 	}
@@ -242,9 +242,9 @@ func prepare(t *testing.T, v *vm) {
 	for _, request := range []string{"getRooms", "getTrades", "getFavorites", "getServiceMessages", "getDeviceHealth", "getSystemInfo", "getInbox"} {
 		ok(t, call(t, conn, message{"type": request}))
 	}
-	channels, _ := ok(t, call(t, conn, message{"type": "getChannels", "all": true}))["channels"].([]interface{})
+	channels, _ := ok(t, call(t, conn, message{"type": "getChannels", "all": true}))["channels"].([]any)
 	t.Logf("%d channels (no radio module in the VM)", len(channels))
-	keys, _ := ok(t, call(t, conn, message{"type": "getVirtualKeys"}))["keys"].([]interface{})
+	keys, _ := ok(t, call(t, conn, message{"type": "getVirtualKeys"}))["keys"].([]any)
 	t.Logf("%d virtual keys", len(keys))
 	// Only a CCU has these
 	if m := call(t, conn, message{"type": "getSysvars"}); m["type"] != "error" {
@@ -308,10 +308,10 @@ func levels(t *testing.T, admin *vm) {
 	configure := accounts["configure"].conn(t, "admin")
 	renamed := ciRoom + " (configure)"
 	ok(t, call(t, configure, message{"type": "renameGroup", "list": "rooms", "id": room, "name": renamed}))
-	rooms, _ := ok(t, call(t, adminConn, message{"type": "getRooms"}))["rooms"].([]interface{})
+	rooms, _ := ok(t, call(t, adminConn, message{"type": "getRooms"}))["rooms"].([]any)
 	seen := false
 	for _, r := range rooms {
-		seen = seen || r.(map[string]interface{})["name"] == renamed
+		seen = seen || r.(map[string]any)["name"] == renamed
 	}
 	if !seen {
 		t.Fatalf("the rename by ci-configure did not reach occulited: %v", rooms)
@@ -351,10 +351,10 @@ func levels(t *testing.T, admin *vm) {
 	if group != 0 {
 		// Stays until the phase fresh: the room shows its tile in the
 		// screenshots (scripts/lite-vm-browser.mjs)
-		groups, _ := ok(t, call(t, adminConn, message{"type": "getHeatingGroups"}))["groups"].([]interface{})
+		groups, _ := ok(t, call(t, adminConn, message{"type": "getHeatingGroups"}))["groups"].([]any)
 		seen := false
 		for _, g := range groups {
-			seen = seen || g.(map[string]interface{})["name"] == ciGroup
+			seen = seen || g.(map[string]any)["name"] == ciGroup
 		}
 		if !seen {
 			t.Fatalf("%q not in the heating groups (umlauts lost?): %v", ciGroup, groups)
@@ -366,10 +366,10 @@ func levels(t *testing.T, admin *vm) {
 	// the one occulited's JSON-RPC gives that session directly. listDevices
 	// in MUI leaves out an interface that fails, so a refused session shows
 	// as devices missing
-	code, body = accounts["configure"].api(t, http.MethodPost, "/api/rpc/v1/json/VirtualDevices", message{"jsonrpc": "2.0", "method": "listDevices", "params": []interface{}{}, "id": 1})
+	code, body = accounts["configure"].api(t, http.MethodPost, "/api/rpc/v1/json/VirtualDevices", message{"jsonrpc": "2.0", "method": "listDevices", "params": []any{}, "id": 1})
 	var direct struct {
-		Result []map[string]interface{} `json:"result"`
-		Error  interface{}              `json:"error"`
+		Result []map[string]any `json:"result"`
+		Error  any              `json:"error"`
 	}
 	if err := json.Unmarshal(body, &direct); code != http.StatusOK || err != nil || direct.Error != nil {
 		t.Fatalf("lite-rpc listDevices as ci-configure: %d %s", code, body)
@@ -381,9 +381,9 @@ func levels(t *testing.T, admin *vm) {
 		}
 	}
 	got := 0
-	devices, _ := ok(t, call(t, configure, message{"type": "listDevices"}))["devices"].([]interface{})
+	devices, _ := ok(t, call(t, configure, message{"type": "listDevices"}))["devices"].([]any)
 	for _, d := range devices {
-		if d.(map[string]interface{})["interfaceName"] == "VirtualDevices" {
+		if d.(map[string]any)["interfaceName"] == "VirtualDevices" {
 			got++
 		}
 	}
@@ -413,9 +413,9 @@ func levels(t *testing.T, admin *vm) {
 	settings(t, configure, operate, device, channels)
 
 	// The group's thermostat channel into the room, for the screenshots
-	all, _ := ok(t, call(t, adminConn, message{"type": "getChannels", "all": true}))["channels"].([]interface{})
+	all, _ := ok(t, call(t, adminConn, message{"type": "getChannels", "all": true}))["channels"].([]any)
 	for _, raw := range all {
-		ch := raw.(map[string]interface{})
+		ch := raw.(map[string]any)
 		if ch["interfaceName"] == "VirtualDevices" && strings.HasPrefix(fmt.Sprint(ch["address"]), device+":") && !strings.HasSuffix(fmt.Sprint(ch["address"]), ":0") {
 			ok(t, call(t, adminConn, message{"type": "setGroupMember", "groupId": room, "channelId": ch["id"], "member": true}))
 			t.Logf("%s in %s", ch["address"], ciRoom)
@@ -429,7 +429,7 @@ func levels(t *testing.T, admin *vm) {
 // BOOL, readable and writable (operations 1 and 2) and, for values, sending
 // events (operations 4), not internal (flag 2); the set point first, then
 // another temperature. Its description and whether there is one.
-func writable(description map[string]interface{}, events bool) (string, map[string]interface{}, bool) {
+func writable(description map[string]any, events bool) (string, map[string]any, bool) {
 	rank := func(name string) int {
 		switch {
 		case name == "SET_TEMPERATURE" || name == "SET_POINT_TEMPERATURE":
@@ -445,7 +445,7 @@ func writable(description map[string]interface{}, events bool) (string, map[stri
 	}
 	best := ""
 	for name, raw := range description {
-		p := raw.(map[string]interface{})
+		p := raw.(map[string]any)
 		operations, _ := p["operations"].(float64)
 		flags, _ := p["flags"].(float64)
 		kind := p["type"]
@@ -459,11 +459,11 @@ func writable(description map[string]interface{}, events bool) (string, map[stri
 	if best == "" {
 		return "", nil, false
 	}
-	return best, description[best].(map[string]interface{}), true
+	return best, description[best].(map[string]any), true
 }
 
 // another is a valid value of the parameter that differs from current
-func another(p map[string]interface{}, current interface{}) interface{} {
+func another(p map[string]any, current any) any {
 	switch p["type"] {
 	case "BOOL":
 		return current != true
@@ -484,7 +484,7 @@ func another(p map[string]interface{}, current interface{}) interface{} {
 }
 
 // same compares values the way they come back as JSON
-func same(a, b interface{}) bool {
+func same(a, b any) bool {
 	fa, oka := a.(float64)
 	fb, okb := b.(float64)
 	if oka && okb {
@@ -502,12 +502,12 @@ func values(t *testing.T, configure, operate *websocket.Conn, device string, cha
 	// 0 (hmipserver's virtual group device fails INHIBIT there with a Java
 	// NullPointerException, Fault -321)
 	var channel, name string
-	var p map[string]interface{}
+	var p map[string]any
 	for _, address := range channels {
 		if strings.HasSuffix(address, ":0") {
 			continue
 		}
-		description, _ := ok(t, call(t, configure, message{"type": "getParamsetDescription", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "VALUES"}))["description"].(map[string]interface{})
+		description, _ := ok(t, call(t, configure, message{"type": "getParamsetDescription", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "VALUES"}))["description"].(map[string]any)
 		n, d, found := writable(description, true)
 		if found && (channel == "" || (n == "SET_TEMPERATURE" || n == "SET_POINT_TEMPERATURE") && name != n) {
 			channel, name, p = address, n, d
@@ -520,7 +520,7 @@ func values(t *testing.T, configure, operate *websocket.Conn, device string, cha
 	// channel gets no answer from hmipserver while the group has no members
 	// (occulited: 503 down). A value in the middle of the range differs
 	// from what a new group starts with
-	var current interface{}
+	var current any
 	value := another(p, current)
 	ok(t, call(t, operate, message{"type": "subscribe", "channels": []string{channel}}))
 	answer := call(t, operate, message{"type": "setDatapoint", "interfaceName": "VirtualDevices", "address": channel, "attribute": name, "value": value})
@@ -541,7 +541,7 @@ func values(t *testing.T, configure, operate *websocket.Conn, device string, cha
 		if err := operate.ReadJSON(&m); err != nil {
 			t.Fatalf("no event for %s %s = %v within 30 s: %v", channel, name, value, err)
 		}
-		event, _ := m["event"].(map[string]interface{})
+		event, _ := m["event"].(map[string]any)
 		if event != nil && event["channel"] == channel && event["datapoint"] == name && same(event["value"], value) {
 			t.Logf("%s %s = %v (was %v): set as ci-operate, the event came back", channel, name, value, current)
 			return
@@ -554,21 +554,21 @@ func values(t *testing.T, configure, operate *websocket.Conn, device string, cha
 // and puts it back; operate may not
 func settings(t *testing.T, configure, operate *websocket.Conn, device string, channels []string) {
 	for _, address := range append([]string{device}, channels...) {
-		description, _ := ok(t, call(t, configure, message{"type": "getParamsetDescription", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER"}))["description"].(map[string]interface{})
+		description, _ := ok(t, call(t, configure, message{"type": "getParamsetDescription", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER"}))["description"].(map[string]any)
 		name, p, found := writable(description, false)
 		if !found {
 			continue
 		}
 		refused(t, call(t, operate, message{"type": "putParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER", "values": message{name: p["default"]}}))
 		var readErr message
-		read := func() interface{} {
+		read := func() any {
 			readErr = nil
 			m := call(t, configure, message{"type": "getParamset", "interfaceName": "VirtualDevices", "address": address, "paramsetKey": "MASTER"})
 			if m["type"] == "error" {
 				readErr = m
 				return nil
 			}
-			return m["values"].(map[string]interface{})[name]
+			return m["values"].(map[string]any)[name]
 		}
 		current := read()
 		if readErr != nil {
@@ -626,11 +626,11 @@ func deviceImages(t *testing.T, v *vm, conn *websocket.Conn) {
 		return
 	}
 	m := ok(t, call(t, conn, message{"type": "getDeviceImages"}))
-	images, _ := m["images"].(map[string]interface{})
+	images, _ := m["images"].(map[string]any)
 	if m["base"] != "/config/img/devices/" || len(images) < 100 {
 		t.Fatalf("getDeviceImages: base %v, %d types", m["base"], len(images))
 	}
-	group, found := images["hm-cc-vg-1"].(map[string]interface{})
+	group, found := images["hm-cc-vg-1"].(map[string]any)
 	if !found {
 		t.Fatalf("no picture for the heating group's device HM-CC-VG-1 among %d types", len(images))
 	}
@@ -653,9 +653,9 @@ func showcase(t *testing.T, v *vm) {
 	conn := v.adminConn(t)
 	deviceImages(t, v, conn)
 	rooms := map[string]int64{}
-	list, _ := ok(t, call(t, conn, message{"type": "getRooms"}))["rooms"].([]interface{})
+	list, _ := ok(t, call(t, conn, message{"type": "getRooms"}))["rooms"].([]any)
 	for _, r := range list {
-		room := r.(map[string]interface{})
+		room := r.(map[string]any)
 		rooms[fmt.Sprint(room["name"])] = int64(room["id"].(float64))
 	}
 	code, body := v.api(t, http.MethodGet, "/api/system/v1/groups/types", nil)
@@ -674,10 +674,10 @@ func showcase(t *testing.T, v *vm) {
 		}
 		m := ok(t, call(t, conn, message{"type": "saveHeatingGroup", "group": message{"name": showcaseGroup(r.Name), "type": types.Types[0].ID, "members": []string{}}}))
 		channel := fmt.Sprintf("INT%07d:1", int(m["id"].(float64)))
-		var id interface{}
-		all, _ := ok(t, call(t, conn, message{"type": "getChannels", "all": true}))["channels"].([]interface{})
+		var id any
+		all, _ := ok(t, call(t, conn, message{"type": "getChannels", "all": true}))["channels"].([]any)
 		for _, raw := range all {
-			if ch := raw.(map[string]interface{}); ch["interfaceName"] == "VirtualDevices" && ch["address"] == channel {
+			if ch := raw.(map[string]any); ch["interfaceName"] == "VirtualDevices" && ch["address"] == channel {
 				id = ch["id"]
 			}
 		}
@@ -718,15 +718,15 @@ func fresh(t *testing.T, v *vm) {
 	for _, r := range showcaseRooms {
 		names[showcaseGroup(r.Name)] = true
 	}
-	groups, _ := ok(t, call(t, conn, message{"type": "getHeatingGroups"}))["groups"].([]interface{})
+	groups, _ := ok(t, call(t, conn, message{"type": "getHeatingGroups"}))["groups"].([]any)
 	for _, raw := range groups {
-		if g := raw.(map[string]interface{}); names[fmt.Sprint(g["name"])] {
+		if g := raw.(map[string]any); names[fmt.Sprint(g["name"])] {
 			ok(t, call(t, conn, message{"type": "deleteHeatingGroup", "id": g["id"]}))
 		}
 	}
-	rooms, _ := ok(t, call(t, conn, message{"type": "getRooms"}))["rooms"].([]interface{})
+	rooms, _ := ok(t, call(t, conn, message{"type": "getRooms"}))["rooms"].([]any)
 	for _, raw := range rooms {
-		room := raw.(map[string]interface{})
+		room := raw.(map[string]any)
 		for _, r := range showcaseRooms {
 			if room["name"] == r.Name {
 				ok(t, call(t, conn, message{"type": "deleteGroup", "list": "rooms", "id": room["id"]}))

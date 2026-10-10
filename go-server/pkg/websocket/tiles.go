@@ -23,7 +23,7 @@ func (s *Server) handleSetChannelTile(client *Client, message []byte) {
 		return
 	}
 	s.configure(client, msg.RequestID, audit.Entry{Action: "setChannelTile", Target: fmt.Sprintf("channel %d", msg.ID), Value: msg.Tile},
-		func() (interface{}, string, error) {
+		func() (any, string, error) {
 			if s.tiles == nil {
 				return nil, "NOT_AVAILABLE", nil
 			}

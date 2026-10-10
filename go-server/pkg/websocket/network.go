@@ -72,8 +72,8 @@ func (s *Server) handleNetwork(client *Client, msgType string, message []byte) {
 		})
 	case "setNetwork":
 		next := msg.Config
-		s.configure(client, msg.RequestID, audit.Entry{Action: "setNetwork", Target: "network", Value: map[string]interface{}{"config": next, "tailscale": msg.Tailscale}},
-			func() (interface{}, string, error) {
+		s.configure(client, msg.RequestID, audit.Entry{Action: "setNetwork", Target: "network", Value: map[string]any{"config": next, "tailscale": msg.Tailscale}},
+			func() (any, string, error) {
 				if err := next.Validate(); err != nil {
 					return nil, "", errors.New("invalid network settings: " + err.Error())
 				}
@@ -85,7 +85,7 @@ func (s *Server) handleNetwork(client *Client, msgType string, message []byte) {
 						return current, "", err
 					}
 				}
-				return map[string]interface{}{"config": current, "tailscale": tailscale.Enabled}, rega.SetOK, nil
+				return map[string]any{"config": current, "tailscale": tailscale.Enabled}, rega.SetOK, nil
 			})
 	}
 }

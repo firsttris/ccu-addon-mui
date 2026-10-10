@@ -59,7 +59,7 @@ func releaseServer(t *testing.T, data []byte, digest string) *httptest.Server {
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/latest":
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"tag_name": "v1.2.3",
 				"assets": []map[string]string{
 					{"name": "mui-1.2.3-x86_64-pc.tar.gz", "browser_download_url": server.URL + "/amd64.tar.gz", "digest": "sha256:" + strings.Repeat("0", 64)},

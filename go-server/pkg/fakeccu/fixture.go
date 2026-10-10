@@ -38,15 +38,15 @@ type Sysvar struct {
 	Visible bool   `json:"visible"`
 	// ValueType and SubType as ReGa numbers them (2/2 bool, 2/6 alarm,
 	// 4/0 number, 16/29 enum, 20/11 string)
-	ValueType int         `json:"valueType"`
-	SubType   int         `json:"subType"`
-	Unit      string      `json:"unit,omitempty"`
-	Min       string      `json:"min,omitempty"`
-	Max       string      `json:"max,omitempty"`
-	FalseName string      `json:"falseName,omitempty"`
-	TrueName  string      `json:"trueName,omitempty"`
-	ValueList string      `json:"valueList,omitempty"`
-	Value     interface{} `json:"value"`
+	ValueType int    `json:"valueType"`
+	SubType   int    `json:"subType"`
+	Unit      string `json:"unit,omitempty"`
+	Min       string `json:"min,omitempty"`
+	Max       string `json:"max,omitempty"`
+	FalseName string `json:"falseName,omitempty"`
+	TrueName  string `json:"trueName,omitempty"`
+	ValueList string `json:"valueList,omitempty"`
+	Value     any    `json:"value"`
 	// Description is the info text (DPInfo)
 	Description string `json:"description,omitempty"`
 	// Channel is the id of the channel it belongs to
@@ -112,7 +112,7 @@ type Channel struct {
 	Interface string `json:"interface"`
 	Name      string `json:"name"`
 	// Datapoints by name; values are bool, number, string or null
-	Datapoints map[string]interface{} `json:"datapoints"`
+	Datapoints map[string]any `json:"datapoints"`
 	// The WebUI's channel options; visible and usable by default
 	Hidden   bool `json:"hidden,omitempty"`
 	ReadOnly bool `json:"readOnly,omitempty"`
@@ -128,19 +128,19 @@ type Channel struct {
 type InterfaceData struct {
 	// Devices are device and channel descriptions as listDevices returns
 	// them (ADDRESS, TYPE, PARENT, PARAMSETS, ...).
-	Devices []map[string]interface{} `json:"devices"`
+	Devices []map[string]any `json:"devices"`
 	// ParamsetDescriptions by address and paramset key
-	ParamsetDescriptions map[string]map[string]map[string]interface{} `json:"paramsetDescriptions,omitempty"`
+	ParamsetDescriptions map[string]map[string]map[string]any `json:"paramsetDescriptions,omitempty"`
 	// Paramsets (MASTER values) by address and paramset key. VALUES are
 	// taken from the ReGa datapoints, so both stay in sync. Link
 	// parameters are keyed by the partner's address; their description is
 	// the "LINK" entry of ParamsetDescriptions.
-	Paramsets map[string]map[string]map[string]interface{} `json:"paramsets,omitempty"`
+	Paramsets map[string]map[string]map[string]any `json:"paramsets,omitempty"`
 	// Links as getLinks returns them (SENDER, RECEIVER, NAME, DESCRIPTION)
-	Links []map[string]interface{} `json:"links,omitempty"`
+	Links []map[string]any `json:"links,omitempty"`
 	// RadioInterfaces as listBidcosInterfaces returns them; without, the
 	// interface doesn't support the call
-	RadioInterfaces []map[string]interface{} `json:"radioInterfaces,omitempty"`
+	RadioInterfaces []map[string]any `json:"radioInterfaces,omitempty"`
 }
 
 // LoadFixture reads a fixture from a JSON file.

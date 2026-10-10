@@ -124,12 +124,12 @@ func (s *Service) forgetGroupSession(username string) {
 	delete(s.groupSessions.sessions, username)
 }
 
-func (s *Service) hmserver(path, sessionID string, params interface{}, result interface{}) error {
+func (s *Service) hmserver(path, sessionID string, params any, result any) error {
 	return s.hmserverPage("/pages/jpages/group/"+path, sessionID, params, result)
 }
 
 // hmserverPage posts JSON to an HMServer page and decodes its answer
-func (s *Service) hmserverPage(page, sessionID string, params interface{}, result interface{}) error {
+func (s *Service) hmserverPage(page, sessionID string, params any, result any) error {
 	body, _ := json.Marshal(params)
 	u := s.webUIURL + page
 	if sessionID != "" {
@@ -202,7 +202,7 @@ func (s *Service) SaveHeatingGroup(username, password string, g GroupChange) (in
 	if members == nil {
 		members = []string{}
 	}
-	params := map[string]interface{}{
+	params := map[string]any{
 		"groupId": g.ID,
 		// escape() in GroupEditPage.ftl; the HMServer decodes it as
 		// ISO-8859-1

@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"ccu-addon-mui-server/pkg/audit"
@@ -42,11 +41,11 @@ type paramsetDescriptionResponse struct {
 }
 
 type paramsetResponse struct {
-	Type        string                 `json:"type"`
-	RequestID   string                 `json:"requestId,omitempty"`
-	Address     string                 `json:"address"`
-	ParamsetKey string                 `json:"paramsetKey"`
-	Values      map[string]interface{} `json:"values"`
+	Type        string         `json:"type"`
+	RequestID   string         `json:"requestId,omitempty"`
+	Address     string         `json:"address"`
+	ParamsetKey string         `json:"paramsetKey"`
+	Values      map[string]any `json:"values"`
 }
 
 // handleParamsetRequest answers getParamsetDescription and getParamset.
@@ -180,7 +179,7 @@ func (s *Server) handlePutParamset(client *Client, message []byte) {
 	rpc := s.rpcFor(client)
 	var msg struct {
 		paramsetRequest
-		Values map[string]interface{} `json:"values"`
+		Values map[string]any `json:"values"`
 	}
 	if err := json.Unmarshal(message, &msg); err != nil {
 		s.sendRequestError(client, msg.RequestID, "invalid message: "+err.Error(), "INVALID_REQUEST")
@@ -224,7 +223,7 @@ func (s *Server) handlePutParamset(client *Client, message []byte) {
 	}
 
 	if current, err := rpc.GetParamset(msg.InterfaceName, msg.Address, msg.ParamsetKey); err == nil {
-		previous := map[string]interface{}{}
+		previous := map[string]any{}
 		for name := range values {
 			previous[name] = current[name]
 		}
@@ -249,7 +248,7 @@ func (s *Server) handlePutParamset(client *Client, message []byte) {
 // HmIP only) and in ReGa (Interface.setMetadata), where the status pages
 // read it (webui.js, after saving MASTER; functions.fn). Failures are only
 // logged: the setting itself is saved.
-func (s *Server) storeChannelMode(client *Client, iface, address string, value interface{}) {
+func (s *Server) storeChannelMode(client *Client, iface, address string, value any) {
 	rpc := s.rpcFor(client)
 	mode, ok := value.(int)
 	if !ok {
@@ -261,12 +260,12 @@ func (s *Server) storeChannelMode(client *Client, iface, address string, value i
 	}
 	if iface == "HmIP-RF" {
 		if err := rpc.SetMetadata(iface, address, "channelMode", mode); err != nil {
-			logger.Error(fmt.Sprintf("setMetadata channelMode %s: %v", address, err))
+			logger.Errorf("setMetadata channelMode %s: %v", address, err)
 		}
 	}
 	if s.home != nil {
 		if result, err := s.homeFor(client).SetChannelMode(iface, address, mode); err != nil || result != "OK" {
-			logger.Error(fmt.Sprintf("SetChannelMode %s: %s %v", address, result, err))
+			logger.Errorf("SetChannelMode %s: %s %v", address, result, err)
 		}
 	}
 }

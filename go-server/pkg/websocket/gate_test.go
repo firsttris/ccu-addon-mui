@@ -17,9 +17,9 @@ import (
 func TestGateLogin(t *testing.T) {
 	s := NewServer(nil, nil)
 	s.SetGate(func(*http.Request) (GateSession, error) { return GateSession{}, ErrNoSession })
-	answer := func(client *Client, request string) map[string]interface{} {
+	answer := func(client *Client, request string) map[string]any {
 		s.handleMessage(client, []byte(request))
-		var m map[string]interface{}
+		var m map[string]any
 		_ = json.Unmarshal(<-client.send, &m)
 		return m
 	}
@@ -130,9 +130,9 @@ func TestGateLoginAsksAgainWhenThePlatformCouldNotTell(t *testing.T) {
 	if client.gateOK || client.gateErr == nil {
 		t.Fatalf("connect while occulited is down: ok %v, err %v", client.gateOK, client.gateErr)
 	}
-	auth := func() map[string]interface{} {
+	auth := func() map[string]any {
 		s.handleMessage(client, []byte(`{"type":"auth"}`))
-		var m map[string]interface{}
+		var m map[string]any
 		_ = json.Unmarshal(<-client.send, &m)
 		return m
 	}
@@ -148,7 +148,7 @@ func TestGateLoginAsksAgainWhenThePlatformCouldNotTell(t *testing.T) {
 	gone := &Client{send: make(chan []byte, 1), gateRequest: httptest.NewRequest(http.MethodGet, "/addons/mui/ws", nil)}
 	s.checkGate(gone)
 	s.handleMessage(gone, []byte(`{"type":"auth"}`))
-	var m map[string]interface{}
+	var m map[string]any
 	_ = json.Unmarshal(<-gone.send, &m)
 	if m["code"] != "SESSION_REQUIRED" {
 		t.Fatalf("no session: %v", m)
