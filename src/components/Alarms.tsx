@@ -8,10 +8,10 @@ import { useEffects } from '../contexts/EffectsContext';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './ui/sheet';
 import { Button } from './ui/button';
 import { WebUILink } from './WebUILink';
-import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { errorText } from '../lib/errors';
+import { formatDate } from '../lib/format';
 
 // Alarm messages: triggered alarm system variables (water, smoke, burglary
 // through programs) that wait to be acknowledged, as the WebUI's
@@ -23,10 +23,7 @@ const formatAlarmTime = (time?: string) => {
   const date = new Date(time.replace(' ', 'T'));
   if (Number.isNaN(date.getTime())) return time;
   const today = new Date().toDateString() === date.toDateString();
-  return new Intl.DateTimeFormat(
-    getLocale(),
-    today ? { hour: '2-digit', minute: '2-digit' } : { dateStyle: 'short', timeStyle: 'short' },
-  ).format(date);
+  return formatDate(date, today ? { hour: '2-digit', minute: '2-digit' } : { dateStyle: 'short', timeStyle: 'short' });
 };
 
 const useAcknowledge = () => {

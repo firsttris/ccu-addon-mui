@@ -8,7 +8,8 @@ import type { Channel, DatapointValue } from '../types/types';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
-import { cn, formatNumber } from '../lib/utils';
+import { cn } from '../lib/utils';
+import { formatNumber } from '../lib/format';
 
 export const number = (value: DatapointValue | undefined) =>
   typeof value === 'number' && Number.isFinite(value) ? value : undefined;

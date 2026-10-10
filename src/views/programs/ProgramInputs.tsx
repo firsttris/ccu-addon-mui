@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useChannelList, useParamsetDescription, useSysvars } from '../../queries';
 import {
   Operation,
@@ -9,6 +9,7 @@ import {
 } from '../../types/types';
 import { NativeSelect } from '../../components/ui/select';
 import { ChannelField } from '../../components/ChannelField';
+import { Field } from '../../components/Field';
 import { Input } from '../../components/ui/input';
 import { type TranslationKey, useTranslations } from '../../i18n/utils';
 import { m } from '../../paraglide/messages';
@@ -18,14 +19,6 @@ import { isPercentUnit } from '../../controls/generic/parameters';
 // The inputs of the program editor: channels, datapoints, system variables
 // and values as the WebUI's condition and action rows offer them (sico.inc,
 // dest.inc).
-
-export const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-  // biome-ignore lint/a11y/noLabelWithoutControl: the control comes as children
-  <label className="flex min-w-0 flex-col gap-1 text-xs">
-    <span className="text-muted-foreground">{label}</span>
-    {children}
-  </label>
-);
 
 // A channel of any device, chosen in the channel dialog (pictures, search)
 export const ChannelSelect = ({
@@ -82,7 +75,7 @@ export const DatapointSelect = ({
   const t = useTranslations();
   const names = Object.keys(datapoints).sort();
   return (
-    <Field label={m.PRG_DATAPOINT()}>
+    <Field dense label={m.PRG_DATAPOINT()}>
       <NativeSelect
         className={inlineSelectClass}
         aria-label={m.PRG_DATAPOINT()}
@@ -104,7 +97,7 @@ export const DatapointSelect = ({
 export const SysvarSelect = ({ value, onChange }: { value: number; onChange: (sysvar: Sysvar) => void }) => {
   const { data: sysvars = [] } = useSysvars();
   return (
-    <Field label={m.PRG_KIND_SYSVAR()}>
+    <Field dense label={m.PRG_KIND_SYSVAR()}>
       <NativeSelect
         className={inlineSelectClass}
         aria-label={m.PRG_KIND_SYSVAR()}

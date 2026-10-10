@@ -6,15 +6,12 @@ import { NativeSelect } from '../../components/ui/select';
 import { Button } from '../../components/ui/button';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
-import { defaultLang } from '../../i18n/locale';
 import { Panel } from './Panel';
-import { formatNumber } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
 import type { EnergyPrice, InfoLed } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
 import { ToggleRow } from '../../components/ToggleRow';
-
-const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 4 });
+import { formatNumber } from '../../lib/format';
 
 // Bytes as "2,5 MB"
 const formatBytes = (bytes: number) => {
@@ -62,7 +59,7 @@ export const GeneralSettings = () => {
     if (!data) return;
     const p = data.energyPrice;
     setCurrency(p.currency);
-    const text = (v: number) => (v ? numberFormat.format(v) : '');
+    const text = (v: number) => (v ? formatNumber(v, 4) : '');
     setPrices({
       electricity: text(p.electricity),
       gas: text(p.gas),

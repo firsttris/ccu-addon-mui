@@ -50,7 +50,8 @@ export const NameField = ({
   );
 };
 
-const Field = ({ label, children }: { label: string; children: ReactNode }) => (
+// A labelled row of the channel's settings: the label beside its controls
+const MetaRow = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className="grid items-center gap-x-3 gap-y-1.5 sm:grid-cols-[7rem_minmax(0,1fr)]">
     <span className="text-xs text-muted-foreground">{label}</span>
     <div className="flex min-w-0 flex-wrap items-center gap-1.5">{children}</div>
@@ -114,7 +115,7 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
         const set = (groupId: number, value: boolean) =>
           run({ type: 'setGroupMember', groupId, channelId: channel.id, member: value, list });
         return (
-          <Field key={list} label={legend}>
+          <MetaRow key={list} label={legend}>
             <ul aria-label={`${legend} ${channel.address}`} className="contents">
               {assigned.map((group) => (
                 <li
@@ -151,11 +152,11 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
                 ))}
               </NativeSelect>
             )}
-          </Field>
+          </MetaRow>
         );
       })}
       {SWITCH_TYPES.has(channel.type) && (
-        <Field label={m.TILE()}>
+        <MetaRow label={m.TILE()}>
           <NativeSelect
             className="h-7 w-auto text-[13px] md:text-[13px]"
             aria-label={`${m.TILE()} ${channel.address}`}
@@ -172,10 +173,10 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
             <option value="light">{m.TILE_LIGHT()}</option>
             <option value="switch">{m.TILE_SWITCH()}</option>
           </NativeSelect>
-        </Field>
+        </MetaRow>
       )}
       {capabilities.channelOptions && (
-        <Field label={m.CHANNEL_OPTIONS()}>
+        <MetaRow label={m.CHANNEL_OPTIONS()}>
           <fieldset
             aria-label={`${m.CHANNEL_OPTIONS()} ${channel.address}`}
             disabled={!canEdit}
@@ -194,7 +195,7 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
               </label>
             ))}
           </fieldset>
-        </Field>
+        </MetaRow>
       )}
     </div>
   );

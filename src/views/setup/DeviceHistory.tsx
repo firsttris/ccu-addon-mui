@@ -3,20 +3,19 @@ import { useWebSocketActions } from '../../hooks/useWebsocket';
 import { useChannelList } from '../../queries';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { datapointLabel, formatEntryValue, formatTime } from '../History';
-import { defaultLang } from '../../i18n/locale';
 import { m } from '../../paraglide/messages';
 import type { HistoryEntry } from '../../types/protocol';
+import { formatDate, formatNumber } from '../../lib/format';
 
 // How many of the newest protocol entries are searched for a channel
 const SCAN = 500;
 
-const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 1 });
-const timeFormat = new Intl.DateTimeFormat(defaultLang, {
+const pointTimeStyle: Intl.DateTimeFormatOptions = {
   day: '2-digit',
   month: '2-digit',
   hour: '2-digit',
   minute: '2-digit',
-});
+};
 
 export interface Point {
   t: number;
@@ -60,7 +59,7 @@ const Chart = ({ label, points, unit }: { label: string; points: Point[]; unit: 
       <figcaption className="flex items-baseline justify-between gap-2 text-xs text-muted-foreground">
         <span>{label}</span>
         <span className="font-medium text-foreground tabular-nums">
-          {numberFormat.format(last.v)}
+          {formatNumber(last.v, 1)}
           {unit}
         </span>
       </figcaption>
@@ -81,12 +80,12 @@ const Chart = ({ label, points, unit }: { label: string; points: Point[]; unit: 
         />
       </svg>
       <div className="flex justify-between text-[11px] text-muted-foreground tabular-nums">
-        <span>{timeFormat.format(points[0].t)}</span>
+        <span>{formatDate(points[0].t, pointTimeStyle)}</span>
         <span>
-          {m.DEVHIST_RANGE({ min: numberFormat.format(Math.min(...vs)), max: numberFormat.format(Math.max(...vs)) })}
+          {m.DEVHIST_RANGE({ min: formatNumber(Math.min(...vs), 1), max: formatNumber(Math.max(...vs), 1) })}
           {unit}
         </span>
-        <span>{timeFormat.format(last.t)}</span>
+        <span>{formatDate(last.t, pointTimeStyle)}</span>
       </div>
     </figure>
   );

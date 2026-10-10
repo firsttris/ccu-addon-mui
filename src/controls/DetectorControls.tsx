@@ -12,8 +12,9 @@ import { HoldButton } from '../components/Gestures';
 import { Switch } from '../components/ui/switch';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
-import { cn, formatNumber } from '../lib/utils';
+import { cn } from '../lib/utils';
 import { useValueList } from './useValueList';
+import { formatNumber } from '../lib/format';
 
 export type Tone = 'calm' | 'active' | 'alarm';
 

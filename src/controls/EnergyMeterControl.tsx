@@ -1,12 +1,13 @@
 import { type ReactNode, useEffect, useRef } from 'react';
 import type { EnergyMeterChannel } from '../types/types';
-import { cn, formatNumber } from '../lib/utils';
+import { cn } from '../lib/utils';
 import ZapIcon from '~icons/lucide/zap';
 import FlameIcon from '~icons/lucide/flame';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 import { channelNumberOf } from '../lib/address';
+import { formatNumber } from '../lib/format';
 
 // All channels of one HmIP-ESI: channel 1 has the current power or gas flow,
 // channels 2-4 the meter readings. Which values are set depends on the

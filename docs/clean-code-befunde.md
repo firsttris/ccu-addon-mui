@@ -34,7 +34,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | 9 | Globale Variablen, Abhängigkeit von der Aufrufreihenfolge (erledigt bis auf `SetHome`) | Go | M |
 | 10 | Handler gehen an `home.Source` vorbei direkt zur ReGa (erledigt) | Go | M |
 | 11 | Zu große Frontend-Dateien (bis auf `DeviceSettings.tsx` erledigt) | Frontend | L |
-| 12 | Wiederholte UI-Bausteine und Zahlenformatierung | Frontend | M |
+| 12 | Wiederholte UI-Bausteine und Zahlenformatierung (erledigt) | Frontend | M |
 | 13 | Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen (größtenteils erledigt) | Go | L |
 | 14 | `integration_test.go` wiederholt dieselben Abläufe | Go-Tests | M |
 
@@ -264,7 +264,7 @@ Der Code ist jeweils nur verschoben. Ein Zeilenvergleich vor und nach dem Umzug 
 - **Noch offen:** `views/setup/DeviceSettings.tsx` (849 Zeilen) ist eine einzige Komponente. Hooks und
   eine Komponente pro Tab herauszulösen, ist ein Umbau mit Zustand. Das bekommt einen eigenen PR.
 
-### 12. Wiederholte UI-Bausteine und Zahlenformatierung
+### 12. Wiederholte UI-Bausteine und Zahlenformatierung: erledigt
 
 **UI-Bausteine**
 
@@ -285,6 +285,33 @@ Der Code ist jeweils nur verschoben. Ein Zeilenvergleich vor und nach dem Umzug 
 
 **Vorschlag:** Je ein gemeinsames `ToggleRow` und `Field`, einen Hook
 `useSliderDrag(ref, axis, step)`, überall `formatNumber` und dazu ein `formatDate` mit Cache.
+
+**Erledigt:**
+
+- **`Field`:** Es gibt nur noch `components/Field.tsx`. Die Variante `dense` ist die kleinere
+  Form, die der Programm-Editor und die Benachrichtigungsregeln nutzen. Das `Field` in
+  `ChannelMeta.tsx` war kein Formularfeld, sondern eine Zeile mit der Beschriftung neben den
+  Bedienelementen. Es heißt jetzt `MetaRow`.
+- **Zieh-Logik:** Der Hook `hooks/useSliderDrag.ts` übernimmt sie, mit Unit-Tests. Der Wert folgt
+  dem Zeiger und wird beim Loslassen einmal gesendet, ein abgebrochenes Ziehen sendet nichts.
+  Pfeiltasten senden erst, wenn sie ruhen. Mit `tapOnTouch` setzt ein Finger den Wert nur durch
+  Tippen, so wie bei den Rollläden. `LevelBar`, `HueBar` und `BlindsControl` nutzen den Hook.
+  Unverändert gleich ist ein Wert jetzt bei allen drei kein Telegramm mehr. Vorher sendeten der
+  Farbton und die Pfeiltasten der Rollläden ihn trotzdem.
+- **Zahlen und Daten:** `lib/format.ts` hält die Intl-Formate pro Sprache und Optionen im Cache:
+  `numberFormat`, `formatNumber` (aus `lib/utils.ts` hierher umgezogen) und `formatDate`. Kein
+  Modul legt mehr beim Laden ein eigenes `Intl.NumberFormat` oder `Intl.DateTimeFormat` an.
+
+Zwei Dinge bleiben, wie sie sind:
+
+- Die lokalen `Row` und `Section` tragen nur denselben Namen. Ihr Aufbau und ihre Bedeutung
+  unterscheiden sich, etwa ein `fieldset` mit Legende oder eine Zeile mit Hinweis und
+  Zurücksetzen. Nur `Links.tsx` und `Pairing.tsx` haben dieselbe einzeilige Flex-Zeile. Dafür
+  lohnt sich keine gemeinsame Komponente.
+- `TimeModuleDialog.tsx`, `programModel.ts` und `deviceHealth.ts` bekommen die Sprache als
+  Parameter, damit ihre Tests sie festlegen können.
+
+Die 72 Bildschirmfotos von `visual.spec.ts` sind pixelgleich mit `main`.
 
 ### 13. Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen: zum größten Teil erledigt
 
@@ -324,4 +351,5 @@ Jeder Schritt ist ein eigener PR:
 6. ~~Große Frontend-Dateien aufteilen (#11)~~ erledigt bis auf `DeviceSettings.tsx`.
 7. ~~Handler vereinheitlichen (#6, #7)~~ erledigt; ~~die langen Handler aufteilen (#13)~~ größtenteils erledigt.
 8. ~~Caches, Globale, ReGa-Aufrufe (#8, #9, #10)~~ erledigt.
-9. Der Rest: #12, #14, `DeviceSettings.tsx`.
+9. ~~UI-Bausteine und Zahlenformatierung (#12)~~ erledigt.
+10. Der Rest: #14, `DeviceSettings.tsx`, der Rest von #13.

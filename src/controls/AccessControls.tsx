@@ -7,19 +7,17 @@ import { useParamsetDescription, useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { Switch } from '../components/ui/switch';
 import { useEffects } from '../contexts/EffectsContext';
-import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
-import { cn, formatNumber } from '../lib/utils';
+import { cn } from '../lib/utils';
 import { keyLabels } from './ButtonsControl';
 import { useValueList } from './useValueList';
 import { channelNumberOf } from '../lib/address';
+import { formatNumber, formatDate } from '../lib/format';
 
 const byIndex = (channels: Channel[]) =>
   [...channels].sort((a, b) => channelNumberOf(a.address) - channelNumberOf(b.address));
 // The CCU's default name is "<type> <address>"
 const isDefaultName = (channel: Channel) => channel.name.endsWith(channel.address.replace(/^[^.]*\./, ''));
-
-const timeFormat = () => new Intl.DateTimeFormat(getLocale(), { hour: '2-digit', minute: '2-digit' });
 
 // --- Access authorisations (HmIP-FWI Wiegand interface, HmIP-WKP keypad,
 // the users of the door lock drives HmIP-DLD and HmIP-DLP, HmIP-FDC)
@@ -150,7 +148,7 @@ export const AccessControl = ({ channels }: { channels: Channel[] }) => {
             </span>
             <span role="status" className="text-[13px] text-muted-foreground">
               {last
-                ? `${last.granted ? m.ACCESS_GRANTED() : m.ACCESS_DENIED()} · ${last.label} · ${timeFormat().format(last.at)}`
+                ? `${last.granted ? m.ACCESS_GRANTED() : m.ACCESS_DENIED()} · ${last.label} · ${formatDate(last.at, { hour: '2-digit', minute: '2-digit' })}`
                 : m.USERS_ALLOWED({ count: allowed, total: users.length })}
             </span>
           </div>

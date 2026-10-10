@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import type { Channel, DatapointValue } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
+import { useSliderDrag } from '../hooks/useSliderDrag';
 import { useStateChanges } from './SwitchControl';
 import { dimLevel } from './DimmerControl';
 import { litTileStyle, PendantLamp, type RGB } from './light/PendantLamp';
@@ -36,33 +37,22 @@ const WHITES = [2700, 4000, 6500];
 const COLORS = [0, 30, 55, 120, 200, 275];
 
 export const HueBar = ({ label, hue, onChange }: { label: string; hue: number; onChange: (hue: number) => void }) => {
-  const bar = useRef<HTMLDivElement>(null);
-  const [drag, setDrag] = useState<number | null>(null);
-  const shown = drag ?? hue;
-  const at = (clientX: number) => {
-    // biome-ignore lint/style/noNonNullAssertion: only called from the pointer events of the mounted element
-    const rect = bar.current!.getBoundingClientRect();
-    return Math.round(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * 360);
-  };
+  const { ref, shown, handlers } = useSliderDrag<HTMLDivElement>({
+    value: hue,
+    axis: 'x',
+    valueAt: (fraction) => Math.round(fraction * 360),
+    onCommit: onChange,
+  });
   return (
     <div
-      ref={bar}
+      ref={ref}
       role="slider"
       tabIndex={0}
       aria-label={label}
       aria-valuemin={0}
       aria-valuemax={360}
       aria-valuenow={shown}
-      onPointerDown={(event) => {
-        event.currentTarget.setPointerCapture(event.pointerId);
-        setDrag(at(event.clientX));
-      }}
-      onPointerMove={(event) => drag !== null && setDrag(at(event.clientX))}
-      onPointerUp={() => {
-        if (drag !== null) onChange(drag);
-        setDrag(null);
-      }}
-      onPointerCancel={() => setDrag(null)}
+      {...handlers}
       onKeyDown={(event) => {
         const delta = event.key === 'ArrowRight' ? 10 : event.key === 'ArrowLeft' ? -10 : 0;
         if (!delta) return;

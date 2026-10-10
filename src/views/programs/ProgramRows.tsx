@@ -14,13 +14,13 @@ import {
   ChannelSelect,
   DatapointSelect,
   discreteOptions,
-  Field,
   NumberInput,
   SysvarSelect,
   sysvarOptions,
   useDatapoints,
   ValueSelect,
 } from './ProgramInputs';
+import { Field } from '../../components/Field';
 import {
   COMPARE,
   conditionKind,
@@ -71,7 +71,7 @@ const NumberCondition = ({
   const compare = numberCompares.some((c) => c.value === condition.compare) ? condition.compare : COMPARE.NUMBER_EQUAL;
   return (
     <>
-      <Field label={m.PRG_COMPARE()}>
+      <Field dense label={m.PRG_COMPARE()}>
         <NativeSelect
           className={inlineSelectClass}
           aria-label={m.PRG_COMPARE()}
@@ -85,7 +85,7 @@ const NumberCondition = ({
           ))}
         </NativeSelect>
       </Field>
-      <Field label={compare === COMPARE.RANGE ? m.RANGE_FROM() : m.PRG_VALUE()}>
+      <Field dense label={compare === COMPARE.RANGE ? m.RANGE_FROM() : m.PRG_VALUE()}>
         <NumberInput
           label={compare === COMPARE.RANGE ? m.RANGE_FROM() : m.PRG_VALUE()}
           value={condition.value1}
@@ -94,7 +94,7 @@ const NumberCondition = ({
         />
       </Field>
       {compare === COMPARE.RANGE && (
-        <Field label={m.RANGE_TO()}>
+        <Field dense label={m.RANGE_TO()}>
           <NumberInput
             label={m.RANGE_TO()}
             value={condition.value2}
@@ -180,7 +180,7 @@ export const ConditionRow = ({
 
   return (
     <Row>
-      <Field label={m.PRG_KIND()}>
+      <Field dense label={m.PRG_KIND()}>
         <NativeSelect
           className={inlineSelectClass}
           aria-label={m.PRG_KIND()}
@@ -240,7 +240,7 @@ export const ConditionRow = ({
         />
       )}
       {options && (
-        <Field label={m.PRG_VALUE()}>
+        <Field dense label={m.PRG_VALUE()}>
           <ValueSelect
             label={m.PRG_VALUE()}
             value={condition.value1}
@@ -251,7 +251,7 @@ export const ConditionRow = ({
       )}
       {isNumber && <NumberCondition condition={condition} parameter={parameter} onChange={onChange} />}
       {isText && (
-        <Field label={m.PRG_VALUE()}>
+        <Field dense label={m.PRG_VALUE()}>
           <Input
             className="h-9 w-40 md:text-[13px]"
             aria-label={m.PRG_VALUE()}
@@ -265,7 +265,7 @@ export const ConditionRow = ({
       )}
       {kind === 'other' && <span className="self-center text-sm text-muted-foreground">{m.PRG_KIND_OTHER()}</span>}
       {kind !== 'other' && parameter?.type !== 'ACTION' && (
-        <Field label={m.PRG_TRIGGER()}>
+        <Field dense label={m.PRG_TRIGGER()}>
           <NativeSelect
             className={inlineSelectClass}
             aria-label={m.PRG_TRIGGER()}
@@ -292,7 +292,7 @@ const DelayInput = ({ delay, onChange }: { delay: number; onChange: (seconds: nu
   const unit = delay > 0 && delay % 3600 === 0 ? 3600 : delay > 0 && delay % 60 === 0 ? 60 : 1;
   return (
     <>
-      <Field label={m.PRG_DELAY()}>
+      <Field dense label={m.PRG_DELAY()}>
         <NativeSelect
           className={inlineSelectClass}
           aria-label={m.PRG_DELAY()}
@@ -368,7 +368,7 @@ export const DestinationRow = ({
 
   return (
     <Row className={kind === 'script' ? 'items-start' : undefined}>
-      <Field label={m.PRG_KIND()}>
+      <Field dense label={m.PRG_KIND()}>
         <NativeSelect
           className={inlineSelectClass}
           aria-label={m.PRG_KIND()}
@@ -424,7 +424,7 @@ export const DestinationRow = ({
         />
       )}
       {canTakeValue && (
-        <Field label={m.PRG_VALUE_FROM()}>
+        <Field dense label={m.PRG_VALUE_FROM()}>
           <NativeSelect
             className={inlineSelectClass}
             aria-label={m.PRG_VALUE_FROM()}
@@ -448,7 +448,7 @@ export const DestinationRow = ({
         />
       )}
       {options && !fromSysvar && (
-        <Field label={m.PRG_VALUE()}>
+        <Field dense label={m.PRG_VALUE()}>
           <ValueSelect
             label={m.PRG_VALUE()}
             value={destination.value}
@@ -458,7 +458,7 @@ export const DestinationRow = ({
         </Field>
       )}
       {isNumber && (
-        <Field label={m.PRG_VALUE()}>
+        <Field dense label={m.PRG_VALUE()}>
           <NumberInput
             label={m.PRG_VALUE()}
             value={destination.value}
@@ -468,7 +468,7 @@ export const DestinationRow = ({
         </Field>
       )}
       {isText && !fromSysvar && (
-        <Field label={m.PRG_VALUE()}>
+        <Field dense label={m.PRG_VALUE()}>
           <Input
             className="h-9 w-40 md:text-[13px]"
             aria-label={m.PRG_VALUE()}

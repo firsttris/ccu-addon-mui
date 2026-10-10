@@ -10,16 +10,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { TableSkeletonRows } from '../components/ui/skeleton';
 import { useToast } from '../contexts/ToastContext';
 import { usePageTitle } from '../contexts/PageTitleContext';
-import { defaultLang } from '../i18n/locale';
 import { humanize } from '../controls/generic/parameters';
 import { m } from '../paraglide/messages';
 import type { HistoryEntry } from '../types/protocol';
 import { errorText } from '../lib/errors';
+import { formatDate, formatNumber } from '../lib/format';
 
 const PAGE = 100;
 
-const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 2 });
-const dateFormat = new Intl.DateTimeFormat(defaultLang, { dateStyle: 'medium', timeStyle: 'medium' });
+const entryTimeStyle: Intl.DateTimeFormatOptions = { dateStyle: 'medium', timeStyle: 'medium' };
 
 const texts = m as unknown as Record<string, (() => string) | undefined>;
 
@@ -29,7 +28,7 @@ export const datapointLabel = (datapoint: string) => texts[`HIST_DP_${datapoint}
 // "2026-10-03 21:00:05" as a local date
 export const formatTime = (time: string) => {
   const date = new Date(time.replace(' ', 'T'));
-  return Number.isNaN(date.getTime()) ? time : dateFormat.format(date);
+  return Number.isNaN(date.getTime()) ? time : formatDate(date, entryTimeStyle);
 };
 
 // The value of an entry: the WebUI's text for system variables, else the
@@ -43,8 +42,8 @@ export const formatEntryValue = (entry: HistoryEntry) => {
   }
   const number = Number(value);
   if (value.trim() !== '' && Number.isFinite(number)) {
-    if (datapoint === 'LEVEL' || datapoint === 'LEVEL_2') return `${numberFormat.format(number * 100)} %`;
-    return numberFormat.format(number);
+    if (datapoint === 'LEVEL' || datapoint === 'LEVEL_2') return `${formatNumber(number * 100, 2)} %`;
+    return formatNumber(number, 2);
   }
   return value;
 };
