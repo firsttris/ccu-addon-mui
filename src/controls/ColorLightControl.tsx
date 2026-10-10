@@ -40,6 +40,7 @@ export const HueBar = ({ label, hue, onChange }: { label: string; hue: number; o
   const [drag, setDrag] = useState<number | null>(null);
   const shown = drag ?? hue;
   const at = (clientX: number) => {
+    // biome-ignore lint/style/noNonNullAssertion: only called from the pointer events of the mounted element
     const rect = bar.current!.getBoundingClientRect();
     return Math.round(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * 360);
   };

@@ -229,7 +229,7 @@ const SecurityLevel = ({ current, disabled }: { current: string; disabled: boole
   const [busy, setBusy] = useState(false);
   const password = usePasswordRetry();
   const choice = selected ?? (current === 'CUSTOM' ? null : (current as Level));
-  const apply = () =>
+  const apply = (level: Level) =>
     password.run(
       async (pw) => {
         setBusy(true);
@@ -237,7 +237,7 @@ const SecurityLevel = ({ current, disabled }: { current: string; disabled: boole
           await request(
             {
               type: 'setSecurityLevel',
-              level: choice!,
+              level,
               ...(pw !== undefined ? { password: pw } : {}),
             },
             { queue: false, timeoutMs: 60000 },
@@ -285,7 +285,7 @@ const SecurityLevel = ({ current, disabled }: { current: string; disabled: boole
         <>
           {password.field}
           <div className="flex justify-end">
-            <Button type="button" disabled={disabled || busy || password.blocked} onClick={apply}>
+            <Button type="button" disabled={disabled || busy || password.blocked} onClick={() => apply(selected)}>
               {m.SEC_LEVEL_APPLY()}
             </Button>
           </div>

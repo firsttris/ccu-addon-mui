@@ -285,6 +285,7 @@ const SingleControl = ({
     case 'percent':
       return <PercentSlider label={label} parameter={parameter} value={num} onChange={(next) => onSet(name, next)} />;
     case 'timeOfDay': {
+      // biome-ignore lint/style/noNonNullAssertion: controlOf picks timeOfDay only when there is a step
       const step = timeOfDayStep(name, parameter)!;
       const max = parameter.max as number;
       // DST times in quarter hours, decalcification in half hours (the

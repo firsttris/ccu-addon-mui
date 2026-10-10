@@ -93,7 +93,7 @@ export const TimePicker = ({
             className,
           )}
         >
-          <span>{minutes === undefined ? '--:--' : `${pad(hour!)}:${pad(minute!)}`}</span>
+          <span>{hour === undefined || minute === undefined ? '--:--' : `${pad(hour)}:${pad(minute)}`}</span>
           <ClockIcon className="size-4 text-muted-foreground" />
         </button>
       </Popover.Trigger>

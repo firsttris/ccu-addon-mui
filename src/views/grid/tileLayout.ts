@@ -153,7 +153,7 @@ export const flowLayout = (layout: Layout, cols: number): Layout => {
     x += w;
     rowHeight = Math.max(rowHeight, t.h);
   }
-  return layout.map((t) => placed.get(t.i)!);
+  return layout.map((t) => placed.get(t.i) ?? t);
 };
 
 // Overlapping while dragging: nothing is pushed away, flowLayout puts every

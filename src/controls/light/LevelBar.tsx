@@ -28,6 +28,7 @@ export const LevelBar = ({ label, value, onChange, color = WARM }: LevelBarProps
   const shown = drag ?? value;
 
   const at = (clientX: number) => {
+    // biome-ignore lint/style/noNonNullAssertion: only called from the pointer events of the mounted element
     const rect = bar.current!.getBoundingClientRect();
     return Math.round((Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * 100) / STEP) * STEP;
   };

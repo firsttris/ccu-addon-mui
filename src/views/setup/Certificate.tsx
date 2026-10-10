@@ -85,7 +85,8 @@ export const Certificate = () => {
         try {
           await request(
             type === 'uploadCertificate'
-              ? { type, pem: file!.pem, ...(pw !== undefined ? { password: pw } : {}) }
+              ? // biome-ignore lint/style/noNonNullAssertion: uploading is disabled until a file is picked
+                { type, pem: file!.pem, ...(pw !== undefined ? { password: pw } : {}) }
               : { type, ...(pw !== undefined ? { password: pw } : {}) },
             { queue: false, timeoutMs: 60000 },
           );

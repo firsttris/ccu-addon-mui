@@ -589,11 +589,11 @@ export const TimeChart = ({
           className="cursor-crosshair"
         />
       </svg>
-      {hoverTime !== null && tooltip.length > 0 && !drag && (
+      {hover !== null && hoverTime !== null && tooltip.length > 0 && !drag && (
         <div
           role="tooltip"
           className="pointer-events-none absolute top-2 z-10 flex max-w-80 flex-col gap-1 rounded-lg border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md"
-          style={hover! > width / 2 ? { right: width - hover! + 12 } : { left: hover! + 12 }}
+          style={hover > width / 2 ? { right: width - hover + 12 } : { left: hover + 12 }}
         >
           <span className="text-muted-foreground">{tooltipFormat.format(hoverTime)}</span>
           {tooltip.map(({ s, v, before, range }) => (

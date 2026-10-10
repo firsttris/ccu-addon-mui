@@ -59,12 +59,14 @@ export const GroupedSettings = ({
           {m.EDIT_WEEK_PROFILE()}
         </Button>
       )}
-      {GROUP_ORDER.filter((group) => groups.has(group)).map((group) => {
+      {GROUP_ORDER.map((group) => {
+        const description = groups.get(group);
+        if (!description) return null;
         const title = groupTitles[group as Exclude<ParameterGroup, 'hidden'>]();
         const view = (
           <SettingsView
             label={`${label} ${title}`}
-            description={groups.get(group)!}
+            description={description}
             values={values}
             changed={changed}
             readOnly={readOnly}
@@ -72,7 +74,7 @@ export const GroupedSettings = ({
           />
         );
         if (folded.has(group)) {
-          const count = Object.keys(groups.get(group)!).length;
+          const count = Object.keys(description).length;
           return (
             <details key={group} className="group rounded-lg border">
               <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm font-medium [&::-webkit-details-marker]:hidden">

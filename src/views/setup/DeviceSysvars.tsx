@@ -24,7 +24,9 @@ export const DeviceSysvars = ({ assigned, names }: { assigned: Sysvar[]; names: 
         <li key={sysvar.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
           <span className="flex flex-col gap-0.5">
             <span className="font-medium">{sysvar.name}</span>
-            <span className="text-xs text-muted-foreground">{names.get(sysvar.channel!)}</span>
+            <span className="text-xs text-muted-foreground">
+              {sysvar.channel !== undefined && names.get(sysvar.channel)}
+            </span>
           </span>
           <span className="flex items-center gap-2">
             <SysvarControl

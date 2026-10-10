@@ -177,6 +177,7 @@ export const useLinkProfiles = (interfaceName: string, link: Link, enabled = tru
     });
   const { data: table } = useQuery({
     queryKey: ['linkProfiles', receiverType],
+    // biome-ignore lint/style/noNonNullAssertion: enabled only with a receiverType
     queryFn: () => loadProfileTable(receiverType!),
     staleTime: Infinity,
     enabled: enabled && !!receiverType,

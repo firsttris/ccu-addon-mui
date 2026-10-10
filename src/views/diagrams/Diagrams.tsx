@@ -366,6 +366,7 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
     >
       {series.map((s) => {
         const stats = seriesStats(s);
+        const cost = stats?.sum !== undefined ? costOf(stats.sum, s.unit, energyPrice) : null;
         return (
           <li key={s.key}>
             <button
@@ -395,10 +396,10 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
                     </span>
                   )}
                 </span>
-                {stats?.sum !== undefined && costOf(stats.sum, s.unit, energyPrice) !== null && (
+                {cost !== null && energyPrice && (
                   <span className="text-xs font-medium text-emerald-700 tabular-nums dark:text-emerald-400">
                     {m.DIAG_COST({
-                      value: costFormat(energyPrice!.currency).format(costOf(stats.sum, s.unit, energyPrice)!),
+                      value: costFormat(energyPrice.currency).format(cost),
                     })}
                   </span>
                 )}

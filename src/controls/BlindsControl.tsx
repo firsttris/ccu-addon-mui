@@ -45,6 +45,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const send = (percent: number) => setDataPoint(interfaceName, address, 'LEVEL', percent / 100);
 
   const levelAt = (clientY: number) => {
+    // biome-ignore lint/style/noNonNullAssertion: only called from the pointer events of the mounted element
     const rect = windowRef.current!.getBoundingClientRect();
     const fraction = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
     return Math.round(((1 - fraction) * 100) / STEP) * STEP;
