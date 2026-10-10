@@ -33,7 +33,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | 8 | Selbstgebaute TTL-Caches neben `cachedList[T]` (erledigt) | Go | M |
 | 9 | Globale Variablen, Abhängigkeit von der Aufrufreihenfolge (erledigt bis auf `SetHome`) | Go | M |
 | 10 | Handler gehen an `home.Source` vorbei direkt zur ReGa (erledigt) | Go | M |
-| 11 | Zu große Frontend-Dateien (bis auf `DeviceSettings.tsx` erledigt) | Frontend | L |
+| 11 | Zu große Frontend-Dateien (erledigt) | Frontend | L |
 | 12 | Wiederholte UI-Bausteine und Zahlenformatierung (erledigt) | Frontend | M |
 | 13 | Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen (größtenteils erledigt) | Go | L |
 | 14 | `integration_test.go` wiederholt dieselben Abläufe (erledigt) | Go-Tests | M |
@@ -246,9 +246,10 @@ keine gibt. Das Anlegen, Bearbeiten, Umbenennen und Löschen von Systemvariablen
 
 ## Groß: lange Dateien und Funktionen
 
-### 11. Zu große Frontend-Dateien: bis auf `DeviceSettings.tsx` erledigt
+### 11. Zu große Frontend-Dateien: erledigt
 
-Der Code ist jeweils nur verschoben. Ein Zeilenvergleich vor und nach dem Umzug zeigt dieselben Zeilen.
+Bis auf `DeviceSettings.tsx` ist der Code jeweils nur verschoben. Ein Zeilenvergleich vor und nach dem
+Umzug zeigt dieselben Zeilen.
 
 | Datei | Vorher | Nachher |
 |---|---|---|
@@ -257,12 +258,24 @@ Der Code ist jeweils nur verschoben. Ein Zeilenvergleich vor und nach dem Umzug 
 | `controls/generic/SettingsView.tsx` | 712 | 274, dazu `settingValues.ts` und `inputs/` mit fünf Widgets |
 | `hooks/useWebsocket.tsx` | 634 | 563, dazu `authStorage.ts` und `requestError.ts` |
 | `views/Dashboard.tsx` | 543 | 281, dazu `components/NavTabs.tsx`, `DashboardOverview.tsx` und `dashboardSections.tsx` |
+| `views/setup/DeviceSettings.tsx` | 718 | 237, dazu fünf Dateien und ein Test in `views/setup/device/` |
 
 - **`useWebsocket`:** Der Hook selbst bleibt eine Funktion mit rund 375 Zeilen. Ihn zu zerlegen wäre ein
   Umbau mit eigenem Risiko. Seine Hooks und Kontexte bleiben im Modul, weil 95 Importe und sieben Tests
   sie von dort holen.
-- **Noch offen:** `views/setup/DeviceSettings.tsx` (849 Zeilen) ist eine einzige Komponente. Hooks und
-  eine Komponente pro Tab herauszulösen, ist ein Umbau mit Zustand. Das bekommt einen eigenen PR.
+- **`DeviceSettings`:** Die Seite war eine einzige Komponente. Sie hält jetzt nur noch den Zustand, der
+  ihre Teile verbindet: die Entwürfe der Änderungen, den gezeigten Kanal und den Tab. Der Rest steht in
+  `views/setup/device/`:
+  - `deviceSettingsModel.ts`: reine Funktionen, mit Unit-Tests. `withDraft` und `changesOf` für die
+    Entwürfe, `transferOf` für den Stand der Übertragung, `channelCardsOf` für die Kanalkarten, dazu
+    `weekProgramKindOf` und `weekProgramTargetsOf`.
+  - `useDeviceSettings.ts`: die Hooks `useMasterSettings` (die MASTER-Paramsets) und `useConfigTransfer`
+    (`CONFIG_PENDING` nach dem Speichern).
+  - `DeviceHeader.tsx` mit dem Dialog zum Löschen, `ChannelsTab.tsx` mit den Kanalkarten, `SaveBar.tsx`
+    mit der Bestätigung der Änderungen.
+
+  Die Gerätseite sieht pixelgenau aus wie vorher. Verglichen wurden 18 Bilder: acht Geräte und Tabs auf
+  Desktop und Telefon, dazu der Dialog zum Löschen. Abweichungen gibt es nur in der Uhrzeit der Kopfzeile.
 
 ### 12. Wiederholte UI-Bausteine und Zahlenformatierung: erledigt
 
@@ -371,4 +384,5 @@ Jeder Schritt ist ein eigener PR:
 8. ~~Caches, Globale, ReGa-Aufrufe (#8, #9, #10)~~ erledigt.
 9. ~~UI-Bausteine und Zahlenformatierung (#12)~~ erledigt.
 10. ~~Integrationstests (#14)~~ erledigt.
-11. Der Rest: `DeviceSettings.tsx`, der Rest von #13.
+11. ~~`DeviceSettings.tsx` (#11)~~ erledigt.
+12. Der Rest: der Rest von #13.
