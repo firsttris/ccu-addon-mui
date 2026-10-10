@@ -402,7 +402,7 @@ Nach der ersten Runde habe ich noch einmal nachgemessen: die größten Dateien u
 | 16 | `rega.parseChannels` (95 Zeilen) | Go | erledigt |
 | 17 | `ccu-export` `export` (108 Zeilen) | Go | erledigt |
 | 18 | `Diagrams.tsx` (647), `TimeChart.tsx` (620), `WeekProgramSheet.tsx` (558), `Links.tsx` (540) | Frontend | erledigt |
-| 19 | Fake-CCU: `fakeccu.go` (1648 Zeilen), Handler mit 100–126 Zeilen | Go-Tests | offen |
+| 19 | Fake-CCU: `fakeccu.go` (1648 Zeilen), Handler mit 100–126 Zeilen | Go-Tests | erledigt |
 
 - **#15 `handleUsers`:** Es gibt jetzt eine Methode pro Nachricht: `listUsers`, `deleteUser` und
   `saveUser`. `userByID` sucht den Benutzer, wie er gerade ist.
@@ -428,6 +428,19 @@ Nach der ersten Runde habe ich noch einmal nachgemessen: die größten Dateien u
 
   Das Markup war gleich. Die Diagramme, die Verknüpfungen und die Geräteseite decken zusätzlich die
   Stack-E2E-Tests ab.
+- **#19 Fake-CCU:** Keine Funktion der Fake-CCU hat mehr als 70 Zeilen.
+  - **`fakeccu.go`** (1648 Zeilen) behält nur den Aufbau. Seine Abschnitte sind eigene Dateien:
+    - `rega.go`, `rega_home.go` und `rega_devices.go`: die ReGa
+    - `webui.go`: die WebUI
+    - `rpcserver.go`: XML-RPC
+
+    `occulited.go` (878 Zeilen) ist ebenso aufgeteilt, in `occulited_meta.go`, `occulited_rpc.go` und
+    `occulited_groups.go`. Ein sortierter Zeilenvergleich zeigt: Diese Inhalte sind nur verschoben.
+  - **`handleWebUI` und `handleOcculited`:** Beide gehen jetzt Tabellen von Routen durch (`route` mit
+    `path`/`pathPrefix`). Die JSON-RPC-Methoden mit Sitzung stehen in `sessionMethods`. Die
+    Sitzungsprüfung, die vorher sechsmal kopiert war, steht damit an einer Stelle.
+  - **Die Handler des HMServers (`handleGroups`) und von occulited:** Ihre Knoten und Heizgruppen sind
+    Tabellen pro Seite und Methode, die Hilfen dazu reine Funktionen statt Closures.
 
 ## Vorgeschlagene Reihenfolge
 
