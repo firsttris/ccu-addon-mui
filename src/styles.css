@@ -466,6 +466,227 @@ html body[data-scroll-locked] {
   }
 }
 
+/* Login (Login.tsx): a grid with two drifting glows, the card rises in, an
+   error shakes, and under the card the logo's house comes to life. At rest
+   (effects off, reduced motion, screenshots) every light is on and the
+   blind up; the animations only run under .login-fx. */
+.login {
+  --login-house: #3b82f6;
+  --login-house-fill: #eff6ff;
+  --login-pane: oklch(0.922 0 0);
+  --login-blind: #bfdbfe;
+  --login-lamp: #f59e0b;
+  --login-lamp-glow: rgb(245 158 11 / 0.45);
+  --login-grid: rgb(0 0 0 / 0.045);
+}
+:root[data-theme='dark'] .login {
+  /* The blue of the logo (public/icon.svg) */
+  --login-house: #4f8ff7;
+  --login-house-fill: rgb(79 143 247 / 0.08);
+  --login-pane: rgb(255 255 255 / 0.07);
+  --login-blind: #94a3b8;
+  --login-lamp: #fcd34d;
+  --login-lamp-glow: rgb(252 211 77 / 0.55);
+  --login-grid: rgb(255 255 255 / 0.04);
+}
+.login-grid {
+  background-image:
+    linear-gradient(var(--login-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--login-grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+.login-glow {
+  position: absolute;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 9999px;
+  filter: blur(64px);
+  pointer-events: none;
+}
+.login-sheen {
+  transform: translateX(-100%);
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%);
+}
+.login-house * {
+  transform-box: fill-box;
+}
+.login-house-fill {
+  fill: var(--login-house-fill);
+}
+.login-wall {
+  fill: none;
+  stroke: var(--login-house);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.login-ground {
+  stroke: var(--login-house);
+  stroke-opacity: 0.35;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.login-ccu {
+  fill: var(--login-house);
+}
+.login-ring {
+  fill: none;
+  stroke: var(--login-house);
+  stroke-width: 1.6;
+  transform-origin: center;
+  opacity: 0;
+}
+.login-pane {
+  fill: var(--login-pane);
+  stroke: var(--login-house);
+  stroke-width: 1.5;
+}
+.login-door {
+  fill: none;
+  stroke: var(--login-house);
+  stroke-width: 2.5;
+}
+.login-lamp {
+  fill: var(--login-lamp);
+}
+.login-lamp-glow {
+  fill: var(--login-lamp-glow);
+  filter: blur(6px);
+}
+.login-blind {
+  fill: url(#login-slats);
+  transform-origin: top;
+  transform: scaleY(0.08);
+}
+.login-blind-box {
+  stroke: var(--login-house);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.login-slat {
+  fill: var(--login-blind);
+}
+.login-slat-gap {
+  fill: var(--login-house);
+  opacity: 0.6;
+}
+
+.login-fx .login-card {
+  animation: login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.login-fx .login-shake {
+  animation: login-shake 0.45s ease-in-out;
+}
+.login-fx .login-glow {
+  animation: login-glow 14s ease-in-out infinite;
+}
+.login-fx .group:hover:not(:disabled) .login-sheen {
+  animation: login-sheen 0.9s ease;
+}
+/* One radio ring per command */
+.login-fx .login-ring {
+  animation: login-ring 2.5s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+}
+.login-fx .login-led {
+  animation: login-led 2.5s steps(1) infinite;
+}
+.login-fx .login-lamp,
+.login-fx .login-lamp-glow {
+  animation: login-lamp 10s ease-in-out infinite backwards;
+}
+.login-fx .login-blind {
+  animation: login-blind 10s ease-in-out infinite backwards;
+}
+@keyframes login-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+}
+@keyframes login-shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+@keyframes login-glow {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(40px, 30px) scale(1.15);
+  }
+}
+@keyframes login-sheen {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes login-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+@keyframes login-led {
+  0%,
+  70%,
+  100% {
+    opacity: 0.35;
+  }
+  8% {
+    opacity: 1;
+  }
+}
+/* Light on for about 5 s, then off */
+@keyframes login-lamp {
+  0%,
+  4% {
+    opacity: 0;
+  }
+  9%,
+  52% {
+    opacity: 1;
+  }
+  60%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes login-blind {
+  0%,
+  4% {
+    transform: scaleY(0.08);
+  }
+  16%,
+  52% {
+    transform: scaleY(1);
+  }
+  64%,
+  100% {
+    transform: scaleY(0.08);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
