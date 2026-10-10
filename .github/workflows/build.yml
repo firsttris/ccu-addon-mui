@@ -49,6 +49,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Formatting and lint rules (biome.json); warnings are shown, errors fail
+      - name: Biome
+        run: npx biome ci .
+
       - name: Protocol types up to date
         run: npm run generate:protocol && git diff --exit-code src/types/protocol.ts
 
