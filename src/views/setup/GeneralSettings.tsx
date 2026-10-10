@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { Input } from '../../components/ui/input';
 import { NativeSelect } from '../../components/ui/select';
-import { Switch } from '../../components/ui/switch';
 import { Button } from '../../components/ui/button';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
@@ -13,6 +12,7 @@ import { formatNumber } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
 import type { EnergyPrice, InfoLed } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
+import { ToggleRow } from '../../components/ToggleRow';
 
 const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 4 });
 
@@ -33,30 +33,6 @@ const parseNumber = (text: string) => {
   const value = Number(text.trim().replace(',', '.'));
   return text.trim() !== '' && Number.isFinite(value) && value >= 0 ? value : null;
 };
-
-const ToggleRow = ({
-  id,
-  label,
-  hint,
-  checked,
-  disabled,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  hint: string;
-  checked: boolean;
-  disabled: boolean;
-  onChange: (on: boolean) => void;
-}) => (
-  <div className="flex items-start justify-between gap-4">
-    <label htmlFor={id} className="flex flex-col gap-0.5 text-sm">
-      {label}
-      <span className="text-xs text-muted-foreground">{hint}</span>
-    </label>
-    <Switch id={id} checked={checked} disabled={disabled} onCheckedChange={onChange} />
-  </div>
-);
 
 // The WebUI's general settings (Systemsteuerung → Allgemeine Einstellungen,
 // the HMServer's StorageSettingsDialog.ftl): energy prices for the costs of
