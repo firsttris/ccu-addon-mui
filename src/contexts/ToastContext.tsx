@@ -45,6 +45,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {children}
       <div className="fixed left-1/2 bottom-4 -translate-x-1/2 z-[2000] flex flex-col gap-2 w-[min(420px,calc(100vw_-_32px))]">
         {toasts.map((toast) => (
+          // biome-ignore lint/a11y/useKeyWithClickEvents: clicking only dismisses early; a toast goes away by itself
           <div
             key={toast.id}
             role="alert"

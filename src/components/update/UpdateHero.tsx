@@ -103,6 +103,7 @@ export const UpdateHero = ({
           />
         ))}
       <svg
+        aria-hidden="true"
         viewBox="0 0 120 120"
         className={cn(
           'absolute inset-0 size-full -rotate-90',

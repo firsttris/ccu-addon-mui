@@ -483,7 +483,9 @@ const Row = ({
       <div className="flex min-w-[180px] flex-1 flex-col">
         <span id={id} className={cn('flex items-center gap-1.5 text-sm', changed && 'font-semibold')}>
           {label}
-          {changed && <span aria-label={m.SETTING_CHANGED()} className="size-1.5 shrink-0 rounded-full bg-blue-600" />}
+          {changed && (
+            <span role="img" aria-label={m.SETTING_CHANGED()} className="size-1.5 shrink-0 rounded-full bg-blue-600" />
+          )}
         </span>
         {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
       </div>

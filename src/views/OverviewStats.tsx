@@ -106,7 +106,14 @@ export const TemperatureStat = ({ index, average }: { index: number; average: nu
       label={m.INDOOR_AVERAGE()}
       picture={
         <PictureBox background={climate(shown)}>
-          <svg viewBox="0 0 24 24" className="size-6" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="size-6"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <defs>
               <linearGradient id={mercury} x1="0" y1="1" x2="0" y2="0">
                 <stop offset="0%" stopColor="#ef4444" />
@@ -283,11 +290,19 @@ export const WindowsStat = ({ index, open }: { index: number; open: string[] }) 
           )}
         >
           {/* Frame */}
-          <svg viewBox="0 0 24 24" className="absolute size-6" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="absolute size-6"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          >
             <rect x="4" y="3.5" width="16" height="17" rx="2" />
           </svg>
           {/* The sash, which opens inwards */}
           <svg
+            aria-hidden="true"
             viewBox="0 0 24 24"
             className="absolute size-6 origin-[30%_50%] transition-transform duration-700 ease-[cubic-bezier(.3,1.4,.5,1)]"
             style={{ transform: anyOpen ? 'rotateY(-62deg)' : 'none' }}

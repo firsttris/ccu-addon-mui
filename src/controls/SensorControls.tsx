@@ -70,6 +70,8 @@ export const MeasureTile = ({
       {caption && <span className="-mb-2 text-xs font-medium text-muted-foreground">{caption}</span>}
       <div className="flex items-end justify-between gap-3">
         <span
+          // A name only goes on an element with a role: read as one value with its unit
+          role="img"
           className="text-[40px] leading-none font-semibold tracking-[-0.04em] tabular-nums"
           aria-label={`${label} ${value} ${unit}`}
         >

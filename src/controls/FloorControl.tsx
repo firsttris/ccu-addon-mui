@@ -92,6 +92,7 @@ const FloorPicture = ({ value, label }: { value: number; label: string }) => {
         flowing &&
         [18, 46, 74].slice(0, Math.ceil(open * 3)).map((left, i) => (
           <svg
+            aria-hidden="true"
             key={left}
             viewBox="0 0 8 24"
             className="fx-heat absolute bottom-0 h-6 w-2"

@@ -225,7 +225,9 @@ export const ParamsetView = ({
             title={name}
           >
             <span className={named ? 'min-w-0' : 'truncate'}>{nameOf(name)}</span>
-            {changed?.has(name) && <span aria-label="•" className="size-1.5 shrink-0 rounded-full bg-blue-600" />}
+            {changed?.has(name) && (
+              <span role="img" aria-label="•" className="size-1.5 shrink-0 rounded-full bg-blue-600" />
+            )}
           </dt>
           <dd className="m-0 flex items-center justify-end text-right tabular-nums">
             <ParameterValue

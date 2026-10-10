@@ -358,7 +358,11 @@ export const WeekProfileSheet = ({
                     >
                       {m.PROFILE_N({ n })}
                       {runningProfile === n && (
-                        <span className="size-1.5 rounded-full bg-green-500" aria-label={m.ACTIVE_PROFILE()} />
+                        <span
+                          role="img"
+                          className="size-1.5 rounded-full bg-green-500"
+                          aria-label={m.ACTIVE_PROFILE()}
+                        />
                       )}
                     </button>
                   ))}

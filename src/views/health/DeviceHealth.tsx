@@ -43,6 +43,8 @@ const Battery = ({ device }: { device: Health }) => {
   const label = state === 'empty' ? m.HEALTH_BATTERY_EMPTY() : state === 'low' ? m.HEALTH_BATTERY_LOW() : m.STATUS_OK();
   return (
     <span
+      // A name only goes on an element with a role: icon and text read as one
+      role="img"
       className={cn(
         'inline-flex items-center gap-1.5 tabular-nums',
         state === 'empty' && 'font-medium text-red-700 dark:text-red-300',
@@ -72,6 +74,8 @@ const Signal = ({ device }: { device: Health }) => {
     state === 'good' ? m.HEALTH_SIGNAL_GOOD() : state === 'fair' ? m.HEALTH_SIGNAL_FAIR() : m.HEALTH_SIGNAL_POOR();
   return (
     <span
+      // As the battery: bars and text read as one
+      role="img"
       className="inline-flex items-center gap-2 whitespace-nowrap tabular-nums"
       aria-label={`${m.HEALTH_SIGNAL()}: ${label}, ${rssi} dBm`}
     >

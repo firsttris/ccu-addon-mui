@@ -18,6 +18,7 @@ import { m } from '../../paraglide/messages';
 // dest.inc).
 
 export const Field = ({ label, children }: { label: string; children: ReactNode }) => (
+  // biome-ignore lint/a11y/noLabelWithoutControl: the control comes as children
   <label className="flex min-w-0 flex-col gap-1 text-xs">
     <span className="text-muted-foreground">{label}</span>
     {children}

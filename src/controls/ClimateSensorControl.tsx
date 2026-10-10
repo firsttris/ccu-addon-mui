@@ -179,13 +179,15 @@ export const ClimateSensorControl = ({ channel }: { channel: Channel }) => {
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-col">
             <span
+              // A name only goes on an element with a role: read as one value with its unit
+              role="img"
               className="text-[44px] leading-none font-semibold tracking-[-0.04em] tabular-nums"
               style={
                 effects.on && temperature !== undefined
                   ? { textShadow: `0 0 ${18 * effects.k}px rgba(${r},${g},${b},0.45)` }
                   : undefined
               }
-              aria-label={temperature !== undefined ? `${m.TEMPERATURE()} ${format(temperature)} °C` : undefined}
+              aria-label={`${m.TEMPERATURE()} ${temperature !== undefined ? `${format(temperature)} °C` : '–'}`}
             >
               {temperature !== undefined ? format(temperature) : '–'}
               <span className="ml-0.5 align-top text-lg font-medium text-muted-foreground">°C</span>

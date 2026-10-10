@@ -44,12 +44,12 @@ export const ScriptResult = ({ result }: { result: Result | null }) => {
     );
   }
   return (
-    <pre
+    <section
       aria-label={m.SCRIPT_OUTPUT()}
       className="max-h-60 overflow-auto rounded-md bg-muted/60 p-2 font-mono text-xs whitespace-pre-wrap text-foreground"
     >
       {result.output || m.SCRIPT_NO_OUTPUT()}
-    </pre>
+    </section>
   );
 };
 
@@ -93,6 +93,7 @@ export const ScriptTestDialog = ({ onDone }: { onDone: () => void }) => {
           aria-label={m.PRG_KIND_SCRIPT()}
           className="min-h-48 w-full rounded-md border bg-transparent p-2 font-mono text-[13px] text-foreground"
           spellCheck={false}
+          // biome-ignore lint/a11y/noAutofocus: the dialog opens to type a script
           autoFocus
           placeholder={'WriteLine("Hallo");'}
           value={script}

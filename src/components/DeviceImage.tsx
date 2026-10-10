@@ -75,6 +75,7 @@ export const DeviceImage = ({ type, size, channel, className, fallback }: Device
           />
           {shapes && (
             <svg
+              aria-hidden="true"
               className="pointer-events-none absolute text-sky-500 dark:text-sky-400"
               style={{ left: pad, top: pad, width: inner, height: inner }}
               viewBox="0 0 1 1"

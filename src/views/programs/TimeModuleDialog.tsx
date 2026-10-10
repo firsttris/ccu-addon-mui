@@ -78,6 +78,7 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 );
 
 const Labeled = ({ label, children }: { label: string; children: ReactNode }) => (
+  // biome-ignore lint/a11y/noLabelWithoutControl: the control comes as children
   <label className="flex flex-wrap items-center gap-2 text-sm">
     <span className="min-w-24 text-muted-foreground">{label}</span>
     {children}

@@ -172,6 +172,7 @@ export const ChannelPicker = ({
                     channel={pointed?.startsWith(`${group.address}:`) ? pointed.split(':')[1] : undefined}
                   />
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    {/* biome-ignore lint/a11y/noLabelWithoutControl: holds the "all" checkbox when the device has several channels */}
                     <label className="flex items-center gap-2">
                       <span className="min-w-0 flex-1 truncate font-medium">{group.name}</span>
                       {!single && group.channels.length > 1 && open.length > 0 && (
