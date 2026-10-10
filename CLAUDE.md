@@ -1,5 +1,14 @@
 # Notes for Claude
 
+## Documentation
+
+The project's documentation is in `docs/`
+(https://github.com/firsttris/ccu-addon-mui/tree/main/docs). Read what
+touches the change before starting: `entwicklung.md` for commands,
+conventions and how to add a message, a tile or a text, `architektur.md`
+for how app and server are built, `protokoll.md` for the messages between
+them, `tests.md` for the tests and the fake CCU.
+
 ## Reference implementation: OpenCCU
 
 Base every CCU feature on how the original WebUI does it, taken from the
