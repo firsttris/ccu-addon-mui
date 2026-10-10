@@ -1,7 +1,7 @@
 import { getLocale } from '../../paraglide/runtime';
-import { formatNumber } from '../../lib/utils';
 import type { ParameterDescription } from '../../types/types';
 import { humanize, parameterLabel } from './parameters';
+import { formatNumber } from '../../lib/format';
 
 // How a device setting (MASTER parameter) is best edited, from its type,
 // range, unit and name, so the settings need no text fields where a

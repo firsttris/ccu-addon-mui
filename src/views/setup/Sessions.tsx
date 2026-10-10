@@ -1,7 +1,6 @@
 import { Panel } from './Panel';
 import { useRevokeSession, useSessions } from '../../queries';
 import { useToast } from '../../contexts/ToastContext';
-import { defaultLang } from '../../i18n/locale';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { m } from '../../paraglide/messages';
 import { TableSkeletonRows } from '../../components/ui/skeleton';
@@ -9,8 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from '../../components/ui/badge';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { errorText } from '../../lib/errors';
+import { formatDate } from '../../lib/format';
 
-const dateFormat = new Intl.DateTimeFormat(defaultLang, { dateStyle: 'medium', timeStyle: 'short' });
+const lastUsedStyle: Intl.DateTimeFormatOptions = { dateStyle: 'medium', timeStyle: 'short' };
 
 // Devices logged in to the add-on; a lost tablet can be logged out here
 export const Sessions = () => {
@@ -49,7 +49,9 @@ export const Sessions = () => {
                   )}
                 </TableCell>
                 <TableCell>{session.user}</TableCell>
-                <TableCell className="text-muted-foreground">{dateFormat.format(new Date(session.lastUsed))}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatDate(new Date(session.lastUsed), lastUsedStyle)}
+                </TableCell>
                 <TableCell className="text-right">
                   {!session.current && (
                     <DialogButton

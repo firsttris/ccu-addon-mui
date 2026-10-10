@@ -14,7 +14,7 @@ import { useSystemInfo } from '../../queries';
 import { usePageTitle } from '../../contexts/PageTitleContext';
 import { Badge } from '../../components/ui/badge';
 import { m } from '../../paraglide/messages';
-import { cn, formatNumber } from '../../lib/utils';
+import { cn } from '../../lib/utils';
 import { DialogButton } from '../../components/ConfirmDialog';
 import { useWebSocketActions, useWebSocketContext } from '../../hooks/useWebsocket';
 import { LiteSystemLinks } from './LiteHints';
@@ -26,6 +26,7 @@ import { Button } from '../../components/ui/button';
 import DownloadIcon from '~icons/lucide/circle-arrow-down';
 import type { CheckFirmwareUpdateResponse, SystemState as State } from '../../types/protocol';
 import { WEBUI_URL } from '../../components/WebUILink';
+import { formatNumber } from '../../lib/format';
 
 export { isNewerVersion };
 

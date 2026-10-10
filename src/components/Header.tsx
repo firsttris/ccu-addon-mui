@@ -31,7 +31,6 @@ import { useRooms, useServiceMessages, useTrades } from '../queries';
 import { ServiceMessagesSheet } from './ServiceMessages';
 import { AlarmButton, AlarmsSheet } from './Alarms';
 import { AdminLockButton } from './AdminLock';
-import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { Button } from './ui/button';
@@ -40,6 +39,7 @@ import { Switch } from './ui/switch';
 import { useWakeLock, useWakeLockSetting, wakeLockAvailable } from './WakeLock';
 import { Label } from './ui/label';
 import { Separator } from './ui/separator';
+import { formatDate } from '../lib/format';
 
 // A short reconnect (e.g. at startup) should not flash a warning
 const CONNECTION_WARNING_DELAY_MS = 2000;
@@ -55,9 +55,8 @@ const useNow = () => {
 
 const Clock = () => {
   const now = useNow();
-  const locale = getLocale();
-  const date = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
-  const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(now);
+  const date = formatDate(now, { weekday: 'long', day: 'numeric', month: 'long' });
+  const time = formatDate(now, { hour: '2-digit', minute: '2-digit' });
   return (
     <span className="truncate text-sm text-muted-foreground">
       {date} · {time}

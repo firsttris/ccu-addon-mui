@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { NativeSelect } from '../../components/ui/select';
 import { Input } from '../../components/ui/input';
-import { formatNumber } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
 import { PERMANENT, TIME_PRESETS } from './linkProfiles';
+import { formatNumber } from '../../lib/format';
 
 // A time of a link profile as the WebUI's time selector offers it: common
 // durations, "not active" (0), "permanent" and a value of one's own.

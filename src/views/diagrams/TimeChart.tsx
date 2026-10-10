@@ -1,29 +1,27 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { defaultLang } from '../../i18n/locale';
 import { useEffects } from '../../contexts/EffectsContext';
 import { m } from '../../paraglide/messages';
 import { isBinary, nearest, niceTicks, timeTicks, DAY, type Bar, type ChartPoint, type RenderSeries } from './chart';
+import { formatDate, formatNumber } from '../../lib/format';
 
 const TOP = 14;
 const BOTTOM = 26;
 const AXIS = 46;
 const LANE = 18;
 
-const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 2 });
-const tickNumber = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 1 });
-const hourFormat = new Intl.DateTimeFormat(defaultLang, { hour: '2-digit', minute: '2-digit' });
-const dayFormat = new Intl.DateTimeFormat(defaultLang, { day: '2-digit', month: '2-digit' });
-const monthFormat = new Intl.DateTimeFormat(defaultLang, { month: 'short', year: '2-digit' });
-const tooltipFormat = new Intl.DateTimeFormat(defaultLang, {
+const hourStyle: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
+const dayStyle: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit' };
+const monthStyle: Intl.DateTimeFormatOptions = { month: 'short', year: '2-digit' };
+const tooltipStyle: Intl.DateTimeFormatOptions = {
   weekday: 'short',
   day: '2-digit',
   month: '2-digit',
   year: 'numeric',
   hour: '2-digit',
   minute: '2-digit',
-});
+};
 
-export const formatValue = (v: number, unit: string) => `${numberFormat.format(v)}${unit ? ` ${unit}` : ''}`;
+export const formatValue = (v: number, unit: string) => `${formatNumber(v, 2)}${unit ? ` ${unit}` : ''}`;
 
 interface Scale {
   key: string;
@@ -240,9 +238,9 @@ export const TimeChart = ({
   const span = to - from;
   const xTicks = timeTicks(from, to, Math.max(3, Math.floor(plotWidth / 90)));
   const formatTick = (t: number) => {
-    if (span <= 2 * DAY) return hourFormat.format(t);
-    if (span <= 120 * DAY) return dayFormat.format(t);
-    return monthFormat.format(t);
+    if (span <= 2 * DAY) return formatDate(t, hourStyle);
+    if (span <= 120 * DAY) return formatDate(t, dayStyle);
+    return formatDate(t, monthStyle);
   };
 
   const pointerX = (event: React.PointerEvent) => {
@@ -345,7 +343,7 @@ export const TimeChart = ({
                 textAnchor="end"
                 className="fill-muted-foreground text-[11px] tabular-nums"
               >
-                {tickNumber.format(v)}
+                {formatNumber(v, 1)}
               </text>
             </g>
           ))}
@@ -358,7 +356,7 @@ export const TimeChart = ({
               dy="0.32em"
               className="fill-muted-foreground text-[11px] tabular-nums"
             >
-              {tickNumber.format(v)}
+              {formatNumber(v, 1)}
             </text>
           ))}
         {axisLeft?.unit && (
@@ -595,7 +593,7 @@ export const TimeChart = ({
           className="pointer-events-none absolute top-2 z-10 flex max-w-80 flex-col gap-1 rounded-lg border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md"
           style={hover > width / 2 ? { right: width - hover + 12 } : { left: hover + 12 }}
         >
-          <span className="text-muted-foreground">{tooltipFormat.format(hoverTime)}</span>
+          <span className="text-muted-foreground">{formatDate(hoverTime, tooltipStyle)}</span>
           {tooltip.map(({ s, v, before, range }) => (
             <span key={s.key} className="flex items-center gap-2">
               <span className="size-2 shrink-0 rounded-full" style={{ background: s.color }} />
@@ -604,7 +602,7 @@ export const TimeChart = ({
                 {formatSeriesValue(s, v)}
                 {range && (
                   <span className="ml-1 font-normal text-muted-foreground">
-                    ({numberFormat.format(range[0])}–{numberFormat.format(range[1])})
+                    ({formatNumber(range[0], 2)}–{formatNumber(range[1], 2)})
                   </span>
                 )}
                 {before !== undefined && (

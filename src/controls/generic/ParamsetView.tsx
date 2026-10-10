@@ -6,7 +6,7 @@ import {
   ParameterFlag,
   type ParamsetDescription,
 } from '../../types/types';
-import { defaultLang, type TranslationKey, useTranslations } from '../../i18n/utils';
+import { type TranslationKey, useTranslations } from '../../i18n/utils';
 import { m } from '../../paraglide/messages';
 import { Switch } from '../../components/ui/switch';
 import { Input } from '../../components/ui/input';
@@ -14,11 +14,10 @@ import { NativeSelect } from '../../components/ui/select';
 import { Button } from '../../components/ui/button';
 import { parameterLabel } from './parameters';
 import { isPercentUnit } from './parameters';
+import { formatNumber } from '../../lib/format';
 
 // Renders a channel's parameters from its paramset description: the element
 // follows the parameter's type, writable parameters get inputs.
-
-const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 2 });
 
 // HomeMatic gives levels as 0..1 with the unit "100%"
 const toDisplay = (p: ParameterDescription, value: number) => (isPercentUnit(p) ? value * 100 : value);
@@ -57,7 +56,7 @@ export const formatParameterValue = (parameter: ParameterDescription, value: Dat
     case 'FLOAT':
     case 'INTEGER':
       return typeof value === 'number'
-        ? `${numberFormat.format(toDisplay(parameter, value))} ${unitOf(parameter)}`.trim()
+        ? `${formatNumber(toDisplay(parameter, value), 2)} ${unitOf(parameter)}`.trim()
         : String(value);
   }
   return String(value);
@@ -175,7 +174,7 @@ export const ParameterValue = (props: ParameterProps) => {
       return (
         <>
           {typeof value === 'number'
-            ? `${numberFormat.format(toDisplay(parameter, value))} ${unitOf(parameter)}`.trim()
+            ? `${formatNumber(toDisplay(parameter, value), 2)} ${unitOf(parameter)}`.trim()
             : '–'}
         </>
       );

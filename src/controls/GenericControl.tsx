@@ -1,12 +1,10 @@
 import type { DatapointValue, GenericChannel, ParamsetDescription } from '../types/types';
 import { useParamsetDescription, useSetDataPoint } from '../queries';
 import { ParamsetView, shownParameters } from './generic/ParamsetView';
-import { defaultLang } from '../i18n/locale';
 import { WebUILink } from '../components/WebUILink';
 import { Tile } from '../components/Tile';
 import { m } from '../paraglide/messages';
-
-const numberFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 2 });
+import { formatNumber } from '../lib/format';
 
 interface ViewProps {
   channel: GenericChannel;
@@ -28,7 +26,7 @@ export const GenericControlView = ({ channel, description, onSet = () => {} }: V
       return value ? m.YES() : m.NO();
     }
     if (typeof value === 'number') {
-      return numberFormat.format(value);
+      return formatNumber(value, 2);
     }
     return value;
   };

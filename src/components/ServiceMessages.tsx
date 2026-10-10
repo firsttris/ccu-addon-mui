@@ -20,6 +20,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { WebUILink } from './WebUILink';
 import { errorText } from '../lib/errors';
 import { groupBy } from '../lib/groupBy';
+import { formatDate } from '../lib/format';
 
 type Severity = 'error' | 'warning' | 'info';
 
@@ -88,12 +89,7 @@ const formatTimestamp = (timestamp?: string) => {
   if (!timestamp) return '';
   const date = new Date(timestamp.replace(' ', 'T'));
   if (Number.isNaN(date.getTime())) return timestamp;
-  return new Intl.DateTimeFormat(getLocale(), {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
+  return formatDate(date, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 };
 
 // Messages of the same device together, in order of appearance

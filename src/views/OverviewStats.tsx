@@ -2,7 +2,8 @@ import { type CSSProperties, type ReactNode, useEffect, useId, useLayoutEffect, 
 import LightbulbIcon from '~icons/lucide/lightbulb';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
-import { cn, formatNumber } from '../lib/utils';
+import { cn } from '../lib/utils';
+import { formatNumber } from '../lib/format';
 
 // The figures above the tiles, each with a small picture that moves like
 // the tiles do: the thermometer rises, the bulb glows, the window opens.

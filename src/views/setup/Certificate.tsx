@@ -7,11 +7,11 @@ import { Badge } from '../../components/ui/badge';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { useToast } from '../../contexts/ToastContext';
-import { getLocale } from '../../paraglide/runtime';
 import { Panel } from './Panel';
 import { usePasswordRetry } from './usePasswordRetry';
 import { m } from '../../paraglide/messages';
 import { errorText } from '../../lib/errors';
+import { formatDate } from '../../lib/format';
 
 // Websocket messages are limited to 128 KiB; certificate chains are far
 // smaller
@@ -60,7 +60,6 @@ export const Certificate = () => {
   const notAfter = data.notAfter ? new Date(data.notAfter) : undefined;
   const expired = notAfter !== undefined && notAfter.getTime() < Date.now();
   const expiresSoon = notAfter !== undefined && !expired && notAfter.getTime() - Date.now() < 30 * DAY;
-  const dateFormat = new Intl.DateTimeFormat(getLocale(), { dateStyle: 'medium' });
 
   const pick = async (picked: File | undefined) => {
     setFile(null);
@@ -131,7 +130,7 @@ export const Certificate = () => {
             <>
               <dt className="text-muted-foreground">{m.CERT_VALID_UNTIL()}</dt>
               <dd className="flex flex-wrap items-center gap-2">
-                {dateFormat.format(notAfter)}
+                {formatDate(notAfter, { dateStyle: 'medium' })}
                 {expired && <Badge variant="destructive">{m.CERT_EXPIRED()}</Badge>}
                 {expiresSoon && <Badge variant="warning">{m.CERT_EXPIRES_SOON()}</Badge>}
               </dd>

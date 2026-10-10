@@ -6,19 +6,18 @@ import { ElevateDialog } from '../../components/ElevateDialog';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { useToast } from '../../contexts/ToastContext';
-import { defaultLang } from '../../i18n/locale';
 import { Panel } from './Panel';
 import { RestoreBackup, RestoreButton } from './RestoreBackup';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { m } from '../../paraglide/messages';
 import { errorText } from '../../lib/errors';
+import { formatNumber } from '../../lib/format';
 
 // Creating a backup packs all of /usr/local on the CCU: that takes a while
 export const BACKUP_TIMEOUT_MS = 5 * 60 * 1000;
 
-const sizeFormat = new Intl.NumberFormat(defaultLang, { maximumFractionDigits: 1 });
 const formatSize = (bytes: number) =>
-  bytes >= 1024 * 1024 ? `${sizeFormat.format(bytes / 1024 / 1024)} MB` : `${sizeFormat.format(bytes / 1024)} kB`;
+  bytes >= 1024 * 1024 ? `${formatNumber(bytes / 1024 / 1024, 1)} MB` : `${formatNumber(bytes / 1024, 1)} kB`;
 
 // Saves what the server hands out once under a random address (a backup,
 // the log files)

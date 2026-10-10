@@ -42,6 +42,7 @@ import {
 } from './chart';
 import type { Diagram, DiagramSeries, EnergyPrice, GetDiagramDataResponse } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
+import { formatDate, numberFormat } from '../../lib/format';
 
 const periodLabels: Record<Period, () => string> = {
   day: m.DIAG_PERIOD_DAY,
@@ -50,13 +51,13 @@ const periodLabels: Record<Period, () => string> = {
   year: m.DIAG_PERIOD_YEAR,
 };
 
-const rangeFormat = new Intl.DateTimeFormat(defaultLang, {
+const rangeStyle: Intl.DateTimeFormatOptions = {
   day: '2-digit',
   month: '2-digit',
   year: 'numeric',
   hour: '2-digit',
   minute: '2-digit',
-});
+};
 const MINUTE = 60 * 1000;
 // Points of a line: about one per two pixels of a wide chart
 const MAX_LINE_POINTS = 600;
@@ -87,7 +88,7 @@ export const costOf = (sum: number, unit: string, price?: EnergyPrice): number |
   return null;
 };
 
-const costFormat = (currency: string) => new Intl.NumberFormat(defaultLang, { style: 'currency', currency });
+const costFormat = (currency: string) => numberFormat({ style: 'currency', currency });
 
 type Range = { period: Period; end: number | null } | { period: Period; from: number; to: number; zoomed: true };
 
@@ -355,7 +356,7 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
             {m.DIAG_LIVE()}
           </span>
         )}
-        {rangeFormat.format(from)} – {rangeFormat.format(to)}
+        {formatDate(from, rangeStyle)} – {formatDate(to, rangeStyle)}
       </span>
     </div>
   );
