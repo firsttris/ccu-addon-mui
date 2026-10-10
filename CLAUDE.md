@@ -38,6 +38,24 @@ merged, reset the working branch to the current `origin/main`
 change. Never merge `main` into the branch, so earlier, already merged
 commits don't show up again in the next PR.
 
+## Language
+
+Commit messages, pull requests and the docs in German; comments and
+identifiers in the code in English. The app's texts go in both
+`messages/de.json` and `messages/en.json`.
+
+## With every change
+
+Update what the change affects, in the same PR, and only that:
+
+- the tests: unit, Go, E2E or stack tests for what changed, the fake CCU
+  (`go-server/pkg/fakeccu`, `fixtures/`) when the server talks to the CCU
+  in a new way;
+- the docs in `docs/` that describe it (e.g. `entwicklung.md`,
+  `architektur.md`, `protokoll.md`, `tests.md`, `vergleich-ccu3.md`);
+- the README (`README.md` and `README.en.md`) when a feature a user sees
+  is added, changed or removed.
+
 ## Code style
 
 Functional, not object-oriented: pure functions (data in, data out),
