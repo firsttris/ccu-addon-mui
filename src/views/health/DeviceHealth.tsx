@@ -184,6 +184,7 @@ export const DeviceHealth = () => {
       <Panel aria-label={m.HEALTH_DEVICES()}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2>{m.HEALTH_DEVICES()}</h2>
+          {/* biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing */}
           <div className="flex rounded-lg border p-0.5 text-sm" role="group">
             {[
               { value: false, label: m.HEALTH_ATTENTION({ count: attention.length }) },

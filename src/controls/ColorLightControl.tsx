@@ -150,6 +150,7 @@ export const ColorLightControl = ({ channel }: { channel: Channel }) => {
           onChange={(v) => set('LEVEL', v / 100)}
         />
         {hasHue && <HueBar label={m.COLOR_OF({ name: channel.name })} hue={hue} onChange={pickColor} />}
+        {/* biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing */}
         <div className="flex flex-wrap justify-between gap-1.5" role="group" aria-label={m.QUICK_COLORS()}>
           {(hasWhite || hasHue) &&
             WHITES.map((k) => (

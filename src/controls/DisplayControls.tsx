@@ -497,6 +497,7 @@ export const Rc19DisplayControl = ({ channel }: { channel: Channel }) => {
         {select(m.DISPLAY_BACKLIGHT(), message.backlight, backlights, 'backlight')}
         {select(m.DISPLAY_BEEP(), message.beep, beeps, 'beep')}
       </div>
+      {/* biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing */}
       <div role="group" aria-label={m.DISPLAY_SYMBOLS()} className="flex flex-wrap gap-1.5">
         {rc19Symbols.map((symbol) => (
           <button

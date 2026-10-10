@@ -189,6 +189,7 @@ export const DiagramEditor = ({ diagram, onClose }: { diagram?: Diagram; onClose
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1.5 text-sm text-muted-foreground">{m.DIAG_PLACES()}</legend>
             {placeGroups.map((group) => (
+              // biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing
               <div
                 key={group.label}
                 className="flex flex-wrap items-center gap-1.5"

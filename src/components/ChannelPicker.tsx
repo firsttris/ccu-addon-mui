@@ -149,6 +149,7 @@ export const ChannelPicker = ({
             </Label>
           </div>
         )}
+        {/* biome-ignore lint/a11y/useSemanticElements: Safari drops the list role of a ul without bullets; the role says it explicitly */}
         <div className="-mx-6 min-h-0 flex-1 overflow-y-auto border-y px-6" role="list" aria-label={m.PICKER_DEVICES()}>
           {groups.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">{m.PICKER_NONE()}</p>}
           {groups.map((group) => {
@@ -157,6 +158,7 @@ export const ChannelPicker = ({
             const open = group.channels.filter((c) => !chosen.has(c.id)).map((c) => c.id);
             const allOn = open.length > 0 && open.every((id) => selected.has(id));
             return (
+              // biome-ignore lint/a11y/useSemanticElements: see the list role above
               <div key={group.address} role="listitem" aria-label={group.name}>
                 {heading && (
                   <div className="sticky top-0 z-10 -mx-6 bg-background/95 px-6 pt-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase backdrop-blur">

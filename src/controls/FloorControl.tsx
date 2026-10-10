@@ -27,6 +27,7 @@ const FloorPicture = ({ value, label }: { value: number; label: string }) => {
   const open = value / 100;
   const flowing = value > 0;
   return (
+    // biome-ignore lint/a11y/useSemanticElements: drawn by the app; the native meter draws itself
     <div
       role="meter"
       aria-label={label}

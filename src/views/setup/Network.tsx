@@ -138,6 +138,7 @@ export const Network = () => {
           { dhcp: true, label: m.NET_DHCP() },
           { dhcp: false, label: m.NET_MANUAL() },
         ].map((option) => (
+          // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
           <button
             key={String(option.dhcp)}
             type="button"

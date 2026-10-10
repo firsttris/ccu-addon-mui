@@ -204,6 +204,7 @@ const Segmented = ({
 }) => (
   <div role="radiogroup" aria-label={label} className="inline-flex w-fit flex-wrap rounded-lg bg-muted p-0.5">
     {options.map((option, index) => (
+      // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
       <button
         key={option}
         type="button"
@@ -473,6 +474,7 @@ const Row = ({
 }) => {
   const id = useId();
   return (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing
     <div
       className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2.5"
       role="group"
@@ -528,6 +530,7 @@ export const SettingsView = ({ label, description, values, onSet, readOnly = fal
     value === p.default ||
     (typeof p.default === 'number' && typeof value === 'number' && Math.abs(p.default - value) < 1e-6);
   return (
+    // biome-ignore lint/a11y/useSemanticElements: Safari drops the list role of a ul without bullets; the role says it explicitly
     <div aria-label={label} role="list" className="flex flex-col divide-y">
       {settings.map((setting) => {
         if (setting.kind === 'duration') {
@@ -535,6 +538,7 @@ export const SettingsView = ({ label, description, values, onSet, readOnly = fal
           const offDefault =
             !isDefault(setting.value, values[setting.valueName]) || !isDefault(setting.unit, values[setting.unitName]);
           return (
+            // biome-ignore lint/a11y/useSemanticElements: see the list role above
             <div role="listitem" key={setting.name}>
               <Row
                 label={rowLabel}
@@ -559,6 +563,7 @@ export const SettingsView = ({ label, description, values, onSet, readOnly = fal
         const control = controlOf(name, parameter, writable);
         const hint = control === 'stepper' || control === 'number' ? rangeHint(name, parameter) : undefined;
         return (
+          // biome-ignore lint/a11y/useSemanticElements: see the list role above
           <div role="listitem" key={name}>
             <Row
               label={rowLabel}

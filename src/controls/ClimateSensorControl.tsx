@@ -58,6 +58,7 @@ const HumidityRing = ({ humidity }: { humidity: number }) => {
   const circumference = 2 * Math.PI * r;
   const level = comfort(humidity);
   return (
+    // biome-ignore lint/a11y/useSemanticElements: drawn by the app; the native meter draws itself
     <div
       className="relative size-[68px] shrink-0"
       role="meter"

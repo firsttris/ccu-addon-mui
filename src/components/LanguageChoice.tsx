@@ -68,6 +68,7 @@ export const LanguageChoice = () => {
         className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1"
       >
         {choices.map(({ value, label }) => (
+          // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
           <button
             type="button"
             key={value}

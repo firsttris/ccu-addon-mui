@@ -52,6 +52,7 @@ export const RgbwColorControl = ({ channel }: { channel: Channel }) => {
       <Header channel={channel} color={color} state={white ? m.RGBW_WHITE() : `${m.COLOR()} ${hue}°`} />
       <div className="flex flex-col gap-3 px-3.5 pt-3 pb-3.5">
         <HueBar label={m.COLOR_OF({ name: channel.name })} hue={hue} onChange={(h) => set(hueToColor(h))} />
+        {/* biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing */}
         <div className="flex flex-wrap justify-between gap-1.5" role="group" aria-label={m.QUICK_COLORS()}>
           <button
             type="button"

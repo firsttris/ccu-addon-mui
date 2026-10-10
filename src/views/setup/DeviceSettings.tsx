@@ -568,8 +568,7 @@ export const DeviceSettings = () => {
       )}
 
       {canEdit && sections.length > 0 && (tab === 'channels' || changes.length > 0) && (
-        <div
-          role="region"
+        <section
           aria-label={m.SETTINGS_SAVE_BAR()}
           className={`sticky bottom-4 z-10 flex flex-wrap items-center justify-end gap-2 rounded-xl border p-3 shadow-lg backdrop-blur-md transition-colors ${changes.length > 0 ? 'border-blue-500/40 bg-blue-50/90 dark:bg-blue-950/60' : 'bg-background/85'}`}
         >
@@ -612,7 +611,7 @@ export const DeviceSettings = () => {
             <SendIcon />
             {m.SETTINGS_SAVE_TRANSFER()} {changes.length > 0 ? `(${changes.length})` : ''}
           </DialogButton>
-        </div>
+        </section>
       )}
 
       {deleting && (

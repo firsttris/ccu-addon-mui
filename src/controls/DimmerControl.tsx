@@ -123,6 +123,7 @@ export const DimmerControl = ({ channel }: { channel: Channel }) => {
         {colorIndex !== undefined && (
           <div className="grid grid-cols-8 gap-1" role="radiogroup" aria-label={m.BACKLIGHT_COLOR()}>
             {BSL_COLORS.map((c, i) => (
+              // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
               <button
                 key={c.name}
                 type="button"

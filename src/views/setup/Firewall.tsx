@@ -60,6 +60,7 @@ const Segmented = <T extends string>({
 }) => (
   <div role="radiogroup" aria-label={label} className="inline-flex w-fit rounded-lg bg-muted p-0.5">
     {options.map((option) => (
+      // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
       <button
         key={option.value}
         type="button"

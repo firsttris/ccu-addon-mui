@@ -209,6 +209,7 @@ const Versions = () => {
                   <Badge variant={module.connected ? 'success' : 'destructive'}>
                     {module.connected ? m.CONNECTED() : m.DISCONNECTED()}
                   </Badge>
+                  {/* biome-ignore lint/a11y/useSemanticElements: drawn by the app; the native meter draws itself */}
                   <div
                     className="h-2 w-40 overflow-hidden rounded-full bg-muted"
                     role="meter"

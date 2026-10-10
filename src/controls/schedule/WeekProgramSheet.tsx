@@ -183,6 +183,7 @@ const EntryDialog = ({
                   ['sunset', m.SUNSET(), { condition: 1, astroType: 1 }],
                 ] as const
               ).map(([key, label, patch]) => (
+                // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
                 <button
                   key={key}
                   type="button"
@@ -261,6 +262,7 @@ const EntryDialog = ({
                     [0, m.OFF()],
                   ] as const
                 ).map(([level, label]) => (
+                  // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
                   <button
                     key={level}
                     type="button"

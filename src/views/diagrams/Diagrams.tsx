@@ -284,6 +284,7 @@ const DiagramCard = ({ diagram, canEdit, names, compact = false, energyPrice }: 
 
   const toolbar = (
     <div className="flex flex-wrap items-center gap-2">
+      {/* biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing */}
       <div role="group" aria-label={m.DIAG_PERIOD()} className="inline-flex rounded-lg bg-muted p-0.5">
         {(Object.keys(periods) as Period[]).map((p) => (
           <button

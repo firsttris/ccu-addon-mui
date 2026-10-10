@@ -233,6 +233,7 @@ export const GeneralSettings = () => {
 
       <h3 className="mt-2 text-sm font-medium">{m.GEN_STORAGE()}</h3>
       <div className="flex flex-col gap-1.5 text-sm">
+        {/* biome-ignore lint/a11y/useSemanticElements: drawn by the app; the native meter draws itself */}
         <div
           className="h-2 w-full max-w-md overflow-hidden rounded-full bg-muted"
           role="meter"

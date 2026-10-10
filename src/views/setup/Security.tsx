@@ -261,6 +261,7 @@ const SecurityLevel = ({ current, disabled }: { current: string; disabled: boole
       </h3>
       <div role="radiogroup" aria-label={m.SEC_LEVEL()} className="grid gap-2 sm:grid-cols-3">
         {LEVELS.map((level) => (
+          // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
           <button
             key={level.id}
             type="button"

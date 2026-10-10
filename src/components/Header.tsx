@@ -246,6 +246,7 @@ const NavMenu = ({
                   className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1"
                 >
                   {effectLevels.map(({ level, label }) => (
+                    // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
                     <button
                       type="button"
                       key={level}
@@ -322,6 +323,7 @@ const StartPageChoice = () => {
         className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"
       >
         {options.map(({ value, label }) => (
+          // biome-ignore lint/a11y/useSemanticElements: a segmented switch: buttons with role radio and aria-checked; native radios would change its look
           <button
             type="button"
             key={value}

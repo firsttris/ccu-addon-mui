@@ -115,6 +115,7 @@ const WeekdayButtons = ({
 }) => {
   const x = useTimeTexts();
   return (
+    // biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing
     <div role="group" aria-label={label} className="flex flex-wrap gap-1">
       {WEEKDAYS.map((bit, i) => (
         <button
