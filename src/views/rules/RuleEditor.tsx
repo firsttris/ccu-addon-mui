@@ -11,13 +11,13 @@ import { NativeSelect } from '../../components/ui/select';
 import {
   ChannelSelect,
   DatapointSelect,
-  Field,
   NumberInput,
   ValueSelect,
   discreteOptions,
   useChannelInfo,
   useDatapoints,
 } from '../programs/ProgramInputs';
+import { Field } from '../../components/Field';
 import { datapointLabel } from '../History';
 import { enumLabel } from '../../controls/generic/settingKinds';
 import { m } from '../../paraglide/messages';
@@ -100,7 +100,7 @@ const ConditionRow = ({
           }}
         />
       </div>
-      <Field label={m.PRG_COMPARE()}>
+      <Field dense label={m.PRG_COMPARE()}>
         <NativeSelect
           className={inlineSelectClass}
           aria-label={m.PRG_COMPARE()}
@@ -114,7 +114,7 @@ const ConditionRow = ({
           ))}
         </NativeSelect>
       </Field>
-      <Field label={m.PRG_VALUE()}>
+      <Field dense label={m.PRG_VALUE()}>
         {options ? (
           <ValueSelect
             label={m.PRG_VALUE()}
@@ -201,7 +201,7 @@ export const RuleEditor = ({ rule: initial, onClose }: { rule: NotificationRule;
           if (valid) save.mutate();
         }}
       >
-        <Field label={m.NAME()}>
+        <Field dense label={m.NAME()}>
           <Input
             autoFocus
             className="h-9"
@@ -249,7 +249,7 @@ export const RuleEditor = ({ rule: initial, onClose }: { rule: NotificationRule;
         </fieldset>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label={m.RULE_DURATION()}>
+          <Field dense label={m.RULE_DURATION()}>
             <span className="flex items-center gap-1.5">
               <Input
                 type="number"
@@ -263,7 +263,7 @@ export const RuleEditor = ({ rule: initial, onClose }: { rule: NotificationRule;
               <span className="text-sm text-muted-foreground">{m.RULE_DURATION_UNIT()}</span>
             </span>
           </Field>
-          <Field label={m.RULE_WINDOW()}>
+          <Field dense label={m.RULE_WINDOW()}>
             <span className="flex flex-wrap items-center gap-2">
               <NativeSelect
                 className="h-9 w-auto"
@@ -297,7 +297,7 @@ export const RuleEditor = ({ rule: initial, onClose }: { rule: NotificationRule;
           </Field>
         </div>
 
-        <Field label={m.RULE_MESSAGE()}>
+        <Field dense label={m.RULE_MESSAGE()}>
           <Input
             className="h-9"
             value={rule.message}
