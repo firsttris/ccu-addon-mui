@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
 import { cn } from '../../lib/utils';
+import { snap, useSliderDrag } from '../../hooks/useSliderDrag';
 import { type RGB, WARM } from './PendantLamp';
 
 const STEP = 5;
@@ -16,31 +16,17 @@ interface LevelBarProps {
 // release, arrow keys change it in 5 % steps. A vertical swipe scrolls the
 // page (touch-pan-y) and sends nothing (pointercancel).
 export const LevelBar = ({ label, value, onChange, color = WARM }: LevelBarProps) => {
-  const bar = useRef<HTMLDivElement>(null);
-  const [drag, setDrag] = useState<number | null>(null);
-  const keyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (keyTimer.current) clearTimeout(keyTimer.current);
-    },
-    [],
-  );
-  const shown = drag ?? value;
-
-  const at = (clientX: number) => {
-    // biome-ignore lint/style/noNonNullAssertion: only called from the pointer events of the mounted element
-    const rect = bar.current!.getBoundingClientRect();
-    return Math.round((Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * 100) / STEP) * STEP;
-  };
-  const commit = (next: number) => {
-    if (next !== value) onChange(next);
-    setDrag(null);
-  };
+  const { ref, shown, dragging, handlers, nudge } = useSliderDrag<HTMLDivElement>({
+    value,
+    axis: 'x',
+    valueAt: (fraction) => snap(fraction * 100, STEP),
+    onCommit: onChange,
+  });
   const [r, g, b] = color;
 
   return (
     <div
-      ref={bar}
+      ref={ref}
       role="slider"
       tabIndex={0}
       aria-label={label}
@@ -48,14 +34,11 @@ export const LevelBar = ({ label, value, onChange, color = WARM }: LevelBarProps
       aria-valuemax={100}
       aria-valuenow={shown}
       aria-valuetext={`${shown} %`}
+      {...handlers}
       onPointerDown={(event) => {
         event.stopPropagation();
-        event.currentTarget.setPointerCapture(event.pointerId);
-        setDrag(at(event.clientX));
+        handlers.onPointerDown(event);
       }}
-      onPointerMove={(event) => drag !== null && setDrag(at(event.clientX))}
-      onPointerUp={() => drag !== null && commit(drag)}
-      onPointerCancel={() => setDrag(null)}
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => {
         const delta =
@@ -66,15 +49,12 @@ export const LevelBar = ({ label, value, onChange, color = WARM }: LevelBarProps
               : 0;
         if (!delta) return;
         event.preventDefault();
-        const next = Math.max(0, Math.min(100, shown + delta));
-        setDrag(next);
-        if (keyTimer.current) clearTimeout(keyTimer.current);
-        keyTimer.current = setTimeout(() => commit(next), 600);
+        nudge(Math.max(0, Math.min(100, shown + delta)));
       }}
       className="relative h-7 cursor-ew-resize touch-pan-y overflow-hidden rounded-full bg-muted outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
     >
       <div
-        className={cn('absolute inset-y-0 left-0 rounded-full', drag === null && 'transition-[width] duration-500')}
+        className={cn('absolute inset-y-0 left-0 rounded-full', !dragging && 'transition-[width] duration-500')}
         style={{
           width: `${Math.max(shown, shown > 0 ? 14 : 0)}%`,
           background: `linear-gradient(90deg, rgba(${r},${g},${b},0.45), rgba(${r},${g},${b},0.95))`,

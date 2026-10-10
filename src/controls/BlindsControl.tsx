@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
 import type { BlindVirtualReceiverChannel } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import ChevronUpIcon from '~icons/lucide/chevron-up';
@@ -8,6 +7,7 @@ import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
+import { snap, useSliderDrag } from '../hooks/useSliderDrag';
 import { LevelBar } from './light/LevelBar';
 
 interface ControlProps {
@@ -30,59 +30,15 @@ export const BlindsControl = ({ channel }: ControlProps) => {
   const { datapoints, name, address, interfaceName } = channel;
   // Rounded: e.g. 0.29 * 100 is 28.999999999999996 in floating point
   const level = Math.round(Number(datapoints.LEVEL) * 100);
-  const [dragLevel, setDragLevel] = useState<number | null>(null);
-  const shown = dragLevel ?? level;
-  const windowRef = useRef<HTMLDivElement>(null);
-  const keyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(
-    () => () => {
-      if (keyTimer.current) clearTimeout(keyTimer.current);
-    },
-    [],
-  );
-
   const send = (percent: number) => setDataPoint(interfaceName, address, 'LEVEL', percent / 100);
+  const { ref, shown, dragging, handlers, nudge } = useSliderDrag<HTMLDivElement>({
+    value: level,
+    axis: 'y',
+    valueAt: (fraction) => snap((1 - fraction) * 100, STEP),
+    onCommit: send,
+    tapOnTouch: true,
+  });
 
-  const levelAt = (clientY: number) => {
-    // biome-ignore lint/style/noNonNullAssertion: only called from the pointer events of the mounted element
-    const rect = windowRef.current!.getBoundingClientRect();
-    const fraction = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
-    return Math.round(((1 - fraction) * 100) / STEP) * STEP;
-  };
-
-  // A finger on the window: a tap if it lifts there, a scroll if the
-  // browser takes over (pointercancel)
-  const touchStart = useRef<number | null>(null);
-  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'touch') {
-      touchStart.current = event.pointerId;
-      return;
-    }
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDragLevel(levelAt(event.clientY));
-  };
-  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (dragLevel !== null) setDragLevel(levelAt(event.clientY));
-  };
-  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (touchStart.current === event.pointerId) {
-      touchStart.current = null;
-      const tapped = levelAt(event.clientY);
-      if (tapped !== level) send(tapped);
-      return;
-    }
-    if (dragLevel !== null) {
-      if (dragLevel !== level) send(dragLevel);
-      setDragLevel(null);
-    }
-  };
-  // Scrolling or an interrupted drag sends nothing
-  const onPointerCancel = () => {
-    touchStart.current = null;
-    setDragLevel(null);
-  };
   const onKeyDown = (event: React.KeyboardEvent) => {
     const next =
       event.key === 'ArrowUp' || event.key === 'ArrowRight'
@@ -96,16 +52,10 @@ export const BlindsControl = ({ channel }: ControlProps) => {
               : null;
     if (next === null) return;
     event.preventDefault();
-    setDragLevel(next);
-    if (keyTimer.current) clearTimeout(keyTimer.current);
-    keyTimer.current = setTimeout(() => {
-      send(next);
-      setDragLevel(null);
-    }, 600);
+    nudge(next);
   };
 
   const open = shown / 100;
-  const dragging = dragLevel !== null;
   // Slats of venetian blinds: HmIP LEVEL_2, BidCos JALOUSIE LEVEL_SLATS.
   // Roller shutters report LEVEL_2 empty (null), they get no slats.
   const dp = datapoints as unknown as Record<string, unknown>;
@@ -120,7 +70,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
     <Tile status={channel.status}>
       <div className="flex gap-4 p-4">
         <div
-          ref={windowRef}
+          ref={ref}
           role="slider"
           tabIndex={0}
           aria-label={m.BLIND_POSITION({ name })}
@@ -128,10 +78,11 @@ export const BlindsControl = ({ channel }: ControlProps) => {
           aria-valuemax={100}
           aria-valuenow={shown}
           aria-valuetext={status}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerCancel}
+          {...handlers}
+          onPointerDown={(event) => {
+            if (event.pointerType !== 'touch') event.preventDefault();
+            handlers.onPointerDown(event);
+          }}
           onKeyDown={onKeyDown}
           className="relative min-h-[168px] w-32 shrink-0 self-stretch cursor-ns-resize touch-pan-y overflow-hidden rounded-[10px] border-[3px] border-zinc-400 bg-[linear-gradient(180deg,#bfe3fb_0%,#9fd2f5_55%,#86c3ee_100%)] transition-shadow duration-500 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:border-zinc-700 dark:bg-[linear-gradient(180deg,#2a4a6b_0%,#1a3350_55%,#142a40_100%)]"
           style={
