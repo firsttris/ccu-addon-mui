@@ -1,10 +1,11 @@
 <div align="center">
 
-<h1>MUI: a modern WebUI for the Homematic CCU3 and OpenCCU</h1>
+<h1>MUI: a modern WebUI for the Homematic CCU3, OpenCCU and openccu-lite</h1>
 
 **The complete WebUI of your Homematic central unit, rebuilt.**<br>
 Control, configure, link and program, live and on every device:
-an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
+an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use, and on openccu-lite
+the interface for the devices.
 
 [![Build](https://github.com/firsttris/ccu-addon-mui/actions/workflows/build.yml/badge.svg)](https://github.com/firsttris/ccu-addon-mui/actions/workflows/build.yml)
 [![Go Tests](https://github.com/firsttris/ccu-addon-mui/actions/workflows/go-unit-tests.yml/badge.svg)](https://github.com/firsttris/ccu-addon-mui/actions/workflows/go-unit-tests.yml)
@@ -12,7 +13,7 @@ an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
 [![Release](https://img.shields.io/github/v/release/firsttris/ccu-addon-mui?label=release&color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/firsttris/ccu-addon-mui/total?color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
-[![CCU3 | OpenCCU](https://img.shields.io/badge/central-CCU3%20%7C%20OpenCCU-1d4ed8)](docs/installation.md)
+[![CCU3 | OpenCCU | openccu-lite](https://img.shields.io/badge/central-CCU3%20%7C%20OpenCCU%20%7C%20openccu--lite-1d4ed8)](docs/installation.md)
 
 <img src="docs/screenshot-hero.png" alt="All devices on a tablet, living room and boiler room on two phones" width="900">
 
@@ -23,7 +24,8 @@ an add-on for the CCU3 and OpenCCU that replaces the old WebUI for everyday use.
 
 MUI stands for *Modern WebUI*. The project is unrelated to the React library Material UI.
 It runs wherever the CCU runs: on the CCU3 by eQ-3, on OpenCCU (formerly RaspberryMatic) on a Raspberry Pi,
-x86, Proxmox or Docker, and on piVCCU, with Homematic IP (HmIP), Homematic (BidCos-RF) and Homematic IP Wired devices.
+x86, Proxmox or Docker, on piVCCU and on [openccu-lite](https://github.com/hobbyquaker/openccu-lite) (a package of its own,
+see [Installation](#-installation)), with Homematic IP (HmIP), Homematic (BidCos-RF) and Homematic IP Wired devices.
 
 ## 💡 Why?
 
@@ -181,7 +183,15 @@ Classic BidCos-Wired (HMW devices on the RS485 bus) is connected once a Wired ga
 2. Upload and install it in the WebUI under *Settings → Control panel → Additional software*. OpenCCU starts the add-on right away; a CCU3 with eQ-3 firmware reboots for it.
 3. Open **http://&lt;ccu-ip&gt;/addons/mui** and log in with a CCU user.
 
-Later updates are installed by the app itself, without rebooting the CCU (*Setup → System → Check for update*).
+On **[openccu-lite](https://github.com/hobbyquaker/openccu-lite)** there is a package of its own
+(`mui-<version>-aarch64-lite.tar.gz` for the Raspberry Pi, `mui-<version>-x86_64-lite.tar.gz` for the VM),
+installed under openccu-lite's *Additional software*. MUI shows up in openccu-lite's menu and uses its
+login. Programs and system variables don't exist there, as they need the ReGa; pairing, configuring,
+linking and controlling devices do. More in the
+[installation docs](https://firsttris.github.io/ccu-addon-mui/installation.html#openccu-lite) (German).
+
+Later updates are installed by the app itself, without rebooting the CCU (*Setup → System → Check for update*);
+on openccu-lite they come through its *Additional software*.
 
 ## 🔧 Development
 
