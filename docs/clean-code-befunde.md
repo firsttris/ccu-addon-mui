@@ -401,7 +401,7 @@ Nach der ersten Runde habe ich noch einmal nachgemessen: die größten Dateien u
 | 15 | `handleUsers` (101 Zeilen) | Go | erledigt |
 | 16 | `rega.parseChannels` (95 Zeilen) | Go | erledigt |
 | 17 | `ccu-export` `export` (108 Zeilen) | Go | erledigt |
-| 18 | `Diagrams.tsx` (647), `TimeChart.tsx` (620), `WeekProgramSheet.tsx` (558), `Links.tsx` (540) | Frontend | offen |
+| 18 | `Diagrams.tsx` (647), `TimeChart.tsx` (620), `WeekProgramSheet.tsx` (558), `Links.tsx` (540) | Frontend | erledigt |
 | 19 | Fake-CCU: `fakeccu.go` (1648 Zeilen), Handler mit 100–126 Zeilen | Go-Tests | offen |
 
 - **#15 `handleUsers`:** Es gibt jetzt eine Methode pro Nachricht: `listUsers`, `deleteUser` und
@@ -411,6 +411,23 @@ Nach der ersten Runde habe ich noch einmal nachgemessen: die größten Dateien u
   `withStatus` für Batterie und Erreichbarkeit.
 - **#17 `export`:** `channelSet` sammelt die Kanäle einmal in der Reihenfolge, in der sie auftauchen.
   `exportChannels` und `exportGroups` lesen sie.
+- **#18 Frontend:** Jede der vier Dateien folgt jetzt dem Muster von `DeviceSettings`: reine Funktionen
+  mit Unit-Tests, Hooks und eine Komponente pro Teil.
+
+  | Datei | Vorher | Nachher | Daneben |
+  |---|---|---|---|
+  | `Diagrams.tsx` | 647 | 106 | `DiagramCard`, `DiagramToolbar`, `DiagramLegend`, `diagramModel.ts` (Zeitraum, Reihen, CSV), `useDiagramData.ts` |
+  | `TimeChart.tsx` | 620 | 176 | `chartGeometry.ts` (Skalen, Lage, Pfade, Tooltip), `TimeChartParts.tsx` (Achsen, Balken, Linien, Zustände, Tooltip) |
+  | `WeekProgramSheet.tsx` | 558 | 254 | `EntryDialog.tsx` mit einem Feld pro Abschnitt, `weekProgramText.ts`, Entwürfe als reine Funktionen in `weekProgram.ts` |
+  | `Links.tsx` | 540 | 31 | `LinkParameters.tsx`, `AddLinkForm.tsx`, `useLinkProfiles.ts` |
+
+  Dass sich nichts ändert, haben vorübergehende Tests geprüft. Sie haben `TimeChart` und
+  `WeekProgramSheet` mit festen Daten gezeichnet und das Markup vor und nach dem Umbau verglichen:
+  - `TimeChart`: alle Arten von Reihen, mit Tooltip
+  - `WeekProgramSheet`: Liste, Dialog, eine Änderung und der Nur-Lesen-Modus
+
+  Das Markup war gleich. Die Diagramme, die Verknüpfungen und die Geräteseite decken zusätzlich die
+  Stack-E2E-Tests ab.
 
 ## Vorgeschlagene Reihenfolge
 

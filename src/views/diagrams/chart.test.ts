@@ -158,7 +158,7 @@ describe('downsample and scaleUnit', () => {
 });
 
 describe('costOf', async () => {
-  const { costOf } = await import('./Diagrams');
+  const { costOf } = await import('./diagramModel');
   const price = { currency: 'EUR', electricity: 0.3, gas: 0.1, gasHeatingValue: 11, gasConditionNumber: 0.95 };
   it('prices electricity and gas', () => {
     expect(costOf(2000, 'Wh', price)).toBeCloseTo(0.6);
