@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useChannels, useRooms } from '../queries';
 import { usePageTitle } from '../contexts/PageTitleContext';
-import { Dashboard, NavTabs } from './Dashboard';
+import { Dashboard } from './Dashboard';
+import { NavTabs } from '../components/NavTabs';
 import { m } from '../paraglide/messages';
 import { rememberView } from '../lib/startPage';
 

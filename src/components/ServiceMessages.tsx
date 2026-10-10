@@ -19,6 +19,7 @@ import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './ui/sheet';
 import { WebUILink } from './WebUILink';
 import { errorText } from '../lib/errors';
+import { groupBy } from '../lib/groupBy';
 
 type Severity = 'error' | 'warning' | 'info';
 
@@ -96,14 +97,8 @@ const formatTimestamp = (timestamp?: string) => {
 };
 
 // Messages of the same device together, in order of appearance
-const groupByDevice = (messages: ServiceMessage[]) => {
-  const devices = new Map<string, ServiceMessage[]>();
-  for (const message of messages) {
-    const key = message.address || message.name;
-    devices.set(key, [...(devices.get(key) ?? []), message]);
-  }
-  return Array.from(devices.values());
-};
+const groupByDevice = (messages: ServiceMessage[]) =>
+  Array.from(groupBy(messages, (message) => message.address || message.name).values());
 
 // All service messages of the CCU, with acknowledging
 export const ServiceMessagesSheet = ({

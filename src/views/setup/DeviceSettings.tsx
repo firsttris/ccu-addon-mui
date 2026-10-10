@@ -9,7 +9,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { type TranslationKey, useTranslations } from '../../i18n/utils';
 import type { DatapointValue, ParamsetDescription } from '../../types/types';
 import { shownParameters } from '../../controls/generic/ParamsetView';
-import { readableValue } from '../../controls/generic/SettingsView';
+import { readableValue } from '../../controls/generic/settingValues';
 import CheckIcon from '~icons/lucide/check-circle-2';
 import SendIcon from '~icons/lucide/send';
 import { ConfirmDialog, DialogButton } from '../../components/ConfirmDialog';

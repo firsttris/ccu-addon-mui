@@ -1,7 +1,8 @@
 import { useParams } from '@tanstack/react-router';
 import { useChannels, useTrades } from '../queries';
 import { usePageTitle } from '../contexts/PageTitleContext';
-import { Dashboard, NavTabs } from './Dashboard';
+import { Dashboard } from './Dashboard';
+import { NavTabs } from '../components/NavTabs';
 import { m } from '../paraglide/messages';
 
 export const Trade: React.FC = () => {

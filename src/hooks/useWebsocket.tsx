@@ -1,17 +1,29 @@
-import type React from 'react';
-import { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Channel, HmEvent, UserLevel } from './../types/types';
+import type { Channel, HmEvent, UserLevel } from '../types/types';
 import { useUniqueDeviceID } from './useUniqueDeviceID';
 import { useToast } from '../contexts/ToastContext';
 import { applyEvent } from './channels';
 import { RecentUpdates } from './recentUpdates';
-import type { Protocol } from '../types/protocol';
+import type { Protocol, SelfUpdateProgressMessage } from '../types/protocol';
 import { type Capabilities, CCU_CAPABILITIES, type Platform } from './capabilities';
 import { m } from '../paraglide/messages';
 import { emitSelfUpdateProgress } from '../lib/selfUpdateProgress';
-import type { SelfUpdateProgressMessage } from '../types/protocol';
+import { RequestError } from './requestError';
+
+// Part of this module's interface: queries and views import them from here
+export { RequestError, shouldRetry } from './requestError';
+import { ADMIN_TOKEN_STORAGE_KEY, loggedOut, readToken, setLoggedOut, writeToken } from './authStorage';
 
 // The transport: WebSocket connection, login, and requests answered by
 // promises. All server data is loaded and cached with TanStack Query on top
@@ -20,7 +32,9 @@ import type { SelfUpdateProgressMessage } from '../types/protocol';
 // Every request type with its request and response, generated from
 // protocol/schema.json (npm run generate:protocol)
 export type RequestType = keyof Protocol;
+
 export type ResponseOf<T extends RequestType> = Protocol[T]['response'];
+
 // A request as passed to request(): requestId and deviceId are added there
 export type RequestMessage = {
   [T in RequestType]: Omit<Protocol[T]['request'], 'requestId' | 'deviceId'>;
@@ -53,37 +67,6 @@ interface Response {
   messages?: unknown[];
 }
 
-// A failed request; code is the server's error code, or NOT_CONNECTED and
-// TIMEOUT from here.
-export class RequestError extends Error {
-  code?: string;
-
-  constructor(message: string, code?: string) {
-    super(message);
-    this.code = code;
-  }
-}
-
-// Asking again gets the same answer: the request was refused or is wrong.
-// NOT_CONNECTED: the connection was lost; all queries are loaded again after
-// the next login anyway.
-const FINAL_ERRORS = new Set([
-  'NOT_CONNECTED',
-  'AUTH_REQUIRED',
-  'FORBIDDEN',
-  'ELEVATION_REQUIRED',
-  'INVALID_REQUEST',
-  'INVALID_VALUE',
-  'NOT_SUPPORTED',
-  'NOT_AVAILABLE',
-  'NOT_FOUND',
-]);
-
-// Whether TanStack Query tries a failed query again: twice for a timeout
-// or a CCU error, not for an answer that won't change
-export const shouldRetry = (failureCount: number, error: unknown) =>
-  failureCount < 2 && !(error instanceof RequestError && error.code !== undefined && FINAL_ERRORS.has(error.code));
-
 export interface RequestOptions {
   // false: fail right away instead of waiting for the connection. For
   // commands: switching a light minutes later would be a surprise.
@@ -104,51 +87,8 @@ interface PendingRequest {
   timeout: ReturnType<typeof setTimeout>;
 }
 
-const TOKEN_STORAGE_KEY = 'ccu-addon-mui_AuthToken';
-// Short-lived token for changing settings (administrators)
-const ADMIN_TOKEN_STORAGE_KEY = 'ccu-addon-mui_AdminToken';
 // Includes the time a request waits in the queue until logged in
 const REQUEST_TIMEOUT_MS = 20000;
-
-const readToken = (key = TOKEN_STORAGE_KEY) => {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-};
-
-// Logged out on purpose in this tab: the login page, not the automatic
-// login (as the WebUI's logout.htm with NoAutoLogin); a new tab logs in
-// automatically again
-const LOGGED_OUT_KEY = 'mui-logged-out';
-const loggedOut = () => {
-  try {
-    return sessionStorage.getItem(LOGGED_OUT_KEY) === '1';
-  } catch {
-    return false;
-  }
-};
-const setLoggedOut = (value: boolean) => {
-  try {
-    if (value) sessionStorage.setItem(LOGGED_OUT_KEY, '1');
-    else sessionStorage.removeItem(LOGGED_OUT_KEY);
-  } catch {
-    // Storage not available: logging out works, the automatic login returns
-  }
-};
-
-const writeToken = (token: string | null, key = TOKEN_STORAGE_KEY) => {
-  try {
-    if (token) {
-      localStorage.setItem(key, token);
-    } else {
-      localStorage.removeItem(key);
-    }
-  } catch {
-    // Without storage the user has to log in again after a reload
-  }
-};
 
 // The WebSocket server on the same host, the paths to try in order.
 // Installed, the app lies under /addons/mui/ and so does the WebSocket: on
@@ -158,7 +98,9 @@ const writeToken = (token: string | null, key = TOKEN_STORAGE_KEY) => {
 // app falls back to it while no connection has opened. The dev server
 // proxies /ws/mui.
 export const socketPaths = (base: string) => (base === '/' ? ['/ws/mui'] : [`${base}ws`, '/ws/mui']);
+
 const paths = socketPaths(import.meta.env.BASE_URL);
+
 const socketUrl = (path: string) =>
   `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${path}`;
 
@@ -541,6 +483,7 @@ export const useWebsocket = () => {
 };
 
 export type UseWebsocketReturnType = ReturnType<typeof useWebsocket>['state'];
+
 export type WebSocketActions = ReturnType<typeof useWebsocket>['actions'];
 
 // Datapoints that raise or end a service message
