@@ -35,7 +35,7 @@ Größe: **S** klein (unter einer Stunde), **M** mittel, **L** groß.
 | 10 | Handler gehen an `home.Source` vorbei direkt zur ReGa (erledigt) | Go | M |
 | 11 | Zu große Frontend-Dateien (erledigt) | Frontend | L |
 | 12 | Wiederholte UI-Bausteine und Zahlenformatierung (erledigt) | Frontend | M |
-| 13 | Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen (größtenteils erledigt) | Go | L |
+| 13 | Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen (erledigt) | Go | L |
 | 14 | `integration_test.go` wiederholt dieselben Abläufe (erledigt) | Go-Tests | M |
 
 ## Klein, mit großer Wirkung
@@ -326,7 +326,7 @@ Zwei Dinge bleiben, wie sie sind:
 
 Die 72 Bildschirmfotos von `visual.spec.ts` sind pixelgleich mit `main`.
 
-### 13. Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen: zum größten Teil erledigt
+### 13. Zu lange Go-Funktionen, die nur aus einem großen `switch` bestehen: erledigt
 
 - **Fake-CCU.** `runScript` (412 Zeilen, 52 Fälle) und `call` (360 Zeilen, 29 XML-RPC-Methoden) sind
   jetzt Tabellen von Funktionen: `scriptHandlers` in `scripthandlers.go` und `rpcMethods` in
@@ -334,11 +334,32 @@ Die 72 Bildschirmfotos von `visual.spec.ts` sind pixelgleich mit `main`.
 - **Eine Funktion pro Nachrichtentyp** bei `handleSecurity` (257 Zeilen), `handleHeatingGroupChange` (163)
   und `handleSystemSettings` (153). Der Nachrichten-Struct hat einen Namen, der Handler prüft und
   verteilt.
-- **Noch offen, weil es dort ein Umbau wäre und kein Verschieben:**
-  - `handleRestore`, `handleDeviceFirmware`, `handleLogic` und `handleLanGateways`: Nach dem `switch`
-    baut gemeinsamer Code die Antwort.
-  - `handlePairing`: Es hat zwei `switch` hintereinander.
-  - `main.run` (140 Zeilen), `rega.parseProgram` (103) und `occulite/home.go` (868 Zeilen).
+- **Die Handler mit gemeinsamem Code nach dem `switch`** sind jetzt umgebaut, nicht nur verschoben:
+
+  | Funktion | Vorher | Nachher | Wie |
+  |---|---|---|---|
+  | `handleLogic` | 102 | 20 | eine Methode pro Nachricht; Programm starten und Variable setzen über `operate` |
+  | `handleServiceMessages` | 58 | 17 | eine Methode pro Nachricht; Bestätigen über `operate` |
+  | `handleRestore` | 105 | 49 | Tabelle `restoreSteps`: pro Schritt eine Funktion und was danach ins Log kommt |
+  | `handleDeviceFirmware` | 123 | 23 | drei Lese-Methoden, Tabelle `deviceFirmwareChanges` für die Änderungen |
+  | `handleLanGateways` | 141 | 48 | Tabelle `gatewayChanges`: pro Änderung ihr Audit-Eintrag und die Änderung |
+  | `handlePairing` | 185 | 50 | Tabelle `pairingReads` für das Lesen, eine Methode pro Änderung |
+  | `rega.parseProgram` | 103 | 17 | Tabelle `programLines`: pro Zeilenart des Skripts eine Funktion |
+  | `main.run` | 140 | 68 | `setupPush`, `setupDiagrams`, `eventHandler` und `shutdown` |
+
+  - **`operate`** ist das Gegenstück zu `configure` für das Bedienen. Gäste dürfen nicht, und das Ergebnis
+    kommt ins Audit-Log. Beide teilen sich den Schluss `finishChange`. Ein Fehler, der `errForbidden`
+    einpackt, antwortet mit `FORBIDDEN`, etwa ein Programm, das nur Administratoren starten dürfen.
+  - **Eigene Fehler mit Code statt Sonderwegen:** `handleDeviceFirmware` und `handleLanGateways` geben
+    ungültige Werte, Fehler des Update-Servers und unbekannte Dateien als Fehlerwerte zurück. `failChange`
+    nimmt dafür die eigenen Codes des Handlers.
+  - **Kleine Unterschiede:**
+    - Die Fehlertexte dieser Fälle beginnen jetzt wie die anderen mit „… failed:“. Die Codes sind
+      unverändert.
+    - Das Audit-Log nennt den vorigen Wert jetzt auch bei einer Änderung, die ReGa ablehnt.
+- **`occulite/home.go`** (859 Zeilen) war schon in fünf Abschnitte gegliedert. Jeder Abschnitt ist jetzt
+  eine eigene Datei: `home_groups.go`, `home_channels.go`, `home_operating.go`, `home_data.go` und
+  `home_pairing.go`. `home.go` behält den Zustand und hat noch 176 Zeilen. Der Inhalt ist nur verschoben.
 
 ### 14. `integration_test.go` wiederholt dieselben Abläufe: erledigt
 
@@ -385,4 +406,4 @@ Jeder Schritt ist ein eigener PR:
 9. ~~UI-Bausteine und Zahlenformatierung (#12)~~ erledigt.
 10. ~~Integrationstests (#14)~~ erledigt.
 11. ~~`DeviceSettings.tsx` (#11)~~ erledigt.
-12. Der Rest: der Rest von #13.
+12. ~~Der Rest von #13~~ erledigt. Damit sind alle Befunde abgearbeitet.
