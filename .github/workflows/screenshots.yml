@@ -34,6 +34,7 @@ jobs:
   update:
     needs: playwright-image
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     container:
       image: ${{ needs.playwright-image.outputs.image }}
       options: --ipc=host

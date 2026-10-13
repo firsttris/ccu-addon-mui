@@ -35,6 +35,7 @@ jobs:
     # Draft pull requests do not build; "Ready for review" starts the run
     if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       image: ${{ steps.version.outputs.image }}
 
@@ -49,6 +50,7 @@ jobs:
     name: Update E2E
     needs: playwright-image
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     container:
       image: ${{ needs.playwright-image.outputs.image }}
       options: --ipc=host
@@ -81,6 +83,7 @@ jobs:
     name: Frontend E2E
     needs: playwright-image
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container:
       image: ${{ needs.playwright-image.outputs.image }}
       options: --ipc=host
@@ -133,6 +136,7 @@ jobs:
     name: Screenshots
     needs: playwright-image
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     # The baselines come from this image (e2e/visual.spec.ts); "Update
     # screenshots" takes them in the same one
     container:
@@ -160,18 +164,19 @@ jobs:
           if-no-files-found: ignore
 
   e2e-stack:
-    name: Stack E2E (fake CCU) ${{ matrix.shard }}/2
+    name: Stack E2E (fake CCU) ${{ matrix.shard }}/3
     needs: playwright-image
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container:
       image: ${{ needs.playwright-image.outputs.image }}
       options: --ipc=host
     # The tests share one fake CCU and run one after the other, so they are
-    # split across two runners, each with its own stack
+    # split across three runners, each with its own stack
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3]
     env:
       # Pure Go; the image has no C compiler
       CGO_ENABLED: '0'
@@ -196,7 +201,7 @@ jobs:
         run: npm ci
 
       - name: Run frontend + server against the fake CCU
-        run: npm run test:stack -- --shard=${{ matrix.shard }}/2
+        run: npm run test:stack -- --shard=${{ matrix.shard }}/3
 
       - name: Upload Playwright test results
         if: failure()

@@ -3,21 +3,36 @@ name: Release
 # A tag vX.Y.Z releases that version: the button in "Bump version" (bump.yml) or
 # `npm run release:patch|minor|major` on a checkout creates it. First the full CI (build, Go and
 # Playwright tests, openccu-lite VM), then the shared GitHub release from firsttris/workflows, which checks the tag
-# against package.json and attaches the add-on archives built by build.yml. Run by hand on main:
-# only the checks, nothing is released.
+# against package.json and attaches the add-on archives built by build.yml. The Go and Playwright tests are
+# skipped when main's CI already passed them for this code (tested-on-main); the build always runs, it
+# makes the archives. Run by hand on main: only the checks, nothing is released.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
 
 jobs:
+  # A release commit from "Bump version" changes only the version, so the
+  # green push runs of the commit before it count
+  tested:
+    uses: firsttris/workflows/.github/workflows/tested-on-main.yml@ccr-161f105b-9ns022
+    with:
+      workflows: build.yml, go-unit-tests.yml, playwright-e2e.yml
+    permissions:
+      actions: read
+      contents: read
+
   build:
     uses: ./.github/workflows/build.yml
 
   go:
+    needs: tested
+    if: needs.tested.outputs.tested != 'true'
     uses: ./.github/workflows/go-unit-tests.yml
 
   e2e:
+    needs: tested
+    if: needs.tested.outputs.tested != 'true'
     uses: ./.github/workflows/playwright-e2e.yml
 
   # The add-on installed on a real openccu-lite (VM)
@@ -25,8 +40,13 @@ jobs:
     uses: ./.github/workflows/lite-vm.yml
 
   release:
-    needs: [build, go, e2e, lite-vm]
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [tested, build, go, e2e, lite-vm]
+    # Build and VM passed; the tests passed or main had already passed them
+    if: >-
+      ${{ !cancelled() && startsWith(github.ref, 'refs/tags/v')
+      && needs.tested.result == 'success' && needs.build.result == 'success' && needs['lite-vm'].result == 'success'
+      && contains(fromJSON('["success", "skipped"]'), needs.go.result)
+      && contains(fromJSON('["success", "skipped"]'), needs.e2e.result) }}
     uses: firsttris/workflows/.github/workflows/github-release.yml@v1
     with:
       release-artifact: addon
