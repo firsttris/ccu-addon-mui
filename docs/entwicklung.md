@@ -312,6 +312,8 @@ Ein Release beginnt mit einem Tag `vX.Y.Z`, nach demselben Schema wie in den and
   `postversion` gepusht.
 
 `release.yml` lässt anschließend Build, Go- und Playwright-Tests laufen und legt die Release mit den
-Archiven `mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz` an. Die Notizen erzeugt
+Archiven `mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz` an. Die Tests entfallen,
+wenn die CI auf `main` sie für denselben Code schon bestanden hat: Der Release-Commit von *Bump version*
+ändert nur die Version. Die Notizen erzeugt
 GitHub aus den Pull Requests seit der letzten Version. Lokal baut `npm run build` dieselben Archive, und
 jeder Build in der CI hängt sie als Artefakt `addon` an.
