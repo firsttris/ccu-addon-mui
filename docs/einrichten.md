@@ -28,6 +28,9 @@ Jede Änderung landet im Audit-Log, mit Benutzer, Zeit, altem und neuem Wert (si
 
 *Geräte* listet alle Geräte der CCU mit Name, Typ, Adresse, Schnittstelle, Firmware und Status, durchsuchbar
 und sortierbar. Die Filter zeigen nur Geräte mit Problemen oder nur die mit verfügbarem Firmware-Update.
+Suche, Filter und Sortierung stehen in der Adresse (z. B. `/setup?q=Rollladen&sort=-address`): Wer ein
+Gerät öffnet und zurückgeht, mit dem Link *Geräte* oben auf der Geräteseite oder mit dem Zurück des
+Browsers, findet die Liste so vor, wie sie war. Die Adresse lässt sich auch als Lesezeichen speichern.
 
 ### Die Geräteseite
 

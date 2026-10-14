@@ -14,6 +14,7 @@ import { m } from '../../../paraglide/messages';
 import { usePairingAction } from '../../../queries';
 import type { Device } from '../../../types/types';
 import type { DeviceTab } from '../deviceTabs';
+import { lastDeviceListSearch } from '../deviceListSearch';
 
 // Deleting the device, optionally with a reset to factory settings or
 // forced when it doesn't answer
@@ -44,7 +45,7 @@ const DeleteDeviceDialog = ({
           {
             onSuccess: () => {
               showToast(m.DELETED(), 'info');
-              navigate({ to: '/setup' });
+              navigate({ to: '/setup', search: lastDeviceListSearch() });
             },
             onError: (error) => showToast(errorText(error, m.CHANGE_FAILED)),
             onSettled: onDone,
@@ -96,6 +97,7 @@ export const DeviceHeader = ({
     <div className="flex flex-col gap-3">
       <Link
         to="/setup"
+        search={lastDeviceListSearch()}
         className="inline-flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ChevronLeftIcon className="size-4" />

@@ -66,7 +66,7 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
           className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-1 [scrollbar-width:none] lg:flex-col lg:gap-5"
         >
           <NavGroup title={m.SETUP()}>
-            <Link to="/setup" activeOptions={{ exact: true }} className={navLink}>
+            <Link to="/setup" activeOptions={{ exact: true, includeSearch: false }} className={navLink}>
               <CpuIcon />
               {m.DEVICES()}
             </Link>

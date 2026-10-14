@@ -2198,3 +2198,40 @@ test('zeigt Gerätebilder der WebUI mit markiertem Kanal', async ({ page }) => {
     page.getByRole('row', { name: /Kontakt-Schnittstelle Gartentor/ }).locator('[data-device-image="none"]'),
   ).toBeVisible();
 });
+
+test('behält Suche und Sortierung der Geräteliste nach der Geräteseite', async ({ page }) => {
+  await login(page);
+  await page.goto('/setup');
+  const table = page.getByRole('table', { name: 'Geräte' });
+  const search = page.getByRole('searchbox', { name: 'Suchen' });
+  // Typed in one go, so the URL must not lose letters on the way
+  await search.pressSequentially('Taster');
+  await table.getByRole('button', { name: 'Adresse' }).click();
+  await table.getByRole('button', { name: 'Adresse' }).click();
+  await expect(page).toHaveURL(/\/setup\?q=Taster&sort=-address$/);
+  // The side menu still marks the list as the open page
+  await expect(
+    page.getByRole('navigation', { name: 'Einrichten' }).getByRole('link', { name: 'Geräte', exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
+  const rows = table.getByRole('row').filter({ hasText: 'Taster' });
+  const count = await rows.count();
+  expect(count).toBeGreaterThan(0);
+
+  // Into a device and back with its link, then with the browser
+  await rows.first().getByRole('link').click();
+  await expect(page).toHaveURL(/\/device\//);
+  // (the link above the device, not the one in the side menu)
+  await page
+    .getByRole('navigation', { name: 'Einrichten' })
+    .locator('xpath=following::a[normalize-space()="Geräte"][1]')
+    .click();
+  await expect(search).toHaveValue('Taster');
+  await expect(table.getByRole('columnheader', { name: 'Adresse' })).toHaveAttribute('aria-sort', 'descending');
+  await expect(rows).toHaveCount(count);
+
+  await rows.first().getByRole('link').click();
+  await expect(page).toHaveURL(/\/device\//);
+  await page.goBack();
+  await expect(search).toHaveValue('Taster');
+  await expect(page).toHaveURL(/\/setup\?q=Taster&sort=-address$/);
+});
