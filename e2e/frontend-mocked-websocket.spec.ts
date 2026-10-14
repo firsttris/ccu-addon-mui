@@ -228,6 +228,35 @@ test('zeigt Energiezähler zusammengefasst und keine Rohdaten', async ({ page })
   await expect(page.getByText('WEEK_PROGRAM_CHANNEL_LOCKS')).toHaveCount(0);
 });
 
+test('dreht die Zählerscheibe beim Einspeisen rückwärts, auch aus dem Stand', async ({ page }) => {
+  await page.goto('/room/3');
+  const emit = (channel: string, datapoint: string, value: unknown) =>
+    page.evaluate(
+      (e) => (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent(e),
+      { channel, datapoint, value },
+    );
+  // The disc's animation: rewound to the start of a turn, or its state
+  const disc = (rewind: boolean) =>
+    page.evaluate((rewind) => {
+      const turning = document
+        .getAnimations()
+        .filter((a) => (a.effect as KeyframeEffect).getKeyframes()[0]?.transform === 'translateX(-320px)');
+      for (const animation of turning) if (rewind) animation.currentTime = 0;
+      return turning.map((a) => `${a.playState} ${a.effect?.getTiming().direction}`);
+    }, rewind);
+  await expect(page.getByText('87 W')).toBeVisible();
+  // Standing still at the start of a turn, as a plug that reports negative
+  // power from the start: play() refused a negative playback rate there, and
+  // instead of the room came "Something went wrong"
+  await emit('003FA2698BC439:1', 'POWER', 0);
+  await disc(true);
+  await emit('003FA2698BC439:1', 'POWER', -800);
+  await expect(page.getByText('-800 W')).toBeVisible();
+  await expect.poll(() => disc(false)).toEqual(['running reverse']);
+  await emit('003FA2698BC439:1', 'POWER', 87);
+  await expect.poll(() => disc(false)).toEqual(['running normal']);
+});
+
 test('öffnet die Tür nur mit bewussten Gesten', async ({ page }) => {
   await page.goto('/room/3');
   const door = page.getByRole('group', { name: 'Haustür' });
