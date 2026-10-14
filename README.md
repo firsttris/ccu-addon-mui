@@ -13,6 +13,7 @@ Oberfläche für die Geräte.
 [![Release](https://img.shields.io/github/v/release/firsttris/ccu-addon-mui?label=Release&color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/firsttris/ccu-addon-mui/total?label=Downloads&color=2563eb)](https://github.com/firsttris/ccu-addon-mui/releases)
 [![Lizenz: AGPL-3.0](https://img.shields.io/badge/Lizenz-AGPL--3.0-blue)](LICENSE)
+[![Doku](https://img.shields.io/badge/Doku-firsttris.github.io%2Fccu--addon--mui-4f46e5?logo=materialformkdocs&logoColor=white)](https://firsttris.github.io/ccu-addon-mui/)
 <br>
 [![CCU3 | OpenCCU | openccu-lite](https://img.shields.io/badge/Zentrale-CCU3%20%7C%20OpenCCU%20%7C%20openccu--lite-1d4ed8)](https://firsttris.github.io/ccu-addon-mui/installation.html)
 [![HmIP | BidCos-RF | HmIP Wired](https://img.shields.io/badge/Funk-HmIP%20%7C%20BidCos--RF%20%7C%20HmIP%20Wired-1d4ed8)](https://firsttris.github.io/ccu-addon-mui/geraete.html)
