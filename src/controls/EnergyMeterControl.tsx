@@ -120,6 +120,8 @@ const meterCase =
 
 // One turn of the disc: the red mark comes round every 320 px of its edge
 const DISC_TURN = 320;
+// One turn at playback rate 1; the rate sets the real speed
+const TURN_MS = 1000;
 
 const FerrarisMeter = ({ power, registers }: { power: number; registers: Register[] }) => {
   const effects = useEffects();
@@ -134,7 +136,7 @@ const FerrarisMeter = ({ power, registers }: { power: number; registers: Registe
     const el = edge.current;
     if (!el?.animate) return;
     const animation = el.animate([{ transform: `translateX(-${DISC_TURN}px)` }, { transform: 'translateX(0)' }], {
-      duration: 1000,
+      duration: TURN_MS,
       iterations: Infinity,
     });
     animation.pause();
@@ -149,8 +151,18 @@ const FerrarisMeter = ({ power, registers }: { power: number; registers: Registe
       animation.pause();
       return;
     }
-    // Seconds per turn: 6 s at 1 W to 0.6 s at 5 kW; backwards while fed in
-    animation.updatePlaybackRate(Math.sign(power) / (6 - 5.4 * speed));
+    // Backwards while fed in: by the effect's direction, not a negative
+    // playback rate, which play() refuses for an endless animation ("Cannot
+    // play reversed Animation with infinite target effect end"). The flip
+    // mirrors the time within the turn, so the disc stays where it is.
+    const reverse = power < 0;
+    if ((animation.effect?.getTiming().direction === 'reverse') !== reverse) {
+      const within = Number(animation.currentTime ?? 0) % TURN_MS;
+      animation.effect?.updateTiming({ direction: reverse ? 'reverse' : 'normal' });
+      animation.currentTime = TURN_MS - within;
+    }
+    // Seconds per turn: 6 s at 1 W to 0.6 s at 5 kW
+    animation.updatePlaybackRate(1 / (6 - 5.4 * speed));
     animation.play();
   }, [power, speed, effects.on]);
   return (
