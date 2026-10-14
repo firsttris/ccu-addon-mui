@@ -1,12 +1,13 @@
 import { DeviceImage } from '../../components/DeviceImage';
-import { useMemo, useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { useEffect, useMemo } from 'react';
+import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
+  type Updater,
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
@@ -26,6 +27,13 @@ import { m } from '../../paraglide/messages';
 import { TableSkeletonRows } from '../../components/ui/skeleton';
 import { cn } from '../../lib/utils';
 import { deviceAddressOf } from '../../lib/address';
+import {
+  type DeviceListSearch,
+  parseDeviceListSearch,
+  rememberDeviceListSearch,
+  sortingOf,
+  sortOf,
+} from './deviceListSearch';
 
 interface DeviceRow {
   name: string;
@@ -65,10 +73,18 @@ export const Setup = () => {
   const { data: devices = [], isPending: devicesLoading } = useDevices();
   const { data: problems = [] } = useDeviceProblems();
   const names = useChannelNames();
-  const [filter, setFilter] = useState('');
-  const [onlyProblems, setOnlyProblems] = useState(false);
-  const [onlyUpdates, setOnlyUpdates] = useState(false);
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
+  // Search, filters and sorting live in the URL, so they are still there
+  // when coming back from a device
+  const search = useSearch({ from: '/setup/' });
+  const navigate = useNavigate({ from: '/setup/' });
+  useEffect(() => rememberDeviceListSearch(search), [search]);
+  // replace: typing or sorting doesn't add a history entry for each step
+  const setSearch = (change: DeviceListSearch) =>
+    navigate({ search: (prev) => parseDeviceListSearch({ ...prev, ...change }), replace: true });
+  const filter = search.q ?? '';
+  const sorting = useMemo(() => sortingOf(search.sort), [search.sort]);
+  const setSorting = (updater: Updater<SortingState>) =>
+    setSearch({ sort: sortOf(typeof updater === 'function' ? updater(sorting) : updater) });
 
   const rows = useMemo<DeviceRow[]>(() => {
     const problemOf = (address: string) => problems.find((p) => deviceAddressOf(p.address) === address);
@@ -85,6 +101,9 @@ export const Setup = () => {
   }, [devices, names, problems]);
   const problemCount = rows.filter((r) => r.unreach || r.lowBat).length;
   const updateCount = rows.filter((r) => r.availableFirmware).length;
+  // Only while their button is shown, so an old link can't hide all devices
+  const onlyProblems = (search.problems ?? false) && problemCount > 0;
+  const onlyUpdates = (search.updates ?? false) && updateCount > 0;
   const shownRows = useMemo(
     () => rows.filter((r) => (!onlyProblems || r.unreach || r.lowBat) && (!onlyUpdates || r.availableFirmware !== '')),
     [rows, onlyProblems, onlyUpdates],
@@ -140,7 +159,6 @@ export const Setup = () => {
     data: shownRows,
     columns,
     state: { globalFilter: filter, sorting },
-    onGlobalFilterChange: setFilter,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -161,7 +179,7 @@ export const Setup = () => {
             aria-label={m.SEARCH()}
             placeholder={m.SEARCH()}
             value={filter}
-            onChange={(event) => setFilter(event.target.value)}
+            onChange={(event) => setSearch({ q: event.target.value })}
             className="pl-9"
           />
         </div>
@@ -169,7 +187,7 @@ export const Setup = () => {
           <Button
             variant="outline"
             aria-pressed={onlyProblems}
-            onClick={() => setOnlyProblems(!onlyProblems)}
+            onClick={() => setSearch({ problems: !onlyProblems })}
             className={cn('border-dashed', onlyProblems && 'border-solid bg-accent')}
           >
             <TriangleAlertIcon className="text-amber-600" />
@@ -180,7 +198,7 @@ export const Setup = () => {
           <Button
             variant="outline"
             aria-pressed={onlyUpdates}
-            onClick={() => setOnlyUpdates(!onlyUpdates)}
+            onClick={() => setSearch({ updates: !onlyUpdates })}
             className={cn('border-dashed', onlyUpdates && 'border-solid bg-accent')}
           >
             <DownloadIcon className="text-sky-600" />
