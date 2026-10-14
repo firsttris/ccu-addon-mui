@@ -185,6 +185,7 @@
   "BLIND_DOWN": "Down",
   "BLIND_FULLY_OPEN": "Fully open",
   "BLIND_PERCENT_OPEN": "{percent} % open",
+  "BLIND_MOVING_TO": "Moving to {percent} %",
   "BLIND_POSITION": "Position {name}",
   "CONNECTION_OK": "Connected to the CCU",
   "ADMIN_MODE": "Admin mode",

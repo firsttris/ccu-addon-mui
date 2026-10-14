@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { BlindVirtualReceiverChannel } from '../types/types';
 import { useSetDataPoint } from '../queries';
 import ChevronUpIcon from '~icons/lucide/chevron-up';
@@ -9,6 +10,8 @@ import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { snap, useSliderDrag } from '../hooks/useSliderDrag';
 import { LevelBar } from './light/LevelBar';
+import { reportOf } from './blindsModel';
+import { useBlindMove } from './useBlindMove';
 
 interface ControlProps {
   channel: BlindVirtualReceiverChannel;
@@ -23,16 +26,22 @@ const button =
 // height. The shutter follows the pointer; the new level is sent once on
 // release (one radio telegram instead of one per pixel). On a touch screen
 // a tap sets the height and a swipe scrolls the page: the window lies in a
-// scrolling page, a swipe across it must not move the shutter.
+// scrolling page, a swipe across it must not move the shutter. After a
+// command the shutter travels to the target (useBlindMove) instead of
+// jumping back to the old position the actuator reports while it moves.
 export const BlindsControl = ({ channel }: ControlProps) => {
   const setDataPoint = useSetDataPoint();
   const effects = useEffects();
   const { datapoints, name, address, interfaceName } = channel;
-  // Rounded: e.g. 0.29 * 100 is 28.999999999999996 in floating point
-  const level = Math.round(Number(datapoints.LEVEL) * 100);
-  const send = (percent: number) => setDataPoint(interfaceName, address, 'LEVEL', percent / 100);
+  const report = useMemo(() => reportOf(datapoints as unknown as Record<string, unknown>), [datapoints]);
+  const travel = useBlindMove(report);
+  const send = (percent: number) => {
+    travel.start(percent);
+    setDataPoint(interfaceName, address, 'LEVEL', percent / 100);
+  };
   const { ref, shown, dragging, handlers, nudge } = useSliderDrag<HTMLDivElement>({
-    value: level,
+    // The target while travelling: what was set, also for the keys
+    value: travel.target ?? travel.level,
     axis: 'y',
     valueAt: (fraction) => snap((1 - fraction) * 100, STEP),
     onCommit: send,
@@ -55,15 +64,23 @@ export const BlindsControl = ({ channel }: ControlProps) => {
     nudge(next);
   };
 
-  const open = shown / 100;
+  // Where the shutter is drawn: under the pointer, else where it travels
+  const height = dragging ? shown : travel.level;
+  const travelling = travel.target !== null && !dragging;
+  const open = height / 100;
   // Slats of venetian blinds: HmIP LEVEL_2, BidCos JALOUSIE LEVEL_SLATS.
   // Roller shutters report LEVEL_2 empty (null), they get no slats.
   const dp = datapoints as unknown as Record<string, unknown>;
   const slatsKey =
     typeof dp.LEVEL_SLATS === 'number' ? 'LEVEL_SLATS' : typeof dp.LEVEL_2 === 'number' ? 'LEVEL_2' : null;
   const slats = slatsKey ? Math.round(Math.min(1, Math.max(0, Number(dp[slatsKey]))) * 100) : null;
-  const status =
-    shown === 0 ? m.BLIND_CLOSED() : shown === 100 ? m.BLIND_FULLY_OPEN() : m.BLIND_PERCENT_OPEN({ percent: shown });
+  const status = travelling
+    ? m.BLIND_MOVING_TO({ percent: shown })
+    : shown === 0
+      ? m.BLIND_CLOSED()
+      : shown === 100
+        ? m.BLIND_FULLY_OPEN()
+        : m.BLIND_PERCENT_OPEN({ percent: shown });
   const a = (alpha: number) => Math.min(1, alpha * effects.k);
 
   return (
@@ -86,7 +103,7 @@ export const BlindsControl = ({ channel }: ControlProps) => {
           onKeyDown={onKeyDown}
           className="relative min-h-[168px] w-32 shrink-0 self-stretch cursor-ns-resize touch-pan-y overflow-hidden rounded-[10px] border-[3px] border-zinc-400 bg-[linear-gradient(180deg,#bfe3fb_0%,#9fd2f5_55%,#86c3ee_100%)] transition-shadow duration-500 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:border-zinc-700 dark:bg-[linear-gradient(180deg,#2a4a6b_0%,#1a3350_55%,#142a40_100%)]"
           style={
-            effects.on && shown > 0
+            effects.on && height > 0
               ? { boxShadow: `0 0 ${28 * effects.k}px -4px rgba(125,211,252,${a(0.35 * open)})` }
               : undefined
           }
@@ -105,14 +122,17 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             aria-hidden
             className={cn(
               'absolute inset-x-0 top-0 bg-[repeating-linear-gradient(180deg,#a1a1aa_0_2px,#8f8f98_2px_11px,#71717a_11px_13px)] dark:bg-[repeating-linear-gradient(180deg,#52525b_0_2px,#3f3f46_2px_11px,#27272a_11px_13px)]',
-              !dragging && 'transition-[height] duration-700 ease-[cubic-bezier(.4,0,.2,1)]',
+              // Travelling: from one estimate to the next, at an even pace
+              travelling
+                ? 'transition-[height] duration-[250ms] ease-linear' // the tick of useBlindMove
+                : !dragging && 'transition-[height] duration-700 ease-[cubic-bezier(.4,0,.2,1)]',
             )}
-            style={{ height: `${100 - shown}%` }}
+            style={{ height: `${100 - height}%` }}
           >
             <div
               className="absolute inset-x-0 bottom-0 h-1 bg-zinc-500"
               style={
-                effects.on && shown > 0 && shown < 100
+                effects.on && height > 0 && height < 100
                   ? { boxShadow: `0 4px ${14 * effects.k}px rgba(186,230,253,${a(0.45)})` }
                   : undefined
               }
@@ -124,6 +144,12 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             className="pointer-events-none absolute bottom-2.5 left-1/2 rounded-full bg-black/70 px-2.5 py-0.5 text-[13px] font-semibold whitespace-nowrap text-white tabular-nums transition-transform duration-200"
             style={{ transform: `translateX(-50%) scale(${dragging ? 1.25 : 1})` }}
           >
+            {travelling &&
+              (shown > travel.level ? (
+                <ChevronUpIcon className="-ml-1 inline size-3.5 align-[-2px]" />
+              ) : (
+                <ChevronDownIcon className="-ml-1 inline size-3.5 align-[-2px]" />
+              ))}
             {shown} %
           </div>
         </div>
@@ -162,7 +188,10 @@ export const BlindsControl = ({ channel }: ControlProps) => {
             <button
               type="button"
               className={button}
-              onClick={() => setDataPoint(interfaceName, address, 'STOP', true)}
+              onClick={() => {
+                travel.stop();
+                setDataPoint(interfaceName, address, 'STOP', true);
+              }}
               aria-label={m.BLIND_STOP()}
               title={m.BLIND_STOP()}
             >
