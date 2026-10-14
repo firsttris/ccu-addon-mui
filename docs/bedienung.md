@@ -78,7 +78,7 @@ veraltet, und gerade der Befehl holt es zurück. Die Kachel zeigt es dann grau m
 | **Licht, Schalter** | Antippen schaltet; Lampen leuchten in der Kachel, Schalter (z. B. Pumpe) haben einen Kippschalter |
 | **Dimmer** | Helligkeit am Balken ziehen, antippen schaltet ein und aus |
 | **Farblicht** | Helligkeit, Farbton und Farbvorgaben (HmIP-RGBW, -LSC, -DRG-DALI) |
-| **Rollladen, Jalousie** | Auf, Stopp, Ab; ins Fenster tippen setzt die Position; bei Jalousien auch die Lamellen |
+| **Rollladen, Jalousie** | Auf, Stopp, Ab; ins Fenster tippen setzt die Position; bei Jalousien auch die Lamellen. Nach einem Befehl fährt der Panzer in der Kachel sichtbar zum Ziel (*Fährt auf 40 %*), auch wenn der Aktor bis zur Ankunft noch die alte Position meldet |
 | **Fenster** | Fensterkontakt und Fenstergriff: geschlossen, gekippt, offen, als Bild |
 | **Fensterantrieb** | Öffnen, Schließen, Stopp; die Winmatic auch Verriegeln, dazu ihr Akku |
 | **Türschloss** | Entsperren und Sperren durch **Gedrückthalten**, Öffnen durch **Schieben**, damit nichts versehentlich aufgeht |

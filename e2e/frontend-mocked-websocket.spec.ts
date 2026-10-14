@@ -257,6 +257,62 @@ test('dreht die Zählerscheibe beim Einspeisen rückwärts, auch aus dem Stand',
   await expect.poll(() => disc(false)).toEqual(['running normal']);
 });
 
+test('fährt den Rollladen sichtbar zum Ziel, auch wenn der Aktor erst die alte Position meldet', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/room/2');
+  const emit = (channel: string, datapoint: string, value: unknown) =>
+    page.evaluate(
+      (e) => (window as Window & { __wsMock?: { emitEvent: (e: unknown) => void } }).__wsMock?.emitEvent(e),
+      { channel, datapoint, value },
+    );
+  const channel = 'BidCos-RF.LEQ0000002:1';
+  const slider = page.getByRole('slider', { name: /Küche Rollo/ });
+  // The window and its buttons
+  const tile = slider.locator('..');
+  // The shutter: its height is the closed part
+  const shutter = slider.locator('[style*="height"]');
+  const closed = () => shutter.evaluate((el: HTMLElement) => Number.parseFloat(el.style.height));
+  await expect(slider).toHaveAttribute('aria-valuenow', '50');
+  // Time only moves when the test says so: the estimate is exact
+  await page.clock.pauseAt(Date.now() + 60000);
+
+  await tile.getByRole('button', { name: /^(Runter|Down)$/ }).click();
+  // As HmIP does: the old position while moving, the new one on arrival
+  await emit(channel, 'ACTIVITY_STATE', 2);
+  await emit(channel, 'PROCESS', 1);
+  await emit(channel, 'LEVEL', 0.5);
+  await expect(slider).toHaveAttribute('aria-valuenow', '0');
+  await expect(slider).toHaveAttribute('aria-valuetext', /Fährt auf 0 %|Moving to 0 %/);
+  expect(await closed()).toBe(50);
+  // On the way down, not back up at 50 %: halfway after 5 of 10 s (the
+  // estimate moves on every 250 ms)
+  await page.clock.runFor(5000);
+  await expect.poll(closed).toBeGreaterThanOrEqual(73);
+  expect(await closed()).toBeLessThanOrEqual(75);
+
+  await emit(channel, 'LEVEL', 0);
+  await emit(channel, 'PROCESS', 0);
+  await emit(channel, 'ACTIVITY_STATE', 3);
+  await page.clock.runFor(500);
+  await expect(slider).toHaveAttribute('aria-valuetext', /^(geschlossen|closed)$/);
+  await expect.poll(closed).toBe(100);
+
+  // Stopped on the way: stays there until the actuator reports
+  await tile.getByRole('button', { name: /^(Hoch|Up)$/ }).click();
+  await emit(channel, 'ACTIVITY_STATE', 1);
+  await emit(channel, 'PROCESS', 1);
+  await emit(channel, 'LEVEL', 0);
+  await page.clock.runFor(4000);
+  await tile.getByRole('button', { name: /^(Stopp|Stop)$/ }).click();
+  await expect.poll(closed).toBe(80);
+  await emit(channel, 'LEVEL', 0.22);
+  await emit(channel, 'PROCESS', 0);
+  await emit(channel, 'ACTIVITY_STATE', 3);
+  await page.clock.runFor(3500);
+  await expect(slider).toHaveAttribute('aria-valuenow', '22');
+  await expect.poll(closed).toBe(78);
+});
+
 test('öffnet die Tür nur mit bewussten Gesten', async ({ page }) => {
   await page.goto('/room/3');
   const door = page.getByRole('group', { name: 'Haustür' });
