@@ -46,14 +46,16 @@ export const RgbwColorControl = ({ channel }: { channel: Channel }) => {
   const hue = colorToHue(value);
   const color = white ? WHITE : hsvToRgb(hue, 1);
   const set = (next: number) => setDataPoint(channel.interfaceName, channel.address, 'COLOR', next);
-  const swatch = 'press size-6 rounded-full border border-black/10 ring-offset-2 ring-offset-card dark:border-white/15';
+  // 24 px to look at, 44 px to tap (the ::after)
+  const swatch =
+    'press relative size-6 rounded-full border border-black/10 ring-offset-2 ring-offset-card after:absolute after:-inset-2.5 dark:border-white/15';
   return (
     <Tile status={channel.status} className="col-span-2">
       <Header channel={channel} color={color} state={white ? m.RGBW_WHITE() : `${m.COLOR()} ${hue}°`} />
       <div className="flex flex-col gap-3 px-3.5 pt-3 pb-3.5">
         <HueBar label={m.COLOR_OF({ name: channel.name })} hue={hue} onChange={(h) => set(hueToColor(h))} />
         {/* biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing */}
-        <div className="flex flex-wrap justify-between gap-1.5" role="group" aria-label={m.QUICK_COLORS()}>
+        <div className="flex flex-wrap justify-between gap-x-1.5 gap-y-5" role="group" aria-label={m.QUICK_COLORS()}>
           <button
             type="button"
             aria-label={m.RGBW_WHITE()}
