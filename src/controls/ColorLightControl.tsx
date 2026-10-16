@@ -59,7 +59,7 @@ export const HueBar = ({ label, hue, onChange }: { label: string; hue: number; o
         event.preventDefault();
         onChange((hue + delta + 360) % 360);
       }}
-      className="relative h-4 cursor-ew-resize touch-none rounded-full outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+      className="relative h-4 cursor-ew-resize touch-none rounded-full outline-none after:absolute after:inset-x-0 after:-inset-y-3 focus-visible:ring-[3px] focus-visible:ring-ring/50"
       style={{ background: 'linear-gradient(90deg,#f00,#ff0 17%,#0f0 33%,#0ff 50%,#00f 67%,#f0f 83%,#f00)' }}
     >
       <div
@@ -109,7 +109,9 @@ export const ColorLightControl = ({ channel }: { channel: Channel }) => {
   };
 
   const state = on ? m.DIMMED_TO({ percent: level }) : m.OFF();
-  const swatch = 'press size-6 rounded-full border border-black/10 ring-offset-2 ring-offset-card dark:border-white/15';
+  // 24 px to look at, 44 px to tap (the ::after)
+  const swatch =
+    'press relative size-6 rounded-full border border-black/10 ring-offset-2 ring-offset-card after:absolute after:-inset-2.5 dark:border-white/15';
   return (
     <Tile
       status={channel.status}
@@ -141,7 +143,7 @@ export const ColorLightControl = ({ channel }: { channel: Channel }) => {
         />
         {hasHue && <HueBar label={m.COLOR_OF({ name: channel.name })} hue={hue} onChange={pickColor} />}
         {/* biome-ignore lint/a11y/useSemanticElements: a fieldset brings its own border and spacing */}
-        <div className="flex flex-wrap justify-between gap-1.5" role="group" aria-label={m.QUICK_COLORS()}>
+        <div className="flex flex-wrap justify-between gap-x-1.5 gap-y-5" role="group" aria-label={m.QUICK_COLORS()}>
           {(hasWhite || hasHue) &&
             WHITES.map((k) => (
               <button
