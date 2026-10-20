@@ -28,7 +28,9 @@ zeigt die App alle Geräte.
 
 Alle vier Ansichten sind gleich aufgebaut:
 
-1. **Reiter** zum Wechseln zwischen Räumen, Gewerken oder Favoritenlisten.
+1. **Reiter** zum Wechseln zwischen Räumen, Gewerken oder Favoritenlisten. Passen nicht alle in die Breite,
+   wischst du die Leiste zur Seite oder blätterst mit den Pfeilen an ihren Rändern; der gewählte Reiter rückt
+   in die Mitte.
 2. **Übersicht**: Innentemperatur im Schnitt, eingeschaltete Lichter („5 von 6“), offene Fenster mit
    Namen.
 3. **Abschnitte** nach Art: Klima, Fußbodenheizung, Licht & Schalter, Rollläden, Fenster, Türen,
