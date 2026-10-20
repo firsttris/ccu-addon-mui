@@ -71,7 +71,11 @@ export const NavTabs = ({ label, items, activeId, to }: NavTabsProps) => {
         aria-hidden
         onClick={() => {
           const row = rowRef.current;
-          row?.scrollBy({ left: (side === 'left' ? -1 : 1) * pageStep(row.clientWidth), behavior: 'smooth' });
+          const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+          row?.scrollBy({
+            left: (side === 'left' ? -1 : 1) * pageStep(row.clientWidth),
+            behavior: still ? 'auto' : 'smooth',
+          });
         }}
         className={cn(
           'press absolute top-[5px] bottom-[9px] z-10 flex w-11 items-center justify-center rounded-lg border bg-card text-muted-foreground shadow-sm hover:text-foreground',
