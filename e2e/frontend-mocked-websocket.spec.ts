@@ -21,6 +21,27 @@ test('lädt Räume ohne echte CCU3-Verbindung', async ({ page }) => {
   await expect(page).toHaveURL(/\/room\/2$/);
 });
 
+test('Raum-Reiter lassen sich auf schmalen Seiten auch mit der Maus durchblättern', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/room/1');
+  const tabs = page.getByRole('navigation', { name: /Räume|Rooms/ });
+  const last = tabs.getByRole('link', { name: 'Heizungsraum' });
+  await expect(last).not.toBeInViewport({ ratio: 1 });
+
+  // An arrow shows where tabs are hidden and pages the row
+  await expect(page.locator('[data-scroll="left"]')).toHaveCount(0);
+  await page.locator('[data-scroll="right"]').click();
+  await expect(last).toBeInViewport({ ratio: 1 });
+  await expect(page.locator('[data-scroll="right"]')).toHaveCount(0);
+  await expect(page.locator('[data-scroll="left"]')).toBeVisible();
+
+  // The tab clicked moves to the middle, so its neighbours show on both sides
+  await page.goto('/room/1');
+  await tabs.getByRole('link', { name: 'Küche' }).click();
+  await expect(page).toHaveURL(/\/room\/2$/);
+  await expect(last).toBeInViewport({ ratio: 0.5 });
+});
+
 test('lädt Trades und springt in Trade-Details mit Channels', async ({ page }) => {
   await page.goto('/trades');
 
