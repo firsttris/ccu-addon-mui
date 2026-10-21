@@ -30,7 +30,7 @@ export const sectionTitles: Record<SectionId, () => string> = {
 };
 
 // The narrowest a tile of each section looks right (as the grids below)
-const sectionMinPx: Record<SectionId | 'generic', number> = {
+export const sectionMinPx: Record<SectionId | 'generic', number> = {
   climate: 232,
   floor: 300,
   lights: 150,
@@ -72,22 +72,22 @@ export const gridTiles = (group: SectionGroup): GridTile[] => {
 };
 
 export const sectionGrids: Record<SectionId | 'generic', string> = {
-  climate: '[grid-template-columns:repeat(auto-fill,minmax(232px,1fr))]',
-  floor: '[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]',
-  lights: 'items-start [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]',
-  blinds: '[grid-template-columns:repeat(auto-fill,minmax(300px,1fr))]',
-  windows: '[grid-template-columns:repeat(auto-fill,minmax(220px,1fr))]',
-  doors: '[grid-template-columns:repeat(auto-fill,minmax(340px,1fr))]',
-  security: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
-  signals: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
-  sensors: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
-  water: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
-  drives: 'items-start [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]',
-  buttons: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
-  inputs: 'items-start [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]',
-  energy: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
-  system: '[grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]',
-  generic: '[grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]',
+  climate: '[grid-template-columns:repeat(auto-fit,minmax(232px,1fr))]',
+  floor: '[grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]',
+  lights: 'items-start [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]',
+  blinds: '[grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]',
+  windows: '[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]',
+  doors: '[grid-template-columns:repeat(auto-fit,minmax(340px,1fr))]',
+  security: 'items-start [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]',
+  signals: 'items-start [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]',
+  sensors: 'items-start [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]',
+  water: 'items-start [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]',
+  drives: 'items-start [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]',
+  buttons: '[grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]',
+  inputs: 'items-start [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]',
+  energy: '[grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]',
+  system: '[grid-template-columns:repeat(auto-fit,minmax(260px,1fr))]',
+  generic: '[grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]',
 };
 
 // A control for all channels of a device: rendered again only when one of

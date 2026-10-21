@@ -35,7 +35,8 @@ Alle vier Ansichten sind gleich aufgebaut:
    Namen.
 3. **Abschnitte** nach Art: Klima, Fußbodenheizung, Licht & Schalter, Rollläden, Fenster, Türen,
    Sicherheit, Klima & Wetter, Bewässerung & Wasser, Taster, Eingänge, Energie, System. Was keine eigene Kachel hat, folgt alphabetisch
-   nach Kanaltyp.
+   nach Kanaltyp. Kleine Abschnitte stehen nebeneinander, solange die Breite reicht, etwa ein Thermostat
+   neben vier Lichtern; jeder ist so breit wie seine Kacheln. Auf dem Handy steht jeder Abschnitt für sich.
 4. **Diagramme**, die als Kachel an diesem Ort hängen.
 
 *Alle Geräte* zeigt jeden Kanal der CCU, auch ohne Raum oder Gewerk. Das ist nützlich, um Geräte zu
@@ -48,11 +49,11 @@ und *Bearbeiten* legst du sie direkt an.
 ### Kacheln anordnen
 
 *Anordnen* (das Raster-Symbol oben in der Kopfzeile, auf dem Handy im Menü) schaltet die Ansicht in den
-Bearbeitungsmodus. Sie sieht dabei genauso aus wie sonst, nur verschiebbar; die Kopfzeile zeigt statt
-ihrer Knöpfe *Abbrechen*, *Automatisch anordnen* und *Fertig*. Jede Kachel hat oben rechts einen Griff: Nur
-daran ziehst du sie, überall sonst scrollt die Seite wie gewohnt, und schalten lässt sich beim Anordnen
-nichts. Die Kacheln stehen dabei wie sonst lückenlos nebeneinander: Ziehst du eine auf den Platz einer
-anderen, rücken die übrigen in der Reihe zur Seite.
+Bearbeitungsmodus. Jeder Abschnitt nimmt dabei die ganze Breite ein, auch wenn er sonst neben einem
+anderen steht; die Kopfzeile zeigt statt ihrer Knöpfe *Abbrechen*, *Automatisch anordnen* und *Fertig*.
+Jede Kachel hat oben rechts einen Griff: Nur daran ziehst du sie, überall sonst scrollt die Seite wie
+gewohnt, und schalten lässt sich beim Anordnen nichts. Die Kacheln stehen dabei wie sonst lückenlos
+nebeneinander: Ziehst du eine auf den Platz einer anderen, rücken die übrigen in der Reihe zur Seite.
 
 - **Räume und Gewerke** behalten ihre Bereiche (Licht, Heizung, Rollläden …). Kacheln ziehst du innerhalb
   ihres Bereichs und änderst an der rechten Kante die Breite. Ganze Bereiche verschiebst du mit den
@@ -61,8 +62,10 @@ anderen, rücken die übrigen in der Reihe zur Seite.
   einer Fläche, zuerst in der Reihenfolge der Liste.
 
 *Fertig* speichert das Layout auf der CCU (Datei `mui-tiles.json`), sofort und auch über einen Neustart
-hinweg; es gilt damit auf allen Geräten und passt sich für Handy, Tablet und Desktop an. *Abbrechen*
-verwirft die Änderungen, *Automatisch anordnen* stellt die ursprüngliche Anordnung wieder her.
+hinweg; es gilt damit auf allen Geräten und passt sich für Handy, Tablet und Desktop an. Ein Abschnitt,
+dessen Kacheln du angeordnet hast, behält danach die ganze Breite, weil seine Anordnung für sie gespeichert
+ist; die übrigen stehen weiter nebeneinander. *Abbrechen* verwirft die Änderungen, *Automatisch anordnen*
+stellt die ursprüngliche Anordnung wieder her.
 
 <img src="screenshot-anordnen.png" alt="Favoritenliste im Modus Anordnen mit Thermostat, Lichtern und Rollladen" width="900">
 

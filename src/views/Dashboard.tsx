@@ -19,7 +19,15 @@ import ChevronUpIcon from '~icons/lucide/chevron-up';
 import ChevronDownIcon from '~icons/lucide/chevron-down';
 import { useLightTradeIds } from '../controls/light/isLight';
 import { Overview, isLightOn } from './DashboardOverview';
-import { type SectionGroup, gridTiles, groupIntoSections, sectionGrids, sectionTitles } from './dashboardSections';
+import {
+  type SectionGroup,
+  gridTiles,
+  groupIntoSections,
+  sectionGrids,
+  sectionMinPx,
+  sectionTitles,
+} from './dashboardSections';
+import { sectionColumns, sectionFlex } from './sectionFlowModel';
 
 // A free arrangement: one section without heading, the tiles in the
 // order of the favorite list
@@ -27,7 +35,9 @@ const FREE = 'free';
 
 interface SectionProps {
   group: SectionGroup;
-  // While arranging, or once arranged: the tiles in a grid
+  // While arranging, or once arranged: the tiles in a grid, across the
+  // whole page (its saved positions are per page width); otherwise the
+  // section flows beside the others
   grid: boolean;
   editing: boolean;
   layout?: SectionLayout;
@@ -62,7 +72,8 @@ const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, 
     <section
       aria-labelledby={free ? undefined : id}
       aria-label={free ? m.FAVORITES() : undefined}
-      className="flex flex-col gap-3"
+      className={cn('flex min-w-0 flex-col gap-3', (grid || free) && 'basis-full')}
+      style={grid || free ? undefined : sectionFlex(sectionMinPx[group.section ?? 'generic'], sectionColumns(tiles))}
     >
       {!free && (
         <div className="flex items-baseline gap-2">
@@ -233,31 +244,36 @@ export const Dashboard = ({
       <AlarmBanner onShowAll={() => setAlarmsOpen(true)} />
       <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
       <Overview channels={channels} />
-      {sections.map((group, index) => (
-        <Section
-          key={group.key}
-          group={group}
-          grid={editing || !!layout?.sections[group.key]}
-          editing={editing}
-          layout={layout?.sections[group.key]}
-          onLayout={(sectionLayout) => change({ sections: { ...layout?.sections, [group.key]: sectionLayout } })}
-          onMove={
-            sections.length > 1
-              ? (delta) =>
-                  change({
-                    order: moveSection(
-                      sections.map((g) => g.key),
-                      group.key,
-                      delta,
-                    ),
-                  })
-              : undefined
-          }
-          first={index === 0}
-          last={index === sections.length - 1}
-          order={freeOrder}
-        />
-      ))}
+      {/* Sections side by side as long as they fit (sectionFlex) */}
+      {sections.length > 0 && (
+        <div className="flex flex-wrap items-start gap-6">
+          {sections.map((group, index) => (
+            <Section
+              key={group.key}
+              group={group}
+              grid={editing || !!layout?.sections[group.key]}
+              editing={editing}
+              layout={layout?.sections[group.key]}
+              onLayout={(sectionLayout) => change({ sections: { ...layout?.sections, [group.key]: sectionLayout } })}
+              onMove={
+                sections.length > 1
+                  ? (delta) =>
+                      change({
+                        order: moveSection(
+                          sections.map((g) => g.key),
+                          group.key,
+                          delta,
+                        ),
+                      })
+                  : undefined
+              }
+              first={index === 0}
+              last={index === sections.length - 1}
+              order={freeOrder}
+            />
+          ))}
+        </div>
+      )}
       {isLoading && channelsByType.length === 0 && <TileSkeletonGrid />}
       {layoutId !== undefined && <PlaceDiagrams place={layoutId} />}
       {extra}
