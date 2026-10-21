@@ -526,12 +526,20 @@ func values(t *testing.T, configure, operate *websocket.Conn, device string, cha
 	// starts with
 	var current any
 	value := another(p, current)
-	answer := call(t, operate, message{"type": "setDatapoint", "interfaceName": "VirtualDevices", "address": channel, "attribute": name, "value": value})
+	// hmipserver answers 503 (occulited: down) for a while after the group
+	// is created; up to a minute, then it counts as openccu-lite's
+	var answer message
+	for wait := time.Now().Add(time.Minute); ; time.Sleep(2 * time.Second) {
+		answer = call(t, operate, message{"type": "setDatapoint", "interfaceName": "VirtualDevices", "address": channel, "attribute": name, "value": value})
+		if answer["success"] == true || answer["code"] != "CCU_ERROR" || !strings.Contains(fmt.Sprint(answer["error"]), "503") || time.Now().After(wait) {
+			break
+		}
+	}
 	if answer["success"] != true && answer["code"] == "CCU_ERROR" && strings.Contains(fmt.Sprint(answer["error"]), "503") {
-		// openccu-lite's, not MUI's: hmipserver answers no VALUES call of a
-		// heating group without members (occulited: 503 down), and the VM
-		// has no radio devices to add. Runs again once hmipserver answers.
-		t.Logf("SKIPPED setting %s %s: hmipserver does not answer for a group without members: %v", channel, name, answer["error"])
+		// openccu-lite's, not MUI's: hmipserver still answers no VALUES
+		// call of the heating group (occulited: 503 down), and the VM has
+		// no radio devices to add. Runs again once hmipserver answers.
+		t.Logf("SKIPPED setting %s %s: hmipserver did not answer within a minute: %v", channel, name, answer["error"])
 		return
 	}
 	if answer["success"] != true {
