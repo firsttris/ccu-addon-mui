@@ -12,8 +12,9 @@ name: openccu-lite VM
 # pairing stay a test on real hardware.
 #
 # Runs when a pull request changes the openccu-lite part, every Monday against
-# the newest openccu-lite release (it is still changing), before a release and
-# by hand, there with a chosen openccu-lite release.
+# the newest openccu-lite release (it is still changing), before a release
+# (release.yml, against the release it names) and by hand, there with a chosen
+# openccu-lite release.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
@@ -36,6 +37,12 @@ on:
         required: false
         default: ''
   workflow_call:
+    inputs:
+      lite-release:
+        description: 'openccu-lite release tag (empty: the newest, pre-releases included)'
+        type: string
+        required: false
+        default: ''
 
 concurrency:
   group: lite-vm-${{ github.ref }}
