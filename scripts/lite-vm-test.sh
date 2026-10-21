@@ -48,7 +48,9 @@ diagnose() {
   for path in /addons/mui/ /addons/mui/index.html /addons/mui/assets/ /addons/mui/ws; do
     say "GET $path with a session: HTTP $(curl -s --max-time 10 -b "$jar" -o "$WORK/diag.body" -w '%{http_code}' "$BASE$path") $(head -c 200 "$WORK/diag.body" | tr '\n' ' ')"
   done
-  for query in 'q=lighttpd' 'q=mui' 'unit=addon-mui' 'unit=lighttpd'; do
+  # occulited and hmipserver as well: whether a value's event left hmipserver
+  # (VirtualDevices runs in it) and reached occulited's lite-rpc stream
+  for query in 'q=lighttpd' 'q=mui' 'unit=addon-mui' 'unit=lighttpd' 'unit=occulited' 'unit=hmipserver' 'q=VirtualDevices'; do
     say "log $query:"
     curl -s --max-time 20 -H "$AUTH" "$BASE/api/system/v1/log?$query&limit=60" \
       | grep -oE '"message":"([^"\\]|\\.)*"' | sed 's/^"message":"//; s/"$//; s/\\"/"/g; s/^/  | /' | tail -60
