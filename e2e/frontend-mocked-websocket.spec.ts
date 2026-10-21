@@ -1121,6 +1121,24 @@ test('verschiebt beim Anordnen ganze Bereiche, die Kacheln bleiben in ihrem Bere
   await expect(headings.nth(1)).toHaveText(first!);
 });
 
+test('stellt kleine Bereiche nebeneinander, beim Anordnen untereinander', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const headings = page.getByRole('main').getByRole('heading', { level: 2 });
+  await expect(headings.nth(1)).toBeVisible();
+  const top = async (n: number) => (await headings.nth(n).boundingBox())?.y;
+  const left = async (n: number) => (await headings.nth(n).boundingBox())?.x;
+
+  // Lights (four columns) and windows (two) share a line
+  expect(await top(1)).toBe(await top(0));
+  expect(await left(1)).toBeGreaterThan((await left(0))! + 400);
+
+  // Arranging works on grids across the whole page
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  await expect.poll(() => top(1)).toBeGreaterThan((await top(0))!);
+  expect(await left(1)).toBe(await left(0));
+});
+
 test('bietet das Anordnen auf dem Handy im Menü an', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/room/1');
