@@ -5,7 +5,7 @@ name: openccu-lite VM
 # occulited, then go-server/litevm against it: login through the session gate,
 # what the app reads, a room, its layout and the language kept over a restart,
 # an update and a reboot, the levels configure and operate, a heating group,
-# a value set with the event coming back and a setting through lite-rpc with
+# a value set and read back and a setting through lite-rpc with
 # the user's session, the app in Chrome, the data in openccu-lite's backup,
 # no write errors in the journal, uninstall and install again, logout ends
 # the connection (scripts/lite-vm-test.sh). Without a radio module: devices and

@@ -166,10 +166,13 @@ VM, über lighttpd und occulites Sitzungs-Gate:
   legt eine Heizgruppe mit Umlauten über occulites Gruppen-API an. Ihr Gerät liegt in hmipserver
   (`VirtualDevices` läuft auch ohne Funkmodul). MUIs Geräteliste für *configure* muss dieselbe sein,
   die lite-rpc (`/api/rpc/v1/json/VirtualDevices`) dieser Sitzung direkt gibt. An diesem Gerät setzt
-  *operate* einen Wert (`setDatapoint` über lite-rpc, `rpc:operate`), und der Wert kommt als Event über
-  occulites Event-Stream an die Verbindung zurück, die den Kanal abonniert hat. Antwortet hmipserver
-  direkt nach dem Anlegen der Gruppe nicht (`503 down`, siehe Plan), meldet der Test den Schritt als
-  übersprungen; jeder andere Fehler und ein fehlendes Event bleiben rot. *configure* ändert eine
+  *operate* einen Wert (`setDatapoint` über lite-rpc, `rpc:operate`) und liest ihn mit `getParamset`
+  (`VALUES`) zurück. Ein Event gibt es dafür nicht: hmipserver schickt für einen Wert an einer Heizgruppe
+  ohne Mitglieder keins, erst die Antwort eines Mitglieds brächte eins, und die VM hat keine Geräte
+  ([openccu-lite#12](https://github.com/hobbyquaker/openccu-lite/issues/12); bis 1.0.0-beta.1 kam
+  nur zufällig eine Statusmeldung von occulited an). Antwortet hmipserver nach dem Anlegen der Gruppe
+  auch nach einer Minute nicht (`503 down`, siehe Plan), meldet der Test den Schritt als übersprungen; jeder andere
+  Fehler und ein Wert, der nicht zurückkommt, bleiben rot. *configure* ändert eine
   Einstellung (MASTER, `rpc:configure`) und setzt sie zurück; *operate* bekommt dabei `FORBIDDEN`.
 - **fresh:** nach Deinstallieren (`POST /api/system/v1/addons/mui/uninstall`) und neuer Installation sind
   Layout und Sprache weg, der Raum in occulites Speicher ist noch da.
@@ -245,7 +248,7 @@ der Workflow dafür eine eigene Auswahl `tiles`.
 | `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Unit-Tests, Build mit Typprüfung (`vite build && tsc`), Go-Build für ARM und x86 und für openccu-lite (aarch64, x86_64), die `tar.gz`-Archive mit `.sha256` als Artefakt `addon` |
 | `go-unit-tests.yml` | Push und Pull Request auf `main` | `go vet`, `gofmt`, `staticcheck` und `go test ./...` mit Coverage-Bericht als Artefakt, dasselbe mit `-tags lite` für openccu-lite |
 | `playwright-e2e.yml` | Push und Pull Request auf `main` | Im Docker-Image `mcr.microsoft.com/playwright` (Version aus der `package-lock.json`, kein Browser-Download): E2E mit Mock inkl. Anmeldung (4 Worker, mit Frontend-Coverage), Screenshot-Vergleich und E2E gegen den Stack auf drei Runnern (`--shard`), Berichte als Artefakte |
-| `lite-vm.yml` | Pull Request, der den Lite-Teil ändert; montags gegen das neueste openccu-lite; von Hand (mit wählbarem openccu-lite-Release); vor jeder Release gegen das in `release.yml` festgelegte openccu-lite (zurzeit 1.0.0-beta.1), damit ein neues openccu-lite keine Release aufhält | Paket bauen, openccu-lite-Image laden (zwischengespeichert je Release), in QEMU mit KVM booten, installieren, `scripts/lite-vm-test.sh`; Dauer je Schritt in der Zusammenfassung, Logs als Artefakt |
+| `lite-vm.yml` | Pull Request, der den Lite-Teil ändert; montags gegen das neueste openccu-lite; von Hand (mit wählbarem openccu-lite-Release); vor jeder Release gegen das in `release.yml` festgelegte openccu-lite (zurzeit 1.0.0-beta.12), damit ein neues openccu-lite keine Release aufhält | Paket bauen, openccu-lite-Image laden (zwischengespeichert je Release), in QEMU mit KVM booten, installieren, `scripts/lite-vm-test.sh`; Dauer je Schritt in der Zusammenfassung, Logs als Artefakt |
 | `release.yml` | Tag `vX.Y.Z` | Die vier Workflows oben, dann die Release mit den Archiven und erzeugten Notizen; Go- und Playwright-Tests entfallen, wenn `main` sie für diesen Code schon bestanden hat |
 | `bump.yml` | von Hand | Version erhöhen, Tag `vX.Y.Z` anlegen und `release.yml` darauf starten |
 

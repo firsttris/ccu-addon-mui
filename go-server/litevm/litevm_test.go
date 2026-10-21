@@ -22,7 +22,7 @@
 //     MUI lets them do and that the changes reach occulited with their own
 //     session; a heating group (occulited's system API) and lite-rpc
 //     (VirtualDevices, hmipserver runs without a radio module) with the
-//     user's session
+//     user's session, a value set and read back
 //   - showcase: rooms with a heating group each, for the screenshots of
 //     scripts/lite-vm-browser.mjs (the VM has no radio devices; a heating
 //     group's virtual thermostat is the one device it can have)
@@ -494,9 +494,13 @@ func same(a, b any) bool {
 }
 
 // values: an operate account sets a value of the heating group's device
-// through MUI (lite-rpc setValue with its own session, rpc:operate), and the
-// value comes back as an event through occulited's event stream to a
-// subscribed connection
+// through MUI (lite-rpc setValue with its own session, rpc:operate) and reads
+// it back (getParamset VALUES). Not as an event: hmipserver sends none for a
+// value set on a heating group without members; the group passes it on to
+// its members and only their answer brings events (hobbyquaker/openccu-lite
+// issue 12). Up to occulited 1.0.0-beta.1 a read of the channel values on
+// adding a device produced a state message that looked like the event; from
+// beta.4 on occulited does that only for HmIP-RF
 func values(t *testing.T, configure, operate *websocket.Conn, device string, channels []string) {
 	// What a user sets: a temperature on a channel of its own, not channel
 	// 0 (hmipserver's virtual group device fails INHIBIT there with a Java
@@ -516,35 +520,43 @@ func values(t *testing.T, configure, operate *websocket.Conn, device string, cha
 	if channel == "" {
 		t.Fatalf("no writable value on the heating group's channels %v", channels)
 	}
-	// Without reading the value first: getParamset VALUES of the group's
-	// channel gets no answer from hmipserver while the group has no members
-	// (occulited: 503 down). A value in the middle of the range differs
-	// from what a new group starts with
+	// Without reading the value first: right after the group is created
+	// hmipserver may not answer its VALUES calls yet (occulited: 503 down).
+	// A value in the middle of the range differs from what a new group
+	// starts with
 	var current any
 	value := another(p, current)
-	ok(t, call(t, operate, message{"type": "subscribe", "channels": []string{channel}}))
-	answer := call(t, operate, message{"type": "setDatapoint", "interfaceName": "VirtualDevices", "address": channel, "attribute": name, "value": value})
+	// hmipserver answers 503 (occulited: down) for a while after the group
+	// is created; up to a minute, then it counts as openccu-lite's
+	var answer message
+	for wait := time.Now().Add(time.Minute); ; time.Sleep(2 * time.Second) {
+		answer = call(t, operate, message{"type": "setDatapoint", "interfaceName": "VirtualDevices", "address": channel, "attribute": name, "value": value})
+		if answer["success"] == true || answer["code"] != "CCU_ERROR" || !strings.Contains(fmt.Sprint(answer["error"]), "503") || time.Now().After(wait) {
+			break
+		}
+	}
 	if answer["success"] != true && answer["code"] == "CCU_ERROR" && strings.Contains(fmt.Sprint(answer["error"]), "503") {
-		// openccu-lite's, not MUI's: hmipserver answers no VALUES call of a
-		// heating group without members (occulited: 503 down), and the VM
-		// has no radio devices to add. Runs again once hmipserver answers.
-		t.Logf("SKIPPED setting %s %s: hmipserver does not answer for a group without members: %v", channel, name, answer["error"])
+		// openccu-lite's, not MUI's: hmipserver still answers no VALUES
+		// call of the heating group (occulited: 503 down), and the VM has
+		// no radio devices to add. Runs again once hmipserver answers.
+		t.Logf("SKIPPED setting %s %s: hmipserver did not answer within a minute: %v", channel, name, answer["error"])
 		return
 	}
 	if answer["success"] != true {
 		t.Fatalf("setDatapoint %s %s = %v as ci-operate: %v", channel, name, value, answer)
 	}
-	_ = operate.SetReadDeadline(time.Now().Add(30 * time.Second))
+	deadline := time.Now().Add(30 * time.Second)
 	for {
-		var m message
-		if err := operate.ReadJSON(&m); err != nil {
-			t.Fatalf("no event for %s %s = %v within 30 s: %v", channel, name, value, err)
-		}
-		event, _ := m["event"].(map[string]any)
-		if event != nil && event["channel"] == channel && event["datapoint"] == name && same(event["value"], value) {
-			t.Logf("%s %s = %v (was %v): set as ci-operate, the event came back", channel, name, value, current)
+		m := call(t, operate, message{"type": "getParamset", "interfaceName": "VirtualDevices", "address": channel, "paramsetKey": "VALUES"})
+		values, _ := m["values"].(map[string]any)
+		if m["type"] == "paramset" && same(values[name], value) {
+			t.Logf("%s %s = %v: set as ci-operate and read back", channel, name, value)
 			return
 		}
+		if time.Now().After(deadline) {
+			t.Fatalf("%s %s = %v not read back within 30 s: %v", channel, name, value, m)
+		}
+		time.Sleep(time.Second)
 	}
 }
 
