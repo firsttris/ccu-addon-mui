@@ -37,12 +37,10 @@ jobs:
 
   # The add-on installed on a real openccu-lite (VM), against a release known to work: a new
   # openccu-lite must not stop a release of ours. The Monday run of lite-vm.yml tests the newest.
-  # Pinned to 1.0.0-beta.1: from 1.0.0-beta.4 on, the event of a value set on a heating group
-  # does not come back (phase levels).
   lite-vm:
     uses: ./.github/workflows/lite-vm.yml
     with:
-      lite-release: v1.0.0-beta.1
+      lite-release: v1.0.0-beta.12
 
   release:
     needs: [tested, build, go, e2e, lite-vm]
