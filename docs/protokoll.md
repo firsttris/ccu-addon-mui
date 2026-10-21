@@ -163,7 +163,7 @@ eines Wartungswerts (`UNREACH`, `LOW_BAT`, `CONFIG_PENDING` …) neu, sonst alle
 | Geräte einrichten | `getParamsetDescription` | Paramset-Beschreibung (`VALUES` oder `MASTER`) per XML-RPC, gecacht | alle |
 | | `getParamset` | Paramset-Werte (`VALUES` oder `MASTER`; andere Schlüssel ergeben `INVALID_REQUEST`) | alle |
 | | `putParamset` | MASTER-Paramset schreiben (gegen die Beschreibung geprüft und konvertiert) | Admin+T (A) |
-| | `listDevices` | Geräte aller Interfaces mit Kanälen, Link-Rollen und Firmware | alle (Gäste und Benutzer sehen Geräteeinstellungen schreibgeschützt) |
+| | `listDevices` | Geräte aller Interfaces mit Kanälen, Link-Rollen und Firmware; ein Interface, das nicht antwortet, wird nach einer Sekunde noch einmal gefragt (nicht, wenn es gar nicht läuft) und fehlt sonst in der Liste | alle (Gäste und Benutzer sehen Geräteeinstellungen schreibgeschützt) |
 | | `rename` | Gerät oder Kanal umbenennen | Admin+T (A) |
 | | `setChannelTile` | Kachel eines Kanals festlegen (light/switch/leer, in `mui-tiles.json`) | Admin+T (A) |
 | | `setChannelOption` | Kanaloptionen der WebUI (z. B. `usable`, sichtbar, protokolliert) | Admin+T (A) |

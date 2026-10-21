@@ -1,7 +1,9 @@
 package websocket
 
 import (
+	"strings"
 	"sync"
+	"time"
 
 	"ccu-addon-mui-server/pkg/audit"
 	"ccu-addon-mui-server/pkg/ccurpc"
@@ -136,9 +138,9 @@ func (s *Server) handleListDevices(client *Client, requestID string) {
 		wg.Add(1)
 		go func(i int, iface string) {
 			defer wg.Done()
-			list, err := rpc.ListDevices(iface)
+			list, err := listWithRetry(func() ([]ccurpc.DeviceDescription, error) { return rpc.ListDevices(iface) }, listDevicesRetry)
 			if err != nil {
-				logger.Debugf("listDevices %s: %v", iface, err)
+				logger.Infof("listDevices %s: %v (left out of the device list)", iface, err)
 				return
 			}
 			lists[i] = list
@@ -265,4 +267,22 @@ func (s *Server) storeChannelMode(client *Client, iface, address string, value a
 			logger.Errorf("SetChannelMode %s: %s %v", address, result, err)
 		}
 	}
+}
+
+// listDevicesRetry is the pause before an interface is asked a second time
+const listDevicesRetry = time.Second
+
+// listWithRetry asks an interface for its devices and, when that fails other
+// than by the process not running, once more after wait: a process busy for
+// a moment would leave all its devices out of the list (hmipserver's
+// VirtualDevices right after a heating group was created, seen on
+// openccu-lite in the VM test). An interface that is not there (connection
+// refused) is not asked again, so a system without it lists as fast as before.
+func listWithRetry(list func() ([]ccurpc.DeviceDescription, error), wait time.Duration) ([]ccurpc.DeviceDescription, error) {
+	devices, err := list()
+	if err == nil || strings.Contains(err.Error(), "connection refused") {
+		return devices, err
+	}
+	time.Sleep(wait)
+	return list()
 }
