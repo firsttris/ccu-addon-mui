@@ -197,6 +197,10 @@ des Add-ons keine Schreibfehler (`EACCES`, `EROFS`, *permission denied*) und kei
 Wiederherstellen ersetzt `/usr/local` und startet das System neu; dass es die Dateien zurückbringt, ist
 Sache des Systems, dass sie im Backup sind, unsere. Die Dauer jedes Schritts steht in der Zusammenfassung
 des Workflows, Serial-Log, Journal, Antworten und die Dateiliste des Backups im Artefakt `lite-vm-logs`.
+Scheitert ein Schritt, schreibt das Skript eine Diagnose ins Log des Jobs: Navigation, Add-on und Dienst
+aus occulites Sicht, die Antworten unter `/addons/mui/` mit Sitzung und die letzten Zeilen des Journals von
+lighttpd, `addon-mui`, `occulited` und `hmipserver` (darin `VirtualDevices`), damit sich ein Fehler ohne die
+VM eingrenzen lässt, etwa ob ein Event hmipserver verlassen hat und bei occulited angekommen ist.
 
 Die VM hat kein Funkmodul: Funkgeräte, Anlernen und Werte über Funk bleiben ein Test auf echter Hardware.
 
