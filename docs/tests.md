@@ -166,10 +166,13 @@ VM, über lighttpd und occulites Sitzungs-Gate:
   legt eine Heizgruppe mit Umlauten über occulites Gruppen-API an. Ihr Gerät liegt in hmipserver
   (`VirtualDevices` läuft auch ohne Funkmodul). MUIs Geräteliste für *configure* muss dieselbe sein,
   die lite-rpc (`/api/rpc/v1/json/VirtualDevices`) dieser Sitzung direkt gibt. An diesem Gerät setzt
-  *operate* einen Wert (`setDatapoint` über lite-rpc, `rpc:operate`), und der Wert kommt als Event über
-  occulites Event-Stream an die Verbindung zurück, die den Kanal abonniert hat. Antwortet hmipserver
-  direkt nach dem Anlegen der Gruppe nicht (`503 down`, siehe Plan), meldet der Test den Schritt als
-  übersprungen; jeder andere Fehler und ein fehlendes Event bleiben rot. *configure* ändert eine
+  *operate* einen Wert (`setDatapoint` über lite-rpc, `rpc:operate`) und liest ihn mit `getParamset`
+  (`VALUES`) zurück. Ein Event gibt es dafür nicht: hmipserver schickt für einen Wert an einer Heizgruppe
+  ohne Mitglieder keins, erst die Antwort eines Mitglieds brächte eins, und die VM hat keine Geräte
+  ([openccu-lite#12](https://github.com/hobbyquaker/openccu-lite/issues/12); bis 1.0.0-beta.1 kam
+  nur zufällig eine Statusmeldung von occulited an). Antwortet hmipserver direkt nach dem Anlegen der
+  Gruppe nicht (`503 down`, siehe Plan), meldet der Test den Schritt als übersprungen; jeder andere
+  Fehler und ein Wert, der nicht zurückkommt, bleiben rot. *configure* ändert eine
   Einstellung (MASTER, `rpc:configure`) und setzt sie zurück; *operate* bekommt dabei `FORBIDDEN`.
 - **fresh:** nach Deinstallieren (`POST /api/system/v1/addons/mui/uninstall`) und neuer Installation sind
   Layout und Sprache weg, der Raum in occulites Speicher ist noch da.
