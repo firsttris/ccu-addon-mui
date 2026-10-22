@@ -1,5 +1,6 @@
 import { PlaceDiagrams } from './diagrams/Diagrams';
 import { Fragment as ReactFragment, type ReactNode, useMemo, useRef, useState } from 'react';
+import { useContainerWidth } from 'react-grid-layout';
 import type { Channel } from '../types/types';
 import { sameItems } from '../hooks/channels';
 import { AlarmBanner, AlarmsSheet } from '../components/Alarms';
@@ -14,7 +15,16 @@ import { useToast } from '../contexts/ToastContext';
 import { usePageArrange } from '../contexts/PageTitleContext';
 import { Button } from '../components/ui/button';
 import { GridDashboard, type GridTile } from './grid/GridDashboard';
-import { moveSection, orderSections, parseLayout, type SavedLayout, type SectionLayout } from './grid/tileLayout';
+import {
+  columnsWidth,
+  MARGIN,
+  moveSection,
+  orderSections,
+  parseLayout,
+  type SavedLayout,
+  type SectionLayout,
+  usedColumns,
+} from './grid/tileLayout';
 import ChevronUpIcon from '~icons/lucide/chevron-up';
 import ChevronDownIcon from '~icons/lucide/chevron-down';
 import { useLightTradeIds } from '../controls/light/isLight';
@@ -27,7 +37,7 @@ import {
   sectionMinPx,
   sectionTitles,
 } from './dashboardSections';
-import { sectionColumns, sectionFlex } from './sectionFlowModel';
+import { arrangedFlex, sectionColumns, sectionFlex } from './sectionFlowModel';
 
 // A free arrangement: one section without heading, the tiles in the
 // order of the favorite list
@@ -35,10 +45,13 @@ const FREE = 'free';
 
 interface SectionProps {
   group: SectionGroup;
-  // While arranging, or once arranged: the tiles in a grid, across the
-  // whole page (its saved positions are per page width); otherwise the
-  // section flows beside the others
+  // While arranging, or once arranged: the tiles in a grid laid out for
+  // the whole row (its saved positions are per row width). While arranging
+  // the section takes the whole row; once arranged it flows beside the
+  // others as wide as its tiles, as does one without a grid.
   grid: boolean;
+  // Width of the row the sections flow in, once measured
+  rowWidth: number;
   editing: boolean;
   layout?: SectionLayout;
   onLayout: (layout: SectionLayout) => void;
@@ -50,7 +63,7 @@ interface SectionProps {
   order?: number[];
 }
 
-const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, order }: SectionProps) => {
+const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, order, rowWidth }: SectionProps) => {
   const free = group.key === FREE;
   // Types without a translation (shown by GenericControl) keep the CCU's name
   const title = group.section ? sectionTitles[group.section]() : free ? '' : channelTypeName(group.types[0][0]);
@@ -68,12 +81,23 @@ const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, 
       .sort((a, b) => rank(a.tile) - rank(b.tile) || a.index - b.index)
       .map(({ tile }) => tile);
   }, [group, order]);
+  // The grid as wide as the row with its padding (GridDashboard's -mx-3)
+  const gridWidth = rowWidth > 0 ? rowWidth + 2 * MARGIN : undefined;
+  const fullRow = editing || free || (grid && gridWidth === undefined);
+  const style = useMemo(() => {
+    if (fullRow) return undefined;
+    if (!grid || gridWidth === undefined) {
+      return sectionFlex(sectionMinPx[group.section ?? 'generic'], sectionColumns(tiles));
+    }
+    const { cols, used } = usedColumns(tiles, layout, gridWidth);
+    return arrangedFlex(columnsWidth(gridWidth, cols, used));
+  }, [fullRow, grid, gridWidth, group.section, tiles, layout]);
   return (
     <section
       aria-labelledby={free ? undefined : id}
       aria-label={free ? m.FAVORITES() : undefined}
-      className={cn('flex min-w-0 flex-col gap-3', (grid || free) && 'basis-full')}
-      style={grid || free ? undefined : sectionFlex(sectionMinPx[group.section ?? 'generic'], sectionColumns(tiles))}
+      className={cn('flex min-w-0 flex-col gap-3', fullRow && 'basis-full')}
+      style={style}
     >
       {!free && (
         <div className="flex items-baseline gap-2">
@@ -114,6 +138,7 @@ const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, 
           saved={layout}
           editing={editing}
           onChange={onLayout}
+          width={gridWidth}
           // As the section's own grid: tiles side by side as tall as the tallest
           equalRows={!sectionGrids[group.section ?? 'generic'].includes('items-start')}
         />
@@ -125,6 +150,17 @@ const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, 
         </div>
       )}
     </section>
+  );
+};
+
+// The sections side by side as long as they fit (sectionFlex, arrangedFlex),
+// given the row's width once measured (0 before)
+const SectionRow = ({ children }: { children: (rowWidth: number) => ReactNode }) => {
+  const { width, containerRef, mounted } = useContainerWidth({ measureBeforeMount: true });
+  return (
+    <div ref={containerRef} className="flex flex-wrap items-start gap-6">
+      {children(mounted ? width : 0)}
+    </div>
   );
 };
 
@@ -244,35 +280,37 @@ export const Dashboard = ({
       <AlarmBanner onShowAll={() => setAlarmsOpen(true)} />
       <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
       <Overview channels={channels} />
-      {/* Sections side by side as long as they fit (sectionFlex) */}
       {sections.length > 0 && (
-        <div className="flex flex-wrap items-start gap-6">
-          {sections.map((group, index) => (
-            <Section
-              key={group.key}
-              group={group}
-              grid={editing || !!layout?.sections[group.key]}
-              editing={editing}
-              layout={layout?.sections[group.key]}
-              onLayout={(sectionLayout) => change({ sections: { ...layout?.sections, [group.key]: sectionLayout } })}
-              onMove={
-                sections.length > 1
-                  ? (delta) =>
-                      change({
-                        order: moveSection(
-                          sections.map((g) => g.key),
-                          group.key,
-                          delta,
-                        ),
-                      })
-                  : undefined
-              }
-              first={index === 0}
-              last={index === sections.length - 1}
-              order={freeOrder}
-            />
-          ))}
-        </div>
+        <SectionRow>
+          {(rowWidth) =>
+            sections.map((group, index) => (
+              <Section
+                key={group.key}
+                group={group}
+                grid={editing || !!layout?.sections[group.key]}
+                editing={editing}
+                layout={layout?.sections[group.key]}
+                onLayout={(sectionLayout) => change({ sections: { ...layout?.sections, [group.key]: sectionLayout } })}
+                onMove={
+                  sections.length > 1
+                    ? (delta) =>
+                        change({
+                          order: moveSection(
+                            sections.map((g) => g.key),
+                            group.key,
+                            delta,
+                          ),
+                        })
+                    : undefined
+                }
+                first={index === 0}
+                last={index === sections.length - 1}
+                order={freeOrder}
+                rowWidth={rowWidth}
+              />
+            ))
+          }
+        </SectionRow>
       )}
       {isLoading && channelsByType.length === 0 && <TileSkeletonGrid />}
       {layoutId !== undefined && <PlaceDiagrams place={layoutId} />}

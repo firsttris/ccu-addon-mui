@@ -1139,6 +1139,80 @@ test('stellt kleine Bereiche nebeneinander, beim Anordnen untereinander', async 
   expect(await left(1)).toBe(await left(0));
 });
 
+// Moves the first light of the living room behind the second while
+// arranging, without saving yet
+const moveFirstLight = async (page: Page) => {
+  const headings = page.getByRole('main').getByRole('heading', { level: 2 });
+  await expect(headings.nth(1)).toBeVisible();
+  const lights = page.getByRole('region', { name: 'Lights & switches' });
+  const box = async (n: number) => (await headings.nth(n).boundingBox())!;
+
+  // Move the first light behind the second
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  // While arranging, every section takes the whole row
+  await expect.poll(async () => (await box(1)).y).toBeGreaterThan((await box(0)).y);
+  const tiles = lights.locator('[data-tile-key]');
+  await expect(tiles).toHaveCount(3);
+  const [key, other] = [
+    await tiles.nth(0).getAttribute('data-tile-key'),
+    await tiles.nth(1).getAttribute('data-tile-key'),
+  ];
+  const x = async (k: string | null) => (await page.locator(`[data-tile-key="${k}"]`).boundingBox())!.x;
+  const tile = (await tiles.first().boundingBox())!;
+  const grip = (await tiles.first().locator('.tile-drag-handle').boundingBox())!;
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(tile.x + tile.width * 1.5, tile.y + 30, { steps: 10 });
+  await page.mouse.move(tile.x + tile.width * 2.4, tile.y + 30, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(async () => (await x(key)) > (await x(other))).toBe(true);
+  return { headings, lights, box, key, other, x };
+};
+
+test('stellt einen angeordneten Bereich so breit wie seine Kacheln neben die anderen', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const { lights, box, key, other, x } = await moveFirstLight(page);
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+
+  // Arranged, the lights keep their order and share a line with the windows
+  for (const reload of [false, true]) {
+    if (reload) await page.reload();
+    await expect.poll(async () => (await box(1)).y).toBe((await box(0)).y);
+    expect(await x(key)).toBeGreaterThan(await x(other));
+    const section = (await lights.boundingBox())!;
+    const right = Math.max(
+      ...(await lights
+        .locator('[data-tile-key]')
+        .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right))),
+    );
+    // As wide as its tiles: the rightmost one ends at the section's edge
+    expect(Math.abs(right - (section.x + section.width))).toBeLessThan(2);
+    expect((await box(1)).x).toBeGreaterThan(section.x + section.width);
+  }
+});
+
+test('hält eine Anordnung auch, wenn die Seite schmaler als der größte Breakpoint ist', async ({ page }) => {
+  // 1024 px: the grid is laid out for sm from the start, without a change
+  // of breakpoint to report
+  await page.setViewportSize({ width: 1024, height: 900 });
+  await page.goto('/room/1');
+  const { key, other, x } = await moveFirstLight(page);
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+  const stored = await page.evaluate(() =>
+    (
+      (
+        window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string; layout?: string }> } }
+      ).__wsMock?.sentMessages() ?? []
+    )
+      .filter((m) => m.type === 'setLayout')
+      .map((m) => JSON.parse(m.layout!)),
+  );
+  expect(Object.keys(stored[0].sections.lights)).toEqual(['sm']);
+  await page.reload();
+  await expect.poll(async () => (await x(key)) > (await x(other))).toBe(true);
+});
+
 test('bietet das Anordnen auf dem Handy im Menü an', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/room/1');

@@ -1,3 +1,4 @@
+import { getBreakpointFromWidth } from 'react-grid-layout';
 import type { Compactor, Layout, LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
 
 // Layout of the dashboard's tiles when arranged by hand. Every section
@@ -162,6 +163,25 @@ export const flowCompactor: Compactor = {
   type: 'wrap',
   allowOverlap: true,
   compact: flowLayout,
+};
+
+// The breakpoint a grid this wide shows, as react-grid-layout picks it
+export const breakpointFor = (widthPx: number) => getBreakpointFromWidth(BREAKPOINTS, widthPx) as BreakpointName;
+
+// Columns an arranged section's tiles take from the left, in the grid of a
+// whole row (widthPx as passed to the grid): a section needs no more than
+// that beside the others
+export const usedColumns = (tiles: TileSpec[], saved: SectionLayout | undefined, widthPx: number) => {
+  const bp = breakpointFor(widthPx);
+  const placed = flowLayout(responsiveLayouts(tiles, saved, {}, widthPx)[bp] ?? [], COLS[bp]);
+  return { cols: COLS[bp], used: placed.reduce((max, t) => Math.max(max, t.x + t.w), 1) };
+};
+
+// Width of the first `used` of `cols` columns in a grid widthPx wide; its
+// padding (MARGIN on each side) is outside, as GridDashboard's -mx-3 puts it
+export const columnsWidth = (widthPx: number, cols: number, used: number) => {
+  const column = (widthPx - 2 * MARGIN - MARGIN * (cols - 1)) / cols;
+  return Math.ceil(used * column + (used - 1) * MARGIN);
 };
 
 // What is stored: position and width (heights come from the content)

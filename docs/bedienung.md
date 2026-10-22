@@ -63,8 +63,9 @@ nebeneinander: Ziehst du eine auf den Platz einer anderen, rücken die übrigen 
 
 *Fertig* speichert das Layout auf der CCU (Datei `mui-tiles.json`), sofort und auch über einen Neustart
 hinweg; es gilt damit auf allen Geräten und passt sich für Handy, Tablet und Desktop an. Ein Abschnitt,
-dessen Kacheln du angeordnet hast, behält danach die ganze Breite, weil seine Anordnung für sie gespeichert
-ist; die übrigen stehen weiter nebeneinander. *Abbrechen* verwirft die Änderungen, *Automatisch anordnen*
+dessen Kacheln du angeordnet hast, ist danach so breit wie die Spalten, die seine Kacheln belegen, und
+steht wie die übrigen neben anderen Abschnitten, solange die Breite reicht. Seine Kacheln bleiben dabei
+genau dort, wo du sie hingezogen hast. *Abbrechen* verwirft die Änderungen, *Automatisch anordnen*
 stellt die ursprüngliche Anordnung wieder her.
 
 <img src="screenshot-anordnen.png" alt="Favoritenliste im Modus Anordnen mit Thermostat, Lichtern und Rollladen" width="900">

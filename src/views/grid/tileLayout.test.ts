@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  breakpointFor,
+  columnsWidth,
   defaultLayout,
   defaultWidth,
   flowLayout,
@@ -9,6 +11,7 @@ import {
   responsiveLayouts,
   rowsFor,
   toSaved,
+  usedColumns,
 } from './tileLayout';
 
 const tiles = [
@@ -127,5 +130,47 @@ describe('tileLayout', () => {
     expect(moveSection(['a', 'b', 'c'], 'b', 1)).toEqual(['a', 'c', 'b']);
     expect(moveSection(['a', 'b', 'c'], 'a', -1)).toEqual(['a', 'b', 'c']);
     expect(moveSection(['a', 'b', 'c'], 'c', 1)).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('arranged sections beside others', () => {
+  // Two blinds of 300 px, arranged by hand side by side in a row of
+  // 1347 px (1371 px with the grid's padding)
+  const blinds = [
+    { key: 'c:MA:1', minPx: 300 },
+    { key: 'c:RA:4', minPx: 300 },
+  ];
+  const saved = {
+    lg: [
+      { i: 'c:RA:4', x: 0, y: 0, w: 15 },
+      { i: 'c:MA:1', x: 15, y: 0, w: 15 },
+    ],
+  };
+
+  it('picks the breakpoint as react-grid-layout does', () => {
+    expect(breakpointFor(1371)).toBe('lg');
+    expect(breakpointFor(1200)).toBe('md');
+    expect(breakpointFor(390)).toBe('xxs');
+  });
+
+  it('counts the columns the tiles take from the left', () => {
+    expect(usedColumns(blinds, saved, 1371)).toEqual({ cols: 60, used: 30 });
+  });
+
+  it('counts a new tile where it is added', () => {
+    const three = [...blinds, { key: 'c:NEW:1', minPx: 300 }];
+    // Four of 300 px fit the row: the new one takes another 15 columns
+    expect(usedColumns(three, saved, 1371)).toEqual({ cols: 60, used: 45 });
+  });
+
+  it('counts the tiles at their own width without a saved layout', () => {
+    expect(usedColumns(blinds, undefined, 1371)).toEqual({ cols: 60, used: 30 });
+  });
+
+  it('measures columns as the grid lays them out', () => {
+    // All columns: the whole row
+    expect(columnsWidth(1371, 60, 60)).toBe(1347);
+    // Half the columns: half the row without the gap in the middle
+    expect(columnsWidth(1371, 60, 30)).toBe(668);
   });
 });
