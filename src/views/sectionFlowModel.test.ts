@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sectionColumns, sectionFlex } from './sectionFlowModel';
+import { arrangedFlex, sectionColumns, sectionFlex } from './sectionFlowModel';
 
 describe('sectionColumns', () => {
   it('counts a wide tile twice', () => {
@@ -21,5 +21,11 @@ describe('sectionFlex', () => {
 
   it('takes a section without tiles as one column', () => {
     expect(sectionFlex(240, 0).flex).toBe('1 1 240px');
+  });
+});
+
+describe('arrangedFlex', () => {
+  it('keeps an arranged section as wide as its columns, at most the row', () => {
+    expect(arrangedFlex(668)).toEqual({ flex: '0 0 668px', maxWidth: '100%' });
   });
 });

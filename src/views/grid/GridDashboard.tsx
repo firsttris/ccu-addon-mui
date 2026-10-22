@@ -7,6 +7,7 @@ import { cn } from '../../lib/utils';
 import {
   BREAKPOINTS,
   type BreakpointName,
+  breakpointFor,
   COLS,
   flowCompactor,
   MARGIN,
@@ -61,14 +62,22 @@ export const GridDashboard = ({
   editing,
   onChange,
   equalRows = false,
+  width: rowWidth,
 }: {
   tiles: GridTile[];
   saved: SectionLayout | undefined;
   editing: boolean;
   onChange: (layout: SectionLayout) => void;
   equalRows?: boolean;
+  // The width to lay the grid out for, that of the whole row (with the
+  // padding): a section narrower than its row keeps the row's breakpoint
+  // and columns, so the saved positions hold. Otherwise its own width.
+  width?: number;
 }) => {
-  const { width, containerRef, mounted } = useContainerWidth();
+  const measured = useContainerWidth();
+  const { containerRef } = measured;
+  const width = rowWidth ?? measured.width;
+  const mounted = measured.mounted && width > 0;
   const [heights, setHeights] = useState<Record<string, number>>({});
   const [draft, setDraft] = useState<SectionLayout | undefined>(saved);
   useEffect(() => setDraft(saved), [saved]);
@@ -86,7 +95,9 @@ export const GridDashboard = ({
     () => responsiveLayouts(tiles, draft, heights, width, equalRows),
     [tiles, draft, heights, width, equalRows],
   );
-  const [breakpoint, setBreakpoint] = useState<BreakpointName>('lg');
+  // From the width, as the grid picks it: its onBreakpointChange only
+  // reports a change, not the breakpoint it starts with
+  const breakpoint = breakpointFor(width);
   // Only what the user moved or resized is kept, for the breakpoint shown
   const commit = (layout: Layout) => {
     const next: SectionLayout = { ...draft, ...toSaved({ [breakpoint]: layout }) };
@@ -115,7 +126,6 @@ export const GridDashboard = ({
           // on a tablet the tiles cover most of it
           dragConfig={{ enabled: editing, handle: '.tile-drag-handle' }}
           resizeConfig={{ enabled: editing, handles: ['e'] }}
-          onBreakpointChange={(bp: BreakpointName) => setBreakpoint(bp)}
           onDragStop={(layout: Layout) => commit(layout)}
           onResizeStop={(layout: Layout) => commit(layout)}
         >

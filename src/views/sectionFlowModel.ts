@@ -30,3 +30,11 @@ export const sectionFlex = (minPx: number, columns: number): CSSProperties => {
     maxWidth: `min(100%, max(${cap}px, (${threshold}px - 100%) * 1000))`,
   };
 };
+
+// An arranged section (its tiles in a grid of saved positions) flows
+// beside the others as wide as the columns its tiles take, neither growing
+// nor shrinking: its grid keeps the width of the whole row
+export const arrangedFlex = (widthPx: number): CSSProperties => ({
+  flex: `0 0 ${widthPx}px`,
+  maxWidth: '100%',
+});
