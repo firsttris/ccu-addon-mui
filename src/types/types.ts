@@ -117,6 +117,10 @@ interface BaseChannel {
   // Name the tile shows instead of name, given in the app (stored in
   // mui-tiles.json); the CCU keeps name for its other interfaces
   displayName?: string;
+  // The CCU's name, on a channel handed to its tile with displayName as its
+  // name (asShown): what the name says about the channel (isLight) goes by
+  // this one
+  ccuName?: string;
   // Inputs (MULTI_MODE_INPUT_TRANSMITTER): what they are wired to, the
   // WebUI's metadata channelMode (0 off, 1 key, 2 switch, 3 contact,
   // 4 level, 5 condition); unset means key

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Channel } from '../../types/types';
+import { isLight } from '../../controls/light/isLight';
 import { asShown, changedNames, shownName, withShownNames } from './tileNamesModel';
 
 const channel = (id: number, name: string, displayName?: string) =>
@@ -32,6 +33,14 @@ describe('asShown', () => {
     expect(asShown(given)).toBe(first);
     expect(asShown(given, 'Schreibtisch').name).toBe('Schreibtisch');
   });
+
+  it("keeps the CCU's name for what the name says about the channel", () => {
+    const shown = asShown(channel(1, 'Wohnzimmer Licht', 'Decke'));
+    expect(shown.ccuName).toBe('Wohnzimmer Licht');
+    // A light stays a light under a name that doesn't sound like one
+    expect(isLight(shown, new Set())).toBe(true);
+    expect(isLight(asShown(channel(2, 'Steckdose', 'Leselampe')), new Set())).toBe(false);
+  });
 });
 
 describe('withShownNames', () => {
@@ -39,6 +48,21 @@ describe('withShownNames', () => {
     const lights = [channel(1, 'SA - Licht:1', 'Deckenlicht'), channel(2, 'SAD - Dimmer:1')];
     const shown = withShownNames([['SWITCH', lights]], { 2: 'Leselampe' });
     expect(shown[0][1].map((c) => c.name)).toEqual(['Deckenlicht', 'Leselampe']);
+  });
+
+  it('keeps the entry of a type whose channels stay as they are', () => {
+    // An event changes the blind: useChannels hands on the same switches
+    const switches: [string, Channel[]] = ['SWITCH', [channel(1, 'Licht')]];
+    const before = withShownNames([switches, ['BLIND', [channel(2, 'Rollladen')]]], {});
+    const after = withShownNames([switches, ['BLIND', [channel(2, 'Rollladen')]]], {});
+    expect(after[0]).toBe(before[0]);
+    expect(after[0]).toBe(switches);
+    // With a name given, the shown entry stays the same as long as the names do
+    const named: [string, Channel[]] = ['SWITCH', [channel(3, 'SA - Licht:1', 'Deckenlicht')]];
+    const first = withShownNames([named], {})[0];
+    expect(first[1][0].name).toBe('Deckenlicht');
+    expect(withShownNames([named], {})[0]).toBe(first);
+    expect(withShownNames([named], { 3: 'Decke' })[0]).not.toBe(first);
   });
 });
 

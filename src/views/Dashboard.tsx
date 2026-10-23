@@ -278,8 +278,9 @@ export const Dashboard = ({
               finish();
             }),
           cancel: finish,
-          // Once something is moved, or an arrangement is saved
-          reset: saved ? () => store('', finish) : draft ? finish : undefined,
+          // Once something is moved, or an arrangement is saved; the names
+          // given meanwhile are kept, only the arrangement goes
+          reset: saved ? () => names.save(() => store('', finish)) : draft ? () => names.save(finish) : undefined,
         }
       : null,
   );

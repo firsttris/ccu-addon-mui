@@ -64,7 +64,8 @@ nebeneinander: Ziehst du eine auf den Platz einer anderen, rücken die übrigen 
   der App gilt, etwa „Leselampe“ statt „SAD - Jugendzimmer:1“. Auf der CCU, in der alten WebUI und in allen
   anderen Schnittstellen behält der Kanal seinen Namen, dein Benennungsschema bleibt also, wie es ist.
   *Name der CCU* nimmt den eigenen Namen wieder weg. Unter *Einrichten → Geräte* steht er in der Karte des
-  Kanals als *Name in der App*. Karten für ein ganzes Gerät (etwa Taster oder Stromzähler) haben keinen
+  Kanals als *Name in der App*. Ob eine Kachel als Lampe erscheint, richtet sich weiter nach dem Namen der
+  CCU. Karten für ein ganzes Gerät (etwa Taster oder Stromzähler) haben keinen
   Stift, weil sie mehrere Kanäle zeigen. Alarme und Push-Benachrichtigungen nennen den Kanal weiter mit
   dem Namen der CCU.
 
@@ -73,7 +74,7 @@ hinweg; es gilt damit auf allen Geräten und passt sich für Handy, Tablet und D
 dessen Kacheln du angeordnet hast, ist danach so breit wie die Spalten, die seine Kacheln belegen, und
 steht wie die übrigen neben anderen Abschnitten, solange die Breite reicht. Seine Kacheln bleiben dabei
 genau dort, wo du sie hingezogen hast. *Abbrechen* verwirft die Änderungen, *Automatisch anordnen*
-stellt die ursprüngliche Anordnung wieder her.
+stellt die ursprüngliche Anordnung wieder her; die Namen, die du dabei gegeben hast, bleiben.
 
 <img src="screenshot-anordnen.png" alt="Favoritenliste im Modus Anordnen mit Thermostat, Lichtern und Rollladen" width="900">
 
