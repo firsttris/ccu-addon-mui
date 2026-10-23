@@ -1121,22 +1121,52 @@ test('verschiebt beim Anordnen ganze Bereiche, die Kacheln bleiben in ihrem Bere
   await expect(headings.nth(1)).toHaveText(first!);
 });
 
-test('stellt kleine Bereiche nebeneinander, beim Anordnen untereinander', async ({ page }) => {
+// Waits until the arranging grids have settled (react-grid-layout moves
+// tiles with a transition)
+const settled = async (page: Page) => {
+  const tile = page.locator('[data-tile-key]').first();
+  await expect(tile.locator('.tile-drag-handle')).toBeVisible();
+  await expect
+    .poll(async () => {
+      const before = JSON.stringify(await tile.boundingBox());
+      await page.waitForTimeout(150);
+      return before === JSON.stringify(await tile.boundingBox());
+    })
+    .toBe(true);
+};
+
+test('stellt kleine Bereiche nebeneinander, beim Anordnen ebenso, die Kacheln gleich breit', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/room/1');
-  const headings = page.getByRole('main').getByRole('heading', { level: 2 });
+  const main = page.getByRole('main');
+  const headings = main.getByRole('heading', { level: 2 });
   await expect(headings.nth(1)).toBeVisible();
-  const top = async (n: number) => (await headings.nth(n).boundingBox())?.y;
-  const left = async (n: number) => (await headings.nth(n).boundingBox())?.x;
+  const boxes = async () => Promise.all([0, 1, 2].map(async (n) => (await headings.nth(n).boundingBox())!));
+  const light = main.locator('[data-tile]').filter({ hasText: 'Wohnzimmer Licht' });
+  const width = async () => (await light.boundingBox())!.width;
 
   // Lights (four columns) and windows (two) share a line
-  expect(await top(1)).toBe(await top(0));
-  expect(await left(1)).toBeGreaterThan((await left(0))! + 400);
+  const before = await boxes();
+  expect(before[1].y).toBe(before[0].y);
+  expect(before[1].x).toBeGreaterThan(before[0].x + 400);
+  const tileWidth = await width();
 
-  // Arranging works on grids across the whole page
+  // Arranging keeps the sections where they are, the tiles as wide as
+  // they were (within half a grid column); lines below move down by the
+  // bars above the tiles, in their places
   await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
-  await expect.poll(() => top(1)).toBeGreaterThan((await top(0))!);
-  expect(await left(1)).toBe(await left(0));
+  await settled(page);
+  const arranging = await boxes();
+  for (const [n, box] of arranging.entries()) {
+    expect(box.x).toBe(before[n].x);
+    if (before[n].y === before[0].y) expect(box.y).toBe(before[n].y);
+    else expect(box.y).toBeGreaterThan(arranging[0].y);
+  }
+  expect(Math.abs((await width()) - tileWidth)).toBeLessThan(12);
+
+  // And so after Cancel
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect.poll(width).toBe(tileWidth);
 });
 
 // Moves the first light of the living room behind the second while
@@ -1149,8 +1179,7 @@ const moveFirstLight = async (page: Page) => {
 
   // Move the first light behind the second
   await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
-  // While arranging, every section takes the whole row
-  await expect.poll(async () => (await box(1)).y).toBeGreaterThan((await box(0)).y);
+  await settled(page);
   const tiles = lights.locator('[data-tile-key]');
   await expect(tiles).toHaveCount(3);
   const [key, other] = [
@@ -1327,12 +1356,12 @@ test('behält beim automatischen Anordnen die gegebenen Namen', async ({ page })
   const main = page.getByRole('main');
   const headings = main.getByRole('heading', { level: 2 });
   await expect(headings.nth(1)).toBeVisible();
+  const light = main.locator('[data-tile]').filter({ hasText: 'Wohnzimmer Licht' });
+  await expect(light).toBeVisible();
+  const width = (await light.boundingBox())!.width;
   const arrange = async () => {
     await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
-    // While arranging, every section takes the whole row
-    await expect
-      .poll(async () => (await headings.nth(1).boundingBox())!.y)
-      .toBeGreaterThan((await headings.nth(0).boundingBox())!.y);
+    await settled(page);
   };
   // A saved arrangement
   await arrange();
@@ -1352,6 +1381,10 @@ test('behält beim automatischen Anordnen die gegebenen Namen', async ({ page })
   await expect.poll(() => sentOfType(page, 'setLayout')).toHaveLength(2);
   expect(await sentOfType(page, 'setChannelNames')).toHaveLength(1);
   await expect(main.getByText('Deckenlicht')).toBeVisible();
+  // As wide as before anything was arranged
+  await expect
+    .poll(async () => (await main.locator('[data-tile]').filter({ hasText: 'Deckenlicht' }).boundingBox())!.width)
+    .toBe(width);
 });
 
 test('bietet das Anordnen auf dem Handy im Menü an', async ({ page }) => {

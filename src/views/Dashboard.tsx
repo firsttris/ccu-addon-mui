@@ -16,6 +16,7 @@ import { usePageArrange } from '../contexts/PageTitleContext';
 import { Button } from '../components/ui/button';
 import { GridDashboard, type GridTile } from './grid/GridDashboard';
 import {
+  columnsFor,
   columnsWidth,
   MARGIN,
   moveSection,
@@ -40,6 +41,7 @@ import {
 import { arrangedFlex, sectionColumns, sectionFlex } from './sectionFlowModel';
 import { TileNameDialog } from './grid/TileNameDialog';
 import { useTileNames } from './grid/useTileNames';
+import { useShownWidth } from './grid/useShownWidth';
 
 // A free arrangement: one section without heading, the tiles in the
 // order of the favorite list
@@ -99,17 +101,24 @@ const Section = ({
   }, [group, order]);
   // The grid as wide as the row with its padding (GridDashboard's -mx-3)
   const gridWidth = rowWidth > 0 ? rowWidth + 2 * MARGIN : undefined;
-  const fullRow = editing || free || (grid && gridWidth === undefined);
+  // As wide as shown before arranging, so nothing on the page moves when it
+  // starts: the sections stay side by side, their tiles as wide as they were
+  const shown = useShownWidth<HTMLElement>(!editing);
+  const flowPx = editing ? shown.width : undefined;
+  const fullRow = free || (grid && gridWidth === undefined) || (editing && flowPx === undefined);
   const style = useMemo(() => {
     if (fullRow) return undefined;
     if (!grid || gridWidth === undefined) {
       return sectionFlex(sectionMinPx[group.section ?? 'generic'], sectionColumns(tiles));
     }
-    const { cols, used } = usedColumns(tiles, layout, gridWidth);
-    return arrangedFlex(columnsWidth(gridWidth, cols, used));
-  }, [fullRow, grid, gridWidth, group.section, tiles, layout]);
+    const { cols, used } = usedColumns(tiles, layout, gridWidth, flowPx);
+    // While arranging it widens only when a tile gets wider than it
+    const arranged = columnsWidth(gridWidth, cols, used);
+    return arrangedFlex(flowPx !== undefined && used <= columnsFor(flowPx, gridWidth, cols) ? flowPx : arranged);
+  }, [fullRow, grid, gridWidth, group.section, tiles, layout, flowPx]);
   return (
     <section
+      ref={shown.ref}
       aria-labelledby={free ? undefined : id}
       aria-label={free ? m.FAVORITES() : undefined}
       className={cn('flex min-w-0 flex-col gap-3', fullRow && 'basis-full')}
@@ -156,6 +165,7 @@ const Section = ({
           onChange={onLayout}
           width={gridWidth}
           onRename={onRename}
+          flowPx={flowPx}
           // As the section's own grid: tiles side by side as tall as the tallest
           equalRows={!sectionGrids[group.section ?? 'generic'].includes('items-start')}
         />

@@ -11,10 +11,11 @@ import {
   type BreakpointName,
   breakpointFor,
   COLS,
-  flowCompactor,
+  flowCompactorWithin,
   MARGIN,
   responsiveLayouts,
   ROW_HEIGHT,
+  rowLimit,
   type SectionLayout,
   type TileSpec,
   toSaved,
@@ -72,6 +73,7 @@ export const GridDashboard = ({
   equalRows = false,
   width: rowWidth,
   onRename,
+  flowPx,
 }: {
   tiles: GridTile[];
   saved: SectionLayout | undefined;
@@ -84,6 +86,9 @@ export const GridDashboard = ({
   width?: number;
   // While editing: give a tile that shows one channel a name of its own
   onRename?: (tile: GridTile) => void;
+  // While editing: the section's width as shown before, so its tiles keep
+  // their width and wrap where they did
+  flowPx?: number;
 }) => {
   const measured = useContainerWidth();
   const { containerRef } = measured;
@@ -104,13 +109,17 @@ export const GridDashboard = ({
   // them going), all are measured again from low cells
   // biome-ignore lint/correctness/useExhaustiveDependencies: width, draft and editing are the triggers, see above
   useEffect(() => setHeights({}), [width, draft, editing]);
+  const shownFlow = editing ? flowPx : undefined;
   const layouts = useMemo(
-    () => responsiveLayouts(tiles, draft, heights, width, equalRows),
-    [tiles, draft, heights, width, equalRows],
+    () => responsiveLayouts(tiles, draft, heights, width, equalRows, shownFlow),
+    [tiles, draft, heights, width, equalRows, shownFlow],
   );
   // From the width, as the grid picks it: its onBreakpointChange only
   // reports a change, not the breakpoint it starts with
   const breakpoint = breakpointFor(width);
+  // The tiles wrap within the section, not the whole row
+  const limit = rowLimit(layouts[breakpoint] ?? [], width, COLS[breakpoint], shownFlow);
+  const compactor = useMemo(() => flowCompactorWithin(limit), [limit]);
   // Only what the user moved or resized is kept, for the breakpoint shown
   const commit = (layout: Layout) => {
     const next: SectionLayout = { ...draft, ...toSaved({ [breakpoint]: layout }) };
@@ -134,7 +143,7 @@ export const GridDashboard = ({
           // Sideways only, balanced by -mx-3: the tiles stay where they are
           // when arranging starts
           containerPadding={[MARGIN, 0]}
-          compactor={flowCompactor}
+          compactor={compactor}
           // Only the grip starts a drag: elsewhere a touch scrolls the page,
           // on a tablet the tiles cover most of it
           dragConfig={{ enabled: editing, handle: '.tile-drag-handle' }}

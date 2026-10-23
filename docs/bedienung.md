@@ -49,11 +49,12 @@ und *Bearbeiten* legst du sie direkt an.
 ### Kacheln anordnen
 
 *Anordnen* (das Raster-Symbol oben in der Kopfzeile, auf dem Handy im Menü) schaltet die Ansicht in den
-Bearbeitungsmodus. Jeder Abschnitt nimmt dabei die ganze Breite ein, auch wenn er sonst neben einem
-anderen steht; die Kopfzeile zeigt statt ihrer Knöpfe *Abbrechen*, *Automatisch anordnen* und *Fertig*.
+Bearbeitungsmodus. Die Abschnitte bleiben dabei, wo sie sind, nebeneinander wie sonst, und die Kacheln
+behalten ihre Größe; die Kopfzeile zeigt statt ihrer Knöpfe *Abbrechen*, *Automatisch anordnen* und *Fertig*.
 Über jeder Kachel steht rechts ein Griff, so dass er nichts von ihr verdeckt: Nur daran ziehst du sie,
-überall sonst scrollt die Seite wie gewohnt, und schalten lässt sich beim Anordnen nichts. Die Kacheln stehen dabei wie sonst lückenlos
-nebeneinander: Ziehst du eine auf den Platz einer anderen, rücken die übrigen in der Reihe zur Seite.
+überall sonst scrollt die Seite wie gewohnt, und schalten lässt sich beim Anordnen nichts. Die Kacheln
+stehen dabei wie sonst lückenlos nebeneinander und brechen innerhalb ihres Abschnitts um: Ziehst du eine
+auf den Platz einer anderen, rücken die übrigen in der Reihe zur Seite.
 
 - **Räume und Gewerke** behalten ihre Bereiche (Licht, Heizung, Rollläden …). Kacheln ziehst du innerhalb
   ihres Bereichs und änderst an der rechten Kante die Breite. Ganze Bereiche verschiebst du mit den
@@ -69,8 +70,8 @@ nebeneinander: Ziehst du eine auf den Platz einer anderen, rücken die übrigen 
   Stift, weil sie mehrere Kanäle zeigen. Alarme und Push-Benachrichtigungen nennen den Kanal weiter mit
   dem Namen der CCU.
 
-*Fertig* speichert das Layout und die Namen auf der CCU (Datei `mui-tiles.json`), sofort und auch über einen Neustart
-hinweg; es gilt damit auf allen Geräten und passt sich für Handy, Tablet und Desktop an. Ein Abschnitt,
+*Fertig* speichert das Layout und die Namen auf der CCU (Datei `mui-tiles.json`), sofort und auch über
+einen Neustart hinweg; es gilt damit auf allen Geräten und passt sich für Handy, Tablet und Desktop an. Ein Abschnitt,
 dessen Kacheln du angeordnet hast, ist danach so breit wie die Spalten, die seine Kacheln belegen, und
 steht wie die übrigen neben anderen Abschnitten, solange die Breite reicht. Seine Kacheln bleiben dabei
 genau dort, wo du sie hingezogen hast. *Abbrechen* verwirft die Änderungen, *Automatisch anordnen*

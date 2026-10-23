@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   breakpointFor,
+  columnsFor,
   columnsWidth,
   defaultLayout,
   defaultWidth,
@@ -10,8 +11,10 @@ import {
   parseLayout,
   responsiveLayouts,
   rowsFor,
+  rowLimit,
   toSaved,
   usedColumns,
+  widestRow,
 } from './tileLayout';
 
 const tiles = [
@@ -157,10 +160,10 @@ describe('arranged sections beside others', () => {
     expect(usedColumns(blinds, saved, 1371)).toEqual({ cols: 60, used: 30 });
   });
 
-  it('counts a new tile where it is added', () => {
+  it('puts a new tile below, the section keeping its width', () => {
     const three = [...blinds, { key: 'c:NEW:1', minPx: 300 }];
-    // Four of 300 px fit the row: the new one takes another 15 columns
-    expect(usedColumns(three, saved, 1371)).toEqual({ cols: 60, used: 45 });
+    // The arranged row is 30 columns wide: the new one starts the next
+    expect(usedColumns(three, saved, 1371)).toEqual({ cols: 60, used: 30 });
   });
 
   it('counts the tiles at their own width without a saved layout', () => {
@@ -172,5 +175,60 @@ describe('arranged sections beside others', () => {
     expect(columnsWidth(1371, 60, 60)).toBe(1347);
     // Half the columns: half the row without the gap in the middle
     expect(columnsWidth(1371, 60, 30)).toBe(668);
+  });
+});
+
+describe('arranging as shown before', () => {
+  // Pauls Jugendzimmer at 1395 px: a row of 1347 px (1371 px with the
+  // grid's padding); two lights of 150 px at least, shown 170 px wide side
+  // by side in a section of 352 px
+  const lights = [
+    { key: 'c:SA:2', minPx: 150 },
+    { key: 'c:SAD:1', minPx: 150 },
+  ];
+
+  it('finds the columns closest to a width', () => {
+    expect(columnsFor(352, 1371, 60)).toBe(16);
+    expect(columnsFor(1347, 1371, 60)).toBe(60);
+    expect(columnsFor(5, 1371, 60)).toBe(1);
+  });
+
+  it('gives tiles the width they had before arranging, side by side as there', () => {
+    const layout = defaultLayout(lights, 'lg', 1371, 352);
+    expect(layout).toEqual([
+      { i: 'c:SA:2', x: 0, y: 0, w: 8 },
+      { i: 'c:SAD:1', x: 8, y: 0, w: 8 },
+    ]);
+    // 8 columns are 169 px: as wide as the 170 px before, within half a column
+    expect(Math.abs(columnsWidth(1371, 60, 8) - 170)).toBeLessThan(12);
+  });
+
+  it('wraps where the section wrapped', () => {
+    // Five lights in a section of 352 px: two per row
+    const five = [1, 2, 3, 4, 5].map((n) => ({ key: `c:L:${n}`, minPx: 150 }));
+    expect(defaultLayout(five, 'lg', 1371, 352).map((t) => [t.x, t.y])).toEqual([
+      [0, 0],
+      [8, 0],
+      [0, 100],
+      [8, 100],
+      [0, 200],
+    ]);
+  });
+
+  it('keeps the rows as arranged, within the section while arranging', () => {
+    const arranged = [
+      { i: 'a', x: 0, y: 0, w: 8, h: 1 },
+      { i: 'b', x: 8, y: 0, w: 8, h: 1 },
+      { i: 'c', x: 0, y: 5, w: 8, h: 1 },
+    ];
+    expect(widestRow(arranged)).toBe(16);
+    expect(rowLimit(arranged, 1371, 60)).toBe(16);
+    // While arranging at least as wide as the section was shown
+    expect(rowLimit(arranged, 1371, 60, 700)).toBe(columnsFor(700, 1371, 60));
+    expect(flowLayout(arranged, rowLimit(arranged, 1371, 60)).map((t) => [t.x, t.y])).toEqual([
+      [0, 0],
+      [8, 0],
+      [0, 1],
+    ]);
   });
 });
