@@ -51,8 +51,8 @@ und *Bearbeiten* legst du sie direkt an.
 *Anordnen* (das Raster-Symbol oben in der Kopfzeile, auf dem Handy im Menü) schaltet die Ansicht in den
 Bearbeitungsmodus. Jeder Abschnitt nimmt dabei die ganze Breite ein, auch wenn er sonst neben einem
 anderen steht; die Kopfzeile zeigt statt ihrer Knöpfe *Abbrechen*, *Automatisch anordnen* und *Fertig*.
-Jede Kachel hat oben rechts einen Griff: Nur daran ziehst du sie, überall sonst scrollt die Seite wie
-gewohnt, und schalten lässt sich beim Anordnen nichts. Die Kacheln stehen dabei wie sonst lückenlos
+Über jeder Kachel steht rechts ein Griff, so dass er nichts von ihr verdeckt: Nur daran ziehst du sie,
+überall sonst scrollt die Seite wie gewohnt, und schalten lässt sich beim Anordnen nichts. Die Kacheln stehen dabei wie sonst lückenlos
 nebeneinander: Ziehst du eine auf den Platz einer anderen, rücken die übrigen in der Reihe zur Seite.
 
 - **Räume und Gewerke** behalten ihre Bereiche (Licht, Heizung, Rollläden …). Kacheln ziehst du innerhalb
@@ -60,7 +60,7 @@ nebeneinander: Ziehst du eine auf den Platz einer anderen, rücken die übrigen 
   Pfeilen neben der Überschrift, z. B. Heizung nach oben.
 - **Favoritenlisten** stellst du selbst zusammen. Dort gibt es keine Bereiche: Alle Kacheln liegen auf
   einer Fläche, zuerst in der Reihenfolge der Liste.
-- **Eigene Namen:** Neben dem Griff hat jede Kachel einen Stift. Damit gibst du ihr einen Namen, der nur in
+- **Eigene Namen:** Neben dem Griff steht ein Stift. Damit gibst du ihr einen Namen, der nur in
   der App gilt, etwa „Leselampe“ statt „SAD - Jugendzimmer:1“. Auf der CCU, in der alten WebUI und in allen
   anderen Schnittstellen behält der Kanal seinen Namen, dein Benennungsschema bleibt also, wie es ist.
   *Name der CCU* nimmt den eigenen Namen wieder weg. Unter *Einrichten → Geräte* steht er in der Karte des

@@ -58,6 +58,10 @@ const Measured = ({
   );
 };
 
+// Height of the bar above a tile while editing: its buttons (size-9) and a
+// gap to the tile
+const TOOLBAR = 44;
+
 // The tiles of one section in a grid: arranged as saved, or by dragging them
 // around and changing their width while editing
 export const GridDashboard = ({
@@ -89,15 +93,17 @@ export const GridDashboard = ({
   const [draft, setDraft] = useState<SectionLayout | undefined>(saved);
   useEffect(() => setDraft(saved), [saved]);
 
-  const onHeight = useMemo(
-    () => (id: string, h: number) => setHeights((prev) => (prev[id] === h ? prev : { ...prev, [id]: h })),
-    [],
-  );
+  // While editing, a bar above each tile holds its buttons (TOOLBAR), so
+  // they cover nothing of it: the cell grows by the bar
+  const onHeight = useMemo(() => {
+    const bar = editing ? TOOLBAR : 0;
+    return (id: string, h: number) => setHeights((prev) => (prev[id] === h + bar ? prev : { ...prev, [id]: h + bar }));
+  }, [editing]);
   // A tile stretched to its row keeps that height when measured; so after
-  // anything that can make tiles lower (width, arrangement), all are
-  // measured again from low cells
-  // biome-ignore lint/correctness/useExhaustiveDependencies: width and draft are the triggers, see above
-  useEffect(() => setHeights({}), [width, draft]);
+  // anything that can make tiles lower (width, arrangement, the bar above
+  // them going), all are measured again from low cells
+  // biome-ignore lint/correctness/useExhaustiveDependencies: width, draft and editing are the triggers, see above
+  useEffect(() => setHeights({}), [width, draft, editing]);
   const layouts = useMemo(
     () => responsiveLayouts(tiles, draft, heights, width, equalRows),
     [tiles, draft, heights, width, equalRows],
@@ -137,31 +143,35 @@ export const GridDashboard = ({
           onResizeStop={(layout: Layout) => commit(layout)}
         >
           {tiles.map((tile) => (
-            <div key={tile.key} data-tile-key={tile.key} className="relative">
-              <Measured id={tile.key} onHeight={onHeight}>
-                {tile.element}
-              </Measured>
-              {/* While editing, a tap must not operate the tile */}
-              {editing && <div aria-hidden className="absolute inset-0 rounded-2xl bg-primary/5" />}
+            <div key={tile.key} data-tile-key={tile.key} className="flex flex-col">
               {editing && (
-                <div
-                  aria-hidden
-                  className="tile-drag-handle absolute right-2 top-2 flex size-9 cursor-move touch-none items-center justify-center rounded-xl border border-border bg-background/80 text-foreground shadow-sm backdrop-blur-sm"
-                >
-                  <GripIcon className="size-5" />
+                <div className="flex shrink-0 items-start justify-end gap-1" style={{ height: TOOLBAR }}>
+                  {onRename && tile.name !== undefined && (
+                    <button
+                      type="button"
+                      aria-label={m.TILE_RENAME({ name: tile.name })}
+                      title={m.TILE_RENAME({ name: tile.name })}
+                      onClick={() => onRename(tile)}
+                      className="flex size-9 items-center justify-center rounded-xl border border-border bg-background/80 text-foreground shadow-sm backdrop-blur-sm hover:bg-accent"
+                    >
+                      <PencilIcon className="size-4" />
+                    </button>
+                  )}
+                  <div
+                    aria-hidden
+                    className="tile-drag-handle flex size-9 cursor-move touch-none items-center justify-center rounded-xl border border-border bg-background/80 text-foreground shadow-sm backdrop-blur-sm"
+                  >
+                    <GripIcon className="size-5" />
+                  </div>
                 </div>
               )}
-              {editing && onRename && tile.name !== undefined && (
-                <button
-                  type="button"
-                  aria-label={m.TILE_RENAME({ name: tile.name })}
-                  title={m.TILE_RENAME({ name: tile.name })}
-                  onClick={() => onRename(tile)}
-                  className="absolute right-12 top-2 flex size-9 items-center justify-center rounded-xl border border-border bg-background/80 text-foreground shadow-sm backdrop-blur-sm hover:bg-accent"
-                >
-                  <PencilIcon className="size-4" />
-                </button>
-              )}
+              <div className="relative min-h-0 flex-1">
+                <Measured id={tile.key} onHeight={onHeight}>
+                  {tile.element}
+                </Measured>
+                {/* While editing, a tap must not operate the tile */}
+                {editing && <div aria-hidden className="absolute inset-0 rounded-2xl bg-primary/5" />}
+              </div>
             </div>
           ))}
         </ResponsiveGridLayout>

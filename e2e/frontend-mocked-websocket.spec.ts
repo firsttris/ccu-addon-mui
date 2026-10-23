@@ -1278,6 +1278,30 @@ const sentOfType = (page: Page, type: string) =>
     type,
   );
 
+test('legt Stift und Griff beim Anordnen über die Kachel, nicht auf sie', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const main = page.getByRole('main');
+  const tile = main.locator('[data-tile]').filter({ hasText: 'Wohnzimmer Licht' });
+  await expect(tile).toBeVisible();
+  const height = (await tile.boundingBox())!.height;
+
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  const pencil = page.getByRole('button', { name: 'Rename "Wohnzimmer Licht"' });
+  const cell = page.locator('[data-tile-key]').filter({ has: pencil });
+  await expect(pencil).toBeVisible();
+  // Both above the tile: they cover nothing of it
+  for (const button of [pencil, cell.locator('.tile-drag-handle')]) {
+    await expect
+      .poll(async () => (await button.boundingBox())!.y + (await button.boundingBox())!.height)
+      .toBeLessThanOrEqual((await tile.boundingBox())!.y);
+  }
+
+  // Back as tall as before once arranging ends
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect.poll(async () => (await tile.boundingBox())!.height).toBe(height);
+});
+
 test('lässt eine Lampe mit eigenem Namen eine Lampe', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/room/1');
