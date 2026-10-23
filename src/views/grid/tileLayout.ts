@@ -61,27 +61,39 @@ export const columnsFor = (px: number, widthPx: number, cols: number) => {
   return Math.max(1, Math.min(cols, Math.round((px + MARGIN) / (column + MARGIN))));
 };
 
-// As wide as in the section as shown before arranging (flowPx wide, its
-// tiles in a grid of auto-fit, minmax(minPx, 1fr)): the same tiles side by
-// side, each as wide as there, in columns of the grid of the whole row
-export const flowWidth = (minPx: number, bp: BreakpointName, widthPx: number, flowPx: number, span = 1) => {
-  const limit = columnsFor(flowPx, widthPx, COLS[bp]);
-  const perRow = Math.max(1, Math.floor((flowPx + MARGIN) / (minPx + MARGIN)));
-  return Math.min(limit, span * Math.max(1, Math.floor(limit / perRow)));
+// The tracks a section's grid (auto-fit, minmax(minPx, 1fr)) shows in
+// flowPx: as many as fit, less those no tile fills, which auto-fit drops
+// (a wide tile wrapping leaves the last one empty). Its tiles placed in
+// order, as the grid does without dense packing.
+export const flowTracks = (tiles: TileSpec[], flowPx: number) => {
+  const minPx = Math.min(...tiles.map((t) => t.minPx));
+  const fit = Math.max(1, Math.floor((flowPx + MARGIN) / (minPx + MARGIN)));
+  let col = 0;
+  let used = 1;
+  for (const tile of tiles) {
+    const span = Math.min(tile.span ?? 1, fit);
+    if (col + span > fit) col = 0;
+    col += span;
+    used = Math.max(used, col);
+  }
+  return used;
 };
 
 // Tiles flowed left to right in their order, as the sections show them:
-// across the whole row, or with flowPx as in the section flowPx wide
+// across the whole row, or with flowPx as in the section flowPx wide, each
+// as wide as a track there (in columns of the grid of the whole row) and
+// wrapping where it wrapped
 export const defaultLayout = (tiles: TileSpec[], bp: BreakpointName, widthPx: number, flowPx?: number): SavedTile[] => {
   const out: SavedTile[] = [];
-  const limit = flowPx === undefined ? COLS[bp] : columnsFor(flowPx, widthPx, COLS[bp]);
+  const tracks = flowPx === undefined || tiles.length === 0 ? 0 : flowTracks(tiles, flowPx);
+  const track = tracks && Math.max(1, Math.floor(columnsFor(flowPx ?? 0, widthPx, COLS[bp]) / tracks));
+  const limit = tracks ? tracks * track : COLS[bp];
   let x = 0;
   let row = 0;
   for (const tile of tiles) {
-    const w =
-      flowPx === undefined
-        ? defaultWidth(tile.minPx, bp, widthPx, tile.span)
-        : flowWidth(tile.minPx, bp, widthPx, flowPx, tile.span);
+    const w = tracks
+      ? Math.min(limit, track * Math.min(tile.span ?? 1, tracks))
+      : defaultWidth(tile.minPx, bp, widthPx, tile.span);
     if (x > 0 && x + w > limit) {
       x = 0;
       row += 1;
@@ -207,11 +219,10 @@ export const flowCompactorWithin = (limit: number): Compactor => ({
     flowLayout(layout, Math.min(cols, Math.max(limit, ...layout.map((t) => t.w)))),
 });
 
-// The columns tiles flow within: while arranging, the section's width as
-// shown before (flowPx), at least its widest row; otherwise the widest row,
-// so the rows stay as arranged
-export const rowLimit = (layout: Layout, widthPx: number, cols: number, flowPx?: number) =>
-  Math.min(cols, Math.max(flowPx === undefined ? 1 : columnsFor(flowPx, widthPx, cols), widestRow(layout)));
+// The columns tiles flow within: the widest row, so the rows stay as
+// arranged, or as the section showed them before arranging (defaultLayout
+// with flowPx)
+export const rowLimit = (layout: Layout, cols: number) => Math.min(cols, widestRow(layout));
 
 // The breakpoint a grid this wide shows, as react-grid-layout picks it
 export const breakpointFor = (widthPx: number) => getBreakpointFromWidth(BREAKPOINTS, widthPx) as BreakpointName;
@@ -223,7 +234,7 @@ export const breakpointFor = (widthPx: number) => getBreakpointFromWidth(BREAKPO
 export const usedColumns = (tiles: TileSpec[], saved: SectionLayout | undefined, widthPx: number, flowPx?: number) => {
   const bp = breakpointFor(widthPx);
   const layout = responsiveLayouts(tiles, saved, {}, widthPx, false, flowPx)[bp] ?? [];
-  const placed = flowLayout(layout, rowLimit(layout, widthPx, COLS[bp], flowPx));
+  const placed = flowLayout(layout, rowLimit(layout, COLS[bp]));
   return { cols: COLS[bp], used: placed.reduce((max, t) => Math.max(max, t.x + t.w), 1) };
 };
 

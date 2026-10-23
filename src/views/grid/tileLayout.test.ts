@@ -6,6 +6,7 @@ import {
   defaultLayout,
   defaultWidth,
   flowLayout,
+  flowTracks,
   moveSection,
   orderSections,
   parseLayout,
@@ -203,6 +204,27 @@ describe('arranging as shown before', () => {
     expect(Math.abs(columnsWidth(1371, 60, 8) - 170)).toBeLessThan(12);
   });
 
+  it('counts the tracks the section shows, without those auto-fit drops', () => {
+    // A phone of 600 px: two lights and a wide one (span 2) in 558 px. Three
+    // tracks fit, but the wide one wraps and the third stays empty
+    const tiles = [
+      { key: 'c:A:1', minPx: 150 },
+      { key: 'c:B:1', minPx: 150 },
+      { key: 'c:C:1', minPx: 150, span: 2 },
+    ];
+    expect(flowTracks(tiles, 558)).toBe(2);
+    // Each as wide as shown there: 273, 273 and 558 px (582 px with padding, xs)
+    const layout = defaultLayout(tiles, 'xs', 582, 558);
+    expect(layout.map((t) => [t.x, t.y, t.w])).toEqual([
+      [0, 0, 10],
+      [10, 0, 10],
+      [0, 100, 20],
+    ]);
+    expect(columnsWidth(582, 20, 10)).toBe(273);
+    // Three tracks when every one is filled
+    expect(flowTracks([tiles[0], tiles[1], tiles[0]], 558)).toBe(3);
+  });
+
   it('wraps where the section wrapped', () => {
     // Five lights in a section of 352 px: two per row
     const five = [1, 2, 3, 4, 5].map((n) => ({ key: `c:L:${n}`, minPx: 150 }));
@@ -222,10 +244,8 @@ describe('arranging as shown before', () => {
       { i: 'c', x: 0, y: 5, w: 8, h: 1 },
     ];
     expect(widestRow(arranged)).toBe(16);
-    expect(rowLimit(arranged, 1371, 60)).toBe(16);
-    // While arranging at least as wide as the section was shown
-    expect(rowLimit(arranged, 1371, 60, 700)).toBe(columnsFor(700, 1371, 60));
-    expect(flowLayout(arranged, rowLimit(arranged, 1371, 60)).map((t) => [t.x, t.y])).toEqual([
+    expect(rowLimit(arranged, 60)).toBe(16);
+    expect(flowLayout(arranged, rowLimit(arranged, 60)).map((t) => [t.x, t.y])).toEqual([
       [0, 0],
       [8, 0],
       [0, 1],

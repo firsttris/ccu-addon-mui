@@ -31,7 +31,19 @@ export interface GridTile extends TileSpec {
 
 // Measures a tile's natural height, which sets its height in the grid. The
 // tile is at least as tall as its cell (as the others of its row) and grows
-// with its content; measured while the cells are low (see reset below).
+// with its content. It is measured without being stretched to its cell, so
+// a cell still tall for a moment (the grid applies new heights a render
+// later, e.g. when the bar above the tiles goes) isn't taken for its height.
+const naturalHeight = (el: HTMLElement) => {
+  const tile = el.firstElementChild as HTMLElement | null;
+  if (!tile) return el.offsetHeight;
+  const before = tile.style.minHeight;
+  tile.style.minHeight = '0px';
+  const height = tile.offsetHeight;
+  tile.style.minHeight = before;
+  return height;
+};
+
 const Measured = ({
   id,
   onHeight,
@@ -45,7 +57,7 @@ const Measured = ({
   useEffect(() => {
     const el = ref.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    const measure = () => onHeight(id, (el.firstElementChild as HTMLElement | null)?.offsetHeight ?? el.offsetHeight);
+    const measure = () => onHeight(id, naturalHeight(el));
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     if (el.firstElementChild) observer.observe(el.firstElementChild);
@@ -98,27 +110,31 @@ export const GridDashboard = ({
   const [draft, setDraft] = useState<SectionLayout | undefined>(saved);
   useEffect(() => setDraft(saved), [saved]);
 
+  // The tiles' own heights, measured below the bar while editing
+  const onHeight = useMemo(
+    () => (id: string, h: number) => setHeights((prev) => (prev[id] === h ? prev : { ...prev, [id]: h })),
+    [],
+  );
+  // After anything that can make tiles lower (width, arrangement), all are
+  // measured again
+  // biome-ignore lint/correctness/useExhaustiveDependencies: width and draft are the triggers, see above
+  useEffect(() => setHeights({}), [width, draft]);
+  const shownFlow = editing ? flowPx : undefined;
   // While editing, a bar above each tile holds its buttons (TOOLBAR), so
   // they cover nothing of it: the cell grows by the bar
-  const onHeight = useMemo(() => {
-    const bar = editing ? TOOLBAR : 0;
-    return (id: string, h: number) => setHeights((prev) => (prev[id] === h + bar ? prev : { ...prev, [id]: h + bar }));
-  }, [editing]);
-  // A tile stretched to its row keeps that height when measured; so after
-  // anything that can make tiles lower (width, arrangement, the bar above
-  // them going), all are measured again from low cells
-  // biome-ignore lint/correctness/useExhaustiveDependencies: width, draft and editing are the triggers, see above
-  useEffect(() => setHeights({}), [width, draft, editing]);
-  const shownFlow = editing ? flowPx : undefined;
+  const cellHeights = useMemo(
+    () => (editing ? Object.fromEntries(tiles.map((tile) => [tile.key, (heights[tile.key] ?? 0) + TOOLBAR])) : heights),
+    [editing, heights, tiles],
+  );
   const layouts = useMemo(
-    () => responsiveLayouts(tiles, draft, heights, width, equalRows, shownFlow),
-    [tiles, draft, heights, width, equalRows, shownFlow],
+    () => responsiveLayouts(tiles, draft, cellHeights, width, equalRows, shownFlow),
+    [tiles, draft, cellHeights, width, equalRows, shownFlow],
   );
   // From the width, as the grid picks it: its onBreakpointChange only
   // reports a change, not the breakpoint it starts with
   const breakpoint = breakpointFor(width);
   // The tiles wrap within the section, not the whole row
-  const limit = rowLimit(layouts[breakpoint] ?? [], width, COLS[breakpoint], shownFlow);
+  const limit = rowLimit(layouts[breakpoint] ?? [], COLS[breakpoint]);
   const compactor = useMemo(() => flowCompactorWithin(limit), [limit]);
   // Only what the user moved or resized is kept, for the breakpoint shown
   const commit = (layout: Layout) => {

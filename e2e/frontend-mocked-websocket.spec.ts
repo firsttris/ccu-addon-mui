@@ -1331,6 +1331,63 @@ test('legt Stift und Griff beim Anordnen über die Kachel, nicht auf sie', async
   await expect.poll(async () => (await tile.boundingBox())!.height).toBe(height);
 });
 
+// Waits until what measure returns stays the same for a moment
+const stable = async <T>(page: Page, measure: () => Promise<T>) => {
+  let last = '';
+  await expect
+    .poll(async () => {
+      const now = JSON.stringify(await measure());
+      const same = now === last;
+      last = now;
+      await page.waitForTimeout(150);
+      return same;
+    })
+    .toBe(true);
+  return JSON.parse(last) as T;
+};
+
+test('lässt die Kacheln beim Anordnen auf dem Handy so breit, wie die Spalten sie zeigen', async ({ page }) => {
+  // 600 px: two lights and a wide one; three tracks would fit, but the wide
+  // one wraps and auto-fit shows two
+  await page.setViewportSize({ width: 600, height: 900 });
+  await page.goto('/room/1');
+  const lights = page.getByRole('region', { name: 'Lights & switches' });
+  const widths = () =>
+    lights.evaluate((s) =>
+      [...s.querySelectorAll(':scope > div.grid > *, [data-tile-key] > div.relative > div > *')].map((t) =>
+        Math.round(t.getBoundingClientRect().width),
+      ),
+    );
+  await expect(lights.locator('.grid > *')).toHaveCount(3);
+  const before = await stable(page, widths);
+  await page.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Anordnen|Arrange)$/ })
+    .click();
+  await settled(page);
+  const arranging = await stable(page, widths);
+  expect(arranging).toHaveLength(before.length);
+  for (const [n, width] of before.entries()) expect(Math.abs(arranging[n] - width)).toBeLessThan(12);
+});
+
+for (const end of ['Cancel', 'Done'] as const) {
+  test(`macht die Kacheln nach dem Anordnen (${end}) wieder so hoch wie vorher`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/favorite/1300');
+    const tiles = page.getByRole('region', { name: 'Favorites' }).locator('[data-tile-key]');
+    await expect(tiles).toHaveCount(2);
+    const heights = () => tiles.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().height)));
+    const before = await stable(page, heights);
+    await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+    await settled(page);
+    // Taller by the bar above them while arranging
+    expect((await heights())[0]).toBeGreaterThan(before[0]);
+    await page.getByRole('button', { name: end }).click();
+    await expect.poll(heights).toEqual(before);
+  });
+}
+
 test('lässt eine Lampe mit eigenem Namen eine Lampe', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/room/1');
