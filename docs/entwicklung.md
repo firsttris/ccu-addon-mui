@@ -269,7 +269,7 @@ Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go 
   (`ccurpc.NewProxy`, XML-RPC unter `/api/rpc/v1/xmlrpc/<Interface>`), nicht über ihre lokalen Ports. Was
   ein Nutzer auslöst, geht mit dessen Sitzung (`Client.WithToken`, `Home.ForSession`), alles andere mit dem
   Token des Add-ons.
-- **Eigene Daten:** Kachel-Layouts und die Kachelwahl je Kanal liegen wie auf der CCU in `mui-tiles.json`
+- **Eigene Daten:** Kachel-Layouts, die Kachelwahl und die Kachelnamen je Kanal liegen wie auf der CCU in `mui-tiles.json`
   (`pkg/tiles`), auf openccu-lite im Datenverzeichnis. Der Modus von Eingangskanälen und die Favoritenlisten
   liegen dort in `mui-lite.json`, weil es keine ReGa für sie gibt. Räume, Gewerke und Namen ändert der Server in occulites Metadaten-Speicher; Räume heißen dort
   Pfade (`room/eg/wohnzimmer`), Kanäle `HmIP-RF.<Adresse>`, und die App bekommt daraus feste Zahlen-IDs

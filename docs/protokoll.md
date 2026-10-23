@@ -138,6 +138,7 @@ eines Wartungswerts (`UNREACH`, `LOW_BAT`, `CONFIG_PENDING` …) neu, sonst alle
 | | `getDeviceHealth` | Wartungswerte aller Geräte mit Zeitstempel (`get_device_health.tcl`: LOW_BAT, OPERATING_VOLTAGE, RSSI_DEVICE/PEER, UNREACH, STICKY_UNREACH, CONFIG_PENDING, UPDATE_PENDING, DUTY_CYCLE, SABOTAGE), bei HmIP zusätzlich `lowBatLimit` aus MASTER `LOW_BAT_LIMIT` (Cache 1 h) | alle |
 | | `getLayout` | Kachel-Layout einer Ansicht (`mui-tiles.json`, leer, wenn keins) | alle |
 | | `setLayout` | Kachel-Layout eines Raums, Gewerks oder einer Favoritenliste speichern (für alle Geräte gleich) | Bed. (A) |
+| | `setChannelNames` | Namen, die Kacheln statt des CCU-Namens zeigen, je Kanal (bis 100 Zeichen, leer gibt den CCU-Namen zurück; alle oder keiner, in `mui-tiles.json`). Jede Kanalliste trägt sie als `displayName`; auf der CCU ändert sich nichts | Bed. (A) |
 | | `getVirtualKeys` | Virtuelle Taster der CCU | alle |
 | | `getDevicePrograms` | Programme, die ein Gerät verwenden | alle |
 | Favoriten | `getFavorites` | Favoritenlisten, die der Benutzer sieht | alle |

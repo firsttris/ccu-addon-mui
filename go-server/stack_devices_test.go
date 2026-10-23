@@ -560,6 +560,46 @@ func TestStackChannelTile(t *testing.T) {
 	}
 }
 
+func TestStackChannelNames(t *testing.T) {
+	_, conn := startStack(t, "ccu")
+	loginAs(t, conn, "Admin", "secret")
+	// Given while arranging tiles: no elevation needed
+	names := []any{map[string]any{"id": 101, "name": " Leselampe "}, map[string]any{"id": 102, "name": "Fenster"}}
+	if m := call(t, conn, message{"type": "setChannelNames", "requestId": "n1", "names": names}); m["success"] != true {
+		t.Fatalf("setChannelNames failed: %v", m)
+	}
+	shown := func(id string) map[float64]any {
+		got := map[float64]any{}
+		for _, raw := range call(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "all": true, "requestId": id})["channels"].([]any) {
+			ch := raw.(map[string]any)
+			got[ch["id"].(float64)] = ch["displayName"]
+		}
+		return got
+	}
+	// Every channel list carries them, trimmed; the CCU's names stay
+	got := shown("n2")
+	if got[101] != "Leselampe" || got[102] != "Fenster" || got[103] != nil {
+		t.Fatalf("names not stored: %v", got)
+	}
+
+	// An empty name gives the channel the CCU's back
+	if m := call(t, conn, message{"type": "setChannelNames", "requestId": "n3", "names": []any{map[string]any{"id": 101, "name": ""}}}); m["success"] != true {
+		t.Fatalf("setChannelNames failed: %v", m)
+	}
+	if got := shown("n4"); got[101] != nil || got[102] != "Fenster" {
+		t.Fatalf("name not given back: %v", got)
+	}
+	if m := call(t, conn, message{"type": "setChannelNames", "requestId": "n5", "names": []any{map[string]any{"id": 101, "name": "a\nb"}}}); m["code"] != "INVALID_VALUE" {
+		t.Fatalf("expected INVALID_VALUE, got %v", m)
+	}
+
+	// Guests may not
+	loginAs(t, conn, "Gast", "gast")
+	if m := call(t, conn, message{"type": "setChannelNames", "requestId": "n6", "names": names}); m["code"] != "FORBIDDEN" {
+		t.Fatalf("expected FORBIDDEN, got %v", m)
+	}
+}
+
 func TestStackLayout(t *testing.T) {
 	_, conn := startStack(t, "ccu")
 	loginAs(t, conn, "Admin", "secret")

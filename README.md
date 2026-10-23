@@ -80,6 +80,7 @@ MUI steht für *Moderne WebUI*. Mit der React-Bibliothek Material UI hat das Pro
 ### 🧩 Kacheln frei anordnen
 - Per Drag & Drop, je Abschnitt und Favoritenliste
 - Kleine Abschnitte stehen nebeneinander, auch selbst angeordnete, weniger Scrollen
+- Eigene Namen für Kacheln, nur in der App: Die CCU behält ihre
 - Gespeichert in der CCU, auf allen Geräten gleich
 - Kacheln zeigen, was los ist, mit Gesten statt Formularen
 

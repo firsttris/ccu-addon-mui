@@ -16,6 +16,7 @@ import { usePageArrange } from '../contexts/PageTitleContext';
 import { Button } from '../components/ui/button';
 import { GridDashboard, type GridTile } from './grid/GridDashboard';
 import {
+  columnsFor,
   columnsWidth,
   MARGIN,
   moveSection,
@@ -38,6 +39,9 @@ import {
   sectionTitles,
 } from './dashboardSections';
 import { arrangedFlex, sectionColumns, sectionFlex } from './sectionFlowModel';
+import { TileNameDialog } from './grid/TileNameDialog';
+import { useTileNames } from './grid/useTileNames';
+import { useShownWidth } from './grid/useShownWidth';
 
 // A free arrangement: one section without heading, the tiles in the
 // order of the favorite list
@@ -61,9 +65,23 @@ interface SectionProps {
   last?: boolean;
   // Favorite lists: the tiles in this order (channel ids)
   order?: number[];
+  // While arranging: give a tile a name of its own
+  onRename?: (tile: GridTile) => void;
 }
 
-const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, order, rowWidth }: SectionProps) => {
+const Section = ({
+  group,
+  grid,
+  editing,
+  layout,
+  onLayout,
+  onMove,
+  first,
+  last,
+  order,
+  rowWidth,
+  onRename,
+}: SectionProps) => {
   const free = group.key === FREE;
   // Types without a translation (shown by GenericControl) keep the CCU's name
   const title = group.section ? sectionTitles[group.section]() : free ? '' : channelTypeName(group.types[0][0]);
@@ -83,17 +101,24 @@ const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, 
   }, [group, order]);
   // The grid as wide as the row with its padding (GridDashboard's -mx-3)
   const gridWidth = rowWidth > 0 ? rowWidth + 2 * MARGIN : undefined;
-  const fullRow = editing || free || (grid && gridWidth === undefined);
+  // As wide as shown before arranging, so nothing on the page moves when it
+  // starts: the sections stay side by side, their tiles as wide as they were
+  const shown = useShownWidth<HTMLElement>(!editing);
+  const flowPx = editing ? shown.width : undefined;
+  const fullRow = free || (grid && gridWidth === undefined) || (editing && flowPx === undefined);
   const style = useMemo(() => {
     if (fullRow) return undefined;
     if (!grid || gridWidth === undefined) {
       return sectionFlex(sectionMinPx[group.section ?? 'generic'], sectionColumns(tiles));
     }
-    const { cols, used } = usedColumns(tiles, layout, gridWidth);
-    return arrangedFlex(columnsWidth(gridWidth, cols, used));
-  }, [fullRow, grid, gridWidth, group.section, tiles, layout]);
+    const { cols, used } = usedColumns(tiles, layout, gridWidth, flowPx);
+    // While arranging it widens only when a tile gets wider than it
+    const arranged = columnsWidth(gridWidth, cols, used);
+    return arrangedFlex(flowPx !== undefined && used <= columnsFor(flowPx, gridWidth, cols) ? flowPx : arranged);
+  }, [fullRow, grid, gridWidth, group.section, tiles, layout, flowPx]);
   return (
     <section
+      ref={shown.ref}
       aria-labelledby={free ? undefined : id}
       aria-label={free ? m.FAVORITES() : undefined}
       className={cn('flex min-w-0 flex-col gap-3', fullRow && 'basis-full')}
@@ -139,6 +164,8 @@ const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, 
           editing={editing}
           onChange={onLayout}
           width={gridWidth}
+          onRename={onRename}
+          flowPx={flowPx}
           // As the section's own grid: tiles side by side as tall as the tallest
           equalRows={!sectionGrids[group.section ?? 'generic'].includes('items-start')}
         />
@@ -187,7 +214,7 @@ interface DashboardProps {
 export const Dashboard = ({
   tabs,
   layoutId,
-  channelsByType,
+  channelsByType: loaded,
   isLoading,
   error,
   onRetry,
@@ -202,6 +229,9 @@ export const Dashboard = ({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<SavedLayout | null>(null);
   const saved = useMemo(() => parseLayout(layoutJson), [layoutJson]);
+  // The channels with the names their tiles show
+  const names = useTileNames(loaded);
+  const { channelsByType } = names;
   // Sections whose types an event didn't touch stay the same objects, so
   // their tiles and grid aren't built again (shareGroups in useChannels)
   const previousGroups = useRef(new Map<string, SectionGroup>());
@@ -237,6 +267,7 @@ export const Dashboard = ({
   const finish = () => {
     setEditing(false);
     setDraft(null);
+    names.discard();
   };
   // The buttons sit in the header (to start on phones in the menu), so
   // nothing on the page moves when arranging starts
@@ -244,12 +275,22 @@ export const Dashboard = ({
     canArrange
       ? {
           editing,
-          busy: setLayout.isPending,
+          busy: setLayout.isPending || names.busy,
           start: () => setEditing(true),
-          done: () => (draft ? store(JSON.stringify(draft), finish) : finish()),
+          // The names first: a layout refused leaves them stored, not lost
+          done: () =>
+            names.save(() => {
+              if (draft) {
+                store(JSON.stringify(draft), finish);
+                return;
+              }
+              if (names.changed) showToast(m.LAYOUT_SAVED(), 'info');
+              finish();
+            }),
           cancel: finish,
-          // Once something is moved, or an arrangement is saved
-          reset: saved ? () => store('', finish) : draft ? finish : undefined,
+          // Once something is moved, or an arrangement is saved; the names
+          // given meanwhile are kept, only the arrangement goes
+          reset: saved ? () => names.save(() => store('', finish)) : draft ? () => names.save(finish) : undefined,
         }
       : null,
   );
@@ -307,10 +348,19 @@ export const Dashboard = ({
                 last={index === sections.length - 1}
                 order={freeOrder}
                 rowWidth={rowWidth}
+                onRename={editing ? names.rename : undefined}
               />
             ))
           }
         </SectionRow>
+      )}
+      {names.renaming && (
+        <TileNameDialog
+          ccuName={names.renaming.ccuName}
+          name={names.renaming.name}
+          onApply={names.renaming.apply}
+          onClose={names.renaming.close}
+        />
       )}
       {isLoading && channelsByType.length === 0 && <TileSkeletonGrid />}
       {layoutId !== undefined && <PlaceDiagrams place={layoutId} />}

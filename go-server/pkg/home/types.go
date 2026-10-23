@@ -40,6 +40,11 @@ type Channel struct {
 	// the app decide.
 	Tile string `json:"tile,omitempty"`
 
+	// DisplayName is the name the channel's tile shows instead of Name,
+	// given in the add-on and filled in by the server from mui-tiles.json;
+	// empty shows Name. The CCU keeps Name for its other interfaces.
+	DisplayName string `json:"displayName,omitempty"`
+
 	// Mode is what an input channel (MULTI_MODE_INPUT_TRANSMITTER) is wired
 	// to, as the WebUI stores it (metadata "channelMode"): 0 off, 1 key,
 	// 2 switch, 3 contact, 4 level, 5 condition (translate.lang.

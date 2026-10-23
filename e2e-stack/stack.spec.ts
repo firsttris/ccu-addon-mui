@@ -709,6 +709,43 @@ test('legt fest, ob ein Schaltaktor als Lampe oder Schalter erscheint', async ({
   await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
 });
 
+test('gibt einer Kachel einen eigenen Namen, die CCU behält ihren', async ({ page }) => {
+  await login(page);
+  await page.goto('/room/1');
+  const main = page.getByRole('main');
+  const dialog = page.getByRole('dialog');
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Anordnen' }).click();
+  await page.getByRole('button', { name: '„Wohnzimmer Licht“ umbenennen' }).click();
+  await dialog.getByRole('textbox', { name: 'Name der Kachel' }).fill('Leselampe');
+  await dialog.getByRole('button', { name: 'Übernehmen' }).click();
+  await page.getByRole('button', { name: 'Fertig' }).click();
+  await expect(page.getByText('Anordnung gespeichert')).toBeVisible();
+
+  // Stored in mui-tiles.json: after a reload too
+  await page.reload();
+  await expect(main.getByText('Leselampe')).toBeVisible();
+  await expect(main.getByText('Wohnzimmer Licht')).toHaveCount(0);
+
+  // The CCU keeps its name; the device page shows both
+  await page.goto('/device/BidCos-RF/LEQ0000001');
+  const card = page.getByRole('region', { name: 'Wohnzimmer Licht' });
+  await expect(card.getByLabel('Name LEQ0000001:1')).toHaveValue('Wohnzimmer Licht');
+  await expect(card.getByText('Name in der App')).toBeVisible();
+  await expect(card.getByText('Leselampe')).toBeVisible();
+
+  // Back to the CCU's name
+  await page.goto('/room/1');
+  await page.getByRole('button', { name: 'Anordnen' }).click();
+  await page.getByRole('button', { name: '„Leselampe“ umbenennen' }).click();
+  await dialog.getByRole('button', { name: 'Name der CCU' }).click();
+  await page.getByRole('button', { name: 'Fertig' }).click();
+  await expect(page.getByText('Anordnung gespeichert')).toBeVisible();
+  await page.reload();
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+});
+
 test('legt Programme im Programm-Editor an, ändert und löscht sie', async ({ page }) => {
   await login(page);
   await page.goto('/programs');

@@ -1121,22 +1121,52 @@ test('verschiebt beim Anordnen ganze Bereiche, die Kacheln bleiben in ihrem Bere
   await expect(headings.nth(1)).toHaveText(first!);
 });
 
-test('stellt kleine Bereiche nebeneinander, beim Anordnen untereinander', async ({ page }) => {
+// Waits until the arranging grids have settled (react-grid-layout moves
+// tiles with a transition)
+const settled = async (page: Page) => {
+  const tile = page.locator('[data-tile-key]').first();
+  await expect(tile.locator('.tile-drag-handle')).toBeVisible();
+  await expect
+    .poll(async () => {
+      const before = JSON.stringify(await tile.boundingBox());
+      await page.waitForTimeout(150);
+      return before === JSON.stringify(await tile.boundingBox());
+    })
+    .toBe(true);
+};
+
+test('stellt kleine Bereiche nebeneinander, beim Anordnen ebenso, die Kacheln gleich breit', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/room/1');
-  const headings = page.getByRole('main').getByRole('heading', { level: 2 });
+  const main = page.getByRole('main');
+  const headings = main.getByRole('heading', { level: 2 });
   await expect(headings.nth(1)).toBeVisible();
-  const top = async (n: number) => (await headings.nth(n).boundingBox())?.y;
-  const left = async (n: number) => (await headings.nth(n).boundingBox())?.x;
+  const boxes = async () => Promise.all([0, 1, 2].map(async (n) => (await headings.nth(n).boundingBox())!));
+  const light = main.locator('[data-tile]').filter({ hasText: 'Wohnzimmer Licht' });
+  const width = async () => (await light.boundingBox())!.width;
 
   // Lights (four columns) and windows (two) share a line
-  expect(await top(1)).toBe(await top(0));
-  expect(await left(1)).toBeGreaterThan((await left(0))! + 400);
+  const before = await boxes();
+  expect(before[1].y).toBe(before[0].y);
+  expect(before[1].x).toBeGreaterThan(before[0].x + 400);
+  const tileWidth = await width();
 
-  // Arranging works on grids across the whole page
+  // Arranging keeps the sections where they are, the tiles as wide as
+  // they were (within half a grid column); lines below move down by the
+  // bars above the tiles, in their places
   await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
-  await expect.poll(() => top(1)).toBeGreaterThan((await top(0))!);
-  expect(await left(1)).toBe(await left(0));
+  await settled(page);
+  const arranging = await boxes();
+  for (const [n, box] of arranging.entries()) {
+    expect(box.x).toBe(before[n].x);
+    if (before[n].y === before[0].y) expect(box.y).toBe(before[n].y);
+    else expect(box.y).toBeGreaterThan(arranging[0].y);
+  }
+  expect(Math.abs((await width()) - tileWidth)).toBeLessThan(12);
+
+  // And so after Cancel
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect.poll(width).toBe(tileWidth);
 });
 
 // Moves the first light of the living room behind the second while
@@ -1149,8 +1179,7 @@ const moveFirstLight = async (page: Page) => {
 
   // Move the first light behind the second
   await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
-  // While arranging, every section takes the whole row
-  await expect.poll(async () => (await box(1)).y).toBeGreaterThan((await box(0)).y);
+  await settled(page);
   const tiles = lights.locator('[data-tile-key]');
   await expect(tiles).toHaveCount(3);
   const [key, other] = [
@@ -1211,6 +1240,208 @@ test('hält eine Anordnung auch, wenn die Seite schmaler als der größte Breakp
   expect(Object.keys(stored[0].sections.lights)).toEqual(['sm']);
   await page.reload();
   await expect.poll(async () => (await x(key)) > (await x(other))).toBe(true);
+});
+
+test('gibt einer Kachel beim Anordnen einen eigenen Namen, nur in der App', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const main = page.getByRole('main');
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+  const arrange = () => page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  const rename = (name: string) => page.getByRole('button', { name: `Rename "${name}"` }).click();
+  const dialog = page.getByRole('dialog');
+  const sent = () =>
+    page.evaluate(() =>
+      (
+        (
+          window as Window & {
+            __wsMock?: { sentMessages: () => Array<{ type: string; names?: { id: number; name: string }[] }> };
+          }
+        ).__wsMock?.sentMessages() ?? []
+      ).filter((m) => m.type === 'setChannelNames'),
+    );
+
+  // Only while arranging, and the tile shows the name at once
+  await expect(page.getByRole('button', { name: 'Rename "Wohnzimmer Licht"' })).toHaveCount(0);
+  await arrange();
+  await rename('Wohnzimmer Licht');
+  await expect(dialog.getByText('the channel stays "Wohnzimmer Licht"')).toBeVisible();
+  await dialog.getByRole('textbox', { name: 'Tile name' }).fill('Deckenlicht');
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await expect(main.getByText('Deckenlicht')).toBeVisible();
+
+  // Cancel drops it
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+  await expect(main.getByText('Deckenlicht')).toHaveCount(0);
+  expect(await sent()).toHaveLength(0);
+
+  // Done stores it, kept after a reload
+  await arrange();
+  await rename('Wohnzimmer Licht');
+  await dialog.getByRole('textbox', { name: 'Tile name' }).fill(' Deckenlicht ');
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+  await expect.poll(sent).toEqual([expect.objectContaining({ names: [{ id: 101, name: 'Deckenlicht' }] })]);
+  await page.reload();
+  await expect(main.getByText('Deckenlicht')).toBeVisible();
+  await expect(main.getByText('Wohnzimmer Licht')).toHaveCount(0);
+
+  // The CCU's name back
+  await arrange();
+  await rename('Deckenlicht');
+  await expect(dialog.getByRole('textbox', { name: 'Tile name' })).toHaveValue('Deckenlicht');
+  await dialog.getByRole('button', { name: 'CCU name' }).click();
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+  await expect.poll(sent).toEqual([expect.objectContaining({ names: [{ id: 101, name: '' }] })]);
+});
+
+const sentOfType = (page: Page, type: string) =>
+  page.evaluate(
+    (t) =>
+      (
+        (window as Window & { __wsMock?: { sentMessages: () => Array<{ type: string }> } }).__wsMock?.sentMessages() ??
+        []
+      ).filter((m) => m.type === t),
+    type,
+  );
+
+test('legt Stift und Griff beim Anordnen über die Kachel, nicht auf sie', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const main = page.getByRole('main');
+  const tile = main.locator('[data-tile]').filter({ hasText: 'Wohnzimmer Licht' });
+  await expect(tile).toBeVisible();
+  const height = (await tile.boundingBox())!.height;
+
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  const pencil = page.getByRole('button', { name: 'Rename "Wohnzimmer Licht"' });
+  const cell = page.locator('[data-tile-key]').filter({ has: pencil });
+  await expect(pencil).toBeVisible();
+  // Both above the tile: they cover nothing of it
+  for (const button of [pencil, cell.locator('.tile-drag-handle')]) {
+    await expect
+      .poll(async () => (await button.boundingBox())!.y + (await button.boundingBox())!.height)
+      .toBeLessThanOrEqual((await tile.boundingBox())!.y);
+  }
+
+  // Back as tall as before once arranging ends
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect.poll(async () => (await tile.boundingBox())!.height).toBe(height);
+});
+
+// Waits until what measure returns stays the same for a moment
+const stable = async <T>(page: Page, measure: () => Promise<T>) => {
+  let last = '';
+  await expect
+    .poll(async () => {
+      const now = JSON.stringify(await measure());
+      const same = now === last;
+      last = now;
+      await page.waitForTimeout(150);
+      return same;
+    })
+    .toBe(true);
+  return JSON.parse(last) as T;
+};
+
+test('lässt die Kacheln beim Anordnen auf dem Handy so breit, wie die Spalten sie zeigen', async ({ page }) => {
+  // 600 px: two lights and a wide one; three tracks would fit, but the wide
+  // one wraps and auto-fit shows two
+  await page.setViewportSize({ width: 600, height: 900 });
+  await page.goto('/room/1');
+  const lights = page.getByRole('region', { name: 'Lights & switches' });
+  const widths = () =>
+    lights.evaluate((s) =>
+      [...s.querySelectorAll(':scope > div.grid > *, [data-tile-key] > div.relative > div > *')].map((t) =>
+        Math.round(t.getBoundingClientRect().width),
+      ),
+    );
+  await expect(lights.locator('.grid > *')).toHaveCount(3);
+  const before = await stable(page, widths);
+  await page.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Anordnen|Arrange)$/ })
+    .click();
+  await settled(page);
+  const arranging = await stable(page, widths);
+  expect(arranging).toHaveLength(before.length);
+  for (const [n, width] of before.entries()) expect(Math.abs(arranging[n] - width)).toBeLessThan(12);
+});
+
+for (const end of ['Cancel', 'Done'] as const) {
+  test(`macht die Kacheln nach dem Anordnen (${end}) wieder so hoch wie vorher`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/favorite/1300');
+    const tiles = page.getByRole('region', { name: 'Favorites' }).locator('[data-tile-key]');
+    await expect(tiles).toHaveCount(2);
+    const heights = () => tiles.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().height)));
+    const before = await stable(page, heights);
+    await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+    await settled(page);
+    // Taller by the bar above them while arranging
+    expect((await heights())[0]).toBeGreaterThan(before[0]);
+    await page.getByRole('button', { name: end }).click();
+    await expect.poll(heights).toEqual(before);
+  });
+}
+
+test('lässt eine Lampe mit eigenem Namen eine Lampe', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const main = page.getByRole('main');
+  // A light by its CCU name, "Wohnzimmer Licht"
+  await expect(main.locator('[data-tile]').filter({ hasText: 'Wohnzimmer Licht' })).toHaveAttribute(
+    'data-tile',
+    'light',
+  );
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  await page.getByRole('button', { name: 'Rename "Wohnzimmer Licht"' }).click();
+  await page.getByRole('dialog').getByRole('textbox', { name: 'Tile name' }).fill('Decke');
+  await page.getByRole('dialog').getByRole('button', { name: 'Apply' }).click();
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+  await expect.poll(() => sentOfType(page, 'setChannelNames')).toHaveLength(1);
+  // The name given doesn't sound like a light, the tile stays one
+  await expect(main.locator('[data-tile]').filter({ hasText: 'Decke' })).toHaveAttribute('data-tile', 'light');
+});
+
+test('behält beim automatischen Anordnen die gegebenen Namen', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const main = page.getByRole('main');
+  const headings = main.getByRole('heading', { level: 2 });
+  await expect(headings.nth(1)).toBeVisible();
+  const light = main.locator('[data-tile]').filter({ hasText: 'Wohnzimmer Licht' });
+  await expect(light).toBeVisible();
+  const width = (await light.boundingBox())!.width;
+  const arrange = async () => {
+    await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+    await settled(page);
+  };
+  // A saved arrangement
+  await arrange();
+  await page
+    .getByRole('button', { name: /^Move ".*" up$/ })
+    .last()
+    .click();
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+  await expect.poll(() => sentOfType(page, 'setLayout')).toHaveLength(1);
+
+  // A name given, then arranged automatically: the arrangement goes, the name stays
+  await arrange();
+  await page.getByRole('button', { name: 'Rename "Wohnzimmer Licht"' }).click();
+  await page.getByRole('dialog').getByRole('textbox', { name: 'Tile name' }).fill('Deckenlicht');
+  await page.getByRole('dialog').getByRole('button', { name: 'Apply' }).click();
+  await page.getByRole('button', { name: /^(Automatisch anordnen|Arrange automatically)$/ }).click();
+  await expect.poll(() => sentOfType(page, 'setLayout')).toHaveLength(2);
+  expect(await sentOfType(page, 'setChannelNames')).toHaveLength(1);
+  await expect(main.getByText('Deckenlicht')).toBeVisible();
+  // As wide as before anything was arranged
+  await expect
+    .poll(async () => (await main.locator('[data-tile]').filter({ hasText: 'Deckenlicht' }).boundingBox())!.width)
+    .toBe(width);
 });
 
 test('bietet das Anordnen auf dem Handy im Menü an', async ({ page }) => {

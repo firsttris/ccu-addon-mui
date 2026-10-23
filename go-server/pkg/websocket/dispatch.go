@@ -109,6 +109,8 @@ func (s *Server) dispatch(client *Client, msgType, requestID string, message []b
 		s.handleRename(client, message)
 	case "setChannelTile":
 		s.handleSetChannelTile(client, message)
+	case "setChannelNames":
+		s.handleSetChannelNames(client, message)
 	case "getSystemInfo":
 		s.handleSystemInfo(client, requestID)
 	case "getGeneralSettings", "setGeneralSettings":

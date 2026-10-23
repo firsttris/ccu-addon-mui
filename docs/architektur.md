@@ -79,7 +79,7 @@ go-server/
   pkg/rules            Benachrichtigungsregeln ohne Programm (Push)
   pkg/devimages        Gerätebilder der WebUI (DEVDB.tcl) mit markiertem Kanal
   pkg/sysinfo          Systeminformationen wie help.cgi: Hardware, Speicher, Last, Temperatur, Netzwerk
-  pkg/tiles            Kachel-Layouts und die Kachelart je Kanal (mui-tiles.json)
+  pkg/tiles            Kachel-Layouts, Kachelart und Kachelname je Kanal (mui-tiles.json)
   pkg/addons, logs, heatinggroups, config, logger, types
   pkg/fakeccu          eine nachgebaute CCU für Tests und Entwicklung
   cmd/fakeccu          startet die Fake-CCU mit einer Fixture
@@ -127,7 +127,7 @@ Benutzer und das Systemprotokoll. Der Server schickt ihr HM-Script per `POST /re
 - **Werte schreiben** läuft über ReGa (`State()`), wie in der WebUI, auch an ein Gerät, das als nicht
   erreichbar gilt (bei HmIP-Batteriegeräten ist `UNREACH` oft veraltet). Das Skript meldet den alten Wert
   fürs Audit-Log.
-- Eigene Daten wie das Kachel-Layout und die Kachelart am Kanal legt das Add-on **nicht** in ReGa ab,
+- Eigene Daten wie das Kachel-Layout, die Kachelart und den Kachelnamen am Kanal legt das Add-on **nicht** in ReGa ab,
   sondern in eigenen Dateien unter `/usr/local/etc/config` (`pkg/tiles`, `mui-tiles.json`), atomar
   geschrieben. ReGa schreibt sein Objektmodell nur alle paar Minuten auf den Flash und beim Beenden gar
   nicht (`rega.conf`: `CheckModifiedCycle`, `AutoSaveDOMOnExit=0`); ein Neustart kurz nach dem Anordnen,

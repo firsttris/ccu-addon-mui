@@ -64,6 +64,7 @@ can already do stays. Everything in one app, from the light switch to the progra
 ### 🧩 Arrange tiles freely
 - Drag & drop, per section and favourites list
 - Small sections sit side by side, arranged ones too, less scrolling
+- Tiles can have names of their own, only in the app: the CCU keeps its names
 - Stored in the CCU, the same on every device
 - Tiles show what is going on, with gestures instead of forms
 

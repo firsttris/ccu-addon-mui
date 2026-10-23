@@ -90,3 +90,44 @@ func TestFailedWriteKeepsTheOldState(t *testing.T) {
 		t.Fatal("tile kept although it was not written")
 	}
 }
+
+func TestNamesKeptAndGivenBack(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "mui-tiles.json")
+	s := open(t, path)
+	if err := s.SetNames(map[int64]string{5: "  Leselampe ", 6: "Deckenlicht"}); err != nil {
+		t.Fatal(err)
+	}
+	// Trimmed, and kept after a restart next to the tile chosen
+	_ = s.SetTile(5, Light)
+	s = open(t, path)
+	if s.Name(5) != "Leselampe" || s.Name(6) != "Deckenlicht" || s.Tile(5) != Light {
+		t.Fatalf("names %q %q, tile %q", s.Name(5), s.Name(6), s.Tile(5))
+	}
+
+	// "" gives the channel the CCU's name back; the others stay
+	if err := s.SetNames(map[int64]string{5: " "}); err != nil {
+		t.Fatal(err)
+	}
+	s = open(t, path)
+	if s.Name(5) != "" || s.Name(6) != "Deckenlicht" {
+		t.Fatalf("names %q %q", s.Name(5), s.Name(6))
+	}
+}
+
+func TestRefusesWhatIsNoName(t *testing.T) {
+	s := open(t, filepath.Join(t.TempDir(), "mui-tiles.json"))
+	_ = s.SetNames(map[int64]string{1: "Flur"})
+	for _, name := range []string{strings.Repeat("ä", MaxName+1), "Zeile\nzwei", "\xff"} {
+		// All or none: the valid name next to it is not stored either
+		if err := s.SetNames(map[int64]string{1: "Neu", 2: name}); !errors.Is(err, ErrInvalid) {
+			t.Errorf("name %.20q: got %v", name, err)
+		}
+	}
+	if s.Name(1) != "Flur" || s.Name(2) != "" {
+		t.Fatalf("names changed: %q %q", s.Name(1), s.Name(2))
+	}
+	// MaxName characters, not bytes
+	if err := s.SetNames(map[int64]string{1: strings.Repeat("ä", MaxName)}); err != nil {
+		t.Fatal(err)
+	}
+}

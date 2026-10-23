@@ -66,6 +66,7 @@ export const gridTiles = (group: SectionGroup): GridTile[] => {
           minPx: sectionMinPx[override?.section ?? 'generic'] ?? minPx,
           span: override?.wide ? 2 : 1,
           channelIds: [channel.id],
+          name: channel.name,
           element: <ControlComponent channel={channel} />,
         }));
   });

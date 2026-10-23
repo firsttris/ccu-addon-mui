@@ -54,14 +54,47 @@ export const defaultWidth = (minPx: number, bp: BreakpointName, widthPx: number,
   return Math.min(COLS[bp], span * Math.max(1, Math.floor(COLS[bp] / Math.min(perRow, COLS[bp]))));
 };
 
-// Tiles flowed left to right in their order, as the sections show them
-export const defaultLayout = (tiles: TileSpec[], bp: BreakpointName, widthPx: number): SavedTile[] => {
+// Columns of a grid widthPx wide (its padding outside, as GridDashboard's
+// -mx-3 puts it) that come closest to px
+export const columnsFor = (px: number, widthPx: number, cols: number) => {
+  const column = (widthPx - 2 * MARGIN - MARGIN * (cols - 1)) / cols;
+  return Math.max(1, Math.min(cols, Math.round((px + MARGIN) / (column + MARGIN))));
+};
+
+// The tracks a section's grid (auto-fit, minmax(minPx, 1fr)) shows in
+// flowPx: as many as fit, less those no tile fills, which auto-fit drops
+// (a wide tile wrapping leaves the last one empty). Its tiles placed in
+// order, as the grid does without dense packing.
+export const flowTracks = (tiles: TileSpec[], flowPx: number) => {
+  const minPx = Math.min(...tiles.map((t) => t.minPx));
+  const fit = Math.max(1, Math.floor((flowPx + MARGIN) / (minPx + MARGIN)));
+  let col = 0;
+  let used = 1;
+  for (const tile of tiles) {
+    const span = Math.min(tile.span ?? 1, fit);
+    if (col + span > fit) col = 0;
+    col += span;
+    used = Math.max(used, col);
+  }
+  return used;
+};
+
+// Tiles flowed left to right in their order, as the sections show them:
+// across the whole row, or with flowPx as in the section flowPx wide, each
+// as wide as a track there (in columns of the grid of the whole row) and
+// wrapping where it wrapped
+export const defaultLayout = (tiles: TileSpec[], bp: BreakpointName, widthPx: number, flowPx?: number): SavedTile[] => {
   const out: SavedTile[] = [];
+  const tracks = flowPx === undefined || tiles.length === 0 ? 0 : flowTracks(tiles, flowPx);
+  const track = tracks && Math.max(1, Math.floor(columnsFor(flowPx ?? 0, widthPx, COLS[bp]) / tracks));
+  const limit = tracks ? tracks * track : COLS[bp];
   let x = 0;
   let row = 0;
   for (const tile of tiles) {
-    const w = defaultWidth(tile.minPx, bp, widthPx, tile.span);
-    if (x + w > COLS[bp]) {
+    const w = tracks
+      ? Math.min(limit, track * Math.min(tile.span ?? 1, tracks))
+      : defaultWidth(tile.minPx, bp, widthPx, tile.span);
+    if (x > 0 && x + w > limit) {
       x = 0;
       row += 1;
     }
@@ -98,6 +131,9 @@ export const responsiveLayouts = (
   // Tiles starting in the same row get the height of the tallest, as in
   // the sections' own grids
   equalRows = false,
+  // The section's width as shown before arranging: tiles not arranged yet
+  // keep their width from there (defaultLayout)
+  flowPx?: number,
 ): ResponsiveLayouts<BreakpointName> => {
   const keys = new Set(tiles.map((t) => t.key));
   const result = {} as Record<BreakpointName, Layout>;
@@ -105,8 +141,8 @@ export const responsiveLayouts = (
     const stored = (saved?.[bp] ?? []).filter((t) => keys.has(t.i));
     const placed = new Set(stored.map((t) => t.i));
     const missing = tiles.filter((t) => !placed.has(t.key));
-    const appended = defaultLayout(missing, bp, widthPx).map((t) => ({ ...t, y: t.y + 100000 }));
-    const base = saved?.[bp] ? [...stored, ...appended] : defaultLayout(tiles, bp, widthPx);
+    const appended = defaultLayout(missing, bp, widthPx, flowPx).map((t) => ({ ...t, y: t.y + 100000 }));
+    const base = saved?.[bp] ? [...stored, ...appended] : defaultLayout(tiles, bp, widthPx, flowPx);
     const rowHeight = new Map<number, number>();
     if (equalRows) {
       for (const t of base) rowHeight.set(t.y, Math.max(rowHeight.get(t.y) ?? 0, heights[t.i] ?? 0));
@@ -165,15 +201,40 @@ export const flowCompactor: Compactor = {
   compact: flowLayout,
 };
 
+// The columns of the widest row (tiles with the same y): what tiles flowed
+// within it make again the same rows, as an arrangement was made in a
+// section that wide
+export const widestRow = (layout: readonly { y: number; w: number }[]) => {
+  const rows = new Map<number, number>();
+  for (const t of layout) rows.set(t.y, (rows.get(t.y) ?? 0) + t.w);
+  return Math.max(1, ...rows.values());
+};
+
+// Tiles flow within limit columns, the section's width, instead of the
+// whole row; a tile wider than that widens it
+export const flowCompactorWithin = (limit: number): Compactor => ({
+  type: 'wrap',
+  allowOverlap: true,
+  compact: (layout: Layout, cols: number) =>
+    flowLayout(layout, Math.min(cols, Math.max(limit, ...layout.map((t) => t.w)))),
+});
+
+// The columns tiles flow within: the widest row, so the rows stay as
+// arranged, or as the section showed them before arranging (defaultLayout
+// with flowPx)
+export const rowLimit = (layout: Layout, cols: number) => Math.min(cols, widestRow(layout));
+
 // The breakpoint a grid this wide shows, as react-grid-layout picks it
 export const breakpointFor = (widthPx: number) => getBreakpointFromWidth(BREAKPOINTS, widthPx) as BreakpointName;
 
 // Columns an arranged section's tiles take from the left, in the grid of a
 // whole row (widthPx as passed to the grid): a section needs no more than
-// that beside the others
-export const usedColumns = (tiles: TileSpec[], saved: SectionLayout | undefined, widthPx: number) => {
+// that beside the others. While arranging with flowPx, as GridDashboard
+// lays them out then.
+export const usedColumns = (tiles: TileSpec[], saved: SectionLayout | undefined, widthPx: number, flowPx?: number) => {
   const bp = breakpointFor(widthPx);
-  const placed = flowLayout(responsiveLayouts(tiles, saved, {}, widthPx)[bp] ?? [], COLS[bp]);
+  const layout = responsiveLayouts(tiles, saved, {}, widthPx, false, flowPx)[bp] ?? [];
+  const placed = flowLayout(layout, rowLimit(layout, COLS[bp]));
   return { cols: COLS[bp], used: placed.reduce((max, t) => Math.max(max, t.x + t.w), 1) };
 };
 
