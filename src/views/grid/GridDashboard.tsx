@@ -1,9 +1,11 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import GripIcon from '~icons/lucide/grip';
+import PencilIcon from '~icons/lucide/pencil';
 import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import { cn } from '../../lib/utils';
+import { m } from '../../paraglide/messages';
 import {
   BREAKPOINTS,
   type BreakpointName,
@@ -22,6 +24,8 @@ export interface GridTile extends TileSpec {
   element: ReactNode;
   // The channels the tile shows, for the order of a favorite list
   channelIds?: number[];
+  // The name it shows, when it shows one channel: it can be given another
+  name?: string;
 }
 
 // Measures a tile's natural height, which sets its height in the grid. The
@@ -63,6 +67,7 @@ export const GridDashboard = ({
   onChange,
   equalRows = false,
   width: rowWidth,
+  onRename,
 }: {
   tiles: GridTile[];
   saved: SectionLayout | undefined;
@@ -73,6 +78,8 @@ export const GridDashboard = ({
   // padding): a section narrower than its row keeps the row's breakpoint
   // and columns, so the saved positions hold. Otherwise its own width.
   width?: number;
+  // While editing: give a tile that shows one channel a name of its own
+  onRename?: (tile: GridTile) => void;
 }) => {
   const measured = useContainerWidth();
   const { containerRef } = measured;
@@ -143,6 +150,17 @@ export const GridDashboard = ({
                 >
                   <GripIcon className="size-5" />
                 </div>
+              )}
+              {editing && onRename && tile.name !== undefined && (
+                <button
+                  type="button"
+                  aria-label={m.TILE_RENAME({ name: tile.name })}
+                  title={m.TILE_RENAME({ name: tile.name })}
+                  onClick={() => onRename(tile)}
+                  className="absolute right-12 top-2 flex size-9 items-center justify-center rounded-xl border border-border bg-background/80 text-foreground shadow-sm backdrop-blur-sm hover:bg-accent"
+                >
+                  <PencilIcon className="size-4" />
+                </button>
               )}
             </div>
           ))}

@@ -161,6 +161,9 @@
     "setChannelTile": {
       "$ref": "#/definitions/SetChannelTileCall"
     },
+    "setChannelNames": {
+      "$ref": "#/definitions/SetChannelNamesCall"
+    },
     "getProgram": {
       "$ref": "#/definitions/GetProgramCall"
     },
@@ -513,6 +516,7 @@
     "addFavoriteItem",
     "removeFavoriteItem",
     "setChannelTile",
+    "setChannelNames",
     "getProgram",
     "saveProgram",
     "deleteProgram",
@@ -701,6 +705,11 @@
             "switch"
           ],
           "description": "Tile chosen in the add-on (stored by the server in mui-tiles.json)"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Name the channel's tile shows instead of name, given in the add-on (stored by the server in mui-tiles.json); missing shows name"
         },
         "mode": {
           "type": "integer",
@@ -3195,6 +3204,9 @@
           "$ref": "#/definitions/SetChannelTileResponse"
         },
         {
+          "$ref": "#/definitions/SetChannelNamesResponse"
+        },
+        {
           "$ref": "#/definitions/GetProgramResponse"
         },
         {
@@ -5397,6 +5409,80 @@
         },
         "response": {
           "$ref": "#/definitions/SetChannelTileResponse"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "SetChannelNamesRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setChannelNames"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "names": {
+          "type": "array",
+          "description": "The names tiles show instead of the CCU's, all stored or none; an empty name gives the channel the CCU's back",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string",
+                "maxLength": 100
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "type",
+        "names"
+      ],
+      "additionalProperties": false
+    },
+    "SetChannelNamesResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setChannelNames_response"
+        },
+        "requestId": {
+          "type": "string"
+        },
+        "success": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "success"
+      ],
+      "additionalProperties": false
+    },
+    "SetChannelNamesCall": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "#/definitions/SetChannelNamesRequest"
+        },
+        "response": {
+          "$ref": "#/definitions/SetChannelNamesResponse"
         }
       },
       "required": [

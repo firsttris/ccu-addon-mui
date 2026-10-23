@@ -38,6 +38,8 @@ import {
   sectionTitles,
 } from './dashboardSections';
 import { arrangedFlex, sectionColumns, sectionFlex } from './sectionFlowModel';
+import { TileNameDialog } from './grid/TileNameDialog';
+import { useTileNames } from './grid/useTileNames';
 
 // A free arrangement: one section without heading, the tiles in the
 // order of the favorite list
@@ -61,9 +63,23 @@ interface SectionProps {
   last?: boolean;
   // Favorite lists: the tiles in this order (channel ids)
   order?: number[];
+  // While arranging: give a tile a name of its own
+  onRename?: (tile: GridTile) => void;
 }
 
-const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, order, rowWidth }: SectionProps) => {
+const Section = ({
+  group,
+  grid,
+  editing,
+  layout,
+  onLayout,
+  onMove,
+  first,
+  last,
+  order,
+  rowWidth,
+  onRename,
+}: SectionProps) => {
   const free = group.key === FREE;
   // Types without a translation (shown by GenericControl) keep the CCU's name
   const title = group.section ? sectionTitles[group.section]() : free ? '' : channelTypeName(group.types[0][0]);
@@ -139,6 +155,7 @@ const Section = ({ group, grid, editing, layout, onLayout, onMove, first, last, 
           editing={editing}
           onChange={onLayout}
           width={gridWidth}
+          onRename={onRename}
           // As the section's own grid: tiles side by side as tall as the tallest
           equalRows={!sectionGrids[group.section ?? 'generic'].includes('items-start')}
         />
@@ -187,7 +204,7 @@ interface DashboardProps {
 export const Dashboard = ({
   tabs,
   layoutId,
-  channelsByType,
+  channelsByType: loaded,
   isLoading,
   error,
   onRetry,
@@ -202,6 +219,9 @@ export const Dashboard = ({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<SavedLayout | null>(null);
   const saved = useMemo(() => parseLayout(layoutJson), [layoutJson]);
+  // The channels with the names their tiles show
+  const names = useTileNames(loaded);
+  const { channelsByType } = names;
   // Sections whose types an event didn't touch stay the same objects, so
   // their tiles and grid aren't built again (shareGroups in useChannels)
   const previousGroups = useRef(new Map<string, SectionGroup>());
@@ -237,6 +257,7 @@ export const Dashboard = ({
   const finish = () => {
     setEditing(false);
     setDraft(null);
+    names.discard();
   };
   // The buttons sit in the header (to start on phones in the menu), so
   // nothing on the page moves when arranging starts
@@ -244,9 +265,18 @@ export const Dashboard = ({
     canArrange
       ? {
           editing,
-          busy: setLayout.isPending,
+          busy: setLayout.isPending || names.busy,
           start: () => setEditing(true),
-          done: () => (draft ? store(JSON.stringify(draft), finish) : finish()),
+          // The names first: a layout refused leaves them stored, not lost
+          done: () =>
+            names.save(() => {
+              if (draft) {
+                store(JSON.stringify(draft), finish);
+                return;
+              }
+              if (names.changed) showToast(m.LAYOUT_SAVED(), 'info');
+              finish();
+            }),
           cancel: finish,
           // Once something is moved, or an arrangement is saved
           reset: saved ? () => store('', finish) : draft ? finish : undefined,
@@ -307,10 +337,19 @@ export const Dashboard = ({
                 last={index === sections.length - 1}
                 order={freeOrder}
                 rowWidth={rowWidth}
+                onRename={editing ? names.rename : undefined}
               />
             ))
           }
         </SectionRow>
+      )}
+      {names.renaming && (
+        <TileNameDialog
+          ccuName={names.renaming.ccuName}
+          name={names.renaming.name}
+          onApply={names.renaming.apply}
+          onClose={names.renaming.close}
+        />
       )}
       {isLoading && channelsByType.length === 0 && <TileSkeletonGrid />}
       {layoutId !== undefined && <PlaceDiagrams place={layoutId} />}

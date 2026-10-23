@@ -169,3 +169,23 @@ export const useSetLayout = () => {
     onSettled: (_, __, { id }) => queryClient.invalidateQueries({ queryKey: ['layout', id] }),
   });
 };
+
+// The names tiles show instead of the CCU's ("" gives one back), given
+// while arranging; every channel list carries them (displayName)
+export const useSetChannelNames = () => {
+  const { request } = useWebSocketActions();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (names: { id: number; name: string }[]) =>
+      request({ type: 'setChannelNames', names }, { queue: false }),
+    onMutate: (names) => {
+      const given = new Map(names.map(({ id, name }) => [id, name]));
+      queryClient.setQueriesData<Channel[]>({ queryKey: ['channels'] }, (channels) =>
+        channels?.map((channel) =>
+          given.has(channel.id) ? { ...channel, displayName: given.get(channel.id) || undefined } : channel,
+        ),
+      );
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['channels'] }),
+  });
+};

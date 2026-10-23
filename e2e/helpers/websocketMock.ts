@@ -234,6 +234,16 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
       // Tile layouts by room, trade or favorite list (kept across reloads)
       const layouts: Record<string, string> = JSON.parse(sessionStorage.getItem('mock-layouts') ?? '{}');
       window.addEventListener('beforeunload', () => sessionStorage.setItem('mock-layouts', JSON.stringify(layouts)));
+      // Names tiles show instead of the CCU's, by channel id (kept across
+      // reloads, as the server's mui-tiles.json)
+      const tileNames: Record<string, string> = JSON.parse(sessionStorage.getItem('mock-tile-names') ?? '{}');
+      window.addEventListener('beforeunload', () =>
+        sessionStorage.setItem('mock-tile-names', JSON.stringify(tileNames)),
+      );
+      const withNames = (list: AnyPayload[]) =>
+        list.map((channel) =>
+          tileNames[String(channel.id)] ? { ...channel, displayName: tileNames[String(channel.id)] } : channel,
+        );
 
       // Favorite lists of the logged-in user
       let nextFavoriteId = 1400;
@@ -1413,6 +1423,15 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
           return;
         }
 
+        if (message.type === 'setChannelNames') {
+          for (const { id, name } of message.names as { id: number; name: string }[]) {
+            if (name.trim()) tileNames[String(id)] = name.trim();
+            else delete tileNames[String(id)];
+          }
+          delayedBroadcast({ type: 'setChannelNames_response', success: true, requestId: message.requestId });
+          return;
+        }
+
         if (message.type === 'setLayout') {
           layouts[String(message.id)] = message.layout as string;
           delayedBroadcast({ type: 'setLayout_response', success: true, requestId: message.requestId });
@@ -1532,7 +1551,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
         if (message.type === 'getChannels' && message.all === true) {
           delayedBroadcast({
-            channels: allChannels(),
+            channels: withNames(allChannels()),
             deviceId: message.deviceId,
             all: true,
             requestId: message.requestId,
@@ -1543,7 +1562,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         if (message.type === 'getChannels' && message.favoriteId) {
           const ids = new Set(favorites.find((f) => String(f.id) === message.favoriteId)?.items.map((item) => item.id));
           delayedBroadcast({
-            channels: allChannels().filter((channel) => ids.has(channel.id as number)),
+            channels: withNames(allChannels().filter((channel) => ids.has(channel.id as number))),
             deviceId: message.deviceId,
             favoriteId: message.favoriteId,
             requestId: message.requestId,
@@ -1557,7 +1576,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
             : (tradeChannels[message.tradeId ?? ''] ?? []);
 
           delayedBroadcast({
-            channels,
+            channels: withNames(channels),
             deviceId: message.deviceId,
             roomId: message.roomId,
             tradeId: message.tradeId,

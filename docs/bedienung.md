@@ -60,8 +60,15 @@ nebeneinander: Ziehst du eine auf den Platz einer anderen, rücken die übrigen 
   Pfeilen neben der Überschrift, z. B. Heizung nach oben.
 - **Favoritenlisten** stellst du selbst zusammen. Dort gibt es keine Bereiche: Alle Kacheln liegen auf
   einer Fläche, zuerst in der Reihenfolge der Liste.
+- **Eigene Namen:** Neben dem Griff hat jede Kachel einen Stift. Damit gibst du ihr einen Namen, der nur in
+  der App gilt, etwa „Leselampe“ statt „SAD - Jugendzimmer:1“. Auf der CCU, in der alten WebUI und in allen
+  anderen Schnittstellen behält der Kanal seinen Namen, dein Benennungsschema bleibt also, wie es ist.
+  *Name der CCU* nimmt den eigenen Namen wieder weg. Unter *Einrichten → Geräte* steht er in der Karte des
+  Kanals als *Name in der App*. Karten für ein ganzes Gerät (etwa Taster oder Stromzähler) haben keinen
+  Stift, weil sie mehrere Kanäle zeigen. Alarme und Push-Benachrichtigungen nennen den Kanal weiter mit
+  dem Namen der CCU.
 
-*Fertig* speichert das Layout auf der CCU (Datei `mui-tiles.json`), sofort und auch über einen Neustart
+*Fertig* speichert das Layout und die Namen auf der CCU (Datei `mui-tiles.json`), sofort und auch über einen Neustart
 hinweg; es gilt damit auf allen Geräten und passt sich für Handy, Tablet und Desktop an. Ein Abschnitt,
 dessen Kacheln du angeordnet hast, ist danach so breit wie die Spalten, die seine Kacheln belegen, und
 steht wie die übrigen neben anderen Abschnitten, solange die Breite reicht. Seine Kacheln bleiben dabei

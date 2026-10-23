@@ -100,6 +100,12 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
 
   return (
     <div className="flex flex-col gap-2.5">
+      {/* Given while arranging tiles; the CCU keeps its name above */}
+      {channel.displayName && (
+        <MetaRow label={m.TILE_NAME_IN_APP()}>
+          <span className="text-[13px]">{channel.displayName}</span>
+        </MetaRow>
+      )}
       {[
         { legend: m.ROOMS(), add: m.ROOM_ADD(), groups: rooms, member: channel.rooms ?? [], list: 'rooms' as const },
         {

@@ -79,6 +79,7 @@ export type ServerMessage =
   | AddFavoriteItemResponse
   | RemoveFavoriteItemResponse
   | SetChannelTileResponse
+  | SetChannelNamesResponse
   | GetProgramResponse
   | SaveProgramResponse
   | DeleteProgramResponse
@@ -234,6 +235,7 @@ export interface Protocol {
   addFavoriteItem: AddFavoriteItemCall;
   removeFavoriteItem: RemoveFavoriteItemCall;
   setChannelTile: SetChannelTileCall;
+  setChannelNames: SetChannelNamesCall;
   getProgram: GetProgramCall;
   saveProgram: SaveProgramCall;
   deleteProgram: DeleteProgramCall;
@@ -455,6 +457,10 @@ export interface Channel {
    * Tile chosen in the add-on (stored by the server in mui-tiles.json)
    */
   tile?: "light" | "switch";
+  /**
+   * Name the channel's tile shows instead of name, given in the add-on (stored by the server in mui-tiles.json); missing shows name
+   */
+  displayName?: string;
   /**
    * Input channels (MULTI_MODE_INPUT_TRANSMITTER): what they are wired to, the WebUI's metadata channelMode (0 off, 1 key, 2 switch, 3 contact, 4 level, 5 condition); missing means key
    */
@@ -2186,6 +2192,38 @@ export interface SetChannelTileRequest {
  */
 export interface SetChannelTileResponse {
   type: "setChannelTile_response";
+  requestId?: string;
+  success: boolean;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetChannelNamesCall".
+ */
+export interface SetChannelNamesCall {
+  request: SetChannelNamesRequest;
+  response: SetChannelNamesResponse;
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetChannelNamesRequest".
+ */
+export interface SetChannelNamesRequest {
+  type: "setChannelNames";
+  requestId?: string;
+  /**
+   * The names tiles show instead of the CCU's, all stored or none; an empty name gives the channel the CCU's back
+   */
+  names: {
+    id: number;
+    name: string;
+  }[];
+}
+/**
+ * This interface was referenced by `Protocol`'s JSON-Schema
+ * via the `definition` "SetChannelNamesResponse".
+ */
+export interface SetChannelNamesResponse {
+  type: "setChannelNames_response";
   requestId?: string;
   success: boolean;
 }

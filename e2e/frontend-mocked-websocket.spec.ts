@@ -1213,6 +1213,61 @@ test('hält eine Anordnung auch, wenn die Seite schmaler als der größte Breakp
   await expect.poll(async () => (await x(key)) > (await x(other))).toBe(true);
 });
 
+test('gibt einer Kachel beim Anordnen einen eigenen Namen, nur in der App', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const main = page.getByRole('main');
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+  const arrange = () => page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  const rename = (name: string) => page.getByRole('button', { name: `Rename "${name}"` }).click();
+  const dialog = page.getByRole('dialog');
+  const sent = () =>
+    page.evaluate(() =>
+      (
+        (
+          window as Window & {
+            __wsMock?: { sentMessages: () => Array<{ type: string; names?: { id: number; name: string }[] }> };
+          }
+        ).__wsMock?.sentMessages() ?? []
+      ).filter((m) => m.type === 'setChannelNames'),
+    );
+
+  // Only while arranging, and the tile shows the name at once
+  await expect(page.getByRole('button', { name: 'Rename "Wohnzimmer Licht"' })).toHaveCount(0);
+  await arrange();
+  await rename('Wohnzimmer Licht');
+  await expect(dialog.getByText('the channel stays "Wohnzimmer Licht"')).toBeVisible();
+  await dialog.getByRole('textbox', { name: 'Tile name' }).fill('Deckenlicht');
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await expect(main.getByText('Deckenlicht')).toBeVisible();
+
+  // Cancel drops it
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+  await expect(main.getByText('Deckenlicht')).toHaveCount(0);
+  expect(await sent()).toHaveLength(0);
+
+  // Done stores it, kept after a reload
+  await arrange();
+  await rename('Wohnzimmer Licht');
+  await dialog.getByRole('textbox', { name: 'Tile name' }).fill(' Deckenlicht ');
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+  await expect.poll(sent).toEqual([expect.objectContaining({ names: [{ id: 101, name: 'Deckenlicht' }] })]);
+  await page.reload();
+  await expect(main.getByText('Deckenlicht')).toBeVisible();
+  await expect(main.getByText('Wohnzimmer Licht')).toHaveCount(0);
+
+  // The CCU's name back
+  await arrange();
+  await rename('Deckenlicht');
+  await expect(dialog.getByRole('textbox', { name: 'Tile name' })).toHaveValue('Deckenlicht');
+  await dialog.getByRole('button', { name: 'CCU name' }).click();
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+  await expect.poll(sent).toEqual([expect.objectContaining({ names: [{ id: 101, name: '' }] })]);
+});
+
 test('bietet das Anordnen auf dem Handy im Menü an', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/room/1');

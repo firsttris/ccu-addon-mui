@@ -1,6 +1,7 @@
 // Package tiles keeps how the app shows tiles, for every device the same:
-// the layout arranged by hand on a room, trade or favorite list, and the
-// tile chosen for a switch channel (lamp or switch). In a file of its own
+// the layout arranged by hand on a room, trade or favorite list, the tile
+// chosen for a switch channel (lamp or switch), and the name a channel's
+// tile shows instead of the CCU's. In a file of its own
 // (mui-tiles.json), written atomically: safe as soon as it is saved, also
 // when the CCU restarts right after, which ReGa metadata was not (ReGa
 // writes its object model only every few minutes, not on exit).
@@ -12,7 +13,10 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"strings"
 	"sync"
+	"unicode"
+	"unicode/utf8"
 
 	"ccu-addon-mui-server/pkg/atomicfile"
 )
@@ -27,10 +31,15 @@ const (
 // few kB
 const MaxLayout = 30000
 
-// maxTiles bounds the tiles chosen, far above the channels of a CCU
+// maxTiles bounds the tiles chosen and the names given, far above the
+// channels of a CCU
 const maxTiles = 10000
 
-// ErrInvalid: not a layout (JSON object up to MaxLayout) or not a tile
+// MaxName is the length a tile's name may have, in characters
+const MaxName = 100
+
+// ErrInvalid: not a layout (JSON object up to MaxLayout), not a tile, or
+// not a name (up to MaxName characters, no control characters)
 var ErrInvalid = errors.New("invalid")
 
 type file struct {
@@ -38,6 +47,9 @@ type file struct {
 	Layouts map[int64]json.RawMessage `json:"layouts"`
 	// By the ReGa id of the channel
 	Tiles map[int64]string `json:"tiles"`
+	// By the ReGa id of the channel: the name its tile shows instead of the
+	// CCU's, which stays as it is for the CCU's other interfaces
+	Names map[int64]string `json:"names,omitempty"`
 }
 
 type Store struct {
@@ -57,6 +69,9 @@ func Open(path string) (*Store, error) {
 	}
 	if s.data.Tiles == nil {
 		s.data.Tiles = map[int64]string{}
+	}
+	if s.data.Names == nil {
+		s.data.Names = map[int64]string{}
 	}
 	return s, nil
 }
@@ -88,7 +103,7 @@ func (s *Store) SetLayout(id int64, layout string, exists func(id int64) bool) e
 	} else {
 		layouts[id] = json.RawMessage(compact.Bytes())
 	}
-	return s.save(file{Layouts: layouts, Tiles: s.data.Tiles})
+	return s.save(file{Layouts: layouts, Tiles: s.data.Tiles, Names: s.data.Names})
 }
 
 // ChangeLayouts lets fn move or drop layouts, as openccu-lite's rooms and
@@ -101,7 +116,7 @@ func (s *Store) ChangeLayouts(fn func(layouts map[int64]json.RawMessage) bool) e
 	if !fn(layouts) {
 		return nil
 	}
-	return s.save(file{Layouts: layouts, Tiles: s.data.Tiles})
+	return s.save(file{Layouts: layouts, Tiles: s.data.Tiles, Names: s.data.Names})
 }
 
 // Tile returns the tile chosen for a channel, "" for the app's own choice
@@ -128,7 +143,42 @@ func (s *Store) SetTile(id int64, tile string) error {
 		}
 		tiles[id] = tile
 	}
-	return s.save(file{Layouts: s.data.Layouts, Tiles: tiles})
+	return s.save(file{Layouts: s.data.Layouts, Tiles: tiles, Names: s.data.Names})
+}
+
+// Name returns the name a channel's tile shows, "" for the CCU's
+func (s *Store) Name(id int64) string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.data.Names[id]
+}
+
+// SetNames stores the names tiles show, by channel id, all or none: a name
+// is trimmed, "" gives the channel back the CCU's
+func (s *Store) SetNames(changes map[int64]string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	names := maps.Clone(s.data.Names)
+	for id, name := range changes {
+		name = strings.TrimSpace(name)
+		if !validName(name) {
+			return ErrInvalid
+		}
+		if name == "" {
+			delete(names, id)
+			continue
+		}
+		if _, ok := names[id]; !ok && len(names) >= maxTiles {
+			return ErrInvalid
+		}
+		names[id] = name
+	}
+	return s.save(file{Layouts: s.data.Layouts, Tiles: s.data.Tiles, Names: names})
+}
+
+func validName(name string) bool {
+	return utf8.ValidString(name) && utf8.RuneCountInString(name) <= MaxName &&
+		!strings.ContainsFunc(name, unicode.IsControl)
 }
 
 // save writes next and keeps it once it is on the flash
