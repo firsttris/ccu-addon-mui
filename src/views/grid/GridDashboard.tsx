@@ -11,6 +11,8 @@ import {
   type BreakpointName,
   breakpointFor,
   COLS,
+  columnsWidth,
+  fitWithin,
   flowCompactorWithin,
   MARGIN,
   responsiveLayouts,
@@ -19,7 +21,9 @@ import {
   type SectionLayout,
   type TileSpec,
   toSaved,
+  usedWidth,
 } from './tileLayout';
+import { SectionEdge } from './SectionEdge';
 
 export interface GridTile extends TileSpec {
   element: ReactNode;
@@ -86,6 +90,8 @@ export const GridDashboard = ({
   width: rowWidth,
   onRename,
   flowPx,
+  edgeLabel,
+  onFit,
 }: {
   tiles: GridTile[];
   saved: SectionLayout | undefined;
@@ -101,6 +107,10 @@ export const GridDashboard = ({
   // While editing: the section's width as shown before, so its tiles keep
   // their width and wrap where they did
   flowPx?: number;
+  // While editing: an edge to drag the section narrower or wider by, named
+  // so; onFit follows once it was
+  edgeLabel?: string;
+  onFit?: () => void;
 }) => {
   const measured = useContainerWidth();
   const { containerRef } = measured;
@@ -108,6 +118,8 @@ export const GridDashboard = ({
   const mounted = measured.mounted && width > 0;
   const [heights, setHeights] = useState<Record<string, number>>({});
   const [draft, setDraft] = useState<SectionLayout | undefined>(saved);
+  // The columns the tiles flow within while the edge is dragged
+  const [preview, setPreview] = useState<number>();
   useEffect(() => setDraft(saved), [saved]);
 
   // The tiles' own heights, measured below the bar while editing
@@ -126,7 +138,7 @@ export const GridDashboard = ({
     () => (editing ? Object.fromEntries(tiles.map((tile) => [tile.key, (heights[tile.key] ?? 0) + TOOLBAR])) : heights),
     [editing, heights, tiles],
   );
-  const layouts = useMemo(
+  const arranged = useMemo(
     () => responsiveLayouts(tiles, draft, cellHeights, width, equalRows, shownFlow),
     [tiles, draft, cellHeights, width, equalRows, shownFlow],
   );
@@ -134,19 +146,34 @@ export const GridDashboard = ({
   // reports a change, not the breakpoint it starts with
   const breakpoint = breakpointFor(width);
   // The tiles wrap within the section, not the whole row
-  const limit = rowLimit(layouts[breakpoint] ?? [], COLS[breakpoint]);
+  const limit = preview ?? rowLimit(arranged[breakpoint] ?? [], COLS[breakpoint]);
   const compactor = useMemo(() => flowCompactorWithin(limit), [limit]);
+  const shown = useMemo(() => fitWithin(arranged[breakpoint] ?? [], limit), [arranged, breakpoint, limit]);
+  const layouts = useMemo(
+    () => (preview === undefined ? arranged : { ...arranged, [breakpoint]: shown }),
+    [arranged, breakpoint, preview, shown],
+  );
   // Only what the user moved or resized is kept, for the breakpoint shown
   const commit = (layout: Layout) => {
     const next: SectionLayout = { ...draft, ...toSaved({ [breakpoint]: layout }) };
     setDraft(next);
     onChange(next);
   };
+  const fit = (columns: number) => {
+    commit(fitWithin(arranged[breakpoint] ?? [], columns));
+    onFit?.();
+  };
 
   return (
     <div
       ref={containerRef}
-      className={cn('-mx-3', editing && 'rounded-2xl outline-2 outline-dashed outline-primary/30')}
+      className={cn('-mx-3', editing && 'relative rounded-2xl outline-2 outline-dashed outline-primary/30')}
+      // While the edge is dragged, as wide as the tiles will take
+      style={
+        preview === undefined
+          ? undefined
+          : { width: columnsWidth(width, COLS[breakpoint], usedWidth(shown)) + 2 * MARGIN }
+      }
     >
       {mounted && (
         <ResponsiveGridLayout<BreakpointName>
@@ -200,6 +227,17 @@ export const GridDashboard = ({
             </div>
           ))}
         </ResponsiveGridLayout>
+      )}
+      {mounted && editing && edgeLabel && (
+        <SectionEdge
+          label={edgeLabel}
+          gridRef={containerRef}
+          width={width}
+          cols={COLS[breakpoint]}
+          layout={shown}
+          onPreview={setPreview}
+          onFit={fit}
+        />
       )}
     </div>
   );

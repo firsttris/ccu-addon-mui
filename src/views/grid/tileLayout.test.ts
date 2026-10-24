@@ -5,8 +5,10 @@ import {
   columnsWidth,
   defaultLayout,
   defaultWidth,
+  fitWithin,
   flowLayout,
   flowTracks,
+  limitAt,
   moveSection,
   orderSections,
   parseLayout,
@@ -15,6 +17,7 @@ import {
   rowLimit,
   toSaved,
   usedColumns,
+  usedWidth,
   widestRow,
 } from './tileLayout';
 
@@ -250,5 +253,44 @@ describe('arranging as shown before', () => {
       [8, 0],
       [0, 1],
     ]);
+  });
+});
+
+describe('a section made narrower or wider', () => {
+  // Six heating circuits, four in a row of 60 columns, 15 each
+  const six = Array.from({ length: 6 }, (_, n) => ({
+    i: `c:H:${n}`,
+    x: (n % 4) * 15,
+    y: Math.floor(n / 4) * 10,
+    w: 15,
+    h: 10,
+  }));
+
+  it('puts as many side by side as fit the new edge', () => {
+    const two = fitWithin(six, 30);
+    expect(two.map(({ x, y }) => [x, y])).toEqual([
+      [0, 0],
+      [15, 0],
+      [0, 10],
+      [15, 10],
+      [0, 20],
+      [15, 20],
+    ]);
+    expect(usedWidth(two)).toBe(30);
+    // The rows it keeps: arranged, the section stays that narrow
+    expect(rowLimit(two, 60)).toBe(30);
+    // Wider again: a row of all six would need 90, four fit
+    expect(usedWidth(fitWithin(two, 60))).toBe(60);
+    // Never narrower than its widest tile
+    expect(usedWidth(fitWithin(six, 5))).toBe(15);
+  });
+
+  it('takes the column nearest the edge, at least the widest tile', () => {
+    // 1376 px, 60 columns of 10.6 px: 30 columns end at 666 px
+    const px = columnsWidth(1376, 60, 30);
+    expect(limitAt(px, 1376, 60, six)).toBe(30);
+    expect(limitAt(px + 4, 1376, 60, six)).toBe(30);
+    expect(limitAt(20, 1376, 60, six)).toBe(15);
+    expect(limitAt(5000, 1376, 60, six)).toBe(60);
   });
 });

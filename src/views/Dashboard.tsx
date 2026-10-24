@@ -1,5 +1,5 @@
 import { PlaceDiagrams } from './diagrams/Diagrams';
-import { Fragment as ReactFragment, type ReactNode, useMemo, useRef, useState } from 'react';
+import { Fragment as ReactFragment, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useContainerWidth } from 'react-grid-layout';
 import type { Channel } from '../types/types';
 import { sameItems } from '../hooks/channels';
@@ -105,6 +105,11 @@ const Section = ({
   // starts: the sections stay side by side, their tiles as wide as they were
   const shown = useShownWidth<HTMLElement>(!editing);
   const flowPx = editing ? shown.width : undefined;
+  // Once its edge was dragged, it is as wide as its tiles while arranging too
+  const [fitted, setFitted] = useState(false);
+  useEffect(() => {
+    if (!editing) setFitted(false);
+  }, [editing]);
   const fullRow = free || (grid && gridWidth === undefined) || (editing && flowPx === undefined);
   const style = useMemo(() => {
     if (fullRow) return undefined;
@@ -114,8 +119,10 @@ const Section = ({
     const { cols, used } = usedColumns(tiles, layout, gridWidth, flowPx);
     // While arranging it widens only when a tile gets wider than it
     const arranged = columnsWidth(gridWidth, cols, used);
-    return arrangedFlex(flowPx !== undefined && used <= columnsFor(flowPx, gridWidth, cols) ? flowPx : arranged);
-  }, [fullRow, grid, gridWidth, group.section, tiles, layout, flowPx]);
+    return arrangedFlex(
+      flowPx !== undefined && !fitted && used <= columnsFor(flowPx, gridWidth, cols) ? flowPx : arranged,
+    );
+  }, [fullRow, grid, gridWidth, group.section, tiles, layout, flowPx, fitted]);
   return (
     <section
       ref={shown.ref}
@@ -166,6 +173,9 @@ const Section = ({
           width={gridWidth}
           onRename={onRename}
           flowPx={flowPx}
+          // A favorite list takes the whole row, there's nothing to go beside it
+          edgeLabel={free ? undefined : m.LAYOUT_SECTION_WIDTH({ name: title })}
+          onFit={() => setFitted(true)}
           // As the section's own grid: tiles side by side as tall as the tallest
           equalRows={!sectionGrids[group.section ?? 'generic'].includes('items-start')}
         />

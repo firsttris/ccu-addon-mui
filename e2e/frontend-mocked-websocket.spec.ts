@@ -1496,3 +1496,41 @@ test('spielt Töne auf MP3-Gong und Funkgong', async ({ page }) => {
       ]),
     );
 });
+
+test('zieht einen Bereich beim Anordnen schmaler, die Kacheln brechen früher um', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const lights = page.getByRole('region', { name: 'Lights & switches' });
+  await expect(lights.locator('[data-tile]').first()).toBeVisible();
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  await settled(page);
+  const tiles = lights.locator('[data-tile-key]');
+  await expect(tiles).toHaveCount(3);
+  const rows = async () =>
+    new Set(await tiles.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().y)))).size;
+  expect(await rows()).toBe(1);
+  const before = (await lights.boundingBox())!;
+  const first = (await tiles.first().boundingBox())!;
+
+  // The edge dragged to just past the second tile: two side by side, the
+  // third below, and the section as narrow as two
+  const edge = (await lights.getByRole('separator', { name: 'Width of "Lights & switches"' }).boundingBox())!;
+  await page.mouse.move(edge.x + edge.width / 2, edge.y + edge.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(first.x + first.width * 2 + 20, edge.y + edge.height / 2, { steps: 10 });
+  await page.mouse.up();
+  await expect.poll(rows).toBe(2);
+  await expect.poll(async () => (await lights.boundingBox())!.width).toBeLessThan(before.width - first.width / 2);
+
+  // Saved so: after reloading it is that narrow, with two in a row
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+  await page.reload();
+  const shown = page.getByRole('region', { name: 'Lights & switches' }).locator('[data-tile-key]');
+  await expect(shown).toHaveCount(3);
+  await expect
+    .poll(
+      async () =>
+        new Set(await shown.evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().y)))).size,
+    )
+    .toBe(2);
+});
