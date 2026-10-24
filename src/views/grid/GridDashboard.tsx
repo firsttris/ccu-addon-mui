@@ -168,11 +168,13 @@ export const GridDashboard = ({
     <div
       ref={containerRef}
       className={cn('-mx-3', editing && 'relative rounded-2xl outline-2 outline-dashed outline-primary/30')}
-      // While the edge is dragged, as wide as the tiles will take
+      // While editing, the frame ends where the tiles do (and will, while
+      // the edge is dragged): the section keeps its width from before, which
+      // whole grid columns rarely fill exactly
       style={
-        preview === undefined
-          ? undefined
-          : { width: columnsWidth(width, COLS[breakpoint], usedWidth(shown)) + 2 * MARGIN }
+        editing && rowWidth !== undefined
+          ? { width: columnsWidth(width, COLS[breakpoint], usedWidth(shown)) + 2 * MARGIN }
+          : undefined
       }
     >
       {mounted && (

@@ -1512,6 +1512,20 @@ test('zieht einen Bereich beim Anordnen schmaler, die Kacheln brechen früher um
   const before = (await lights.boundingBox())!;
   const first = (await tiles.first().boundingBox())!;
 
+  // The frames end where their tiles do, not where the section's width
+  // from before does (whole grid columns rarely fill it)
+  for (const name of ['Lights & switches', 'Windows']) {
+    const region = page.getByRole('region', { name });
+    const right = Math.max(
+      ...(await region
+        .locator('[data-tile-key]')
+        .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right))),
+    );
+    const edge = (await region.getByRole('separator').boundingBox())!;
+    // The edge (24 px) sits on the frame, MARGIN (12) right of the tiles
+    expect(Math.abs(edge.x + edge.width / 2 - (right + 12))).toBeLessThan(2);
+  }
+
   // The edge dragged to just past the second tile: two side by side, the
   // third below, and the section as narrow as two
   const edge = (await lights.getByRole('separator', { name: 'Width of "Lights & switches"' }).boundingBox())!;
