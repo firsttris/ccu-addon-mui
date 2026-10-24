@@ -59,6 +59,11 @@ auf den Platz einer anderen, rücken die übrigen in der Reihe zur Seite.
 - **Räume und Gewerke** behalten ihre Bereiche (Licht, Heizung, Rollläden …). Kacheln ziehst du innerhalb
   ihres Bereichs und änderst an der rechten Kante die Breite. Ganze Bereiche verschiebst du mit den
   Pfeilen neben der Überschrift, z. B. Heizung nach oben.
+- **Bereiche schmaler oder breiter ziehen:** An der rechten Kante des gestrichelten Rahmens sitzt ein
+  Griff. Ziehst du ihn nach links, brechen die Kacheln früher um, etwa zwei statt vier nebeneinander,
+  und der Bereich wird so schmal wie seine Kacheln; daneben rückt ein anderer Bereich nach, wenn er
+  Platz hat. Nach rechts gezogen stehen wieder mehr nebeneinander. Mit der Tastatur geht das mit den
+  Pfeiltasten links und rechts, wenn der Griff den Fokus hat.
 - **Favoritenlisten** stellst du selbst zusammen. Dort gibt es keine Bereiche: Alle Kacheln liegen auf
   einer Fläche, zuerst in der Reihenfolge der Liste.
 - **Eigene Namen:** Neben dem Griff steht ein Stift. Damit gibst du ihr einen Namen, der nur in

@@ -235,7 +235,7 @@ export const usedColumns = (tiles: TileSpec[], saved: SectionLayout | undefined,
   const bp = breakpointFor(widthPx);
   const layout = responsiveLayouts(tiles, saved, {}, widthPx, false, flowPx)[bp] ?? [];
   const placed = flowLayout(layout, rowLimit(layout, COLS[bp]));
-  return { cols: COLS[bp], used: placed.reduce((max, t) => Math.max(max, t.x + t.w), 1) };
+  return { cols: COLS[bp], used: usedWidth(placed) };
 };
 
 // Width of the first `used` of `cols` columns in a grid widthPx wide; its
@@ -273,4 +273,34 @@ export const moveSection = (keys: string[], key: string, delta: -1 | 1): string[
   const next = [...keys];
   [next[from], next[to]] = [next[to], next[from]];
   return next;
+};
+
+// Columns a section's tiles flow within when its edge is dragged to px
+// (from the left of its first column, in a grid widthPx wide): the nearest
+// column, but no narrower than its widest tile
+export const limitAt = (px: number, widthPx: number, cols: number, layout: readonly { w: number }[]) =>
+  Math.min(cols, Math.max(columnsFor(px, widthPx, cols), ...layout.map((t) => t.w)));
+
+// The tiles flowed again within limit columns, in their order: a section
+// made narrower puts fewer side by side, one made wider more
+export const fitWithin = (layout: Layout, limit: number): Layout =>
+  flowLayout(
+    layout.map((t) => ({ ...t, moved: false })),
+    Math.max(limit, ...layout.map((t) => t.w)),
+  );
+
+// Columns the tiles take from the left
+export const usedWidth = (layout: readonly { x: number; w: number }[]) =>
+  layout.reduce((max, t) => Math.max(max, t.x + t.w), 1);
+
+// The columns one step narrower (-1) or wider (+1) by keyboard: the
+// nearest that puts the tiles in other rows, or undefined when none does
+// (a wide tile can need more than one more column to move up)
+export const nextLimit = (layout: Layout, cols: number, delta: -1 | 1) => {
+  const used = usedWidth(layout);
+  for (let limit = used + delta; limit >= 1 && limit <= cols; limit += delta) {
+    const next = usedWidth(fitWithin(layout, limit));
+    if (next !== used) return limit;
+  }
+  return undefined;
 };

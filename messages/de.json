@@ -1428,6 +1428,7 @@
   "PUSH_RULES_OPEN": "Regeln verwalten",
   "LAYOUT_SECTION_UP": "„{name}“ nach oben",
   "LAYOUT_SECTION_DOWN": "„{name}“ nach unten",
+  "LAYOUT_SECTION_WIDTH": "Breite von „{name}“",
   "TILE_RENAME": "„{name}“ umbenennen",
   "TILE_NAME": "Name der Kachel",
   "TILE_NAME_HINT": "Gilt nur in dieser App, auf allen Geräten. Auf der CCU und in ihren anderen Oberflächen heißt der Kanal weiter „{name}“.",
