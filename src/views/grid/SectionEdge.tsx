@@ -1,6 +1,6 @@
 import { type KeyboardEvent, type PointerEvent, type RefObject, useRef } from 'react';
 import type { Layout } from 'react-grid-layout';
-import { limitAt, MARGIN, usedWidth } from './tileLayout';
+import { limitAt, MARGIN, nextLimit, usedWidth } from './tileLayout';
 
 // The right edge of a section while arranging: dragged to the left, its
 // tiles wrap sooner (two side by side instead of four) and the section gets
@@ -42,14 +42,15 @@ export const SectionEdge = ({
     onPreview(undefined);
     if (limit !== undefined) onFit(limit);
   };
-  // By keyboard a tile narrower or wider at a time
-  const step = Math.max(1, Math.min(...layout.map((t) => t.w)));
+  // By keyboard to the next rows narrower or wider; nothing is changed
+  // where there are none
   const used = usedWidth(layout);
   const key = (event: KeyboardEvent) => {
-    const delta = { ArrowLeft: -step, ArrowRight: step }[event.key];
+    const delta = ({ ArrowLeft: -1, ArrowRight: 1 } as const)[event.key as 'ArrowLeft' | 'ArrowRight'];
     if (delta === undefined) return;
     event.preventDefault();
-    onFit(Math.max(1, Math.min(cols, used + delta)));
+    const limit = nextLimit(layout, cols, delta);
+    if (limit !== undefined) onFit(limit);
   };
   return (
     // biome-ignore lint/a11y/useSemanticElements: an <hr> can't be dragged or focused; a separator with a value is the ARIA pattern for a splitter
@@ -57,7 +58,7 @@ export const SectionEdge = ({
       role="separator"
       aria-orientation="vertical"
       aria-label={label}
-      aria-valuemin={step}
+      aria-valuemin={Math.max(1, ...layout.map((t) => t.w))}
       aria-valuemax={cols}
       aria-valuenow={used}
       tabIndex={0}

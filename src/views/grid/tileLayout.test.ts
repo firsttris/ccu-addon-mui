@@ -9,6 +9,7 @@ import {
   flowLayout,
   flowTracks,
   limitAt,
+  nextLimit,
   moveSection,
   orderSections,
   parseLayout,
@@ -292,5 +293,28 @@ describe('a section made narrower or wider', () => {
     expect(limitAt(px + 4, 1376, 60, six)).toBe(30);
     expect(limitAt(20, 1376, 60, six)).toBe(15);
     expect(limitAt(5000, 1376, 60, six)).toBe(60);
+  });
+});
+
+describe('a section made narrower or wider by keyboard', () => {
+  // Two lights and a wide color light in a row (8, 8, 16 columns)
+  const lights = [
+    { i: 'a', x: 0, y: 0, w: 8, h: 10 },
+    { i: 'b', x: 8, y: 0, w: 8, h: 10 },
+    { i: 'c', x: 16, y: 0, w: 16, h: 10 },
+  ];
+
+  it('steps to the next rows, even where a wide tile needs more columns', () => {
+    expect(nextLimit(lights, 60, -1)).toBe(31);
+    const narrow = fitWithin(lights, 31);
+    expect(usedWidth(narrow)).toBe(16);
+    // Wider: the wide tile moves up only with 32 columns, not with 24
+    expect(nextLimit(narrow, 60, 1)).toBe(32);
+    expect(usedWidth(fitWithin(narrow, 32))).toBe(32);
+  });
+
+  it('changes nothing where there are no other rows', () => {
+    expect(nextLimit(lights, 60, 1)).toBeUndefined();
+    expect(nextLimit(fitWithin(lights, 16), 60, -1)).toBeUndefined();
   });
 });

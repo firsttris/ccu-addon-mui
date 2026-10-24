@@ -1548,3 +1548,22 @@ test('zieht einen Bereich beim Anordnen schmaler, die Kacheln brechen früher um
     )
     .toBe(2);
 });
+
+test('zieht einen Bereich per Tastatur schmaler und wieder breiter', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const lights = page.getByRole('region', { name: 'Lights & switches' });
+  await expect(lights.locator('[data-tile]').first()).toBeVisible();
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  await settled(page);
+  const edge = lights.getByRole('separator', { name: 'Width of "Lights & switches"' });
+  // Two lights and the wide color light (8, 8 and 16 columns) in a row
+  await expect(edge).toHaveAttribute('aria-valuenow', '32');
+  await expect(edge).toHaveAttribute('aria-valuemin', '16');
+  await edge.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(edge).toHaveAttribute('aria-valuenow', '16');
+  // Wider again: the wide light moves up, though it needs 16 more columns
+  await page.keyboard.press('ArrowRight');
+  await expect(edge).toHaveAttribute('aria-valuenow', '32');
+});

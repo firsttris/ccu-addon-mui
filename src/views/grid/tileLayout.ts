@@ -292,3 +292,15 @@ export const fitWithin = (layout: Layout, limit: number): Layout =>
 // Columns the tiles take from the left
 export const usedWidth = (layout: readonly { x: number; w: number }[]) =>
   layout.reduce((max, t) => Math.max(max, t.x + t.w), 1);
+
+// The columns one step narrower (-1) or wider (+1) by keyboard: the
+// nearest that puts the tiles in other rows, or undefined when none does
+// (a wide tile can need more than one more column to move up)
+export const nextLimit = (layout: Layout, cols: number, delta: -1 | 1) => {
+  const used = usedWidth(layout);
+  for (let limit = used + delta; limit >= 1 && limit <= cols; limit += delta) {
+    const next = usedWidth(fitWithin(layout, limit));
+    if (next !== used) return limit;
+  }
+  return undefined;
+};
