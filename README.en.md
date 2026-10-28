@@ -55,7 +55,7 @@ can already do stays. Everything in one app, from the light switch to the progra
 
 ### 📱 Mobile first, as an app
 - Built for phone, tablet and wall, installable as an app (PWA)
-- Light and dark, keep the screen on with a switch (WakeLock)
+- Light and dark, keep the screen on with a switch (WakeLock), the overview above the tiles can be hidden
 - Live over WebSocket instead of polling every 3 seconds
 
 </td>

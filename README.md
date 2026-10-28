@@ -71,7 +71,7 @@ MUI steht für *Moderne WebUI*. Mit der React-Bibliothek Material UI hat das Pro
 
 ### 📱 Mobile first, als App
 - Für Handy, Tablet und Wand gebaut, als App installierbar (PWA)
-- Hell und dunkel, Bildschirm anlassen per Schalter (WakeLock)
+- Hell und dunkel, Bildschirm anlassen per Schalter (WakeLock), Übersicht über den Kacheln ausblendbar
 - Live per WebSocket statt Abfrage alle 3 Sekunden
 
 </td>

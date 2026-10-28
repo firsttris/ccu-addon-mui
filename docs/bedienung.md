@@ -18,7 +18,7 @@ ab, erscheint nach zwei Sekunden ein roter Balken, und die App verbindet sich vo
 |---|---|
 | Navigation | Räume, Gewerke |
 | Ansichten | Favoriten, Alle Geräte, Systemvariablen, Programme, Diagramme, Geräte-Gesundheit, Einrichten |
-| Darstellung | Dunkles Design, Effekte (Aus, Dezent, Kräftig), Sprache (je Benutzer), Startseite (zuletzt geöffnet oder Favoriten), Bildschirm anlassen (je Gerät) |
+| Darstellung | Dunkles Design, Effekte (Aus, Dezent, Kräftig), Übersicht oben (je Gerät), Sprache (je Benutzer), Startseite (zuletzt geöffnet oder Favoriten), Bildschirm anlassen (je Gerät) |
 | Konto | Benachrichtigungen (Push für Alarme, Servicemeldungen und Regeln), Passwort ändern, Abmelden |
 
 **Startseite**: die zuletzt geöffnete Ansicht, auf Wunsch immer die Favoriten. Gibt es noch keine Räume,
@@ -32,7 +32,8 @@ Alle vier Ansichten sind gleich aufgebaut:
    wischst du die Leiste zur Seite oder blätterst mit den Pfeilen an ihren Rändern; der gewählte Reiter rückt
    in die Mitte.
 2. **Übersicht**: Innentemperatur im Schnitt, eingeschaltete Lichter („5 von 6“), offene Fenster mit
-   Namen.
+   Namen. Es erscheint nur, was es an diesem Ort gibt. Im Menü unter *Darstellung* blendet *Übersicht oben* sie
+   auf diesem Gerät aus, etwa auf einem Wandtablet, wo der Platz den Kacheln gehören soll.
 3. **Abschnitte** nach Art: Klima, Fußbodenheizung, Licht & Schalter, Rollläden, Fenster, Türen,
    Sicherheit, Klima & Wetter, Bewässerung & Wasser, Taster, Eingänge, Energie, System. Was keine eigene Kachel hat, folgt alphabetisch
    nach Kanaltyp. Kleine Abschnitte stehen nebeneinander, solange die Breite reicht, etwa ein Thermostat
@@ -268,6 +269,8 @@ Administratoren können sie umbenennen.
 - **Effekte**: Leuchten und Animationen (z. B. die leuchtende Lampe, die Radarwellen des Bewegungsmelders)
   in drei Stufen. *Aus* schont schwache Tablets. Auch die Anmeldeseite folgt der Stufe: Dort funkt die CCU
   im Haus unter der Karte und schaltet Licht und Rollladen, bei *Aus* steht das Haus still.
+- **Übersicht oben**: zeigt oder verbirgt die Zeile mit Temperatur, Lichtern und Fenstern über den Kacheln.
+  Gilt pro Gerät.
 - **Sprache**: *Automatisch* (nach der Sprache des Browsers), Deutsch oder Englisch. Mit Anmeldung gilt die Wahl für
   den CCU-Benutzer auf allen Geräten und auch in der alten WebUI (wie dort unter *Benutzerverwaltung*), ohne
   Anmeldung für dieses Gerät.
