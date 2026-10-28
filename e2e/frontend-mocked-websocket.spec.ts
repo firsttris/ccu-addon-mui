@@ -1394,6 +1394,32 @@ const stable = async <T>(page: Page, measure: () => Promise<T>) => {
   return JSON.parse(last) as T;
 };
 
+test('blendet die Übersicht über den Kacheln auf diesem Gerät aus und wieder ein', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const main = page.getByRole('main');
+  const overview = main.getByText('Switched on', { exact: true });
+  const toggle = async () => {
+    await page.getByRole('button', { name: /^(Menü|Menu)$/ }).click();
+    await page.getByRole('dialog').getByRole('switch', { name: 'Overview at the top' }).click();
+    await page.keyboard.press('Escape');
+  };
+  await expect(overview).toBeVisible();
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+
+  // Off at once, the tiles stay, and it stays off after a reload
+  await toggle();
+  await expect(overview).toHaveCount(0);
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+  await page.reload();
+  await expect(main.getByText('Wohnzimmer Licht')).toBeVisible();
+  await expect(overview).toHaveCount(0);
+
+  // On again
+  await toggle();
+  await expect(overview).toBeVisible();
+});
+
 test('lässt die Kacheln beim Anordnen auf dem Handy so breit, wie die Spalten sie zeigen', async ({ page }) => {
   // 600 px: two lights and a wide one; three tracks would fit, but the wide
   // one wraps and auto-fit shows two

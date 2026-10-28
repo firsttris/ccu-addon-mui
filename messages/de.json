@@ -142,6 +142,8 @@
   "DARK_MODE": "Dunkles Design",
   "KEEP_SCREEN_ON": "Bildschirm anlassen",
   "KEEP_SCREEN_ON_HINT": "Für ein Tablet an der Wand; nur auf diesem Gerät.",
+  "SHOW_OVERVIEW": "Übersicht oben",
+  "SHOW_OVERVIEW_HINT": "Temperatur, eingeschaltete Lichter und offene Fenster über den Kacheln; nur auf diesem Gerät.",
   "EFFECTS": "Effekte",
   "EFFECTS_OFF": "Aus",
   "EFFECTS_SUBTLE": "Dezent",
