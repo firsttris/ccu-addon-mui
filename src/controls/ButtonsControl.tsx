@@ -97,8 +97,8 @@ const Key = ({ channel, label }: { channel: Channel; label: string }) => {
           key={effects.on ? flash : 0}
           aria-hidden
           className={cn(
-            'pointer-events-none absolute inset-0 rounded-xl bg-sky-400/25',
-            effects.on ? 'fx-flash' : 'opacity-0',
+            'pointer-events-none absolute inset-0 rounded-xl bg-sky-400/25 opacity-0',
+            effects.on && 'fx-key-flash',
           )}
         />
       )}

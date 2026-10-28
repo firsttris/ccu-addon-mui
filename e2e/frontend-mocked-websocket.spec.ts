@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { expect, test } from './helpers/coverageTest';
 import { installWebSocketMock } from './helpers/websocketMock';
 
@@ -427,6 +427,32 @@ test('dimmt, färbt Licht und drückt Taster', async ({ page }) => {
   // Releasing after a long press sends nothing more
   await page.waitForTimeout(200);
   expect((await sentSetDatapoints(page)).filter((m) => m.attribute?.startsWith('PRESS'))).toHaveLength(2);
+});
+
+test('lässt eine Taste nach dem Drücken nicht farbig stehen', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  // Tinted layers over the key: the light of a press must go out again
+  const tinted = (key: Locator) =>
+    key.evaluate(
+      (button) =>
+        [...button.querySelectorAll('span')].filter((span) => {
+          const style = getComputedStyle(span);
+          return (
+            style.position === 'absolute' &&
+            Number(style.opacity) > 0 &&
+            span.getBoundingClientRect().height > 0 &&
+            style.backgroundColor !== 'rgba(0, 0, 0, 0)'
+          );
+        }).length,
+    );
+  for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+    await page.emulateMedia({ reducedMotion });
+    await page.goto('/room/1');
+    const top = page.getByRole('button', { name: /^oben:/ });
+    await top.click();
+    await expect.poll(async () => (await sentSetDatapoints(page)).at(-1)?.attribute).toBe('PRESS_SHORT');
+    await expect.poll(() => tinted(top), { timeout: 4000 }).toBe(0);
+  }
 });
 
 test('bedient Bewässerung und Fensterantriebe', async ({ page }) => {
