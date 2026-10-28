@@ -36,4 +36,14 @@ describe('useShowOverview', () => {
     setShowOverview(true);
     expect(readShowOverview()).toBe(true);
   });
+
+  it('switches over a stored choice when the storage is full and refuses the write', () => {
+    // A shared origin (the CCU) whose storage is full: reading works, writing throws
+    localStorage.setItem('show-overview', 'true');
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+    setShowOverview(false);
+    expect(readShowOverview()).toBe(false);
+  });
 });
