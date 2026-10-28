@@ -25,7 +25,12 @@ export const setShowOverview = (show: boolean) => {
   try {
     localStorage.setItem(KEY, String(show));
   } catch {
-    // See inPage
+    // See inPage; a full storage keeps the old value, which would win over it
+    try {
+      localStorage.removeItem(KEY);
+    } catch {
+      // Blocked altogether
+    }
   }
   window.dispatchEvent(new Event(CHANGED));
 };
