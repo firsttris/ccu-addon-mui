@@ -5,6 +5,7 @@ import type { Channel } from '../types/types';
 import { sameItems } from '../hooks/channels';
 import { AlarmBanner, AlarmsSheet } from '../components/Alarms';
 import { useEffects } from '../contexts/EffectsContext';
+import { useShowOverview } from '../hooks/useShowOverview';
 import { channelTypeName } from '../i18n/channelTypeNames';
 import { m } from '../paraglide/messages';
 import { TileSkeletonGrid } from '../components/ui/skeleton';
@@ -305,6 +306,7 @@ export const Dashboard = ({
       : null,
   );
   const effects = useEffects();
+  const [showOverview] = useShowOverview();
   const channels = useMemo(() => channelsByType.flatMap(([, list]) => list), [channelsByType]);
   const lightTradeIds = useLightTradeIds();
   const lightsOn = channels.filter((c) => isLightOn(c, lightTradeIds)).length;
@@ -330,7 +332,7 @@ export const Dashboard = ({
       {tabs}
       <AlarmBanner onShowAll={() => setAlarmsOpen(true)} />
       <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
-      <Overview channels={channels} />
+      {showOverview && <Overview channels={channels} />}
       {sections.length > 0 && (
         <SectionRow>
           {(rowWidth) =>

@@ -136,6 +136,7 @@ Für ein Tablet an der Wand:
   im Vordergrund ist. Als installierte App ist der Schalter anfangs an, im Browser-Tab aus. Er erscheint
   nur, wo der Browser WakeLock kennt (HTTPS oder localhost).
 - **Effekte** im Menü auf *Dezent* oder *Aus* stellen, wenn das Tablet schwach ist.
+- **Übersicht oben** im Menü unter *Darstellung* ausschalten, wenn der Platz den Kacheln gehören soll.
 - Ein eigener CCU-Benutzer mit Stufe *Benutzer* für das Tablet verhindert, dass dort jemand einrichtet.
 
 ## Push-Benachrichtigungen

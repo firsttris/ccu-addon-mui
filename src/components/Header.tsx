@@ -23,6 +23,7 @@ import ArrowLeftIcon from '~icons/lucide/arrow-left';
 import PuzzleIcon from '~icons/lucide/puzzle';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { LanguageChoice, useUserLanguageSync } from './LanguageChoice';
+import { OverviewChoice } from './OverviewChoice';
 import { useTheme } from '../contexts/ThemeContext';
 import { type EffectsLevel, useEffects } from '../contexts/EffectsContext';
 import { usePageArrangeValue, usePageTitleValue } from '../contexts/PageTitleContext';
@@ -265,6 +266,7 @@ const NavMenu = ({
                 </div>
                 <span className="text-xs text-muted-foreground">{m.EFFECTS_HINT()}</span>
               </div>
+              <OverviewChoice />
               <LanguageChoice />
               <StartPageChoice />
             </NavSection>

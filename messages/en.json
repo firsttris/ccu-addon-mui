@@ -142,6 +142,8 @@
   "DARK_MODE": "Dark design",
   "KEEP_SCREEN_ON": "Keep the screen on",
   "KEEP_SCREEN_ON_HINT": "For a tablet on the wall; on this device only.",
+  "SHOW_OVERVIEW": "Overview at the top",
+  "SHOW_OVERVIEW_HINT": "Temperature, lights on and open windows above the tiles; on this device only.",
   "EFFECTS": "Effects",
   "EFFECTS_OFF": "Off",
   "EFFECTS_SUBTLE": "Subtle",
