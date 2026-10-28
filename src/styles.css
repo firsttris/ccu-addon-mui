@@ -187,6 +187,18 @@ html body[data-scroll-locked] {
     box-shadow: 0 0 0 16px rgb(255 255 255 / 0);
   }
 }
+/* The light on a key: shows for a moment, at rest it is out (also without
+   motion) */
+@keyframes fx-key-flash {
+  0% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgb(255 255 255 / 0.55);
+  }
+  100% {
+    opacity: 0;
+    box-shadow: 0 0 0 16px rgb(255 255 255 / 0);
+  }
+}
 @keyframes fx-pulse {
   0%,
   100% {
@@ -390,6 +402,9 @@ html body[data-scroll-locked] {
 }
 @utility fx-flash {
   animation: fx-flash 1.3s ease-out;
+}
+@utility fx-key-flash {
+  animation: fx-key-flash 1.3s ease-out;
 }
 @utility fx-pulse {
   animation: fx-pulse 2s ease-in-out infinite;
