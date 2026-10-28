@@ -1326,6 +1326,25 @@ test('gibt den Tasten einer Taster-Kachel beim Anordnen eigene Namen', async ({ 
     ]);
 });
 
+test('behält den Namen der Taster-Kachel, wenn nur eine Taste einen eigenen Namen bekommt', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const main = page.getByRole('main');
+  const dialog = page.getByRole('dialog');
+  await expect(main.getByText('Wandtaster Wohnzimmer')).toBeVisible();
+
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  await page.getByRole('button', { name: 'Rename "Wandtaster Wohnzimmer"' }).click();
+  await dialog.getByRole('textbox', { name: 'Wandtaster Wohnzimmer oben' }).fill('Licht');
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+
+  // The tile keeps the device's name, the other key its short label
+  await expect(main.getByRole('group', { name: 'Wandtaster Wohnzimmer' })).toBeVisible();
+  await expect(main.getByRole('button', { name: /^Licht:/ })).toBeVisible();
+  await expect(main.getByRole('button', { name: /^unten:/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Rename "Wandtaster Wohnzimmer"' })).toBeVisible();
+});
+
 const sentOfType = (page: Page, type: string) =>
   page.evaluate(
     (t) =>
