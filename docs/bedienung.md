@@ -71,9 +71,9 @@ auf den Platz einer anderen, rücken die übrigen in der Reihe zur Seite.
   anderen Schnittstellen behält der Kanal seinen Namen, dein Benennungsschema bleibt also, wie es ist.
   *Name der CCU* nimmt den eigenen Namen wieder weg. Unter *Einrichten → Geräte* steht er in der Karte des
   Kanals als *Name in der App*. Ob eine Kachel als Lampe erscheint, richtet sich weiter nach dem Namen der
-  CCU. Karten für ein ganzes Gerät (etwa Taster oder Stromzähler) haben keinen
-  Stift, weil sie mehrere Kanäle zeigen. Alarme und Push-Benachrichtigungen nennen den Kanal weiter mit
-  dem Namen der CCU.
+  CCU. Zeigt eine Kachel ein ganzes Gerät (etwa Taster, virtuelle Taster oder Stromzähler), hat der Dialog
+  ein Feld je Kanal, beim Taster also eines je Taste; *Namen der CCU* nimmt alle eigenen Namen der Kachel
+  wieder weg. Alarme und Push-Benachrichtigungen nennen den Kanal weiter mit dem Namen der CCU.
 
 *Fertig* speichert das Layout und die Namen auf der CCU (Datei `mui-tiles.json`), sofort und auch über
 einen Neustart hinweg; es gilt damit auf allen Geräten und passt sich für Handy, Tablet und Desktop an. Ein Abschnitt,

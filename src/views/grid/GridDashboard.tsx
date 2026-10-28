@@ -29,7 +29,7 @@ export interface GridTile extends TileSpec {
   element: ReactNode;
   // The channels the tile shows, for the order of a favorite list
   channelIds?: number[];
-  // The name it shows, when it shows one channel: it can be given another
+  // The name it shows: its channels can be given others
   name?: string;
 }
 

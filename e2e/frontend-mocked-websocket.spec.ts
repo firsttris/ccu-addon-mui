@@ -1297,6 +1297,35 @@ test('gibt einer Kachel beim Anordnen einen eigenen Namen, nur in der App', asyn
   await expect.poll(sent).toEqual([expect.objectContaining({ names: [{ id: 101, name: '' }] })]);
 });
 
+test('gibt den Tasten einer Taster-Kachel beim Anordnen eigene Namen', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/room/1');
+  const main = page.getByRole('main');
+  const dialog = page.getByRole('dialog');
+  await expect(main.getByText('Wandtaster Wohnzimmer')).toBeVisible();
+
+  // The tile shows all keys of the device: one field per key
+  await page.getByRole('button', { name: /^(Anordnen|Arrange)$/ }).click();
+  await page.getByRole('button', { name: 'Rename "Wandtaster Wohnzimmer"' }).click();
+  await dialog.getByRole('textbox', { name: 'Wandtaster Wohnzimmer oben' }).fill('Licht Flur');
+  await dialog.getByRole('textbox', { name: 'Wandtaster Wohnzimmer unten' }).fill('Licht Terrasse');
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await expect(main.getByRole('button', { name: /^Flur:/ })).toBeVisible();
+  await expect(main.getByRole('button', { name: /^Terrasse:/ })).toBeVisible();
+
+  await page.getByRole('button', { name: /^(Fertig|Done)$/ }).click();
+  await expect
+    .poll(() => sentOfType(page, 'setChannelNames'))
+    .toEqual([
+      expect.objectContaining({
+        names: [
+          { id: 107, name: 'Licht Flur' },
+          { id: 108, name: 'Licht Terrasse' },
+        ],
+      }),
+    ]);
+});
+
 const sentOfType = (page: Page, type: string) =>
   page.evaluate(
     (t) =>

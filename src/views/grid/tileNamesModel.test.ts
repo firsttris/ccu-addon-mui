@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Channel } from '../../types/types';
 import { isLight } from '../../controls/light/isLight';
-import { asShown, changedNames, shownName, withShownNames } from './tileNamesModel';
+import { asShown, changedNames, nameFields, shownName, withShownNames } from './tileNamesModel';
 
 const channel = (id: number, name: string, displayName?: string) =>
   ({ id, name, displayName, address: `LEQ${id}:1`, type: 'SWITCH', datapoints: {} }) as unknown as Channel;
@@ -76,6 +76,29 @@ describe('changedNames', () => {
     expect(changedNames({ 1: 'Deckenlicht ', 2: ' Leselampe', 3: '', 9: 'weg' }, byId)).toEqual([
       { id: 2, name: 'Leselampe' },
       { id: 3, name: '' },
+    ]);
+  });
+});
+
+describe('nameFields', () => {
+  it('gives each channel of a tile a field, with the name being given, else the stored one', () => {
+    const byId = new Map([
+      [1, channel(1, 'Wandtaster oben', 'Licht')],
+      [2, channel(2, 'Wandtaster unten')],
+    ]);
+    expect(nameFields([1, 2], byId, {})).toEqual([
+      { id: 1, ccuName: 'Wandtaster oben', name: 'Licht' },
+      { id: 2, ccuName: 'Wandtaster unten', name: '' },
+    ]);
+    expect(nameFields([1, 2], byId, { 1: '', 2: 'Rollo' })).toEqual([
+      { id: 1, ccuName: 'Wandtaster oben', name: '' },
+      { id: 2, ccuName: 'Wandtaster unten', name: 'Rollo' },
+    ]);
+  });
+
+  it('leaves out a channel that is gone', () => {
+    expect(nameFields([1, 9], new Map([[1, channel(1, 'RMZ VT:1')]]), {})).toEqual([
+      { id: 1, ccuName: 'RMZ VT:1', name: '' },
     ]);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hsvToRgb, kelvinToRgb } from './ColorLightControl';
-import { keyLabels } from './ButtonsControl';
+import { keyLabels } from './buttonsModel';
 
 describe('hsvToRgb', () => {
   it('converts the primary hues', () => {

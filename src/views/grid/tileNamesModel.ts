@@ -12,6 +12,23 @@ export const MaxTileName = 100;
 // the CCU's name back
 export type NameDrafts = Record<number, string>;
 
+// A field of the dialog: one per channel of the tile, e.g. each key of a
+// device's buttons
+export interface NameField {
+  id: number;
+  ccuName: string;
+  // The name given so far, "" for none
+  name: string;
+}
+
+// The fields for the channels of a tile, from the channels as the CCU names
+// them and the names being given
+export const nameFields = (ids: number[], byId: Map<number, Channel>, drafts: NameDrafts): NameField[] =>
+  ids.flatMap((id) => {
+    const channel = byId.get(id);
+    return channel ? [{ id, ccuName: channel.name, name: drafts[id] ?? channel.displayName ?? '' }] : [];
+  });
+
 // The name a tile shows: the one given in the app, while arranging the one
 // being given, else the CCU's
 export const shownName = (channel: Channel, draft?: string) => {
