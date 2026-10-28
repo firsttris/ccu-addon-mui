@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hsvToRgb, kelvinToRgb } from './ColorLightControl';
-import { keyLabels } from './buttonsModel';
+import { keyLabels, keyNames } from './buttonsModel';
 
 describe('hsvToRgb', () => {
   it('converts the primary hues', () => {
@@ -34,5 +34,27 @@ describe('keyLabels', () => {
   it('cuts only at word boundaries and keeps single keys', () => {
     expect(keyLabels(['Taster1', 'Taster2'])).toEqual({ title: 'Taster1', labels: ['Taster1', 'Taster2'] });
     expect(keyLabels(['Klingel'])).toEqual({ title: 'Klingel', labels: ['Klingel'] });
+  });
+});
+
+describe('keyNames', () => {
+  const key = (address: string, name: string, ccuName?: string) => ({ address, name, ccuName });
+
+  it('names the keys as keyLabels while the names shown share a beginning', () => {
+    expect(keyNames([key('A:2', 'Licht Terrasse', 'Taster unten'), key('A:1', 'Licht Flur', 'Taster oben')])).toEqual({
+      title: 'Licht',
+      labels: ['Flur', 'Terrasse'],
+    });
+  });
+
+  it("keeps the CCU's title when one key is given a name of its own", () => {
+    expect(keyNames([key('A:1', 'Licht', 'Wandtaster Flur oben'), key('A:2', 'Wandtaster Flur unten')])).toEqual({
+      title: 'Wandtaster Flur',
+      labels: ['Licht', 'unten'],
+    });
+  });
+
+  it('leaves names without a shared beginning and without names of their own as they are', () => {
+    expect(keyNames([key('A:1', 'Eins'), key('A:2', 'Zwei')])).toEqual({ title: 'Eins', labels: ['Eins', 'Zwei'] });
   });
 });

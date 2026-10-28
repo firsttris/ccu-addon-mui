@@ -5,7 +5,7 @@ import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
-import { keyLabels } from './buttonsModel';
+import { keyNames } from './buttonsModel';
 
 const LONG_MS = 500;
 
@@ -122,7 +122,7 @@ const Key = ({ channel, label }: { channel: Channel; label: string }) => {
 // direct links). Presses at the device light up the key.
 export const ButtonsControl = ({ channels }: { channels: Channel[] }) => {
   const keys = [...channels].sort((a, b) => a.address.localeCompare(b.address, undefined, { numeric: true }));
-  const { title, labels } = keyLabels(keys.map((c) => c.name));
+  const { title, labels } = keyNames(keys);
   return (
     <Tile status={keys[0]?.status} role="group" aria-label={title}>
       <div className="flex flex-col gap-3 p-3.5">

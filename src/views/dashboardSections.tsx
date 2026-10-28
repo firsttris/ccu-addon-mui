@@ -8,7 +8,7 @@ import { TileSkeleton } from '../components/ui/skeleton';
 import type { GridTile } from './grid/GridDashboard';
 import { deviceAddressOf } from '../lib/address';
 import { groupBy } from '../lib/groupBy';
-import { keyLabels } from '../controls/buttonsModel';
+import { keyNames } from '../controls/buttonsModel';
 
 // --- Sections: one per kind of control
 
@@ -60,7 +60,7 @@ export const gridTiles = (group: SectionGroup): GridTile[] => {
           key: `d:${deviceAddress}`,
           minPx: sectionMinPx[override.section ?? 'generic'] ?? minPx,
           channelIds: deviceChannels.map((c) => c.id),
-          name: keyLabels(deviceChannels.map((c) => c.name)).title,
+          name: keyNames(deviceChannels).title,
           element: <DeviceTile component={override.component} channels={deviceChannels} />,
         }))
       : channels.map((channel) => ({
