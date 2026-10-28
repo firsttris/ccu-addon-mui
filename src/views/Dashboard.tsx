@@ -365,12 +365,7 @@ export const Dashboard = ({
         </SectionRow>
       )}
       {names.renaming && (
-        <TileNameDialog
-          ccuName={names.renaming.ccuName}
-          name={names.renaming.name}
-          onApply={names.renaming.apply}
-          onClose={names.renaming.close}
-        />
+        <TileNameDialog fields={names.renaming.fields} onApply={names.renaming.apply} onClose={names.renaming.close} />
       )}
       {isLoading && channelsByType.length === 0 && <TileSkeletonGrid />}
       {layoutId !== undefined && <PlaceDiagrams place={layoutId} />}

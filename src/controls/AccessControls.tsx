@@ -9,7 +9,7 @@ import { Switch } from '../components/ui/switch';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
-import { keyLabels } from './ButtonsControl';
+import { keyLabels } from './buttonsModel';
 import { useValueList } from './useValueList';
 import { channelNumberOf } from '../lib/address';
 import { formatNumber, formatDate } from '../lib/format';

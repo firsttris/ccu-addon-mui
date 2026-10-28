@@ -5,24 +5,9 @@ import { Tile } from '../components/Tile';
 import { useEffects } from '../contexts/EffectsContext';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
+import { keyNames } from './buttonsModel';
 
 const LONG_MS = 500;
-
-// Names of the keys without what they all share (usually the device name)
-export const keyLabels = (names: string[]): { title: string; labels: string[] } => {
-  if (names.length < 2) return { title: names[0] ?? '', labels: names };
-  let prefix = names[0];
-  for (const name of names) {
-    while (!name.startsWith(prefix)) prefix = prefix.slice(0, -1);
-  }
-  // Only cut at a word boundary
-  const cut = prefix.lastIndexOf(' ') + 1;
-  const title = names[0].slice(0, cut).trim();
-  return {
-    title: title || names[0],
-    labels: names.map((name) => name.slice(cut).trim() || name),
-  };
-};
 
 const Key = ({ channel, label }: { channel: Channel; label: string }) => {
   const setDataPoint = useSetDataPoint();
@@ -137,7 +122,7 @@ const Key = ({ channel, label }: { channel: Channel; label: string }) => {
 // direct links). Presses at the device light up the key.
 export const ButtonsControl = ({ channels }: { channels: Channel[] }) => {
   const keys = [...channels].sort((a, b) => a.address.localeCompare(b.address, undefined, { numeric: true }));
-  const { title, labels } = keyLabels(keys.map((c) => c.name));
+  const { title, labels } = keyNames(keys);
   return (
     <Tile status={keys[0]?.status} role="group" aria-label={title}>
       <div className="flex flex-col gap-3 p-3.5">

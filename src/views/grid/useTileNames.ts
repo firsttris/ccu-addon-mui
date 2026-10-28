@@ -4,14 +4,14 @@ import { m } from '../../paraglide/messages';
 import { useSetChannelNames } from '../../queries';
 import type { Channel } from '../../types/types';
 import type { GridTile } from './GridDashboard';
-import { changedNames, type NameDrafts, withShownNames } from './tileNamesModel';
+import { changedNames, type NameDrafts, nameFields, withShownNames } from './tileNamesModel';
 
 // Names given to tiles while arranging: shown at once, stored with Done
 // (save), dropped with Cancel (discard)
 export const useTileNames = (channelsByType: [string, Channel[]][]) => {
   const [drafts, setDrafts] = useState<NameDrafts>({});
-  // The channel whose tile is being renamed (TileNameDialog)
-  const [renamingId, setRenamingId] = useState<number | null>(null);
+  // The channels of the tile being renamed (TileNameDialog)
+  const [renamingIds, setRenamingIds] = useState<number[]>([]);
   const setNames = useSetChannelNames();
   const { showToast } = useToast();
   const byId = useMemo(
@@ -19,21 +19,20 @@ export const useTileNames = (channelsByType: [string, Channel[]][]) => {
     [channelsByType],
   );
   const shown = useMemo(() => withShownNames(channelsByType, drafts), [channelsByType, drafts]);
-  const renaming = renamingId === null ? undefined : byId.get(renamingId);
+  const fields = nameFields(renamingIds, byId, drafts);
   const changed = changedNames(drafts, byId);
 
   return {
     channelsByType: shown,
-    // A tile that shows one channel
-    rename: (tile: GridTile) => setRenamingId(tile.channelIds?.[0] ?? null),
-    renaming: renaming && {
-      ccuName: renaming.name,
-      name: drafts[renaming.id] ?? renaming.displayName ?? '',
-      apply: (name: string) => {
-        setDrafts((before) => ({ ...before, [renaming.id]: name }));
-        setRenamingId(null);
+    // A channel's tile or one of a device's channels, e.g. its keys
+    rename: (tile: GridTile) => setRenamingIds(tile.channelIds ?? []),
+    renaming: fields.length > 0 && {
+      fields,
+      apply: (names: NameDrafts) => {
+        setDrafts((before) => ({ ...before, ...names }));
+        setRenamingIds([]);
       },
-      close: () => setRenamingId(null),
+      close: () => setRenamingIds([]),
     },
     changed: changed.length > 0,
     busy: setNames.isPending,
@@ -50,7 +49,7 @@ export const useTileNames = (channelsByType: [string, Channel[]][]) => {
     },
     discard: () => {
       setDrafts({});
-      setRenamingId(null);
+      setRenamingIds([]);
     },
   };
 };
