@@ -15,7 +15,7 @@ jobs:
   # A release commit from "Bump version" changes only the version, so the
   # green push runs of the commit before it count
   tested:
-    uses: firsttris/workflows/.github/workflows/tested-on-main.yml@ccr-161f105b-9ns022
+    uses: firsttris/workflows/.github/workflows/tested-on-main.yml@v1
     with:
       workflows: build.yml, go-unit-tests.yml, playwright-e2e.yml
     permissions:
