@@ -24,8 +24,8 @@ export const temperatureRange = (master?: Record<string, unknown>): TemperatureR
   const confMax = Number(master?.TEMPERATURE_MAXIMUM);
   if (!Number.isFinite(confMin) || !Number.isFinite(confMax) || confMin >= confMax) return DEFAULT_RANGE;
   return {
-    min: confMin < MIN_TEMP ? MIN_TEMP : confMin,
-    max: confMax > MAX_TEMP ? MAX_TEMP : confMax,
+    min: Math.max(confMin, MIN_TEMP),
+    max: Math.min(confMax, MAX_TEMP),
     off: confMin < MIN_TEMP ? 4.5 : confMin,
   };
 };

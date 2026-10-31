@@ -30,6 +30,13 @@
       "quoteStyle": "single"
     }
   },
+  // Biome 2.6 formats Markdown and YAML too: left as they are written
+  "markdown": {
+    "formatter": { "enabled": false }
+  },
+  "yaml": {
+    "formatter": { "enabled": false }
+  },
   "linter": {
     "enabled": true,
     "rules": {
