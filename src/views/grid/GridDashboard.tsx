@@ -8,7 +8,6 @@ import { cn } from '../../lib/utils';
 import { m } from '../../paraglide/messages';
 import {
   BREAKPOINTS,
-  type BreakpointName,
   breakpointFor,
   COLS,
   columnsWidth,
@@ -178,7 +177,7 @@ export const GridDashboard = ({
       }
     >
       {mounted && (
-        <ResponsiveGridLayout<BreakpointName>
+        <ResponsiveGridLayout
           width={width}
           breakpoints={BREAKPOINTS}
           cols={COLS}
