@@ -34,16 +34,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v7.0.1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 26
           cache: 'npm'
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
           go-version-file: go-server/go.mod
 
@@ -73,7 +73,7 @@ jobs:
       # The add-on archives for the CCU (ARM, x86) and openccu-lite (aarch64, x86_64) with their
       # checksums, to install from a pull request; the release attaches them
       - name: Upload add-on archives
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: addon
           path: |
