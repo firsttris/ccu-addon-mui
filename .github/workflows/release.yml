@@ -40,7 +40,7 @@ jobs:
   lite-vm:
     uses: ./.github/workflows/lite-vm.yml
     with:
-      lite-release: v1.0.0-beta.12
+      lite-release: v1.0.0
 
   release:
     needs: [tested, build, go, e2e, lite-vm]
