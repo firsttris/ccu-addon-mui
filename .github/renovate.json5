@@ -1,0 +1,89 @@
+// Renovate (GitHub App, https://github.com/apps/renovate): a pull request for each new release of
+// what MUI builds on, plus the "Dependency Dashboard" issue listing what is open.
+// Only those: the openccu-lite release every release of ours is tested against (release.yml), the
+// Go toolchain of the server (go directive in go-server/go.mod, which every workflow reads through
+// go-version-file) with the staticcheck that has to know that Go, and the Node of CI. The npm and
+// Go modules and the actions are not tracked here; the Playwright image follows the lockfile.
+// OpenCCU/OpenCCU-Base are read from checkouts by scripts/import-*.mjs, nothing pins them.
+// Check with `npx --package renovate renovate-config-validator .github/renovate.json5`.
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: ["config:recommended"],
+  enabledManagers: ["gomod", "custom.regex"],
+  timezone: "Europe/Berlin",
+  labels: ["dependencies"],
+  automerge: false,
+  customManagers: [
+    {
+      // The openccu-lite of the release's lite-vm job and the version docs/tests.md names, as the
+      // switch to a fixed release (#259) changed them
+      customType: "regex",
+      managerFilePatterns: ["/^\\.github/workflows/release\\.yml$/", "/^docs/tests\\.md$/"],
+      matchStrings: [
+        "lite-release: v(?<currentValue>\\d+\\.\\d+\\.\\d+(?:-[a-z]+\\.\\d+)?)\\n",
+        "festgelegte openccu-lite \\(zurzeit (?<currentValue>\\d+\\.\\d+\\.\\d+(?:-[a-z]+\\.\\d+)?);",
+      ],
+      depNameTemplate: "hobbyquaker/openccu-lite",
+      datasourceTemplate: "github-releases",
+      extractVersionTemplate: "^v(?<version>.+)$",
+    },
+    {
+      // staticcheck of go-unit-tests.yml (`go run ...staticcheck@vX.Y.Z`)
+      customType: "regex",
+      managerFilePatterns: ["/^\\.github/workflows/go-unit-tests\\.yml$/"],
+      matchStrings: ["honnef\\.co/go/tools/cmd/staticcheck@(?<currentValue>v\\d+\\.\\d+\\.\\d+)"],
+      depNameTemplate: "honnef.co/go/tools",
+      datasourceTemplate: "go",
+    },
+    {
+      // The Node of CI's jobs
+      customType: "regex",
+      managerFilePatterns: ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
+      matchStrings: ["node-version: (?<currentValue>\\d+)\\n"],
+      depNameTemplate: "node",
+      datasourceTemplate: "node-version",
+      versioningTemplate: "node",
+    },
+  ],
+  packageRules: [
+    {
+      // From go.mod only the go directive (the toolchain), not the modules
+      matchManagers: ["gomod"],
+      enabled: false,
+    },
+    {
+      matchManagers: ["gomod"],
+      matchDepTypes: ["golang"],
+      enabled: true,
+      rangeStrategy: "bump",
+    },
+    {
+      // openccu-lite has only pre-releases so far: betas and release candidates count (and 1.0.0
+      // once it is out), the nightly -dev.N builds do not match and are left out
+      matchPackageNames: ["hobbyquaker/openccu-lite"],
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:-(?<prerelease>(?:beta|rc)\\.\\d+))?$",
+      ignoreUnstable: false,
+      respectLatest: false,
+      groupName: "openccu-lite",
+      sourceUrl: "https://github.com/hobbyquaker/openccu-lite",
+      commitMessageTopic: "openccu-lite",
+      prBodyNotes: [
+        "This is the openccu-lite every release of MUI must pass in the `lite-vm` job; the checks of this PR do **not** boot it (`lite-vm.yml` runs on PRs only for the lite paths, and then against the newest release). Before merging: `gh workflow run lite-vm.yml --ref <this branch> -f lite-release=v<new>` and wait for it to be green (from beta.4 on, the heating group's event stopped coming back, #259). Read the release notes and occulited's `docs/` (meta-api, system-api, manifest-format, lite-rpc-methods.json) for changes MUI talks to; `docs/tests.md` names the version too.",
+      ],
+    },
+    {
+      // Go: the go directive and staticcheck in one PR, a new Go needs a staticcheck that knows it
+      matchPackageNames: ["go", "golang", "honnef.co/go/tools"],
+      groupName: "Go",
+      sourceUrl: "https://github.com/golang/go",
+      prBodyNotes: [
+        "Every workflow takes Go from `go-version-file: go-server/go.mod`. Check that `go-unit-tests.yml` (staticcheck for both builds) and `build.yml` (static cross builds: linux/arm GOARM=7 for the CCU3, amd64, lite arm64/amd64) stay green. For a new minor: README.md and README.en.md name the minimum Go (\"Go 1.27+\").",
+      ],
+    },
+    {
+      matchPackageNames: ["node"],
+      groupName: "Node",
+      sourceUrl: "https://github.com/nodejs/node",
+    },
+  ],
+}
