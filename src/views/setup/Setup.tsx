@@ -2,14 +2,20 @@ import { DeviceImage } from '../../components/DeviceImage';
 import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearch } from '@tanstack/react-router';
 import {
+  columnFilteringFeature,
+  columnVisibilityFeature,
   createColumnHelper,
+  createFilteredRowModel,
+  createSortedRowModel,
+  filterFns,
   flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
+  globalFilteringFeature,
+  rowSortingFeature,
+  sortFns,
+  tableFeatures,
   type Updater,
   type SortingState,
-  useReactTable,
+  useTable,
 } from '@tanstack/react-table';
 import SearchIcon from '~icons/lucide/search';
 import ArrowUpIcon from '~icons/lucide/arrow-up';
@@ -47,7 +53,20 @@ interface DeviceRow {
   lowBat: boolean;
 }
 
-const column = createColumnHelper<DeviceRow>();
+// The table's features (TanStack Table 9 adds only what is listed): the search
+// filters all columns, the headers sort, with the built-in filter and sort functions
+const features = tableFeatures({
+  columnFilteringFeature,
+  columnVisibilityFeature,
+  globalFilteringFeature,
+  rowSortingFeature,
+  filteredRowModel: createFilteredRowModel(),
+  sortedRowModel: createSortedRowModel(),
+  filterFns,
+  sortFns,
+});
+
+const column = createColumnHelper<typeof features, DeviceRow>();
 
 const StatusBadge = ({ row }: { row: DeviceRow }) =>
   row.unreach ? (
@@ -110,59 +129,58 @@ export const Setup = () => {
   );
 
   const columns = useMemo(
-    () => [
-      column.accessor('name', {
-        header: m.NAME(),
-        cell: (info) => (
-          <span className="flex items-center gap-3">
-            <DeviceImage type={info.row.original.type} size={40} />
-            <Link
-              to="/device/$interfaceName/$address"
-              params={{ interfaceName: info.row.original.interfaceName, address: info.row.original.address }}
-              className="font-medium after:absolute after:inset-0 hover:underline"
-            >
+    () =>
+      column.columns([
+        column.accessor('name', {
+          header: m.NAME(),
+          cell: (info) => (
+            <span className="flex items-center gap-3">
+              <DeviceImage type={info.row.original.type} size={40} />
+              <Link
+                to="/device/$interfaceName/$address"
+                params={{ interfaceName: info.row.original.interfaceName, address: info.row.original.address }}
+                className="font-medium after:absolute after:inset-0 hover:underline"
+              >
+                {info.getValue()}
+              </Link>
+            </span>
+          ),
+        }),
+        column.accessor('type', { header: m.DEVICE_TYPE() }),
+        column.accessor('address', {
+          header: m.ADDRESS(),
+          cell: (info) => <span className="font-mono text-[13px] text-muted-foreground">{info.getValue()}</span>,
+        }),
+        column.accessor('interfaceName', { header: m.INTERFACE() }),
+        column.accessor('firmware', {
+          header: m.FIRMWARE(),
+          cell: (info) => (
+            <span className="inline-flex flex-wrap items-center gap-1.5 tabular-nums">
               {info.getValue()}
-            </Link>
-          </span>
-        ),
-      }),
-      column.accessor('type', { header: m.DEVICE_TYPE() }),
-      column.accessor('address', {
-        header: m.ADDRESS(),
-        cell: (info) => <span className="font-mono text-[13px] text-muted-foreground">{info.getValue()}</span>,
-      }),
-      column.accessor('interfaceName', { header: m.INTERFACE() }),
-      column.accessor('firmware', {
-        header: m.FIRMWARE(),
-        cell: (info) => (
-          <span className="inline-flex flex-wrap items-center gap-1.5 tabular-nums">
-            {info.getValue()}
-            {info.row.original.availableFirmware && (
-              <Badge variant="info" title={m.UPDATE_AVAILABLE()}>
-                <DownloadIcon className="size-3" />
-                {info.row.original.availableFirmware}
-              </Badge>
-            )}
-          </span>
-        ),
-      }),
-      column.accessor((row) => (row.unreach ? 0 : row.lowBat ? 1 : 2), {
-        id: 'status',
-        header: m.STATUS(),
-        cell: (info) => <StatusBadge row={info.row.original} />,
-      }),
-    ],
+              {info.row.original.availableFirmware && (
+                <Badge variant="info" title={m.UPDATE_AVAILABLE()}>
+                  <DownloadIcon className="size-3" />
+                  {info.row.original.availableFirmware}
+                </Badge>
+              )}
+            </span>
+          ),
+        }),
+        column.accessor((row) => (row.unreach ? 0 : row.lowBat ? 1 : 2), {
+          id: 'status',
+          header: m.STATUS(),
+          cell: (info) => <StatusBadge row={info.row.original} />,
+        }),
+      ]),
     [],
   );
 
-  const table = useReactTable({
+  const table = useTable({
+    features,
     data: shownRows,
     columns,
     state: { globalFilter: filter, sorting },
     onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   return (
