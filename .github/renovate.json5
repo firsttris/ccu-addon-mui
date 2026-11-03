@@ -2,13 +2,13 @@
 // what MUI builds on, plus the "Dependency Dashboard" issue listing what is open. Their own pull
 // requests: the openccu-lite release every release of ours is tested against (release.yml), the Go
 // toolchain of the server (go directive in go-server/go.mod, which every workflow reads through
-// go-version-file) with the staticcheck that has to know that Go, and the Node of CI. The
-// Playwright image follows the lockfile. OpenCCU/OpenCCU-Base are read from checkouts by
-// scripts/import-*.mjs, nothing pins them.
+// go-version-file) with the staticcheck that has to know that Go, and Bun (packageManager in
+// package.json, which CI installs) with its types. The Playwright image follows the lockfile.
+// OpenCCU/OpenCCU-Base are read from checkouts by scripts/import-*.mjs, nothing pins them.
 // Everything else (the other packages, the actions, the images) comes with the shared settings of
 // firsttris/workflows (renovate/default.json5): minor and patch updates once a month in one pull
 // request that merges itself when CI is green, majors on request in the dashboard.
-// Check with `npx --package renovate renovate-config-validator .github/renovate.json5`.
+// Check with `bunx --package renovate renovate-config-validator .github/renovate.json5`.
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: ["github>firsttris/workflows//renovate/default.json5"],
@@ -35,13 +35,14 @@
       datasourceTemplate: "go",
     },
     {
-      // The Node of CI's jobs
+      // "packageManager": "bun@x.y.z": the Bun of every CI job (bun-version-file, and the
+      // npm-installed Bun of the jobs in the Playwright image)
       customType: "regex",
-      managerFilePatterns: ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
-      matchStrings: ["node-version: (?<currentValue>\\d+)\\n"],
-      depNameTemplate: "node",
-      datasourceTemplate: "node-version",
-      versioningTemplate: "node",
+      managerFilePatterns: ["/^package\\.json$/"],
+      matchStrings: ['"packageManager": "bun@(?<currentValue>\\d+\\.\\d+\\.\\d+)"'],
+      depNameTemplate: "oven-sh/bun",
+      datasourceTemplate: "github-releases",
+      extractVersionTemplate: "^bun-v(?<version>.+)$",
     },
   ],
   packageRules: [
@@ -81,9 +82,14 @@
       dependencyDashboardApproval: false,
     },
     {
-      matchPackageNames: ["node"],
-      groupName: "Node",
-      sourceUrl: "https://github.com/nodejs/node",
+      // Bun: packageManager and the types in one PR
+      matchPackageNames: ["oven-sh/bun", "@types/bun"],
+      enabled: true,
+      groupName: "Bun",
+      sourceUrl: "https://github.com/oven-sh/bun",
+      prBodyNotes: [
+        "`packageManager` in package.json is the Bun of every CI job (`bun-version-file` of setup-bun, and `npm install --global bun@…` in the Playwright image) and `@types/bun` moves with it. Bun installs the packages (`bun.lock`), runs the scripts and runs `vite build` and Vitest (`bun --bun`), so the add-on archives of `build.yml` are built with it: read the release notes for `bun install`, `bun run` (pre/post scripts) and Node compatibility, and run `bun install` locally if `bun.lock` changes.",
+      ],
       schedule: ["at any time"],
       automerge: false,
       dependencyDashboardApproval: false,
