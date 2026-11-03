@@ -67,6 +67,7 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
 - Validierungen der Einrichten-Seiten: Firewall, Netzwerk, LAN-Gateways, Zertifikat, Anlernen, Benutzer
 - Zuordnung der Kanaltypen zu Kacheln (`registry.test.ts`)
 - Übersetzungen: Deutsch und Englisch haben dieselben Schlüssel, keiner ist leer
+- `scripts/dev.ts` (`scripts/dev.test.ts`): SIGHUP beim Schließen des Terminals beendet alle gestarteten Skripte
 
 ## Go-Tests
 

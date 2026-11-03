@@ -2,7 +2,7 @@
 //   bun scripts/dev.ts start:fakeccu start:server:fake start:fe   (bun run dev:fake)
 // Each runs as `bun run <name>` (so prestart:fe runs too) in a process group of
 // its own; when one exits, the others are stopped with everything they started
-// (go run's binary, Vite), and Ctrl+C reaches all of them.
+// (go run's binary, Vite), and Ctrl+C or closing the terminal reaches all of them.
 const names = process.argv.slice(2);
 if (names.length === 0) {
   console.error('usage: bun scripts/dev.ts <script> [<script> ...]');
@@ -23,7 +23,7 @@ const stopAll = (signal: NodeJS.Signals) => {
   }
 };
 
-for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => stopAll(signal));
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) process.on(signal, () => stopAll(signal));
 
 const code = await Promise.race(children.map((child) => child.exited));
 stopAll('SIGTERM');
