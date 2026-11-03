@@ -95,8 +95,9 @@ export const useCommandEntries = (arrange: boolean): PaletteEntry[] => {
             target: channelTarget(c),
           }),
         ),
+      // As the lists of the logic pages: hidden ones only for administrators, internal programs not at all
       ...programs
-        .filter((p) => !p.internal)
+        .filter((p) => !p.internal && (p.visible || userLevel === 'admin'))
         .map(
           (p): PaletteEntry => ({
             id: `program:${p.id}`,
@@ -106,16 +107,18 @@ export const useCommandEntries = (arrange: boolean): PaletteEntry[] => {
             target: route('/program/$programId', { programId: String(p.id) }),
           }),
         ),
-      ...sysvars.map(
-        (v): PaletteEntry => ({
-          id: `sysvar:${v.id}`,
-          group: 'sysvars',
-          label: v.name,
-          detail: v.description,
-          icon: 'braces',
-          target: route('/sysvars'),
-        }),
-      ),
+      ...sysvars
+        .filter((v) => v.visible || userLevel === 'admin')
+        .map(
+          (v): PaletteEntry => ({
+            id: `sysvar:${v.id}`,
+            group: 'sysvars',
+            label: v.name,
+            detail: v.description,
+            icon: 'braces',
+            target: route('/sysvars'),
+          }),
+        ),
       {
         id: 'action:theme',
         group: 'actions',
