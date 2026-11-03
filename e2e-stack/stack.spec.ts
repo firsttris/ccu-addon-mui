@@ -988,7 +988,7 @@ test('zeigt das Systemprotokoll der protokollierten Kanäle', async ({ page }) =
   const table = page.getByRole('table', { name: 'Systemprotokoll' });
   const row = table.getByRole('row', { name: /Flur Licht/ });
   await expect(row).toContainText('Zustand');
-  await page.getByLabel('Suchen').fill('Flur');
+  await page.getByRole('searchbox', { name: 'Suchen' }).fill('Flur');
   await expect(row).toBeVisible();
 
   await page.goto('/device/BidCos-RF/LEQ0000003');

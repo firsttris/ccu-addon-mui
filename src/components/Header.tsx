@@ -21,6 +21,7 @@ import XIcon from '~icons/lucide/x';
 import RotateCcwIcon from '~icons/lucide/rotate-ccw';
 import ArrowLeftIcon from '~icons/lucide/arrow-left';
 import PuzzleIcon from '~icons/lucide/puzzle';
+import SearchIcon from '~icons/lucide/search';
 import { ChangePasswordDialog } from './ChangePasswordDialog';
 import { LanguageChoice, useUserLanguageSync } from './LanguageChoice';
 import { OverviewChoice } from './OverviewChoice';
@@ -29,6 +30,8 @@ import { type EffectsLevel, useEffects } from '../contexts/EffectsContext';
 import { usePageArrangeValue, usePageTitleValue } from '../contexts/PageTitleContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useRooms, useServiceMessages, useTrades } from '../queries';
+import { CommandPalette } from './CommandPalette';
+import { isApplePlatform, isPaletteShortcut, paletteShortcutLabel } from './commandPaletteModel';
 import { ServiceMessagesSheet } from './ServiceMessages';
 import { AlarmButton, AlarmsSheet } from './Alarms';
 import { AdminLockButton } from './AdminLock';
@@ -359,6 +362,17 @@ export const Header: React.FC = () => {
   useWakeLock(keepScreenOn);
   const [problemsOpen, setProblemsOpen] = useState(false);
   const [alarmsOpen, setAlarmsOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const mac = isApplePlatform(navigator);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!isPaletteShortcut(e, mac)) return;
+      e.preventDefault();
+      setPaletteOpen((open) => !open);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mac]);
   const { connectionStatus } = useWebSocketContext();
   const { data: serviceMessages } = useServiceMessages();
   const problemCount = serviceMessages?.length ?? 0;
@@ -424,6 +438,15 @@ export const Header: React.FC = () => {
                 <LayoutGridIcon className="size-5" />
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="icon-lg"
+              onClick={() => setPaletteOpen(true)}
+              aria-label={m.PALETTE_OPEN()}
+              title={`${m.PALETTE_OPEN()} (${paletteShortcutLabel(mac)})`}
+            >
+              <SearchIcon className="size-5" />
+            </Button>
             <AdminLockButton />
             <AlarmButton onClick={() => setAlarmsOpen(true)} />
           </>
@@ -470,6 +493,7 @@ export const Header: React.FC = () => {
         keepScreenOn={keepScreenOn}
         setKeepScreenOn={setKeepScreenOn}
       />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <ServiceMessagesSheet open={problemsOpen} onOpenChange={setProblemsOpen} />
       <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
     </header>

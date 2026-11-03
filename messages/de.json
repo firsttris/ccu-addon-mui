@@ -1545,5 +1545,12 @@
   "LITE_AUTOMATION_TITLE": "Automationen",
   "LITE_AUTOMATION_HINT": "Programme und Systemvariablen gibt es auf openccu-lite nicht: Automationen laufen dort in einem eigenen System, etwa in Node-RED (RedMatic), Home Assistant oder ioBroker.",
   "LITE_AUTOMATION_LINKS": "Einfache Abläufe wie „Taster schaltet Licht“ laufen ohne Zentrale als Direktverknüpfung.",
-  "LITE_NODE_RED": "Node-RED (RedMatic) öffnen"
+  "LITE_NODE_RED": "Node-RED (RedMatic) öffnen",
+  "PALETTE_OPEN": "Suchen und Befehle",
+  "PALETTE_PLACEHOLDER": "Seite, Raum, Gerät, Programm suchen …",
+  "PALETTE_EMPTY": "Nichts gefunden.",
+  "PALETTE_PAGES": "Seiten",
+  "PALETTE_CHANNELS": "Geräte",
+  "PALETTE_ACTIONS": "Aktionen",
+  "PALETTE_HINT": "↑↓ wählen · ↵ öffnen · Esc schließen"
 }

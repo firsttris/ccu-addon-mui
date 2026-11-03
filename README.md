@@ -133,6 +133,7 @@ MUI steht für *Moderne WebUI*. Mit der React-Bibliothek Material UI hat das Pro
 
 ### 🏠 Bedienen
 - Räume, Gewerke, Favoriten und *Alle Geräte* mit Kennzahlen
+- Befehlspalette (`Strg`+`K`): Seiten, Räume, Geräte, Programme und Systemvariablen suchen und öffnen
 - Eigene Kacheln für Thermostat, Licht, Rollladen, Schloss, Melder, Energie und mehr
 - Jedes andere Gerät bekommt eine Kachel aus seiner Gerätebeschreibung
 

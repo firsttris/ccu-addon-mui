@@ -21,6 +21,17 @@ ab, erscheint nach zwei Sekunden ein roter Balken, und die App verbindet sich vo
 | Darstellung | Dunkles Design, Effekte (Aus, Dezent, Kräftig), Übersicht oben (je Gerät), Sprache (je Benutzer), Startseite (zuletzt geöffnet oder Favoriten), Bildschirm anlassen (je Gerät) |
 | Konto | Benachrichtigungen (Push für Alarme, Servicemeldungen und Regeln), Passwort ändern, Abmelden |
 
+**Suche und Befehle**: Die Lupe in der Kopfzeile oder `Strg`+`K` (am Mac `Cmd`+`K`, `Ctrl`+`K` löscht dort
+im Textfeld weiter bis zum Zeilenende) öffnet die Befehlspalette. Sie sucht in einem Zug nach Seiten, Räumen, Gewerken, Favoritenlisten, Geräten (Kanälen),
+Programmen und Systemvariablen und kennt ein paar Aktionen (Dunkles Design umschalten, Anordnen, Abmelden).
+Man tippt Wörter des Namens, des Raums, des Gerätetyps oder der Adresse in beliebiger Reihenfolge; auch
+„wzlicht“ findet *Wohnzimmer Licht*. Mit `↑` `↓` wählt man, `Enter` öffnet, `Esc` schließt. Ein Gerät öffnet
+seinen Raum (oder sein Gewerk, sonst *Alle Geräte*), ein Programm seinen Editor, eine Systemvariable die Liste
+der Systemvariablen; ein Programm wird dabei nie gestartet. Was der Benutzer nicht darf (Einrichten) oder die
+Plattform nicht hat (Programme, Systemvariablen auf openccu-lite), fehlt in der Liste. Kanäle, die auch Räume und
+*Alle Geräte* nicht zeigen (in der WebUI unsichtbar, ein Transmitter neben seinem virtuellen Empfänger), fehlen ebenso. Die Daten lädt die
+Palette erst beim ersten Öffnen.
+
 **Startseite**: die zuletzt geöffnete Ansicht, auf Wunsch immer die Favoriten. Gibt es noch keine Räume,
 zeigt die App alle Geräte.
 
