@@ -100,6 +100,22 @@ describe('buildEntries', () => {
     expect(entries).not.toContain('channel:12');
   });
 
+  it('leaves out a transmitter channel next to its virtual receiver, as the rooms and device list do', () => {
+    const entries = ids(
+      sources({
+        channels: [
+          channel(13, { address: '0001:3', type: 'SWITCH_TRANSMITTER', rooms: [1] }),
+          channel(14, { address: '0001:4', type: 'SWITCH_VIRTUAL_RECEIVER', rooms: [1] }),
+          channel(23, { address: '0002:3', type: 'SWITCH_TRANSMITTER', rooms: [1] }),
+        ],
+      }),
+    );
+    expect(entries).toContain('channel:14');
+    expect(entries).not.toContain('channel:13');
+    // Without a receiver beside it, the transmitter is the channel
+    expect(entries).toContain('channel:23');
+  });
+
   it('gives every entry its own id', () => {
     const all = ids(sources({ userLevel: 'admin', arrange: true }));
     expect(new Set(all).size).toBe(all.length);
