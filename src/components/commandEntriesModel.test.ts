@@ -92,6 +92,14 @@ describe('buildEntries', () => {
     expect(shown?.keywords).toContain('0001:11');
   });
 
+  it('leaves out channels hidden by the WebUI option "sichtbar", as the rooms and device list do', () => {
+    const entries = ids(
+      sources({ channels: [channel(11, { rooms: [1] }), channel(12, { rooms: [1], hidden: true })] }),
+    );
+    expect(entries).toContain('channel:11');
+    expect(entries).not.toContain('channel:12');
+  });
+
   it('gives every entry its own id', () => {
     const all = ids(sources({ userLevel: 'admin', arrange: true }));
     expect(new Set(all).size).toBe(all.length);
