@@ -288,16 +288,16 @@ Auch als Website mit Suche: **https://firsttris.github.io/ccu-addon-mui/**
 
 ## 🔧 Entwicklung
 
-Voraussetzungen: Node.js 22.12+ und Go 1.27+.
+Voraussetzungen: Bun 1.4+, Go 1.27+ und für die E2E-Tests Node.js 22.12+.
 
 ```bash
 git clone https://github.com/firsttris/ccu-addon-mui.git && cd ccu-addon-mui
-npm install
-npm run dev:fake   # Fake-CCU + Go-Server + App auf http://localhost:4200, Anmeldung Admin / secret
+bun install
+bun run dev:fake   # Fake-CCU + Go-Server + App auf http://localhost:4200, Anmeldung Admin / secret
 ```
 
 Ohne echte Zentrale läuft alles gegen eine Fake-CCU mit Demo-Daten. Gegen die eigene CCU geht es mit
-`npm run dev`; `npm run build` baut das installierbare Archiv.
+`bun run dev`; `bun run build` baut das installierbare Archiv.
 
 **Stack**: Go-Server (WebSocket, XML-RPC, ReGa, JSON-RPC der WebUI) · React 19 mit TanStack Router und
 Query, Tailwind und shadcn/ui · Paraglide für Deutsch und Englisch · ein JSON-Schema als Vertrag zwischen
@@ -308,8 +308,8 @@ Mehr in [Entwicklung](https://firsttris.github.io/ccu-addon-mui/entwicklung.html
 
 Fehler, Ideen und vor allem Rückmeldungen von echten Zentralen gern als
 [Issue](https://github.com/firsttris/ccu-addon-mui/issues). Fehlt einem Gerät eine eigene Kachel, hilft ein
-Export der Gerätedaten (`npm run export:ccu -- -anonymize`, siehe [Entwicklung](https://firsttris.github.io/ccu-addon-mui/entwicklung.html)).
-Vor einem Pull Request bitte `npm test`, `npm run typecheck` und `npm run test:go` laufen lassen.
+Export der Gerätedaten (`bun run export:ccu -- -anonymize`, siehe [Entwicklung](https://firsttris.github.io/ccu-addon-mui/entwicklung.html)).
+Vor einem Pull Request bitte `bun run test`, `bun run typecheck` und `bun run test:go` laufen lassen.
 
 ---
 
