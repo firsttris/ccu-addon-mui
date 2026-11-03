@@ -89,19 +89,22 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "openccu-lite $TAG"
 
+      # The key ends in "-image": actions/cache also restores a key that merely
+      # starts with the one asked for, and "…-v1.0.0" would find "…-v1.0.0-rc.3"
+      # (a second image in lite-image, a third argument for lite-vm-test.sh)
       - name: Cached image
         id: cache
         uses: actions/cache@v6
         with:
           path: lite-image
-          key: openccu-lite-x86_64-ova-${{ steps.lite.outputs.tag }}
+          key: openccu-lite-x86_64-ova-${{ steps.lite.outputs.tag }}-image
 
       - name: Download image
         if: steps.cache.outputs.cache-hit != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          mkdir -p lite-image
+          rm -rf lite-image && mkdir -p lite-image
           gh release download "${{ steps.lite.outputs.tag }}" -R hobbyquaker/openccu-lite -D lite-image \
             -p 'openccu-lite-x86_64-ova-*.zip' -p 'openccu-lite-x86_64-ova-*.zip.sha256'
           cd lite-image && sha256sum -c ./*.zip.sha256
