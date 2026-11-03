@@ -6,7 +6,7 @@ for (const [dir, version] of [
   ['installed', '1.0.0'],
   ['new', '1.0.1'],
 ]) {
-  execSync(`bunx vite build --outDir e2e-update/.fixture/${dir} --emptyOutDir`, {
+  execSync(`bunx --bun vite build --outDir e2e-update/.fixture/${dir} --emptyOutDir`, {
     stdio: 'inherit',
     env: { ...process.env, MUI_APP_VERSION: version },
   });
