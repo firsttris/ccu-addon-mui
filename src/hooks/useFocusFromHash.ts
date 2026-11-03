@@ -26,7 +26,13 @@ export const useFocusFromHash = (ready: boolean) => {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: unlight only uses a ref
   useEffect(() => {
-    if (!id || !ready || done.current === id) return;
+    // The hash is gone (dropped below or left by hand): the same target may
+    // come again, from the palette or a link
+    if (!id) {
+      done.current = undefined;
+      return;
+    }
+    if (!ready || done.current === id) return;
     const holder = document.querySelector<HTMLElement>(`[data-focus~="${id}"]`);
     if (!holder) return;
     done.current = id;
