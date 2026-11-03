@@ -29,6 +29,9 @@ import { type EffectsLevel, useEffects } from '../contexts/EffectsContext';
 import { usePageArrangeValue, usePageTitleValue } from '../contexts/PageTitleContext';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useRooms, useServiceMessages, useTrades } from '../queries';
+import { CommandPalette } from './CommandPalette';
+import { isPaletteShortcut } from './commandPaletteModel';
+import SearchIcon from '~icons/lucide/search';
 import { ServiceMessagesSheet } from './ServiceMessages';
 import { AlarmButton, AlarmsSheet } from './Alarms';
 import { AdminLockButton } from './AdminLock';
@@ -359,6 +362,16 @@ export const Header: React.FC = () => {
   useWakeLock(keepScreenOn);
   const [problemsOpen, setProblemsOpen] = useState(false);
   const [alarmsOpen, setAlarmsOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!isPaletteShortcut(e)) return;
+      e.preventDefault();
+      setPaletteOpen((open) => !open);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const { connectionStatus } = useWebSocketContext();
   const { data: serviceMessages } = useServiceMessages();
   const problemCount = serviceMessages?.length ?? 0;
@@ -424,6 +437,15 @@ export const Header: React.FC = () => {
                 <LayoutGridIcon className="size-5" />
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="icon-lg"
+              onClick={() => setPaletteOpen(true)}
+              aria-label={m.PALETTE_OPEN()}
+              title={`${m.PALETTE_OPEN()} (Ctrl+K)`}
+            >
+              <SearchIcon className="size-5" />
+            </Button>
             <AdminLockButton />
             <AlarmButton onClick={() => setAlarmsOpen(true)} />
           </>
@@ -470,6 +492,7 @@ export const Header: React.FC = () => {
         keepScreenOn={keepScreenOn}
         setKeepScreenOn={setKeepScreenOn}
       />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
       <ServiceMessagesSheet open={problemsOpen} onOpenChange={setProblemsOpen} />
       <AlarmsSheet open={alarmsOpen} onOpenChange={setAlarmsOpen} />
     </header>

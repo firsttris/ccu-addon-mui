@@ -1667,3 +1667,30 @@ test('zieht einen Bereich per Tastatur schmaler und wieder breiter', async ({ pa
   await page.keyboard.press('ArrowRight');
   await expect(edge).toHaveAttribute('aria-valuenow', '32');
 });
+
+test('Befehlspalette: Strg+K öffnet sie, Tippen filtert, Enter springt in den Raum', async ({ page }) => {
+  await page.goto('/room/1');
+  // The header (and with it the shortcut) is there once the page has loaded
+  await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
+  await page.keyboard.press('Control+k');
+  const input = page.getByRole('combobox');
+  await expect(input).toBeFocused();
+
+  await input.fill('küche');
+  const options = page.getByRole('option');
+  await expect(options.first()).toContainText('Küche');
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/room\/2$/);
+  await expect(input).toHaveCount(0);
+
+  // The button in the header opens it too, Escape closes it
+  await page.getByRole('button', { name: /Suchen und Befehle|Search and commands/ }).click();
+  await expect(page.getByRole('combobox')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('combobox')).toHaveCount(0);
+
+  // Nothing found says so
+  await page.keyboard.press('Control+k');
+  await page.getByRole('combobox').fill('qqqqxyz');
+  await expect(page.getByText(/Nichts gefunden|Nothing found/)).toBeVisible();
+});
