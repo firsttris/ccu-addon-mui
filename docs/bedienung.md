@@ -27,9 +27,12 @@ Programmen und Systemvariablen und kennt ein paar Aktionen (Dunkles Design umsch
 Man tippt Wörter des Namens, des Raums, des Gerätetyps oder der Adresse in beliebiger Reihenfolge; auch
 „wzlicht“ findet *Wohnzimmer Licht*. Mit `↑` `↓` wählt man, `Enter` öffnet, `Esc` schließt. Ein Gerät öffnet
 seinen Raum (oder sein Gewerk, sonst *Alle Geräte*), ein Programm seinen Editor, eine Systemvariable die Liste
-der Systemvariablen; ein Programm wird dabei nie gestartet. Was der Benutzer nicht darf (Einrichten) oder die
-Plattform nicht hat (Programme, Systemvariablen auf openccu-lite), fehlt in der Liste. Kanäle, die auch Räume und
-*Alle Geräte* nicht zeigen (in der WebUI unsichtbar, ein Transmitter neben seinem virtuellen Empfänger), fehlen ebenso. Die Daten lädt die
+der Systemvariablen; ein Programm wird dabei nie gestartet. Die Kachel des Geräts und die Zeile der
+Systemvariable werden in den Blick gerollt und kurz umrandet. Dafür steht `#tile-<Kanal-ID>` bzw.
+`#sysvar-<ID>` in der Adresse; die App nimmt es nach dem Hervorheben wieder heraus. Was der Benutzer nicht darf
+(Einrichten) oder die Plattform nicht hat (Programme, Systemvariablen auf openccu-lite), fehlt in der Liste.
+Kanäle, die auch Räume und *Alle Geräte* nicht zeigen (in der WebUI unsichtbar, ein Transmitter neben seinem
+virtuellen Empfänger), fehlen ebenso. Die Daten lädt die
 Palette erst beim ersten Öffnen.
 
 **Startseite**: die zuletzt geöffnete Ansicht, auf Wunsch immer die Favoriten. Gibt es noch keine Räume,

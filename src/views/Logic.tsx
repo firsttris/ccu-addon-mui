@@ -23,6 +23,8 @@ import { ListSkeletonItems } from '../components/ui/skeleton';
 import { m } from '../paraglide/messages';
 import { Input as UiInput } from '../components/ui/input';
 import { NativeSelect } from '../components/ui/select';
+import { sysvarFocusId } from '../hooks/focusModel';
+import { useFocusFromHash } from '../hooks/useFocusFromHash';
 import { usePageTitle } from '../contexts/PageTitleContext';
 import { cn } from '../lib/utils';
 import { errorText } from '../lib/errors';
@@ -42,8 +44,10 @@ export const List = ({ children, loading, ...props }: HTMLAttributes<HTMLUListEl
   </ul>
 );
 
-export const Item = ({ children }: Children) => (
-  <li className="flex min-h-16 flex-wrap items-center justify-between gap-3 px-4 py-3">{children}</li>
+export const Item = ({ children, focus }: Children & { focus?: string }) => (
+  <li data-focus={focus} className="flex min-h-16 flex-wrap items-center justify-between gap-3 px-4 py-3">
+    {children}
+  </li>
 );
 
 export const Name = ({ children }: Children) => (
@@ -207,6 +211,7 @@ export const Sysvars = () => {
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<Sysvar | null>(null);
   const [editing, setEditing] = useState<Sysvar | null>(null);
+  useFocusFromHash(!loading);
   usePageTitle(m.SYSVARS());
 
   const runChange = (variables: Parameters<typeof change.mutate>[0], success: string, onSuccess?: () => void) =>
@@ -232,7 +237,7 @@ export const Sysvars = () => {
         {sysvars
           .filter((sv) => sv.visible || userLevel === 'admin')
           .map((sysvar) => (
-            <Item key={sysvar.id}>
+            <Item key={sysvar.id} focus={sysvarFocusId(sysvar.id)}>
               <div className="flex min-w-40 flex-1 flex-col gap-0.5">
                 <span className="flex flex-wrap items-center gap-2">
                   {canConfigure ? (

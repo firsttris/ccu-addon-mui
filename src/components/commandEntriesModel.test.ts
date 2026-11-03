@@ -128,12 +128,21 @@ describe('channelTarget', () => {
       kind: 'route',
       to: '/room/$roomId',
       params: { roomId: '3' },
+      hash: 'tile-1',
     });
     expect(channelTarget(channel(1, { trades: [5] }))).toEqual({
       kind: 'route',
       to: '/trade/$tradeId',
       params: { tradeId: '5' },
+      hash: 'tile-1',
     });
-    expect(channelTarget(channel(1))).toEqual({ kind: 'route', to: '/devices', params: undefined });
+    expect(channelTarget(channel(1))).toEqual({ kind: 'route', to: '/devices', params: undefined, hash: 'tile-1' });
+  });
+});
+
+describe('sysvar target', () => {
+  it('opens the list at the variable', () => {
+    const entry = buildEntries(sources({})).find((e) => e.id === 'sysvar:31');
+    expect(entry?.target).toEqual({ kind: 'route', to: '/sysvars', params: undefined, hash: 'sysvar-31' });
   });
 });

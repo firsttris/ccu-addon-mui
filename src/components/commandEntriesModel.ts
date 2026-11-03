@@ -4,6 +4,7 @@
 // platform does not have, are left out.
 
 import { isHiddenChannel, withoutMirrors } from '../hooks/channels';
+import { sysvarFocusId, tileFocusId } from '../hooks/focusModel';
 import type { Capabilities } from '../hooks/capabilities';
 import { channelTypeName } from '../i18n/channelTypeNames';
 import { m } from '../paraglide/messages';
@@ -25,7 +26,12 @@ export interface EntrySources {
   arrange: boolean;
 }
 
-const route = (to: string, params?: Record<string, string>): PaletteTarget => ({ kind: 'route', to, params });
+const route = (to: string, params?: Record<string, string>, hash?: string): PaletteTarget => ({
+  kind: 'route',
+  to,
+  params,
+  hash,
+});
 
 const page = (id: string, label: string, icon: PaletteIcon, to: string): PaletteEntry => ({
   id: `page:${id}`,
@@ -51,11 +57,12 @@ const action = (
 const only = <T>(condition: boolean, items: T[]): T[] => (condition ? items : []);
 
 // A channel opens in the first room or trade it belongs to, else in the
-// list of all devices
+// list of all devices, at its tile
 export const channelTarget = (channel: Channel): PaletteTarget => {
-  if (channel.rooms?.[0] !== undefined) return route('/room/$roomId', { roomId: String(channel.rooms[0]) });
-  if (channel.trades?.[0] !== undefined) return route('/trade/$tradeId', { tradeId: String(channel.trades[0]) });
-  return route('/devices');
+  const hash = tileFocusId(channel.id);
+  if (channel.rooms?.[0] !== undefined) return route('/room/$roomId', { roomId: String(channel.rooms[0]) }, hash);
+  if (channel.trades?.[0] !== undefined) return route('/trade/$tradeId', { tradeId: String(channel.trades[0]) }, hash);
+  return route('/devices', undefined, hash);
 };
 
 // The pages of the menu (Header.tsx), with the same conditions
@@ -149,7 +156,7 @@ const logicEntries = ({ programs, sysvars, capabilities, userLevel }: EntrySourc
         label: v.name,
         detail: v.description,
         icon: 'braces',
-        target: route('/sysvars'),
+        target: route('/sysvars', undefined, sysvarFocusId(v.id)),
       }),
     ),
 ];

@@ -82,7 +82,7 @@ const PaletteBody = ({ close }: { close: () => void }) => {
     const { target } = entry;
     if (target.kind === 'route') {
       // The route is a path pattern of the router, typed per route there
-      navigate({ to: target.to as never, params: target.params as never });
+      navigate({ to: target.to as never, params: target.params as never, hash: target.hash });
     } else if (target.action === 'toggleTheme') toggleTheme();
     else if (target.action === 'arrange') arrange?.start();
     else logout();

@@ -1,5 +1,5 @@
 import { PlaceDiagrams } from './diagrams/Diagrams';
-import { Fragment as ReactFragment, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { useContainerWidth } from 'react-grid-layout';
 import type { Channel } from '../types/types';
 import { sameItems } from '../hooks/channels';
@@ -29,6 +29,8 @@ import {
 } from './grid/tileLayout';
 import ChevronUpIcon from '~icons/lucide/chevron-up';
 import ChevronDownIcon from '~icons/lucide/chevron-down';
+import { tileFocusAttr } from '../hooks/focusModel';
+import { useFocusFromHash } from '../hooks/useFocusFromHash';
 import { useLightTradeIds } from '../controls/light/isLight';
 import { Overview, isLightOn } from './DashboardOverview';
 import {
@@ -183,7 +185,10 @@ const Section = ({
       ) : (
         <div className={cn('grid gap-3', sectionGrids[group.section ?? 'generic'])}>
           {tiles.map((tile) => (
-            <ReactFragment key={tile.key}>{tile.element}</ReactFragment>
+            // No box of its own: the grid sees the tile; data-focus lets the palette point at it
+            <div key={tile.key} className="contents" data-focus={tileFocusAttr(tile.channelIds)}>
+              {tile.element}
+            </div>
           ))}
         </div>
       )}
@@ -309,6 +314,7 @@ export const Dashboard = ({
   const [showOverview] = useShowOverview();
   const channels = useMemo(() => channelsByType.flatMap(([, list]) => list), [channelsByType]);
   const lightTradeIds = useLightTradeIds();
+  useFocusFromHash(channels.length > 0);
   const lightsOn = channels.filter((c) => isLightOn(c, lightTradeIds)).length;
   const [alarmsOpen, setAlarmsOpen] = useState(false);
   const a = (alpha: number) => Math.min(1, alpha * effects.k).toFixed(3);
