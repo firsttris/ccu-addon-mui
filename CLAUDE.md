@@ -46,6 +46,18 @@ gets a new branch, fresh from the current `main`
 and the PR is opened from it. Don't reuse a branch whose PR is merged, and
 never merge `main` into a branch; if `main` moves on, rebase onto it.
 
+A PR from someone else: review it, put our fixes on top, keep them the
+author.
+
+1. Branch from their head, not from `main`
+   (`git fetch origin pull/<n>/head && git checkout -b claude/<topic> FETCH_HEAD`).
+   Their commits stay untouched (no rebase, amend or squash); ours follow.
+2. Open our PR from it and run the TDD review on it (skill `tdd-review`).
+3. Merge with a merge commit, never squash or rebase: only then do their
+   commits reach `main` with their hashes, so GitHub marks their PR as
+   merged.
+4. Thank them in their PR.
+
 ## Language
 
 Commit messages, pull requests and the docs in German; comments and
