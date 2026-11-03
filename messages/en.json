@@ -1546,7 +1546,7 @@
   "LITE_AUTOMATION_HINT": "openccu-lite has no programs or system variables: automations run in a system of their own there, such as Node-RED (RedMatic), Home Assistant or ioBroker.",
   "LITE_AUTOMATION_LINKS": "Simple sequences like “a button switches a light” run without the central unit as direct links.",
   "LITE_NODE_RED": "Open Node-RED (RedMatic)",
-  "PALETTE_OPEN": "Search and commands",
+  "PALETTE_OPEN": "Command palette",
   "PALETTE_PLACEHOLDER": "Search pages, rooms, devices, programs …",
   "PALETTE_EMPTY": "Nothing found.",
   "PALETTE_PAGES": "Pages",

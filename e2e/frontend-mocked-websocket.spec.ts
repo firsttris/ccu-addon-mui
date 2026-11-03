@@ -1684,7 +1684,7 @@ test('Befehlspalette: Strg+K öffnet sie, Tippen filtert, Enter springt in den R
   await expect(input).toHaveCount(0);
 
   // The button in the header opens it too, Escape closes it
-  await page.getByRole('button', { name: /Suchen und Befehle|Search and commands/ }).click();
+  await page.getByRole('button', { name: /Befehlspalette|Command palette/ }).click();
   await expect(page.getByRole('combobox')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('combobox')).toHaveCount(0);
