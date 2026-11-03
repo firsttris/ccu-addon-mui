@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import SearchIcon from '~icons/lucide/search';
 import StarIcon from '~icons/lucide/star';
@@ -22,10 +22,16 @@ import { useWebSocketContext } from '../hooks/useWebsocket';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from './ui/dialog';
-import { filterEntries, moveActive, type PaletteGroup, type PaletteEntry } from './commandPaletteModel';
+import {
+  filterEntries,
+  moveActive,
+  type PaletteEntry,
+  type PaletteGroup,
+  type PaletteIcon,
+} from './commandPaletteModel';
 import { useCommandEntries } from './useCommandEntries';
 
-const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const ICONS: Record<PaletteIcon, React.ComponentType<{ className?: string }>> = {
   star: StarIcon,
   list: ListIcon,
   braces: BracesIcon,
@@ -63,7 +69,7 @@ const PaletteBody = ({ close }: { close: () => void }) => {
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
-  const shown = filterEntries(entries, query);
+  const shown = useMemo(() => filterEntries(entries, query), [entries, query]);
   const current = Math.min(active, Math.max(0, shown.length - 1));
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: scrolls when the highlighted entry changes
@@ -119,15 +125,16 @@ const PaletteBody = ({ close }: { close: () => void }) => {
           <p className="px-3 py-8 text-center text-sm text-muted-foreground">{m.PALETTE_EMPTY()}</p>
         )}
         {shown.map((entry, i) => {
-          const Icon = ICONS[entry.icon] ?? ListIcon;
+          const Icon = ICONS[entry.icon];
           const heading = i === 0 || shown[i - 1].group !== entry.group;
           return (
-            <div key={entry.id}>
+            <div key={entry.id} role="presentation">
               {heading && (
-                <div className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                <div role="presentation" className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground">
                   {GROUP_LABELS[entry.group]()}
                 </div>
               )}
+              {/* biome-ignore lint/a11y/useKeyWithClickEvents: the keyboard stays in the combobox, which moves aria-activedescendant over the options and runs one with Enter */}
               <div
                 id={`palette-${entry.id}`}
                 role="option"
@@ -135,7 +142,6 @@ const PaletteBody = ({ close }: { close: () => void }) => {
                 aria-selected={i === current}
                 onMouseMove={() => setActive(i)}
                 onClick={() => run(entry)}
-                onKeyDown={undefined}
                 className={cn(
                   'flex h-11 cursor-pointer items-center gap-3 rounded-lg px-3 text-[15px]',
                   i === current && 'bg-accent',

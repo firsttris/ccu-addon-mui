@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { filterEntries, isPaletteShortcut, moveActive, type PaletteEntry } from './commandPaletteModel';
+import {
+  filterEntries,
+  isApplePlatform,
+  isPaletteShortcut,
+  moveActive,
+  type PaletteEntry,
+  paletteShortcutLabel,
+} from './commandPaletteModel';
 
 const entry = (
   id: string,
@@ -59,10 +66,41 @@ describe('moveActive', () => {
 });
 
 describe('isPaletteShortcut', () => {
-  it('takes Ctrl+K and Cmd+K, not K alone or with Alt', () => {
-    expect(isPaletteShortcut({ key: 'k', ctrlKey: true, metaKey: false, altKey: false })).toBe(true);
-    expect(isPaletteShortcut({ key: 'K', ctrlKey: false, metaKey: true, altKey: false })).toBe(true);
-    expect(isPaletteShortcut({ key: 'k', ctrlKey: false, metaKey: false, altKey: false })).toBe(false);
-    expect(isPaletteShortcut({ key: 'k', ctrlKey: true, metaKey: false, altKey: true })).toBe(false);
+  const key = (extra: Partial<KeyboardEvent>) => ({
+    key: 'k',
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    shiftKey: false,
+    ...extra,
+  });
+
+  it('takes Ctrl+K off a Mac, not Cmd+K, K alone or with Alt or Shift', () => {
+    expect(isPaletteShortcut(key({ ctrlKey: true }), false)).toBe(true);
+    expect(isPaletteShortcut(key({ key: 'K', ctrlKey: true }), false)).toBe(true);
+    expect(isPaletteShortcut(key({ metaKey: true }), false)).toBe(false);
+    expect(isPaletteShortcut(key({}), false)).toBe(false);
+    expect(isPaletteShortcut(key({ ctrlKey: true, altKey: true }), false)).toBe(false);
+    expect(isPaletteShortcut(key({ ctrlKey: true, shiftKey: true }), false)).toBe(false);
+  });
+
+  it('takes Cmd+K on a Mac and leaves Ctrl+K to the text field', () => {
+    expect(isPaletteShortcut(key({ metaKey: true }), true)).toBe(true);
+    expect(isPaletteShortcut(key({ ctrlKey: true }), true)).toBe(false);
+  });
+});
+
+describe('isApplePlatform', () => {
+  it('tells a Mac or iPad from Windows and Linux', () => {
+    expect(isApplePlatform({ platform: 'MacIntel' })).toBe(true);
+    expect(isApplePlatform({ platform: 'iPad' })).toBe(true);
+    expect(isApplePlatform({ platform: '', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0)' })).toBe(true);
+    expect(isApplePlatform({ platform: 'Win32' })).toBe(false);
+    expect(isApplePlatform({ platform: 'Linux x86_64' })).toBe(false);
+  });
+
+  it('names the shortcut of the platform', () => {
+    expect(paletteShortcutLabel(true)).toBe('⌘K');
+    expect(paletteShortcutLabel(false)).toBe('Ctrl+K');
   });
 });

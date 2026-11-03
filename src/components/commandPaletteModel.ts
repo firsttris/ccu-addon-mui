@@ -12,6 +12,24 @@ export type PaletteTarget =
   | { kind: 'route'; to: string; params?: Record<string, string> }
   | { kind: 'action'; action: 'toggleTheme' | 'arrange' | 'logout' };
 
+// The icons an entry can have, drawn by CommandPalette.tsx
+export type PaletteIcon =
+  | 'star'
+  | 'list'
+  | 'braces'
+  | 'play'
+  | 'chart'
+  | 'heart'
+  | 'history'
+  | 'bell'
+  | 'sliders'
+  | 'home'
+  | 'tag'
+  | 'device'
+  | 'moon'
+  | 'grid'
+  | 'logout';
+
 export interface PaletteEntry {
   // Unique within the palette; also the React key
   id: string;
@@ -21,8 +39,7 @@ export interface PaletteEntry {
   detail?: string;
   // Searched along with the label, not shown
   keywords?: string[];
-  // Name of the icon in PaletteIcon
-  icon: string;
+  icon: PaletteIcon;
   target: PaletteTarget;
 }
 
@@ -89,6 +106,17 @@ export const filterEntries = (entries: PaletteEntry[], query: string): PaletteEn
 export const moveActive = (current: number, delta: 1 | -1, count: number) =>
   count === 0 ? 0 : (current + delta + count) % count;
 
-// Cmd+K on a Mac, Ctrl+K elsewhere (and the other one works too)
-export const isPaletteShortcut = (e: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey'>) =>
-  e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey) && !e.altKey;
+// Cmd+K on a Mac, Ctrl+K elsewhere. Only the one of the platform: on a Mac
+// Ctrl+K deletes to the end of the line in a text field.
+export const isPaletteShortcut = (
+  e: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'shiftKey'>,
+  mac: boolean,
+) =>
+  e.key.toLowerCase() === 'k' && (mac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey) && !e.altKey && !e.shiftKey;
+
+// The shortcut as the tooltip shows it
+export const paletteShortcutLabel = (mac: boolean) => (mac ? '⌘K' : 'Ctrl+K');
+
+// Whether the browser runs on an Apple system, where Cmd takes the place of Ctrl
+export const isApplePlatform = (nav: { platform?: string; userAgent?: string }) =>
+  /Mac|iPhone|iPad|iPod/.test(nav.platform || nav.userAgent || '');
