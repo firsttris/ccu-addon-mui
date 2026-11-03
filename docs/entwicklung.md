@@ -6,9 +6,9 @@ Kachel oder einen neuen Text.
 
 ## Voraussetzungen
 
-- **Bun** 1.4 oder neuer: installiert die Pakete und führt die Skripte aus; welche Version die CI nimmt, steht
-  in `package.json` unter `packageManager`
-- **Node.js** 22.12 oder neuer für Playwright (die E2E-Tests, ihr Testrunner läuft nicht unter Bun)
+- **Bun** 1.4 oder neuer: installiert die Pakete und führt die Skripte aus, auch den Testrunner von
+  Playwright (`bun --bun playwright test`); welche Version die CI nimmt, steht in `package.json` unter
+  `packageManager`
 - **Go** 1.27 oder neuer (für den Server, die Fake-CCU und die Stack-Tests)
 - für die E2E-Tests einmal `bun run test:e2e:install`, das installiert Chromium für Playwright
 

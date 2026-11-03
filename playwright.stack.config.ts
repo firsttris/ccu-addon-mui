@@ -95,7 +95,7 @@ export default defineConfig({
       },
     },
     {
-      command: 'bunx vite --mode stack --host=127.0.0.1 --port=4201 --strictPort',
+      command: 'bun --bun vite --mode stack --host=127.0.0.1 --port=4201 --strictPort',
       url: 'http://127.0.0.1:4201',
       reuseExistingServer: false,
       timeout: 120000,
