@@ -1729,3 +1729,26 @@ test('Befehlspalette: eine Systemvariable öffnet die Liste und hebt ihre Zeile 
   await expect(page).toHaveURL(/\/sysvars$/);
   await expect(lit).toHaveCount(0, { timeout: 5000 });
 });
+
+test('Befehlspalette: dasselbe Gerät ein zweites Mal hebt die Kachel wieder hervor', async ({ page }) => {
+  await page.goto('/room/2');
+  await expect(page.getByRole('navigation', { name: /Räume|Rooms/ })).toBeVisible();
+  const pick = async () => {
+    await page.keyboard.press('Control+k');
+    await page.getByRole('combobox').fill('wohnzimmer licht');
+    await page
+      .getByRole('option', { name: /Wohnzimmer Licht/ })
+      .first()
+      .click();
+  };
+  const lit = page.locator('[data-palette-focus]');
+  await pick();
+  await expect(lit).toHaveCount(1);
+  await expect(page).toHaveURL(/\/room\/1$/);
+  await expect(lit).toHaveCount(0, { timeout: 5000 });
+
+  // Same room, same tile: lit again
+  await pick();
+  await expect(lit).toHaveCount(1);
+  await expect(lit).toContainText('Wohnzimmer Licht');
+});
