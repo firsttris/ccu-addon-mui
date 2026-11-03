@@ -1,7 +1,7 @@
 // Imports the texts the CCU's WebUI shows for service messages from an
 // OpenCCU-Base checkout:
 //
-//   node scripts/import-service-texts.mjs /path/to/OpenCCU-Base
+//   bun scripts/import-service-texts.mjs /path/to/OpenCCU-Base
 //
 // The WebUI looks a message up in www/config/stringtable_de.txt by
 // "<DATAPOINT>=TRUE" for a flag, "<DATAPOINT>=<VALUE>" for a value list,
@@ -19,7 +19,7 @@ const LANGS = ['de', 'en'];
 
 const base = process.argv[2];
 if (!base) {
-  console.error('usage: node scripts/import-service-texts.mjs /path/to/OpenCCU-Base');
+  console.error('usage: bun scripts/import-service-texts.mjs /path/to/OpenCCU-Base');
   process.exit(1);
 }
 const www = path.join(base, 'www');

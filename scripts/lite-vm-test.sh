@@ -175,7 +175,7 @@ step "rooms and heating groups for the screenshots"
 # --- the app in a browser, through lighttpd and the gate ------------------------------
 # Checks the app and takes the screenshots (screenshots/ in the logs). The
 # room's name as go-server/litevm makes it (ciRoom)
-if ! (cd "$ROOT" && node scripts/lite-vm-browser.mjs "$BASE" "$USER_NAME" "$PASSWORD" "CI-Raum Küche Öfen Maß" "$OUT") 2>&1 | tee -a "$OUT/browser.log"; then
+if ! (cd "$ROOT" && bun scripts/lite-vm-browser.mjs "$BASE" "$USER_NAME" "$PASSWORD" "CI-Raum Küche Öfen Maß" "$OUT") 2>&1 | tee -a "$OUT/browser.log"; then
   fail "the app in the browser"
 fi
 step "app in the browser"

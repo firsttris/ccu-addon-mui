@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/firsttris/ccu-addon-mui/protocol/schema.json",
   "title": "Protocol",
-  "description": "The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (npm run generate:protocol) and checked against the real server in go-server/integration_test.go.",
+  "description": "The WebSocket protocol between the app and the go-server: for every request type its request and response. The single source for the TypeScript types (bun run generate:protocol) and checked against the real server in go-server/integration_test.go.",
   "type": "object",
   "properties": {
     "getRooms": {

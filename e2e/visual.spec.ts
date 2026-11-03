@@ -7,8 +7,8 @@ import { installWebSocketMock } from './helpers/websocketMock';
 // whole new line of text through on a phone screenshot.
 // Font rendering differs between machines, so they only run on request in
 // a fixed environment:
-//   VISUAL=1 npx playwright test visual            compare
-//   VISUAL=1 npx playwright test visual -u         update the baselines
+//   VISUAL=1 bunx playwright test visual            compare
+//   VISUAL=1 bunx playwright test visual -u         update the baselines
 test.skip(!process.env.VISUAL, 'visual regression tests run with VISUAL=1');
 
 const viewports = [

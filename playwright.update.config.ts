@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
 // The add-on updating itself, up to this browser running the new app: two
-// builds (npm run test:update builds them first) served as on the CCU, the
+// builds (bun run test:update builds them first) served as on the CCU, the
 // service worker on, unlike the other tests. Guards #196's problems: no
 // takeover found, other tabs reloaded, the old app after "done".
 export default defineConfig({
@@ -18,7 +18,7 @@ export default defineConfig({
     viewport: { width: 420, height: 760 },
   },
   webServer: {
-    command: 'node e2e-update/server.mjs',
+    command: 'bun e2e-update/server.mjs',
     url: 'http://127.0.0.1:4202/addons/mui/',
     reuseExistingServer: false,
   },

@@ -30,7 +30,7 @@ import { ADMIN_TOKEN_STORAGE_KEY, loggedOut, readToken, setLoggedOut, writeToken
 // of request() (see queries/); events go straight into that cache.
 
 // Every request type with its request and response, generated from
-// protocol/schema.json (npm run generate:protocol)
+// protocol/schema.json (bun run generate:protocol)
 export type RequestType = keyof Protocol;
 
 export type ResponseOf<T extends RequestType> = Protocol[T]['response'];

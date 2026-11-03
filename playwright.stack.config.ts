@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 // Frontend and server together against the fake CCU (go-server/pkg/fakeccu)
-// with fixtures/demo-ccu.json. Ports differ from `npm run dev:fake`, so both
+// with fixtures/demo-ccu.json. Ports differ from `bun run dev:fake`, so both
 // can run at the same time.
 const fakeCCU = {
   rega: 28181,
@@ -21,7 +21,7 @@ export const FAKE_CCU_URL = `http://127.0.0.1:${fakeCCU.webui}`;
 
 export default defineConfig({
   testDir: './e2e-stack',
-  // The documentation pictures only with DOCS=1 (npm run docs:screenshots):
+  // The documentation pictures only with DOCS=1 (bun run docs:screenshots):
   // skipped, they would still count for --shard and leave the first shard
   // with fewer real tests than the others
   testIgnore: process.env.DOCS ? undefined : 'docs-screenshots.spec.ts',
@@ -95,7 +95,7 @@ export default defineConfig({
       },
     },
     {
-      command: 'npx vite --mode stack --host=127.0.0.1 --port=4201 --strictPort',
+      command: 'bunx vite --mode stack --host=127.0.0.1 --port=4201 --strictPort',
       url: 'http://127.0.0.1:4201',
       reuseExistingServer: false,
       timeout: 120000,

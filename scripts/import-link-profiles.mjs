@@ -2,7 +2,7 @@
 // OpenCCU-Base checkout into src/controls/links/profiles/<RECEIVER_TYPE>.json
 // (one file per receiver type, loaded only when a link needs it):
 //
-//   node scripts/import-link-profiles.mjs /path/to/OpenCCU-Base /path/to/OpenCCU
+//   bun scripts/import-link-profiles.mjs /path/to/OpenCCU-Base /path/to/OpenCCU
 //
 // With an OpenCCU checkout its WebUI patches are laid over OpenCCU-Base
 // (buildroot-external/package/openccu-base/rootfs-patches/*/rootfs/www, in
@@ -29,7 +29,7 @@ const LANGS = ['de', 'en'];
 
 const [base, openccu] = process.argv.slice(2);
 if (!base) {
-  console.error('usage: node scripts/import-link-profiles.mjs /path/to/OpenCCU-Base [/path/to/OpenCCU]');
+  console.error('usage: bun scripts/import-link-profiles.mjs /path/to/OpenCCU-Base [/path/to/OpenCCU]');
   process.exit(1);
 }
 if (!openccu) console.warn('warning: without an OpenCCU checkout its WebUI patches are missing');

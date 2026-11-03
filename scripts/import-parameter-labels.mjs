@@ -1,7 +1,7 @@
 // Imports the names the CCU's WebUI shows for device settings and values
 // from an OpenCCU-Base checkout:
 //
-//   node scripts/import-parameter-labels.mjs /path/to/OpenCCU-Base /path/to/OpenCCU
+//   bun scripts/import-parameter-labels.mjs /path/to/OpenCCU-Base /path/to/OpenCCU
 //
 // The WebUI writes a parameter as <span class="stringtable_value">TYPE|NAME
 // </span> (config/ic_deviceparameters.cgi) and looks it up with
@@ -21,7 +21,7 @@ const LANGS = ['de', 'en'];
 
 const [base, openccu] = process.argv.slice(2);
 if (!base) {
-  console.error('usage: node scripts/import-parameter-labels.mjs /path/to/OpenCCU-Base [/path/to/OpenCCU]');
+  console.error('usage: bun scripts/import-parameter-labels.mjs /path/to/OpenCCU-Base [/path/to/OpenCCU]');
   process.exit(1);
 }
 if (!openccu) console.warn('warning: without an OpenCCU checkout its WebUI patches are missing');

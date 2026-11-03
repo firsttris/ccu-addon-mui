@@ -1,5 +1,5 @@
 // Rendert social-preview.html nach docs/social-preview.png (1280 × 640).
-// Aufruf: node scripts/social-preview/render.mjs
+// Aufruf: bun scripts/social-preview/render.mjs
 import { chromium } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
