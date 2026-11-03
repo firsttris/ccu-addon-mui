@@ -288,7 +288,7 @@ Auch als Website mit Suche: **https://firsttris.github.io/ccu-addon-mui/**
 
 ## 🔧 Entwicklung
 
-Voraussetzungen: Bun 1.4+, Go 1.27+ und für die E2E-Tests Node.js 22.12+.
+Voraussetzungen: Bun 1.4+ und Go 1.27+.
 
 ```bash
 git clone https://github.com/firsttris/ccu-addon-mui.git && cd ccu-addon-mui

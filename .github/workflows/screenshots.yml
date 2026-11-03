@@ -65,7 +65,7 @@ jobs:
 
       - name: Take the test screenshots
         if: inputs.what == 'both' || inputs.what == 'tests'
-        run: bunx playwright test visual --update-snapshots --reporter=line
+        run: bun --bun playwright test visual --update-snapshots --reporter=line
         env:
           VISUAL: '1'
 

@@ -223,8 +223,10 @@ sie. Lokal geht das mit Docker:
 ```bash
 docker run --rm --ipc=host -v "$PWD":/work -w /work -e VISUAL=1 \
   mcr.microsoft.com/playwright:v$(grep -oE '@playwright/test@[0-9.]+' bun.lock | head -1 | cut -d@ -f3)-noble \
-  node_modules/.bin/playwright test visual -u
+  sh -c 'npm install --global "bun@$(grep -oE "\"bun@[0-9.]+" package.json | cut -d@ -f2)" && bun --bun playwright test visual -u'
 ```
+
+Das Image bringt kein Bun mit; wie in der CI kommt es über npm dazu.
 
 Damit jeder Lauf dasselbe Bild liefert, wartet der Test, bis die App keine Anfragen mehr stellt und die Seite
 ihre Höhe behält, und nimmt die ganze Seite in einem passend hohen Fenster auf statt mit `fullPage`. Nur *Alle
@@ -269,3 +271,11 @@ scripts/lite-vm-test.sh <openccu-lite-x86_64-ova-*.zip> mui-*-x86_64-lite.tar.gz
 ```
 
 Playwright braucht einmal `bun run test:e2e:install` für Chromium.
+
+Alle Playwright-Läufe starten den Testrunner unter Bun (`bun --bun playwright test`, so auch in den Skripten
+und der CI), Node.js ist dafür nicht nötig. Unter Bun lässt Playwright seinen eigenen Loader weg und lädt
+Testdateien eines CommonJS-Pakets so, dass Bun sie als JavaScript liest: Typ-Syntax wie `import type` oder
+`as` bricht dann das Laden ab. Deshalb erklären `e2e/package.json`, `e2e-stack/package.json` und
+`e2e-update/package.json` die Tests zu ES-Modulen, die Bun selbst übersetzt. Für das ganze Repository geht
+das nicht: Vite 8 behandelt in einem `"type": "module"`-Paket den Default-Import von CommonJS-Paketen anders,
+`useWebSocket` aus `react-use-websocket` wäre dann keine Funktion mehr.
