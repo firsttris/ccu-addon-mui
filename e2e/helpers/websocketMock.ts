@@ -1102,6 +1102,16 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         return Array.from(byAddress.values());
       };
 
+      // The rooms and trades a channel belongs to, as the server adds them to every channel it sends
+      const withMembership = (list: AnyPayload[]) =>
+        list.map((channel) => {
+          const idsOf = (groups: Record<string, AnyPayload[]>) =>
+            Object.entries(groups)
+              .filter(([, channels]) => channels.some((c) => c.address === channel.address))
+              .map(([id]) => Number(id));
+          return { ...channel, rooms: idsOf(roomChannels), trades: idsOf(tradeChannels) };
+        });
+
       // Paramset descriptions as the server sends them (camelCase)
       const paramsetDescriptions: Record<string, AnyPayload> = {
         '00369D89A1B2C1:1': {
@@ -1551,7 +1561,7 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
 
         if (message.type === 'getChannels' && message.all === true) {
           delayedBroadcast({
-            channels: withNames(allChannels()),
+            channels: withMembership(withNames(allChannels())),
             deviceId: message.deviceId,
             all: true,
             requestId: message.requestId,

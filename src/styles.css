@@ -804,3 +804,21 @@ html body[data-scroll-locked] {
 .chart-pulse {
   animation: chart-pulse 1.8s ease-out infinite;
 }
+
+/* The thing the command palette led to: lit for a moment (useFocusFromHash).
+   A wrapper without a box (display: contents) lights its child. */
+@keyframes palette-focus {
+  0%,
+  70% {
+    outline-color: var(--foreground);
+  }
+  100% {
+    outline-color: transparent;
+  }
+}
+[data-palette-focus]:not(.contents),
+[data-palette-focus].contents > * {
+  outline: 3px solid var(--foreground);
+  outline-offset: -3px;
+  animation: palette-focus 2.5s ease-out forwards;
+}

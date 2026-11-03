@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { tileFocusAttr } from '../../hooks/focusModel';
 import GripIcon from '~icons/lucide/grip';
 import PencilIcon from '~icons/lucide/pencil';
 import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
@@ -218,7 +219,7 @@ export const GridDashboard = ({
                   </div>
                 </div>
               )}
-              <div className="relative min-h-0 flex-1">
+              <div className="relative min-h-0 flex-1 rounded-2xl" data-focus={tileFocusAttr(tile.channelIds)}>
                 <Measured id={tile.key} onHeight={onHeight}>
                   {tile.element}
                 </Measured>

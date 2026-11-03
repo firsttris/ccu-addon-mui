@@ -9,7 +9,7 @@ export type PaletteGroup = 'pages' | 'rooms' | 'trades' | 'favorites' | 'channel
 
 // Where an entry leads: a route of the app, or an action the palette runs
 export type PaletteTarget =
-  | { kind: 'route'; to: string; params?: Record<string, string> }
+  | { kind: 'route'; to: string; params?: Record<string, string>; hash?: string }
   | { kind: 'action'; action: 'toggleTheme' | 'arrange' | 'logout' };
 
 // The icons an entry can have, drawn by CommandPalette.tsx

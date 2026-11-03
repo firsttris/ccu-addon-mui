@@ -1454,8 +1454,8 @@ test('lässt die Kacheln beim Anordnen auf dem Handy so breit, wie die Spalten s
   const lights = page.getByRole('region', { name: 'Lights & switches' });
   const widths = () =>
     lights.evaluate((s) =>
-      [...s.querySelectorAll(':scope > div.grid > *, [data-tile-key] > div.relative > div > *')].map((t) =>
-        Math.round(t.getBoundingClientRect().width),
+      [...s.querySelectorAll(':scope > div.grid > div.contents > *, [data-tile-key] > div.relative > div > *')].map(
+        (t) => Math.round(t.getBoundingClientRect().width),
       ),
     );
   await expect(lights.locator('.grid > *')).toHaveCount(3);
@@ -1693,4 +1693,39 @@ test('Befehlspalette: Strg+K öffnet sie, Tippen filtert, Enter springt in den R
   await page.keyboard.press('Control+k');
   await page.getByRole('combobox').fill('qqqqxyz');
   await expect(page.getByText(/Nichts gefunden|Nothing found/)).toBeVisible();
+});
+
+test('Befehlspalette: ein Gerät öffnet seinen Raum und hebt die Kachel hervor', async ({ page }) => {
+  await page.goto('/room/2');
+  await expect(page.getByRole('navigation', { name: /Räume|Rooms/ })).toBeVisible();
+  await page.keyboard.press('Control+k');
+  await page.getByRole('combobox').fill('wohnzimmer licht');
+  await page
+    .getByRole('option', { name: /Wohnzimmer Licht/ })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/\/room\/1(#tile-\d+)?$/);
+
+  // The tile is lit and in view, then the hash goes, so a reload does not do it again
+  const lit = page.locator('[data-palette-focus]');
+  await expect(lit).toHaveCount(1);
+  await expect(lit).toContainText('Wohnzimmer Licht');
+  await expect(
+    lit.locator('xpath=self::*[contains(@class,"contents")]/*[1] | self::*[not(contains(@class,"contents"))]'),
+  ).toBeInViewport();
+  await expect(page).toHaveURL(/\/room\/1$/);
+  await expect(lit).toHaveCount(0, { timeout: 5000 });
+});
+
+test('Befehlspalette: eine Systemvariable öffnet die Liste und hebt ihre Zeile hervor', async ({ page }) => {
+  await page.goto('/room/1');
+  await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
+  await page.keyboard.press('Control+k');
+  await page.getByRole('combobox').fill('anwesenheit');
+  await page.getByRole('option', { name: /Anwesenheit/ }).click();
+  await expect(page).toHaveURL(/\/sysvars(#sysvar-\d+)?$/);
+  const lit = page.locator('li[data-palette-focus]');
+  await expect(lit).toContainText('Anwesenheit');
+  await expect(page).toHaveURL(/\/sysvars$/);
+  await expect(lit).toHaveCount(0, { timeout: 5000 });
 });

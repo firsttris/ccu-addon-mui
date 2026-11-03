@@ -11,6 +11,9 @@ vi.mock('../hooks/useWebsocket', async (importOriginal) => ({
   useWebSocketContext: () => ({ userLevel: 'admin', elevated: false, capabilities: CCU_CAPABILITIES }),
 }));
 
+// Needs the router, which these tests do without
+vi.mock('../hooks/useFocusFromHash', () => ({ useFocusFromHash: () => undefined }));
+
 const { Dashboard } = await import('./Dashboard');
 
 const render = (ui: React.ReactElement) =>
