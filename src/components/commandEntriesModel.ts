@@ -3,7 +3,7 @@
 // variables, and the actions. Pages and entries the user may not use, or the
 // platform does not have, are left out.
 
-import { isHiddenChannel } from '../hooks/channels';
+import { isHiddenChannel, withoutMirrors } from '../hooks/channels';
 import type { Capabilities } from '../hooks/capabilities';
 import { channelTypeName } from '../i18n/channelTypeNames';
 import { m } from '../paraglide/messages';
@@ -104,10 +104,11 @@ const placeEntries = ({ rooms, trades, favorites }: EntrySources): PaletteEntry[
 const channelEntries = ({ channels, rooms, trades }: EntrySources): PaletteEntry[] => {
   const roomNames = new Map(rooms.map((r) => [r.id, r.name]));
   const tradeNames = new Map(trades.map((t) => [t.id, t.name]));
-  return channels
-    // As the rooms and the device list (useChannels): not the channels the
-    // WebUI's option "sichtbar" hides
-    .filter((c) => !c.hidden && !isHiddenChannel(c))
+  // As the rooms and the device list (useChannels, groupChannelsByType): not
+  // the channels the WebUI's option "sichtbar" hides, nor a transmitter
+  // that only repeats the state of its virtual receiver
+  return withoutMirrors(channels.filter((c) => !c.hidden))
+    .filter((c) => !isHiddenChannel(c))
     .map(
       (c): PaletteEntry => ({
         id: `channel:${c.id}`,

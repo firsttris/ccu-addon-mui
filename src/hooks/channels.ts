@@ -40,6 +40,12 @@ const isMirror = (channel: Channel, shown: Set<string>) => {
   return receiverType !== undefined && shown.has(`${deviceAddressOf(channel.address)}|${receiverType}`);
 };
 
+// The channels without the transmitters whose virtual receiver is among them
+export const withoutMirrors = (channels: Channel[]) => {
+  const shown = new Set(channels.map((c) => `${deviceAddressOf(c.address)}|${c.type}`));
+  return channels.filter((c) => !isMirror(c, shown));
+};
+
 // Groups the visible channels by type, in the order they are shown
 export const groupChannelsByType = (channels: Channel[]): [string, Channel[]][] => {
   const shown = new Set(channels.map((c) => `${deviceAddressOf(c.address)}|${c.type}`));
