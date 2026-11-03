@@ -105,7 +105,9 @@ const channelEntries = ({ channels, rooms, trades }: EntrySources): PaletteEntry
   const roomNames = new Map(rooms.map((r) => [r.id, r.name]));
   const tradeNames = new Map(trades.map((t) => [t.id, t.name]));
   return channels
-    .filter((c) => !isHiddenChannel(c))
+    // As the rooms and the device list (useChannels): not the channels the
+    // WebUI's option "sichtbar" hides
+    .filter((c) => !c.hidden && !isHiddenChannel(c))
     .map(
       (c): PaletteEntry => ({
         id: `channel:${c.id}`,

@@ -125,6 +125,8 @@ interface BaseChannel {
   // WebUI's metadata channelMode (0 off, 1 key, 2 switch, 3 contact,
   // 4 level, 5 condition); unset means key
   mode?: number;
+  // Not visible (the WebUI's channel option); the views leave it out
+  hidden?: boolean;
 }
 
 export interface SwitchVirtualReceiverChannel extends BaseChannel {
