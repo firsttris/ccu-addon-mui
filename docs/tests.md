@@ -48,13 +48,13 @@ Favoriten, ein Gerät im Posteingang) und startet fünf Server:
 Konfigurationsdateien wie `rfd.conf`, `netconfig`, `firewall.conf` und `groups.gson` kopieren die Tests in
 ein frisches Verzeichnis, damit jeder Lauf sauber beginnt.
 
-Eine Fixture lässt sich aus der eigenen CCU erzeugen (`npm run export:ccu`). `fixtures/my-ccu.json` ist ein
+Eine Fixture lässt sich aus der eigenen CCU erzeugen (`bun run export:ccu`). `fixtures/my-ccu.json` ist ein
 anonymisierter Export einer echten Zentrale mit 482 Kanälen; er dient als Prüfstein für Gerätebeschreibungen
 aus der Praxis.
 
 ## Unit-Tests (Vitest)
 
-`npm test` · Konfiguration `vitest.config.mts` (jsdom, Testing Library)
+`bun run test` · Konfiguration `vitest.config.mts` (jsdom, Testing Library)
 
 Getestet werden vor allem reine Logik und kritische Komponenten:
 
@@ -67,10 +67,11 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
 - Validierungen der Einrichten-Seiten: Firewall, Netzwerk, LAN-Gateways, Zertifikat, Anlernen, Benutzer
 - Zuordnung der Kanaltypen zu Kacheln (`registry.test.ts`)
 - Übersetzungen: Deutsch und Englisch haben dieselben Schlüssel, keiner ist leer
+- `scripts/dev.ts` (`scripts/dev.test.ts`): SIGHUP beim Schließen des Terminals beendet alle gestarteten Skripte
 
 ## Go-Tests
 
-`npm run test:go` · Coverage: `npm run test:go:coverage`
+`bun run test:go` · Coverage: `bun run test:go:coverage`
 
 - **Pakete**: ReGa (Skripte, Parser, Validierung, Programm-Code), XML-RPC-Client und -Server, Anmeldung und
   Tokens, Einstellungen, Diagramme, Push, Audit, Add-ons, Logs …
@@ -97,7 +98,7 @@ Getestet werden vor allem reine Logik und kritische Komponenten:
 
 ## E2E mit gemocktem WebSocket
 
-`npm run test:e2e` · Konfiguration `playwright.config.ts`
+`bun run test:e2e` · Konfiguration `playwright.config.ts`
 
 Die App läuft im Vite-Dev-Server und in echtem Chromium; nur `window.WebSocket` ist durch einen Mock ersetzt
 (`e2e/helpers/websocketMock.ts`), der Anfragen im Browser beantwortet und über `window.__wsMock` steuerbar
@@ -117,12 +118,12 @@ die App Programme, Systemvariablen, Alarme und die Systemeinstellungen ausblende
 stattdessen auf Automationen und die Seiten von openccu-lite verweist. `lite-session.spec.ts` prüft, dass eine
 abgelaufene Sitzung zur Anmeldung von openccu-lite führt statt ins eigene Login-Formular.
 
-`npm run test:e2e:coverage` misst dabei die Abdeckung des Frontend-Codes (nyc, Bericht unter
+`bun run test:e2e:coverage` misst dabei die Abdeckung des Frontend-Codes (nyc, Bericht unter
 `coverage/playwright`).
 
 ## E2E gegen den Stack
 
-`npm run test:stack` (braucht Go) · Konfiguration `playwright.stack.config.ts`
+`bun run test:stack` (braucht Go) · Konfiguration `playwright.stack.config.ts`
 
 Playwright startet drei Prozesse: die Fake-CCU, den echten Go-Server (mit allen Dateipfaden in einem
 temporären Verzeichnis) und Vite. Jeder Test setzt die Fake-CCU zurück, meldet sich über die Anmeldemaske an
@@ -209,7 +210,7 @@ Die VM hat kein Funkmodul: Funkgeräte, Anlernen und Werte über Funk bleiben ei
 
 ## Screenshot-Vergleich
 
-`npm run test:visual` · Baselines erneuern: `npm run test:visual:update`
+`bun run test:visual` · Baselines erneuern: `bun run test:visual:update`
 
 Zwölf Ansichten (Räume, Gewerke, Kacheln aller Art, Anmeldung, Meldungen, Menü) in drei Größen (Handy,
 Tablet hoch und quer), hell und dunkel, mit fester Uhrzeit und Sprache: 72 Bilder unter
@@ -221,8 +222,8 @@ sie. Lokal geht das mit Docker:
 
 ```bash
 docker run --rm --ipc=host -v "$PWD":/work -w /work -e VISUAL=1 \
-  mcr.microsoft.com/playwright:v$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")-noble \
-  npx playwright test visual -u
+  mcr.microsoft.com/playwright:v$(grep -oE '@playwright/test@[0-9.]+' bun.lock | head -1 | cut -d@ -f3)-noble \
+  node_modules/.bin/playwright test visual -u
 ```
 
 Damit jeder Lauf dasselbe Bild liefert, wartet der Test, bis die App keine Anfragen mehr stellt und die Seite
@@ -230,12 +231,12 @@ ihre Höhe behält, und nimmt die ganze Seite in einem passend hohen Fenster auf
 Geräte* lässt 500 abweichende Pixel zu: Das Leuchten der vielen aktiven Kacheln kommt bei jedem Lauf etwas
 anders heraus.
 
-Die Bilder der Dokumentation (`docs/screenshot-*.png`) nimmt `npm run docs:screenshots` neu auf: die
+Die Bilder der Dokumentation (`docs/screenshot-*.png`) nimmt `bun run docs:screenshots` neu auf: die
 Kacheln aus dem Mock (`e2e/docs-screenshots.spec.ts`), die Einrichten-Seiten aus der Fake-CCU
 (`e2e-stack/docs-screenshots.spec.ts`). Derselbe Workflow kann auch sie erneuern.
 
 Die bewegten Bilder der Kacheln in [Geräteunterstützung](geraete.md#eigene-kacheln) (`docs/kacheln/*.webp`)
-nimmt `npm run docs:tiles` auf (`e2e/docs-tiles.spec.ts`, braucht `ffmpeg` mit libwebp): Jede Kachel des
+nimmt `bun run docs:tiles` auf (`e2e/docs-tiles.spec.ts`, braucht `ffmpeg` mit libwebp): Jede Kachel des
 Mocks spielt eine kurze Szene, in der der Mock Meldungen der CCU schickt (ein Fenster kippt und öffnet, der
 Rauchmelder schlägt an). Chromiums Screencast liefert jedes gemalte Bild mit seiner Zeit, ffmpeg macht daraus
 eine animierte WebP mit 15 Bildern pro Sekunde. Eine Animation kommt nie zweimal gleich heraus, deshalb hat
@@ -247,7 +248,7 @@ der Workflow dafür eine eigene Auswahl `tiles`.
 |---|---|---|
 | `build.yml` | Push und Pull Request auf `main` | Protokolltypen aktuell (`generate:protocol` + `git diff --exit-code`), Unit-Tests, Build mit Typprüfung (`vite build && tsc`), Go-Build für ARM und x86 und für openccu-lite (aarch64, x86_64), die `tar.gz`-Archive mit `.sha256` als Artefakt `addon` |
 | `go-unit-tests.yml` | Push und Pull Request auf `main` | `go vet`, `gofmt`, `staticcheck` und `go test ./...` mit Coverage-Bericht als Artefakt, dasselbe mit `-tags lite` für openccu-lite |
-| `playwright-e2e.yml` | Push und Pull Request auf `main` | Im Docker-Image `mcr.microsoft.com/playwright` (Version aus der `package-lock.json`, kein Browser-Download): E2E mit Mock inkl. Anmeldung (4 Worker, mit Frontend-Coverage), Screenshot-Vergleich und E2E gegen den Stack auf drei Runnern (`--shard`), Berichte als Artefakte |
+| `playwright-e2e.yml` | Push und Pull Request auf `main` | Im Docker-Image `mcr.microsoft.com/playwright` (Version aus der `bun.lock`, kein Browser-Download, Bun über `npm install --global` in der Version aus `packageManager`, geprüft mit `scripts/test/ci-bun-version.sh`): E2E mit Mock inkl. Anmeldung (4 Worker, mit Frontend-Coverage), Screenshot-Vergleich und E2E gegen den Stack auf drei Runnern (`--shard`), Berichte als Artefakte |
 | `lite-vm.yml` | Pull Request, der den Lite-Teil ändert; montags gegen das neueste openccu-lite; von Hand (mit wählbarem openccu-lite-Release); vor jeder Release gegen das in `release.yml` festgelegte openccu-lite (zurzeit 1.0.0; ein neueres schlägt Renovate als Pull Request vor, `.github/renovate.json5`), damit ein neues openccu-lite keine Release aufhält | Paket bauen, openccu-lite-Image laden (zwischengespeichert je Release), in QEMU mit KVM booten, installieren, `scripts/lite-vm-test.sh`; Dauer je Schritt in der Zusammenfassung, Logs als Artefakt |
 | `release.yml` | Tag `vX.Y.Z` | Die vier Workflows oben, dann die Release mit den Archiven und erzeugten Notizen; Go- und Playwright-Tests entfallen, wenn `main` sie für diesen Code schon bestanden hat |
 | `bump.yml` | von Hand | Version erhöhen, Tag `vX.Y.Z` anlegen und `release.yml` darauf starten |
@@ -257,14 +258,14 @@ Ein Pull Request wird erst gemergt, wenn alle Prüfungen grün sind.
 ## Selbst laufen lassen
 
 ```bash
-npm test                  # Vitest
-npm run typecheck         # TypeScript
-npm run test:go           # Go
+bun run test              # Vitest
+bun run typecheck         # TypeScript
+bun run test:go           # Go
 cd go-server && go test -tags lite ./...   # Go für openccu-lite
-npm run test:e2e          # Playwright mit Mock (startet Vite selbst)
-npm run test:stack        # Playwright gegen Go-Server + Fake-CCU
-npm run test:visual       # Screenshot-Vergleich
+bun run test:e2e          # Playwright mit Mock (startet Vite selbst)
+bun run test:stack        # Playwright gegen Go-Server + Fake-CCU
+bun run test:visual       # Screenshot-Vergleich
 scripts/lite-vm-test.sh <openccu-lite-x86_64-ova-*.zip> mui-*-x86_64-lite.tar.gz   # auf einer openccu-lite-VM
 ```
 
-Playwright braucht einmal `npm run test:e2e:install` für Chromium.
+Playwright braucht einmal `bun run test:e2e:install` für Chromium.

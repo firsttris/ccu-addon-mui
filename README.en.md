@@ -199,8 +199,8 @@ on openccu-lite they come through its *Additional software*.
 ## 🔧 Development
 
 ```bash
-npm install
-npm run dev:fake   # fake CCU + Go server + app on http://localhost:4200, login Admin / secret
+bun install
+bun run dev:fake   # fake CCU + Go server + app on http://localhost:4200, login Admin / secret
 ```
 
 Go server (WebSocket, XML-RPC, ReGa, JSON-RPC) · React 19 with TanStack Router and Query, Tailwind,

@@ -44,7 +44,7 @@ gestaltete Kachel gibt, nicht, dass sie jede Funktion des Geräts abdeckt.
 
 Welche Kachel ein Kanal bekommt, entscheidet sein Kanaltyp (`src/controls/registry.ts`). Die Bilder zeigen
 jede Kachel im Demo-Zuhause der Tests, wie sie auf Meldungen der CCU reagiert (aufgenommen mit
-`npm run docs:tiles`):
+`bun run docs:tiles`):
 
 | Kachel | Kanaltypen und Beispielgeräte |
 |---|---|
@@ -149,7 +149,7 @@ Nach Bedeutung:
 Am meisten hilft ein Export der Gerätedaten deiner CCU:
 
 ```bash
-npm run export:ccu -- -o ../fixtures/meine-ccu.json -anonymize
+bun run export:ccu -- -o ../fixtures/meine-ccu.json -anonymize
 ```
 
 Der Export liest nur (Räume, Kanäle, Gerätebeschreibungen) und ersetzt Namen durch Platzhalter.

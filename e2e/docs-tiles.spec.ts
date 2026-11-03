@@ -9,10 +9,10 @@ import { installWebSocketMock } from './helpers/websocketMock';
 // each tile of the mock's demo home in a short scene, as the CCU reports
 // changes (a window tilts and opens, the smoke detector sounds), taken frame
 // by frame and joined by ffmpeg (libwebp) into an animated WebP. Not a test:
-// `npm run docs:tiles` takes them anew (the "Update screenshots" workflow
+// `bun run docs:tiles` takes them anew (the "Update screenshots" workflow
 // with "tiles"). Kept apart from docs:screenshots: an animation never comes
 // out twice the same, so every run would change all pictures.
-test.skip(!process.env.DOCS, 'tile pictures are taken with npm run docs:tiles');
+test.skip(!process.env.DOCS, 'tile pictures are taken with bun run docs:tiles');
 
 test.use({ locale: 'de-DE', timezoneId: 'Europe/Berlin', serviceWorkers: 'block' });
 test.setTimeout(10 * 60 * 1000);

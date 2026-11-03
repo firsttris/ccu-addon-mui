@@ -12,7 +12,7 @@
 // user reaches them. Errors of the shell itself are logged, not counted:
 // they are openccu-lite's.
 //
-//   node scripts/lite-vm-browser.mjs <base> <user> <password> <room> <out dir>
+//   bun scripts/lite-vm-browser.mjs <base> <user> <password> <room> <out dir>
 //
 // Takes the browser at MUI_VM_CHROMIUM when set, else the runner's Chrome
 // (channel chrome), else Playwright's Chromium.

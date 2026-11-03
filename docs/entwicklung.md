@@ -6,14 +6,16 @@ Kachel oder einen neuen Text.
 
 ## Voraussetzungen
 
-- **Node.js** 22.12 oder neuer
+- **Bun** 1.4 oder neuer: installiert die Pakete und führt die Skripte aus; welche Version die CI nimmt, steht
+  in `package.json` unter `packageManager`
+- **Node.js** 22.12 oder neuer für Playwright (die E2E-Tests, ihr Testrunner läuft nicht unter Bun)
 - **Go** 1.27 oder neuer (für den Server, die Fake-CCU und die Stack-Tests)
-- für die E2E-Tests einmal `npm run test:e2e:install`, das installiert Chromium für Playwright
+- für die E2E-Tests einmal `bun run test:e2e:install`, das installiert Chromium für Playwright
 
 ```bash
 git clone https://github.com/firsttris/ccu-addon-mui.git
 cd ccu-addon-mui
-npm install
+bun install
 ```
 
 ## Drei Arten zu entwickeln
@@ -21,7 +23,7 @@ npm install
 ### Ohne CCU: gegen die Fake-CCU
 
 ```bash
-npm run dev:fake
+bun run dev:fake
 ```
 
 Das startet die Fake-CCU (mit `fixtures/demo-ccu.json`), den Go-Server und Vite zusammen. Die App läuft
@@ -40,7 +42,7 @@ curl -X POST http://127.0.0.1:18080/fake/set \
 cp go-server/.env.example go-server/.env
 # in go-server/.env: CCU_HOST, CCU_USER/CCU_PASS (falls die CCU Authentifizierung verlangt)
 # und CALLBACK_HOST = IP dieses Rechners
-npm run dev
+bun run dev
 ```
 
 Der Go-Server läuft dann auf deinem Rechner und spricht über das Netz mit deiner CCU. Damit Events
@@ -50,7 +52,7 @@ beendest, meldet er sich bei der CCU wieder ab.
 ### Nur die App, gegen das installierte Add-on
 
 ```bash
-npm run start:fe:ccu3
+bun run start:fe:ccu3
 ```
 
 Vite leitet `/ws/mui` an die CCU weiter, deren Adresse steht in `vite.config.mts` unter
@@ -60,22 +62,22 @@ Vite leitet `/ws/mui` an die CCU weiter, deren Adresse steht in `vite.config.mts
 
 | Befehl | Wirkung |
 |---|---|
-| `npm run dev:fake` | Fake-CCU + Server + App |
-| `npm run dev` | Server + App gegen die CCU aus `go-server/.env` |
-| `npm run start:fe:ccu3` | nur App, Proxy auf die CCU |
-| `npm run build` | App bauen, Typen prüfen, Server für ARMv7 und amd64 bauen, `mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz` packen |
-| `npm run generate:protocol` | `src/types/protocol.ts` aus `protocol/schema.json` erzeugen |
-| `npm run export:ccu` | eine echte CCU nur lesend auslesen und als Fixture speichern |
-| `npm test` | Unit-Tests (Vitest) |
-| `npm run typecheck` | TypeScript prüfen |
-| `npm run lint` | Formatierung und Lint-Regeln prüfen ([Biome](https://biomejs.dev), Regeln in `biome.json`) |
-| `npm run lint:fix` | Formatieren und behebbare Lint-Befunde beheben |
-| `npm run test:go` | Go-Tests |
-| `npm run test:e2e` | Playwright mit Mock-WebSocket |
-| `npm run test:stack` | Playwright gegen Go-Server + Fake-CCU |
-| `npm run test:visual` | Screenshot-Vergleich (`:update` erneuert die Bilder; in der CI im Playwright-Image) |
-| `npm run docs:screenshots` | die Bilder in `docs/` neu aufnehmen (Mock und Fake-CCU) |
-| `npm run docs:tiles` | die bewegten Bilder der Kacheln (`docs/kacheln/`) neu aufnehmen, braucht `ffmpeg` |
+| `bun run dev:fake` | Fake-CCU + Server + App |
+| `bun run dev` | Server + App gegen die CCU aus `go-server/.env` |
+| `bun run start:fe:ccu3` | nur App, Proxy auf die CCU |
+| `bun run build` | App bauen, Typen prüfen, Server für ARMv7 und amd64 bauen, `mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz` packen |
+| `bun run generate:protocol` | `src/types/protocol.ts` aus `protocol/schema.json` erzeugen |
+| `bun run export:ccu` | eine echte CCU nur lesend auslesen und als Fixture speichern |
+| `bun run test` | Unit-Tests (Vitest) |
+| `bun run typecheck` | TypeScript prüfen |
+| `bun run lint` | Formatierung und Lint-Regeln prüfen ([Biome](https://biomejs.dev), Regeln in `biome.json`) |
+| `bun run lint:fix` | Formatieren und behebbare Lint-Befunde beheben |
+| `bun run test:go` | Go-Tests |
+| `bun run test:e2e` | Playwright mit Mock-WebSocket |
+| `bun run test:stack` | Playwright gegen Go-Server + Fake-CCU |
+| `bun run test:visual` | Screenshot-Vergleich (`:update` erneuert die Bilder; in der CI im Playwright-Image) |
+| `bun run docs:screenshots` | die Bilder in `docs/` neu aufnehmen (Mock und Fake-CCU) |
+| `bun run docs:tiles` | die bewegten Bilder der Kacheln (`docs/kacheln/`) neu aufnehmen, braucht `ffmpeg` |
 
 Mehr zu den Tests findest du unter [Tests](tests.md).
 
@@ -109,7 +111,7 @@ docs/                diese Dokumentation
   Commit-Nachricht, zum Beispiel „wie in der WebUI `door_opener.fn`“. So kann später jeder nachvollziehen,
   warum etwas so ist.
 - **Formatierung und Lint-Regeln** setzt [Biome](https://biomejs.dev) durch (`biome.json`), die CI prüft
-  beides, auch Warnungen. Lass vor dem Commit `npm run lint:fix` laufen; die Erweiterung `biomejs.biome`
+  beides, auch Warnungen. Lass vor dem Commit `bun run lint:fix` laufen; die Erweiterung `biomejs.biome`
   für VS Code formatiert beim Speichern. Schlägt eine Regel an, obwohl der Code stimmt, nimm die Stelle
   mit `// biome-ignore <regel>: <Grund>` aus, statt die Regel abzuschalten.
 - **Texte** der Oberfläche gibt es auf Deutsch und Englisch. Halte sie kurz und vermeide Fachjargon, wo es
@@ -125,7 +127,7 @@ docs/                diese Dokumentation
    `"meinTyp": {"$ref": "#/definitions/MeinTypCall"}` an. Unter `definitions` kommen dazu `MeinTypCall` mit
    `request` und `response` sowie die Definitionen `MeinTypRequest` und `MeinTypResponse`. Nimm die Antwort
    außerdem in `ServerMessage` auf. Alle Objekte bekommen `"additionalProperties": false`.
-2. **Typen erzeugen**: `npm run generate:protocol`.
+2. **Typen erzeugen**: `bun run generate:protocol`.
 3. **Server**: Trag den Typ in `go-server/pkg/websocket/dispatch.go` im Dispatcher `dispatch` ein (was nur
    eine CCU hat, in `dispatch_ccu.go`), bei reinen Lesezugriffen auch in `parallelReads`. Den Handler
    schreibst du in die Datei seiner Domäne, etwa `devices.go`, `links.go`, `pairing.go`, `logic.go`
@@ -164,7 +166,7 @@ docs/                diese Dokumentation
 Echte Daten bekommst du über einen Export deiner eigenen CCU:
 
 ```bash
-npm run export:ccu -- -o ../fixtures/meine-ccu.json -anonymize
+bun run export:ccu -- -o ../fixtures/meine-ccu.json -anonymize
 ```
 
 Der Export ändert nichts an deiner CCU, er liest nur: Räume, Gewerke, Kanäle mit ihren Werten,
@@ -187,7 +189,7 @@ import { m } from '../paraglide/messages';
 Vite übersetzt die Texte beim Start und bei jeder Änderung selbst. Brauchst du es einmal von Hand:
 
 ```bash
-npx paraglide-js compile --project ./project.inlang --outdir ./src/paraglide \
+bunx paraglide-js compile --project ./project.inlang --outdir ./src/paraglide \
   --emit-ts-declarations --strategy preferredLanguage baseLocale
 ```
 
@@ -199,7 +201,7 @@ sich nach dem Browser, sonst ist es Englisch.
 Die Profile der Direktverknüpfungen stammen aus den Easymodes der WebUI:
 
 ```bash
-node scripts/import-link-profiles.mjs /pfad/zu/OpenCCU-Base
+bun scripts/import-link-profiles.mjs /pfad/zu/OpenCCU-Base
 ```
 
 Das Skript liest `www/config/easymodes/<Empfänger>/<Sender>.tcl` samt Übersetzungen und schreibt daraus
@@ -292,7 +294,7 @@ Aus demselben Code entstehen zwei Server: `go build` für CCU3 und OpenCCU, `go 
   `/addons/mui/ws`.
 - **Die App** ist für beide gleich. Bei der Anmeldung schickt der Server `platform` und `capabilities` mit,
   danach blendet sie aus, was es nicht gibt.
-- **Paket:** `make build-lite` baut die Server für aarch64 und x86_64, `npm run build` packt daraus
+- **Paket:** `make build-lite` baut die Server für aarch64 und x86_64, `bun run build` packt daraus
   `mui-<version>-aarch64-lite.tar.gz` und `mui-<version>-x86_64-lite.tar.gz` mit `openccu-lite.json`. Das
   Add-on läuft dort als eigener Benutzer und schreibt nur nach `/usr/local/etc/config/addons/mui`
   (`DATA_DIR`); `addon_installer/rc.d/mui-lite` und `addon_installer/lite/` sind die Teile dafür.
@@ -306,14 +308,14 @@ Ein Release beginnt mit einem Tag `vX.Y.Z`, nach demselben Schema wie in den and
 ([firsttris/workflows](https://github.com/firsttris/workflows)). Den Tag kannst du auf zwei Wegen anlegen:
 
 - **ohne Checkout**: unter Actions → *Bump version* → patch, minor oder major (`bump.yml`). Das erhöht die
-  Version in `package.json` und `package-lock.json`, committet sie als `Release vX.Y.Z` auf `main`, setzt den
+  Version in `package.json`, committet sie als `Release vX.Y.Z` auf `main`, setzt den
   Tag und startet `release.yml` darauf.
-- **lokal**: mit `npm run release:patch` (oder `:minor`, `:major`). Commit und Tag werden dann per
+- **lokal**: mit `bun run release:patch` (oder `:minor`, `:major`). Commit und Tag werden dann per
   `postversion` gepusht.
 
 `release.yml` lässt anschließend Build, Go- und Playwright-Tests laufen und legt die Release mit den
 Archiven `mui-<version>-arm-ccu3-raspi.tar.gz` und `mui-<version>-x86_64-pc.tar.gz` an. Die Tests entfallen,
 wenn die CI auf `main` sie für denselben Code schon bestanden hat: Der Release-Commit von *Bump version*
 ändert nur die Version. Die Notizen erzeugt
-GitHub aus den Pull Requests seit der letzten Version. Lokal baut `npm run build` dieselben Archive, und
+GitHub aus den Pull Requests seit der letzten Version. Lokal baut `bun run build` dieselben Archive, und
 jeder Build in der CI hängt sie als Artefakt `addon` an.
