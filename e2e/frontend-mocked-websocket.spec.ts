@@ -1771,7 +1771,11 @@ test('Befehlspalette: hebt die Kachel auch in einem schon besuchten Raum hervor'
   await page.goto('/room/1');
   await expect(page.getByText('Wohnzimmer Licht')).toBeVisible();
   // Another room, then back through the palette: room 1's channels are loaded already
-  await page.getByRole('navigation', { name: /Räume|Rooms/ }).getByRole('link').nth(1).click();
+  await page
+    .getByRole('navigation', { name: /Räume|Rooms/ })
+    .getByRole('link')
+    .nth(1)
+    .click();
   await expect(page).not.toHaveURL(/\/room\/1$/);
   await expect(page.getByText('Wohnzimmer Licht')).toHaveCount(0);
   await pickLivingRoomLight(page);

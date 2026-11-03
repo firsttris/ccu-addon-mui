@@ -9,7 +9,9 @@ const LIGHT_MS = 2500;
 // its data, so the element can exist; the hash is dropped afterwards so a
 // reload or the back button does not do it again.
 export const useFocusFromHash = (ready: boolean) => {
-  const hash = useRouterState({ select: (s) => s.location.hash });
+  // The location the page shows: while the router still loads a new one
+  // (another room of the same view), the old room's tiles are on the page
+  const hash = useRouterState({ select: (s) => s.resolvedLocation?.hash ?? '' });
   const router = useRouter();
   const id = focusIdFromHash(hash);
   const done = useRef<string | undefined>(undefined);
