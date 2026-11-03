@@ -2,10 +2,10 @@ name: Update screenshots
 
 # Renews screenshots on the chosen branch and commits them: the baselines of
 # e2e/visual.spec.ts, in the image the "Screenshots" check compares in, and
-# the pictures of the documentation (npm run docs:screenshots). Run it after
+# the pictures of the documentation (bun run docs:screenshots). Run it after
 # a change to the look on purpose, then push again (a commit of this
 # workflow doesn't start the checks). "tiles" takes the moving pictures of
-# the tiles in docs/geraete.md (npm run docs:tiles) on their own: an
+# the tiles in docs/geraete.md (bun run docs:tiles) on their own: an
 # animation never comes out twice the same, so they change on every run.
 on:
   workflow_dispatch:
@@ -27,9 +27,11 @@ jobs:
     outputs:
       image: ${{ steps.version.outputs.image }}
     steps:
-      - name: Image of the @playwright/test version in package-lock.json
+      - name: Image of the @playwright/test version in bun.lock
         id: version
         uses: firsttris/workflows/actions/playwright-image@v1
+        with:
+          lockfile: bun.lock
 
   update:
     needs: playwright-image
@@ -43,8 +45,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
 
+      # The npm package brings the binary without curl or unzip, which the image lacks
+      - name: Set up Bun
+        run: npm install --global "bun@$(jq -r .packageManager package.json | cut -d@ -f2)"
+
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Set up Go
         if: inputs.what == 'both' || inputs.what == 'docs'
@@ -55,13 +61,13 @@ jobs:
 
       - name: Take the test screenshots
         if: inputs.what == 'both' || inputs.what == 'tests'
-        run: npx playwright test visual --update-snapshots --reporter=line
+        run: bunx playwright test visual --update-snapshots --reporter=line
         env:
           VISUAL: '1'
 
       - name: Take the documentation pictures
         if: inputs.what == 'both' || inputs.what == 'docs'
-        run: npm run docs:screenshots
+        run: bun run docs:screenshots
 
       # ffmpeg with libwebp joins the frames into animated WebP
       - name: Install ffmpeg
@@ -70,7 +76,7 @@ jobs:
 
       - name: Take the moving pictures of the tiles
         if: inputs.what == 'tiles'
-        run: npm run docs:tiles
+        run: bun run docs:tiles
 
       - name: Commit what changed
         uses: firsttris/workflows/actions/commit-changes@v1

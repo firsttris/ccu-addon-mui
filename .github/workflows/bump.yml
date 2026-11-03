@@ -1,7 +1,7 @@
 name: Bump version
 
 # Raises the version in package.json, tags it vX.Y.Z and starts release.yml on the tag, without a
-# local checkout. The same as `npm run release:patch|minor|major`.
+# local checkout. The same as `bun run release:patch|minor|major`.
 on:
   workflow_dispatch:
     inputs:

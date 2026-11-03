@@ -36,11 +36,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 26
-          cache: 'npm'
+          bun-version-file: package.json
 
       - name: Set up Go
         uses: actions/setup-go@v7
@@ -48,21 +47,21 @@ jobs:
           go-version-file: go-server/go.mod
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       # Formatting and lint rules (biome.jsonc); a warning fails too, so none
       # piles up. Intended exceptions carry a biome-ignore with their reason.
       - name: Biome
-        run: npx biome ci --error-on-warnings .
+        run: bunx biome ci --error-on-warnings .
 
       - name: Protocol types up to date
-        run: npm run generate:protocol && git diff --exit-code src/types/protocol.ts
+        run: bun run generate:protocol && git diff --exit-code src/types/protocol.ts
 
       - name: Unit tests
-        run: npm run test:unit
+        run: bun run test:unit
 
       - name: Build app
-        run: npm run build
+        run: bun run build
 
       # A .sha256 beside every archive, with the bare file name, so
       # `sha256sum -c` works and openccu-lite's catalogue verifies the download

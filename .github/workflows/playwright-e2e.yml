@@ -40,9 +40,11 @@ jobs:
       image: ${{ steps.version.outputs.image }}
 
     steps:
-      - name: Image of the @playwright/test version in package-lock.json
+      - name: Image of the @playwright/test version in bun.lock
         id: version
         uses: firsttris/workflows/actions/playwright-image@v1
+        with:
+          lockfile: bun.lock
 
   # The add-on updating itself up to the new app in this browser (service
   # worker on): two builds, served as on the CCU (playwright.update.config.ts)
@@ -59,17 +61,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 26
-          cache: 'npm'
+      # The npm package brings the binary without curl or unzip, which the image lacks
+      - name: Set up Bun
+        run: npm install --global "bun@$(jq -r .packageManager package.json | cut -d@ -f2)"
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build the installed and the new app, run the update
-        run: npm run test:update
+        run: bun run test:update
 
       - name: Upload Playwright test results
         if: failure()
@@ -92,21 +92,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 26
-          cache: 'npm'
+      # The npm package brings the binary without curl or unzip, which the image lacks
+      - name: Set up Bun
+        run: npm install --global "bun@$(jq -r .packageManager package.json | cut -d@ -f2)"
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run frontend E2E tests with coverage
-        run: npm run test:e2e:coverage:collect -- --project=chromium --reporter=github,html
+        run: bun run test:e2e:coverage:collect --project=chromium --reporter=github,html
 
       - name: Generate Playwright coverage report
         if: always()
-        run: npm run test:e2e:coverage:report
+        run: bun run test:e2e:coverage:report
 
       - name: Upload Playwright report
         if: always()
@@ -147,11 +145,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
 
+      # The npm package brings the binary without curl or unzip, which the image lacks
+      - name: Set up Bun
+        run: npm install --global "bun@$(jq -r .packageManager package.json | cut -d@ -f2)"
+
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Compare the screenshots
-        run: npx playwright test visual --reporter=github,line
+        run: bunx playwright test visual --reporter=github,line
         env:
           VISUAL: '1'
 
@@ -185,11 +187,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 26
-          cache: 'npm'
+      # The npm package brings the binary without curl or unzip, which the image lacks
+      - name: Set up Bun
+        run: npm install --global "bun@$(jq -r .packageManager package.json | cut -d@ -f2)"
 
       - name: Set up Go
         uses: actions/setup-go@v7
@@ -198,10 +198,10 @@ jobs:
           cache-dependency-path: go-server/go.sum
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run frontend + server against the fake CCU
-        run: npm run test:stack -- --shard=${{ matrix.shard }}/3
+        run: bun run test:stack --shard=${{ matrix.shard }}/3
 
       - name: Upload Playwright test results
         if: failure()
