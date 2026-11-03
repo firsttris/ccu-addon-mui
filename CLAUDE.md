@@ -51,12 +51,15 @@ author.
 
 1. Branch from their head, not from `main`
    (`git fetch origin pull/<n>/head && git checkout -b claude/<topic> FETCH_HEAD`).
-   Their commits stay untouched (no rebase, amend or squash); ours follow.
+   Their commits stay untouched; ours follow.
 2. Open our PR from it and run the TDD review on it (skill `tdd-review`).
-3. Merge with a merge commit, never squash or rebase: only then do their
-   commits reach `main` with their hashes, so GitHub marks their PR as
-   merged.
-4. Thank them in their PR.
+3. Once it is green, merge their PR itself (squash, as always; the repo
+   allows no merge commits): only that marks it as merged with them as
+   the author.
+4. Cherry-pick our commits onto the new `main` on a fresh branch, open a
+   PR from it, close the first one with a link, and merge the new one once
+   it is green.
+5. Thank them in their PR.
 
 ## Language
 
