@@ -15,6 +15,8 @@ entstehen die Typen der App, und die Go-Tests prüfen jede Nachricht des Servers
 - **Keepalive**: Ping alle 54 s, nach 60 s ohne Pong ist die Verbindung tot.
 - **Reihenfolge**: Der Server arbeitet die Nachrichten einer Verbindung nacheinander ab, nur lesende
   Anfragen laufen parallel (bis zu 4 je Verbindung), damit eine langsame Liste das Schalten nicht aufhält.
+  Dazu gehört `checkSelfUpdate`: Die App fragt bei jedem Start, und eine langsame Antwort von GitHub (oder
+  eine CCU ohne Internet, die auf den Timeout wartet) hält sonst alles auf, was danach kommt.
   Der Sendepuffer fasst 1024 Nachrichten; ist er voll, verwirft der Server und schreibt es ins Log.
 - **App-Seite**: Timeout je Anfrage 20 s (Backup länger), Neuverbinden alle 3 s ohne Begrenzung.
 
