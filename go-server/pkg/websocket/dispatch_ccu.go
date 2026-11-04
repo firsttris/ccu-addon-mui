@@ -34,7 +34,12 @@ func (s *Server) dispatchPlatform(client *Client, msgType, requestID string, mes
 	case "getAddons", "addonAction", "checkAddonUpdate":
 		s.handleAddons(client, msgType, message)
 	case "checkSelfUpdate":
-		s.handleCheckSelfUpdate(client, message)
+		// Asks GitHub (at most every 6 hours, cached meanwhile), which can
+		// take up to the HTTP timeout: the client's other requests go on
+		// meanwhile. Not one of the parallelReads: checks the app repeats
+		// (its timeout is 30 s) wait for each other at the cache and would
+		// take every slot
+		go s.handleCheckSelfUpdate(client.snapshot(), message)
 	case "installSelfUpdate":
 		// Download and install take a while: the client's other requests
 		// go on meanwhile

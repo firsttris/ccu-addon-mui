@@ -85,6 +85,10 @@ export default defineConfig({
         CCU_STATUS_DIR: path.join(stateDir, 'status'),
         // The fake CCU also stands in for eQ-3's update server
         DEVICE_FIRMWARE_SERVER: FAKE_CCU_URL,
+        // Not GitHub: the app asks for a new add-on release on every start,
+        // and how fast GitHub answers is not the tests' business. The fake
+        // CCU has no releases and refuses at once, so no update is offered.
+        ADDON_RELEASE_URL: `${FAKE_CCU_URL}/addon-releases/latest`,
         // Nothing outside the state directory: not the host's /usr/local
         // or a go-server/mui-push.json of a local run
         PUSH_FILE: path.join(stateDir, 'push.json'),

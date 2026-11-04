@@ -126,9 +126,10 @@ abgelaufene Sitzung zur Anmeldung von openccu-lite führt statt ins eigene Login
 `bun run test:stack` (braucht Go) · Konfiguration `playwright.stack.config.ts`
 
 Playwright startet drei Prozesse: die Fake-CCU, den echten Go-Server (mit allen Dateipfaden in einem
-temporären Verzeichnis) und Vite. Jeder Test setzt die Fake-CCU zurück, meldet sich über die Anmeldemaske an
-und bedient die App wie ein Mensch. Die Kette ist echt: Browser → Vite-Proxy → Go-Server → Fake-CCU und die
-Events zurück.
+temporären Verzeichnis) und Vite. Die Update-Prüfung des Add-ons fragt die Fake-CCU statt GitHub
+(`ADDON_RELEASE_URL`), wie schnell GitHub antwortet, spielt also keine Rolle. Jeder Test setzt die Fake-CCU
+zurück, meldet sich über die Anmeldemaske an und bedient die App wie ein Mensch. Die Kette ist echt:
+Browser → Vite-Proxy → Go-Server → Fake-CCU und die Events zurück.
 
 Die 74 Tests decken praktisch jede Funktion von *Einrichten* ab, zum Beispiel:
 
