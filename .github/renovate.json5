@@ -34,16 +34,6 @@
       depNameTemplate: "honnef.co/go/tools",
       datasourceTemplate: "go",
     },
-    {
-      // "packageManager": "bun@x.y.z": the Bun of every CI job (bun-version-file, and the
-      // npm-installed Bun of the jobs in the Playwright image)
-      customType: "regex",
-      managerFilePatterns: ["/^package\\.json$/"],
-      matchStrings: ['"packageManager": "bun@(?<currentValue>\\d+\\.\\d+\\.\\d+)"'],
-      depNameTemplate: "oven-sh/bun",
-      datasourceTemplate: "github-releases",
-      extractVersionTemplate: "^bun-v(?<version>.+)$",
-    },
   ],
   packageRules: [
     {
@@ -82,8 +72,9 @@
       dependencyDashboardApproval: false,
     },
     {
-      // Bun: packageManager and the types in one PR
-      matchPackageNames: ["oven-sh/bun", "@types/bun"],
+      // Bun: packageManager and the types in one PR. Renovate's bun manager reads
+      // "packageManager": "bun@x.y.z" itself, as the npm package `bun` (no regex manager needed).
+      matchPackageNames: ["bun", "@types/bun"],
       enabled: true,
       groupName: "Bun",
       sourceUrl: "https://github.com/oven-sh/bun",
