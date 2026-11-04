@@ -176,3 +176,53 @@ func TestSlowUpdateCheckDoesNotHoldUpOtherRequests(t *testing.T) {
 		t.Fatalf("unexpected check answer: %v", check)
 	}
 }
+
+// Checks started by hand while GitHub hangs (the app gives up after 30 s,
+// the user asks again) wait for each other at the cache: they must not
+// take every parallel slot and stall the connection again
+func TestRepeatedSlowUpdateChecksDoNotHoldUpOtherRequests(t *testing.T) {
+	release := make(chan struct{})
+	github := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		<-release
+		_ = json.NewEncoder(w).Encode(map[string]any{"tag_name": "v9.9.9"})
+	}))
+	defer github.Close()
+	defer close(release)
+
+	s := NewServer(nil, nil)
+	s.SetSelfUpdate(selfupdate.New(github.URL, t.TempDir()))
+	client := &Client{
+		send: make(chan []byte, 16), done: make(chan struct{}), reads: make(chan struct{}, maxParallelReads),
+		level: auth.LevelAdmin, user: "Admin",
+	}
+
+	handled := make(chan struct{})
+	go func() {
+		for range maxParallelReads {
+			s.handleMessage(client, []byte(`{"type":"checkSelfUpdate","force":true,"requestId":"check"}`))
+		}
+		// The next read of the app (refused at once), then a write
+		s.handleMessage(client, []byte(`{"type":"getDiagramData","requestId":"r","from":"now"}`))
+		s.handleMessage(client, []byte(`{"type":"setDatapoint","requestId":"w"}`))
+		close(handled)
+	}()
+	select {
+	case <-handled:
+	case <-time.After(2 * time.Second):
+		t.Fatal("the connection waited for GitHub")
+	}
+	answered := map[any]bool{}
+	for len(answered) < 2 {
+		select {
+		case data := <-client.send:
+			var answer map[string]any
+			_ = json.Unmarshal(data, &answer)
+			if answer["requestId"] == "check" {
+				t.Fatalf("expected the read's and the write's answers before GitHub's, got %v", answer)
+			}
+			answered[answer["requestId"]] = true
+		case <-time.After(2 * time.Second):
+			t.Fatalf("waited for GitHub, answered: %v", answered)
+		}
+	}
+}
