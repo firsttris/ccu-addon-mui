@@ -11,6 +11,7 @@ go-server/ccu-addon-mui-server-amd64
 go-server/ccu-addon-mui-server-lite-arm64
 go-server/ccu-addon-mui-server-lite-amd64
 go-server/ccu-addon-mui-server-local
+go-server/fakeccu-local
 
 # Dependencies
 node_modules
