@@ -12,6 +12,7 @@ import { useWebSocketContext } from '../../hooks/useWebsocket';
 import { Badge } from '../../components/ui/badge';
 import { PanelSkeleton } from '../../components/ui/skeleton';
 import { Panel } from '../setup/Panel';
+import { groupName } from '../../i18n/groupNames';
 import { m } from '../../paraglide/messages';
 import { getLocale } from '../../paraglide/runtime';
 import { cn } from '../../lib/utils';
@@ -237,7 +238,7 @@ export const DeviceHealth = () => {
                       <span className="truncate font-medium">{device.name}</span>
                     )}
                     <span className="truncate text-xs text-muted-foreground">
-                      {[device.roomName, device.type].filter(Boolean).join(' · ')}
+                      {[device.roomName && groupName(device.roomName), device.type].filter(Boolean).join(' · ')}
                     </span>
                     {flags(device).length > 0 && (
                       <span className="mt-1 flex flex-wrap gap-1">

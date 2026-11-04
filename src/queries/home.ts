@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWebSocketActions } from '../hooks/useWebsocket';
+import { withGroupNames } from '../i18n/groupNames';
 import type { Channel, Sysvar } from '../types/types';
 
 export const useRooms = ({ enabled = true }: { enabled?: boolean } = {}) => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['rooms'],
-    queryFn: async () => (await request({ type: 'getRooms' })).rooms ?? [],
+    queryFn: async () => withGroupNames((await request({ type: 'getRooms' })).rooms ?? []),
     enabled,
   });
 };
@@ -15,7 +16,7 @@ export const useTrades = ({ enabled = true }: { enabled?: boolean } = {}) => {
   const { request } = useWebSocketActions();
   return useQuery({
     queryKey: ['trades'],
-    queryFn: async () => (await request({ type: 'getTrades' })).trades ?? [],
+    queryFn: async () => withGroupNames((await request({ type: 'getTrades' })).trades ?? []),
     enabled,
   });
 };

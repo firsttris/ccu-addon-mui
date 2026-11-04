@@ -8,6 +8,7 @@ import { useEffects } from '../contexts/EffectsContext';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './ui/sheet';
 import { Button } from './ui/button';
 import { WebUILink } from './WebUILink';
+import { groupName } from '../i18n/groupNames';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { errorText } from '../lib/errors';
@@ -45,7 +46,7 @@ const useAcknowledge = () => {
 const detailOf = (alarm: AlarmMessage) =>
   [
     alarm.channel,
-    alarm.roomName,
+    alarm.roomName && groupName(alarm.roomName),
     formatAlarmTime(alarm.lastTime || alarm.firstTime),
     alarm.counter > 1 ? m.ALARM_TIMES({ count: alarm.counter }) : '',
   ]
