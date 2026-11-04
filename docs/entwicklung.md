@@ -26,7 +26,15 @@ bun install
 bun run dev:fake
 ```
 
-Das startet die Fake-CCU (mit `fixtures/demo-ccu.json`), den Go-Server und Vite zusammen. Die App läuft
+Das startet die Fake-CCU (mit `fixtures/demo-ccu.json`), den Go-Server und Vite zusammen, mit Buns
+`bun run --parallel` (die Ausgabe jedes Skripts steht hinter seinem Namen). Strg+C beendet alle, Strg+Z
+hält alle an und `fg` setzt sie fort; beendet sich eines, stoppt Bun die anderen. Bun schickt dabei
+SIGINT nur an den Prozess des Skripts, deshalb besteht jeder Schritt aus einem einzigen Befehl: Die
+Go-Programme baut ein `prestart:*`-Skript mit `go build`, das Skript selbst startet sie mit `exec`.
+`go run` ginge nicht, es ignoriert SIGINT und reicht es nicht weiter. Bun leitet die Ausgabe durch eine
+Pipe, die Skripte setzen deshalb `FORCE_COLOR=1`, wenn sie in einem Terminal laufen, damit die Farben
+bleiben. Die Tastenkürzel von Vite (`h`, `o`, `r`, …) gibt es nur, wenn du `bun run start:fe` allein
+startest. Die App läuft
 dann auf **http://localhost:4200**, du meldest dich mit `Admin` / `secret` an (oder mit `Gast` / `gast`).
 Hier kannst du alles gefahrlos ausprobieren, sogar die Werkseinstellungen. Willst du sehen, wie die App
 reagiert, wenn ein Gerät einen Wert meldet, geht das so:
