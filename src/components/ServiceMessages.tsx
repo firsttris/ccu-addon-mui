@@ -12,6 +12,7 @@ import { useAcknowledgeServiceMessage, useServiceMessages } from '../queries';
 import { useWebSocketContext } from '../hooks/useWebsocket';
 import { useToast } from '../contexts/ToastContext';
 import type { ServiceMessage } from '../types/protocol';
+import { groupName } from '../i18n/groupNames';
 import { getLocale } from '../paraglide/runtime';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
@@ -161,7 +162,7 @@ export const ServiceMessagesSheet = ({
                             onClick={() => onOpenChange(false)}
                             className="underline-offset-4 hover:underline"
                           >
-                            {first.roomName}
+                            {groupName(first.roomName ?? '')}
                           </Link>
                         ) : (
                           m.NO_ROOM()

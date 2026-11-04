@@ -57,6 +57,9 @@ Alle vier Ansichten sind gleich aufgebaut:
 *Alle Geräte* zeigt jeden Kanal der CCU, auch ohne Raum oder Gewerk. Das ist nützlich, um Geräte zu
 finden, die noch nirgends zugeordnet sind.
 
+Die Räume und Gewerke, die die CCU beim ersten Start anlegt, heißen intern `roomGarden`, `funcLight` und so
+weiter. MUI zeigt sie wie die WebUI übersetzt an (*Garten*, *Licht*); selbst vergebene Namen bleiben, wie sie sind.
+
 **Favoriten** sind die Favoritenlisten der CCU, also dieselben wie in der WebUI, und gehören zum
 angemeldeten Benutzer. Neben Kanälen enthalten sie auch Systemvariablen und Programme. Mit *Neue Liste*
 und *Bearbeiten* legst du sie direkt an.
