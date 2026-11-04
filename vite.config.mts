@@ -53,6 +53,10 @@ export default defineConfig(({ command, mode, isPreview }) => ({
     paraglideVitePlugin({
       project: './project.inlang',
       outdir: './src/paraglide',
+      // Paraglide 2's default: one module per locale in the dev server and tests (a few requests),
+      // one per message in production builds (tree shaking). v3 would serve virtual modules only Vite
+      // can resolve.
+      outputStructure: process.env.NODE_ENV === 'production' ? 'message-modules' : 'locale-modules',
       // The browser's language, else English
       strategy: ['preferredLanguage', 'baseLocale'],
       emitTsDeclarations: true,

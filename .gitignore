@@ -58,3 +58,4 @@ site/
 # scripts/lite-vm-test.sh
 lite-vm-out/
 lite-image/
+**/project.inlang/cache/
