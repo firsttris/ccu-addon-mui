@@ -146,8 +146,8 @@ export const TimeChart = ({
           </clipPath>
           {drawn.map((s, i) => (
             <linearGradient key={s.key} id={`${id}-g${i}`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor={s.color} stopOpacity={0.45} />
-              <stop offset="100%" stopColor={s.color} stopOpacity={0.02} />
+              <stop offset="0%" style={{ stopColor: s.color, stopOpacity: 0.45 }} />
+              <stop offset="100%" style={{ stopColor: s.color, stopOpacity: 0.02 }} />
             </linearGradient>
           ))}
         </defs>

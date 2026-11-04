@@ -59,7 +59,7 @@ export const ChartAxes = ({ g, xTicks, span }: { g: Geometry; xTicks: number[]; 
               x={left - 6}
               y={y(axisLeft, v)}
               dy="0.32em"
-              textAnchor="end"
+              style={{ textAnchor: 'end' }}
               className="fill-muted-foreground text-[11px] tabular-nums"
             >
               {formatNumber(v, 1)}
@@ -79,7 +79,7 @@ export const ChartAxes = ({ g, xTicks, span }: { g: Geometry; xTicks: number[]; 
           </text>
         ))}
       {axisLeft?.unit && (
-        <text x={left - 6} y={TOP - 4} textAnchor="end" className="fill-muted-foreground text-[10px]">
+        <text x={left - 6} y={TOP - 4} style={{ textAnchor: 'end' }} className="fill-muted-foreground text-[10px]">
           {axisLeft.unit}
         </text>
       )}
@@ -91,7 +91,12 @@ export const ChartAxes = ({ g, xTicks, span }: { g: Geometry; xTicks: number[]; 
       {xTicks.map((t) => (
         <g key={t}>
           <line x1={x(t)} x2={x(t)} y1={TOP} y2={TOP + plotHeight} className="stroke-border/60" />
-          <text x={x(t)} y={total - 8} textAnchor="middle" className="fill-muted-foreground text-[11px] tabular-nums">
+          <text
+            x={x(t)}
+            y={total - 8}
+            style={{ textAnchor: 'middle' }}
+            className="fill-muted-foreground text-[11px] tabular-nums"
+          >
             {formatTick(t, span)}
           </text>
         </g>
@@ -264,7 +269,7 @@ export const StateLanes = ({ g, states, delay }: { g: Geometry; states: RenderSe
               y={top + (LANE - 4) / 2}
               dy="0.32em"
               className="pointer-events-none fill-foreground/70 text-[10px] font-medium"
-              paintOrder="stroke"
+              style={{ paintOrder: 'stroke' }}
               stroke="var(--color-muted)"
               strokeWidth={3}
             >

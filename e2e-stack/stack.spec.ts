@@ -110,7 +110,9 @@ test('ändert Geräteeinstellungen als Administrator mit Vorschau', async ({ pag
 
   // Device list from all interfaces, searchable
   const table = page.getByRole('table', { name: 'Geräte' });
-  await expect(table.getByText('HmIP-SRH')).toBeVisible();
+  // The type's cell: until the channel names arrived, the name link reads
+  // "HmIP-SRH <address>" as well
+  await expect(table.getByRole('cell', { name: 'HmIP-SRH', exact: true })).toBeVisible();
   await page.getByRole('searchbox', { name: 'Suchen' }).fill('Fenstergriff');
   await expect(table.getByRole('row')).toHaveCount(2);
   await table.getByRole('link', { name: 'Fenstergriff Wohnzimmer' }).click();

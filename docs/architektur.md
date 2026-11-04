@@ -197,7 +197,7 @@ Neustart, Herunterfahren und abgesicherter Modus (nach `SaveSystem` in ReGa; fü
 
 | | |
 |---|---|
-| Framework | React 19, TypeScript strict |
+| Framework | React 19 als API, zur Laufzeit [TanStack Redact](https://github.com/TanStack/redact) statt React; TypeScript strict |
 | Routing | TanStack Router, dateibasiert, mit Code-Splitting je Route |
 | Daten | TanStack Query: jede Anfrage über den WebSocket ist eine Query oder Mutation |
 | Oberfläche | Tailwind CSS 4, shadcn/ui-Komponenten auf Radix, Icons zur Build-Zeit einkompiliert |
@@ -205,7 +205,7 @@ Neustart, Herunterfahren und abgesicherter Modus (nach `SaveSystem` in ReGa; fü
 | Diagramme | eigene SVG-Zeichnung, ohne Chart-Bibliothek |
 | Übersetzungen | Paraglide JS, Deutsch und Englisch, typisierte Funktionen (`m.KEY()`) |
 | PWA | vite-plugin-pwa (Workbox), Push über einen eigenen Service-Worker-Teil |
-| Build | Vite |
+| Build | Vite; das Plugin von Redact lenkt die Importe von `react` und `react-dom` um |
 
 28.817 Zeilen TypeScript ohne Tests und generierten Code.
 
@@ -367,6 +367,17 @@ Zentrale anzufassen (siehe [Tests](tests.md)).
 microSD-Karte. Der Server bekommt ohnehin jedes Event; er fasst sie zu Minuten- und Stundenwerten zusammen
 und schreibt alle 5 Minuten auf den Speicher der CCU.
 
+**Warum TanStack Redact statt React?** Die App lädt auf Handys und über das WLAN der CCU; jedes KB zählt
+beim ersten Öffnen. [Redact](https://github.com/TanStack/redact) ist eine Laufzeit mit der API von
+React 19: Der Code importiert weiter aus `react`, das Vite-Plugin (`vite.config.mts`) lenkt die Importe beim
+Bauen um, auch in den Unit-Tests (`vitest.config.mts`). Das spart beim Start rund 43 KB gzip (190 → 146 KB
+JavaScript, das die Seite sofort lädt). Redact rendert synchron, ohne Time-Slicing; die App nutzt weder
+`useTransition` noch `useDeferredValue`. Eine Eigenheit: SVG-Attribute in camelCase setzt Redact nur bei
+`clip…`, `fill…` und `stroke…` als `clip-path`, `fill-opacity` usw.; `textAnchor`, `stopColor`, `stopOpacity`,
+`vectorEffect`, `paintOrder` und Ähnliche kämen unverändert im DOM an und wirkten nicht. Solche Werte stehen
+deshalb im `style` (`style={{ textAnchor: 'end' }}`), was mit React wie mit Redact gilt. Zurück zu React geht
+es, indem man `redact()` aus `vite.config.mts` nimmt.
+
 ## Warum es schnell ist
 
 - **Push statt Polling**: Die WebUI ruft in jedem offenen Tab alle 3 Sekunden ein ReGa-Skript über alle
@@ -374,7 +385,7 @@ und schreibt alle 5 Minuten auf den Speicher der CCU.
   die Verbindungen, die den Kanal anzeigen. ReGa wird für Gerätewerte nur beim Öffnen einer Ansicht gefragt.
 - **Keine Seiten vom Server**: Die WebUI lässt ReGa jede Seite als HTML erzeugen. Die App wechselt Seiten im
   Browser und holt nur Daten.
-- **Wenig zu laden, und nur einmal**: 17 Dateien mit 400 KB (gzip-gepackt, 1,3 MB entpackt) bis zum fertigen
+- **Wenig zu laden, und nur einmal**: 17 Dateien mit 355 KB (gzip-gepackt, 1,1 MB entpackt) bis zum fertigen
   Dashboard statt 40 Dateien mit 3,1 MB, die die lighttpd der CCU ungepackt schickt. Danach kommt die App aus dem
   Cache des Service Workers. Große Teile wie die Verknüpfungsvorlagen und die Seiten von *Einrichten* lädt sie
   erst bei Bedarf.

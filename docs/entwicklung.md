@@ -122,6 +122,10 @@ docs/                diese Dokumentation
   beides, auch Warnungen. Lass vor dem Commit `bun run lint:fix` laufen; die Erweiterung `biomejs.biome`
   für VS Code formatiert beim Speichern. Schlägt eine Regel an, obwohl der Code stimmt, nimm die Stelle
   mit `// biome-ignore <regel>: <Grund>` aus, statt die Regel abzuschalten.
+- **SVG-Präsentationsattribute** wie `textAnchor`, `stopColor` oder `vectorEffect` gehören in den `style`
+  (`style={{ stopColor: color }}`): Die Laufzeit TanStack Redact setzt in camelCase nur `clip…`, `fill…` und
+  `stroke…` richtig (siehe [Architektur](architektur.md#entscheidungen)). Echte SVG-Attribute wie `viewBox`
+  oder `stdDeviation` bleiben, wie sie sind.
 - **Texte** der Oberfläche gibt es auf Deutsch und Englisch. Halte sie kurz und vermeide Fachjargon, wo es
   geht.
 - **Ein Feature, ein Pull Request.** Kleine PRs lassen sich leichter prüfen. Gemergt wird, wenn die CI grün

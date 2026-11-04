@@ -113,6 +113,7 @@ package's own license file is in its published package:
 | @tanstack/react-router | 1.170.40 | MIT |
 | @tanstack/react-store | 0.11.1 | MIT |
 | @tanstack/react-table | 8.21.3 | MIT |
+| @tanstack/redact | 0.3.1 | MIT |
 | @tanstack/router-core | 1.171.33 | MIT |
 | @tanstack/store | 0.11.1 | MIT |
 | @tanstack/table-core | 8.21.3 | MIT |
@@ -132,8 +133,6 @@ package's own license file is in its published package:
 | object-assign | 4.1.1 | MIT |
 | prop-types | 15.8.1 | MIT |
 | radix-ui | 1.6.7 | MIT |
-| react | 19.3.0 | MIT |
-| react-dom | 19.3.0 | MIT |
 | react-draggable | 4.7.2 | MIT |
 | react-grid-layout | 2.2.4 | MIT |
 | react-is | 16.13.1 | MIT |
@@ -143,7 +142,6 @@ package's own license file is in its published package:
 | react-style-singleton | 2.2.3 | MIT |
 | react-use-websocket | 4.13.0 | MIT |
 | resize-observer-polyfill | 1.5.1 | MIT |
-| scheduler | 0.28.0 | MIT |
 | seroval | 1.6.7 | MIT |
 | seroval-plugins | 1.6.7 | MIT |
 | tailwind-merge | 3.7.0 | MIT |
