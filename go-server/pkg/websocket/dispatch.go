@@ -75,9 +75,6 @@ var parallelReads = map[string]bool{
 	"getLinks": true, "getLinkParamsetDescription": true, "getLinkParamset": true, "getAllLinks": true,
 	"getDeviceImages": true, "getPrograms": true, "getProgram": true,
 	"getServiceMessages": true, "getAlarmMessages": true, "getFavorites": true,
-	// Asks GitHub (at most every 6 hours, cached meanwhile), which can take
-	// up to the HTTP timeout: the app's other requests don't wait for it
-	"checkSelfUpdate": true,
 }
 
 const maxParallelReads = 4
