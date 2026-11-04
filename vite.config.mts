@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { redact } from '@tanstack/redact/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import fs from 'node:fs';
@@ -48,6 +49,10 @@ export default defineConfig(({ command, mode, isPreview }) => ({
       autoCodeSplitting: true,
     }),
     react(),
+    // TanStack Redact instead of React at runtime: the code keeps importing
+    // from 'react', the plugin redirects it at build time. A much smaller
+    // download on the CCU and on phones (docs/architektur.md)
+    redact(),
     tailwindcss(),
     // Texts from messages/<locale>.json, compiled to typed functions (m.KEY())
     paraglideVitePlugin({

@@ -816,7 +816,10 @@ test('zeigt Favoritenlisten und bearbeitet sie', async ({ page }) => {
   await page.getByRole('button', { name: /(Zur Liste hinzufügen|Add to list): Fenstergriff Wohnzimmer/ }).click();
   await expect(inList).toContainText('Fenstergriff Wohnzimmer');
   await page.keyboard.press('Escape');
-  await expect(page.getByTitle('Fenstergriff Wohnzimmer')).toBeVisible();
+  // In the list's tiles: the overview above names the open window as well
+  await expect(
+    page.getByRole('region', { name: /^(Favoriten|Favorites)$/ }).getByTitle('Fenstergriff Wohnzimmer'),
+  ).toBeVisible();
   await expect(page.getByText('Flur Licht')).toHaveCount(0);
 
   // A new list opens with its editor; deleting it goes back to the first

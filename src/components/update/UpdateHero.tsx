@@ -112,8 +112,8 @@ export const UpdateHero = ({
       >
         <defs>
           <linearGradient id={gradient} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor={colors.from} />
-            <stop offset="100%" stopColor={colors.to} />
+            <stop offset="0%" style={{ stopColor: colors.from }} />
+            <stop offset="100%" style={{ stopColor: colors.to }} />
           </linearGradient>
         </defs>
         <circle cx="60" cy="60" r={R} fill="none" strokeWidth="6" className="stroke-muted" />

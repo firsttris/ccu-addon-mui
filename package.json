@@ -62,6 +62,7 @@
     "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-router": "^1.170.40",
     "@tanstack/react-table": "^9.0.0",
+    "@tanstack/redact": "0.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "radix-ui": "^1.6.7",

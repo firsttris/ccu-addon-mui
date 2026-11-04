@@ -203,8 +203,9 @@ bun install
 bun run dev:fake   # fake CCU + Go server + app on http://localhost:4200, login Admin / secret
 ```
 
-Go server (WebSocket, XML-RPC, ReGa, JSON-RPC) · React 19 with TanStack Router and Query, Tailwind,
-shadcn/ui · a JSON schema as the contract between both · Vitest, Go tests and Playwright.
+Go server (WebSocket, XML-RPC, ReGa, JSON-RPC) · React 19 on the TanStack Redact runtime, with TanStack
+Router and Query, Tailwind, shadcn/ui · a JSON schema as the contract between both · Vitest, Go tests and
+Playwright.
 See [Entwicklung](docs/entwicklung.md) and [Architektur](docs/architektur.md).
 
 ---

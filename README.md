@@ -299,9 +299,10 @@ bun run dev:fake   # Fake-CCU + Go-Server + App auf http://localhost:4200, Anmel
 Ohne echte Zentrale läuft alles gegen eine Fake-CCU mit Demo-Daten. Gegen die eigene CCU geht es mit
 `bun run dev`; `bun run build` baut das installierbare Archiv.
 
-**Stack**: Go-Server (WebSocket, XML-RPC, ReGa, JSON-RPC der WebUI) · React 19 mit TanStack Router und
-Query, Tailwind und shadcn/ui · Paraglide für Deutsch und Englisch · ein JSON-Schema als Vertrag zwischen
-beiden, aus dem die TypeScript-Typen entstehen · Vitest, Go-Tests und Playwright.
+**Stack**: Go-Server (WebSocket, XML-RPC, ReGa, JSON-RPC der WebUI) · React 19, zur Laufzeit TanStack
+Redact, mit TanStack Router und Query, Tailwind und shadcn/ui · Paraglide für Deutsch und Englisch · ein
+JSON-Schema als Vertrag zwischen beiden, aus dem die TypeScript-Typen entstehen · Vitest, Go-Tests und
+Playwright.
 Mehr in [Entwicklung](https://firsttris.github.io/ccu-addon-mui/entwicklung.html) und [Architektur](https://firsttris.github.io/ccu-addon-mui/architektur.html).
 
 ## 🤝 Mitwirken

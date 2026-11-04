@@ -54,7 +54,8 @@ aus der Praxis.
 
 ## Unit-Tests (Vitest)
 
-`bun run test` · Konfiguration `vitest.config.mts` (jsdom, Testing Library)
+`bun run test` · Konfiguration `vitest.config.mts` (jsdom, Testing Library, auf derselben Laufzeit wie die App,
+TanStack Redact)
 
 Getestet werden vor allem reine Logik und kritische Komponenten:
 

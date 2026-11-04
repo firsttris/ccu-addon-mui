@@ -76,7 +76,7 @@ const Chart = ({ label, points, unit }: { label: string; points: Point[]; unit: 
           stroke="currentColor"
           strokeWidth="1.5"
           className="text-primary"
-          vectorEffect="non-scaling-stroke"
+          style={{ vectorEffect: 'non-scaling-stroke' }}
         />
       </svg>
       <div className="flex justify-between text-[11px] text-muted-foreground tabular-nums">

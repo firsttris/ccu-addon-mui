@@ -117,8 +117,8 @@ export const TemperatureStat = ({ index, average }: { index: number; average: nu
           >
             <defs>
               <linearGradient id={mercury} x1="0" y1="1" x2="0" y2="0">
-                <stop offset="0%" stopColor="#ef4444" />
-                <stop offset="100%" stopColor="#fb923c" />
+                <stop offset="0%" style={{ stopColor: '#ef4444' }} />
+                <stop offset="100%" style={{ stopColor: '#fb923c' }} />
               </linearGradient>
             </defs>
             {/* The mercury: the column and the bulb */}

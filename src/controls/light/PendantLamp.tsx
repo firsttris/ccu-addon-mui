@@ -39,9 +39,9 @@ export const PendantLamp = ({ level, color = WARM, changes }: PendantLampProps) 
     >
       <defs>
         <linearGradient id={`${id}-cone`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={rgba(bulb, 1)} stopOpacity="0.55" />
-          <stop offset="0.5" stopColor={rgba(color, 1)} stopOpacity="0.16" />
-          <stop offset="1" stopColor={rgba(color, 1)} stopOpacity="0" />
+          <stop offset="0" style={{ stopColor: rgba(bulb, 1), stopOpacity: 0.55 }} />
+          <stop offset="0.5" style={{ stopColor: rgba(color, 1), stopOpacity: 0.16 }} />
+          <stop offset="1" style={{ stopColor: rgba(color, 1), stopOpacity: 0 }} />
         </linearGradient>
         <filter id={`${id}-bulb`} x="-200%" y="-200%" width="500%" height="500%">
           <feGaussianBlur stdDeviation="5" />
