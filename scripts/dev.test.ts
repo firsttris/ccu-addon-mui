@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { type ChildProcess, spawn } from 'node:child_process';
+import { type ChildProcess, spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -62,5 +62,43 @@ describe('scripts/dev.ts', () => {
     const stopped = await waitFor(() => pids.every((pid) => !alive(pid)), 5_000);
     expect(pids.filter(alive)).toEqual([]);
     expect(stopped).toBe(true);
+  }, 20_000);
+
+  // Ctrl+Z sends SIGTSTP to the terminal's foreground group, which holds only
+  // dev.ts: the scripts run in sessions of their own. Unless dev.ts passes it
+  // on, they keep running and writing to the terminal the shell has taken back.
+  it('SIGTSTP to dev.ts stops all scripts and what they started; SIGCONT resumes them', async () => {
+    dir = mkdtempSync(path.join(tmpdir(), 'mui-dev-'));
+    // Each script starts a process of its own (as go run starts its binary)
+    // and notes its pid and that child's
+    const script = (name: string) => `sleep 300 & echo $$ $! > ${name}.pid; wait`;
+    writeFileSync(
+      path.join(dir, 'package.json'),
+      JSON.stringify({ name: 'dev-test', scripts: { a: script('a'), b: script('b') } }),
+    );
+    dev = spawn('bun', [DEV, 'a', 'b'], { cwd: dir, stdio: 'ignore' });
+    const pidFiles = ['a.pid', 'b.pid'].map((name) => path.join(dir, name));
+    const started = await waitFor(
+      () => pidFiles.every((file) => existsSync(file) && readFileSync(file, 'utf8').trim().includes(' ')),
+      10_000,
+    );
+    expect(started).toBe(true);
+    for (const file of pidFiles) pids.push(...readFileSync(file, 'utf8').trim().split(' ').map(Number));
+
+    // The state `ps` shows per pid (T: stopped)
+    const states = () =>
+      pids.map((pid) => {
+        const ps = spawnSync('ps', ['-o', 'stat=', '-p', String(pid)], { encoding: 'utf8' });
+        return ps.stdout.trim()[0] ?? '-';
+      });
+
+    dev.kill('SIGTSTP');
+    await waitFor(() => states().every((state) => state === 'T'), 3_000);
+    expect(states()).toEqual(['T', 'T', 'T', 'T']);
+
+    dev.kill('SIGCONT');
+    await waitFor(() => states().every((state) => state !== 'T'), 3_000);
+    expect(states().filter((state) => state === 'T')).toEqual([]);
+    expect(pids.filter(alive)).toEqual(pids);
   }, 20_000);
 });
