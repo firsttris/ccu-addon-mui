@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 // status.cgi answers index.html while the server is down (lighttpd runs it
@@ -101,17 +102,19 @@ func TestStatusCGIRunningOnlyForTheServersProcess(t *testing.T) {
 	if _, err := os.Stat("/proc/self/exe"); err != nil {
 		t.Skip("no /proc")
 	}
-	sleepPath, err := exec.LookPath("sleep")
-	if err != nil {
-		t.Skip("no sleep")
-	}
-	sleepBin, err := os.ReadFile(sleepPath)
+	// The process: this test binary, waiting in TestStatusCGIHelperProcess.
+	// Not a copy of sleep: on some systems it is a multi-call binary
+	// (BusyBox, Rust coreutils) that exits under any other name
+	self, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)
 	}
-	dir := t.TempDir()
-	server := filepath.Join(dir, "ccu-addon-mui-server")
-	if err := os.WriteFile(server, sleepBin, 0o755); err != nil {
+	selfBin, err := os.ReadFile(self)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := filepath.Join(t.TempDir(), "ccu-addon-mui-server")
+	if err := os.WriteFile(server, selfBin, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	log := writeLog(t, `2026/11/09 16:00:00 ❌ Stopped: old reason`)
@@ -122,10 +125,11 @@ func TestStatusCGIRunningOnlyForTheServersProcess(t *testing.T) {
 		running bool
 	}{
 		{"the server", server, true},
-		{"another process", sleepPath, false},
+		{"another process", self, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			cmd := exec.Command(tc.binary, "30")
+			cmd := exec.Command(tc.binary, "-test.run=^TestStatusCGIHelperProcess$")
+			cmd.Env = append(os.Environ(), "MUI_STATUS_CGI_HELPER=1")
 			if err := cmd.Start(); err != nil {
 				t.Fatal(err)
 			}
@@ -160,4 +164,13 @@ func TestStatusCGIGivesNoLineTheServerKeptRunningAfter(t *testing.T) {
 	if status := runStatusCGI(t, "/nonexistent.pid", log); status.Running || status.Reason != "" {
 		t.Fatalf("got %+v, want not running without a reason", status)
 	}
+}
+
+// The process TestStatusCGIRunningOnlyForTheServersProcess starts: waits
+// until it is killed
+func TestStatusCGIHelperProcess(t *testing.T) {
+	if os.Getenv("MUI_STATUS_CGI_HELPER") != "1" {
+		t.Skip("only started by TestStatusCGIRunningOnlyForTheServersProcess")
+	}
+	time.Sleep(time.Minute)
 }
