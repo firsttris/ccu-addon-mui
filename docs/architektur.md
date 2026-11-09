@@ -53,6 +53,7 @@ App, das Server-Binary für ihre Architektur und vier Dateien, die die CCU für 
 | `rc.d/mui` | Startskript (start, stop, restart, info, uninstall); liest `mui.conf`, schreibt das Log, rotiert es ab 1 MB |
 | `lighttpd.conf` | `^/ws/mui` → Proxy auf `127.0.0.1:8088` mit WebSocket-Upgrade, ebenso `/addons/mui/assets/` (die gzip-gepackten Skripte der App); unter `/addons/mui/` jede unbekannte URL auf `index.html` (Routing der App). Läuft der Server nicht, laden die Skripte nicht, und ein kleines Skript in `index.html` zeigt „MUI lässt sich nicht laden“ statt einer weißen Seite |
 | `update-check.cgi` | meldet der WebUI die neueste Version auf GitHub |
+| `status.cgi` | sagt dem Hinweis in `index.html`, ob der Server läuft, und wenn nicht, die Zeile, mit der er abgebrochen ist (JSON, ohne Anmeldung, siehe [Sicherheit](sicherheit.md#netzwerk)) |
 
 Der Server ist ein **statisches Go-Binary** (`CGO_ENABLED=0`, `-ldflags="-s -w"`, rund 10 MB), für ARMv7 (CCU3 und Raspberry Pi) und amd64 (OpenCCU auf x86), je in einem eigenen Archiv. Er braucht
 keine Laufzeit und keine Bibliotheken der CCU und läuft daher unabhängig von der Firmware-Version (auf ARM). Welche Dateien er

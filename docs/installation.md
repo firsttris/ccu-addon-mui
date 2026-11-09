@@ -173,7 +173,7 @@ unter *Zusatzsoftware → Neustart* oder per SSH mit `/usr/local/etc/config/rc.d
 
 | Pfad | Inhalt |
 |---|---|
-| `/usr/local/addons/mui/` | App, Server (`go-server/ccu-addon-mui-server`) und `update-check.cgi`, über das die CCU nach Updates fragt |
+| `/usr/local/addons/mui/` | App, Server (`go-server/ccu-addon-mui-server`) `update-check.cgi`, über das die CCU nach Updates fragt, und `status.cgi`, das der Hinweis „MUI lässt sich nicht laden“ fragt, ob der Server läuft |
 | `/usr/local/etc/config/addons/www/mui` | Link auf das Add-on-Verzeichnis, darüber liefert die CCU `/addons/mui` aus |
 | `/usr/local/etc/config/rc.d/mui` | Startskript |
 | `/usr/local/etc/config/lighttpd/mui.conf` | Weiterleitung von `/ws/mui` und `/addons/mui/assets/` (die gzip-gepackten Skripte der App) an den Server |
@@ -204,7 +204,8 @@ Für ein Update ist Deinstallieren nicht nötig, das Update behält alles.
 
 **„MUI lässt sich nicht laden“**: Die Skripte der App liefert der Server aus. Läuft er nicht, lädt die App
 gar nicht, und die Seite zeigt nur diesen Hinweis (später kommt die App aus dem Cache des Service Workers und
-zeigt stattdessen den roten Balken unten). Add-on unter *Zusatzsoftware* neu starten und die Seite neu laden.
+zeigt stattdessen den roten Balken unten). Darunter steht, ob der Server läuft, und wenn nicht, die Zeile aus
+seinem Log, mit der er abgebrochen ist. Add-on unter *Zusatzsoftware* neu starten und die Seite neu laden.
 Startet der Server nicht, steht der Grund im Log (`/var/log/mui-websocket-server.log`, auf openccu-lite
 `journalctl -u addon-mui`). Eine Neuinstallation hilft dabei meist nicht, und Deinstallieren löscht die
 Daten des Add-ons (siehe oben).

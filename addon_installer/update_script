@@ -81,6 +81,7 @@ rm -rf $ADDON_DIR/assets
 rm -f $ADDON_DIR/workbox-*.js
 cp -R dist/. $ADDON_DIR/
 cp update-check.cgi $ADDON_DIR/update-check.cgi
+cp status.cgi $ADDON_DIR/status.cgi
 [ -f VERSION ] && cp VERSION $ADDON_DIR/
 
 # Leftovers of the old Node.js server
@@ -97,7 +98,7 @@ cp lighttpd.conf $LIGHTTPD_DIR/mui.conf
 chown -R root:root $ADDON_DIR $RC_DIR/mui $LIGHTTPD_DIR/mui.conf 2>/dev/null || true
 chmod -R u=rwX,go=rX $ADDON_DIR
 chmod 644 $LIGHTTPD_DIR/mui.conf
-chmod 755 $ADDON_DIR/update-check.cgi $ADDON_DIR/go-server/ccu-addon-mui-server $RC_DIR/mui
+chmod 755 $ADDON_DIR/update-check.cgi $ADDON_DIR/status.cgi $ADDON_DIR/go-server/ccu-addon-mui-server $RC_DIR/mui
 
 if [ ! -L $WWW_DIR/mui ]; then
   ln -sf $ADDON_DIR $WWW_DIR/mui

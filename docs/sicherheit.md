@@ -111,6 +111,12 @@ WebUI-Sitzung des Benutzers. Die hält der Server nach der ersten Passworteingab
   demselben Zertifikat und derselben Firewall wie die WebUI.
 - Die Origin-Prüfung verhindert, dass eine fremde Webseite im selben Browser eine Verbindung aufbaut.
 - Der Event-Server auf Port 9099 bindet nur an `127.0.0.1`, solange er auf der CCU läuft.
+- Ohne Anmeldung erreichbar sind nur die beiden CGIs, die lighttpd selbst ausführt: `update-check.cgi` (die
+  neueste Version für die WebUI) und `status.cgi`. Dieses sagt, ob der Server läuft, und gibt nur dann, wenn
+  er nicht läuft, eine einzige Zeile aus dem Log zurück: die, mit der er seit seinem letzten Start
+  abgebrochen ist (`❌`, `Failed to start`, Absturz, oder der Fehler der Shell, wenn das Binary nicht
+  startet). Sonst nichts aus dem Log, denn darin stehen Benutzernamen, Adressen und Änderungen. Neu starten
+  lässt sich der Server darüber nicht.
 
 ## Audit-Log
 

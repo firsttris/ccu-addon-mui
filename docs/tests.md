@@ -11,7 +11,7 @@ echten Server und eine nachgebaute CCU.
 | **Unit (Vitest)** | Funktionen und einzelne Komponenten der App | – | 309 in 58 Dateien | ✅ |
 | **Go** | Server-Pakete; Integration: der ganze Server | die CCU (Fake-CCU), openccu-lite (Fake-Lite) | 335 Testfunktionen in 81 Dateien | ✅ |
 | **Protokoll** | jede Nachricht des Servers in den Go-Tests, jede Nachricht des Mocks an die App in den E2E-Tests | – | gegen `protocol/schema.json` | ✅ |
-| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 35 + 2 + 2 + 1 + 2 | ✅ |
+| **E2E mit Mock** | App im Browser | der WebSocket (im Browser) | 35 + 2 + 2 + 1 + 4 | ✅ |
 | **E2E gegen den Stack** | Browser, App, Go-Server, WebSocket, XML-RPC, ReGa-Aufrufe | nur die CCU (Fake-CCU) | 74 | ✅ |
 | **openccu-lite-VM** | openccu-lite aus seinem Release-Image (QEMU), occulited, lighttpd, Sitzungs-Gate, Installation des Pakets | nichts; aber ohne Funkmodul, also ohne Geräte | 3 Phasen | ✅ bei Lite-Änderungen, wöchentlich, vor Releases |
 | **Screenshot-Vergleich** | Darstellung in 3 Größen, hell und dunkel | der WebSocket | 72 | ✅ |
@@ -118,7 +118,9 @@ die App Programme, Systemvariablen, Alarme und die Systemeinstellungen ausblende
 stattdessen auf Automationen und die Seiten von openccu-lite verweist. `lite-session.spec.ts` prüft, dass eine
 abgelaufene Sitzung zur Anmeldung von openccu-lite führt statt ins eigene Login-Formular. `boot-error.spec.ts`
 lässt das Skript der App mit 503 scheitern, wie lighttpd, wenn der Server nicht läuft, und prüft den Hinweis
-in `index.html` statt einer weißen Seite.
+in `index.html` statt einer weißen Seite, auch mit dem, was `status.cgi` meldet. Das Skript selbst prüft
+`go-server/status_cgi_test.go`: welche Zeile des Logs es herausgibt (nur die seit dem letzten Start, mit der
+der Server abgebrochen ist), und dass es „läuft“ nur für den Prozess des Servers meldet.
 
 `bun run test:e2e:coverage` misst dabei die Abdeckung des Frontend-Codes (nyc, Bericht unter
 `coverage/playwright`).
