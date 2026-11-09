@@ -26,12 +26,14 @@ esac
 
 reason=""
 if [ $running = false ]; then
-  # Only since the last start. The lines the server ends with (main.go: ❌
-  # and "Failed to start"), Go's own for a crash, and the shell's when the
-  # binary doesn't run at all (rc.d/mui writes its errors to the log too)
+  # Only since the last start. The lines the server ends with (main.go:
+  # "❌ Stopped:" and "Failed to start"; not any ❌, the server keeps running
+  # after others, e.g. a rejected connection anyone can cause), Go's own for
+  # a crash, and the shell's when the binary doesn't run at all (rc.d/mui
+  # writes its errors to the log too)
   reason=$(awk '
     /🚀 WebSocket Server starting/ { line = "" }
-    /❌|Failed to start|^panic: |^fatal error: |ccu-addon-mui-server: / { line = $0 }
+    /❌ Stopped: |Failed to start|^panic: |^fatal error: |ccu-addon-mui-server: / { line = $0 }
     END { print line }
   ' "$LOG_FILE" 2>/dev/null | cut -c1-300 | tr -d '\000-\037' | sed 's/\\/\\\\/g; s/"/\\"/g')
 fi

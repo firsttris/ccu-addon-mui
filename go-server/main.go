@@ -40,7 +40,9 @@ func main() {
 	}()
 
 	if err := run(ctx, cfg); err != nil {
-		logger.Error("❌", err)
+		// status.cgi looks for this line: the one the server stops with,
+		// unlike the other ❌ lines, after which it keeps running
+		logger.Error("❌ Stopped:", err)
 		os.Exit(1)
 	}
 }

@@ -114,7 +114,7 @@ WebUI-Sitzung des Benutzers. Die hält der Server nach der ersten Passworteingab
 - Ohne Anmeldung erreichbar sind nur die beiden CGIs, die lighttpd selbst ausführt: `update-check.cgi` (die
   neueste Version für die WebUI) und `status.cgi`. Dieses sagt, ob der Server läuft, und gibt nur dann, wenn
   er nicht läuft, eine einzige Zeile aus dem Log zurück: die, mit der er seit seinem letzten Start
-  abgebrochen ist (`❌`, `Failed to start`, Absturz, oder der Fehler der Shell, wenn das Binary nicht
+  abgebrochen ist (`❌ Stopped:`, `Failed to start`, Absturz, oder der Fehler der Shell, wenn das Binary nicht
   startet). Sonst nichts aus dem Log, denn darin stehen Benutzernamen, Adressen und Änderungen. Neu starten
   lässt sich der Server darüber nicht.
 

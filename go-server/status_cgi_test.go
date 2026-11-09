@@ -52,14 +52,14 @@ func writeLog(t *testing.T, lines ...string) string {
 func TestStatusCGIGivesTheLineTheServerStoppedWith(t *testing.T) {
 	log := writeLog(t,
 		`2026/11/09 16:00:00 🚀 WebSocket Server starting...`,
-		`2026/11/09 16:00:00 ❌ old reason from an earlier start`,
+		`2026/11/09 16:00:00 ❌ Stopped: old reason from an earlier start`,
 		`2026/11/09 17:00:00 🚀 WebSocket Server starting...`,
 		`2026/11/09 17:00:01 🔓 User "Paul" logged in`,
-		`2026/11/09 17:00:02 ❌ failed to load the logged-in devices: invalid character '"' \ in "x"`,
+		`2026/11/09 17:00:02 ❌ Stopped: failed to load the logged-in devices: invalid character '"' \ in "x"`,
 		`2026/11/09 17:00:02 🛑 something after it`,
 	)
 	status := runStatusCGI(t, filepath.Join(t.TempDir(), "none.pid"), log)
-	want := `2026/11/09 17:00:02 ❌ failed to load the logged-in devices: invalid character '"' \ in "x"`
+	want := `2026/11/09 17:00:02 ❌ Stopped: failed to load the logged-in devices: invalid character '"' \ in "x"`
 	if status.Running || status.Reason != want {
 		t.Fatalf("got %+v, want not running with %q", status, want)
 	}
@@ -67,7 +67,7 @@ func TestStatusCGIGivesTheLineTheServerStoppedWith(t *testing.T) {
 
 func TestStatusCGIGivesNoLineFromAStartWithoutError(t *testing.T) {
 	log := writeLog(t,
-		`2026/11/09 16:00:00 ❌ old reason`,
+		`2026/11/09 16:00:00 ❌ Stopped: old reason`,
 		`2026/11/09 17:00:00 🚀 WebSocket Server starting...`,
 		`2026/11/09 17:00:01 🔓 User "Paul" logged in from 192.168.1.20`,
 	)
@@ -114,7 +114,7 @@ func TestStatusCGIRunningOnlyForTheServersProcess(t *testing.T) {
 	if err := os.WriteFile(server, sleepBin, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	log := writeLog(t, `2026/11/09 16:00:00 ❌ old reason`)
+	log := writeLog(t, `2026/11/09 16:00:00 ❌ Stopped: old reason`)
 
 	for _, tc := range []struct {
 		name    string

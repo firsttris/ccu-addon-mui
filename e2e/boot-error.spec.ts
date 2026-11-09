@@ -32,7 +32,7 @@ test('sagt, dass der Server nicht läuft, wenn die Skripte der App nicht laden',
 });
 
 test('zeigt die letzte Meldung des Servers aus status.cgi', async ({ page }) => {
-  const reason = '2026/11/09 17:00:02 ❌ listen tcp 127.0.0.1:8088: bind: address already in use <b>';
+  const reason = '2026/11/09 17:00:02 ❌ Stopped: listen tcp 127.0.0.1:8088: bind: address already in use <b>';
   await failScripts(page);
   await answerStatus(page, { running: false, reason });
   await page.goto('/rooms');
