@@ -37,12 +37,18 @@
             text: 'Der Server des Add-ons antwortet nicht. Starten Sie das Add-on neu (in der WebUI der CCU unter Einstellungen → Systemsteuerung → Zusatzsoftware → Neustart) und laden Sie dann diese Seite neu.',
             help: 'Hilfe in der Anleitung',
             reload: 'Neu laden',
+            stopped: 'Er läuft nicht.',
+            reason: 'Seine letzte Meldung im Log:',
+            starting: 'Er läuft, antwortet aber noch nicht. Startet er gerade, laden Sie die Seite in einer Minute neu.',
           },
           en: {
             title: 'MUI cannot be loaded',
             text: "The add-on's server is not responding. Restart the add-on (in the CCU's WebUI under Settings → Control panel → Additional software → Restart), then reload this page.",
             help: 'Help in the manual',
             reload: 'Reload',
+            stopped: 'It is not running.',
+            reason: 'Its last message in the log:',
+            starting: 'It is running but not answering yet. If it is starting, reload the page in a minute.',
           },
         };
         const help = 'https://firsttris.github.io/ccu-addon-mui/installation.html#h%C3%A4ufige-probleme';
@@ -72,8 +78,27 @@
           button.style.cssText = 'display:block;margin-top:1rem;font:inherit;padding:.4rem 1rem';
           button.textContent = t.reload;
           button.onclick = () => location.reload();
-          box.append(title, text, link, button);
+          const status = document.createElement('div');
+          box.append(title, text, status, link, button);
           root.append(box);
+          // Whether the server runs, and the line it stopped with: lighttpd
+          // runs status.cgi without the server (addon_installer/status.cgi).
+          // Not there on openccu-lite and in the dev server: then nothing.
+          fetch('/addons/mui/status.cgi', { cache: 'no-store' })
+            .then((response) => response.json())
+            .then((state) => {
+              const line = document.createElement('p');
+              line.textContent = state.running ? t.starting : t.stopped;
+              status.append(line);
+              if (state.running || !state.reason) return;
+              const label = document.createElement('p');
+              label.textContent = t.reason;
+              const reason = document.createElement('pre');
+              reason.style.cssText = 'white-space:pre-wrap;word-break:break-word;font-size:.875rem;padding:.5rem;border:1px solid';
+              reason.textContent = state.reason;
+              status.append(label, reason);
+            })
+            .catch(() => {});
         };
         addEventListener(
           'error',
