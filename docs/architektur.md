@@ -121,6 +121,13 @@ Benutzer und das Systemprotokoll. Der Server schickt ihr HM-Script per `POST /re
   eingebettet. Platzhalter wie `{{ADDRESS}}` werden ersetzt.
 - Die Skripte geben **tabulatorgetrennte Zeilen** aus, das JSON baut Go. So muss im Skript nichts maskiert
   werden.
+- **Abbruch erkennen**: Bei einem Laufzeitfehler bricht ReGa das Skript ab und antwortet trotzdem mit 200 und
+  dem, was bis dahin geschrieben war. Skripte, deren Ausgabe vollständig sein muss (schreibgeschützte Kanäle,
+  Systemprotokoll), laufen über `ExecuteComplete`: Fehlt die angehängte Endmarke, ist das ein Fehler statt
+  einer kurzen oder leeren Liste.
+- **Keine Funktionen der WebUI-Seiten**: Was die WebUI nur in ihren Seiten aufruft, etwa
+  `web.webGetValueFromList` in `functions.fn::WriteDPText`, meiden die Skripte; sie lesen solche Werte selbst
+  (Enum-Texte per `ValueList().StrValueByIndex(";", n)`). Das Systemprotokoll brach daran ab und erschien leer.
 - **Ablehnen statt maskieren**: HM-Script hat keine verlässlichen Escapes. Bezeichner müssen
   `^[a-zA-Z0-9_:.-]+$` entsprechen, IDs sind Zahlen, Namen dürfen keine Anführungszeichen, Backslashes oder
   Zeilenumbrüche enthalten. Alles andere lehnt der Server ab, bevor ein Skript entsteht.

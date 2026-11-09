@@ -48,6 +48,11 @@ export const formatEntryValue = (entry: HistoryEntry) => {
   return value;
 };
 
+// The line shown instead of entries: with entries loaded only the search
+// found nothing, else why the protocol could not be read or that it is empty
+export const emptyText = (error: unknown, loaded: number) =>
+  loaded > 0 ? m.NO_RESULTS() : error ? errorText(error, m.HIST_LOAD_FAILED) : m.HIST_EMPTY();
+
 // The system protocol: changes of the datapoints logged in the CCU, newest
 // first, as the WebUI's Status und Bedienung → Systemprotokoll
 // (systemProtocol.htm, dom.GetHistoryData)
@@ -152,7 +157,7 @@ export const History = () => {
             {!history.isPending && shown.length === 0 && (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">
-                  {entries.length === 0 ? m.HIST_EMPTY() : m.NO_RESULTS()}
+                  {emptyText(history.error, entries.length)}
                 </TableCell>
               </TableRow>
             )}

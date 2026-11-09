@@ -34,7 +34,9 @@ func (c *Client) GetHistory(start, count int, channel int64) (entries []HistoryE
 	script := strings.NewReplacer(
 		"{{START}}", strconv.Itoa(start), "{{COUNT}}", strconv.Itoa(count), "{{CHANNEL}}", strconv.FormatInt(channel, 10),
 	).Replace(getHistoryScript)
-	output, err := c.Execute(script)
+	// Complete or an error: a script stopped at an entry would otherwise
+	// pass as an empty protocol
+	output, err := c.ExecuteComplete(script)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -258,7 +258,8 @@ und Stundenwerte unbegrenzt. Wie viel Platz noch frei ist, zeigt *Einrichten →
 
 *Einrichten → Systemprotokoll* (für alle Benutzer sichtbar) listet die Änderungen der Kanäle, die in der
 CCU als *protokolliert* markiert sind, die neuesten zuerst, mit Suche. Auf der Geräteseite steht der
-Verlauf des Geräts zusätzlich als kleine Diagramme.
+Verlauf des Geräts zusätzlich als kleine Diagramme. Kann der Server das Protokoll nicht lesen, steht das dort
+mit dem Grund, statt dass es leer erscheint.
 
 ## Programme
 
