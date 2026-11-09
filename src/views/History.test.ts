@@ -36,4 +36,11 @@ describe('History', () => {
     expect(emptyText(null, 0)).toBe(m.HIST_EMPTY());
     expect(emptyText(null, 12)).toBe(m.NO_RESULTS());
   });
+
+  // Entries are loaded and shown in the count; a later page or a refetch that
+  // failed does not turn a search without hits into an unreadable protocol
+  it('keeps "no results" for a search when entries are loaded', () => {
+    const error = new RequestError('getHistory failed: script stopped before its end', 'CCU_ERROR');
+    expect(emptyText(error, 12)).toBe(m.NO_RESULTS());
+  });
 });
