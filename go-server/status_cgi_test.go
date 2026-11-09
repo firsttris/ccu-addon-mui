@@ -145,3 +145,19 @@ func TestStatusCGIRunningOnlyForTheServersProcess(t *testing.T) {
 		})
 	}
 }
+
+// A ❌ line the server logs while it keeps running is not the line it
+// stopped with. Killed without a word (out of memory, kill -9), it stopped
+// with none: the rejected connection of a foreign page, which anyone can
+// cause without a login (websocket.go), is no reason, and nothing of the
+// log goes out without a login but the line it stopped with
+func TestStatusCGIGivesNoLineTheServerKeptRunningAfter(t *testing.T) {
+	log := writeLog(t,
+		`2026/11/09 17:00:00 🚀 WebSocket Server starting...`,
+		`2026/11/09 17:05:00 ❌ Rejected WebSocket connection from origin "https://evil.example" (host "ccu.local")`,
+		`2026/11/09 17:06:00 🔓 User "Paul" logged in from 192.168.1.20`,
+	)
+	if status := runStatusCGI(t, "/nonexistent.pid", log); status.Running || status.Reason != "" {
+		t.Fatalf("got %+v, want not running without a reason", status)
+	}
+}
