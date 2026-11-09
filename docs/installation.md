@@ -202,8 +202,12 @@ Für ein Update ist Deinstallieren nicht nötig, das Update behält alles.
 
 ## Häufige Probleme
 
-**Weiße Seite beim ersten Öffnen**: Die Skripte der App liefert der Server aus. Läuft er nicht, lädt die App
-gar nicht (später kommt sie aus dem Cache des Service Workers). Add-on unter *Zusatzsoftware* neu starten.
+**„MUI lässt sich nicht laden“**: Die Skripte der App liefert der Server aus. Läuft er nicht, lädt die App
+gar nicht, und die Seite zeigt nur diesen Hinweis (später kommt die App aus dem Cache des Service Workers und
+zeigt stattdessen den roten Balken unten). Add-on unter *Zusatzsoftware* neu starten und die Seite neu laden.
+Startet der Server nicht, steht der Grund im Log (`/var/log/mui-websocket-server.log`, auf openccu-lite
+`journalctl -u addon-mui`). Eine Neuinstallation hilft dabei meist nicht, und Deinstallieren löscht die
+Daten des Add-ons (siehe oben).
 
 **Roter Balken „Keine Verbindung zur CCU, verbinde neu …“**: Die App erreicht den Server nicht. Die App verbindet sich alle
 3 Sekunden neu. Bleibt der Balken, läuft der Server nicht: Add-on unter *Zusatzsoftware* neu starten und
