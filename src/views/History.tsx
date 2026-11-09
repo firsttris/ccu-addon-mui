@@ -48,10 +48,10 @@ export const formatEntryValue = (entry: HistoryEntry) => {
   return value;
 };
 
-// The line shown instead of entries: why the protocol could not be read,
-// else whether it is empty or only the search found nothing
+// The line shown instead of entries: with entries loaded only the search
+// found nothing, else why the protocol could not be read or that it is empty
 export const emptyText = (error: unknown, loaded: number) =>
-  error ? errorText(error, m.HIST_LOAD_FAILED) : loaded === 0 ? m.HIST_EMPTY() : m.NO_RESULTS();
+  loaded > 0 ? m.NO_RESULTS() : error ? errorText(error, m.HIST_LOAD_FAILED) : m.HIST_EMPTY();
 
 // The system protocol: changes of the datapoints logged in the CCU, newest
 // first, as the WebUI's Status und Bedienung → Systemprotokoll
