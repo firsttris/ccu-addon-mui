@@ -6,6 +6,7 @@ import { datapointLabel, formatEntryValue, formatTime } from '../History';
 import { m } from '../../paraglide/messages';
 import type { HistoryEntry } from '../../types/protocol';
 import { formatDate, formatNumber } from '../../lib/format';
+import { errorText } from '../../lib/errors';
 
 // How many of the newest protocol entries are searched for a channel
 const SCAN = 500;
@@ -122,6 +123,16 @@ export const DeviceHistory = ({ address }: { address: string }) => {
     <div className="flex flex-col gap-4">
       {logged.map((channel, i) => {
         const entries = histories[i]?.data;
+        const error = histories[i]?.error;
+        // A protocol the server could not read (#299) is said, not loaded forever
+        if (!entries && error) {
+          return (
+            <section key={channel.id} aria-label={channel.name} className="flex flex-col gap-3">
+              <h3 className="text-sm font-medium">{channel.name}</h3>
+              <p>{errorText(error, m.HIST_LOAD_FAILED)}</p>
+            </section>
+          );
+        }
         if (!entries) return <PanelSkeleton key={channel.id} lines={2} />;
         const byDatapoint = new Map<string, HistoryEntry[]>();
         for (const e of entries) {
