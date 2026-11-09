@@ -51,7 +51,7 @@ App, das Server-Binary für ihre Architektur und vier Dateien, die die CCU für 
 |---|---|
 | `update_script` | wird von der WebUI bei der Installation ausgeführt: kopiert nach `/usr/local/addons/mui`, legt den Link `/usr/local/etc/config/addons/www/mui` an, installiert Startskript und lighttpd-Konfiguration |
 | `rc.d/mui` | Startskript (start, stop, restart, info, uninstall); liest `mui.conf`, schreibt das Log, rotiert es ab 1 MB |
-| `lighttpd.conf` | `^/ws/mui` → Proxy auf `127.0.0.1:8088` mit WebSocket-Upgrade; unter `/addons/mui/` jede unbekannte URL auf `index.html` (Routing der App) |
+| `lighttpd.conf` | `^/ws/mui` → Proxy auf `127.0.0.1:8088` mit WebSocket-Upgrade, ebenso `/addons/mui/assets/` (die gzip-gepackten Skripte der App); unter `/addons/mui/` jede unbekannte URL auf `index.html` (Routing der App). Läuft der Server nicht, laden die Skripte nicht, und ein kleines Skript in `index.html` zeigt „MUI lässt sich nicht laden“ statt einer weißen Seite |
 | `update-check.cgi` | meldet der WebUI die neueste Version auf GitHub |
 
 Der Server ist ein **statisches Go-Binary** (`CGO_ENABLED=0`, `-ldflags="-s -w"`, rund 10 MB), für ARMv7 (CCU3 und Raspberry Pi) und amd64 (OpenCCU auf x86), je in einem eigenen Archiv. Er braucht

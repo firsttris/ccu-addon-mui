@@ -23,6 +23,71 @@
     <!-- Background of the app (styles.css --background); ThemeContext follows the switch in the menu -->
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <script>
+      // The app's scripts and styles come from the add-on's server: lighttpd
+      // forwards /addons/mui/assets/ to it (addon_installer/lighttpd.conf,
+      // lite/lighttpd.conf). When the server isn't running they fail to load
+      // and the page would stay white; this says why instead. A plain inline
+      // script, so it works without them, and before them, so it hears their
+      // errors (which don't bubble, only the capture phase gets them).
+      (() => {
+        const texts = {
+          de: {
+            title: 'MUI lässt sich nicht laden',
+            text: 'Der Server des Add-ons antwortet nicht. Starten Sie das Add-on neu (in der WebUI der CCU unter Einstellungen → Systemsteuerung → Zusatzsoftware → Neustart) und laden Sie dann diese Seite neu.',
+            help: 'Hilfe in der Anleitung',
+            reload: 'Neu laden',
+          },
+          en: {
+            title: 'MUI cannot be loaded',
+            text: "The add-on's server is not responding. Restart the add-on (in the CCU's WebUI under Settings → Control panel → Additional software → Restart), then reload this page.",
+            help: 'Help in the manual',
+            reload: 'Reload',
+          },
+        };
+        const help = 'https://firsttris.github.io/ccu-addon-mui/installation.html#h%C3%A4ufige-probleme';
+        let shown = false;
+        const show = () => {
+          const root = document.getElementById('root');
+          // Already said, or the app is running and a part loaded later failed
+          if (shown || !root || root.firstChild) return;
+          shown = true;
+          const t = /^de\b/i.test(navigator.language || '') ? texts.de : texts.en;
+          const box = document.createElement('div');
+          box.setAttribute('role', 'alert');
+          box.style.cssText =
+            'color-scheme:light dark;max-width:32rem;margin:15vh auto 0;padding:0 1rem;font:16px/1.5 system-ui,sans-serif';
+          const title = document.createElement('h1');
+          title.style.fontSize = '1.25rem';
+          title.textContent = t.title;
+          const text = document.createElement('p');
+          text.textContent = t.text;
+          const link = document.createElement('a');
+          link.href = help;
+          link.target = '_blank';
+          link.rel = 'noopener';
+          link.textContent = t.help;
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.style.cssText = 'display:block;margin-top:1rem;font:inherit;padding:.4rem 1rem';
+          button.textContent = t.reload;
+          button.onclick = () => location.reload();
+          box.append(title, text, link, button);
+          root.append(box);
+        };
+        addEventListener(
+          'error',
+          (event) => {
+            const el = event.target;
+            const failed = el instanceof HTMLScriptElement || (el instanceof HTMLLinkElement && /stylesheet|modulepreload/.test(el.rel));
+            if (!failed) return;
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show);
+            else show();
+          },
+          true,
+        );
+      })();
+    </script>
   </head>
   <body style="margin: 0">
     <div id="root"></div>
