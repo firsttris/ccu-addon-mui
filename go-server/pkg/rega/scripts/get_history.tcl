@@ -6,6 +6,10 @@
 ! (functions.fn::WriteDPText), empty for channel datapoints. Tabs and line
 ! breaks in values become spaces. With CHANNEL other than 0 only the
 ! entries of that channel are written (total stays the whole protocol's).
+! An enum's text is read from its ValueList directly: web.webGetValueFromList,
+! which WriteDPText uses, belongs to the WebUI's pages; a script sent to
+! rega.exe that stopped at it wrote nothing, and the protocol read as empty
+! (#299).
 integer total;
 integer onlyChannel = {{CHANNEL}};
 string entry;
@@ -42,7 +46,7 @@ foreach (entry, dom.GetHistoryData({{START}}, {{COUNT}}, &total)) {
                     }
                 }
                 if ((vt == ivtInteger) && (st == istEnum)) {
-                    text = web.webGetValueFromList(dp.ValueList(), value.ToInteger());
+                    text = dp.ValueList().StrValueByIndex(";", value.ToInteger());
                 }
                 if ((vt == ivtFloat) && (st == istGeneric)) {
                     text = value.ToFloat().ToString(2) # " " # dp.ValueUnit();

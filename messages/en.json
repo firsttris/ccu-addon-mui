@@ -747,6 +747,7 @@
   "HIST_YES": "yes",
   "HIST_NO": "no",
   "HIST_EMPTY": "The protocol is empty.",
+  "HIST_LOAD_FAILED": "The protocol could not be read",
   "HIST_COUNT": "{shown} of {total} entries",
   "HIST_MORE": "Load older",
   "HIST_CLEAR": "Clear protocol",

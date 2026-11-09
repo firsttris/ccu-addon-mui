@@ -747,6 +747,7 @@
   "HIST_YES": "ja",
   "HIST_NO": "nein",
   "HIST_EMPTY": "Das Protokoll ist leer.",
+  "HIST_LOAD_FAILED": "Das Protokoll konnte nicht gelesen werden",
   "HIST_COUNT": "{shown} von {total} Einträgen",
   "HIST_MORE": "Ältere laden",
   "HIST_CLEAR": "Protokoll löschen",
