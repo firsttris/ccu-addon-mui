@@ -114,6 +114,8 @@ func TestLighttpdConfTakesThePortFromMuiConf(t *testing.T) {
 // The server takes WS_PORT from mui.conf sourced by rc.d/mui (set -a; .
 // mui.conf), the proxy from lighttpd-conf.sh: for every mui.conf both have
 // to end up on the same port.
+// With sh, as rc.d/mui: BusyBox on the CCU, the system's shell here (the CI
+// runners have no busybox)
 func TestLighttpdConfFollowsTheSourcedMuiConf(t *testing.T) {
 	for _, tc := range []struct{ name, muiConf string }{
 		{"plain", "WS_PORT=12345\n"},
@@ -125,7 +127,7 @@ func TestLighttpdConfFollowsTheSourcedMuiConf(t *testing.T) {
 			if err := os.WriteFile(confFile, []byte(tc.muiConf), 0o644); err != nil {
 				t.Fatal(err)
 			}
-			sourced, err := exec.Command("busybox", "sh", "-c", `set -a; . "$1"; set +a; printf %s "$WS_PORT"`, "sh", confFile).Output()
+			sourced, err := exec.Command("sh", "-c", `set -a; . "$1"; set +a; printf %s "$WS_PORT"`, "sh", confFile).Output()
 			if err != nil {
 				t.Fatalf("source mui.conf: %v", err)
 			}

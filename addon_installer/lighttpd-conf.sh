@@ -4,8 +4,9 @@
 #   sh lighttpd-conf.sh <fragment> <mui.conf>
 # The fragment names the default port (8089, config.go); a WS_PORT= in
 # mui.conf replaces it, so the proxy follows the port the server listens on
-# (rc.d/mui reads mui.conf for the server, and so does this script). Without the file, the line or
-# with a value that is no port, the default stays. update_script writes the
+# (rc.d/mui reads mui.conf for the server, and so does this script). Without
+# the file, the line or with a value that is no port, the default stays.
+# update_script writes the
 # result at every install: an update never leaves the proxy on another port
 # than the server.
 
