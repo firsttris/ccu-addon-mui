@@ -108,3 +108,34 @@ func TestLighttpdConfTakesThePortFromMuiConf(t *testing.T) {
 		})
 	}
 }
+
+// The server takes WS_PORT from mui.conf sourced by rc.d/mui (set -a; .
+// mui.conf), the proxy from lighttpd-conf.sh: for every mui.conf both have
+// to end up on the same port.
+func TestLighttpdConfFollowsTheSourcedMuiConf(t *testing.T) {
+	for _, tc := range []struct{ name, muiConf string }{
+		{"plain", "WS_PORT=12345\n"},
+		{"Windows line end", "WS_PORT=12349\r\n"},
+		{"comment after the value", "WS_PORT=12350 # not the NEO Server\n"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			confFile := filepath.Join(t.TempDir(), "mui.conf")
+			if err := os.WriteFile(confFile, []byte(tc.muiConf), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			sourced, err := exec.Command("busybox", "sh", "-c", `set -a; . "$1"; set +a; printf %s "$WS_PORT"`, "sh", confFile).Output()
+			if err != nil {
+				t.Fatalf("source mui.conf: %v", err)
+			}
+			t.Setenv("WS_PORT", string(sourced))
+			want := config.Load().WSPort
+			for _, fragment := range fragments {
+				for _, port := range proxyPorts(t, lighttpdConf(t, fragment, tc.muiConf)) {
+					if port != want {
+						t.Errorf("%s: proxy to %d, the server listens on %d", fragment, port, want)
+					}
+				}
+			}
+		})
+	}
+}
