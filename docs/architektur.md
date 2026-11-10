@@ -13,7 +13,7 @@ flowchart LR
   end
   subgraph CCU["CCU3 / OpenCCU"]
     L["lighttpd<br/>:80 / :443"]
-    S["ccu-addon-mui-server<br/>Go, 127.0.0.1:8088"]
+    S["ccu-addon-mui-server<br/>Go, 127.0.0.1:8089"]
     R["ReGa<br/>rega.exe"]
     RF["rfd<br/>BidCos-RF :32001"]
     IP["crRFD / HMIPServer<br/>HmIP-RF :32010"]
@@ -28,8 +28,8 @@ flowchart LR
   S -- "XML-RPC" --> IP
   S -- "XML-RPC" --> V
   S -- "Session.login,<br/>Backup, Firewall …" --> W
-  RF -- "Events an :9099" --> S
-  IP -- "Events an :9099" --> S
+  RF -- "Events an :9098" --> S
+  IP -- "Events an :9098" --> S
 ```
 
 - **lighttpd**, der Webserver der CCU, liefert die App aus (`/addons/mui/…`) und leitet `/ws/mui` an den
@@ -51,7 +51,8 @@ App, das Server-Binary für ihre Architektur und vier Dateien, die die CCU für 
 |---|---|
 | `update_script` | wird von der WebUI bei der Installation ausgeführt: kopiert nach `/usr/local/addons/mui`, legt den Link `/usr/local/etc/config/addons/www/mui` an, installiert Startskript und lighttpd-Konfiguration |
 | `rc.d/mui` | Startskript (start, stop, restart, info, uninstall); liest `mui.conf`, schreibt das Log, rotiert es ab 1 MB |
-| `lighttpd.conf` | `^/ws/mui` → Proxy auf `127.0.0.1:8088` mit WebSocket-Upgrade, ebenso `/addons/mui/assets/` (die gzip-gepackten Skripte der App); unter `/addons/mui/` jede unbekannte URL auf `index.html` (Routing der App). Läuft der Server nicht, laden die Skripte nicht, und ein kleines Skript in `index.html` zeigt „MUI lässt sich nicht laden“ statt einer weißen Seite |
+| `lighttpd.conf` | `^/ws/mui` → Proxy auf `127.0.0.1:8089` mit WebSocket-Upgrade (bzw. den `WS_PORT` aus `mui.conf`, den `lighttpd-conf.sh` beim Installieren einsetzt), ebenso `/addons/mui/assets/` (die gzip-gepackten Skripte der App); unter `/addons/mui/` jede unbekannte URL auf `index.html` (Routing der App). Läuft der Server nicht, laden die Skripte nicht, und ein kleines Skript in `index.html` zeigt „MUI lässt sich nicht laden“ statt einer weißen Seite |
+| `lighttpd-conf.sh` | schreibt beim Installieren `lighttpd.conf` mit dem Port des Servers: dem Standard 8089 oder dem `WS_PORT` aus `mui.conf`, damit Weiterleitung und Server nach jedem Update zusammenpassen |
 | `update-check.cgi` | meldet der WebUI die neueste Version auf GitHub |
 | `status.cgi` | sagt dem Hinweis in `index.html`, ob der Server läuft, und wenn nicht, die Zeile, mit der er abgebrochen ist (JSON, ohne Anmeldung, siehe [Sicherheit](sicherheit.md#netzwerk)) |
 
@@ -163,7 +164,7 @@ Beschreibung (bekannt, schreibbar, im Bereich) und wandelt JSON-Zahlen in den ri
 
 ### Events
 
-Der Server ist selbst ein XML-RPC-Server auf Port 9099 und meldet sich mit `init` bei rfd und crRFD an, mit
+Der Server ist selbst ein XML-RPC-Server auf Port 9098 (nicht 9099 und beim WebSocket nicht 8088: dort lauscht der Mediola NEO Server, den OpenCCU mitbringt, `libfirewall.tcl`; wer beim Start zuerst kommt, bekommt die Ports, #224) und meldet sich mit `init` bei rfd und crRFD an, mit
 Wired-Gateway auch bei hs485d.
 Ab dann schickt die CCU jede Wertänderung als `event` (meist gebündelt in `system.multicall`).
 

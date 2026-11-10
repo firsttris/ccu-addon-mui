@@ -53,7 +53,7 @@ und App) oder `bun run start:server` (nur der Server).
 CCU_HOST=192.168.178.26   # Adresse der CCU
 CCU_USER=Admin            # nur, falls die CCU Authentifizierung verlangt
 CCU_PASS=…
-CALLBACK_HOST=192.168.178.134   # Adresse DIESES Rechners, die CCU schickt Events dorthin (Port 9099)
+CALLBACK_HOST=192.168.178.134   # Adresse DIESES Rechners, die CCU schickt Events dorthin (Port 9098)
 ```
 
 Auf der CCU selbst gilt `CALLBACK_HOST=127.0.0.1` (Standard). Optionen kommen dort aus

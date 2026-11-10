@@ -7,7 +7,7 @@ entstehen die Typen der App, und die Go-Tests prüfen jede Nachricht des Servers
 ## Verbindung
 
 - **Endpunkt**: `ws://<CCU>/addons/mui/ws` bzw. `wss://` über HTTPS; `/ws/mui` geht weiterhin. lighttpd
-  leitet an den Server auf `127.0.0.1:8088` weiter. Auf openccu-lite gibt es nur den Pfad unter `/addons/`,
+  leitet an den Server auf `127.0.0.1:8089` weiter. Auf openccu-lite gibt es nur den Pfad unter `/addons/`,
   weil nur dort occulites Gate die Sitzung weitergibt.
 - **Origin**: Schickt der Browser einen `Origin`, muss sein Hostname zum `Host` (oder `X-Forwarded-Host`)
   passen. Fremde Webseiten können sich also nicht verbinden. Ohne `Origin` (z. B. `websocat`) geht es.

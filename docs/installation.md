@@ -165,7 +165,13 @@ Web-Verzeichnisses und überlebt Updates. Eine Zeile pro Option, `NAME=Wert`:
 | `PUSH_SUBJECT` | GitHub-URL des Projekts | Kontaktadresse in den Push-Anfragen (VAPID `sub`), z. B. `mailto:du@example.com` |
 | `DIAGRAMS_DIR` | `/usr/local/mui-diagrams` | Wo die Diagrammwerte liegen, z. B. auf einem USB-Stick |
 
-Die übrigen Variablen (Ports, Dateipfade) braucht man nur zur Entwicklung, siehe
+Belegt ein anderes Programm die Ports des Servers (`8089` für die App, `9098` für die Events der Funkdienste),
+lassen sie sich mit `WS_PORT` und `RPC_SERVER_PORT` ändern. Die Weiterleitung von lighttpd übernimmt einen
+geänderten `WS_PORT` bei der nächsten Installation oder dem nächsten Update; bis dahin in
+`/usr/local/etc/config/lighttpd/mui.conf` denselben Port eintragen und lighttpd neu laden
+(`/etc/init.d/S50lighttpd reload`).
+
+Die übrigen Variablen (Dateipfade) braucht man nur zur Entwicklung, siehe
 [Entwicklung](entwicklung.md#umgebungsvariablen). Nach einer Änderung das Add-on neu starten: in der WebUI
 unter *Zusatzsoftware → Neustart* oder per SSH mit `/usr/local/etc/config/rc.d/mui restart`.
 
@@ -176,7 +182,7 @@ unter *Zusatzsoftware → Neustart* oder per SSH mit `/usr/local/etc/config/rc.d
 | `/usr/local/addons/mui/` | App, Server (`go-server/ccu-addon-mui-server`) `update-check.cgi`, über das die CCU nach Updates fragt, und `status.cgi`, das der Hinweis „MUI lässt sich nicht laden“ fragt, ob der Server läuft |
 | `/usr/local/etc/config/addons/www/mui` | Link auf das Add-on-Verzeichnis, darüber liefert die CCU `/addons/mui` aus |
 | `/usr/local/etc/config/rc.d/mui` | Startskript |
-| `/usr/local/etc/config/lighttpd/mui.conf` | Weiterleitung von `/ws/mui` und `/addons/mui/assets/` (die gzip-gepackten Skripte der App) an den Server |
+| `/usr/local/etc/config/lighttpd/mui.conf` | Weiterleitung von `/ws/mui` und `/addons/mui/assets/` (die gzip-gepackten Skripte der App) an den Server, auf Port 8089 oder den `WS_PORT` aus `mui.conf` (bei jeder Installation neu geschrieben) |
 | `/usr/local/etc/config/mui.conf` | deine Optionen (optional) |
 | `/usr/local/etc/config/mui-auth.key` | Schlüssel, mit dem die Anmeldungen signiert sind. Löschen meldet alle Geräte ab |
 | `/usr/local/etc/config/mui-sessions.json` | angemeldete Geräte |
@@ -209,6 +215,12 @@ seinem Log, mit der er abgebrochen ist. Add-on unter *Zusatzsoftware* neu starte
 Startet der Server nicht, steht der Grund im Log (`/var/log/mui-websocket-server.log`, auf openccu-lite
 `journalctl -u addon-mui`). Eine Neuinstallation hilft dabei meist nicht, und Deinstallieren löscht die
 Daten des Add-ons (siehe oben).
+
+**`address already in use` im Log**: Ein anderes Programm belegt den Port des Servers, und der Server beendet
+sich gleich wieder. Bis einschließlich Version 1.0.30 nutzte MUI 8088 und 9099, dieselben Ports wie der Mediola NEO Server,
+den OpenCCU mitbringt; wer beim Start der CCU zuerst kam, bekam sie. Seitdem sind es 8089 und 9098. Wer
+die Ports belegt, zeigt `netstat -tlnp | grep -E ':(8089|9098) '`; ausweichen lässt sich mit `WS_PORT` und
+`RPC_SERVER_PORT` (siehe [Optionen](#optionen-muiconf)).
 
 **Roter Balken „Keine Verbindung zur CCU, verbinde neu …“**: Die App erreicht den Server nicht. Die App verbindet sich alle
 3 Sekunden neu. Bleibt der Balken, läuft der Server nicht: Add-on unter *Zusatzsoftware* neu starten und
