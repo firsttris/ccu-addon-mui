@@ -121,6 +121,10 @@ lässt das Skript der App mit 503 scheitern, wie lighttpd, wenn der Server nicht
 in `index.html` statt einer weißen Seite, auch mit dem, was `status.cgi` meldet. Das Skript selbst prüft
 `go-server/status_cgi_test.go`: welche Zeile des Logs es herausgibt (nur die seit dem letzten Start, mit der
 der Server abgebrochen ist), und dass es „läuft“ nur für den Prozess des Servers meldet.
+`go-server/lighttpd_conf_test.go` prüft, dass die Weiterleitung von lighttpd (beide Fragmente) auf den
+Standardport des Servers zeigt, dass `lighttpd-conf.sh` einen `WS_PORT` aus `mui.conf` übernimmt und
+ungültige Werte verwirft, dabei auf demselben Port landet wie der Server, der `mui.conf` über `rc.d/mui`
+einliest (mit BusyBox, auch mit Kommentar hinter dem Wert oder Windows-Zeilenende), und dass keiner der Ports dem Mediola NEO Server gehört (8088, 9099).
 
 `bun run test:e2e:coverage` misst dabei die Abdeckung des Frontend-Codes (nyc, Bericht unter
 `coverage/playwright`).

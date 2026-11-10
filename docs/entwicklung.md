@@ -54,7 +54,7 @@ bun run dev
 ```
 
 Der Go-Server läuft dann auf deinem Rechner und spricht über das Netz mit deiner CCU. Damit Events
-ankommen, muss die CCU deinen Rechner auf Port 9099 erreichen können. Wenn du den Server mit Strg+C
+ankommen, muss die CCU deinen Rechner auf Port 9098 erreichen können. Wenn du den Server mit Strg+C
 beendest, meldet er sich bei der CCU wieder ab.
 
 ### Nur die App, gegen das installierte Add-on
@@ -233,8 +233,8 @@ kommen sie aus `/usr/local/etc/config/mui.conf`, lokal aus `go-server/.env`.
 | `CCU_HOST` | `localhost` | Adresse der CCU |
 | `CCU_USER`, `CCU_PASS` | – | Basic Auth für ReGa und XML-RPC, falls die CCU sie verlangt (nur aus dem LAN; auf der CCU nicht nötig) |
 | `CALLBACK_HOST` | `127.0.0.1` | Adresse, unter der die CCU den Event-Server erreicht |
-| `RPC_SERVER_PORT` | `9099` | Port des Event-Servers |
-| `WS_PORT`, `WS_BIND_HOST` | `8088`, `127.0.0.1` | WebSocket-Server |
+| `RPC_SERVER_PORT` | `9098` | Port des Event-Servers |
+| `WS_PORT`, `WS_BIND_HOST` | `8089`, `127.0.0.1` | WebSocket-Server; auf der CCU übernimmt `update_script` einen `WS_PORT` aus `mui.conf` in die Weiterleitung von lighttpd |
 | `REGA_PORT` | `8183` bei `localhost`, sonst `8181` | ReGa |
 | `SYSVAR_INTERVAL` | `5` | Sekunden zwischen zwei Abfragen der Systemvariablen, solange eine App sie zeigt |
 | `RPC_PORT`, `HMIP_PORT`, `VIRTUAL_DEVICES_PORT` | bei `localhost` aus `/etc/config/InterfacesList.xml` (sonst `32001`, `32010`, `39292`), aus dem LAN `2001`, `2010`, `9292` | Funkdienste |

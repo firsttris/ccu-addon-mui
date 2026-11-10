@@ -32,7 +32,7 @@ func TestLoadDefaultsForLocalhost(t *testing.T) {
 		t.Fatalf("expected RegaPort 8183 for localhost, got %d", cfg.RegaPort)
 	}
 	// On the CCU the services' own ports, not lighttpd's
-	if cfg.WSPort != 8088 || cfg.RPCPort != 32001 || cfg.HmIPPort != 32010 || cfg.VirtualDevicesPort != 39292 || cfg.RPCServerPort != 9099 {
+	if cfg.WSPort != 8089 || cfg.RPCPort != 32001 || cfg.HmIPPort != 32010 || cfg.VirtualDevicesPort != 39292 || cfg.RPCServerPort != 9098 {
 		t.Fatalf("unexpected default ports: ws=%d rpc=%d hmip=%d virtual=%d rpcServer=%d", cfg.WSPort, cfg.RPCPort, cfg.HmIPPort, cfg.VirtualDevicesPort, cfg.RPCServerPort)
 	}
 	if cfg.Debug {
@@ -96,8 +96,8 @@ func TestLoadEnvOverridesAndInvalidIntFallback(t *testing.T) {
 
 	cfg := Load()
 
-	if cfg.WSPort != 8088 {
-		t.Fatalf("expected invalid WS_PORT to fall back to 8088, got %d", cfg.WSPort)
+	if cfg.WSPort != 8089 {
+		t.Fatalf("expected invalid WS_PORT to fall back to 8089, got %d", cfg.WSPort)
 	}
 	if cfg.RPCPort != 2200 || cfg.HmIPPort != 2210 || cfg.RPCServerPort != 9191 {
 		t.Fatalf("unexpected overridden ports: rpc=%d hmip=%d rpcServer=%d", cfg.RPCPort, cfg.HmIPPort, cfg.RPCServerPort)

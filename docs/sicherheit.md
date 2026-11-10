@@ -107,10 +107,10 @@ WebUI-Sitzung des Benutzers. Die hält der Server nach der ersten Passworteingab
 
 ## Netzwerk
 
-- Der Server lauscht nur auf `127.0.0.1:8088`. Erreichbar ist er über lighttpd, also mit derselben Adresse,
+- Der Server lauscht nur auf `127.0.0.1:8089`. Erreichbar ist er über lighttpd, also mit derselben Adresse,
   demselben Zertifikat und derselben Firewall wie die WebUI.
 - Die Origin-Prüfung verhindert, dass eine fremde Webseite im selben Browser eine Verbindung aufbaut.
-- Der Event-Server auf Port 9099 bindet nur an `127.0.0.1`, solange er auf der CCU läuft.
+- Der Event-Server auf Port 9098 bindet nur an `127.0.0.1`, solange er auf der CCU läuft.
 - Ohne Anmeldung erreichbar sind nur die beiden CGIs, die lighttpd selbst ausführt: `update-check.cgi` (die
   neueste Version für die WebUI) und `status.cgi`. Dieses sagt, ob der Server läuft, und gibt nur dann, wenn
   er nicht läuft, eine einzige Zeile aus dem Log zurück: die, mit der er seit seinem letzten Start

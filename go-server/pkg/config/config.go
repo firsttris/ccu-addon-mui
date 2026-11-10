@@ -144,7 +144,11 @@ func Load() *Config {
 	}
 
 	return &Config{
-		WSPort: getEnvInt("WS_PORT", 8088),
+		// Not 8088 and 9099: OpenCCU's Mediola NEO Server listens there
+		// (libfirewall.tcl, Firewall_SERVICES(NEOSERVER)), and whichever
+		// starts first at boot keeps them. lighttpd.conf names the same port
+		// (update_script writes a WS_PORT from mui.conf into it)
+		WSPort: getEnvInt("WS_PORT", 8089),
 		// Only lighttpd (or the Vite dev proxy) needs to reach the
 		// WebSocket server; it must not be reachable directly from the LAN.
 		WSBindHost:           getEnv("WS_BIND_HOST", "127.0.0.1"),
@@ -152,7 +156,7 @@ func Load() *Config {
 		HmIPPort:             getEnvInt("HMIP_PORT", hmipPort),
 		VirtualDevicesPort:   getEnvInt("VIRTUAL_DEVICES_PORT", virtualDevicesPort),
 		WiredPort:            getEnvInt("WIRED_PORT", wiredPort),
-		RPCServerPort:        getEnvInt("RPC_SERVER_PORT", 9099),
+		RPCServerPort:        getEnvInt("RPC_SERVER_PORT", 9098),
 		CCUHost:              ccuHost,
 		CCUUser:              getEnv("CCU_USER", ""),
 		CCUPass:              getEnv("CCU_PASS", ""),

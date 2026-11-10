@@ -10,7 +10,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // WebSocket target of the go-server, selected via `vite --mode <name>`
 const proxyTargets: Record<string, string> = {
-  development: 'ws://localhost:8088',
+  development: 'ws://localhost:8089',
   ccu3: 'ws://192.168.178.26',
   // Server against the fake CCU in the Playwright stack tests
   stack: 'ws://127.0.0.1:28088',

@@ -39,7 +39,7 @@ if grep -q '^LITE=' /VERSION 2>/dev/null || [ -x /usr/bin/occulited ]; then
   cp rc.d/mui-lite $RC_DIR/mui
   chmod 755 $RC_DIR/mui
   # occulited checks the fragment and copies it to lighttpd's directory
-  cp lite/lighttpd.conf $ADDON_DIR/etc/lighttpd.conf
+  sh lighttpd-conf.sh lite/lighttpd.conf /usr/local/etc/config/addons/mui/mui.conf > $ADDON_DIR/etc/lighttpd.conf
   # The entry in openccu-lite's menu
   cp lite/nav.json /usr/local/etc/config/nav.d/mui.json
   [ -L $WWW_DIR/mui ] || ln -sf $ADDON_DIR $WWW_DIR/mui
@@ -92,7 +92,8 @@ rm -rf $ADDON_DIR/node $ADDON_DIR/server
 cp "$BINARY" $ADDON_DIR/go-server/ccu-addon-mui-server.new
 mv -f $ADDON_DIR/go-server/ccu-addon-mui-server.new $ADDON_DIR/go-server/ccu-addon-mui-server
 cp rc.d/mui $RC_DIR/mui
-cp lighttpd.conf $LIGHTTPD_DIR/mui.conf
+# With the port from mui.conf, if one is set there (lighttpd-conf.sh)
+sh lighttpd-conf.sh lighttpd.conf /usr/local/etc/config/mui.conf > $LIGHTTPD_DIR/mui.conf
 
 # Not every file system knows owners (VFAT on some setups)
 chown -R root:root $ADDON_DIR $RC_DIR/mui $LIGHTTPD_DIR/mui.conf 2>/dev/null || true
