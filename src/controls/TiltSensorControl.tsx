@@ -1,10 +1,13 @@
 import VibrateIcon from '~icons/lucide/vibrate';
 import RotateIcon from '~icons/lucide/rotate-3d';
+import DoorOpenIcon from '~icons/lucide/door-open';
+import DoorClosedIcon from '~icons/lucide/door-closed';
 import type { Channel, DatapointValue } from '../types/types';
 import { useParamset } from '../queries';
 import { m } from '../paraglide/messages';
 import { DetectorTile } from './DetectorControls';
 import { format, number } from './ClimateSensorControl';
+import { type DoorState, doorState, isTiltTile } from './tiltModel';
 
 const datapoints = (channel: Channel) => channel.datapoints as Record<string, DatapointValue>;
 
@@ -53,10 +56,31 @@ export const tiltReading = (
   return undefined;
 };
 
+const doorText: Record<DoorState, () => string> = {
+  open: m.TILT_OPEN,
+  closed: m.TILT_CLOSED,
+  partlyOpen: m.TILT_PARTLY_OPEN,
+};
+
+// A tilt sensor set up as door or flap (tiltModel.ts): open or closed
+// instead of its position
+const TiltDoorTile = ({ channel, door, angle }: { channel: Channel; door: DoorState; angle: number | undefined }) => (
+  <DetectorTile
+    channel={channel}
+    tone={door === 'closed' ? 'calm' : 'active'}
+    waves={false}
+    icon={door === 'closed' ? <DoorClosedIcon /> : <DoorOpenIcon />}
+    status={doorText[door]()}
+    detail={angle !== undefined ? `${m.TILT_ANGLE()} ${format(angle, 0)}°` : undefined}
+  />
+);
+
 export const TiltSensorControl = ({ channel }: { channel: Channel }) => {
   const dp = datapoints(channel);
   const { data: master } = useParamset(channel.interfaceName, channel.address, 'MASTER');
   const mode = typeof master?.CHANNEL_OPERATION_MODE === 'number' ? master.CHANNEL_OPERATION_MODE : undefined;
+  const door = isTiltTile(channel.tile) ? doorState(dp, mode, channel.tile) : undefined;
+  if (door) return <TiltDoorTile channel={channel} door={door} angle={number(dp.ABSOLUTE_ANGLE)} />;
   const reading = tiltReading(dp, mode);
   const angle = number(dp.ABSOLUTE_ANGLE);
   // Devices with three positions show the angle too (iseAccelerationTransceiverTaco)

@@ -558,6 +558,15 @@ func TestStackChannelTile(t *testing.T) {
 	if m := call(t, conn, message{"type": "setChannelTile", "requestId": "t3", "id": 101, "tile": "lamp"}); m["code"] != "INVALID_VALUE" {
 		t.Fatalf("expected INVALID_VALUE, got %v", m)
 	}
+	// A tilt sensor as a door that is closed when horizontal (#307)
+	if m := call(t, conn, message{"type": "setChannelTile", "requestId": "t4", "id": 101, "tile": "horizontalClosed"}); m["success"] != true {
+		t.Fatalf("setChannelTile failed: %v", m)
+	}
+	for _, raw := range call(t, conn, message{"type": "getChannels", "deviceId": "dev-1", "all": true, "requestId": "t5"})["channels"].([]any) {
+		if ch := raw.(map[string]any); ch["id"] == 101.0 && ch["tile"] != "horizontalClosed" {
+			t.Fatalf("tile not stored: %v", ch)
+		}
+	}
 }
 
 func TestStackChannelNames(t *testing.T) {

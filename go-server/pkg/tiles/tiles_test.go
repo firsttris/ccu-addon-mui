@@ -63,6 +63,20 @@ func TestLayoutsOfDeletedViewsAreDropped(t *testing.T) {
 	}
 }
 
+// A tilt sensor shows a door or flap, open or closed when horizontal
+func TestKeepsTheTileOfATiltSensor(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "mui-tiles.json")
+	s := open(t, path)
+	for _, tile := range []string{HorizontalOpen, HorizontalClosed} {
+		if err := s.SetTile(7, tile); err != nil {
+			t.Fatal(err)
+		}
+		if got := open(t, path).Tile(7); got != tile {
+			t.Fatalf("after a restart: %q, want %q", got, tile)
+		}
+	}
+}
+
 func TestRefusesWhatIsNoLayoutOrTile(t *testing.T) {
 	s := open(t, filepath.Join(t.TempDir(), "mui-tiles.json"))
 	for _, layout := range []string{"[]", "not json", `"text"`, `{"v":3,"x":"` + strings.Repeat("a", MaxLayout) + `"}`} {

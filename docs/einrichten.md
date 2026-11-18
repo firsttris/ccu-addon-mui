@@ -45,12 +45,17 @@ Ein Klick auf ein Gerät öffnet seine Seite. Sie hat die Reiter *Kanäle*, *Dir
 
 **Kanäle** zeigt eine Karte für das Gerät und je eine für jeden Kanal. Alles, was zu einem Kanal gehört,
 steht in seiner Karte: Name, Typ und Adresse, Räume und Gewerke als Chips (mit × entfernen, mit
-*+ Raum* / *+ Gewerk* hinzufügen), bei Schaltaktoren die Kachel, die Optionen der CCU *sichtbar*,
+*+ Raum* / *+ Gewerk* hinzufügen), bei Schaltaktoren und Neigungssensoren die Kachel, die Optionen der CCU *sichtbar*,
 *bedienbar (nicht nur Admins)*, *protokolliert* und *gesichert (AES)* und darunter seine Einstellungen. Die
 Karte *Gerät* enthält den Gerätenamen und die geräteweiten Einstellungen. Selten gebrauchte Kanäle (der 2.
 und 3. virtuelle Kanal eines HmIP-Aktors, Kanäle ohne Zustand und Einstellungen) stehen eingeklappt unter
 *Weitere Kanäle*. Auf breiten Bildschirmen bleibt links das Gerätebild stehen, darunter eine Liste zum
 Springen zu den Kanälen.
+
+Bei einem Neigungssensor an einem Garagentor oder einer Klappe hängt es von der Einbaulage ab, ob *waagerecht*
+offen oder geschlossen heißt; der Sensor selbst weiß das nicht. Wähle als Kachel *Tor oder Klappe: waagerecht ist
+offen* oder *… waagerecht ist geschlossen*, dann zeigt sie *Offen* und *Geschlossen*, bei Sensoren mit drei Lagen
+dazwischen *Teilweise offen*. Das gilt, wenn der Sensor auf Lageänderung oder Neigungsänderung eingestellt ist.
 
 Name, Räume, Gewerke, Kachel und Optionen werden sofort gespeichert. Einstellungen (die mit *nach dem
 Übertragen* markiert sind) sammelt die Leiste unten, bis du sie überträgst:

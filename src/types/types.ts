@@ -111,9 +111,10 @@ interface BaseChannel {
   // Ids of the rooms and trades the channel belongs to
   rooms?: number[];
   trades?: number[];
-  // Tile chosen in the setup area (stored in the CCU); unset lets the app
-  // decide from the name and trade
-  tile?: 'light' | 'switch';
+  // Tile chosen in the setup area (stored in mui-tiles.json): lamp or
+  // switch for a switch actuator, unset lets the app decide from the name
+  // and trade; a tilt sensor as door or flap (tiltModel.ts)
+  tile?: 'light' | 'switch' | 'horizontalOpen' | 'horizontalClosed';
   // Name the tile shows instead of name, given in the app (stored in
   // mui-tiles.json); the CCU keeps name for its other interfaces
   displayName?: string;

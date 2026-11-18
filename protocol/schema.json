@@ -702,9 +702,11 @@
         "tile": {
           "enum": [
             "light",
-            "switch"
+            "switch",
+            "horizontalOpen",
+            "horizontalClosed"
           ],
-          "description": "Tile chosen in the add-on (stored by the server in mui-tiles.json)"
+          "description": "Tile chosen in the add-on (stored by the server in mui-tiles.json): lamp or switch for a switch actuator, a tilt sensor as door or flap that is open or closed when horizontal"
         },
         "displayName": {
           "type": "string",
@@ -5369,9 +5371,11 @@
           "enum": [
             "",
             "light",
-            "switch"
+            "switch",
+            "horizontalOpen",
+            "horizontalClosed"
           ],
-          "description": "The tile shown for the channel; empty lets the app decide"
+          "description": "The tile shown for the channel (see Channel.tile); empty lets the app decide"
         }
       },
       "required": [

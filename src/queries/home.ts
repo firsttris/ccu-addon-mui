@@ -25,7 +25,7 @@ export type ConfigChange =
   | { type: 'rename'; address: string; name: string }
   // list says where the group is, for the optimistic update
   | { type: 'setGroupMember'; groupId: number; channelId: number; member: boolean; list: 'rooms' | 'trades' }
-  | { type: 'setChannelTile'; id: number; tile: '' | 'light' | 'switch' }
+  | { type: 'setChannelTile'; id: number; tile: '' | NonNullable<Channel['tile']> }
   | { type: 'setChannelOption'; id: number; option: 'visible' | 'usable' | 'logged' | 'aes'; value: boolean };
 
 // The channel field each option is shown in

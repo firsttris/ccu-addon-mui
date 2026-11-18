@@ -829,6 +829,34 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
           type: 'ACCELERATION_TRANSCEIVER',
           datapoints: { MOTION: false },
         },
+        // A tilt sensor on a garage door, set up as open when horizontal
+        {
+          id: 638,
+          name: 'Kipptor Werkstatt',
+          address: '00199D89A1B2CA:1',
+          interfaceName: 'HmIP-RF',
+          type: 'ACCELERATION_TRANSCEIVER',
+          tile: 'horizontalOpen',
+          datapoints: { MOTION: true },
+        },
+        // BidCos rain sensor HM-Sen-RD-O (rf_rd.xml): STATE 0 DRY, 1 RAIN,
+        // the heater a switch channel of its own
+        {
+          id: 639,
+          name: 'Regenmelder Dach',
+          address: 'NEQ0005001:1',
+          interfaceName: 'BidCos-RF',
+          type: 'RAINDETECTOR',
+          datapoints: { STATE: 0 },
+        },
+        {
+          id: 640,
+          name: 'Regenmelder Dach Heizung',
+          address: 'NEQ0005001:2',
+          interfaceName: 'BidCos-RF',
+          type: 'RAINDETECTOR_HEAT',
+          datapoints: { STATE: false },
+        },
         {
           id: 637,
           name: 'Netzausfall Keller',
@@ -1628,10 +1656,12 @@ export const installWebSocketMock = async (page: Page, options: WebSocketMockOpt
         }
 
         // MASTER values: the tilt sensor reports vibration (operation mode 1),
+        // the one on the garage door its position (2),
         if (message.type === 'getParamset') {
           // the filling level sensor sits in a vertical barrel, the meter sensor has an IEC sensor
           const master: Record<string, AnyPayload> = {
             '00199D89A1B2C8:1': { CHANNEL_OPERATION_MODE: 1 },
+            '00199D89A1B2CA:1': { CHANNEL_OPERATION_MODE: 2 },
             'LEQ0000030:1': { CASE_DESIGN: 0, CASE_HIGH: 100, CASE_WIDTH: 100 },
             'LEQ0000031:1': { METER_TYPE: 3 },
           };

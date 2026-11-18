@@ -711,6 +711,34 @@ test('legt fest, ob ein Schaltaktor als Lampe oder Schalter erscheint', async ({
   await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
 });
 
+// #307: whether horizontal is open or closed depends on how the sensor is
+// mounted; the tile chosen in the setup area says it
+test('zeigt einen Neigungssensor am Tor als offen oder geschlossen', async ({ page }) => {
+  await login(page);
+  await page.goto('/devices');
+  const tile = page.getByRole('group', { name: 'Garagentor Lage' });
+  // Operation mode position change (MASTER CHANNEL_OPERATION_MODE 2), lying flat
+  await expect(tile.getByRole('status')).toHaveText('Lage: waagerecht');
+
+  await page.goto('/device/HmIP-RF/0000D3C99A7E11');
+  const choice = page.getByRole('region', { name: 'Garagentor Lage' }).getByLabel('Kachel 0000D3C99A7E11:1');
+  await expect(choice).toHaveValue('');
+  await choice.selectOption({ label: 'Tor oder Klappe: waagerecht ist offen' });
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+
+  // Stored on the CCU, so every device shows it
+  await page.goto('/devices');
+  await expect(tile.getByRole('status')).toHaveText('Offen');
+  await page.reload();
+  await expect(tile.getByRole('status')).toHaveText('Offen');
+
+  await page.goto('/device/HmIP-RF/0000D3C99A7E11');
+  await choice.selectOption({ label: 'Tor oder Klappe: waagerecht ist geschlossen' });
+  await expect(page.getByText('Einstellungen gespeichert')).toBeVisible();
+  await page.goto('/devices');
+  await expect(tile.getByRole('status')).toHaveText('Geschlossen');
+});
+
 test('gibt einer Kachel einen eigenen Namen, die CCU behält ihren', async ({ page }) => {
   await login(page);
   await page.goto('/room/1');

@@ -524,6 +524,30 @@
         "PRESS_LONG": false
       },
       "mode": 3
+    },
+    {
+      "id": 9301,
+      "address": "0000D3C99A7E11:0",
+      "type": "MAINTENANCE",
+      "interface": "HmIP-RF",
+      "name": "Garagentor Lage:0",
+      "datapoints": {
+        "UNREACH": false,
+        "LOW_BAT": false,
+        "CONFIG_PENDING": false,
+        "RSSI_DEVICE": -70,
+        "RSSI_PEER": -68
+      }
+    },
+    {
+      "id": 9300,
+      "address": "0000D3C99A7E11:1",
+      "type": "ACCELERATION_TRANSCEIVER",
+      "interface": "HmIP-RF",
+      "name": "Garagentor Lage",
+      "datapoints": {
+        "MOTION": false
+      }
     }
   ],
   "deviceNames": {
@@ -5065,6 +5089,49 @@
           "VERSION": 4,
           "FLAGS": 1,
           "LINK_SOURCE_ROLES": "CONDITIONAL_SWITCH REMOTE_CONTROL SWITCH WINDOW_SWITCH"
+        },
+        {
+          "ADDRESS": "0000D3C99A7E11",
+          "TYPE": "HmIP-SAM",
+          "CHILDREN": [
+            "0000D3C99A7E11:0",
+            "0000D3C99A7E11:1"
+          ],
+          "PARAMSETS": [
+            "MASTER",
+            "SERVICE"
+          ],
+          "VERSION": 4,
+          "FIRMWARE": "1.0.12",
+          "FLAGS": 1,
+          "UPDATABLE": 1
+        },
+        {
+          "ADDRESS": "0000D3C99A7E11:0",
+          "TYPE": "MAINTENANCE",
+          "PARENT": "0000D3C99A7E11",
+          "PARENT_TYPE": "HmIP-SAM",
+          "INDEX": 0,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES"
+          ],
+          "VERSION": 4,
+          "FLAGS": 3
+        },
+        {
+          "ADDRESS": "0000D3C99A7E11:1",
+          "TYPE": "ACCELERATION_TRANSCEIVER",
+          "PARENT": "0000D3C99A7E11",
+          "PARENT_TYPE": "HmIP-SAM",
+          "INDEX": 1,
+          "PARAMSETS": [
+            "MASTER",
+            "VALUES",
+            "LINK"
+          ],
+          "VERSION": 4,
+          "FLAGS": 1
         }
       ],
       "paramsetDescriptions": {
@@ -6761,6 +6828,35 @@
               "TAB_ORDER": 2
             }
           }
+        },
+        "0000D3C99A7E11:1": {
+          "VALUES": {
+            "MOTION": {
+              "TYPE": "BOOL",
+              "OPERATIONS": 5,
+              "FLAGS": 1,
+              "DEFAULT": false,
+              "MIN": false,
+              "MAX": true,
+              "TAB_ORDER": 0
+            }
+          },
+          "MASTER": {
+            "CHANNEL_OPERATION_MODE": {
+              "TYPE": "ENUM",
+              "OPERATIONS": 3,
+              "FLAGS": 1,
+              "DEFAULT": 1,
+              "MIN": 0,
+              "MAX": 2,
+              "VALUE_LIST": [
+                "OFF",
+                "ANY_MOTION",
+                "FLAT_DECT"
+              ],
+              "TAB_ORDER": 0
+            }
+          }
         }
       },
       "paramsets": {
@@ -6852,6 +6948,11 @@
         "000855699C4F38:0": {
           "MASTER": {
             "LOW_BAT_LIMIT": 2.2
+          }
+        },
+        "0000D3C99A7E11:1": {
+          "MASTER": {
+            "CHANNEL_OPERATION_MODE": 2
           }
         }
       },

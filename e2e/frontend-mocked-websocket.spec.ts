@@ -655,6 +655,20 @@ test('zeigt Sensoren mit eigenen Kacheln', async ({ page }) => {
   await emit('00199D89A1B2C8:1', 'MOTION', true);
   await expect(tilt.getByRole('status')).toHaveText(/(Erschütterung|Vibration): (Ja|Yes)/);
 
+  // Set up as a door that is open when horizontal (#307): open or closed
+  // instead of its position
+  const door = page.getByRole('group', { name: 'Kipptor Werkstatt' });
+  await expect(door.getByRole('status')).toHaveText(/^(Geschlossen|Closed)$/);
+  await emit('00199D89A1B2CA:1', 'MOTION', false);
+  await expect(door.getByRole('status')).toHaveText(/^(Offen|Open)$/);
+
+  // HM-Sen-RD-O: the rain tile, not the generic one under "RAINDETECTOR"
+  const roofRain = page.getByRole('group', { name: 'Regenmelder Dach', exact: true });
+  await expect(roofRain.getByRole('status')).toHaveText(/^(Trocken|Dry)$/);
+  await emit('NEQ0005001:1', 'STATE', 1);
+  await expect(roofRain.getByRole('status')).toHaveText(/Es regnet|Raining/);
+  await expect(page.getByText('RAINDETECTOR', { exact: true })).toHaveCount(0);
+
   const power = page.getByRole('group', { name: 'Netzausfall Keller' });
   await expect(power.getByRole('status')).toHaveText(/Netzspannung vorhanden|Mains power present/);
   await emit('00199D89A1B2C9:1', 'POWER_MAINS_FAILURE', true);
