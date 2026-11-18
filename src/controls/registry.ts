@@ -57,7 +57,7 @@ const ParticulateMatterControl = tile(() => import('./SensorControls'), 'Particu
 const PowerMainsControl = tile(() => import('./SensorControls'), 'PowerMainsControl');
 const RainSensorControl = tile(() => import('./SensorControls'), 'RainSensorControl');
 const SoilMoistureControl = tile(() => import('./SensorControls'), 'SoilMoistureControl');
-const TiltSensorControl = tile(() => import('./SensorControls'), 'TiltSensorControl');
+const TiltSensorControl = tile(() => import('./TiltSensorControl'), 'TiltSensorControl');
 const AkkuControl = tile(() => import('./WaterControls'), 'AkkuControl');
 const FlowMeterControl = tile(() => import('./WaterControls'), 'FlowMeterControl');
 const ValveControl = tile(() => import('./WaterControls'), 'ValveControl');

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 // The registry first, as in the app (queries import it, the controls them)
 import { controlOverrides } from './registry';
-import { co2Rating, measured, pmRating, soilRating, tiltReading } from './SensorControls';
+import { co2Rating, measured, pmRating, soilRating } from './SensorControls';
+import { tiltReading } from './TiltSensorControl';
 import { m } from '../paraglide/messages';
 
 describe('sensor tiles', () => {
