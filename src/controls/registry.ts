@@ -57,7 +57,7 @@ const ParticulateMatterControl = tile(() => import('./SensorControls'), 'Particu
 const PowerMainsControl = tile(() => import('./SensorControls'), 'PowerMainsControl');
 const RainSensorControl = tile(() => import('./SensorControls'), 'RainSensorControl');
 const SoilMoistureControl = tile(() => import('./SensorControls'), 'SoilMoistureControl');
-const TiltSensorControl = tile(() => import('./SensorControls'), 'TiltSensorControl');
+const TiltSensorControl = tile(() => import('./TiltSensorControl'), 'TiltSensorControl');
 const AkkuControl = tile(() => import('./WaterControls'), 'AkkuControl');
 const FlowMeterControl = tile(() => import('./WaterControls'), 'FlowMeterControl');
 const ValveControl = tile(() => import('./WaterControls'), 'ValveControl');
@@ -203,6 +203,10 @@ export const controlOverrides: Partial<Record<string, ControlOverride>> = {
   HEATING_ROOM_TH_TRANSCEIVER: channelControl('sensors', ClimateSensorControl),
   // Sensors as the WebUI's raindetector_transmitter.fn, brightness_transmitter.fn
   RAIN_DETECTION_TRANSMITTER: channelControl('sensors', RainSensorControl),
+  // HM-Sen-RD-O (rf_rd.xml): rain as STATE, the heater a switch of its own
+  // (control SWITCH.STATE, so switch.fn in the WebUI)
+  RAINDETECTOR: channelControl('sensors', RainSensorControl),
+  RAINDETECTOR_HEAT: channelControl('sensors', SwitchControl),
   BRIGHTNESS_TRANSMITTER: channelControl('sensors', BrightnessControl),
   LUXMETER: channelControl('sensors', BrightnessControl),
   CARBON_DIOXIDE_RECEIVER: channelControl('sensors', Co2Control),

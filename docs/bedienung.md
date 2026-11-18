@@ -131,7 +131,7 @@ veraltet, und gerade der Befehl holt es zurück. Die Kachel zeigt es dann grau m
 | **Wassermelder** | trocken, feucht, Wasser erkannt |
 | **Sirene** | ruhig, akustischer oder optischer Alarm |
 | **Zutritt** | Berechtigungen der Benutzer eines Keypads oder Fingerabdrucklesers |
-| **Erschütterung und Neigung** | je nach Betriebsart des Sensors Erschütterung, Lage oder Neigungswinkel |
+| **Erschütterung und Neigung** | je nach Betriebsart des Sensors Erschütterung, Lage oder Neigungswinkel; an einem Tor oder einer Klappe auf Wunsch *Offen* und *Geschlossen* (siehe [Einrichten](einrichten.md)) |
 | **Netzausfall** | Netzspannung vorhanden oder Stromausfall |
 | **Klima und Wetter** | Temperatur, Taupunkt, Luftfeuchte mit Bewertung; Wind, Regen, Helligkeit, Sonnenscheindauer |
 | **Regen, Helligkeit** | Regen ja oder nein mit Heizung und Temperatur; Helligkeit mit Durchschnitt, Minimum und Maximum |

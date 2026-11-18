@@ -10,7 +10,7 @@ import (
 )
 
 // handleSetChannelTile stores the tile shown for a channel (light or
-// switch, empty for the app's choice) in mui-tiles.json, for every device.
+// switch, door or flap for a tilt sensor, empty for the app's choice) in mui-tiles.json, for every device.
 // Setup, for administrators only.
 func (s *Server) handleSetChannelTile(client *Client, message []byte) {
 	var msg struct {

@@ -15,10 +15,10 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
 |---|---:|---:|---:|---:|---:|
 | HomeMatic IP (Funk, inkl. ELV-SH) | 244 | 221 | 206 | 14 | 1 |
 | HomeMatic IP Wired (HmIPW) | 38 | 36 | 36 | 0 | 0 |
-| BidCos-RF (HM-) | 186 | 168 | 148 | 11 | 9 |
+| BidCos-RF (HM-) | 186 | 168 | 149 | 11 | 8 |
 | BidCos-RF, ältere und OEM-Typen | 41 | 36 | 31 | 1 | 4 |
 | BidCos-Wired (HMW-) | 15 | 11 | 6 | 0 | 5 |
-| **Summe** | **524** | **472** | **427 (90 %)** | **26 (6 %)** | **19 (4 %)** |
+| **Summe** | **524** | **472** | **428 (91 %)** | **26 (6 %)** | **18 (4 %)** |
 | virtuelle Typen (VIR-) | 11 | nicht geprüft | | | |
 
 - **BidCos-Wired** ist angebunden, sobald ein Wired-Gateway (HMW-LGW) eingerichtet ist, aber noch nicht an
@@ -33,7 +33,7 @@ steht nicht in der WebUI, sondern in den Gerätebeschreibungen, die OpenCCU mitl
   Display eines Wandthermostats.
 - **nur generisch**: kein Kanal hat eine eigene Kachel. Das Gerät ist trotzdem voll bedienbar.
 
-Zusammen haben **453 von 472 Gerätetypen (96 %)** eine eigene Kachel für ihre Hauptfunktion.
+Zusammen haben **454 von 472 Gerätetypen (96 %)** eine eigene Kachel für ihre Hauptfunktion.
 
 Die Zählung ist reproduzierbar. Die Skripte vergleichen die Gerätebeschreibungen mit
 `src/controls/registry.ts`, gegengeprüft an einem Export einer echten CCU (`fixtures/my-ccu.json`).
@@ -65,12 +65,12 @@ jede Kachel im Demo-Zuhause der Tests, wie sie auf Meldungen der CCU reagiert (a
 | **Gong und MP3**<br><img src="kacheln/gong.webp" width="284" loading="lazy" alt="Kachel Gong und MP3"> | `ACOUSTIC_SIGNAL_VIRTUAL_RECEIVER`: Ton (Systemton oder Datei 1–252), Lautstärke, abspielen und stoppen wie `acoustic_signal.fn`; `SIGNAL_CHIME`, `SIGNAL_LED`: Gong und Blitzlicht auslösen (Melodien und Blinkmuster werden in Programmen gewählt)<br><br>**Beispiele:** HmIP-MP3P, HM-OU-CFM-Pl, -CFM-TW, -CF-Pl, -CM-PCB |
 | **Zutritt**<br><img src="kacheln/zutritt.webp" width="284" loading="lazy" alt="Kachel Zutritt"> | `ACCESS_TRANSCEIVER` (eine Kachel je Gerät)<br><br>**Beispiele:** HmIP-WKP, -FWI |
 | **Klima und Wetter**<br><img src="kacheln/klima.webp" width="284" loading="lazy" alt="Kachel Klima und Wetter"> | `CLIMATE_TRANSCEIVER`, `WEATHER_TRANSMIT`, `WEATHER`<br><br>**Beispiele:** HmIP-STHO, -SWO, HM-WDS10-TH-O, HM-WDS100 |
-| **Regen**<br><img src="kacheln/regen.webp" width="284" loading="lazy" alt="Kachel Regen"> | `RAIN_DETECTION_TRANSMITTER`: Regen, Heizung, Temperatur<br><br>**Beispiele:** HmIP-SRD |
+| **Regen**<br><img src="kacheln/regen.webp" width="284" loading="lazy" alt="Kachel Regen"> | `RAIN_DETECTION_TRANSMITTER`: Regen, Heizung, Temperatur; `RAINDETECTOR` (Regen), seine Heizung `RAINDETECTOR_HEAT` als Schalter<br><br>**Beispiele:** HmIP-SRD, HM-Sen-RD-O |
 | **Helligkeit**<br><img src="kacheln/helligkeit.webp" width="284" loading="lazy" alt="Kachel Helligkeit"> | `BRIGHTNESS_TRANSMITTER`, `LUXMETER`: aktuell, Durchschnitt, Minimum, Maximum<br><br>**Beispiele:** HmIP-SLO, HM-Sen-LI-O |
 | **CO₂**<br><img src="kacheln/co2.webp" width="284" loading="lazy" alt="Kachel CO₂"> | `CARBON_DIOXIDE_RECEIVER` (ppm, bewertet nach Umweltbundesamt), `SENSOR_FOR_CARBON_DIOXIDE` (Stufe)<br><br>**Beispiele:** HmIP-SCTH230, HM-CC-SCD |
 | **Feinstaub**<br><img src="kacheln/feinstaub.webp" width="284" loading="lazy" alt="Kachel Feinstaub"> | `TEMP_HUMIDITY_PARTICULATE_MATTER_TRANSMITTER`: PM2.5 (bewertet nach dem Europäischen Luftqualitätsindex), PM10, Partikelgröße, Temperatur, Luftfeuchte<br><br>**Beispiele:** HmIP-SFD |
 | **Bodenfeuchte**<br><img src="kacheln/bodenfeuchte.webp" width="284" loading="lazy" alt="Kachel Bodenfeuchte"> | `SOIL_MOISTURE_TRANSMITTER`: Feuchte, Bodentemperatur<br><br>**Beispiele:** ELV-SH-SMSI |
-| **Erschütterung und Neigung**<br><img src="kacheln/erschuetterung.webp" width="284" loading="lazy" alt="Kachel Erschütterung und Neigung"> | `ACCELERATION_TRANSCEIVER`, je nach Betriebsart Erschütterung, Lage oder Neigung<br><br>**Beispiele:** HmIP-SAM, -STV, ELV-SH-CTV, -TACO |
+| **Erschütterung und Neigung**<br><img src="kacheln/erschuetterung.webp" width="284" loading="lazy" alt="Kachel Erschütterung und Neigung"> | `ACCELERATION_TRANSCEIVER`, je nach Betriebsart Erschütterung, Lage oder Neigung. Sitzt der Sensor an einem Tor oder einer Klappe, zeigt die Kachel *Offen* und *Geschlossen*, wenn in der Einrichtung als Kachel „waagerecht ist offen“ oder „waagerecht ist geschlossen“ gewählt ist<br><br>**Beispiele:** HmIP-SAM, -STV, ELV-SH-CTV, -TACO |
 | **Netzausfall**<br><img src="kacheln/netzausfall.webp" width="284" loading="lazy" alt="Kachel Netzausfall"> | `POWER_MAINS_TRANSMITTER`<br><br>**Beispiele:** HmIP-PMFS |
 | **Bewässerung**<br><img src="kacheln/bewaesserung.webp" width="284" loading="lazy" alt="Kachel Bewässerung"> | `WATER_SWITCH_VIRTUAL_RECEIVER`: Ventil auf und zu, mit `ON_TIME` auch für 10, 30 oder 60 Minuten; `FLOW_METER_TRANSMITTER`: Durchfluss, Menge seit dem Öffnen, Gesamtmenge<br><br>**Beispiele:** HmIP-WSM, ELV-SH-WSM |
 | **Wasserschutz**<br><img src="kacheln/wasserschutz.webp" width="284" loading="lazy" alt="Kachel Wasserschutz"> | `VALVE_ACTUATOR_RECEIVER` (Absperrventil), `WATER_FLOW_TRANSMITTER`, `WATER_PRESSURE_TRANSMITTER`<br><br>**Beispiele:** HmIP-WSS |
@@ -117,15 +117,14 @@ Nach Bedeutung:
 2. **Ohne eigene Kachel** sind noch diese Gerätetypen (Stand: Zählung oben). Sie sind trotzdem voll
    bedienbar, über die generische Kachel.
 
-   *Nur generisch (19):*
+   *Nur generisch (18):*
 
    | Gerätetyp | Kanaltyp |
    |---|---|
    | HM-SwI-3-FM und OEM-Varianten | `SWITCH_INTERFACE` |
    | HM-CC-VD und OEM-Variante | `CLIMATECONTROL_VENT_DRIVE` |
    | HM-Sec-Sir-WM | `ARMING`, `SWITCH_PANIC`, `SWITCH_SENSOR` |
-   | HM-Sen-RD-O | `RAINDETECTOR`, `RAINDETECTOR_HEAT` |
-   | HM-Sec-TiS, HM-Sec-SFA-SM, HM-Sen-EP, HM-LC-DDC1-PCB, HM-Dis-TD-T | je ein eigener Kanaltyp |
+      | HM-Sec-TiS, HM-Sec-SFA-SM, HM-Sen-EP, HM-LC-DDC1-PCB, HM-Dis-TD-T | je ein eigener Kanaltyp |
    | HmIP-STE2-PCB | `COND_SWITCH_TRANSMITTER_TEMPERATURE` |
    | HMW-IO-12-FM, -IO-4-FM, -IO-12-Sw14-DR, -Sen-SC-12-FM/-DR | Ein- und Ausgänge (BidCos-Wired) |
    | 263 149/263 150 (OEM) | `ACTOR_SECURITY`, `ACTOR_WINDOW`, `SENSOR_WINDOW` |

@@ -10,11 +10,8 @@ import RulerIcon from '~icons/lucide/ruler';
 import WindIcon from '~icons/lucide/wind';
 import PlugZapIcon from '~icons/lucide/plug-zap';
 import UnplugIcon from '~icons/lucide/unplug';
-import VibrateIcon from '~icons/lucide/vibrate';
-import RotateIcon from '~icons/lucide/rotate-3d';
 import type { Channel, DatapointValue } from '../types/types';
 import { Tile } from '../components/Tile';
-import { useParamset } from '../queries';
 import { m } from '../paraglide/messages';
 import { cn } from '../lib/utils';
 import { DetectorTile, type Tone } from './DetectorControls';
@@ -89,12 +86,26 @@ export const MeasureTile = ({
   </Tile>
 );
 
-// --- Rain (HmIP-SRD, as the WebUI's raindetector_transmitter.fn)
+// --- Rain: HmIP-SRD (RAINING, as the WebUI's raindetector_transmitter.fn)
+// and HM-Sen-RD-O (STATE 0 DRY, 1 RAIN, rf_rd.xml; its heater is a channel
+// of its own, RAINDETECTOR_HEAT)
+
+export const rainState = (dp: Record<string, DatapointValue>): 'rain' | 'dry' | 'unknown' => {
+  if (typeof dp.RAINING === 'boolean') return dp.RAINING ? 'rain' : 'dry';
+  if (dp.STATE === 0 || dp.STATE === 1) return dp.STATE === 1 ? 'rain' : 'dry';
+  return 'unknown';
+};
+
+const rainText: Record<ReturnType<typeof rainState>, () => string> = {
+  rain: m.IS_RAINING,
+  dry: m.DRY,
+  unknown: m.WINDOW_UNKNOWN,
+};
 
 export const RainSensorControl = ({ channel }: { channel: Channel }) => {
   const dp = datapoints(channel);
-  const raining = dp.RAINING === true;
-  const unknown = typeof dp.RAINING !== 'boolean';
+  const state = rainState(dp);
+  const raining = state === 'rain';
   const temperature = measured(dp, 'ACTUAL_TEMPERATURE');
   const heater = typeof dp.HEATER_STATE === 'boolean' ? dp.HEATER_STATE : undefined;
   const detail = [
@@ -109,7 +120,7 @@ export const RainSensorControl = ({ channel }: { channel: Channel }) => {
       tone={raining ? 'active' : 'calm'}
       waves={raining}
       icon={raining ? <CloudRainIcon /> : <CloudIcon />}
-      status={unknown ? m.WINDOW_UNKNOWN() : raining ? m.IS_RAINING() : m.DRY()}
+      status={rainText[state]()}
       detail={detail || undefined}
     />
   );
@@ -309,77 +320,6 @@ export const PowerMainsControl = ({ channel }: { channel: Channel }) => {
       waves={failure === true}
       icon={failure === true ? <UnplugIcon /> : <PlugZapIcon />}
       status={unknown ? m.WINDOW_UNKNOWN() : failure ? m.POWER_FAILURE() : m.POWER_OK()}
-    />
-  );
-};
-
-// --- Acceleration and tilt (HmIP-SAM, -STV, ELV-SH-CTV, -TACO …). What it
-// reports depends on its operation mode (MASTER CHANNEL_OPERATION_MODE):
-// 1 vibration, 2 position, 3 tilt. Shown as the WebUI's
-// iseAccelerationTransceiver; devices with a STATE (three positions) as
-// iseAccelerationTransceiverTaco (webui.js).
-
-export const tiltReading = (
-  dp: Record<string, DatapointValue>,
-  mode: number | undefined,
-): { label: string; value: string; active: boolean } | undefined => {
-  const motion = dp.MOTION === true;
-  const taco = dp.STATE !== undefined && dp.STATE !== null;
-  const position = typeof dp.STATE === 'number' && dp.STATE >= 0 && dp.STATE <= 2 ? dp.STATE : undefined;
-  const angle = number(dp.ABSOLUTE_ANGLE);
-  switch (mode) {
-    case 1:
-      return { label: m.TILT_VIBRATION(), value: motion ? m.YES() : m.NO(), active: motion };
-    case 2:
-      if (taco) {
-        const names = [m.TILT_HORIZONTAL, m.TILT_TILTED, m.TILT_TILTED];
-        return {
-          label: m.TILT_POSITION(),
-          value: position !== undefined ? names[position]() : '–',
-          active: (position ?? 0) > 0,
-        };
-      }
-      return {
-        label: m.TILT_POSITION(),
-        value: motion ? m.TILT_NOT_HORIZONTAL() : m.TILT_HORIZONTAL(),
-        active: motion,
-      };
-    case 3:
-      if (taco) {
-        const names = [m.TILT_HORIZONTAL, m.TILT_TILTED, m.TILT_VERTICAL];
-        return {
-          label: m.TILT_POSITION_A(),
-          value: position !== undefined ? names[position]() : '–',
-          active: (position ?? 0) > 0,
-        };
-      }
-      return { label: m.TILT_ANGLE(), value: angle !== undefined ? `${format(angle, 0)}°` : '–', active: false };
-  }
-  return undefined;
-};
-
-export const TiltSensorControl = ({ channel }: { channel: Channel }) => {
-  const dp = datapoints(channel);
-  const { data: master } = useParamset(channel.interfaceName, channel.address, 'MASTER');
-  const mode = typeof master?.CHANNEL_OPERATION_MODE === 'number' ? master.CHANNEL_OPERATION_MODE : undefined;
-  const reading = tiltReading(dp, mode);
-  const angle = number(dp.ABSOLUTE_ANGLE);
-  // Devices with three positions show the angle too (iseAccelerationTransceiverTaco)
-  const showAngle = angle !== undefined && dp.STATE !== undefined && dp.STATE !== null;
-  return (
-    <DetectorTile
-      channel={channel}
-      tone={reading?.active ? 'active' : 'calm'}
-      waves={Boolean(reading?.active && mode === 1)}
-      icon={mode === 1 ? <VibrateIcon /> : <RotateIcon />}
-      status={
-        reading
-          ? `${reading.label}: ${reading.value}`
-          : angle !== undefined
-            ? `${m.TILT_ANGLE()}: ${format(angle, 0)}°`
-            : m.INPUT_NO_FUNCTION()
-      }
-      detail={showAngle ? `${m.TILT_ANGLE()} ${format(angle, 0)}°` : undefined}
     />
   );
 };

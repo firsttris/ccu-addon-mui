@@ -1,6 +1,7 @@
 // Package tiles keeps how the app shows tiles, for every device the same:
 // the layout arranged by hand on a room, trade or favorite list, the tile
-// chosen for a switch channel (lamp or switch), and the name a channel's
+// chosen for a switch channel (lamp or switch) or a tilt sensor (door or
+// flap), and the name a channel's
 // tile shows instead of the CCU's. In a file of its own
 // (mui-tiles.json), written atomically: safe as soon as it is saved, also
 // when the CCU restarts right after, which ReGa metadata was not (ReGa
@@ -26,6 +27,17 @@ const (
 	Light  = "light"
 	Switch = "switch"
 )
+
+// The tiles a tilt sensor can show: a door or flap that is open, or
+// closed, when the sensor lies horizontal (how it is mounted, which the
+// device doesn't know)
+const (
+	HorizontalOpen   = "horizontalOpen"
+	HorizontalClosed = "horizontalClosed"
+)
+
+// tileKinds are the tiles SetTile takes
+var tileKinds = map[string]bool{Light: true, Switch: true, HorizontalOpen: true, HorizontalClosed: true}
 
 // MaxLayout is the size a layout may have (JSON); one of a large room is a
 // few kB
@@ -126,10 +138,11 @@ func (s *Store) Tile(id int64) string {
 	return s.data.Tiles[id]
 }
 
-// SetTile stores the tile of a channel: Light, Switch, or "" for the app's
-// own choice (by name and trade)
+// SetTile stores the tile of a channel: Light or Switch for a switch,
+// HorizontalOpen or HorizontalClosed for a tilt sensor, or "" for the
+// app's own choice
 func (s *Store) SetTile(id int64, tile string) error {
-	if tile != "" && tile != Light && tile != Switch {
+	if tile != "" && !tileKinds[tile] {
 		return ErrInvalid
 	}
 	s.mu.Lock()

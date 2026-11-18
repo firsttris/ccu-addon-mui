@@ -454,9 +454,9 @@ export interface Channel {
   rooms?: number[];
   trades?: number[];
   /**
-   * Tile chosen in the add-on (stored by the server in mui-tiles.json)
+   * Tile chosen in the add-on (stored by the server in mui-tiles.json): lamp or switch for a switch actuator, a tilt sensor as door or flap that is open or closed when horizontal
    */
-  tile?: "light" | "switch";
+  tile?: "light" | "switch" | "horizontalOpen" | "horizontalClosed";
   /**
    * Name the channel's tile shows instead of name, given in the add-on (stored by the server in mui-tiles.json); missing shows name
    */
@@ -2182,9 +2182,9 @@ export interface SetChannelTileRequest {
   requestId?: string;
   id: number;
   /**
-   * The tile shown for the channel; empty lets the app decide
+   * The tile shown for the channel (see Channel.tile); empty lets the app decide
    */
-  tile: "" | "light" | "switch";
+  tile: "" | "light" | "switch" | "horizontalOpen" | "horizontalClosed";
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

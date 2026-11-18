@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 // The registry first, as in the app (queries import it, the controls them)
 import { controlOverrides } from './registry';
-import { co2Rating, measured, pmRating, soilRating, tiltReading } from './SensorControls';
+import { co2Rating, measured, pmRating, rainState, soilRating } from './SensorControls';
+import { tiltReading } from './TiltSensorControl';
 import { m } from '../paraglide/messages';
 
 describe('sensor tiles', () => {
@@ -9,6 +10,16 @@ describe('sensor tiles', () => {
     expect(controlOverrides.RAIN_DETECTION_TRANSMITTER).toMatchObject({
       section: 'sensors',
       component: expect.objectContaining({ tileName: 'RainSensorControl' }),
+    });
+    // HM-Sen-RD-O (rf_rd.xml): the rain tile and its heater as a switch,
+    // not the generic tile under the bare channel type
+    expect(controlOverrides.RAINDETECTOR).toMatchObject({
+      section: 'sensors',
+      component: expect.objectContaining({ tileName: 'RainSensorControl' }),
+    });
+    expect(controlOverrides.RAINDETECTOR_HEAT).toMatchObject({
+      section: 'sensors',
+      component: expect.objectContaining({ tileName: 'SwitchControl' }),
     });
     expect(controlOverrides.LUXMETER).toMatchObject({
       section: 'sensors',
@@ -18,6 +29,16 @@ describe('sensor tiles', () => {
       section: 'security',
       component: expect.objectContaining({ tileName: 'TiltSensorControl' }),
     });
+  });
+
+  // HmIP-SRD: RAINING; HM-Sen-RD-O: STATE 0 DRY, 1 RAIN (rf_rd.xml)
+  it('reads rain from either sensor', () => {
+    expect(rainState({ RAINING: true })).toBe('rain');
+    expect(rainState({ RAINING: false })).toBe('dry');
+    expect(rainState({ STATE: 1 })).toBe('rain');
+    expect(rainState({ STATE: 0 })).toBe('dry');
+    expect(rainState({ STATE: null })).toBe('unknown');
+    expect(rainState({})).toBe('unknown');
   });
 
   // *_STATUS: NORMAL is 0, anything else (UNKNOWN, OVERFLOW …) is no value

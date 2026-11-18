@@ -36,7 +36,8 @@ type Channel struct {
 	Trades []int64 `json:"trades,omitempty"`
 
 	// Tile is the tile chosen for the channel in the add-on ("light" or
-	// "switch"), filled in by the server from mui-tiles.json; empty lets
+	// "switch" for a switch, "horizontalOpen" or "horizontalClosed" for a
+	// tilt sensor), filled in by the server from mui-tiles.json; empty lets
 	// the app decide.
 	Tile string `json:"tile,omitempty"`
 

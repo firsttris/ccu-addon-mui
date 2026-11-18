@@ -10,8 +10,26 @@ import type { Channel } from '../../types/protocol';
 import { errorText } from '../../lib/errors';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
 
-// Channel types shown as a lamp or a plain switch (SwitchControl)
-const SWITCH_TYPES = new Set(['SWITCH_VIRTUAL_RECEIVER', 'SWITCH']);
+type TileChoice = { value: '' | NonNullable<Channel['tile']>; label: () => string };
+
+// The tiles a channel can be shown as, by channel type: a switch as lamp
+// or plain switch (SwitchControl), a tilt sensor by its position or as a
+// door or flap (TiltSensorControl). The first is the app's own choice.
+const switchTiles: TileChoice[] = [
+  { value: '', label: m.TILE_AUTO },
+  { value: 'light', label: m.TILE_LIGHT },
+  { value: 'switch', label: m.TILE_SWITCH },
+];
+const tiltTiles: TileChoice[] = [
+  { value: '', label: m.TILE_TILT_POSITION },
+  { value: 'horizontalOpen', label: m.TILE_TILT_HORIZONTAL_OPEN },
+  { value: 'horizontalClosed', label: m.TILE_TILT_HORIZONTAL_CLOSED },
+];
+const tileChoices: Partial<Record<string, { choices: TileChoice[]; hint?: () => string }>> = {
+  SWITCH_VIRTUAL_RECEIVER: { choices: switchTiles },
+  SWITCH: { choices: switchTiles },
+  ACCELERATION_TRANSCEIVER: { choices: tiltTiles, hint: m.TILE_TILT_HINT },
+};
 
 export const NameField = ({
   label,
@@ -81,6 +99,7 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
   const change = useConfigChange();
   // The ReGa's channel options; openccu-lite has none
   const { capabilities } = useWebSocketContext();
+  const tiles = tileChoices[channel.type];
 
   const run = (variables: Parameters<typeof change.mutate>[0], success?: string) =>
     change.mutate(variables, {
@@ -161,7 +180,7 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
           </MetaRow>
         );
       })}
-      {SWITCH_TYPES.has(channel.type) && (
+      {tiles && (
         <MetaRow label={m.TILE()}>
           <NativeSelect
             className="h-7 w-auto text-[13px] md:text-[13px]"
@@ -170,15 +189,18 @@ export const ChannelMeta = ({ channel, canEdit }: { channel: Channel; canEdit: b
             disabled={!canEdit}
             onChange={(event) =>
               run(
-                { type: 'setChannelTile', id: channel.id, tile: event.target.value as '' | 'light' | 'switch' },
+                { type: 'setChannelTile', id: channel.id, tile: event.target.value as TileChoice['value'] },
                 m.SAVED(),
               )
             }
           >
-            <option value="">{m.TILE_AUTO()}</option>
-            <option value="light">{m.TILE_LIGHT()}</option>
-            <option value="switch">{m.TILE_SWITCH()}</option>
+            {tiles.choices.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label()}
+              </option>
+            ))}
           </NativeSelect>
+          {tiles.hint && <span className="text-xs text-muted-foreground">{tiles.hint()}</span>}
         </MetaRow>
       )}
       {capabilities.channelOptions && (
