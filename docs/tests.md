@@ -162,8 +162,9 @@ Die 74 Tests decken praktisch jede Funktion von *Einrichten* ab, zum Beispiel:
 Die Tests gegen die Fake-Lite prüfen, was MUI aus occulites APIs macht. Ob das Paket auf einem echten
 openccu-lite überhaupt installiert und läuft, prüft erst dieser Test: Er bootet das x86_64-Image eines
 openccu-lite-Releases headless in QEMU, wie openccu-lites eigenes `scripts/lite-qemu-test.sh`, legt den
-ersten Administrator an und installiert das Paket über occulites Add-on-API, wie dessen Seite
-*Zusatzsoftware* es hochlädt. Dann läuft `go-server/litevm` (Build-Tag `litevm`) in fünf Phasen gegen die
+ersten Administrator an, stellt HmIP-RF auf *Keins* (seit openccu-lite 2 startet hmipserver ohne
+Funkmodul nur so, als `HMServer.jar` mit den virtuellen Geräten; `PUT /api/system/v1/radio/connections`)
+und installiert das Paket über occulites Add-on-API, wie dessen Seite *Zusatzsoftware* es hochlädt. Dann läuft `go-server/litevm` (Build-Tag `litevm`) in fünf Phasen gegen die
 VM, über lighttpd und occulites Sitzungs-Gate:
 
 - **prepare:** Anmeldung über das Gate (`platform: lite`, Administrator), alles, was die App beim Start
@@ -175,7 +176,7 @@ VM, über lighttpd und occulites Sitzungs-Gate:
   *configure* benennt einen Raum um, und die Änderung kommt mit seiner eigenen Sitzung bei occulited an.
   Heizgruppen und Gerät löschen bekommen `FORBIDDEN`, *operate* darf nichts einrichten. Der Administrator
   legt eine Heizgruppe mit Umlauten über occulites Gruppen-API an. Ihr Gerät liegt in hmipserver
-  (`VirtualDevices` läuft auch ohne Funkmodul). MUIs Geräteliste für *configure* muss dieselbe sein,
+  (`VirtualDevices` läuft ohne Funkmodul, mit HmIP-RF auf *Keins*). MUIs Geräteliste für *configure* muss dieselbe sein,
   die lite-rpc (`/api/rpc/v1/json/VirtualDevices`) dieser Sitzung direkt gibt. An diesem Gerät setzt
   *operate* einen Wert (`setDatapoint` über lite-rpc, `rpc:operate`) und liest ihn mit `getParamset`
   (`VALUES`) zurück. Ein Event gibt es dafür nicht: hmipserver schickt für einen Wert an einer Heizgruppe
