@@ -11,6 +11,10 @@ export default defineConfig((env) =>
     resolve: { mainFields: ['module', 'jsnext:main', 'jsnext', 'main'] },
     test: {
       environment: 'jsdom',
+      // Worker threads, not forks: since 5.1 the forks pool starts a watchdog
+      // process and calls child.channel.unref(), which Bun's child processes
+      // lack, so no test file started under `bun --bun vitest`
+      pool: 'threads',
       include: ['src/**/*.test.{ts,tsx}'],
       setupFiles: ['./src/test/setup.ts'],
       server: { deps: { inline: true } },
