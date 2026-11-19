@@ -55,7 +55,8 @@ aus der Praxis.
 ## Unit-Tests (Vitest)
 
 `bun run test` · Konfiguration `vitest.config.mts` (jsdom, Testing Library, auf derselben Laufzeit wie die App,
-TanStack Redact)
+TanStack Redact). Die Testdateien laufen in Worker-Threads (`pool: 'threads'`): Der Standard-Pool `forks` startet
+seit Vitest 5.1 einen Watchdog-Prozess, den Bun nicht unterstützt (`child.channel.unref()` fehlt).
 
 Getestet werden vor allem reine Logik und kritische Komponenten:
 
