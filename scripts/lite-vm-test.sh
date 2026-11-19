@@ -117,6 +117,30 @@ SID=$(sed -n 's/.*"sid":"\([^"]*\)".*/\1/p' "$WORK/setup.json")
 AUTH="Authorization: Bearer $SID"
 step "setup"
 
+# --- HmIP-RF to None: hmipserver with the virtual devices alone ----------------
+# Since openccu-lite 2 hmipserver runs HMServer.jar (VirtualDevices, which the
+# heating groups need) only with HmIP set to None; on Automatic without a radio
+# module it does not start at all (openccu-lite docs/radio.md, occulited
+# docs/system-api.md: PUT /radio/connections). BidCos keeps its choice.
+curl -s --max-time 10 -H "$AUTH" "$BASE/api/system/v1/radio/connections" > "$OUT/radio-connections.json"
+BIDCOS=$(sed -n 's/.*"choices":{[^}]*"bidcos":"\([^"]*\)".*/\1/p' "$OUT/radio-connections.json")
+code=$(curl -s -o "$WORK/radio-put.json" -w '%{http_code}' --max-time 30 -X PUT -H "$AUTH" \
+  -H 'Content-Type: application/json' -d "{\"hmip\":\"none\",\"bidcos\":\"$BIDCOS\",\"confirm\":false}" \
+  "$BASE/api/system/v1/radio/connections")
+say "radio connections hmip=none bidcos='$BIDCOS': HTTP $code $(head -c 300 "$WORK/radio-put.json")"
+[ "$code" -lt 300 ] || fail "HmIP-RF to None refused"
+hmipserver_up() {
+  for _ in $(seq 1 60); do
+    if [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 -H "$AUTH" "$BASE/api/system/v1/groups/types")" = 200 ]; then
+      return 0
+    fi
+    sleep 3
+  done
+  fail "hmipserver (VirtualDevices) did not answer after HmIP-RF to None"
+}
+hmipserver_up
+step "hmipserver with the virtual devices"
+
 # A new session of the administrator, after a reboot
 relogin() {
   curl -s --max-time 10 -X POST -H 'Content-Type: application/json' \

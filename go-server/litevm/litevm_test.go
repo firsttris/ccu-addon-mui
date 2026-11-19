@@ -328,7 +328,8 @@ func levels(t *testing.T, admin *vm) {
 
 	// administer: a heating group through occulited's system API, with the
 	// administrator's session; its virtual device lives in hmipserver
-	// (VirtualDevices), which runs without a radio module. The types are
+	// (VirtualDevices), which runs without a radio module as HMServer.jar
+	// once scripts/lite-vm-test.sh has set HmIP-RF to None. The types are
 	// what hmipserver offers: without an HmIP module only HomeMatic.heating
 	code, body := admin.api(t, http.MethodGet, "/api/system/v1/groups/types", nil)
 	var types struct {
