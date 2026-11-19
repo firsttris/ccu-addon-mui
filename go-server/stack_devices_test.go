@@ -47,8 +47,8 @@ func TestStackAllDevices(t *testing.T) {
 			t.Fatalf("maintenance channel listed: %s", ch.Address)
 		}
 	}
-	if len(channels) != 24 {
-		t.Fatalf("expected all 24 channels, got %d", len(channels))
+	if len(channels) != 25 {
+		t.Fatalf("expected all 25 channels, got %d", len(channels))
 	}
 }
 
@@ -179,8 +179,8 @@ func TestStackListDevices(t *testing.T) {
 		d := raw.(map[string]any)
 		types[d["address"].(string)] = d["interfaceName"].(string) + " " + d["type"].(string)
 	}
-	if len(types) != 8 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" ||
-		types["LEQ0000004"] != "BidCos-RF HM-TC-IT-WM-W-EU" {
+	if len(types) != 9 || types["0000DBE9A5C1F2"] != "HmIP-RF HmIP-SRH" || types["LEQ0000001"] != "BidCos-RF HM-LC-Sw1-FM" ||
+		types["LEQ0000004"] != "BidCos-RF HM-TC-IT-WM-W-EU" || types["0000D3C99A7E11"] != "HmIP-RF HmIP-SAM" {
 		t.Fatalf("unexpected devices: %v", types)
 	}
 }
