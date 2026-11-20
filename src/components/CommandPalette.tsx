@@ -8,6 +8,8 @@ import PlayIcon from '~icons/lucide/play';
 import ChartIcon from '~icons/lucide/chart-line';
 import HeartPulseIcon from '~icons/lucide/heart-pulse';
 import HistoryIcon from '~icons/lucide/history';
+import KeyboardIcon from '~icons/lucide/keyboard';
+import InfoIcon from '~icons/lucide/info';
 import BellIcon from '~icons/lucide/bell';
 import SlidersIcon from '~icons/lucide/sliders-horizontal';
 import HomeIcon from '~icons/lucide/house';
@@ -39,6 +41,8 @@ const ICONS: Record<PaletteIcon, React.ComponentType<{ className?: string }>> = 
   chart: ChartIcon,
   heart: HeartPulseIcon,
   history: HistoryIcon,
+  keyboard: KeyboardIcon,
+  info: InfoIcon,
   bell: BellIcon,
   sliders: SlidersIcon,
   home: HomeIcon,

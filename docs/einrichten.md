@@ -20,7 +20,9 @@ Beispiel Backup, Firewall und Sicherheitsstufe. Dann fragt die App das Passwort 
 Sitzung danach.
 
 Benutzer ohne Admin-Rechte sehen im Seitenmenü nur die Gruppe *Logik*: Systemvariablen, Programme,
-virtuelle Taster, Systemprotokoll und Diagramme.
+virtuelle Taster, Systemprotokoll, Diagramme, Geräte-Gesundheit und Benachrichtigungsregeln. Diese Seiten
+stehen auch im Menü, ebenso *System* für Administratoren; jede Seite im Rahmen von Einrichten steht in
+dessen Seitenmenü.
 
 Jede Änderung landet im Audit-Log, mit Benutzer, Zeit, altem und neuem Wert (siehe [Sicherheit](sicherheit.md)).
 

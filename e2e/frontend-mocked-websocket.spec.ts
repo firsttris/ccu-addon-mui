@@ -1074,6 +1074,38 @@ test('zeigt die Anzahl der Geräte mit Problemen im Header', async ({ page }) =>
   await expect(page.getByRole('dialog').getByRole('list', { name: /^(Notices|Meldungen)$/ })).toBeVisible();
 });
 
+test('Menü führt zu allen Seiten zum Anschauen, das Seitenmenü von Einrichten zu allen Seiten in seinem Rahmen', async ({
+  page,
+}) => {
+  await page.goto('/room/1');
+  const openMenu = () => page.getByRole('button', { name: /^(Menu|Menü)$/ }).click();
+  const setupNav = page.getByRole('navigation', { name: /^(Setup|Einrichten)$/ });
+
+  // The mock logs in as administrator, so the system page is offered too
+  for (const [name, url] of [
+    [/^(Virtual keys|Virtuelle Taster)$/, /\/virtual-keys$/],
+    [/^(System protocol|Systemprotokoll)$/, /\/history$/],
+    [/^System$/, /\/setup\/system$/],
+  ] as const) {
+    await openMenu();
+    await page.getByRole('dialog').getByRole('button', { name }).click();
+    await expect(page).toHaveURL(url);
+    await expect(setupNav.getByRole('link', { name })).toHaveAttribute('aria-current', 'page');
+  }
+
+  // Device health is shown in the setup frame, so its side menu marks it
+  await openMenu();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: /^(Device health|Geräte-Gesundheit)$/ })
+    .click();
+  await expect(page).toHaveURL(/\/health$/);
+  await expect(setupNav.getByRole('link', { name: /^(Device health|Geräte-Gesundheit)$/ })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+});
+
 test('zeigt die Geräte-Gesundheit nach Dringlichkeit', async ({ page }) => {
   await page.goto('/room/1');
   await page.getByRole('button', { name: /^(Menu|Menü)$/ }).click();

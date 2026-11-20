@@ -13,6 +13,7 @@ import HistoryIcon from '~icons/lucide/history';
 import KeyboardIcon from '~icons/lucide/keyboard';
 import FlameIcon from '~icons/lucide/flame';
 import ChartIcon from '~icons/lucide/chart-line';
+import HeartPulseIcon from '~icons/lucide/heart-pulse';
 import BellIcon from '~icons/lucide/bell-ring';
 import GatewayIcon from '~icons/lucide/router';
 import { useWebSocketContext } from '../../hooks/useWebsocket';
@@ -160,6 +161,10 @@ export const SetupShell = ({ children, adminOnly = true }: { children: ReactNode
             <Link to="/diagrams" className={navLink}>
               <ChartIcon />
               {m.DIAGRAMS()}
+            </Link>
+            <Link to="/health" className={navLink}>
+              <HeartPulseIcon />
+              {m.HEALTH()}
             </Link>
             <Link to="/rules" className={navLink}>
               <BellIcon />
