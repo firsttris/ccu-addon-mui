@@ -71,11 +71,15 @@ const pageEntries = ({ capabilities, userLevel }: EntrySources): PaletteEntry[] 
   page('devices', m.ALL_DEVICES(), 'list', '/devices'),
   ...only(capabilities.sysvars, [page('sysvars', m.SYSVARS(), 'braces', '/sysvars')]),
   ...only(capabilities.programs, [page('programs', m.PROGRAMS(), 'play', '/programs')]),
+  page('virtual-keys', m.VKEYS_TITLE(), 'keyboard', '/virtual-keys'),
+  ...only(capabilities.history, [page('history', m.HIST_TITLE(), 'history', '/history')]),
   page('diagrams', m.DIAGRAMS(), 'chart', '/diagrams'),
   page('health', m.HEALTH(), 'heart', '/health'),
-  ...only(capabilities.history, [page('history', m.HIST_TITLE(), 'history', '/history')]),
   page('rules', m.RULES(), 'bell', '/rules'),
-  ...only(userLevel === 'admin', [page('setup', m.SETUP(), 'sliders', '/setup')]),
+  ...only(userLevel === 'admin', [
+    page('system', m.SYSTEM(), 'info', '/setup/system'),
+    page('setup', m.SETUP(), 'sliders', '/setup'),
+  ]),
 ];
 
 const placeEntries = ({ rooms, trades, favorites }: EntrySources): PaletteEntry[] => [

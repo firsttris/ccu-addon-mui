@@ -17,7 +17,7 @@ ab, erscheint nach zwei Sekunden ein roter Balken, und die App verbindet sich vo
 | Bereich | Inhalt |
 |---|---|
 | Navigation | Räume, Gewerke |
-| Ansichten | Favoriten, Alle Geräte, Systemvariablen, Programme, Diagramme, Geräte-Gesundheit, Einrichten |
+| Ansichten | Favoriten, Alle Geräte, Systemvariablen, Programme, Virtuelle Taster, Systemprotokoll, Diagramme, Geräte-Gesundheit, für Administratoren System und Einrichten |
 | Darstellung | Dunkles Design, Effekte (Aus, Dezent, Kräftig), Übersicht oben (je Gerät), Sprache (je Benutzer), Startseite (zuletzt geöffnet oder Favoriten), Bildschirm anlassen (je Gerät) |
 | Konto | Benachrichtigungen (Push für Alarme, Servicemeldungen und Regeln), Passwort ändern, Abmelden |
 
@@ -256,7 +256,7 @@ und Stundenwerte unbegrenzt. Wie viel Platz noch frei ist, zeigt *Einrichten →
 
 ## Systemprotokoll
 
-*Einrichten → Systemprotokoll* (für alle Benutzer sichtbar) listet die Änderungen der Kanäle, die in der
+*Systemprotokoll* im Menü (für alle Benutzer sichtbar) listet die Änderungen der Kanäle, die in der
 CCU als *protokolliert* markiert sind, die neuesten zuerst, mit Suche. Auf der Geräteseite steht der
 Verlauf des Geräts zusätzlich als kleine Diagramme. Kann der Server das Protokoll nicht lesen, steht das dort
 mit dem Grund, statt dass es leer erscheint.

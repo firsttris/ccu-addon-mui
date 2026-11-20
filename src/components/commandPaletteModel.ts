@@ -21,6 +21,8 @@ export type PaletteIcon =
   | 'chart'
   | 'heart'
   | 'history'
+  | 'keyboard'
+  | 'info'
   | 'bell'
   | 'sliders'
   | 'home'

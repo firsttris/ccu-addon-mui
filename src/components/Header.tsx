@@ -12,6 +12,9 @@ import BracesIcon from '~icons/lucide/braces';
 import ChartIcon from '~icons/lucide/chart-line';
 import HeartPulseIcon from '~icons/lucide/heart-pulse';
 import PlayIcon from '~icons/lucide/play';
+import KeyboardIcon from '~icons/lucide/keyboard';
+import HistoryIcon from '~icons/lucide/history';
+import InfoIcon from '~icons/lucide/info';
 import SlidersIcon from '~icons/lucide/sliders-horizontal';
 import LogOutIcon from '~icons/lucide/log-out';
 import KeyIcon from '~icons/lucide/key-round';
@@ -208,6 +211,14 @@ const NavMenu = ({
                   {m.PROGRAMS()}
                 </NavLink>
               )}
+              <NavLink icon={<KeyboardIcon />} onClick={() => go(() => navigate({ to: '/virtual-keys' }))}>
+                {m.VKEYS_TITLE()}
+              </NavLink>
+              {capabilities.history && (
+                <NavLink icon={<HistoryIcon />} onClick={() => go(() => navigate({ to: '/history' }))}>
+                  {m.HIST_TITLE()}
+                </NavLink>
+              )}
               <NavLink icon={<ChartIcon />} onClick={() => go(() => navigate({ to: '/diagrams' }))}>
                 {m.DIAGRAMS()}
               </NavLink>
@@ -215,9 +226,14 @@ const NavMenu = ({
                 {m.HEALTH()}
               </NavLink>
               {userLevel === 'admin' && (
-                <NavLink icon={<SlidersIcon />} onClick={() => go(() => navigate({ to: '/setup' }))}>
-                  {m.SETUP()}
-                </NavLink>
+                <>
+                  <NavLink icon={<InfoIcon />} onClick={() => go(() => navigate({ to: '/setup/system' }))}>
+                    {m.SYSTEM()}
+                  </NavLink>
+                  <NavLink icon={<SlidersIcon />} onClick={() => go(() => navigate({ to: '/setup' }))}>
+                    {m.SETUP()}
+                  </NavLink>
+                </>
               )}
             </NavSection>
             <Separator />

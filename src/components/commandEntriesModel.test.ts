@@ -66,6 +66,13 @@ describe('buildEntries', () => {
     expect(ids(sources({ userLevel: 'admin' }))).toContain('page:setup');
   });
 
+  it('offers the system page only to administrators, the virtual keys to everyone, as the menu does', () => {
+    expect(ids(sources())).not.toContain('page:system');
+    expect(ids(sources({ userLevel: 'admin' }))).toContain('page:system');
+    expect(ids(sources())).toContain('page:virtual-keys');
+    expect(ids(sources({ capabilities: LITE }))).toContain('page:virtual-keys');
+  });
+
   it('leaves out on openccu-lite what it does not have, even with data at hand', () => {
     const lite = ids(sources({ capabilities: LITE, userLevel: 'admin' }));
     for (const id of ['page:programs', 'page:sysvars', 'page:history', 'program:21', 'sysvar:31']) {
