@@ -2,7 +2,7 @@
   "name": "ccu-addon-mui",
   "version": "1.0.34",
   "license": "AGPL-3.0-only",
-  "packageManager": "bun@1.4.4",
+  "packageManager": "bun@1.4.5",
   "scripts": {
     "start": "vite",
     "prestart:fe": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy preferredLanguage baseLocale --emit-ts-declarations --silent",
