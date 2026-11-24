@@ -10,6 +10,7 @@ import {
   isBinary,
   nearest,
   niceTicks,
+  tickDecimals,
   seriesStats,
   timeTicks,
   toBars,
@@ -166,5 +167,14 @@ describe('costOf', () => {
     expect(costOf(100, 'm³', price)).toBeCloseTo(104.5);
     expect(costOf(10, '°C', price)).toBeNull();
     expect(costOf(10, 'kWh', undefined)).toBeNull();
+  });
+});
+
+describe('tickDecimals', () => {
+  it('gives each tick of a small step its own label', () => {
+    expect(tickDecimals([0, 500, 1000])).toBe(0);
+    expect(tickDecimals([0, 0.5, 1])).toBe(1);
+    expect(tickDecimals([0, 0.25, 0.5, 0.75, 1])).toBe(2);
+    expect(tickDecimals(niceTicks(0, 0.008))).toBe(3);
   });
 });
