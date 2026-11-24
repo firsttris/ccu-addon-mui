@@ -141,6 +141,8 @@ describe('aggregatePoints and seriesStats', () => {
     };
     expect(seriesStats(s)).toEqual({ current: 5, min: 5, max: 10, avg: 7.5, sum: 15 });
     expect(seriesStats({ ...s, kind: 'line', aggregate: 'avg' })).toMatchObject({ current: 4, min: 1, max: 6, avg: 3 });
+    // The latest value, not the average of the last interval
+    expect(seriesStats({ ...s, kind: 'line', aggregate: 'avg', last: 5.9 })).toMatchObject({ current: 5.9 });
   });
 });
 

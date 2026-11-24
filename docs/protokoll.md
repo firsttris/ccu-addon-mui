@@ -194,7 +194,7 @@ eines Wartungswerts (`UNREACH`, `LOW_BAT`, `CONFIG_PENDING` …) neu, sonst alle
 | | `getHeatingGroupMembers` | Passende Mitglieder (HMServer) | Admin |
 | | `saveHeatingGroup`, `deleteHeatingGroup` | Gruppe speichern oder löschen (HMServer und ReGa) | Admin+T (A)(PW) |
 | Diagramme | `getDiagrams` | Diagramm-Definitionen und Energiepreis | alle |
-| | `getDiagramData` | Aggregierte Messreihen (höchstens 2000 Buckets) | alle |
+| | `getDiagramData` | Aggregierte Messreihen (höchstens 2000 Buckets) und der zuletzt empfangene Wert (`last`) | alle |
 | | `saveDiagram`, `deleteDiagram` | Diagramm speichern oder löschen | Admin+T (A) |
 | Push | `getPush` | VAPID-Public-Key und Abo-Status des Endpoints | alle |
 | | `subscribePush`, `unsubscribePush` | Push-Abo anlegen oder entfernen, mit `alarms`, `service` und `rules` (Benachrichtigungsregeln) | alle |

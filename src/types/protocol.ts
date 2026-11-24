@@ -4131,6 +4131,13 @@ export interface DiagramSeriesData {
    * [time (ms), average, minimum, maximum] per interval
    */
   points: [number, number, number, number][];
+  /**
+   * [time (ms), value] of the latest value received, also within the last interval
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  last?: [number, number];
 }
 /**
  * This interface was referenced by `Protocol`'s JSON-Schema

@@ -64,9 +64,10 @@ const toRender = (
   from: number,
   to: number,
   shift: number,
-): Pick<RenderSeries, 'points' | 'bars' | 'kind' | 'aggregate'> & { key: string } => {
+): Pick<RenderSeries, 'points' | 'bars' | 'kind' | 'aggregate' | 'last'> & { key: string } => {
   const factor = factorOf(s.datapoint);
-  const raw = (data?.find((d) => d.address === s.address && d.datapoint === s.datapoint)?.points ?? []) as ChartPoint[];
+  const found = data?.find((d) => d.address === s.address && d.datapoint === s.datapoint);
+  const raw = (found?.points ?? []) as ChartPoint[];
   const scaled = raw.map(([t, avg, lo, hi]) => [t + shift, avg * factor, lo * factor, hi * factor] as ChartPoint);
   const aggregate = (s.aggregate || 'avg') as Aggregate;
   const kind = s.chart || defaultKind(scaled, aggregate);
@@ -79,16 +80,23 @@ const toRender = (
   // Consumption as a line or area: a point per interval
   if (aggregate === 'delta' && kind !== 'bar') points = bars.map((b) => [(b.t0 + b.t1) / 2, b.v, b.v, b.v]);
   else if (kind !== 'state' && kind !== 'step') points = downsample(points, MAX_LINE_POINTS);
-  return { key: keyOf(s), points, bars, kind, aggregate };
+  // The latest value is the current one of plain lines; minima, maxima and
+  // the span before keep their own
+  const last = found?.last && aggregate === 'avg' && shift === 0 ? found.last[1] * factor : undefined;
+  return { key: keyOf(s), points, bars, kind, aggregate, last };
 };
 
 // Values and bars multiplied by factor (Wh in kWh)
-const scaledBy = <T extends { points: ChartPoint[]; bars: RenderSeries['bars'] }>(r: T, factor: number): T =>
+const scaledBy = <T extends { points: ChartPoint[]; bars: RenderSeries['bars']; last?: number }>(
+  r: T,
+  factor: number,
+): T =>
   factor === 1
     ? r
     : {
         ...r,
         points: r.points.map(([t, a, lo, hi]) => [t, a * factor, lo * factor, hi * factor] as ChartPoint),
+        last: r.last === undefined ? undefined : r.last * factor,
         bars: r.bars.map((b) => ({ ...b, v: b.v * factor })),
       };
 
