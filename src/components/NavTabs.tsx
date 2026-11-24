@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { useSwipeNavigation } from '../hooks/useSwipeNavigation';
+import { neighbourId } from './swipeModel';
 import { useEffects } from '../contexts/EffectsContext';
 import { cn } from '../lib/utils';
 import ChevronLeftIcon from '~icons/lucide/chevron-left';
@@ -21,6 +23,12 @@ const tabParams = (to: NavTabsProps['to'], id: string) =>
 
 export const NavTabs = ({ label, items, activeId, to }: NavTabsProps) => {
   const effects = useEffects();
+  const navigate = useNavigate();
+  // A swipe across the page opens the neighbouring tab
+  useSwipeNavigation((direction) => {
+    const id = neighbourId(items, activeId, direction);
+    if (id) navigate({ to, params: tabParams(to, id) as never });
+  });
   const listRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLElement>(null);
   const [marker, setMarker] = useState<{ left: number; width: number } | null>(null);
