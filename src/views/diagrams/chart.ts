@@ -57,6 +57,16 @@ export const niceTicks = (min: number, max: number, count = 5): number[] => {
   return ticks.map((v) => Number(v.toPrecision(12)));
 };
 
+// The decimals that tell ticks apart: 0.25 needs two, 0.002 three, so
+// labels of small steps don't round to the same text
+export const tickDecimals = (ticks: number[]): number => {
+  for (let d = 0; d < 10; d++) {
+    const f = 10 ** d;
+    if (ticks.every((v) => Math.abs(Math.round(v * f) - v * f) < 1e-6)) return d;
+  }
+  return 10;
+};
+
 const timeSteps = [
   5 * 60 * 1000,
   15 * 60 * 1000,

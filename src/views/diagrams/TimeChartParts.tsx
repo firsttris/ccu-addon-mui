@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { formatDate, formatNumber } from '../../lib/format';
 import { m } from '../../paraglide/messages';
-import { type Bar, DAY, niceTicks, type RenderSeries } from './chart';
+import { type Bar, DAY, niceTicks, type RenderSeries, tickDecimals } from './chart';
 import { type Geometry, isBinaryValues, LANE, type LinePaths, scaleKey, TOP, type TooltipRow } from './chartGeometry';
 
 // The parts TimeChart draws, each from the chart's geometry
@@ -18,7 +18,19 @@ const tooltipStyle: Intl.DateTimeFormatOptions = {
   minute: '2-digit',
 };
 
-export const formatValue = (v: number, unit: string) => `${formatNumber(v, 2)}${unit ? ` ${unit}` : ''}`;
+// Two decimals, small values with three significant digits (0.008 A is
+// not 0.01 A)
+export const formatValue = (v: number, unit: string) => {
+  const decimals = v !== 0 && Math.abs(v) < 1 ? Math.min(10, 2 - Math.floor(Math.log10(Math.abs(v)))) : 2;
+  return `${formatNumber(v, decimals)}${unit ? ` ${unit}` : ''}`;
+};
+
+// The labels of a value axis, with as many decimals as its step needs
+const axisLabels = (lo: number, hi: number) => {
+  const ticks = niceTicks(lo, hi);
+  const decimals = tickDecimals(ticks);
+  return ticks.map((v) => ({ v, label: formatNumber(v, decimals, decimals) }));
+};
 
 // A value as shown: on/off for states and switches
 export const formatSeriesValue = (s: RenderSeries, v: number) =>
@@ -45,7 +57,7 @@ export const ChartAxes = ({ g, xTicks, span }: { g: Geometry; xTicks: number[]; 
     <>
       {/* Grid and axes */}
       {axisLeft &&
-        niceTicks(axisLeft.lo, axisLeft.hi).map((v) => (
+        axisLabels(axisLeft.lo, axisLeft.hi).map(({ v, label }) => (
           <g key={`l${v}`}>
             <line
               x1={left}
@@ -62,12 +74,12 @@ export const ChartAxes = ({ g, xTicks, span }: { g: Geometry; xTicks: number[]; 
               style={{ textAnchor: 'end' }}
               className="fill-muted-foreground text-[11px] tabular-nums"
             >
-              {formatNumber(v, 1)}
+              {label}
             </text>
           </g>
         ))}
       {axisRight &&
-        niceTicks(axisRight.lo, axisRight.hi).map((v) => (
+        axisLabels(axisRight.lo, axisRight.hi).map(({ v, label }) => (
           <text
             key={`r${v}`}
             x={left + plotWidth + 6}
@@ -75,7 +87,7 @@ export const ChartAxes = ({ g, xTicks, span }: { g: Geometry; xTicks: number[]; 
             dy="0.32em"
             className="fill-muted-foreground text-[11px] tabular-nums"
           >
-            {formatNumber(v, 1)}
+            {label}
           </text>
         ))}
       {axisLeft?.unit && (
