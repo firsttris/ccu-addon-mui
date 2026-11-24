@@ -44,7 +44,9 @@ Alle vier Ansichten sind gleich aufgebaut:
 
 1. **Reiter** zum Wechseln zwischen Räumen, Gewerken oder Favoritenlisten. Passen nicht alle in die Breite,
    wischst du die Leiste zur Seite oder blätterst mit den Pfeilen an ihren Rändern; der gewählte Reiter rückt
-   in die Mitte.
+   in die Mitte. Auf Handy und Tablet wechselt ein Wischen quer über die Seite zum Nachbarreiter (nach links
+   zum nächsten, nach rechts zum vorigen); Regler, Felder und der Bildschirmrand (Zurück-Geste) bleiben davon
+   unberührt.
 2. **Übersicht**: Innentemperatur im Schnitt, eingeschaltete Lichter („5 von 6“), offene Fenster mit
    Namen. Es erscheint nur, was es an diesem Ort gibt. Im Menü unter *Darstellung* blendet *Übersicht oben* sie
    auf diesem Gerät aus, etwa auf einem Wandtablet, wo der Platz den Kacheln gehören soll.

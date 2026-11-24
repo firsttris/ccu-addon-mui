@@ -116,7 +116,7 @@ can already do stays. Everything in one app, from the light switch to the progra
 <td width="50%" valign="top">
 
 ### 🏠 Operate
-- Rooms, functions, favourites and *All devices* with key figures
+- Rooms, functions, favourites and *All devices* with key figures; on phones and tablets swipe to the next room
 - Own tiles for thermostat, light, blinds, lock, detectors, energy and more
 - Every other device gets a tile from its device description
 
