@@ -132,6 +132,25 @@ func TestRecorder(t *testing.T) {
 	}
 }
 
+func TestLast(t *testing.T) {
+	r := NewRecorder(t.TempDir())
+	r.SetWanted(map[string]bool{"A:1.T": true})
+	at := time.Unix(1_700_000_000, 0)
+	if _, ok := r.Last("A:1.T"); ok {
+		t.Fatal("a value before any was recorded")
+	}
+	// Within one minute: the point holds the average, Last the latest
+	r.Record("A:1.T", 6.8, at)
+	r.Record("A:1.T", 5.0, at.Add(20*time.Second))
+	r.Record("B:1.T", 9.0, at.Add(30*time.Second))
+	if l, ok := r.Last("A:1.T"); !ok || l.V != 5.0 || l.T != at.Unix()+20 {
+		t.Fatalf("last = %+v %v", l, ok)
+	}
+	if _, ok := r.Last("B:1.T"); ok {
+		t.Fatal("kept a value of a series not wanted")
+	}
+}
+
 func TestImportAndPrune(t *testing.T) {
 	dir := t.TempDir()
 	r := NewRecorder(dir)

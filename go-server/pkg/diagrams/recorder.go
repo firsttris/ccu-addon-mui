@@ -40,6 +40,9 @@ type Recorder struct {
 	wanted  map[string]bool
 	current [2]map[string]*Point
 	pending [2]map[string][]Point
+	// The latest value of each series, for the current value shown: the
+	// points only hold averages per interval
+	last map[string]Sample
 }
 
 const (
@@ -60,7 +63,7 @@ const minuteRange = 8 * 24 * time.Hour
 
 // NewRecorder records into dir
 func NewRecorder(dir string) *Recorder {
-	r := &Recorder{dir: dir, now: time.Now, wanted: map[string]bool{}}
+	r := &Recorder{dir: dir, now: time.Now, wanted: map[string]bool{}, last: map[string]Sample{}}
 	for i := range r.current {
 		r.current[i] = map[string]*Point{}
 		r.pending[i] = map[string][]Point{}
@@ -86,6 +89,9 @@ func (r *Recorder) Record(key string, value any, at time.Time) {
 	defer r.mu.Unlock()
 	if !r.wanted[key] {
 		return
+	}
+	if l, ok := r.last[key]; !ok || at.Unix() >= l.T {
+		r.last[key] = Sample{T: at.Unix(), V: v}
 	}
 	for res := range resolutions {
 		start := at.Unix() - mod(at.Unix(), resolutions[res].period)
@@ -328,6 +334,14 @@ func combine(points []Point, from, to int64, buckets int) []Point {
 		out = append(out, p)
 	}
 	return out
+}
+
+// Last returns the latest value recorded of a series since the start
+func (r *Recorder) Last(key string) (Sample, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	l, ok := r.last[key]
+	return l, ok
 }
 
 // HasData reports whether anything was recorded for a series

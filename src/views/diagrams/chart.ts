@@ -174,6 +174,8 @@ export interface RenderSeries {
   aggregate: Aggregate;
   points: ChartPoint[];
   bars: Bar[];
+  // The latest value received; the points only hold averages per interval
+  last?: number;
   compare?: { points: ChartPoint[]; bars: Bar[] };
 }
 
@@ -275,7 +277,7 @@ export const seriesStats = (s: RenderSeries) => {
   if (s.points.length === 0) return null;
   const n = s.points.length;
   return {
-    current: s.points[s.points.length - 1][1],
+    current: s.last ?? s.points[s.points.length - 1][1],
     min: Math.min(...s.points.map((p) => p[2])),
     max: Math.max(...s.points.map((p) => p[3])),
     avg: s.points.reduce((a, p) => a + p[1], 0) / n,

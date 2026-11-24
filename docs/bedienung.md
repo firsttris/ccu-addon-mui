@@ -238,7 +238,7 @@ gespeichert.
 ## Diagramme
 
 *Diagramme* im Menü zeigt Verläufe über einen Tag, eine Woche, einen Monat oder ein Jahr, mit Blättern
-in die Vergangenheit und Zoom durch Ziehen. Unter jedem Diagramm stehen der aktuelle Wert, Durchschnitt,
+in die Vergangenheit und Zoom durch Ziehen. Unter jedem Diagramm stehen der aktuelle Wert (der zuletzt gemeldete, kein Mittelwert), Durchschnitt,
 Minimum und Maximum, bei Energiezählern auch die Kosten zum hinterlegten Strom- oder Gaspreis. *Als CSV
 exportieren* lädt die Werte herunter.
 

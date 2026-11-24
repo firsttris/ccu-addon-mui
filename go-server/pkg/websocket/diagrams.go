@@ -86,6 +86,8 @@ type seriesData struct {
 	Datapoint string `json:"datapoint"`
 	// [time (ms), average, minimum, maximum] per interval
 	Points [][4]float64 `json:"points"`
+	// [time (ms), value] of the latest value, when it falls in the range
+	Last *[2]float64 `json:"last,omitempty"`
 }
 
 type diagramDataResponse struct {
@@ -139,6 +141,9 @@ func (s *Server) handleDiagrams(client *Client, msgType string, message []byte) 
 			data := seriesData{Address: series.Address, Datapoint: series.Datapoint, Points: [][4]float64{}}
 			for _, p := range s.recorder.Query(series.Key(), msg.From/1000, msg.To/1000, buckets) {
 				data.Points = append(data.Points, [4]float64{float64(p.T * 1000), p.Avg, p.Min, p.Max})
+			}
+			if l, ok := s.recorder.Last(series.Key()); ok && l.T*1000 >= msg.From && l.T*1000 < msg.To {
+				data.Last = &[2]float64{float64(l.T * 1000), l.V}
 			}
 			response.Series = append(response.Series, data)
 		}
